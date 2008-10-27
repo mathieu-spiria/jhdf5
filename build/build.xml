@@ -1,0 +1,104 @@
+<project name="hfd5" default="dist" basedir="..">
+    <import file="../../build_resources/ant/build-common.xml" />
+		<project-classpath name="ecp" classes="${classes}" />
+	
+		<property name="mainfolder" value="hdf5" />
+    <property name="jar.file" value="${dist}/jhdf5.jar" />
+    <property name="src.jar.file" value="${dist}/jhdf5-src.zip" />
+    <property name="test.jar.file" value="${dist}/jhdf5-test.jar" />
+    <property name="lib" value="../libraries" />
+		<property name="nativesrc" value="${lib}/hdf5/native" />
+	  <property name="nativeroot" value="${targets}/ant" />
+	  <property name="native" value="${nativeroot}/native" />
+	
+		<property name="dist.hdf5" value="${dist}/${mainfolder}" />
+		<property name="dist.hdf5.lib" value="${dist.hdf5}/lib" />
+    
+	<target name="clean">
+		<delete dir="${dist}" />
+		<delete dir="${targets}/ant" />
+	</target>
+	
+	<target name="jar-test" depends="compile-tests">
+		<mkdir dir="${dist.hdf5.lib}" />
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<copy todir="${native}">
+			<fileset dir="${nativesrc}">
+				<include name="**/jhdf5.so"/>
+			</fileset>
+		</copy>
+		<recursive-jar destfile="${test.jar.file}">
+			<fileset dir="${classes}">
+				<include name="**/*.class" />
+				<include name="${build.info.filename}" />
+			</fileset>
+			<fileset dir="${nativeroot}">
+				<include name="**/jhdf5.so"/>
+			</fileset>
+			<zipfileset src="${lib}/log4j/log4j.jar" />
+			<zipfileset src="${lib}/testng/testng-jdk15.jar" />
+			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
+			<zipfileset src="${lib}/commons-io/commons-io.jar" />
+			<manifest>
+				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.HDF5RoundtripTest" />
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number" value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</recursive-jar>
+	</target>
+	
+	<target name="jar" depends="compile">
+		<mkdir dir="${dist.hdf5.lib}" />
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<copy todir="${native}">
+			<fileset dir="${nativesrc}">
+				<include name="**/jhdf5.so"/>
+			</fileset>
+		</copy>
+		<recursive-jar destfile="${jar.file}">
+			<fileset dir="${classes}">
+				<include name="${build.info.filename}" />
+				<include name="**/*.class" />
+			</fileset>
+			<fileset dir="${nativeroot}">
+				<include name="**/jhdf5.so"/>
+			</fileset>
+			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
+			<zipfileset src="${lib}/commons-io/commons-io.jar" />
+			<manifest>
+				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number" value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</recursive-jar>
+	</target>
+	
+	<target name="src-jar">
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<recursive-jar destfile="${src.jar.file}">
+			<fileset dir="${classes}">
+				<include name="${build.info.filename}" />
+			</fileset>
+			<fileset dir="${sources}">
+				<include name="**/*.java" />
+			</fileset>
+			<manifest>
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number" value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</recursive-jar>
+	</target>
+	
+	<target name="dist" depends="jar" />
+	
+    <!--
+	// Task for continuous integration server.
+	-->
+    <target name="ci"
+            depends="build-common.ci, check-dependencies"
+            description="Task for continuous integration server." />
+
+</project>

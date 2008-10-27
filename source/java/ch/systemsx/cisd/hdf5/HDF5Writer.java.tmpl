@@ -1,0 +1,426 @@
+    //
+    // __Name__
+    //
+
+    /**
+     * Writes out a <code>__name__</code> value.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param value The value to write.
+     */
+    public void write__Name__(final String objectPath, final __name__ value)
+    {
+        assert objectPath != null;
+
+        checkOpen();
+        writeScalar(objectPath, __Storagetype__, __Memorytype__, HDFNativeData.__name__ToByte(value));
+    }
+
+    /**
+     * Creates a <code>__name__</code> array (of rank 1). Uses a compact storage layout. Should only be
+     * used for small data sets.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param length The length of the data set to create.
+     */
+    public void create__Name__ArrayCompact(final String objectPath, final long length)
+    {
+        assert objectPath != null;
+        assert length > 0;
+
+        checkOpen();
+        writeRank1Compact(objectPath, __Storagetype__, __Memorytype__, null, length);
+    }
+
+    /**
+     * Writes out a <code>__name__</code> array (of rank 1). Uses a compact storage layout. Should only
+     * be used for small data sets.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     */
+    public void write__Name__ArrayCompact(final String objectPath, final __name__[] data)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        checkOpen();
+        writeRank1Compact(objectPath, __Storagetype__, __Memorytype__, data, data.length);
+    }
+
+    /**
+     * Writes out a <code>__name__</code> array (of rank 1).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     */
+    public void write__Name__Array(final String objectPath, final __name__[] data)
+    {
+        write__Name__Array(objectPath, data, false);
+    }
+
+    /**
+     * Writes out a <code>__name__</code> array (of rank 1).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param deflate If <code>true</code>, the data set will be compressed.
+     */
+    public void write__Name__Array(final String objectPath, final __name__[] data, boolean deflate)
+    {
+        assert data != null;
+
+        checkOpen();
+        writeRank1(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate), data,
+                data.length);
+    }
+
+    /**
+     * Creates a <code>__name__</code> array (of rank 1).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the __name__ vector to create. When using extendable data sets 
+     *          ((see {@link #dontUseExtendableDataTypes()})), then no data set smaller than 
+     *          this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
+     *          sets are used (see {@link #dontUseExtendableDataTypes()}).
+     */
+    public void create__Name__Array(final String objectPath, final long size, final int blockSize)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+        assert blockSize >= 0 && blockSize <= size;
+
+        checkOpen();
+        create__Name__Array(objectPath, size, blockSize, false);
+    }
+
+    /**
+     * Creates a <code>__name__</code> array (of rank 1).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the __name__ array to create. When using extendable data sets 
+     *          ((see {@link #dontUseExtendableDataTypes()})), then no data set smaller than 
+     *          this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
+     *          sets are used (see {@link #dontUseExtendableDataTypes()}) and 
+     *                <code>deflate == false</code>.
+     * @param deflate If <code>true</code>, the data set will be compressed.
+     */
+    public void create__Name__Array(final String objectPath, final long size, final int blockSize,
+            boolean deflate)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+        assert blockSize >= 0 && blockSize <= size;
+
+        checkOpen();
+        writeBlockRank1(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate),
+                null, size, blockSize, 0);
+    }
+
+    /**
+     * Writes out a block of a <code>__name__</code> array (of rank 1). The data set needs to have been
+     * created by {@link #create__Name__Array(String, long, int, boolean)} beforehand.
+     * <p>
+     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
+     * to the <var>blockSize</var> argument of the
+     * {@link #create__Name__Array(String, long, int, boolean)} call that was used to create the data
+     * set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param blockNumber The number of the block to write.
+     */
+    public void write__Name__ArrayBlock(final String objectPath, final __name__[] data,
+            final long blockNumber)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        checkOpen();
+        writeBlockRank1(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data,
+                data.length, data.length, data.length * blockNumber);
+    }
+
+    /**
+     * Writes out a block of a <code>__name__</code> array (of rank 1). The data set needs to have been
+     * created by {@link #create__Name__Array(String, long, int, boolean)} beforehand.
+     * <p>
+     * Use this method instead of {@link #write__Name__ArrayBlock(String, __name__[], long)} if the total
+     * size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #create__Name__Array(String, long, int, boolean)} call that was used to create the data
+     * set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
+     *            )
+     * @param offset The offset in the data set  to start writing to.
+     */
+    public void write__Name__ArrayBlockWithOffset(final String objectPath, final __name__[] data,
+            final int dataSize, final long offset)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        checkOpen();
+        writeBlockRank1(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data,
+                dataSize, dataSize, offset);
+    }
+
+    /**
+     * Writes out a <code>__name__</code> matrix (array of rank 2).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     */
+    public void write__Name__Matrix(final String objectPath, final __name__[][] data)
+    {
+        write__Name__Matrix(objectPath, data, false);
+    }
+
+    /**
+     * Writes out a <code>__name__</code> matrix (array of rank 2).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param deflate If <code>true</code>, the data set will be compressed.
+     */
+    public void write__Name__Matrix(final String objectPath, final __name__[][] data, boolean deflate)
+    {
+        assert data != null;
+        assert checkDimensions(data);
+
+        checkOpen();
+        writeRankN(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate), data,
+                new long[]
+                    { data.length, data.length == 0 ? 0 : data[0].length });
+    }
+
+    /**
+     * Creates a <code>__name__</code> matrix (array of rank 2).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param sizeX The size of the x dimension of the __name__ matrix to create.
+     * @param sizeY The size of the y dimension of the __name__ matrix to create.
+     * @param blockSizeX The size of one block in the x dimension.
+     * @param blockSizeY The size of one block in the y dimension.
+     */
+    public void create__Name__Matrix(final String objectPath, final long sizeX, final long sizeY,
+            int blockSizeX, int blockSizeY)
+    {
+        create__Name__Matrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
+    }
+
+    /**
+     * Creates a <code>__name__</code> matrix (array of rank 2).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param sizeX The size of the x dimension of the __name__ matrix to create.
+     * @param sizeY The size of the y dimension of the __name__ matrix to create.
+     * @param blockSizeX The size of one block in the x dimension.
+     * @param blockSizeY The size of one block in the y dimension.
+     * @param deflate If <code>true</code>, the data set will be compressed.
+     */
+    public void create__Name__Matrix(final String objectPath, final long sizeX, final long sizeY,
+            int blockSizeX, int blockSizeY, boolean deflate)
+    {
+        assert objectPath != null;
+        assert sizeX >= 0;
+        assert sizeY >= 0;
+        assert blockSizeX >= 0 && blockSizeX <= sizeX;
+        assert blockSizeY >= 0 && blockSizeY <= sizeY;
+
+        checkOpen();
+        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate),
+                null, new long[]
+                    { sizeX, sizeY }, new long[]
+                    { blockSizeX, blockSizeY }, new long[]
+                    { 0, 0 });
+    }
+
+    /**
+     * Writes out a block of a <code>__name__</code> matrix (array of rank 2). The data set needs to
+     * have been created by {@link #create__Name__Matrix(String, long, long, int, int, boolean)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #create__Name__Matrix(String, long, long, int, int, boolean)}
+     * if the total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
+     * the <var>blockSizeX/Y</var> arguments of the
+     * {@link #create__Name__Matrix(String, long, long, int, int, boolean)} call that was used to
+     * create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param blockNumberX The block number in the x dimension (offset: multiply with
+     *            <code>data.length</code>).
+     * @param blockNumberY The block number in the y dimension (offset: multiply with
+     *            <code>data[0.length</code>).
+     */
+    public void write__Name__MatrixBlock(final String objectPath, final __name__[][] data,
+            final long blockNumberX, final long blockNumberY)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        checkOpen();
+        final long[] blockDimensions = new long[]
+            { data.length, data[0].length };
+        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data,
+                blockDimensions, blockDimensions, new long[]
+                    { blockNumberX * data.length, blockNumberY * data[0].length });
+    }
+
+    /**
+     * Writes out a block of a <code>__name__</code> matrix (array of rank 2). The data set needs to
+     * have been created by {@link #create__Name__Matrix(String, long, long, int, int, boolean)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #write__Name__MatrixBlock(String, __name__[][], long, long)} if
+     * the total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #create__Name__Matrix(String, long, long, int, int, boolean)} call that was used to
+     * create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
+     * @param offsetX The x offset in the data set  to start writing to.
+     * @param offsetY The y offset in the data set  to start writing to.
+     */
+    public void write__Name__MatrixBlockWithOffset(final String objectPath, final __name__[][] data,
+            final long offsetX, final long offsetY)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        checkOpen();
+        final long[] blockDimensions = new long[]
+            { data.length, data[0].length };
+        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data,
+                blockDimensions, blockDimensions, new long[]
+                    { offsetX, offsetY });
+    }
+
+    /**
+     * Writes out a multi-dimensional <code>__name__</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     */
+    public void write__Name__MDArray(final String objectPath, final MD__Name__Array data)
+    {
+        write__Name__MDArray(objectPath, data, false);
+    }
+
+    /**
+     * Writes out a multi-dimensional <code>__name__</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param deflate If <code>true</code>, the data set will be compressed.
+     */
+    public void write__Name__MDArray(final String objectPath, final MD__Name__Array data,
+            final boolean deflate)
+    {
+        assert data != null;
+
+        checkOpen();
+        writeRankN(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate), data
+                .getAsFlatArray(), data.longDimensions());
+    }
+
+    /**
+     * Creates a multi-dimensional <code>__name__</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     */
+    public void create__Name__MDArray(final String objectPath, final long[] dimensions,
+            final int[] blockDimensions)
+    {
+        create__Name__MDArray(objectPath, dimensions, blockDimensions, false);
+    }
+
+    /**
+     * Creates a multi-dimensional <code>__name__</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     * @param deflate If <code>true</code>, the data set will be compressed.
+     */
+    public void create__Name__MDArray(final String objectPath, final long[] dimensions,
+            final int[] blockDimensions, final boolean deflate)
+    {
+        assert objectPath != null;
+        assert dimensions != null;
+        assert blockDimensions != null;
+
+        checkOpen();
+        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate),
+                null, dimensions, MDArray.toLong(blockDimensions), null);
+    }
+
+    /**
+     * Writes out a block of a multi-dimensional <code>__name__</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
+     *            the according dimension).
+     */
+    public void write__Name__MDArrayBlock(final String objectPath, final MD__Name__Array data,
+            final long[] blockNumber)
+    {
+        assert data != null;
+        assert blockNumber != null;
+
+        checkOpen();
+        final long[] dimensions = data.longDimensions();
+        assert dimensions.length == blockNumber.length;
+        final long[] offset = new long[dimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * dimensions[i];
+        }
+        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data
+                .getAsFlatArray(), dimensions, dimensions, offset);
+    }
+
+    /**
+     * Writes out a block of a multi-dimensional <code>__name__</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param offset The offset in the data set  to start writing to in each dimension.
+     */
+    public void write__Name__MDArrayBlockWithOffset(final String objectPath, final MD__Name__Array data,
+            final long[] offset)
+    {
+        assert data != null;
+        assert offset != null;
+
+        checkOpen();
+        final long[] dimensions = data.longDimensions();
+        assert dimensions.length == offset.length;
+        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data
+                .getAsFlatArray(), dimensions, dimensions, offset);
+    }

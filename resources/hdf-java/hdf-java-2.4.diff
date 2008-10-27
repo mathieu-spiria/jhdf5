@@ -1,0 +1,92 @@
+diff -ruN ncsa.orig/hdf/hdf5lib/H5.java ncsa/hdf/hdf5lib/H5.java
+--- ncsa/hdf/hdf5lib/H5.java	2007-10-11 16:28:30.000000000 -0500
++++ ncsa/hdf/hdf5lib/H5.java	2008-01-17 16:17:05.000000000 -0600
+@@ -12,6 +12,10 @@
+ package ncsa.hdf.hdf5lib;
+ 
+ import java.io.*;
++
++import ch.systemsx.cisd.common.utilities.FileUtilities;
++import ch.systemsx.cisd.common.utilities.OSUtilities;
++
+ import ncsa.hdf.hdf5lib.exceptions.*;
+ 
+ 
+@@ -209,10 +213,25 @@
+ 
+     public final static String H5PATH_PROPERTY_KEY = "ncsa.hdf.hdf5lib.H5.hdf5lib";
+     
++    /** Expected major number of the library. */
++    private final static int expectedMajnum = 1;
++    
++    /** Expected minor number of the library. */
++    private final static int expectedMinnum = 6;
++    
++    /** Expected release number of the library. */
++    private final static int expectedRelnum = 6;
++
+     static
+     {
+         boolean done = false;
+         String filename = System.getProperty(H5PATH_PROPERTY_KEY,null);
++        if (filename == null)
++        {
++            filename =
++                    FileUtilities.tryCopyResourceToTempFile("/" + OSUtilities.getComputerPlatform() + "/jhdf5.so",
++                            "jhdf5", ".so");
++        }
+         
+         if ((filename != null) && (filename.length() > 0))
+         {
+@@ -221,7 +240,11 @@
+                 try {
+                     System.load(filename);
+                     done = true;
+-                    } catch (Throwable err) { done = false; }
++                    } catch (Throwable err) { 
++                        System.err.printf("Native HDF5 library '%s' failed to load:\n", filename);
++                        err.printStackTrace();
++                        done = false; 
++                    }
+             } else {
+                 done = false;
+                 throw (new UnsatisfiedLinkError("Invalid HDF5 library, "+filename));
+@@ -246,16 +269,8 @@
+         /* Important!  Disable error output to C stdout */
+         H5.H5error_off();
+ 
+-        /*  Optional:  confirm the version
+-                 *     This will crash immediately if not the
+-                 *     specified version.
+-         */
+-        Integer majnum = Integer.getInteger("ncsa.hdf.hdf5lib.H5.hdf5maj",null);
+-        Integer minnum = Integer.getInteger("ncsa.hdf.hdf5lib.H5.hdf5min",null);
+-        Integer relnum = Integer.getInteger("ncsa.hdf.hdf5lib.H5.hdf5rel",null);
+-        if ((majnum != null) && (minnum != null) && (relnum != null)) {
+-            H5.H5check_version(majnum.intValue(),minnum.intValue(),relnum.intValue());
+-        }
++        /* Ensure we have the expected version of the library. */
++        H5.H5check_version(expectedMajnum, expectedMinnum, expectedRelnum);
+     }
+ 
+        //////////////////////////////////////////////////////////////////
+@@ -4520,19 +4535,6 @@
+             throws HDF5LibraryException;
+ 
+ 
+-    ////////////////////////////////////////////////////////////////////
+-    //                                                                //
+-    //             New APIs for HDF5Index                             //
+-    //                 October 10, 2005                               //
+-    ////////////////////////////////////////////////////////////////////
+-
+-    public synchronized static native int H5INcreate (String grp_name, int grp_loc_id,
+-        int property_list, int data_loc_id, String data_loc_name, String field_name, long max_mem_size);
+-
+-    public synchronized static native int H5INquery (int dset_id, String keys[],
+-        Object ubounds, Object lbounds, int nkeys);
+-
+-
+     //////////////////////////////////////////////////////////////////////////
+     //    Modified by Peter Cao on July 26, 2006:                           //
+     //       Some of the Generic Property APIs have callback function       //

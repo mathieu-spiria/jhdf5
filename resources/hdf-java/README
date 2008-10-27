@@ -1,0 +1,2 @@
+We are using hdf-java 2.4 with some small changes to H5.java which are contained in the patch file df-java-2.4.diff.
+All the other changes are just formatting changes and changes to get rid of Eclipse warnings.
