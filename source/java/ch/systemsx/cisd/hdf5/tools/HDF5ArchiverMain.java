@@ -173,7 +173,7 @@ public class HDF5ArchiverMain
                         + "EXTRACT <archive_file> [<item-to-unarchive> [...]] | "
                         + "DELETE <archive_file> <item-to-delete> [...] | "
                         + "LIST <archive_file>]", ExampleMode.NONE);
-        System.err.println("java -jar hdf5.jar" + parser.printExample(ExampleMode.ALL) + " ARCHIVE archive.h5 .");
+        System.err.println("java -jar jhdf5.jar" + parser.printExample(ExampleMode.ALL) + " ARCHIVE archive.h5 .");
         System.exit(0);
     }
 
