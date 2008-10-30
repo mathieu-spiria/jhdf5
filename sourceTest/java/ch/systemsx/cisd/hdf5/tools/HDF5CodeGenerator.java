@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5;
+package ch.systemsx.cisd.hdf5.tools;
 
 import org.apache.commons.lang.StringUtils;
 

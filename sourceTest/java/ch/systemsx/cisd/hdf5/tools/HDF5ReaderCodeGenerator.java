@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5;
+package ch.systemsx.cisd.hdf5.tools;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
+
+import ch.systemsx.cisd.hdf5.HDF5Writer;
 
 /**
  * A code generator for the identical parts of the {@link HDF5Writer} class for different numerical
