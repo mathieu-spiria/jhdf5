@@ -79,6 +79,12 @@ public class HDF5ArchiveTools
             throws ArchivingException
     {
         final File[] entries = dir.listFiles();
+        if (entries == null)
+        {
+            dealWithError(new ArchivingException(dir, new IOException("Cannot read directory")),
+                    continueOnError);
+            return;
+        }
         if (writer.isUseLatestFileFormat() == false
                 && entries.length > MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT)
         {
@@ -230,8 +236,8 @@ public class HDF5ArchiveTools
                     extractFile(reader, strategy, root, path, continueOnError, verbose);
                 } else
                 {
-                    System.err.println("Ignoring object '" + path + "' (type: " + infoOrNull.getType()
-                            + ")");
+                    System.err.println("Ignoring object '" + path + "' (type: "
+                            + infoOrNull.getType() + ")");
                 }
             }
         } catch (HDF5Exception ex)
