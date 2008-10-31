@@ -108,7 +108,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     // /////////////////////
 
     /**
-     * The file will be truncated to length 0 if it already exists, i.e. its content will be
+     * The file will be truncated to length 0 if it already exists, that is its content will be
      * deleted.
      */
     public HDF5Writer overwrite()
@@ -129,7 +129,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
     /**
      * Returns <code>true</code>, if the file was <em>not</em> configured with
-     * {@link #dontUseExtendableDataTypes()}, i.e. if extendable data types are used for new data
+     * {@link #dontUseExtendableDataTypes()}, that is if extendable data types are used for new data
      * sets.
      */
     public boolean isUseExtendableDataTypes()
@@ -290,8 +290,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     }
 
     /**
-     * Creates an external link, i.e. a link to a data set in another HDF5 file, the <em>target</em>
-     * .
+     * Creates an external link, that is a link to a data set in another HDF5 file, the
+     * <em>target</em> .
      * <p>
      * <em>Note: This method is only allowed when the file was configured with 
      * {@link #useLatestFileFormat()}.</em>
@@ -319,7 +319,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     }
 
     /**
-     * Creates or updates an external link, i.e. a link to a data set in another HDF5 file, the
+
+     * Creates or updates an external link, that is a link to a data set in another HDF5 file, the
      * <em>target</em> .
      * <p>
      * <em>Note: This method will never overwrite a data set, but only a symbolic link.</em>
@@ -456,7 +457,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Deletes an attribute.
      * <p>
-     * The referenced object must exist, i.e. it need to have been written before by one of the
+     * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
      * 
      * @param objectPath The name of the object to delete the attribute from.
@@ -481,7 +482,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Adds an enum attribute to the referenced object.
      * <p>
-     * The referenced object must exist, i.e. it need to have been written before by one of the
+     * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
      * 
      * @param objectPath The name of the object to add the attribute to.
@@ -515,7 +516,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Adds a string attribute to the referenced object.
      * <p>
-     * The referenced object must exist, i.e. it need to have been written before by one of the
+     * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
      * 
      * @param objectPath The name of the object to add the attribute to.
@@ -530,7 +531,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Adds a string attribute to the referenced object.
      * <p>
-     * The referenced object must exist, i.e. it need to have been written before by one of the
+     * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
      * 
      * @param objectPath The name of the object to add the attribute to.
@@ -574,7 +575,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Adds a <code>boolean</code> attribute to the referenced object.
      * <p>
-     * The referenced object must exist, i.e. it need to have been written before by one of the
+     * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
      * 
      * @param objectPath The name of the object to add the attribute to.
@@ -591,7 +592,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Adds an <code>int</code> attribute to the referenced object.
      * <p>
-     * The referenced object must exist, i.e. it need to have been written before by one of the
+     * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
      * 
      * @param objectPath The name of the object to add the attribute to.
@@ -607,7 +608,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Adds a long attribute to the referenced object.
      * <p>
-     * The referenced object must exist, i.e. it need to have been written before by one of the
+     * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
      * 
      * @param objectPath The name of the object to add the attribute to.
@@ -623,7 +624,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Adds a <code>float</code> attribute to the referenced object.
      * <p>
-     * The referenced object must exist, i.e. it need to have been written before by one of the
+     * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
      * 
      * @param objectPath The name of the object to add the attribute to.
@@ -639,7 +640,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Adds a <code>double</code> attribute to the referenced object.
      * <p>
-     * The referenced object must exist, i.e. it need to have been written before by one of the
+     * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
      * 
      * @param objectPath The name of the object to add the attribute to.
