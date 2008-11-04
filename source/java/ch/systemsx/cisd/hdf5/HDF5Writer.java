@@ -177,6 +177,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             return h5.openFileReadWrite(path, useLatestFileFormat, fileRegistry);
         } else
         {
+            final File directory = hdf5File.getParentFile();
+            if (directory.exists() == false)
+            {
+                throw new HDF5JavaException("Directory '" + directory.getPath() + "' does not exist.");
+            }
             return h5.createFile(path, useLatestFileFormat, fileRegistry);
         }
     }
