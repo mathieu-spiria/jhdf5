@@ -1,5 +1,5 @@
---- hdf5-1.8.1/config/gnu-flags.orig	2008-05-29 18:39:02.000000000 +0200
-+++ hdf5-1.8.1/config/gnu-flags	2008-07-20 13:06:37.000000000 +0200
+--- hdf5-1.8.2/config/gnu-flags.orig	2008-05-29 18:39:02.000000000 +0200
++++ hdf5-1.8.2/config/gnu-flags	2008-07-20 13:06:37.000000000 +0200
 @@ -151,7 +151,7 @@
          # optimization levels (which shows up as failures for various integer
          # types -> long long conversions in the test/dtypes test).  Perhaps
@@ -9,9 +9,9 @@
          ;;
        gcc-4*)
          # Be optimistic about future versions of gcc.. :-) - QAK - 2003/10/20
-diff -ruN hdf5-1.8.1.orig/compile_pass2.sh hdf5-1.8.1/compile_pass2.sh
---- hdf5-1.8.1.orig/compile_pass2.sh	1970-01-01 01:00:00.000000000 +0100
-+++ hdf5-1.8.1/compile_pass2.sh	2008-07-20 13:56:43.000000000 +0200
+diff -ruN hdf5-1.8.2.orig/compile_pass2.sh hdf5-1.8.2/compile_pass2.sh
+--- hdf5-1.8.2.orig/compile_pass2.sh	1970-01-01 01:00:00.000000000 +0100
++++ hdf5-1.8.2/compile_pass2.sh	2008-07-20 13:56:43.000000000 +0200
 @@ -0,0 +1,23 @@
 +#! /bin/bash
 +
