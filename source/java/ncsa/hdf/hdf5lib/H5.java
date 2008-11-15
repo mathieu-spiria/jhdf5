@@ -213,7 +213,7 @@ public class H5
     private final static int expectedMinnum = 8;
 
     /** Expected release number of the library. */
-    private final static int expectedRelnum = 1;
+    private final static int expectedRelnum = 2;
 
     static
     {

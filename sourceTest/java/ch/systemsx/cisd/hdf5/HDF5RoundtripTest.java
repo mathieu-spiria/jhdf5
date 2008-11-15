@@ -2506,29 +2506,21 @@ public class HDF5RoundtripTest
         {
             assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
         }
-        // Note: v1.8.1 has a bug here: overflow due to infinity won't be detected under Windows.
-        if (OSUtilities.isWindows())
+        try
         {
-            assertEquals(Float.NEGATIVE_INFINITY, reader.readFloat("DINFINITY"));
-            assertEquals(Long.MAX_VALUE, reader.readLong("INFINITY"));
-        } else
+            reader.readFloat("DINFINITY");
+            fail("Failed to detect overflow");
+        } catch (HDF5DatatypeInterfaceException ex)
         {
-            try
-            {
-                reader.readFloat("DINFINITY");
-                fail("Failed to detect overflow");
-            } catch (HDF5DatatypeInterfaceException ex)
-            {
-                assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
-            }
-            try
-            {
-                reader.readLong("INFINITY");
-                fail("Failed to detect overflow");
-            } catch (HDF5DatatypeInterfaceException ex)
-            {
-                assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
-            }
+            assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
+        }
+        try
+        {
+            reader.readLong("INFINITY");
+            fail("Failed to detect overflow");
+        } catch (HDF5DatatypeInterfaceException ex)
+        {
+            assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
         }
         reader.close();
 
