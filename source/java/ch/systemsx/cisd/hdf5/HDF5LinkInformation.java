@@ -22,6 +22,7 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_DATASET;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_NAMED_DATATYPE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_NTYPES;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
@@ -100,6 +101,14 @@ public final class HDF5LinkInformation
     public String getPath()
     {
         return path;
+    }
+    
+    /**
+     * Returns the name of this link in the HDF5 file (the path without the parent).
+     */
+    public String getName()
+    {
+        return path.substring(path.lastIndexOf('/') + 1);
     }
 
     /**
