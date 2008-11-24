@@ -324,7 +324,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     }
 
     /**
-
      * Creates or updates an external link, that is a link to a data set in another HDF5 file, the
      * <em>target</em> .
      * <p>
