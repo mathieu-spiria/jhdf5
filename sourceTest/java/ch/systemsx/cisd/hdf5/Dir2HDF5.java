@@ -46,11 +46,11 @@ public class Dir2HDF5
         {
             for (int i = 1; i < args.length; ++i)
             {
-                archiver.archiveAll(new File(args[i]), false, true);
+                archiver.archiveAll(new File(args[i]), true);
             }
         } else
         {
-            archiver.archiveAll(new File("."), false, true);
+            archiver.archiveAll(new File("."), true);
         }
         archiver.close();
         watch.stop();

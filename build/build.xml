@@ -7,7 +7,8 @@
 	<property name="src.jar.file" value="${dist}/jhdf5-src.zip" />
 	<property name="test.jar.file" value="${dist}/jhdf5-test.jar" />
 	<property name="lib" value="../libraries" />
-	<property name="nativesrc" value="${lib}/hdf5/native" />
+	<property name="nativesrc1" value="${lib}/hdf5/native" />
+	<property name="nativesrc2" value="${lib}/filelink/native" />
 	<property name="nativeroot" value="${targets}/ant" />
 	<property name="native" value="${nativeroot}/native" />
 
@@ -24,8 +25,11 @@
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
-			<fileset dir="${nativesrc}">
+			<fileset dir="${nativesrc1}">
 				<include name="**/jhdf5.so" />
+			</fileset>
+			<fileset dir="${nativesrc2}">
+				<include name="**/jlink.so" />
 			</fileset>
 		</copy>
 		<recursive-jar destfile="${test.jar.file}">
@@ -34,7 +38,7 @@
 				<include name="${build.info.filename}" />
 			</fileset>
 			<fileset dir="${nativeroot}">
-				<include name="**/jhdf5.so" />
+				<include name="**/*.so" />
 			</fileset>
 			<zipfileset src="${lib}/log4j/log4j.jar" />
 			<zipfileset src="${lib}/testng/testng-jdk15.jar" />
@@ -54,8 +58,11 @@
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
-			<fileset dir="${nativesrc}">
+			<fileset dir="${nativesrc1}">
 				<include name="**/jhdf5.so" />
+			</fileset>
+			<fileset dir="${nativesrc2}">
+				<include name="**/jlink.so" />
 			</fileset>
 		</copy>
 		<recursive-jar destfile="${jar.file}">
@@ -64,7 +71,7 @@
 				<include name="**/*.class" />
 			</fileset>
 			<fileset dir="${nativeroot}">
-				<include name="**/jhdf5.so" />
+				<include name="**/*.so" />
 			</fileset>
 			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
 			<zipfileset src="${lib}/commons-io/commons-io.jar" />

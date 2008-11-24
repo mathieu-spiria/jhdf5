@@ -20,8 +20,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
-
 import ch.systemsx.cisd.hdf5.HDF5Reader;
 import ch.systemsx.cisd.hdf5.HDF5Writer;
 
@@ -68,56 +66,45 @@ public class HDF5Archiver
         return strategy;
     }
 
-    public HDF5Archiver archiveAll(File path, boolean addEmptyDirectories, boolean verbose)
-            throws IllegalStateException
+    public HDF5Archiver archiveAll(File path, boolean verbose) throws IllegalStateException
     {
         final File absolutePath = path.getAbsoluteFile();
-        return archive(absolutePath.getParentFile(), absolutePath, addEmptyDirectories, verbose);
+        return archive(absolutePath.getParentFile(), absolutePath, verbose);
     }
 
-    public HDF5Archiver archive(File root, File path, boolean addEmptyDirectories, boolean verbose)
-            throws IllegalStateException
+    public HDF5Archiver archive(File root, File path, boolean verbose) throws IllegalStateException
     {
         if (hdf5WriterOrNull == null)
         {
             throw new IllegalStateException("Cannot archive in read-only mode.");
         }
         HDF5ArchiveTools.archive(hdf5WriterOrNull, strategy, root.getAbsoluteFile(), path
-                .getAbsoluteFile(), addEmptyDirectories, continueOnError, verbose);
+                .getAbsoluteFile(), continueOnError, verbose);
         return this;
     }
 
-    public HDF5Archiver extract(File root, String path, boolean createEmptyDirectories,
-            boolean verbose) throws IllegalStateException
+    public HDF5Archiver extract(File root, String path, boolean verbose)
+            throws IllegalStateException
     {
-        HDF5ArchiveTools.extract(hdf5Reader, strategy, root, path, createEmptyDirectories,
-                continueOnError, verbose);
+        HDF5ArchiveTools.extract(hdf5Reader, strategy, root, path, continueOnError, verbose);
         return this;
     }
 
-    public HDF5Archiver delete(String hdf5ObjectPath, boolean verbose)
+    public HDF5Archiver delete(List<String> hdf5ObjectPaths, boolean verbose)
     {
         if (hdf5WriterOrNull == null)
         {
             // delete() must not be called if we only have a reader.
             throw new IllegalStateException("Cannot delete in read-only mode.");
         }
-        try
-        {
-            hdf5WriterOrNull.delete(hdf5ObjectPath);
-            HDF5ArchiveTools.list(hdf5ObjectPath, verbose);
-        } catch (HDF5Exception ex)
-        {
-            HDF5ArchiveTools.dealWithError(new DeleteFromArchiveException(hdf5ObjectPath, ex),
-                    continueOnError);
-        }
+        HDF5ArchiveTools.delete(hdf5WriterOrNull, hdf5ObjectPaths, continueOnError, verbose);
         return this;
     }
 
-    public List<String> list(boolean addDirectories, boolean verbose)
+    public List<String> list(String dir, boolean recursive, boolean verbose)
     {
         final List<String> result = new ArrayList<String>();
-        HDF5ArchiveTools.addEntries(hdf5Reader, result, "/", verbose, addDirectories);
+        HDF5ArchiveTools.addEntries(hdf5Reader, result, dir, recursive, verbose, continueOnError);
         return result;
     }
 

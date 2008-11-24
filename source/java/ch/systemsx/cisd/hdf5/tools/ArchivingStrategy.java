@@ -150,7 +150,12 @@ public class ArchivingStrategy
         return this;
     }
 
-    public boolean exclude(String path, boolean isDirectory)
+    public boolean doStoreOwnerAndPermissions()
+    {
+        return true;
+    }
+    
+    public boolean doExclude(String path, boolean isDirectory)
     {
         if (isDirectory)
         {
@@ -161,7 +166,7 @@ public class ArchivingStrategy
         }
     }
 
-    public boolean compress(String path)
+    public boolean doCompress(String path)
     {
         if (compressAll)
         {

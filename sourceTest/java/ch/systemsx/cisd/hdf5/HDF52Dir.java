@@ -47,7 +47,7 @@ public class HDF52Dir
         final StopWatch watch = new StopWatch();
         watch.start();
         final HDF5Archiver archiver = new HDF5Archiver(hdf5File, true, false, false);
-        archiver.extract(rootDir, pathInFile, false, true);
+        archiver.extract(rootDir, pathInFile, true);
         archiver.close();
         watch.stop();
         System.out.println("Extracting hdf5 file took " + watch);

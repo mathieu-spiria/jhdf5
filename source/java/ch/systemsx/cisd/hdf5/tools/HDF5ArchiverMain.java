@@ -103,9 +103,9 @@ public class HDF5ArchiverMain
     @Option(name = "r", longName = "root-dir", metaVar = "DIR", usage = "Root directory for archiving / extracting")
     private File rootOrNull;
 
-    @Option(name = "d", longName = "empty-directories", skipForExample = true, usage = "Consider empty directories")
-    private boolean considerEmptyDirectories = false;
-
+    @Option(name = "R", longName = "recursive", usage = "Recursive output")
+    private boolean recursive = false;
+    
     @Option(name = "v", longName = "verbose", usage = "Verbose output")
     private boolean verbose = false;
 
@@ -173,7 +173,8 @@ public class HDF5ArchiverMain
                         + "EXTRACT <archive_file> [<item-to-unarchive> [...]] | "
                         + "DELETE <archive_file> <item-to-delete> [...] | "
                         + "LIST <archive_file>]", ExampleMode.NONE);
-        System.err.println("java -jar jhdf5.jar" + parser.printExample(ExampleMode.ALL) + " ARCHIVE archive.h5 .");
+        System.err.println("java -jar jhdf5.jar" + parser.printExample(ExampleMode.ALL)
+                + " ARCHIVE archive.h5 .");
         System.exit(0);
     }
 
@@ -227,14 +228,13 @@ public class HDF5ArchiverMain
                         for (int i = 2; i < arguments.size(); ++i)
                         {
                             archiver.archive(rootOrNull, new File(rootOrNull, arguments.get(i)),
-                                    considerEmptyDirectories, verbose);
+                                    verbose);
                         }
                     } else
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.archiveAll(new File(arguments.get(i)),
-                                    considerEmptyDirectories, verbose);
+                            archiver.archiveAll(new File(arguments.get(i)), verbose);
                         }
                     }
                     break;
@@ -244,10 +244,10 @@ public class HDF5ArchiverMain
                     {
                         if (rootOrNull != null)
                         {
-                            archiver.extract(rootOrNull, "/", considerEmptyDirectories, verbose);
+                            archiver.extract(rootOrNull, "/", verbose);
                         } else
                         {
-                            archiver.extract(new File("."), "/", considerEmptyDirectories, verbose);
+                            archiver.extract(new File("."), "/", verbose);
                         }
                     } else
                     {
@@ -255,15 +255,13 @@ public class HDF5ArchiverMain
                         {
                             for (int i = 2; i < arguments.size(); ++i)
                             {
-                                archiver.extract(rootOrNull, arguments.get(i),
-                                        considerEmptyDirectories, verbose);
+                                archiver.extract(rootOrNull, arguments.get(i), verbose);
                             }
                         } else
                         {
                             for (int i = 2; i < arguments.size(); ++i)
                             {
-                                archiver.extract(new File("."), arguments.get(i),
-                                        considerEmptyDirectories, verbose);
+                                archiver.extract(new File("."), arguments.get(i), verbose);
                             }
                         }
                     }
@@ -275,14 +273,12 @@ public class HDF5ArchiverMain
                         printHelpAndExit(true);
                     }
                     createArchiver();
-                    for (int i = 2; i < arguments.size(); ++i)
-                    {
-                        archiver.delete(arguments.get(i), verbose);
-                    }
+                    archiver.delete(arguments.subList(2, arguments.size()), verbose);
                     break;
                 case LIST:
                     createArchiver();
-                    for (String s : archiver.list(considerEmptyDirectories, verbose))
+                    final String dir = (arguments.size() > 2) ? arguments.get(2) : "/";
+                    for (String s : archiver.list(dir, recursive, verbose))
                     {
                         System.out.println(s);
                     }
