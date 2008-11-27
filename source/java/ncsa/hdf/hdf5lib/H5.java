@@ -953,13 +953,9 @@ public class H5
     public synchronized static int H5Dextend(final int dataset_id, final long[] size)
             throws HDF5Exception, NullPointerException
     {
-        int rval = -1;
-        HDFArray theArray = new HDFArray(size);
-        byte[] buf = theArray.byteify();
-        rval = H5Dextend(dataset_id, buf);
-        buf = null;
-        theArray = null;
-        return rval;
+        final byte[] buf = HDFNativeData.longToByte(0, size.length, size);
+
+        return H5Dextend(dataset_id, buf);
     }
 
     /**
@@ -979,13 +975,9 @@ public class H5
     public synchronized static int H5Dset_extent(final int dataset_id, final long[] size)
             throws HDF5Exception, NullPointerException
     {
-        int rval = -1;
-        HDFArray theArray = new HDFArray(size);
-        byte[] buf = theArray.byteify();
-        rval = H5Dset_extent(dataset_id, buf);
-        buf = null;
-        theArray = null;
-        return rval;
+        final byte[] buf = HDFNativeData.longToByte(0, size.length, size);
+
+        return H5Dset_extent(dataset_id, buf);
     }
 
     /**
@@ -1590,14 +1582,9 @@ public class H5
             return -1;
         }
 
-        HDFArray theArray = new HDFArray(dim);
-        byte[] thedims = theArray.byteify();
+        final byte[] thedims = HDFNativeData.longToByte(0, dim.length, dim);
 
-        final int retVal = H5Pset_chunk(plist, ndims, thedims);
-
-        thedims = null;
-        theArray = null;
-        return retVal;
+        return H5Pset_chunk(plist, ndims, thedims);
     }
 
     /**
@@ -2368,25 +2355,11 @@ public class H5
             return -1;
         }
 
-        HDFArray theArray = new HDFArray(dims);
-        byte[] thedims = theArray.byteify();
+        final byte[] dimsAsByteArray = HDFNativeData.longToByte(0, dims.length, dims);
+        final byte[] maxDimsAsByteArray =
+                (maxdims != null) ? HDFNativeData.longToByte(0, maxdims.length, maxdims) : null;
 
-        byte[] themaxdims = null;
-        HDFArray theArr = null;
-
-        if (maxdims != null)
-        {
-            theArr = new HDFArray(maxdims);
-            themaxdims = theArr.byteify();
-        }
-
-        final int retVal = H5Screate_simple(rank, thedims, themaxdims);
-
-        thedims = null;
-        themaxdims = null;
-        theArr = null;
-        theArray = null;
-        return retVal;
+        return H5Screate_simple(rank, dimsAsByteArray, maxDimsAsByteArray);
     }
 
     /**
@@ -2544,31 +2517,20 @@ public class H5
             NullPointerException;
 
     public synchronized static int H5Sset_extent_simple(final int space_id, final int rank,
-            final long[] current_size, final long[] maximum_size) throws HDF5Exception,
+            final long[] currentSize, final long[] maxSize) throws HDF5Exception,
             NullPointerException
     {
-        if (current_size == null)
+        if (currentSize == null)
         {
             return -1;
         }
 
-        HDFArray theArray = new HDFArray(current_size);
-        byte[] thecurr = theArray.byteify();
+        final byte[] currentSizeAsByteArray =
+                HDFNativeData.longToByte(0, currentSize.length, currentSize);
+        final byte[] maxSizeAsByteArray =
+                (maxSize != null) ? HDFNativeData.longToByte(0, maxSize.length, maxSize) : null;
 
-        byte[] themax = null;
-        HDFArray theArr = null;
-        if (maximum_size != null)
-        {
-            theArr = new HDFArray(maximum_size);
-            themax = theArr.byteify();
-        }
-        final int retVal = H5Screate_simple(rank, thecurr, themax);
-
-        thecurr = null;
-        themax = null;
-        theArr = null;
-        theArray = null;
-        return retVal;
+        return H5Screate_simple(rank, currentSizeAsByteArray, maxSizeAsByteArray);
     }
 
     /**
@@ -2601,14 +2563,9 @@ public class H5
             return -1;
         }
 
-        HDFArray theArray = new HDFArray(offset);
-        byte[] theArr = theArray.byteify();
+        final byte[] offsetAsByteArray = HDFNativeData.longToByte(0, offset.length, offset);
 
-        final int retVal = H5Soffset_simple(space_id, theArr);
-
-        theArr = null;
-        theArray = null;
-        return retVal;
+        return H5Soffset_simple(space_id, offsetAsByteArray);
     }
 
     /**
@@ -2657,46 +2614,17 @@ public class H5
             final long[] start, final long[] stride, final long[] count, final long[] block)
             throws HDF5Exception, NullPointerException, IllegalArgumentException
     {
-        byte[] thestart = null;
-        if (start != null)
-        {
-            HDFArray theA1 = new HDFArray(start);
-            thestart = theA1.byteify();
-            theA1 = null;
-        }
+        final byte[] startAsByteArray =
+                (start != null) ? HDFNativeData.longToByte(0, start.length, start) : null;
+        final byte[] countAsByteArray =
+                (count != null) ? HDFNativeData.longToByte(0, count.length, count) : null;
+        final byte[] strideAsByteArray =
+                (stride != null) ? HDFNativeData.longToByte(0, stride.length, stride) : null;
+        final byte[] blockAsByteArray =
+                (block != null) ? HDFNativeData.longToByte(0, block.length, block) : null;
 
-        byte[] thecount = null;
-        if (count != null)
-        {
-            HDFArray theA2 = new HDFArray(count);
-            thecount = theA2.byteify();
-            theA2 = null;
-        }
-
-        byte[] thestride = null;
-        if (stride != null)
-        {
-            HDFArray theA3 = new HDFArray(stride);
-            thestride = theA3.byteify();
-            theA3 = null;
-        }
-
-        byte[] theblock = null;
-        if (block != null)
-        {
-            HDFArray theA4 = new HDFArray(block);
-            theblock = theA4.byteify();
-            theA4 = null;
-        }
-
-        final int retVal =
-                H5Sselect_hyperslab(space_id, op, thestart, thestride, thecount, theblock);
-
-        thestart = null;
-        thestride = null;
-        thecount = null;
-        theblock = null;
-        return retVal;
+        return H5Sselect_hyperslab(space_id, op, startAsByteArray, strideAsByteArray,
+                countAsByteArray, blockAsByteArray);
     }
 
     /**
