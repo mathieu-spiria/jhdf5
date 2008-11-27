@@ -17,13 +17,14 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 /**
  * This is a class for handling multidimensional arrays for HDF.
  * <p>
- * The purpose is to allow the storage and retrieval of arbitrary array types containing scientific data.
+ * The purpose is to allow the storage and retrieval of arbitrary array types containing scientific
+ * data.
  * <p>
- * The methods support the conversion of an array to and from Java to a one-dimensional array of bytes suitable for I/O
- * by the C library.
+ * The methods support the conversion of an array to and from Java to a one-dimensional array of
+ * bytes suitable for I/O by the C library.
  * <p>
- * This class heavily uses the <a href="./ncsa.hdf.hdf5lib.HDFNativeData.html">HDFNativeData</a> class to convert
- * between Java and C representations.
+ * This class heavily uses the <a href="./ncsa.hdf.hdf5lib.HDFNativeData.html">HDFNativeData</a>
+ * class to convert between Java and C representations.
  */
 
 public class HDFArray
@@ -38,10 +39,11 @@ public class HDFArray
     // public HDFArray() {}
 
     /**
-     * The input must be a Java Array (possibly multidimensional) of primitive numbers or sub-classes of Number.
+     * The input must be a Java Array (possibly multidimensional) of primitive numbers or
+     * sub-classes of Number.
      * <P>
-     * The input is analysed to determine the number of dimensions and size of each dimension, as well as the type of
-     * the elements.
+     * The input is analysed to determine the number of dimensions and size of each dimension, as
+     * well as the type of the elements.
      * <P>
      * The description is saved in private variables, and used to convert data.
      * 
@@ -74,10 +76,11 @@ public class HDFArray
     }
 
     /**
-     * The input must be a Java Array (possibly multidimensional) of primitive numbers or sub-classes of Number.
+     * The input must be a Java Array (possibly multidimensional) of primitive numbers or
+     * sub-classes of Number.
      * <P>
-     * The input is analysed to determine the number of dimensions and size of each dimension, as well as the type of
-     * the elements.
+     * The input is analysed to determine the number of dimensions and size of each dimension, as
+     * well as the type of the elements.
      * <P>
      * The description is saved in private variables, and used to convert data.
      * 
@@ -105,8 +108,8 @@ public class HDFArray
     /**
      * Allocate a one-dimensional array of bytes sufficient to store the array.
      * 
-     * @return A one-D array of bytes, filled with zeroes. The bytes are sufficient to hold the data of the Array passed
-     *         to the constructor.
+     * @return A one-D array of bytes, filled with zeroes. The bytes are sufficient to hold the data
+     *         of the Array passed to the constructor.
      * @exception ncsa.hdf.hdf5lib.exceptions.HDF5JavaException Allocation failed.
      */
 
@@ -131,11 +134,13 @@ public class HDFArray
     }
 
     /**
-     * Given a Java array of numbers, convert it to a one-dimensional array of bytes in correct native order.
+     * Given a Java array of numbers, convert it to a one-dimensional array of bytes in correct
+     * native order.
      * 
      * @return A one-D array of bytes, constructed from the Array passed to the constructor.
      * @exception ncsa.hdf.hdf5lib.exceptions.HDF5Exception thrown for errors in HDF5
-     * @exception ncsa.hdf.hdf5lib.exceptions.HDF5JavaException the object not an array or other internal error.
+     * @exception ncsa.hdf.hdf5lib.exceptions.HDF5JavaException the object not an array or other
+     *                internal error.
      */
     public byte[] byteify() throws HDF5Exception
     {
@@ -384,7 +389,8 @@ public class HDFArray
         }
         for (i = 0; i < ArrayDescriptor.dims; i++)
         {
-            if (ArrayDescriptor.currentindex[i] != ArrayDescriptor.dimlen[i] - 1)
+            if (ArrayDescriptor.currentindex[i] != ArrayDescriptor.dimlen[i] - 1
+                    && ArrayDescriptor.totalSize > 0)
             {
                 throw new java.lang.InternalError(new String(
                         "Panic didn't complete all data: currentindex[" + i + "] = "
@@ -396,13 +402,14 @@ public class HDFArray
     }
 
     /**
-     * Given a one-dimensional array of bytes representing numbers, convert it to a java array of the shape and size
-     * passed to the constructor.
+     * Given a one-dimensional array of bytes representing numbers, convert it to a java array of
+     * the shape and size passed to the constructor.
      * 
      * @param bytes The bytes to construct the Array.
      * @return An Array (possibly multidimensional) of primitive or number objects.
      * @exception ncsa.hdf.hdf5lib.exceptions.HDF5Exception thrown for errors in HDF5
-     * @exception ncsa.hdf.hdf5lib.exceptions.HDF5JavaException the object not an array or other internal error.
+     * @exception ncsa.hdf.hdf5lib.exceptions.HDF5JavaException the object not an array or other
+     *                internal error.
      */
     public Object arrayify(final byte[] bytes) throws HDF5Exception
     {
@@ -706,7 +713,8 @@ public class HDFArray
         }
         if (ArrayDescriptor.NT != 'B')
         {
-            if (ArrayDescriptor.currentindex[ArrayDescriptor.dims - 1] != ArrayDescriptor.dimlen[ArrayDescriptor.dims - 1])
+            if (ArrayDescriptor.currentindex[ArrayDescriptor.dims - 1] != ArrayDescriptor.dimlen[ArrayDescriptor.dims - 1]
+                    && ArrayDescriptor.totalSize > 0)
             {
                 throw new java.lang.InternalError(new String(
                         "HDFArray::arrayify Panic didn't complete all data: currentindex[" + i
@@ -715,7 +723,8 @@ public class HDFArray
             }
         } else
         {
-            if (ArrayDescriptor.currentindex[ArrayDescriptor.dims - 1] != (ArrayDescriptor.dimlen[ArrayDescriptor.dims - 1] - 1))
+            if (ArrayDescriptor.currentindex[ArrayDescriptor.dims - 1] != (ArrayDescriptor.dimlen[ArrayDescriptor.dims - 1] - 1)
+                    && ArrayDescriptor.totalSize > 0)
             {
                 throw new java.lang.InternalError(new String(
                         "HDFArray::arrayify Panic didn't complete all data: currentindex[" + i
@@ -1101,8 +1110,11 @@ class ArrayDescriptor
         for (i = 1; i <= dims; i++)
         {
             dimlen[i] = java.lang.reflect.Array.getLength(o);
-            o = java.lang.reflect.Array.get(o, 0);
-            objs[i] = o;
+            if (dimlen[i] > 0)
+            {
+                o = java.lang.reflect.Array.get(o, 0);
+                objs[i] = o;
+            }
             dimstart[i] = 0;
             currentindex[i] = 0;
         }
@@ -1130,14 +1142,14 @@ class ArrayDescriptor
         className = "java.lang.String";
         NTsize = maxLength + 1;
         dims = 1;
-        
+
         /* fill in the table */
         dimlen = new int[dims + 1];
         dimlen[0] = 1;
         dimlen[1] = stringArray.length;
         totalSize = dimlen[1] * NTsize;
     }
-    
+
     /**
      * Debug dump
      */

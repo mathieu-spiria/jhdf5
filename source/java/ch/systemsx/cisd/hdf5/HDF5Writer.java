@@ -180,7 +180,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             final File directory = hdf5File.getParentFile();
             if (directory.exists() == false)
             {
-                throw new HDF5JavaException("Directory '" + directory.getPath() + "' does not exist.");
+                throw new HDF5JavaException("Directory '" + directory.getPath()
+                        + "' does not exist.");
             }
             return h5.createFile(path, useLatestFileFormat, fileRegistry);
         }
@@ -3751,7 +3752,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int stringDataTypeId = h5.createDataTypeString(maxLength + 1, registry);
-                    final long[] chunkSize = HDF5Utils.tryGetChunkSizeForString(maxLength, deflate);
+                    final long[] chunkSizeOrNull =
+                            HDF5Utils.tryGetChunkSizeForString(maxLength, deflate);
                     final int dataSetId;
                     if (exists(objectPath))
                     {
@@ -3760,11 +3762,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     {
                         final StorageLayout layout =
                                 determineLayout(stringDataTypeId, HDF5Utils.SCALAR_DIMENSIONS,
-                                        null, (chunkSize != null), false);
+                                        chunkSizeOrNull, false);
                         dataSetId =
-                                h5.createDataSet(fileId, HDF5Utils.SCALAR_DIMENSIONS, chunkSize,
-                                        stringDataTypeId, getDeflateLevel(deflate), objectPath,
-                                        layout, registry);
+                                h5.createDataSet(fileId, HDF5Utils.SCALAR_DIMENSIONS,
+                                        chunkSizeOrNull, stringDataTypeId,
+                                        getDeflateLevel(deflate), objectPath, layout, registry);
                     }
                     h5.writeDataSet(dataSetId, stringDataTypeId, (data + '\0').getBytes());
                     return null; // Nothing to return.
@@ -3864,15 +3866,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         }
                     } else
                     {
-                        final long[] chunkSize =
+                        final long[] chunkSizeOrNull =
                                 HDF5Utils.tryGetChunkSizeForStringVector(data.length, maxLength,
                                         deflate, useExtentableDataTypes);
                         final StorageLayout layout =
-                                determineLayout(stringDataTypeId, dimensions, null,
-                                        useExtentableDataTypes, false);
+                                determineLayout(stringDataTypeId, dimensions, chunkSizeOrNull,
+                                        false);
                         dataSetId =
-                                h5.createDataSet(fileId, dimensions, chunkSize, stringDataTypeId,
-                                        getDeflateLevel(deflate), objectPath, layout, registry);
+                                h5.createDataSet(fileId, dimensions, chunkSizeOrNull,
+                                        stringDataTypeId, getDeflateLevel(deflate), objectPath,
+                                        layout, registry);
                     }
                     h5.writeDataSet(dataSetId, stringDataTypeId, data, maxLength);
                     return null; // Nothing to return.
@@ -4496,7 +4499,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
         final boolean blockWrite = (slabStartOrNull != null);
         final boolean blockWriteInProgress = blockWrite && (dataOrNull != null);
-        final boolean empty = (blockWrite == false) && HDF5Utils.isEmpty(dimensions);
         final int dataSetId;
         final boolean overwriteDataSet = blockWriteInProgress || exists(objectPath);
         if (overwriteDataSet)
@@ -4523,7 +4525,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     createDataSet(objectPath, storageDataTypeId, deflateLevel, dimensions,
                             chunkSizeOrNull, enforceCompactLayout, registry);
         }
-        if (empty == false && dataOrNull != null)
+        if (dataOrNull != null)
         {
             final int memorySpaceId;
             final int dataSpaceId;
@@ -4539,15 +4541,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             }
             h5.writeDataSet(dataSetId, nativeDataTypeId, memorySpaceId, dataSpaceId, dataOrNull);
         }
-        // Handle special case of empty data set since HDF5 does not accept a truly empty data set.
-        if (empty)
-        {
-            addBooleanAttribute(objectPath, HDF5Utils.DATASET_IS_EMPTY_ATTRIBUTE, true);
-        } else if (overwriteDataSet
-                && hasAttribute(objectPath, HDF5Utils.DATASET_IS_EMPTY_ATTRIBUTE))
-        {
-            deleteAttribute(objectPath, HDF5Utils.DATASET_IS_EMPTY_ATTRIBUTE);
-        }
     }
 
     private int createDataSet(final String objectPath, final int storageDataTypeId,
@@ -4556,44 +4549,44 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         final int dataSetId;
         final boolean deflate = (deflateLevel != HDF5.NO_DEFLATION);
-        final long[] chunkSize;
-        if (enforceCompactLayout)
+        final boolean empty = isEmpty(dimensions);
+        final long[] definitiveChunkSizeOrNull;
+        if (empty)
         {
-            chunkSize = null;
+            definitiveChunkSizeOrNull = HDF5Utils.tryGetChunkSize(dimensions, deflate, true);
+        } else if (enforceCompactLayout)
+        {
+            definitiveChunkSizeOrNull = null;
         } else if (chunkSizeOrNull != null)
         {
-            chunkSize = chunkSizeOrNull;
+            definitiveChunkSizeOrNull = chunkSizeOrNull;
         } else
         {
-            chunkSize = HDF5Utils.tryGetChunkSize(dimensions, deflate, useExtentableDataTypes);
+            definitiveChunkSizeOrNull =
+                    HDF5Utils.tryGetChunkSize(dimensions, deflate, useExtentableDataTypes);
         }
         final StorageLayout layout =
-                determineLayout(storageDataTypeId, dimensions, chunkSize, useExtentableDataTypes,
+                determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull,
                         enforceCompactLayout);
         dataSetId =
-                h5.createDataSet(fileId, dimensions, chunkSize, storageDataTypeId, deflateLevel,
-                        objectPath, layout, registry);
+                h5.createDataSet(fileId, dimensions, definitiveChunkSizeOrNull, storageDataTypeId,
+                        deflateLevel, objectPath, layout, registry);
         return dataSetId;
     }
 
     private StorageLayout determineLayout(final int storageDataTypeId, final long[] dimensions,
-            final long[] chunkSizeOrNull, boolean useextentableDataTypesForLayout,
-            boolean enforceCompactLayout)
+            final long[] chunkSizeOrNull, boolean enforceCompactLayout)
     {
-        if (enforceCompactLayout)
-        {
-            return StorageLayout.COMPACT;
-        }
-        if (useextentableDataTypesForLayout)
+        if (chunkSizeOrNull != null)
         {
             return StorageLayout.CHUNKED_EXTENDABLE;
-        } else if (computeSizeForDimensions(storageDataTypeId, dimensions) < COMPACT_LAYOUT_THRESHOLD)
+        }
+        if (enforceCompactLayout
+                || computeSizeForDimensions(storageDataTypeId, dimensions) < COMPACT_LAYOUT_THRESHOLD)
         {
             return StorageLayout.COMPACT;
-        } else
-        {
-            return StorageLayout.CONTIGUOUS;
         }
+        return StorageLayout.CONTIGUOUS;
     }
 
     private int computeSizeForDimensions(int dataTypeId, long[] dimensions)

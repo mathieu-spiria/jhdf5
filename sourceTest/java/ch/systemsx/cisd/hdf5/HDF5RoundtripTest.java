@@ -120,7 +120,10 @@ public class HDF5RoundtripTest
         test.testFloatMatrixLength1();
         test.testOneRowFloatMatrix();
         test.testEmptyVectorDataSets();
+        test.testEmptyVectorDataSetsContiguous();
+        test.testEmptyVectorDataSetsCompact();
         test.testEmptyMatrixDataSets();
+        test.testEmptyMatrixDataSetsContiguous();
         test.testOverwriteVectorIncreaseSize();
         test.testOverwriteMatrixIncreaseSize();
         test.testOverwriteStringVectorDecreaseSize();
@@ -556,7 +559,7 @@ public class HDF5RoundtripTest
         HDF5Writer writer = new HDF5Writer(datasetFile).dontUseExtendableDataTypes().open();
         // Set maxdims such that COMPACT_LAYOUT_THRESHOLD (int bytes!) is exceeded so that we get a
         // contiguous data set.
-        writer.createLongArray(dsName, 128, 0);
+        writer.createLongArray(dsName, 128, 1);
         writer.writeLongArray(dsName, data);
         writer.close();
         HDF5Reader reader = new HDF5Reader(datasetFile).open();
@@ -1115,6 +1118,70 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testEmptyVectorDataSetsContiguous()
+    {
+        final File datasetFile = new File(workingDirectory, "emptyVectorDatasetsContiguous.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).dontUseExtendableDataTypes().open();
+        final String floatDatasetName = "/float";
+        writer.writeFloatArray(floatDatasetName, new float[0]);
+        final String doubleDatasetName = "/double";
+        writer.writeDoubleArray(doubleDatasetName, new double[0]);
+        final String byteDatasetName = "byte";
+        writer.writeByteArray(byteDatasetName, new byte[0]);
+        final String shortDatasetName = "/short";
+        writer.writeShortArray(shortDatasetName, new short[0]);
+        final String intDatasetName = "/int";
+        writer.writeIntArray(intDatasetName, new int[0]);
+        final String longDatasetName = "/long";
+        writer.writeLongArray(longDatasetName, new long[0]);
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        assertEquals(HDF5ObjectType.DATASET, reader.getObjectType(floatDatasetName));
+        assertTrue(reader.readFloatArray(floatDatasetName).length == 0);
+        assertTrue(reader.readDoubleArray(doubleDatasetName).length == 0);
+        assertTrue(reader.readByteArray(byteDatasetName).length == 0);
+        assertTrue(reader.readShortArray(shortDatasetName).length == 0);
+        assertTrue(reader.readIntArray(intDatasetName).length == 0);
+        assertTrue(reader.readLongArray(longDatasetName).length == 0);
+        reader.close();
+    }
+
+    @Test
+    public void testEmptyVectorDataSetsCompact()
+    {
+        final File datasetFile = new File(workingDirectory, "emptyVectorDatasetsCompact.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).open();
+        final String floatDatasetName = "/float";
+        writer.writeFloatArrayCompact(floatDatasetName, new float[0]);
+        final String doubleDatasetName = "/double";
+        writer.writeDoubleArrayCompact(doubleDatasetName, new double[0]);
+        final String byteDatasetName = "byte";
+        writer.writeByteArrayCompact(byteDatasetName, new byte[0]);
+        final String shortDatasetName = "/short";
+        writer.writeShortArrayCompact(shortDatasetName, new short[0]);
+        final String intDatasetName = "/int";
+        writer.writeIntArrayCompact(intDatasetName, new int[0]);
+        final String longDatasetName = "/long";
+        writer.writeLongArrayCompact(longDatasetName, new long[0]);
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        assertEquals(HDF5ObjectType.DATASET, reader.getObjectType(floatDatasetName));
+        assertTrue(reader.readFloatArray(floatDatasetName).length == 0);
+        assertTrue(reader.readDoubleArray(doubleDatasetName).length == 0);
+        assertTrue(reader.readByteArray(byteDatasetName).length == 0);
+        assertTrue(reader.readShortArray(shortDatasetName).length == 0);
+        assertTrue(reader.readIntArray(intDatasetName).length == 0);
+        assertTrue(reader.readLongArray(longDatasetName).length == 0);
+        reader.close();
+    }
+
+    @Test
     public void testEmptyMatrixDataSets()
     {
         final File datasetFile = new File(workingDirectory, "emptyMatrixDatasets.h5");
@@ -1137,6 +1204,39 @@ public class HDF5RoundtripTest
         writer.close();
         final HDF5Reader reader = new HDF5Reader(datasetFile).open();
         assertTrue(isEmpty(reader.readFloatMatrix(floatDatasetName)));
+        assertTrue(isEmpty(reader.readDoubleMatrix(doubleDatasetName)));
+        assertTrue(isEmpty(reader.readByteMatrix(byteDatasetName)));
+        assertTrue(isEmpty(reader.readShortMatrix(shortDatasetName)));
+        assertTrue(isEmpty(reader.readIntMatrix(intDatasetName)));
+        assertTrue(isEmpty(reader.readLongMatrix(longDatasetName)));
+        reader.close();
+    }
+
+    @Test
+    public void testEmptyMatrixDataSetsContiguous()
+    {
+        final File datasetFile = new File(workingDirectory, "emptyMatrixDatasetsContiguous.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).dontUseExtendableDataTypes().open();
+        final String floatDatasetName = "/float";
+        writer.writeFloatMatrix(floatDatasetName, new float[0][0]);
+        final String doubleDatasetName = "/double";
+        writer.writeDoubleMatrix(doubleDatasetName, new double[1][0]);
+        final String byteDatasetName = "byte";
+        writer.writeByteMatrix(byteDatasetName, new byte[2][0]);
+        final String shortDatasetName = "/short";
+        writer.writeShortMatrix(shortDatasetName, new short[3][0]);
+        final String intDatasetName = "/int";
+        writer.writeIntMatrix(intDatasetName, new int[4][0]);
+        final String longDatasetName = "/long";
+        writer.writeLongMatrix(longDatasetName, new long[5][0]);
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        assertTrue(isEmpty(reader.readFloatMatrix(floatDatasetName)));
+        final double[][] emptyDoubleMatrix = reader.readDoubleMatrix(doubleDatasetName);
+        System.out.println(emptyDoubleMatrix.length + "/" + emptyDoubleMatrix[0].length);
         assertTrue(isEmpty(reader.readDoubleMatrix(doubleDatasetName)));
         assertTrue(isEmpty(reader.readByteMatrix(byteDatasetName)));
         assertTrue(isEmpty(reader.readShortMatrix(shortDatasetName)));
@@ -1203,8 +1303,6 @@ public class HDF5RoundtripTest
         final String dsName = "/vector";
         final byte[] emptyVector = new byte[0];
         writer.writeByteArray(dsName, emptyVector);
-        assertTrue(writer.hasAttribute(dsName, HDF5Utils.DATASET_IS_EMPTY_ATTRIBUTE));
-        assertTrue(writer.getBooleanAttribute(dsName, HDF5Utils.DATASET_IS_EMPTY_ATTRIBUTE));
         writer.close();
         writer = new HDF5Writer(datasetFile).open();
         final byte[] nonEmptyVector = new byte[]
@@ -1213,7 +1311,6 @@ public class HDF5RoundtripTest
         writer.close();
         HDF5Reader reader = new HDF5Reader(datasetFile).open();
         final byte[] vectorRead = reader.readByteArray(dsName);
-        assertFalse(reader.hasAttribute(dsName, HDF5Utils.DATASET_IS_EMPTY_ATTRIBUTE));
         reader.close();
         assertTrue(Arrays.equals(nonEmptyVector, vectorRead));
     }
@@ -1361,7 +1458,16 @@ public class HDF5RoundtripTest
 
     private static boolean isEmpty(Object matrix)
     {
-        return Array.getLength(matrix) == 0;
+        Object maybeAnArray = matrix;
+        do
+        {
+            if (Array.getLength(maybeAnArray) == 0)
+            {
+                return true;
+            }
+            maybeAnArray = Array.get(maybeAnArray, 0);
+        } while(maybeAnArray.getClass().isArray());
+        return false;
     }
 
     @Test

@@ -16,8 +16,6 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import java.util.Arrays;
-
 import ch.systemsx.cisd.common.array.MDArray;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
@@ -29,6 +27,8 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  */
 final class HDF5Utils
 {
+
+    private static final int MIN_CHUNK_SIZE = 4;
 
     /** The minimal size of a data set in order to allow for chunking. */
     private static final long MIN_TOTAL_SIZE_FOR_CHUNKING = 128L;
@@ -99,39 +99,6 @@ final class HDF5Utils
     }
 
     /**
-     * If the <var>dimensions</var> are empty, fill it will 1 (which indicates an empty data set in
-     * storage).
-     * <p>
-     * Note: Calling this method has a side-effect on the argument <var>dimensions</var>!
-     * 
-     * @return dimensions.
-     */
-    static long[] mangleEmptyDimensions(long[] dimensions)
-    {
-        if (isEmpty(dimensions))
-        {
-            Arrays.fill(dimensions, 1L);
-        }
-        return dimensions;
-    }
-
-    /**
-     * If all elements of <var>dimensions</var> are 1, the data set might be empty, then check
-     * {@link #DATASET_IS_EMPTY_ATTRIBUTE}.
-     */
-    static boolean mightBeEmptyInStorage(final long[] dimensions)
-    {
-        for (long d : dimensions)
-        {
-            if (d != 1L)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
      * Returns the dimensions for a scalar, or <code>null</code>, if this data set is too small for
      * chunking.
      */
@@ -175,11 +142,7 @@ final class HDF5Utils
     {
         assert dimensions != null;
 
-        if (enforceChunkedDS)
-        {
-            return dimensions;
-        }
-        if (tryChunkedDS == false)
+        if (enforceChunkedDS == false && tryChunkedDS == false)
         {
             return null;
         }
@@ -188,9 +151,9 @@ final class HDF5Utils
         for (int i = 0; i < dimensions.length; ++i)
         {
             totalSize *= dimensions[i];
-            chunkSize[i] = dimensions[i];
+            chunkSize[i] = Math.max(MIN_CHUNK_SIZE, dimensions[i]);
         }
-        if (totalSize < MIN_TOTAL_SIZE_FOR_CHUNKING)
+        if (enforceChunkedDS == false && totalSize < MIN_TOTAL_SIZE_FOR_CHUNKING)
         {
             return null;
         }

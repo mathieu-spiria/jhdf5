@@ -452,11 +452,6 @@ public class HDF5Reader implements HDF5SimpleReader
                             } else
                             {
                                 h5.fillDataDimensions(dataSetId, false, dataSetInfo);
-                                final long[] dataDimensions = dataSetInfo.getDimensions();
-                                if (isEmptyInStorage(dataSetId, dataDimensions))
-                                {
-                                    Arrays.fill(dataDimensions, 0L);
-                                }
                             }
                             return dataSetInfo;
                         }
@@ -3801,12 +3796,6 @@ public class HDF5Reader implements HDF5SimpleReader
         return (Class<T>) value.getClass().getComponentType();
     }
 
-    private boolean isEmptyInStorage(final int objectId, final long[] dimensions)
-    {
-        return (mightBeEmptyInStorage(dimensions))
-                && h5.existsAttribute(objectId, DATASET_IS_EMPTY_ATTRIBUTE);
-    }
-
     /**
      * Class to store the parameters of a data space.
      */
@@ -3925,13 +3914,6 @@ public class HDF5Reader implements HDF5SimpleReader
         final Object data = Array.newInstance(componentType, spaceParams.blockSize);
         h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                 spaceParams.dataSpaceId, data);
-        // Implementation note: The order of calls matters!
-        // Do not try to call isEmpty() before h5.readDataSet() or you will get a BAD_ATOM
-        // exception.
-        if (isEmptyInStorage(dataSetId, spaceParams.dimensions))
-        {
-            return Array.newInstance(componentType, 0);
-        }
         return data;
     }
 
@@ -4003,14 +3985,6 @@ public class HDF5Reader implements HDF5SimpleReader
         }
         final Object data = Array.newInstance(componentType, MDArray.toInt(actualBlockShape));
         h5.readDataSet(dataSetId, nativeDataTypeId, memorySpaceId, dataSpaceId, data);
-        // Implementation note: The order of calls matters!
-        // Do not try to call isEmpty() before h5.readDataSet() or you will get a BAD_ATOM
-        // exception.
-        if (isEmptyInStorage(dataSetId, shape))
-        {
-            return Array.newInstance(componentType, new int[]
-                { 0, 0 });
-        }
         return data;
     }
 
@@ -4080,13 +4054,6 @@ public class HDF5Reader implements HDF5SimpleReader
 
         final Object data = Array.newInstance(componentType, MDArray.getLength(actualBlockShape));
         h5.readDataSet(dataSetId, nativeDataTypeId, memorySpaceId, dataSpaceId, data);
-        // Implementation note: The order of calls matters!
-        // Do not try to call isEmpty() before h5.readDataSet() or you will get a BAD_ATOM
-        // exception.
-        if (isEmptyInStorage(dataSetId, shape))
-        {
-            return Array.newInstance(componentType, 0);
-        }
         return data;
     }
 

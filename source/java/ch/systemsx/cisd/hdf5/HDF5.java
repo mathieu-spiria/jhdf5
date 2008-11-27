@@ -402,10 +402,9 @@ class HDF5
     public int createDataSet(int fileId, long[] dimensions, long[] chunkSizeOrNull, int dataTypeId,
             int deflateLevel, String dataSetName, StorageLayout layout, ICleanUpRegistry registry)
     {
-        final long[] mangledDimensions = HDF5Utils.mangleEmptyDimensions(dimensions);
         final int dataSpaceId =
-                H5Screate_simple(mangledDimensions.length, mangledDimensions, createMaxDimensions(
-                        mangledDimensions, (layout == StorageLayout.CHUNKED_EXTENDABLE)));
+                H5Screate_simple(dimensions.length, dimensions, createMaxDimensions(
+                        dimensions, (layout == StorageLayout.CHUNKED_EXTENDABLE)));
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -553,8 +552,7 @@ class HDF5
         assert dataSetId >= 0;
         assert dimensions != null;
 
-        final long[] mangledDimensions = HDF5Utils.mangleEmptyDimensions(dimensions);
-        H5Dset_extent(dataSetId, mangledDimensions);
+        H5Dset_extent(dataSetId, dimensions);
     }
 
     public void readDataSetNonNumeric(int dataSetId, int nativeDataTypeId, Object data)
