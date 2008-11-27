@@ -396,7 +396,7 @@ class HDF5
 
     enum StorageLayout
     {
-        COMPACT, CONTIGUOUS, CHUNKED, CHUNKED_EXTENDABLE
+        COMPACT, CONTIGUOUS, CHUNKED
     }
 
     public int createDataSet(int fileId, long[] dimensions, long[] chunkSizeOrNull, int dataTypeId,
@@ -404,7 +404,7 @@ class HDF5
     {
         final int dataSpaceId =
                 H5Screate_simple(dimensions.length, dimensions, createMaxDimensions(
-                        dimensions, (layout == StorageLayout.CHUNKED_EXTENDABLE)));
+                        dimensions, (layout == StorageLayout.CHUNKED)));
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -413,8 +413,7 @@ class HDF5
                 }
             });
         final int dataSetCreationPropertyListId;
-        if ((layout == StorageLayout.CHUNKED || layout == StorageLayout.CHUNKED_EXTENDABLE)
-                && chunkSizeOrNull != null)
+        if (layout == StorageLayout.CHUNKED && chunkSizeOrNull != null)
         {
             dataSetCreationPropertyListId = createDataSetCreationPropertyList(registry);
             setChunkedLayout(dataSetCreationPropertyListId, chunkSizeOrNull);
@@ -457,7 +456,7 @@ class HDF5
     }
 
     /**
-     * Returns the layout: COMPACT, CHUNKED, CONTIGUOUS, but never CHUNKED_EXTENDABLE
+     * Returns one of: COMPACT, CHUNKED, CONTIGUOUS.
      */
     public StorageLayout getLayout(int dataSetId, ICleanUpRegistry registry)
     {

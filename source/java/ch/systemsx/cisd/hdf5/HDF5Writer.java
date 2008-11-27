@@ -4579,7 +4579,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         if (chunkSizeOrNull != null)
         {
-            return StorageLayout.CHUNKED_EXTENDABLE;
+            return StorageLayout.CHUNKED;
         }
         if (enforceCompactLayout
                 || computeSizeForDimensions(storageDataTypeId, dimensions) < COMPACT_LAYOUT_THRESHOLD)
