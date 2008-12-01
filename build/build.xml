@@ -8,7 +8,7 @@
 	<property name="test.jar.file" value="${dist}/jhdf5-test.jar" />
 	<property name="lib" value="../libraries" />
 	<property name="nativesrc1" value="${lib}/hdf5/native" />
-	<property name="nativesrc2" value="${lib}/filelink/native" />
+	<property name="nativesrc2" value="${lib}/unix/native" />
 	<property name="nativeroot" value="${targets}/ant" />
 	<property name="native" value="${nativeroot}/native" />
 
@@ -29,7 +29,7 @@
 				<include name="**/jhdf5.so" />
 			</fileset>
 			<fileset dir="${nativesrc2}">
-				<include name="**/jlink.so" />
+				<include name="**/unix.so" />
 			</fileset>
 		</copy>
 		<recursive-jar destfile="${test.jar.file}">
@@ -62,7 +62,7 @@
 				<include name="**/jhdf5.so" />
 			</fileset>
 			<fileset dir="${nativesrc2}">
-				<include name="**/jlink.so" />
+				<include name="**/unix.so" />
 			</fileset>
 		</copy>
 		<recursive-jar destfile="${jar.file}">

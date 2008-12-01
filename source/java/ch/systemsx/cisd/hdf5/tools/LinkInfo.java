@@ -24,9 +24,9 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 
 import ch.systemsx.cisd.common.exceptions.CheckedExceptionTunnel;
-import ch.systemsx.cisd.common.filesystem.FileLinkInfo;
-import ch.systemsx.cisd.common.filesystem.FileLinkType;
-import ch.systemsx.cisd.common.filesystem.FileLinkUtilities;
+import ch.systemsx.cisd.common.os.Unix;
+import ch.systemsx.cisd.common.os.FileLinkType;
+import ch.systemsx.cisd.common.os.Unix.Stat;
 
 /**
  * A class containing all information we need to store about a link.
@@ -77,9 +77,9 @@ public final class LinkInfo implements Serializable, Comparable<LinkInfo>
      */
     public static LinkInfo get(File link, boolean includeOwnerAndPermissions)
     {
-        if (includeOwnerAndPermissions && FileLinkUtilities.isOperational())
+        if (includeOwnerAndPermissions && Unix.isOperational())
         {
-            final FileLinkInfo info = FileLinkUtilities.getLinkInfo(link.getPath(), false);
+            final Stat info = Unix.getLinkInfo(link.getPath(), false);
             return new LinkInfo(link.getName(), info.getLinkType(), info.getSize(), info
                     .getLastModified(), info.getUid(), info.getGid(), info.getPermissions());
         } else
@@ -97,9 +97,9 @@ public final class LinkInfo implements Serializable, Comparable<LinkInfo>
      */
     public static String tryReadLinkTarget(File symbolicLink)
     {
-        if (FileLinkUtilities.isOperational())
+        if (Unix.isOperational())
         {
-            return FileLinkUtilities.tryReadSymbolicLink(symbolicLink.getPath());
+            return Unix.tryReadSymbolicLink(symbolicLink.getPath());
         } else
         {
             return null;

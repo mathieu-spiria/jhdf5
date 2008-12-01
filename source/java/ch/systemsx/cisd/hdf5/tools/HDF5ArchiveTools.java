@@ -34,7 +34,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import ch.systemsx.cisd.common.exceptions.WrappedIOException;
-import ch.systemsx.cisd.common.filesystem.FileLinkType;
+import ch.systemsx.cisd.common.os.FileLinkType;
 import ch.systemsx.cisd.common.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.HDF5ObjectType;
