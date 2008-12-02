@@ -1235,8 +1235,6 @@ public class HDF5RoundtripTest
         writer.close();
         final HDF5Reader reader = new HDF5Reader(datasetFile).open();
         assertTrue(isEmpty(reader.readFloatMatrix(floatDatasetName)));
-        final double[][] emptyDoubleMatrix = reader.readDoubleMatrix(doubleDatasetName);
-        System.out.println(emptyDoubleMatrix.length + "/" + emptyDoubleMatrix[0].length);
         assertTrue(isEmpty(reader.readDoubleMatrix(doubleDatasetName)));
         assertTrue(isEmpty(reader.readByteMatrix(byteDatasetName)));
         assertTrue(isEmpty(reader.readShortMatrix(shortDatasetName)));
