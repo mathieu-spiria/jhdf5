@@ -3403,3 +3403,28 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pcreate_1xfer_1abort_1overflow
     }
     return plist;
 }
+
+H5T_conv_ret_t abort_cb(int except_type, hid_t *src_id, hid_t *dst_id, void *src_buf, void *dst_buf, void *op_data)
+{
+    return H5T_CONV_ABORT;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Pcreate_xfer_abort
+ * Signature: hid_t H5Pcreate_xfer_abort() 
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pcreate_1xfer_1abort
+  (JNIEnv *env, jclass clss)
+{
+    hid_t plist;
+    herr_t status;
+    
+    plist = H5Pcreate(H5P_DATASET_XFER);
+    status = H5Pset_type_conv_cb(plist, (H5T_conv_except_func_t) abort_cb, NULL);
+    if (status < 0)
+    {
+        return status;
+    }
+    return plist;
+}

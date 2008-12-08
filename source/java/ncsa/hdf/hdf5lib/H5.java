@@ -2233,6 +2233,12 @@ public class H5
      */
     public synchronized static native int H5Pcreate_xfer_abort_overflow();
 
+    /**
+     * Returns a dataset transfer property list (<code>H5P_DATASET_XFER</code>) that has a
+     * conversion exception handler set which aborts all conversions.
+     */
+    public synchronized static native int H5Pcreate_xfer_abort();
+
     // ////////////////////////////////////////////////////////////
     // //
     // H5R: Reference Interface Functions //
@@ -3202,7 +3208,7 @@ public class H5
     public synchronized static native int H5Tenum_create(int base_id) throws HDF5LibraryException;
 
     /**
-     * H5Tenum_insert inserts a new enumeration datatype member into an enumeration datatype.
+     * H5Tenum_insert inserts a new enumeration datatype member into an 8bit enumeration datatype.
      * 
      * @param type Identifier of datatype.
      * @param name The name of the member
@@ -3211,16 +3217,48 @@ public class H5
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - name is null.
      */
-    public synchronized static native int H5Tenum_insert(int type, String name, int[] value)
+    public synchronized static native int H5Tenum_insert(int type, String name, byte value)
             throws HDF5LibraryException, NullPointerException;
 
-    public synchronized static int H5Tenum_insert(final int type, final String name, final int value)
-            throws HDF5LibraryException, NullPointerException
-    {
-        final int[] val =
-            { value };
-        return H5Tenum_insert(type, name, val);
-    }
+    /**
+     * H5Tenum_insert inserts a new enumeration datatype member into a 16bit enumeration datatype.
+     * 
+     * @param type Identifier of datatype.
+     * @param name The name of the member
+     * @param value The value of the member, data of the correct type
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - name is null.
+     */
+    public synchronized static native int H5Tenum_insert(int type, String name, short value)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * H5Tenum_insert inserts a new enumeration datatype member into a 32bit enumeration datatype.
+     * 
+     * @param type Identifier of datatype.
+     * @param name The name of the member
+     * @param value The value of the member, data of the correct type
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - name is null.
+     */
+    public synchronized static native int H5Tenum_insert(int type, String name, int value)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * Converts the <var>value</var> (in place) to little endian.
+     * 
+     * @return a non-negative value if successful
+     */
+    public synchronized static native int H5Tconvert_to_little_endian(short[] value);
+
+    /**
+     * Converts the <var>value</var> (in place) to little endian.
+     * 
+     * @return a non-negative value if successful
+     */
+    public synchronized static native int H5Tconvert_to_little_endian(int[] value);
 
     /**
      * H5Tenum_nameof finds the symbol name that corresponds to the specified value of the

@@ -696,7 +696,7 @@ JNIEXPORT jstring JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tget_1member_1name
     char *name;
     jstring str;
 
-    name = H5Tget_member_name(type_id, field_idx);
+    name = H5Tget_member_name(type_id, (unsigned) field_idx);
 
     if (name == NULL) {
         return NULL;
@@ -881,13 +881,12 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tenum_1create
 /*
  * Class:     ncsa_hdf_hdf5lib_H5
  * Method:    H5Tenum_insert
- * Signature: (ILjava/lang/String;[B)I
+ * Signature: (ILjava/lang/String;B)I
  */
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tenum_1insert
-  (JNIEnv *env, jclass clss, jint type, jstring name, jintArray value)
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tenum_1insert__ILjava_lang_String_2B
+  (JNIEnv *env, jclass clss, jint type, jstring name, jbyte value)
 {
     herr_t status;
-    jint *byteP;
     char *nameP;
     jboolean isCopy;
 
@@ -906,39 +905,177 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tenum_1insert
         return -1;
     }
 
-    if ( value == NULL ) {
-#ifdef __cplusplus
-        env->ReleaseStringUTFChars(name,nameP);
-#else
-        (*env)->ReleaseStringUTFChars(env,name,nameP);
-#endif
-        h5nullArgument( env, "H5Tenum_insert:  value is NULL");
-        return -1;
-    }
-
-#ifdef __cplusplus
-    byteP = env->GetIntArrayElements(value,&isCopy);
-#else
-    byteP = (*env)->GetIntArrayElements(env,value,&isCopy);
-#endif
-    if (byteP == NULL) {
-#ifdef __cplusplus
-        env->ReleaseStringUTFChars(name,nameP);
-#else
-        (*env)->ReleaseStringUTFChars(env,name,nameP);
-#endif
-        h5JNIFatalError( env, "H5Tenum_insert:  value not pinned");
-        return -1;
-    }
-
-    status = H5Tenum_insert((hid_t)type, nameP, byteP);
+    status = H5Tenum_insert((hid_t)type, nameP, &value);
 
 #ifdef __cplusplus
     env->ReleaseStringUTFChars(name,nameP);
-    env->ReleaseIntArrayElements(value,byteP,JNI_ABORT);
 #else
     (*env)->ReleaseStringUTFChars(env,name,nameP);
-    (*env)->ReleaseIntArrayElements(env,value,byteP,JNI_ABORT);
+#endif
+
+    if (status < 0) {
+        h5libraryError(env);
+    }
+
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Tenum_insert
+ * Signature: (ILjava/lang/String;S)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tenum_1insert__ILjava_lang_String_2S
+  (JNIEnv *env, jclass clss, jint type, jstring name, jshort value)
+{
+    herr_t status;
+    char *nameP;
+    jboolean isCopy;
+
+    if (name == NULL) {
+        h5nullArgument( env, "H5Tenum_insert:  name is NULL");
+        return -1;
+    }
+
+#ifdef __cplusplus
+    nameP = (char *)env->GetStringUTFChars(name,&isCopy);
+#else
+    nameP = (char *)(*env)->GetStringUTFChars(env,name,&isCopy);
+#endif
+    if (nameP == NULL) {
+        h5JNIFatalError( env, "H5Tenum_insert:  name not pinned");
+        return -1;
+    }
+
+    status = H5Tenum_insert((hid_t)type, nameP, &value);
+
+#ifdef __cplusplus
+    env->ReleaseStringUTFChars(name,nameP);
+#else
+    (*env)->ReleaseStringUTFChars(env,name,nameP);
+#endif
+
+    if (status < 0) {
+        h5libraryError(env);
+    }
+
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Tenum_insert
+ * Signature: (ILjava/lang/String;I)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tenum_1insert__ILjava_lang_String_2I
+  (JNIEnv *env, jclass clss, jint type, jstring name, jint value)
+{
+    herr_t status;
+    char *nameP;
+    jboolean isCopy;
+
+    if (name == NULL) {
+        h5nullArgument( env, "H5Tenum_insert:  name is NULL");
+        return -1;
+    }
+
+#ifdef __cplusplus
+    nameP = (char *)env->GetStringUTFChars(name,&isCopy);
+#else
+    nameP = (char *)(*env)->GetStringUTFChars(env,name,&isCopy);
+#endif
+    if (nameP == NULL) {
+        h5JNIFatalError( env, "H5Tenum_insert:  name not pinned");
+        return -1;
+    }
+
+    status = H5Tenum_insert((hid_t)type, nameP, &value);
+
+#ifdef __cplusplus
+    env->ReleaseStringUTFChars(name,nameP);
+#else
+    (*env)->ReleaseStringUTFChars(env,name,nameP);
+#endif
+
+    if (status < 0) {
+        h5libraryError(env);
+    }
+
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Tconvert_to_little_endian
+ * Signature: ([S)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tconvert_1to_1little_1endian___3S
+  (JNIEnv *env, jclass clss, jshortArray value)
+{
+    jshort *byteP;
+    jboolean isCopy;
+    size_t nelem;
+    herr_t status;
+    int i;
+
+#ifdef __cplusplus
+    nelem = env->GetArrayLength(value);
+    byteP = env->GetShortArrayElements(value,&isCopy);
+#else
+    nelem = (*env)->GetArrayLength(env, value);
+    byteP = (*env)->GetShortArrayElements(env,value,&isCopy);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env, "H5Tconvert_to_little_endian:  value not pinned");
+        return -1;
+    }
+
+    status = H5Tconvert(H5T_NATIVE_INT16, H5T_STD_I16LE, nelem, byteP, NULL, H5P_DEFAULT);
+
+#ifdef __cplusplus
+    env->ReleaseShortArrayElements(value,byteP,JNI_COMMIT);
+#else
+    (*env)->ReleaseShortArrayElements(env,value,byteP,JNI_COMMIT);
+#endif
+
+    if (status < 0) {
+        h5libraryError(env);
+    }
+
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Tconvert_to_little_endian
+ * Signature: ([I)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tconvert_1to_1little_1endian___3I
+  (JNIEnv *env, jclass clss, jintArray value)
+{
+    jint *byteP;
+    jboolean isCopy;
+    size_t nelem;
+    herr_t status;
+
+#ifdef __cplusplus
+    nelem = env->GetArrayLength(value);
+    byteP = env->GetIntArrayElements(value,&isCopy);
+#else
+    nelem = (*env)->GetArrayLength(env, value);
+    byteP = (*env)->GetIntArrayElements(env,value,&isCopy);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env, "H5Tconvert_to_little_endian:  value not pinned");
+        return -1;
+    }
+
+    status = H5Tconvert(H5T_NATIVE_INT32, H5T_STD_I32LE, nelem, byteP, NULL, H5P_DEFAULT);
+
+#ifdef __cplusplus
+    env->ReleaseIntArrayElements(value,byteP,JNI_COMMIT);
+#else
+    (*env)->ReleaseIntArrayElements(env,value,byteP,JNI_COMMIT);
 #endif
 
     if (status < 0) {

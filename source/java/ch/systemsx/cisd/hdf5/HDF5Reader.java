@@ -43,6 +43,7 @@ import ch.systemsx.cisd.common.process.CleanUpCallable;
 import ch.systemsx.cisd.common.process.CleanUpRegistry;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
+import ch.systemsx.cisd.common.utilities.OSUtilities;
 
 /**
  * A class for reading HDF5 files (HDF5 1.8.x and older).
@@ -67,9 +68,13 @@ import ch.systemsx.cisd.common.process.ICleanUpRegistry;
  */
 public class HDF5Reader implements HDF5SimpleReader
 {
-    protected final File hdf5File;
+    /** State that this reader / writer is currently in. */
+    protected enum State
+    {
+        CONFIG, OPEN, CLOSED
+    }
 
-    protected final HDF5 h5;
+    protected final File hdf5File;
 
     protected final CleanUpCallable runner;
 
@@ -78,19 +83,26 @@ public class HDF5Reader implements HDF5SimpleReader
     /** Map from named data types to ids. */
     private final Map<String, Integer> namedDataTypeMap;
 
+    protected HDF5 h5;
+
     protected int fileId;
 
     protected int booleanDataTypeId;
 
     protected int typeVariantDataTypeId;
 
-    private boolean closed;
+    private boolean performNumericConversions;
+
+    protected State state;
 
     protected void checkOpen() throws HDF5JavaException
     {
-        if (closed)
+        if (state != State.OPEN)
         {
-            throw new HDF5JavaException("HDF5 file '" + hdf5File.getPath() + "' is closed.");
+            final String msg =
+                    "HDF5 file '" + hdf5File.getPath() + "' is "
+                            + (state == State.CLOSED ? "closed." : "not opened yet.");
+            throw new HDF5JavaException(msg);
         }
     }
 
@@ -105,7 +117,6 @@ public class HDF5Reader implements HDF5SimpleReader
 
         this.runner = new CleanUpCallable();
         this.fileRegistry = new CleanUpRegistry();
-        this.h5 = new HDF5(fileRegistry);
         this.namedDataTypeMap = new HashMap<String, Integer>();
         this.hdf5File = hdf5File.getAbsoluteFile();
     }
@@ -123,6 +134,33 @@ public class HDF5Reader implements HDF5SimpleReader
     // /////////////////////
 
     /**
+     * Will try to perform numeric conversions where appropriate if supported by the platform.
+     * <p>
+     * <strong>Numeric conversions can be platform dependent and are not available on all platforms.
+     * Be advised not to rely on numeric conversions if you can help it!</strong>
+     */
+    public HDF5Reader performNumericConversions()
+    {
+        // On HDF5 1.8.2, numeric conversions on sparcv9 can get us SEGFAULTS for converting between
+        // integers and floats.
+        if (OSUtilities.getCPUArchitecture().startsWith("sparc"))
+        {
+            return this;
+        }
+        this.performNumericConversions = true;
+        return this;
+    }
+
+    /**
+     * Returns <code>true</code>, if the latest file format will be used and <code>false</code>, if
+     * a file format with maximum compatibility will be used.
+     */
+    public boolean isPerformNumericConversions()
+    {
+        return performNumericConversions;
+    }
+
+    /**
      * Opens the HDF5 file for reading. Do not try to call any read method before calling this
      * method.
      */
@@ -133,10 +171,12 @@ public class HDF5Reader implements HDF5SimpleReader
         {
             throw new IllegalArgumentException("The file " + path + " does not exit.");
         }
-        this.fileId = h5.openFileReadOnly(path, fileRegistry);
+        h5 = new HDF5(fileRegistry, performNumericConversions);
+        fileId = h5.openFileReadOnly(path, fileRegistry);
+        state = State.OPEN;
         readNamedDataTypes();
-        this.booleanDataTypeId = openOrCreateBooleanDataType();
-        this.typeVariantDataTypeId = openOrCreateTypeVariantDataType();
+        booleanDataTypeId = openOrCreateBooleanDataType();
+        typeVariantDataTypeId = openOrCreateTypeVariantDataType();
 
         return this;
     }
@@ -191,7 +231,7 @@ public class HDF5Reader implements HDF5SimpleReader
     public void close()
     {
         fileRegistry.cleanUp(false);
-        closed = true;
+        state = State.CLOSED;
     }
 
     // /////////////////////
@@ -898,12 +938,12 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int objectId = h5.openObject(fileId, objectPath, registry);
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
-                    final int nativeDataTypeId =
-                            h5.getNativeDataTypeForAttribute(attributeId, registry);
+                    final int storageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+                    final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
                     int[] data = new int[1];
                     h5.readAttribute(attributeId, nativeDataTypeId, data);
                     final String value =
-                            h5.getNameForEnumOrCompoundMemberIndex(nativeDataTypeId, data[0]);
+                            h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId, data[0]);
                     if (value == null)
                     {
                         throw new HDF5JavaException("Attribute " + attributeName + " of path "
@@ -986,9 +1026,30 @@ public class HDF5Reader implements HDF5SimpleReader
                                     h5.openAttribute(objectId, attributeName, registry);
                             final HDF5EnumerationType enumType =
                                     getEnumTypeForAttributeId(attributeId);
-                            final int[] data = new int[1];
-                            h5.readAttribute(attributeId, enumType.getStorageTypeId(), data);
-                            return new HDF5EnumerationValue(enumType, data[0]);
+                            switch (enumType.getStorageSize())
+                            {
+                                case 1:
+                                {
+                                    final byte[] data = new byte[1];
+                                    h5.readAttribute(attributeId, enumType.getNativeTypeId(), data);
+                                    return new HDF5EnumerationValue(enumType, data[0]);
+                                }
+                                case 2:
+                                {
+                                    final short[] data = new short[1];
+                                    h5.readAttribute(attributeId, enumType.getNativeTypeId(), data);
+                                    return new HDF5EnumerationValue(enumType, data[0]);
+                                }
+                                case 4:
+                                {
+                                    final int[] data = new int[1];
+                                    h5.readAttribute(attributeId, enumType.getNativeTypeId(), data);
+                                    return new HDF5EnumerationValue(enumType, data[0]);
+                                }
+                                default:
+                                    throw new HDF5JavaException("Illegal storage size for enum ("
+                                            + enumType.getStorageSize() + ")");
+                            }
                         }
                     };
 
@@ -3148,8 +3209,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 public String call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
-                    final int nativeDataTypeId =
-                            h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    final int storageDataTypeId = h5.getDataTypeForDataSet(dataSetId, registry);
+                    final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
                     final int size = h5.getSize(nativeDataTypeId);
                     final String value;
                     switch (size)
@@ -3159,7 +3220,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             final byte[] data = new byte[1];
                             h5.readDataSet(dataSetId, nativeDataTypeId, data);
                             value =
-                                    h5.getNameForEnumOrCompoundMemberIndex(nativeDataTypeId,
+                                    h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
                                             data[0]);
                             break;
                         }
@@ -3168,7 +3229,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             final short[] data = new short[1];
                             h5.readDataSet(dataSetId, nativeDataTypeId, data);
                             value =
-                                    h5.getNameForEnumOrCompoundMemberIndex(nativeDataTypeId,
+                                    h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
                                             data[0]);
                             break;
                         }
@@ -3177,7 +3238,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int[] data = new int[1];
                             h5.readDataSet(dataSetId, nativeDataTypeId, data);
                             value =
-                                    h5.getNameForEnumOrCompoundMemberIndex(nativeDataTypeId,
+                                    h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
                                             data[0]);
                             break;
                         }
@@ -3214,9 +3275,7 @@ public class HDF5Reader implements HDF5SimpleReader
                         {
                             final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
                             final HDF5EnumerationType enumType = getEnumTypeForDataSetId(dataSetId);
-                            final int[] data = new int[1];
-                            h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
-                            return new HDF5EnumerationValue(enumType, data[0]);
+                            return readEnumValue(dataSetId, enumType);
                         }
                     };
 
@@ -3247,14 +3306,41 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
-                            final int[] data = new int[1];
                             final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
-                            h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
-                            return new HDF5EnumerationValue(enumType, data[0]);
+                            return readEnumValue(dataSetId, enumType);
                         }
                     };
 
         return runner.call(readRunnable);
+    }
+
+    private HDF5EnumerationValue readEnumValue(final int dataSetId,
+            final HDF5EnumerationType enumType)
+    {
+        switch (enumType.getStorageSize())
+        {
+            case 1:
+            {
+                final byte[] data = new byte[1];
+                h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
+                return new HDF5EnumerationValue(enumType, data[0]);
+            }
+            case 2:
+            {
+                final short[] data = new short[1];
+                h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
+                return new HDF5EnumerationValue(enumType, data[0]);
+            }
+            case 4:
+            {
+                final int[] data = new int[1];
+                h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
+                return new HDF5EnumerationValue(enumType, data[0]);
+            }
+            default:
+                throw new HDF5JavaException("Illegal storage size for enum ("
+                        + enumType.getStorageSize() + ")");
+        }
     }
 
     /**
@@ -3324,8 +3410,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
                     final long[] dimensions = h5.getDataDimensions(dataSetId);
                     final int vectorLength = getOneDimensionalArraySize(dimensions);
-                    final int nativeDataTypeId =
-                            h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    final int storageDataTypeId = h5.getDataTypeForDataSet(dataSetId, registry);
+                    final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
                     final boolean isEnum = (h5.getClassType(nativeDataTypeId) == H5T_ENUM);
                     if (isEnum == false)
                     {
@@ -3343,7 +3429,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             for (int i = 0; i < data.length; ++i)
                             {
                                 value[i] =
-                                        h5.getNameForEnumOrCompoundMemberIndex(nativeDataTypeId,
+                                        h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
                                                 data[i]);
                             }
                             break;
@@ -3355,7 +3441,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             for (int i = 0; i < data.length; ++i)
                             {
                                 value[i] =
-                                        h5.getNameForEnumOrCompoundMemberIndex(nativeDataTypeId,
+                                        h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
                                                 data[i]);
                             }
                             break;
@@ -3367,7 +3453,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             for (int i = 0; i < data.length; ++i)
                             {
                                 value[i] =
-                                        h5.getNameForEnumOrCompoundMemberIndex(nativeDataTypeId,
+                                        h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
                                                 data[i]);
                             }
                             break;

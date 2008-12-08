@@ -157,15 +157,29 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         return useLatestFileFormat;
     }
 
+    /**
+     * Will try to perform numeric conversions where appropriate if supported by the platform.
+     * <p>
+     * <strong>Numeric conversions can be platform dependent and are not available on all platforms.
+     * Be advised not to rely on numeric conversions if you can help it!</strong>
+     */
+    @Override
+    public HDF5Writer performNumericConversions()
+    {
+        return (HDF5Writer) super.performNumericConversions();
+    }
+
     @Override
     public HDF5Writer open()
     {
         final String path = hdf5File.getAbsolutePath();
-        this.fileId = openOrCreateFile(path);
+        h5 = new HDF5(fileRegistry, true);
+        fileId = openOrCreateFile(path);
+        state = State.OPEN;
         readNamedDataTypes();
-        this.booleanDataTypeId = openOrCreateBooleanDataType();
-        this.typeVariantDataTypeId = openOrCreateTypeVariantDataType();
-        this.variableLengthStringDataTypeId = openOrCreateVLStringType();
+        booleanDataTypeId = openOrCreateBooleanDataType();
+        typeVariantDataTypeId = openOrCreateTypeVariantDataType();
+        variableLengthStringDataTypeId = openOrCreateVLStringType();
 
         return this;
     }
@@ -503,8 +517,9 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
         checkOpen();
         value.getType().check(fileId);
+        final int storageDataTypeId = value.getType().getStorageTypeId();
         final int nativeDataTypeId = value.getType().getNativeTypeId();
-        addAttribute(objectPath, name, nativeDataTypeId, value.toStorageForm());
+        addAttribute(objectPath, name, storageDataTypeId, nativeDataTypeId, value.toStorageForm());
     }
 
     /**
@@ -514,8 +529,9 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             final HDF5DataTypeVariant typeVariant)
     {
         checkOpen();
-        addAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE, typeVariantDataTypeId, new int[]
-            { typeVariant.ordinal() });
+        addAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE, typeVariantDataTypeId,
+                typeVariantDataTypeId, new int[]
+                    { typeVariant.ordinal() });
     }
 
     /**
@@ -590,7 +606,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void addBooleanAttribute(final String objectPath, final String name, final boolean value)
     {
         checkOpen();
-        addAttribute(objectPath, name, getDataTypeId(BOOLEAN_DATA_TYPE), new byte[]
+        addAttribute(objectPath, name, booleanDataTypeId, booleanDataTypeId, new byte[]
             { (byte) (value ? 1 : 0) });
     }
 
@@ -607,7 +623,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void addIntAttribute(final String objectPath, final String name, final int value)
     {
         checkOpen();
-        addAttribute(objectPath, name, H5T_STD_I32LE, HDFNativeData.intToByte(value));
+        addAttribute(objectPath, name, H5T_STD_I32LE, H5T_NATIVE_INT32, HDFNativeData
+                .intToByte(value));
     }
 
     /**
@@ -623,7 +640,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void addLongAttribute(final String objectPath, final String name, final long value)
     {
         checkOpen();
-        addAttribute(objectPath, name, H5T_STD_I64LE, HDFNativeData.longToByte(value));
+        addAttribute(objectPath, name, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData
+                .longToByte(value));
     }
 
     /**
@@ -639,7 +657,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void addFloatAttribute(final String objectPath, final String name, final float value)
     {
         checkOpen();
-        addAttribute(objectPath, name, H5T_IEEE_F32LE, HDFNativeData.floatToByte(value));
+        addAttribute(objectPath, name, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDFNativeData
+                .floatToByte(value));
     }
 
     /**
@@ -655,14 +674,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void addDoubleAttribute(final String objectPath, final String name, final double value)
     {
         checkOpen();
-        addAttribute(objectPath, name, H5T_IEEE_F64LE, HDFNativeData.doubleToByte(value));
+        addAttribute(objectPath, name, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDFNativeData
+                .doubleToByte(value));
     }
 
     private void addAttribute(final String objectPath, final String name,
-            final int nativeDataTypeId, final Object value)
+            final int storageDataTypeId, final int nativeDataTypeId, final Object value)
     {
         assert objectPath != null;
         assert name != null;
+        assert storageDataTypeId >= 0;
         assert nativeDataTypeId >= 0;
         assert value != null;
 
@@ -679,7 +700,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                             } else
                             {
                                 attributeId =
-                                        h5.createAttribute(objectId, name, nativeDataTypeId,
+                                        h5.createAttribute(objectId, name, storageDataTypeId,
                                                 registry);
                             }
                             h5.writeAttribute(attributeId, nativeDataTypeId, value);
@@ -706,9 +727,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeBoolean(final String objectPath, final boolean value)
     {
         checkOpen();
-        final int dataTypeId = getDataTypeId(BOOLEAN_DATA_TYPE);
-        writeScalar(objectPath, dataTypeId, dataTypeId, HDFNativeData.byteToByte((byte) (value ? 1
-                : 0)));
+        writeScalar(objectPath, booleanDataTypeId, booleanDataTypeId, HDFNativeData
+                .byteToByte((byte) (value ? 1 : 0)));
     }
 
     /**

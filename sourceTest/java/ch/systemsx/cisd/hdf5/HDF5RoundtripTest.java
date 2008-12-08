@@ -2157,7 +2157,7 @@ public class HDF5RoundtripTest
         final String[] enumValues = new String[1024];
         for (int i = 0; i < enumValues.length; ++i)
         {
-            enumValues[i] = "" + i;
+            enumValues[i] = Integer.toString(i);
         }
         final HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, enumValues, false);
         return enumType;
@@ -2543,6 +2543,11 @@ public class HDF5RoundtripTest
     @Test
     public void testConfusedCompound()
     {
+        // Sparc tries conversion which doesn't work reliably on this platform and may even SEGFAULT
+        if (OSUtilities.getComputerPlatform().startsWith("sparc"))
+        {
+            return;
+        }
         final File file = new File(workingDirectory, "confusedCompound.h5");
         file.delete();
         assertFalse(file.exists());
@@ -2579,7 +2584,13 @@ public class HDF5RoundtripTest
         writer.writeLong("smallInteger", 17L);
         writer.writeLong("largeInteger", Long.MAX_VALUE);
         writer.close();
-        final HDF5Reader reader = new HDF5Reader(file).open();
+        final HDF5Reader reader = new HDF5Reader(file).performNumericConversions();
+        // If this platform doesn't support numeric conversions, the test would fail.
+        if (reader.isPerformNumericConversions() == false)
+        {
+            return;
+        }
+        reader.open();
         assertEquals(3.14159, reader.readDouble("pi"), 1e-5);
         assertEquals(3, reader.readInt("pi"));
         assertEquals(1e-5f, reader.getFloatAttribute("pi", "eps"), 1e-9);

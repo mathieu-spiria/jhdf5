@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import ncsa.hdf.hdf5lib.H5;
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
@@ -45,18 +46,25 @@ class HDF5
 
     private final int dataSetCreationPropertyListCompactStorageLayout;
 
-    private final int abortOverflowXferPropertyListID;
+    private final int numericConversionXferPropertyListID;
 
     private final int lcplCreateIntermediateGroups;
 
-    public HDF5(final CleanUpRegistry fileRegistry)
+    public HDF5(final CleanUpRegistry fileRegistry, final boolean performNumericConversions)
     {
         this.runner = new CleanUpCallable();
         this.dataSetCreationPropertyListCompactStorageLayout =
                 createDataSetCreationPropertyList(fileRegistry);
         H5Pset_layout(dataSetCreationPropertyListCompactStorageLayout, H5D_COMPACT);
-        this.abortOverflowXferPropertyListID =
-                createDataSetXferPropertyListAbortOverflow(fileRegistry);
+        if (performNumericConversions)
+        {
+            this.numericConversionXferPropertyListID =
+                    createDataSetXferPropertyListAbortOverflow(fileRegistry);
+        } else
+        {
+            this.numericConversionXferPropertyListID =
+                createDataSetXferPropertyListAbort(fileRegistry);
+        }
         this.lcplCreateIntermediateGroups = createLinkCreationPropertyList(true, fileRegistry);
 
     }
@@ -403,8 +411,8 @@ class HDF5
             int deflateLevel, String dataSetName, StorageLayout layout, ICleanUpRegistry registry)
     {
         final int dataSpaceId =
-                H5Screate_simple(dimensions.length, dimensions, createMaxDimensions(
-                        dimensions, (layout == StorageLayout.CHUNKED)));
+                H5Screate_simple(dimensions.length, dimensions, createMaxDimensions(dimensions,
+                        (layout == StorageLayout.CHUNKED)));
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -561,18 +569,19 @@ class HDF5
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, Object data)
     {
-        readDataSet(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, abortOverflowXferPropertyListID, data);
-    }
-
-    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId, int fileSpaceId,
-            Object data)
-    {
-        H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId, abortOverflowXferPropertyListID,
+        readDataSet(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
                 data);
     }
 
-    private void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId, int fileSpaceId,
-            int xferPlistId, Object data)
+    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
+            int fileSpaceId, Object data)
+    {
+        H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+                numericConversionXferPropertyListID, data);
+    }
+
+    private void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
+            int fileSpaceId, int xferPlistId, Object data)
     {
         H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId, xferPlistId, data);
     }
@@ -707,7 +716,7 @@ class HDF5
             });
         return copiedDataTypeId;
     }
-    
+
     public int createDataTypeVariableString(ICleanUpRegistry registry)
     {
         final int dataTypeId = createDataTypeStringVariableLength();
@@ -750,11 +759,31 @@ class HDF5
         return dataTypeId;
     }
 
-    public int createDataTypeEnum(String[] values, ICleanUpRegistry registry)
+    private enum EnumSize
     {
-        final int baseDataTypeId =
-                (values.length < Byte.MAX_VALUE) ? H5T_STD_I8LE
-                        : (values.length < Short.MAX_VALUE) ? H5T_STD_I16LE : H5T_STD_I32LE;
+        BYTE8, SHORT16, INT32
+    }
+
+    public int createDataTypeEnum(String[] names, ICleanUpRegistry registry)
+    {
+        final EnumSize size =
+                (names.length < Byte.MAX_VALUE) ? EnumSize.BYTE8
+                        : (names.length < Short.MAX_VALUE) ? EnumSize.SHORT16 : EnumSize.INT32;
+        final int baseDataTypeId;
+        switch (size)
+        {
+            case BYTE8:
+                baseDataTypeId = H5T_STD_I8LE;
+                break;
+            case SHORT16:
+                baseDataTypeId = H5T_STD_I16LE;
+                break;
+            case INT32:
+                baseDataTypeId = H5T_STD_I32LE;
+                break;
+            default:
+                throw new InternalError();
+        }
         final int dataTypeId = H5Tenum_create(baseDataTypeId);
         registry.registerCleanUp(new Runnable()
             {
@@ -763,11 +792,72 @@ class HDF5
                     H5Tclose(dataTypeId);
                 }
             });
-        for (int i = 0; i < values.length; ++i)
+        switch (size)
         {
-            insertMemberEnum(dataTypeId, values[i], i);
+            case BYTE8:
+                for (byte i = 0; i < names.length; ++i)
+                {
+                    insertMemberEnum(dataTypeId, names[i], i);
+                }
+                break;
+            case SHORT16:
+            {
+                final short[] values = getLittleEndianSuccessiveShortValues(names);
+                for (short i = 0; i < names.length; ++i)
+                {
+                    insertMemberEnum(dataTypeId, names[i], values[i]);
+                }
+                break;
+            }
+            case INT32:
+            {
+                final int[] values = getLittleEndianSuccessiveIntValues(names);
+                for (int i = 0; i < names.length; ++i)
+                {
+                    insertMemberEnum(dataTypeId, names[i], values[i]);
+                }
+                break;
+            }
         }
         return dataTypeId;
+    }
+
+    private short[] getLittleEndianSuccessiveShortValues(String[] names)
+    {
+        final short[] values = new short[names.length];
+        for (short i = 0; i < names.length; ++i)
+        {
+            values[i] = i;
+        }
+        H5.H5Tconvert_to_little_endian(values);
+        return values;
+    }
+
+    private int[] getLittleEndianSuccessiveIntValues(String[] names)
+    {
+        final int[] values = new int[names.length];
+        for (short i = 0; i < names.length; ++i)
+        {
+            values[i] = i;
+        }
+        H5.H5Tconvert_to_little_endian(values);
+        return values;
+    }
+
+    private void insertMemberEnum(int dataTypeId, String name, byte value)
+    {
+        assert dataTypeId >= 0;
+        assert name != null;
+
+        H5Tenum_insert(dataTypeId, name, value);
+    }
+
+    private void insertMemberEnum(int dataTypeId, String name, short value)
+    {
+        assert dataTypeId >= 0;
+        assert name != null;
+
+        H5Tenum_insert(dataTypeId, name, value);
     }
 
     private void insertMemberEnum(int dataTypeId, String name, int value)
@@ -775,8 +865,7 @@ class HDF5
         assert dataTypeId >= 0;
         assert name != null;
 
-        H5Tenum_insert(dataTypeId, name, new int[]
-            { value });
+        H5Tenum_insert(dataTypeId, name, value);
     }
 
     /** Returns the number of members of an enum type or a compound type. */
@@ -1171,7 +1260,7 @@ class HDF5
     // Properties
     //
 
-    public int createLinkCreationPropertyList(boolean createIntermediateGroups,
+    private int createLinkCreationPropertyList(boolean createIntermediateGroups,
             ICleanUpRegistry registry)
     {
         final int linkCreationPropertyList = H5Pcreate(H5P_LINK_CREATE);
@@ -1189,9 +1278,22 @@ class HDF5
         return linkCreationPropertyList;
     }
 
-    public int createDataSetXferPropertyListAbortOverflow(ICleanUpRegistry registry)
+    private int createDataSetXferPropertyListAbortOverflow(ICleanUpRegistry registry)
     {
         final int datasetXferPropertyList = H5Pcreate_xfer_abort_overflow();
+        registry.registerCleanUp(new Runnable()
+            {
+                public void run()
+                {
+                    H5Pclose(datasetXferPropertyList);
+                }
+            });
+        return datasetXferPropertyList;
+    }
+
+    private int createDataSetXferPropertyListAbort(ICleanUpRegistry registry)
+    {
+        final int datasetXferPropertyList = H5Pcreate_xfer_abort();
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
