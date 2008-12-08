@@ -126,7 +126,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
             return 2;
         } else
         {
-            return 2;
+            return 4;
         }
     }
 
