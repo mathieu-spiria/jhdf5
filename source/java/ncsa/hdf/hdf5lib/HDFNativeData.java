@@ -61,9 +61,6 @@ public class HDFNativeData
      * @param data The input array of bytes
      * @return an array of long
      */
-    /*
-     * does this really work? C 'long' is 32 bits, Java 'long' is 64-bits. What does this routine actually do?
-     */
     public synchronized static native long[] byteToLong(byte[] data);
 
     /**
