@@ -928,14 +928,26 @@ public class H5
             final String[] obj, final int maxLength) throws HDF5Exception, HDF5LibraryException,
             NullPointerException
     {
-        final HDFArray theArray = new HDFArray(obj, maxLength);
-        final byte[] buf = theArray.byteify();
+        final byte[] buf = stringArrayToByteArray(obj, maxLength + 1);
 
         /* will raise exception on error */
         final int status =
                 H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf);
 
         return status;
+    }
+
+    private static byte[] stringArrayToByteArray(final String[] in, final int maxLength)
+    {
+        final int nelems = in.length;
+        final byte[] out = new byte[nelems * maxLength];
+
+        for (int i = 0; i < nelems; i++)
+        {
+            final byte[] bytes = (in[i] + '\0').getBytes();
+            System.arraycopy(bytes, 0, out, i * maxLength, bytes.length);
+        }
+        return out;
     }
 
     /**
