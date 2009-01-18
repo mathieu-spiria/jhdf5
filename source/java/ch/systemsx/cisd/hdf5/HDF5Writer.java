@@ -1444,6 +1444,35 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @param offsetX The x offset in the data set to start writing to.
+     * @param offsetY The y offset in the data set to start writing to.
+     */
+    public void writeByteMatrixBlockWithOffset(final String objectPath, final byte[][] data,
+            final long offsetX, final long offsetY)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        writeByteMDArrayBlockWithOffset(objectPath, new MDByteArray(data, new int[]
+            { data.length, data[0].length }), new long[]
+            { offsetX, offsetY });
+    }
+
+    /**
+     * Writes out a block of a <code>byte</code> matrix (array of rank 2). The data set needs to
+     * have been created by {@link #createByteMatrix(String, long, long, int, int, boolean)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #writeByteMatrixBlock(String, byte[][], long, long)} if the
+     * total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #createByteMatrix(String, long, long, int, int, boolean)} call that was used to create
+     * the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
      * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
      *            <code><= data.length</code> )
      * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
@@ -1977,6 +2006,35 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
         writeShortMDArrayBlock(objectPath, new MDShortArray(data), new long[]
             { blockNumberX, blockNumberY });
+    }
+
+    /**
+     * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
+     * have been created by {@link #createShortMatrix(String, long, long, int, int, boolean)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #writeShortMatrixBlock(String, short[][], long, long)} if
+     * the total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #createShortMatrix(String, long, long, int, int, boolean)} call that was used to
+     * create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
+     * @param offsetX The x offset in the data set to start writing to.
+     * @param offsetY The y offset in the data set to start writing to.
+     */
+    public void writeShortMatrixBlockWithOffset(final String objectPath, final short[][] data,
+            final long offsetX, final long offsetY)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        writeShortMDArrayBlockWithOffset(objectPath, new MDShortArray(data, new int[]
+            { data.length, data[0].length }), new long[]
+            { offsetX, offsetY });
     }
 
     /**
@@ -2540,6 +2598,34 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @param offsetX The x offset in the data set to start writing to.
+     * @param offsetY The y offset in the data set to start writing to.
+     */
+    public void writeIntMatrixBlockWithOffset(final String objectPath, final int[][] data,
+            final long offsetX, final long offsetY)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        writeIntMDArrayBlockWithOffset(objectPath, new MDIntArray(data, new int[]
+            { data.length, data[0].length }), new long[]
+            { offsetX, offsetY });
+    }
+
+    /**
+     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to have
+     * been created by {@link #createIntMatrix(String, long, long, int, int, boolean)} beforehand.
+     * <p>
+     * Use this method instead of {@link #writeIntMatrixBlock(String, int[][], long, long)} if the
+     * total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #createIntMatrix(String, long, long, int, int, boolean)} call that was used to create
+     * the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
      * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
      *            <code><= data.length</code> )
      * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
@@ -3072,6 +3158,35 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
         writeLongMDArrayBlock(objectPath, new MDLongArray(data), new long[]
             { blockNumberX, blockNumberY });
+    }
+
+    /**
+     * Writes out a block of a <code>long</code> matrix (array of rank 2). The data set needs to
+     * have been created by {@link #createLongMatrix(String, long, long, int, int, boolean)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #writeLongMatrixBlock(String, long[][], long, long)} if the
+     * total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #createLongMatrix(String, long, long, int, int, boolean)} call that was used to create
+     * the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
+     * @param offsetX The x offset in the data set to start writing to.
+     * @param offsetY The y offset in the data set to start writing to.
+     */
+    public void writeLongMatrixBlockWithOffset(final String objectPath, final long[][] data,
+            final long offsetX, final long offsetY)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        writeLongMDArrayBlockWithOffset(objectPath, new MDLongArray(data, new int[]
+            { data.length, data[0].length }), new long[]
+            { offsetX, offsetY });
     }
 
     /**
@@ -3639,6 +3754,35 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @param offsetX The x offset in the data set to start writing to.
+     * @param offsetY The y offset in the data set to start writing to.
+     */
+    public void writeFloatMatrixBlockWithOffset(final String objectPath, final float[][] data,
+            final long offsetX, final long offsetY)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        writeFloatMDArrayBlockWithOffset(objectPath, new MDFloatArray(data, new int[]
+            { data.length, data[0].length }), new long[]
+            { offsetX, offsetY });
+    }
+
+    /**
+     * Writes out a block of a <code>float</code> matrix (array of rank 2). The data set needs to
+     * have been created by {@link #createFloatMatrix(String, long, long, int, int, boolean)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #writeFloatMatrixBlock(String, float[][], long, long)} if
+     * the total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #createFloatMatrix(String, long, long, int, int, boolean)} call that was used to
+     * create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
      * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
      *            <code><= data.length</code> )
      * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
@@ -4175,6 +4319,35 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
         writeDoubleMDArrayBlock(objectPath, new MDDoubleArray(data), new long[]
             { blockNumberX, blockNumberY });
+    }
+
+    /**
+     * Writes out a block of a <code>double</code> matrix (array of rank 2). The data set needs to
+     * have been created by {@link #createDoubleMatrix(String, long, long, int, int, boolean)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #writeDoubleMatrixBlock(String, double[][], long, long)} if
+     * the total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #createDoubleMatrix(String, long, long, int, int, boolean)} call that was used to
+     * create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
+     * @param offsetX The x offset in the data set to start writing to.
+     * @param offsetY The y offset in the data set to start writing to.
+     */
+    public void writeDoubleMatrixBlockWithOffset(final String objectPath, final double[][] data,
+            final long offsetX, final long offsetY)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        writeDoubleMDArrayBlockWithOffset(objectPath, new MDDoubleArray(data, new int[]
+            { data.length, data[0].length }), new long[]
+            { offsetX, offsetY });
     }
 
     /**

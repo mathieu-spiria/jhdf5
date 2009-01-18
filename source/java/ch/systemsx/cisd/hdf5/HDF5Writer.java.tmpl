@@ -371,6 +371,35 @@
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @param offsetX The x offset in the data set to start writing to.
+     * @param offsetY The y offset in the data set to start writing to.
+     */
+    public void write__Name__MatrixBlockWithOffset(final String objectPath, final __name__[][] data,
+            final long offsetX, final long offsetY)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        write__Name__MDArrayBlockWithOffset(objectPath, new MD__Name__Array(data, new int[]
+            { data.length, data[0].length }), new long[]
+            { offsetX, offsetY });
+    }
+
+    /**
+     * Writes out a block of a <code>__name__</code> matrix (array of rank 2). The data set needs to
+     * have been created by {@link #create__Name__Matrix(String, long, long, int, int, boolean)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #write__Name__MatrixBlock(String, __name__[][], long, long)} if
+     * the total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #create__Name__Matrix(String, long, long, int, int, boolean)} call that was used to
+     * create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
      * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
      *            <code><= data.length</code> )
      * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
