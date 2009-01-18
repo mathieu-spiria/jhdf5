@@ -17,10 +17,10 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.*;
+import static ncsa.hdf.hdf5lib.H5.H5Aread;
 import static ncsa.hdf.hdf5lib.HDF5Constants.*;
 
 import java.io.File;
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Date;
@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import ncsa.hdf.hdf5lib.HDF5Constants;
+import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ch.systemsx.cisd.common.array.MDArray;
@@ -867,7 +868,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int size = h5.getSize(dataTypeId);
                     final int stringDataTypeId = h5.createDataTypeString(size, registry);
                     byte[] data = new byte[size];
-                    h5.readAttribute(attributeId, stringDataTypeId, data);
+                    H5Aread(attributeId, stringDataTypeId, data);
                     int termIdx;
                     for (termIdx = 0; termIdx < size && data[termIdx] != 0; ++termIdx)
                     {
@@ -903,7 +904,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int nativeDataTypeId =
                             h5.getNativeDataTypeForAttribute(attributeId, registry);
                     byte[] data = new byte[1];
-                    h5.readAttribute(attributeId, nativeDataTypeId, data);
+                    H5Aread(attributeId, nativeDataTypeId, data);
                     final Boolean value = h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
                     if (value == null)
                     {
@@ -940,10 +941,11 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
                     final int storageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
                     final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
-                    int[] data = new int[1];
-                    h5.readAttribute(attributeId, nativeDataTypeId, data);
+                    final byte[] data = new byte[4];
+                    H5Aread(attributeId, nativeDataTypeId, data);
                     final String value =
-                            h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId, data[0]);
+                            h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId, HDFNativeData
+                                    .byteToInt(data, 0));
                     if (value == null)
                     {
                         throw new HDF5JavaException("Attribute " + attributeName + " of path "
@@ -995,9 +997,9 @@ public class HDF5Reader implements HDF5SimpleReader
         }
         final int attributeId = h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
         final int dataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
-        final int[] data = new int[1];
-        h5.readAttribute(attributeId, dataTypeId, data);
-        return data[0];
+        final byte[] data = new byte[4];
+        H5Aread(attributeId, dataTypeId, data);
+        return HDFNativeData.byteToInt(data, 0);
     }
 
     /**
@@ -1026,29 +1028,31 @@ public class HDF5Reader implements HDF5SimpleReader
                                     h5.openAttribute(objectId, attributeName, registry);
                             final HDF5EnumerationType enumType =
                                     getEnumTypeForAttributeId(attributeId);
-                            switch (enumType.getStorageSize())
+                            switch (enumType.getStorageForm())
                             {
-                                case 1:
+                                case BYTE:
                                 {
                                     final byte[] data = new byte[1];
-                                    h5.readAttribute(attributeId, enumType.getNativeTypeId(), data);
+                                    H5Aread(attributeId, enumType.getNativeTypeId(), data);
                                     return new HDF5EnumerationValue(enumType, data[0]);
                                 }
-                                case 2:
+                                case SHORT:
                                 {
-                                    final short[] data = new short[1];
-                                    h5.readAttribute(attributeId, enumType.getNativeTypeId(), data);
-                                    return new HDF5EnumerationValue(enumType, data[0]);
+                                    final byte[] data = new byte[2];
+                                    H5Aread(attributeId, enumType.getNativeTypeId(), data);
+                                    return new HDF5EnumerationValue(enumType, HDFNativeData
+                                            .byteToShort(data, 0));
                                 }
-                                case 4:
+                                case INT:
                                 {
-                                    final int[] data = new int[1];
-                                    h5.readAttribute(attributeId, enumType.getNativeTypeId(), data);
-                                    return new HDF5EnumerationValue(enumType, data[0]);
+                                    final byte[] data = new byte[4];
+                                    H5Aread(attributeId, enumType.getNativeTypeId(), data);
+                                    return new HDF5EnumerationValue(enumType, HDFNativeData
+                                            .byteToInt(data, 0));
                                 }
                                 default:
-                                    throw new HDF5JavaException("Illegal storage size for enum ("
-                                            + enumType.getStorageSize() + ")");
+                                    throw new HDF5JavaException("Illegal storage form for enum ("
+                                            + enumType.getStorageForm() + ")");
                             }
                         }
                     };
@@ -1084,9 +1088,9 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int objectId = h5.openObject(fileId, objectPath, registry);
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
-                    int[] data = new int[1];
-                    h5.readAttribute(attributeId, H5T_NATIVE_INT32, data);
-                    return data[0];
+                    final byte[] data = new byte[4];
+                    H5Aread(attributeId, H5T_NATIVE_INT32, data);
+                    return HDFNativeData.byteToInt(data, 0);
                 }
             };
         return runner.call(writeRunnable);
@@ -1112,9 +1116,9 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int objectId = h5.openObject(fileId, objectPath, registry);
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
-                    long[] data = new long[1];
-                    h5.readAttribute(attributeId, H5T_NATIVE_INT64, data);
-                    return data[0];
+                    final byte[] data = new byte[8];
+                    H5Aread(attributeId, H5T_NATIVE_INT64, data);
+                    return HDFNativeData.byteToLong(data, 0);
                 }
             };
         return runner.call(writeRunnable);
@@ -1140,9 +1144,9 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int objectId = h5.openObject(fileId, objectPath, registry);
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
-                    float[] data = new float[1];
-                    h5.readAttribute(attributeId, H5T_NATIVE_FLOAT, data);
-                    return data[0];
+                    final byte[] data = new byte[4];
+                    H5Aread(attributeId, H5T_NATIVE_FLOAT, data);
+                    return HDFNativeData.byteToFloat(data, 0);
                 }
             };
         return runner.call(writeRunnable);
@@ -1168,9 +1172,9 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int objectId = h5.openObject(fileId, objectPath, registry);
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
-                    double[] data = new double[1];
-                    h5.readAttribute(attributeId, H5T_NATIVE_DOUBLE, data);
-                    return data[0];
+                    final byte[] data = new byte[8];
+                    H5Aread(attributeId, H5T_NATIVE_DOUBLE, data);
+                    return HDFNativeData.byteToDouble(data, 0);
                 }
             };
         return runner.call(writeRunnable);
@@ -1197,7 +1201,14 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
-                    return (byte[]) primReadArrayRank1(objectPath, -1, byte.class, -1, -1, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final int nativeDataTypeId =
+                            h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    final byte[] data = new byte[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1221,8 +1232,16 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
-                    return (byte[]) primReadArrayRank1(objectPath, -1, byte.class, blockSize,
-                            blockNumber * blockSize, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
+                                    registry);
+                    final int nativeDataTypeId =
+                            h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    final byte[] data = new byte[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1245,8 +1264,15 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
-                    return (byte[]) primReadArrayRank1(objectPath, -1, byte.class, blockSize,
-                            offset, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final int nativeDataTypeId =
+                            h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    final byte[] data = new byte[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1321,8 +1347,12 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
-                    return (long[]) primReadArrayRank1(objectPath, H5T_NATIVE_B64, long.class, -1,
-                            -1, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_B64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1376,8 +1406,12 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
-                    return (byte[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT8, byte.class, -1,
-                            -1, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final byte[] data = new byte[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1405,8 +1439,14 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
-                    return (byte[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT8, byte.class,
-                            blockSize, blockNumber * blockSize, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
+                                    registry);
+                    final byte[] data = new byte[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1433,8 +1473,13 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
-                    return (byte[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT8, byte.class,
-                            blockSize, offset, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final byte[] data = new byte[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1445,21 +1490,17 @@ public class HDF5Reader implements HDF5SimpleReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public byte[][] readByteMatrix(final String objectPath)
+    public byte[][] readByteMatrix(final String objectPath) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<byte[][]> readCallable = new ICallableWithCleanUp<byte[][]>()
-            {
-                public byte[][] call(ICleanUpRegistry registry)
-                {
-                    return (byte[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT8, byte.class,
-                            -1, -1, -1, -1, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDByteArray array = readByteMDArray(objectPath);
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -1473,23 +1514,21 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>blockSizeY</code>).
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public byte[][] readByteMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY)
+            throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<byte[][]> readCallable = new ICallableWithCleanUp<byte[][]>()
-            {
-                public byte[][] call(ICleanUpRegistry registry)
-                {
-                    return (byte[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT8, byte.class,
-                            blockSizeX, blockSizeY, blockNumberX * blockSizeX, blockNumberY
-                                    * blockSizeY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDByteArray array = readByteMDArrayBlock(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { blockNumberX, blockNumberY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -1501,22 +1540,20 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param offsetX The offset in x dimension in the data set to start reading from.
      * @param offsetY The offset in y dimension in the data set to start reading from.
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public byte[][] readByteMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
-            final int blockSizeY, final long offsetX, final long offsetY)
+            final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<byte[][]> readCallable = new ICallableWithCleanUp<byte[][]>()
-            {
-                public byte[][] call(ICleanUpRegistry registry)
-                {
-                    return (byte[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT8, byte.class,
-                            blockSizeX, blockSizeY, offsetX, offsetY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDByteArray array = readByteMDArrayBlockWithOffset(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { offsetX, offsetY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -1535,11 +1572,15 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDByteArray call(ICleanUpRegistry registry)
                         {
-                            final long[][] dimensionsContainer = new long[1][];
-                            final byte[] data =
-                                    (byte[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT8,
-                                            byte.class, null, null, dimensionsContainer, registry);
-                            return new MDByteArray(data, dimensionsContainer[0]);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, registry);
+                            final int nativeDataTypeId =
+                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
+                            final byte[] data = new byte[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, data);
+                            return new MDByteArray(data, spaceParams.dimensions);
                         }
                     };
         return runner.call(readCallable);
@@ -1572,9 +1613,12 @@ public class HDF5Reader implements HDF5SimpleReader
                             {
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
-                            final byte[] dataBlock =
-                                    (byte[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT8,
-                                            byte.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final byte[] dataBlock = new byte[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDByteArray(dataBlock, blockDimensions);
                         }
                     };
@@ -1602,9 +1646,12 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDByteArray call(ICleanUpRegistry registry)
                         {
-                            final byte[] dataBlock =
-                                    (byte[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT8,
-                                            byte.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final byte[] dataBlock = new byte[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDByteArray(dataBlock, blockDimensions);
                         }
                     };
@@ -1655,8 +1702,12 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public short[] call(ICleanUpRegistry registry)
                 {
-                    return (short[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT16, short.class,
-                            -1, -1, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final short[] data = new short[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1684,8 +1735,14 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public short[] call(ICleanUpRegistry registry)
                 {
-                    return (short[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT16, short.class,
-                            blockSize, blockNumber * blockSize, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
+                                    registry);
+                    final short[] data = new short[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1712,8 +1769,13 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public short[] call(ICleanUpRegistry registry)
                 {
-                    return (short[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT16, short.class,
-                            blockSize, offset, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final short[] data = new short[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1724,21 +1786,17 @@ public class HDF5Reader implements HDF5SimpleReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public short[][] readShortMatrix(final String objectPath)
+    public short[][] readShortMatrix(final String objectPath) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<short[][]> readCallable = new ICallableWithCleanUp<short[][]>()
-            {
-                public short[][] call(ICleanUpRegistry registry)
-                {
-                    return (short[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT16,
-                            short.class, -1, -1, -1, -1, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDShortArray array = readShortMDArray(objectPath);
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -1752,23 +1810,21 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>blockSizeY</code>).
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public short[][] readShortMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY)
+            throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<short[][]> readCallable = new ICallableWithCleanUp<short[][]>()
-            {
-                public short[][] call(ICleanUpRegistry registry)
-                {
-                    return (short[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT16,
-                            short.class, blockSizeX, blockSizeY, blockNumberX * blockSizeX,
-                            blockNumberY * blockSizeY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDShortArray array = readShortMDArrayBlock(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { blockNumberX, blockNumberY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -1780,22 +1836,20 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param offsetX The offset in x dimension in the data set to start reading from.
      * @param offsetY The offset in y dimension in the data set to start reading from.
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public short[][] readShortMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
-            final int blockSizeY, final long offsetX, final long offsetY)
+            final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<short[][]> readCallable = new ICallableWithCleanUp<short[][]>()
-            {
-                public short[][] call(ICleanUpRegistry registry)
-                {
-                    return (short[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT16,
-                            short.class, blockSizeX, blockSizeY, offsetX, offsetY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDShortArray array = readShortMDArrayBlockWithOffset(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { offsetX, offsetY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -1814,11 +1868,15 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDShortArray call(ICleanUpRegistry registry)
                         {
-                            final long[][] dimensionsContainer = new long[1][];
-                            final short[] data =
-                                    (short[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT16,
-                                            short.class, null, null, dimensionsContainer, registry);
-                            return new MDShortArray(data, dimensionsContainer[0]);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, registry);
+                            final int nativeDataTypeId =
+                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
+                            final short[] data = new short[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, data);
+                            return new MDShortArray(data, spaceParams.dimensions);
                         }
                     };
         return runner.call(readCallable);
@@ -1851,9 +1909,12 @@ public class HDF5Reader implements HDF5SimpleReader
                             {
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
-                            final short[] dataBlock =
-                                    (short[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT16,
-                                            short.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final short[] dataBlock = new short[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDShortArray(dataBlock, blockDimensions);
                         }
                     };
@@ -1881,9 +1942,12 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDShortArray call(ICleanUpRegistry registry)
                         {
-                            final short[] dataBlock =
-                                    (short[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT16,
-                                            short.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final short[] dataBlock = new short[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDShortArray(dataBlock, blockDimensions);
                         }
                     };
@@ -1934,8 +1998,12 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    return (int[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT32, int.class, -1,
-                            -1, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final int[] data = new int[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1963,8 +2031,14 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    return (int[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT32, int.class,
-                            blockSize, blockNumber * blockSize, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
+                                    registry);
+                    final int[] data = new int[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -1990,8 +2064,13 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    return (int[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT32, int.class,
-                            blockSize, offset, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final int[] data = new int[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -2002,21 +2081,17 @@ public class HDF5Reader implements HDF5SimpleReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public int[][] readIntMatrix(final String objectPath)
+    public int[][] readIntMatrix(final String objectPath) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<int[][]> readCallable = new ICallableWithCleanUp<int[][]>()
-            {
-                public int[][] call(ICleanUpRegistry registry)
-                {
-                    return (int[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT32, int.class,
-                            -1, -1, -1, -1, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDIntArray array = readIntMDArray(objectPath);
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2030,23 +2105,21 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>blockSizeY</code>).
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public int[][] readIntMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY)
+            throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<int[][]> readCallable = new ICallableWithCleanUp<int[][]>()
-            {
-                public int[][] call(ICleanUpRegistry registry)
-                {
-                    return (int[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT32, int.class,
-                            blockSizeX, blockSizeY, blockNumberX * blockSizeX, blockNumberY
-                                    * blockSizeY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDIntArray array = readIntMDArrayBlock(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { blockNumberX, blockNumberY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2058,22 +2131,20 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param offsetX The offset in x dimension in the data set to start reading from.
      * @param offsetY The offset in y dimension in the data set to start reading from.
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public int[][] readIntMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
-            final int blockSizeY, final long offsetX, final long offsetY)
+            final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<int[][]> readCallable = new ICallableWithCleanUp<int[][]>()
-            {
-                public int[][] call(ICleanUpRegistry registry)
-                {
-                    return (int[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT32, int.class,
-                            blockSizeX, blockSizeY, offsetX, offsetY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDIntArray array = readIntMDArrayBlockWithOffset(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { offsetX, offsetY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2092,11 +2163,15 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDIntArray call(ICleanUpRegistry registry)
                         {
-                            final long[][] dimensionsContainer = new long[1][];
-                            final int[] data =
-                                    (int[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT32,
-                                            int.class, null, null, dimensionsContainer, registry);
-                            return new MDIntArray(data, dimensionsContainer[0]);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, registry);
+                            final int nativeDataTypeId =
+                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
+                            final int[] data = new int[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, data);
+                            return new MDIntArray(data, spaceParams.dimensions);
                         }
                     };
         return runner.call(readCallable);
@@ -2129,9 +2204,12 @@ public class HDF5Reader implements HDF5SimpleReader
                             {
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
-                            final int[] dataBlock =
-                                    (int[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT32,
-                                            int.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final int[] dataBlock = new int[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDIntArray(dataBlock, blockDimensions);
                         }
                     };
@@ -2159,9 +2237,12 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDIntArray call(ICleanUpRegistry registry)
                         {
-                            final int[] dataBlock =
-                                    (int[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT32,
-                                            int.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final int[] dataBlock = new int[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDIntArray(dataBlock, blockDimensions);
                         }
                     };
@@ -2212,8 +2293,12 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
-                    return (long[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT64, long.class,
-                            -1, -1, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -2241,8 +2326,14 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
-                    return (long[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT64, long.class,
-                            blockSize, blockNumber * blockSize, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
+                                    registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -2269,8 +2360,13 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
-                    return (long[]) primReadArrayRank1(objectPath, H5T_NATIVE_INT64, long.class,
-                            blockSize, offset, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -2281,21 +2377,17 @@ public class HDF5Reader implements HDF5SimpleReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public long[][] readLongMatrix(final String objectPath)
+    public long[][] readLongMatrix(final String objectPath) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<long[][]> readCallable = new ICallableWithCleanUp<long[][]>()
-            {
-                public long[][] call(ICleanUpRegistry registry)
-                {
-                    return (long[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT64, long.class,
-                            -1, -1, -1, -1, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDLongArray array = readLongMDArray(objectPath);
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2309,23 +2401,21 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>blockSizeY</code>).
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public long[][] readLongMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY)
+            throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<long[][]> readCallable = new ICallableWithCleanUp<long[][]>()
-            {
-                public long[][] call(ICleanUpRegistry registry)
-                {
-                    return (long[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT64, long.class,
-                            blockSizeX, blockSizeY, blockNumberX * blockSizeX, blockNumberY
-                                    * blockSizeY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDLongArray array = readLongMDArrayBlock(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { blockNumberX, blockNumberY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2337,22 +2427,20 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param offsetX The offset in x dimension in the data set to start reading from.
      * @param offsetY The offset in y dimension in the data set to start reading from.
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public long[][] readLongMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
-            final int blockSizeY, final long offsetX, final long offsetY)
+            final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<long[][]> readCallable = new ICallableWithCleanUp<long[][]>()
-            {
-                public long[][] call(ICleanUpRegistry registry)
-                {
-                    return (long[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_INT64, long.class,
-                            blockSizeX, blockSizeY, offsetX, offsetY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDLongArray array = readLongMDArrayBlockWithOffset(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { offsetX, offsetY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2371,11 +2459,15 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
-                            final long[][] dimensionsContainer = new long[1][];
-                            final long[] data =
-                                    (long[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT64,
-                                            long.class, null, null, dimensionsContainer, registry);
-                            return new MDLongArray(data, dimensionsContainer[0]);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, registry);
+                            final int nativeDataTypeId =
+                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
+                            final long[] data = new long[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, data);
+                            return new MDLongArray(data, spaceParams.dimensions);
                         }
                     };
         return runner.call(readCallable);
@@ -2408,9 +2500,12 @@ public class HDF5Reader implements HDF5SimpleReader
                             {
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
-                            final long[] dataBlock =
-                                    (long[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT64,
-                                            long.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final long[] dataBlock = new long[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDLongArray(dataBlock, blockDimensions);
                         }
                     };
@@ -2438,9 +2533,12 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
-                            final long[] dataBlock =
-                                    (long[]) primReadArrayRankN(objectPath, H5T_NATIVE_INT64,
-                                            long.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final long[] dataBlock = new long[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDLongArray(dataBlock, blockDimensions);
                         }
                     };
@@ -2491,8 +2589,12 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public float[] call(ICleanUpRegistry registry)
                 {
-                    return (float[]) primReadArrayRank1(objectPath, H5T_NATIVE_FLOAT, float.class,
-                            -1, -1, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final float[] data = new float[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -2520,8 +2622,14 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public float[] call(ICleanUpRegistry registry)
                 {
-                    return (float[]) primReadArrayRank1(objectPath, H5T_NATIVE_FLOAT, float.class,
-                            blockSize, blockNumber * blockSize, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
+                                    registry);
+                    final float[] data = new float[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -2548,8 +2656,13 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public float[] call(ICleanUpRegistry registry)
                 {
-                    return (float[]) primReadArrayRank1(objectPath, H5T_NATIVE_FLOAT, float.class,
-                            blockSize, offset, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final float[] data = new float[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -2560,21 +2673,17 @@ public class HDF5Reader implements HDF5SimpleReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public float[][] readFloatMatrix(final String objectPath)
+    public float[][] readFloatMatrix(final String objectPath) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<float[][]> readCallable = new ICallableWithCleanUp<float[][]>()
-            {
-                public float[][] call(ICleanUpRegistry registry)
-                {
-                    return (float[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_FLOAT,
-                            float.class, -1, -1, -1, -1, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDFloatArray array = readFloatMDArray(objectPath);
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2588,23 +2697,21 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>blockSizeY</code>).
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public float[][] readFloatMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY)
+            throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<float[][]> readCallable = new ICallableWithCleanUp<float[][]>()
-            {
-                public float[][] call(ICleanUpRegistry registry)
-                {
-                    return (float[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_FLOAT,
-                            float.class, blockSizeX, blockSizeY, blockNumberX * blockSizeX,
-                            blockNumberY * blockSizeY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDFloatArray array = readFloatMDArrayBlock(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { blockNumberX, blockNumberY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2616,22 +2723,20 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param offsetX The offset in x dimension in the data set to start reading from.
      * @param offsetY The offset in y dimension in the data set to start reading from.
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public float[][] readFloatMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
-            final int blockSizeY, final long offsetX, final long offsetY)
+            final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<float[][]> readCallable = new ICallableWithCleanUp<float[][]>()
-            {
-                public float[][] call(ICleanUpRegistry registry)
-                {
-                    return (float[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_FLOAT,
-                            float.class, blockSizeX, blockSizeY, offsetX, offsetY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MDFloatArray array = readFloatMDArrayBlockWithOffset(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { offsetX, offsetY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2650,11 +2755,15 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDFloatArray call(ICleanUpRegistry registry)
                         {
-                            final long[][] dimensionsContainer = new long[1][];
-                            final float[] data =
-                                    (float[]) primReadArrayRankN(objectPath, H5T_NATIVE_FLOAT,
-                                            float.class, null, null, dimensionsContainer, registry);
-                            return new MDFloatArray(data, dimensionsContainer[0]);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, registry);
+                            final int nativeDataTypeId =
+                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
+                            final float[] data = new float[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, data);
+                            return new MDFloatArray(data, spaceParams.dimensions);
                         }
                     };
         return runner.call(readCallable);
@@ -2687,9 +2796,12 @@ public class HDF5Reader implements HDF5SimpleReader
                             {
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
-                            final float[] dataBlock =
-                                    (float[]) primReadArrayRankN(objectPath, H5T_NATIVE_FLOAT,
-                                            float.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final float[] dataBlock = new float[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDFloatArray(dataBlock, blockDimensions);
                         }
                     };
@@ -2717,9 +2829,12 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDFloatArray call(ICleanUpRegistry registry)
                         {
-                            final float[] dataBlock =
-                                    (float[]) primReadArrayRankN(objectPath, H5T_NATIVE_FLOAT,
-                                            float.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final float[] dataBlock = new float[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDFloatArray(dataBlock, blockDimensions);
                         }
                     };
@@ -2770,8 +2885,12 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public double[] call(ICleanUpRegistry registry)
                 {
-                    return (double[]) primReadArrayRank1(objectPath, H5T_NATIVE_DOUBLE,
-                            double.class, -1, -1, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final double[] data = new double[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -2799,8 +2918,14 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public double[] call(ICleanUpRegistry registry)
                 {
-                    return (double[]) primReadArrayRank1(objectPath, H5T_NATIVE_DOUBLE,
-                            double.class, blockSize, blockNumber * blockSize, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
+                                    registry);
+                    final double[] data = new double[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -2827,8 +2952,13 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public double[] call(ICleanUpRegistry registry)
                 {
-                    return (double[]) primReadArrayRank1(objectPath, H5T_NATIVE_DOUBLE,
-                            double.class, blockSize, offset, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final double[] data = new double[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -2839,22 +2969,17 @@ public class HDF5Reader implements HDF5SimpleReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public double[][] readDoubleMatrix(final String objectPath)
+    public double[][] readDoubleMatrix(final String objectPath) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<double[][]> readCallable =
-                new ICallableWithCleanUp<double[][]>()
-                    {
-                        public double[][] call(ICleanUpRegistry registry)
-                        {
-                            return (double[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_DOUBLE,
-                                    double.class, -1, -1, -1, -1, registry);
-                        }
-                    };
-        return runner.call(readCallable);
+        final MDDoubleArray array = readDoubleMDArray(objectPath);
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2868,24 +2993,21 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>blockSizeY</code>).
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public double[][] readDoubleMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY)
+            throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<double[][]> readCallable =
-                new ICallableWithCleanUp<double[][]>()
-                    {
-                        public double[][] call(ICleanUpRegistry registry)
-                        {
-                            return (double[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_DOUBLE,
-                                    double.class, blockSizeX, blockSizeY,
-                                    blockNumberX * blockSizeX, blockNumberY * blockSizeY, registry);
-                        }
-                    };
-        return runner.call(readCallable);
+        final MDDoubleArray array = readDoubleMDArrayBlock(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { blockNumberX, blockNumberY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2897,24 +3019,21 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param offsetX The offset in x dimension in the data set to start reading from.
      * @param offsetY The offset in y dimension in the data set to start reading from.
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public double[][] readDoubleMatrixBlockWithOffset(final String objectPath,
             final int blockSizeX, final int blockSizeY, final long offsetX, final long offsetY)
+            throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<double[][]> readCallable =
-                new ICallableWithCleanUp<double[][]>()
-                    {
-                        public double[][] call(ICleanUpRegistry registry)
-                        {
-                            return (double[][]) primReadMatrixRank2(objectPath, H5T_NATIVE_DOUBLE,
-                                    double.class, blockSizeX, blockSizeY, offsetX, offsetY,
-                                    registry);
-                        }
-                    };
-        return runner.call(readCallable);
+        final MDDoubleArray array = readDoubleMDArrayBlockWithOffset(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { offsetX, offsetY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -2933,11 +3052,15 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDDoubleArray call(ICleanUpRegistry registry)
                         {
-                            final long[][] dimensionsContainer = new long[1][];
-                            final double[] data =
-                                    (double[]) primReadArrayRankN(objectPath, H5T_NATIVE_DOUBLE,
-                                            double.class, null, null, dimensionsContainer, registry);
-                            return new MDDoubleArray(data, dimensionsContainer[0]);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, registry);
+                            final int nativeDataTypeId =
+                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
+                            final double[] data = new double[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, data);
+                            return new MDDoubleArray(data, spaceParams.dimensions);
                         }
                     };
         return runner.call(readCallable);
@@ -2970,9 +3093,12 @@ public class HDF5Reader implements HDF5SimpleReader
                             {
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
-                            final double[] dataBlock =
-                                    (double[]) primReadArrayRankN(objectPath, H5T_NATIVE_DOUBLE,
-                                            double.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final double[] dataBlock = new double[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDDoubleArray(dataBlock, blockDimensions);
                         }
                     };
@@ -3000,9 +3126,12 @@ public class HDF5Reader implements HDF5SimpleReader
                     {
                         public MDDoubleArray call(ICleanUpRegistry registry)
                         {
-                            final double[] dataBlock =
-                                    (double[]) primReadArrayRankN(objectPath, H5T_NATIVE_DOUBLE,
-                                            double.class, blockDimensions, offset, null, registry);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                            final DataSpaceParameters spaceParams =
+                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            final double[] dataBlock = new double[spaceParams.blockSize];
+                            h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
+                                    spaceParams.dataSpaceId, dataBlock);
                             return new MDDoubleArray(dataBlock, blockDimensions);
                         }
                     };
@@ -3317,29 +3446,29 @@ public class HDF5Reader implements HDF5SimpleReader
     private HDF5EnumerationValue readEnumValue(final int dataSetId,
             final HDF5EnumerationType enumType)
     {
-        switch (enumType.getStorageSize())
+        switch (enumType.getStorageForm())
         {
-            case 1:
+            case BYTE:
             {
                 final byte[] data = new byte[1];
                 h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
                 return new HDF5EnumerationValue(enumType, data[0]);
             }
-            case 2:
+            case SHORT:
             {
                 final short[] data = new short[1];
                 h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
                 return new HDF5EnumerationValue(enumType, data[0]);
             }
-            case 4:
+            case INT:
             {
                 final int[] data = new int[1];
                 h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
                 return new HDF5EnumerationValue(enumType, data[0]);
             }
             default:
-                throw new HDF5JavaException("Illegal storage size for enum ("
-                        + enumType.getStorageSize() + ")");
+                throw new HDF5JavaException("Illegal storage form for enum ("
+                        + enumType.getStorageForm() + ")");
         }
     }
 
@@ -3367,11 +3496,33 @@ public class HDF5Reader implements HDF5SimpleReader
                             final HDF5EnumerationType actualEnumType =
                                     (enumType == null) ? getEnumTypeForDataSetId(dataSetId)
                                             : enumType;
-                            final Object data =
-                                    actualEnumType.createArray(HDF5Utils
-                                            .getOneDimensionalArraySize(dimensions));
-                            h5.readDataSet(dataSetId, actualEnumType.getNativeTypeId(), data);
-                            return new HDF5EnumerationValueArray(actualEnumType, data);
+                            final int arraySize = HDF5Utils.getOneDimensionalArraySize(dimensions);
+                            switch (actualEnumType.getStorageForm())
+                            {
+                                case BYTE:
+                                {
+                                    final byte[] data = new byte[arraySize];
+                                    h5.readDataSet(dataSetId, actualEnumType.getNativeTypeId(),
+                                            data);
+                                    return new HDF5EnumerationValueArray(actualEnumType, data);
+                                }
+                                case SHORT:
+                                {
+                                    final short[] data = new short[arraySize];
+                                    h5.readDataSet(dataSetId, actualEnumType.getNativeTypeId(),
+                                            data);
+                                    return new HDF5EnumerationValueArray(actualEnumType, data);
+                                }
+                                case INT:
+                                {
+                                    final int[] data = new int[arraySize];
+                                    h5.readDataSet(dataSetId, actualEnumType.getNativeTypeId(),
+                                            data);
+                                    return new HDF5EnumerationValueArray(actualEnumType, data);
+                                }
+                            }
+                            throw new Error("Illegal storage form ("
+                                    + actualEnumType.getStorageForm() + ".)");
                         }
                     };
 
@@ -3883,7 +4034,7 @@ public class HDF5Reader implements HDF5SimpleReader
     }
 
     /**
-     * Class to store the parameters of a data space.
+     * Class to store the parameters of a 1d data space.
      */
     private static class DataSpaceParameters
     {
@@ -3943,22 +4094,40 @@ public class HDF5Reader implements HDF5SimpleReader
         return new DataSpaceParameters(memorySpaceId, dataSpaceId, actualBlockSize, dimensions);
     }
 
+    private DataSpaceParameters getSpaceParameters(final int dataSetId, ICleanUpRegistry registry)
+    {
+        final long[] dimensions = h5.getDataDimensions(dataSetId);
+        return new DataSpaceParameters(H5S_ALL, H5S_ALL, MDArray.getLength(dimensions), dimensions);
+    }
+
     private DataSpaceParameters getSpaceParameters(final int dataSetId, final long[] offset,
-            final int[] blockDimensions, ICleanUpRegistry registry)
+            final int[] blockDimensionsOrNull, ICleanUpRegistry registry)
     {
         final int memorySpaceId;
         final int dataSpaceId;
         final long[] effectiveBlockDimensions;
-        if (blockDimensions != null)
+        if (blockDimensionsOrNull != null)
         {
+            assert offset != null;
+            assert blockDimensionsOrNull.length == offset.length;
+
             dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
             final long[] dimensions = h5.getDataSpaceDimensions(dataSpaceId);
-            if (dimensions.length != blockDimensions.length)
+            if (dimensions.length != blockDimensionsOrNull.length)
             {
                 throw new HDF5JavaException("Data Set is expected to be of rank "
-                        + blockDimensions.length + " (rank=" + dimensions.length + ")");
+                        + blockDimensionsOrNull.length + " (rank=" + dimensions.length + ")");
             }
-            effectiveBlockDimensions = MDArray.toLong(blockDimensions);
+            effectiveBlockDimensions = new long[blockDimensionsOrNull.length];
+            for (int i = 0; i < offset.length; ++i)
+            {
+                final long maxBlockSize = dimensions[i] - offset[i];
+                if (maxBlockSize <= 0)
+                {
+                    throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
+                }
+                effectiveBlockDimensions[i] = Math.min(blockDimensionsOrNull[i], maxBlockSize);
+            }
             h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
             memorySpaceId = h5.createSimpleDataSpace(effectiveBlockDimensions, registry);
         } else
@@ -3971,25 +4140,10 @@ public class HDF5Reader implements HDF5SimpleReader
                 .getLength(effectiveBlockDimensions), effectiveBlockDimensions);
     }
 
-    /**
-     * Reads an array block (of rank 1) from the data set <var>objectPath</var> and a data type of
-     * <var>dataTypeId</var>. The <var>componentType</var> needs to match the <var>dataTypeId</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set. (A one-dimension array of <var>componentType</var>).
-     */
-    private Object primReadArrayRank1(final String objectPath, final int specifiedDataSetTypeId,
-            Class<?> componentType, final int blockSize, final long offset,
+    private int getNativeDataTypeId(final int dataSetId, final int specifiedDataSetTypeId,
             ICleanUpRegistry registry)
     {
-        assert objectPath != null;
-        assert componentType != null;
-        assert registry != null;
-
-        final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
-        final DataSpaceParameters spaceParams =
-                getSpaceParameters(dataSetId, offset, blockSize, registry);
-        int nativeDataTypeId = -1;
+        final int nativeDataTypeId;
         if (specifiedDataSetTypeId < 0)
         {
             nativeDataTypeId = h5.getNativeDataTypeForDataSet(dataSetId, registry);
@@ -3997,150 +4151,7 @@ public class HDF5Reader implements HDF5SimpleReader
         {
             nativeDataTypeId = specifiedDataSetTypeId;
         }
-        final Object data = Array.newInstance(componentType, spaceParams.blockSize);
-        h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                spaceParams.dataSpaceId, data);
-        return data;
-    }
-
-    /**
-     * Reads a matrix block (of rank 2) from the data set <var>objectPath</var> and a data type of
-     * <var>dataTypeId</var>. The <var>componentType</var> needs to match the <var>dataTypeId</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set. (A one-dimension array of <var>componentType</var>).
-     */
-    private Object primReadMatrixRank2(final String objectPath, final int specifiedDataSetTypeId,
-            Class<?> componentType, final int blockSizeX, final int blockSizeY, final long offsetX,
-            final long offsetY, ICleanUpRegistry registry)
-    {
-        assert objectPath != null;
-        assert componentType != null;
-        assert registry != null;
-
-        final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
-        final int memorySpaceId;
-        final int dataSpaceId;
-        final long[] actualBlockShape;
-        final long[] shape;
-        if (blockSizeX > 0 && blockSizeY > 0)
-        {
-            dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
-            shape = h5.getDataSpaceDimensions(dataSpaceId);
-            if (shape.length != 2)
-            {
-                throw new HDF5JavaException("Data Set must be of rank 2 (rank=" + shape.length
-                        + ")");
-            }
-            final long sizeX = shape[0];
-            final long sizeY = shape[1];
-            final long maxBlockSizeX = sizeX - offsetX;
-            final long maxBlockSizeY = sizeY - offsetY;
-            if (maxBlockSizeX <= 0)
-            {
-                throw new HDF5JavaException("Offset " + offsetX + " >= Size " + sizeX);
-            }
-            if (maxBlockSizeY <= 0)
-            {
-                throw new HDF5JavaException("Offset " + offsetY + " >= Size " + sizeY);
-            }
-            actualBlockShape = new long[]
-                { Math.min(blockSizeX, maxBlockSizeX), Math.min(blockSizeY, maxBlockSizeY) };
-            h5.setHyperslabBlock(dataSpaceId, new long[]
-                { offsetX, offsetY }, actualBlockShape);
-            memorySpaceId = h5.createSimpleDataSpace(actualBlockShape, registry);
-        } else
-        {
-            memorySpaceId = HDF5Constants.H5S_ALL;
-            dataSpaceId = HDF5Constants.H5S_ALL;
-            shape = h5.getDataDimensions(dataSetId);
-            if (shape.length != 2)
-            {
-                throw new HDF5JavaException("Data Set must be of rank 2 (rank=" + shape.length
-                        + ")");
-            }
-            actualBlockShape = shape;
-        }
-        int nativeDataTypeId = -1;
-        if (specifiedDataSetTypeId < 0)
-        {
-            nativeDataTypeId = h5.getNativeDataTypeForDataSet(dataSetId, registry);
-        } else
-        {
-            nativeDataTypeId = specifiedDataSetTypeId;
-        }
-        final Object data = Array.newInstance(componentType, MDArray.toInt(actualBlockShape));
-        h5.readDataSet(dataSetId, nativeDataTypeId, memorySpaceId, dataSpaceId, data);
-        return data;
-    }
-
-    /**
-     * Reads an array block (of rank N) from the data set <var>objectPath</var> and a data type of
-     * <var>dataTypeId</var>. The <var>componentType</var> needs to match the <var>dataTypeId</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set. (A one-dimension array of <var>componentType</var>).
-     */
-    private Object primReadArrayRankN(final String objectPath, final int specifiedDataSetTypeId,
-            Class<?> componentType, final int[] blockShapeOrNull, final long[] offset,
-            final long[][] shapeContainerOrNull, ICleanUpRegistry registry)
-    {
-        assert objectPath != null;
-        assert componentType != null;
-        assert registry != null;
-
-        final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
-        final int memorySpaceId;
-        final int dataSpaceId;
-        final long[] actualBlockShape;
-        final long[] shape;
-        if (blockShapeOrNull != null)
-        {
-            assert offset != null;
-            assert blockShapeOrNull.length == offset.length;
-
-            dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
-            shape = h5.getDataSpaceDimensions(dataSpaceId);
-            if (shape.length != blockShapeOrNull.length)
-            {
-                throw new HDF5JavaException("Data Set is expected to be of rank "
-                        + blockShapeOrNull.length + " (rank=" + shape.length + ")");
-            }
-            actualBlockShape = new long[blockShapeOrNull.length];
-            for (int i = 0; i < offset.length; ++i)
-            {
-                final long maxBlockSize = shape[i] - offset[i];
-                if (maxBlockSize <= 0)
-                {
-                    throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + shape[i]);
-                }
-                actualBlockShape[i] = Math.min(blockShapeOrNull[i], maxBlockSize);
-            }
-            h5.setHyperslabBlock(dataSpaceId, offset, actualBlockShape);
-            memorySpaceId = h5.createSimpleDataSpace(actualBlockShape, registry);
-        } else
-        {
-            memorySpaceId = HDF5Constants.H5S_ALL;
-            dataSpaceId = HDF5Constants.H5S_ALL;
-            shape = h5.getDataDimensions(dataSetId);
-            actualBlockShape = shape;
-        }
-        if (shapeContainerOrNull != null)
-        {
-            shapeContainerOrNull[0] = shape;
-        }
-        int nativeDataTypeId = -1;
-        if (specifiedDataSetTypeId < 0)
-        {
-            nativeDataTypeId = h5.getNativeDataTypeForDataSet(dataSetId, registry);
-        } else
-        {
-            nativeDataTypeId = specifiedDataSetTypeId;
-        }
-
-        final Object data = Array.newInstance(componentType, MDArray.getLength(actualBlockShape));
-        h5.readDataSet(dataSetId, nativeDataTypeId, memorySpaceId, dataSpaceId, data);
-        return data;
+        return nativeDataTypeId;
     }
 
 }

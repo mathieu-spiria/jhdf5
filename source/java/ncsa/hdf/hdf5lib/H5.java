@@ -434,30 +434,6 @@ public class H5
             throws HDF5LibraryException, NullPointerException;
 
     /**
-     * H5Awrite writes an attribute, specified with attr_id. The attribute's memory datatype is
-     * specified with mem_type_id. The entire attribute is written from data object to the file.
-     * 
-     * @param attr_id IN: Identifier of an attribute to write.
-     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
-     * @param obj IN: Data object to be written.
-     * @return a non-negative value if successful
-     * @exception HDF5LibraryException - Error from the HDF-5 Library.
-     * @exception NullPointerException - data object is null. See public synchronized static native
-     *                int H5Awrite(int attr_id, int mem_type_id, byte[] buf);
-     */
-    public synchronized static int H5Awrite(final int attr_id, final int mem_type_id,
-            final Object obj) throws HDF5Exception, NullPointerException
-    {
-        HDFArray theArray = new HDFArray(obj);
-        byte[] buf = theArray.byteify();
-
-        final int retVal = H5Awrite(attr_id, mem_type_id, buf);
-        buf = null;
-        theArray = null;
-        return retVal;
-    }
-
-    /**
      * H5Acopy copies the content of one attribute to another.
      * 
      * @param src_aid the identifier of the source attribute
@@ -479,36 +455,6 @@ public class H5
      */
     public synchronized static native int H5Aread(int attr_id, int mem_type_id, byte[] buf)
             throws HDF5LibraryException, NullPointerException;
-
-    /**
-     * H5Aread reads an attribute, specified with attr_id. The attribute's memory datatype is
-     * specified with mem_type_id. The entire attribute is read into data object from the file.
-     * 
-     * @param attr_id IN: Identifier of an attribute to read.
-     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
-     * @param obj IN: Object for data to be read.
-     * @return a non-negative value if successful
-     * @exception HDF5LibraryException - Error from the HDF-5 Library.
-     * @exception NullPointerException - data buffer is null. See public synchronized static native
-     *                int H5Aread( )
-     */
-    public synchronized static int H5Aread(final int attr_id, final int mem_type_id, Object obj)
-            throws HDF5Exception, NullPointerException
-    {
-        final HDFArray theArray = new HDFArray(obj);
-        final byte[] buf = theArray.emptyBytes();
-
-        // This will raise an exception if there is an error
-        final int status = H5Aread(attr_id, mem_type_id, buf);
-
-        // No exception: status really ought to be OK
-        if (status >= 0)
-        {
-            theArray.arrayify(buf);
-        }
-
-        return status;
-    }
 
     public synchronized static native int H5AreadVL(int attr_id, int mem_type_id, String[] buf)
             throws HDF5LibraryException, NullPointerException;
@@ -676,108 +622,6 @@ public class H5
             throws HDF5LibraryException, NullPointerException;
 
     /**
-     * H5Dread reads a (partial) dataset, specified by its identifier dataset_id, from the file into
-     * the application data object.
-     * 
-     * @param dataset_id Identifier of the dataset read from.
-     * @param mem_type_id Identifier of the memory datatype.
-     * @param mem_space_id Identifier of the memory dataspace.
-     * @param file_space_id Identifier of the dataset's dataspace in the file.
-     * @param xfer_plist_id Identifier of a transfer property list for this I/O operation.
-     * @param obj Object to store data read from the file.
-     * @return a non-negative value if successful
-     * @exception HDF5Exception - Failure in the data conversion.
-     * @exception HDF5LibraryException - Error from the HDF-5 Library.
-     * @exception NullPointerException - data object is null.
-     */
-    public synchronized static int H5Dread(final int dataset_id, final int mem_type_id,
-            final int mem_space_id, final int file_space_id, final int xfer_plist_id, Object obj)
-            throws HDF5Exception, HDF5LibraryException, NullPointerException
-    {
-        int status = -1;
-        boolean is1D = false;
-
-        final Class<?> dataClass = obj.getClass();
-        if (dataClass.isArray() == false)
-        {
-            throw (new HDF5JavaException("H5Dread: data is not an array"));
-        }
-
-        final String cname = dataClass.getName();
-        is1D = (cname.lastIndexOf('[') == cname.indexOf('['));
-        final char dname = cname.charAt(cname.lastIndexOf("[") + 1);
-
-        if (is1D && (dname == 'B'))
-        {
-            status =
-                    H5Dread(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id,
-                            (byte[]) obj);
-        } else if (is1D && (dname == 'S'))
-        {
-            status =
-                    H5Dread_short(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (short[]) obj);
-        } else if (is1D && (dname == 'I'))
-        {
-            status =
-                    H5Dread_int(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (int[]) obj);
-        } else if (is1D && (dname == 'J'))
-        {
-            status =
-                    H5Dread_long(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (long[]) obj);
-        } else if (is1D && (dname == 'F'))
-        {
-            status =
-                    H5Dread_float(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (float[]) obj);
-        } else if (is1D && (dname == 'D'))
-        {
-            status =
-                    H5Dread_double(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (double[]) obj);
-        } else if (H5.H5Tequal(mem_type_id, HDF5Constants.H5T_STD_REF_DSETREG))
-        {
-            status =
-                    H5Dread_reg_ref(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (String[]) obj);
-        } else if (is1D && cname.equals("[Ljava.lang.String;"))
-        {
-            status =
-                    H5Dread_string(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (String[]) obj);
-            // Rosetta Biosoftware - add support for Strings (variable length)
-        } else if (is1D && (dataClass.getComponentType() == String.class))
-        { // already know it is an array
-            status =
-                    H5DreadVL(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id,
-                            (Object[]) obj);
-        } else
-        {
-            // Create a data buffer to hold the data into a Java Array
-            HDFArray theArray = new HDFArray(obj);
-            byte[] buf = theArray.emptyBytes();
-
-            // will raise exception if read fails
-            status =
-                    H5Dread(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id,
-                            buf);
-            if (status >= 0)
-            {
-                // convert the data into a Java Array */
-                theArray.arrayify(buf);
-            }
-
-            // clean up these: assign 'null' as hint to gc() */
-            buf = null;
-            theArray = null;
-        }
-
-        return status;
-    }
-
-    /**
      * H5DwriteString writes a (partial) variable length String dataset, specified by its identifier
      * dataset_id, from the application memory buffer buf into the file.
      * <p>
@@ -815,97 +659,6 @@ public class H5
     public synchronized static native int H5Dwrite(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, byte[] buf)
             throws HDF5LibraryException, NullPointerException;
-
-    /**
-     * H5Dwrite writes a (partial) dataset, specified by its identifier dataset_id, from the
-     * application memory data object into the file.
-     * 
-     * @param dataset_id Identifier of the dataset read from.
-     * @param mem_type_id Identifier of the memory datatype.
-     * @param mem_space_id Identifier of the memory dataspace.
-     * @param file_space_id Identifier of the dataset's dataspace in the file.
-     * @param xfer_plist_id Identifier of a transfer property list for this I/O operation.
-     * @param obj Object with data to be written to the file.
-     * @return a non-negative value if successful
-     * @exception HDF5Exception - Failure in the data conversion.
-     * @exception HDF5LibraryException - Error from the HDF-5 Library.
-     * @exception NullPointerException - data object is null.
-     */
-    public synchronized static int H5Dwrite(final int dataset_id, final int mem_type_id,
-            final int mem_space_id, final int file_space_id, final int xfer_plist_id,
-            final Object obj) throws HDF5Exception, HDF5LibraryException, NullPointerException
-    {
-        int status = -1;
-        boolean is1D = false;
-
-        final Class<?> dataClass = obj.getClass();
-        if (dataClass.isArray() == false)
-        {
-            throw (new HDF5JavaException("H5Dwrite: data is not an array"));
-        }
-
-        final String cname = dataClass.getName();
-        is1D = (cname.lastIndexOf('[') == cname.indexOf('['));
-        final char dname = cname.charAt(cname.lastIndexOf("[") + 1);
-
-        if (is1D && (dname == 'B'))
-        {
-            status =
-                    H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id,
-                            (byte[]) obj);
-        } else if (is1D && (dname == 'S'))
-        {
-            status =
-                    H5Dwrite_short(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (short[]) obj);
-        } else if (is1D && (dname == 'I'))
-        {
-            status =
-                    H5Dwrite_int(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (int[]) obj);
-        } else if (is1D && (dname == 'J'))
-        {
-            status =
-                    H5Dwrite_long(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (long[]) obj);
-        } else if (is1D && (dname == 'F'))
-        {
-            status =
-                    H5Dwrite_float(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (float[]) obj);
-        } else if (is1D && (dname == 'D'))
-        {
-            status =
-                    H5Dwrite_double(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (double[]) obj);
-        }
-
-        // Rosetta Biosoftware - call into H5DwriteString for variable length Strings
-        else if ((H5.H5Tget_class(mem_type_id) == HDF5Constants.H5T_STRING)
-                && H5.H5Tis_variable_str(mem_type_id) && dataClass.isArray()
-                && (dataClass.getComponentType() == String.class) && is1D)
-        {
-            status =
-                    H5DwriteString(dataset_id, mem_type_id, mem_space_id, file_space_id,
-                            xfer_plist_id, (String[]) obj);
-
-        } else
-        {
-            HDFArray theArray = new HDFArray(obj);
-            byte[] buf = theArray.byteify();
-
-            /* will raise exception on error */
-            status =
-                    H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id,
-                            buf);
-
-            // clean up these: assign 'null' as hint to gc() */
-            buf = null;
-            theArray = null;
-        }
-
-        return status;
-    }
 
     /**
      * H5Dwrite writes a (partial) dataset, specified by its identifier dataset_id, from the
@@ -1712,28 +1465,6 @@ public class H5
             throws HDF5Exception;
 
     /**
-     * H5Pset_fill_value sets the fill value for a dataset creation property list.
-     * 
-     * @param plist_id IN: Property list identifier.
-     * @param type_id IN: The datatype identifier of value.
-     * @param obj IN: The fill value.
-     * @return a non-negative value if successful
-     * @exception HDF5Exception - Error converting data array
-     */
-    public synchronized static int H5Pset_fill_value(final int plist_id, final int type_id,
-            final Object obj) throws HDF5Exception
-    {
-        HDFArray theArray = new HDFArray(obj);
-        byte[] buf = theArray.byteify();
-
-        final int retVal = H5Pset_fill_value(plist_id, type_id, buf);
-
-        buf = null;
-        theArray = null;
-        return retVal;
-    }
-
-    /**
      * H5Pget_fill_value queries the fill value property of a dataset creation property list. <b>NOT
      * IMPLEMENTED YET</B>
      * 
@@ -1744,30 +1475,6 @@ public class H5
      */
     public synchronized static native int H5Pget_fill_value(int plist_id, int type_id, byte[] value)
             throws HDF5Exception;
-
-    /**
-     * H5Pget_fill_value queries the fill value property of a dataset creation property list. <b>NOT
-     * IMPLEMENTED YET</B>
-     * 
-     * @param plist_id IN: Property list identifier.
-     * @param type_id IN: The datatype identifier of value.
-     * @param obj IN: The fill value.
-     * @return a non-negative value if successful
-     */
-    public synchronized static int H5Pget_fill_value(final int plist_id, final int type_id,
-            Object obj) throws HDF5Exception
-    {
-        final HDFArray theArray = new HDFArray(obj);
-        final byte[] buf = theArray.emptyBytes();
-
-        final int status = H5Pget_fill_value(plist_id, type_id, buf);
-        if (status >= 0)
-        {
-            theArray.arrayify(buf);
-        }
-
-        return status;
-    }
 
     /**
      * H5Pset_filter adds the specified filter and corresponding properties to the end of an output
@@ -2401,40 +2108,8 @@ public class H5
      * @return a non-negative value if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      */
-    private synchronized static native int H5Sselect_elements(int space_id, int op,
+    public synchronized static native int H5Sselect_elements(int space_id, int op,
             int num_elements, byte[] coord) throws HDF5LibraryException, NullPointerException;
-
-    /**
-     * H5Sselect_elements selects array elements to be included in the selection for the space_id
-     * dataspace.
-     * 
-     * @param space_id Identifier of the dataspace.
-     * @param op operator specifying how the new selection is combined.
-     * @param num_elements Number of elements to be selected.
-     * @param coord2D A 2-dimensional array specifying the coordinates of the elements.
-     * @return a non-negative value if successful
-     * @exception HDF5Exception - Error in the data conversion
-     * @exception HDF5LibraryException - Error from the HDF-5 Library.
-     * @exception NullPointerException - cord array is
-     */
-    public synchronized static int H5Sselect_elements(final int space_id, final int op,
-            final int num_elements, final long[][] coord2D) throws HDF5Exception,
-            HDF5LibraryException, NullPointerException
-    {
-        if (coord2D == null)
-        {
-            return -1;
-        }
-
-        HDFArray theArray = new HDFArray(coord2D);
-        byte[] coord = theArray.byteify();
-
-        final int retVal = H5Sselect_elements(space_id, op, num_elements, coord);
-
-        coord = null;
-        theArray = null;
-        return retVal;
-    }
 
     /**
      * H5Sselect_all selects the entire extent of the dataspace space_id.

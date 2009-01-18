@@ -160,7 +160,9 @@ public class HDF5RoundtripTest
         test.testNullOnGetSymbolicLinkTargetForNoLink();
         test.testReadByteArrayDataSetBlockWise();
         test.testWriteByteArrayDataSetBlockWise();
+        test.testWriteByteMatrixDataSetBlockWise();
         test.testWriteByteArrayDataSetBlockWiseMismatch();
+        test.testWriteByteMatrixDataSetBlockWiseMismatch();
         test.testReadFloatMatrixDataSetBlockWise();
         test.testWriteFloatMatrixDataSetBlockWise();
         test.testExtendCompactDataset();
@@ -335,7 +337,6 @@ public class HDF5RoundtripTest
             flatArray[i] = i;
         }
         final MDFloatArray arrayBlockWritten = new MDFloatArray(flatArray, blockShape);
-        writer.createFloatMDArray(floatDatasetName, shape, blockShape);
         for (int i = 0; i < 2; ++i)
         {
             for (int j = 0; j < 2; ++j)
@@ -701,7 +702,8 @@ public class HDF5RoundtripTest
         final int offsetX = 2;
         final int offsetY = 3;
         writer.createFloatMatrix(dsName, 2 * blockSize, 2 * blockSize, blockSize, blockSize);
-        writer.writeFloatMatrixBlockWithOffset(dsName, floatMatrixBlockWritten, offsetX, offsetY);
+        writer.writeFloatMatrixBlockWithOffset(dsName, floatMatrixBlockWritten, 5, 5, offsetX,
+                offsetY);
         writer.close();
         final HDF5Reader reader = new HDF5Reader(datasetFile).open();
         final float[][] floatMatrixBlockRead =
@@ -890,6 +892,94 @@ public class HDF5RoundtripTest
         for (int i = 0; i < byteArrayRead.length; ++i)
         {
             assertEquals("Byte " + i, (i / blockSize), byteArrayRead[i]);
+        }
+    }
+
+    @Test
+    public void testWriteByteMatrixDataSetBlockWise()
+    {
+        final File datasetFile = new File(workingDirectory, "writeByteMatrixBlockWise.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).open();
+        final String dsName = "ds";
+        final int sizeX = 100;
+        final int sizeY = 10;
+        final int blockSizeX = 10;
+        final int blockSizeY = 5;
+        final int numberOfBlocksX = 10;
+        final int numberOfBlocksY = 2;
+        writer.createByteMatrix(dsName, sizeX, sizeY, blockSizeX, blockSizeY, true);
+        final byte[][] block = new byte[blockSizeX][blockSizeY];
+        for (int i = 0; i < numberOfBlocksX; ++i)
+        {
+            for (int j = 0; j < numberOfBlocksY; ++j)
+            {
+                for (int k = 0; k < blockSizeX; ++k)
+                {
+                    Arrays.fill(block[k], (byte) (i + j));
+                }
+                writer.writeByteMatrixBlock(dsName, block, i, j);
+            }
+        }
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        final byte[][] byteMatrixRead = reader.readByteMatrix(dsName);
+        reader.close();
+        assertEquals(sizeX, byteMatrixRead.length);
+        for (int i = 0; i < byteMatrixRead.length; ++i)
+        {
+            for (int j = 0; j < byteMatrixRead[i].length; ++j)
+            {
+                assertEquals("Byte (" + i + "," + j + ")", (i / blockSizeX + j / blockSizeY),
+                        byteMatrixRead[i][j]);
+            }
+        }
+    }
+
+    @Test
+    public void testWriteByteMatrixDataSetBlockWiseMismatch()
+    {
+        final File datasetFile = new File(workingDirectory, "writeByteMatrixBlockWiseMismatch.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).open();
+        final String dsName = "ds";
+        final int sizeX = 99;
+        final int sizeY = 12;
+        final int blockSizeX = 10;
+        final int blockSizeY = 5;
+        final int numberOfBlocksX = 10;
+        final int numberOfBlocksY = 3;
+        writer.createByteMatrix(dsName, sizeX, sizeY, blockSizeX, blockSizeY, true);
+        final byte[][] block = new byte[blockSizeX][blockSizeY];
+        for (int i = 0; i < numberOfBlocksX; ++i)
+        {
+            for (int j = 0; j < numberOfBlocksY; ++j)
+            {
+                for (int k = 0; k < blockSizeX; ++k)
+                {
+                    Arrays.fill(block[k], (byte) (i + j));
+                }
+                writer.writeByteMatrixBlockWithOffset(dsName, block, Math.min(blockSizeX, sizeX - i
+                        * blockSizeX), Math.min(blockSizeY, sizeY - j * blockSizeY),
+                        i * blockSizeX, j * blockSizeY);
+            }
+        }
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        final byte[][] byteMatrixRead = reader.readByteMatrix(dsName);
+        reader.close();
+        assertEquals(sizeX, byteMatrixRead.length);
+        for (int i = 0; i < byteMatrixRead.length; ++i)
+        {
+            for (int j = 0; j < byteMatrixRead[i].length; ++j)
+            {
+                assertEquals("Byte (" + i + "," + j + ")", (i / blockSizeX + j / blockSizeY),
+                        byteMatrixRead[i][j]);
+            }
         }
     }
 
@@ -1464,7 +1554,7 @@ public class HDF5RoundtripTest
                 return true;
             }
             maybeAnArray = Array.get(maybeAnArray, 0);
-        } while(maybeAnArray.getClass().isArray());
+        } while (maybeAnArray.getClass().isArray());
         return false;
     }
 
@@ -2555,7 +2645,7 @@ public class HDF5RoundtripTest
         final HDF5Writer writer = new HDF5Writer(file).open();
         HDF5CompoundType<RecordA> compoundTypeInt = RecordA.getHDF5Type(writer);
         final RecordA recordWritten = new RecordA(17, 42.0f);
-        writer.writeCompound("/testCompound", compoundTypeInt, recordWritten, false);
+        writer.writeCompound("/testCompound", compoundTypeInt, recordWritten);
         writer.close();
         final HDF5Reader reader = new HDF5Reader(file).open();
         HDF5CompoundType<RecordB> compoundTypeFloat = RecordB.getHDF5Type(reader);

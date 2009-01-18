@@ -17,6 +17,8 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.*;
+import static ch.systemsx.cisd.hdf5.HDF5.NO_DEFLATION;
+import static ncsa.hdf.hdf5lib.H5.*;
 import static ncsa.hdf.hdf5lib.HDF5Constants.*;
 
 import java.io.File;
@@ -24,7 +26,6 @@ import java.lang.reflect.Array;
 import java.util.BitSet;
 import java.util.Date;
 
-import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
@@ -530,8 +531,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         checkOpen();
         addAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE, typeVariantDataTypeId,
-                typeVariantDataTypeId, new int[]
-                    { typeVariant.ordinal() });
+                typeVariantDataTypeId, HDFNativeData.intToByte(typeVariant.ordinal()));
     }
 
     /**
@@ -585,8 +585,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                                         h5.createAttribute(objectId, name, stringDataTypeId,
                                                 registry);
                             }
-                            h5.writeAttribute(attributeId, stringDataTypeId, (value + '\0')
-                                    .getBytes());
+                            H5Awrite(attributeId, stringDataTypeId, (value + '\0').getBytes());
                             return null; // Nothing to return.
                         }
                     };
@@ -679,7 +678,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     }
 
     private void addAttribute(final String objectPath, final String name,
-            final int storageDataTypeId, final int nativeDataTypeId, final Object value)
+            final int storageDataTypeId, final int nativeDataTypeId, final byte[] value)
     {
         assert objectPath != null;
         assert name != null;
@@ -703,7 +702,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                                         h5.createAttribute(objectId, name, storageDataTypeId,
                                                 registry);
                             }
-                            h5.writeAttribute(attributeId, nativeDataTypeId, value);
+                            H5Awrite(attributeId, nativeDataTypeId, value);
                             return null; // Nothing to return.
                         }
                     };
@@ -750,10 +749,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        final long[] longArray = BitSetConversionUtils.toStorageForm(data);
-        final int msb = data.length();
-        final int realLength = msb / 64 + (msb % 64 != 0 ? 1 : 0);
-        writeRank1Compact(objectPath, H5T_STD_B64LE, H5T_NATIVE_B64, longArray, realLength);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int msb = data.length();
+                    final int realLength = msb / 64 + (msb % 64 != 0 ? 1 : 0);
+                    final int dataSetId = getDataSetId(objectPath, H5T_STD_B64LE, new long[]
+                        { realLength }, NO_DEFLATION, registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            BitSetConversionUtils.toStorageForm(data));
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -786,17 +795,26 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param data The data to write. Must not be <code>null</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeBitField(final String objectPath, final BitSet data, boolean deflate)
+    public void writeBitField(final String objectPath, final BitSet data, final boolean deflate)
     {
         assert objectPath != null;
         assert data != null;
 
         checkOpen();
-        final long[] longArray = BitSetConversionUtils.toStorageForm(data);
-        final int msb = data.length();
-        final int realLength = msb / 64 + (msb % 64 != 0 ? 1 : 0);
-        writeRank1(objectPath, H5T_STD_B64LE, H5T_NATIVE_B64, getDeflateLevel(deflate), longArray,
-                realLength);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int msb = data.length();
+                    final int realLength = msb / 64 + (msb % 64 != 0 ? 1 : 0);
+                    final int dataSetId = getDataSetId(objectPath, H5T_STD_B64LE, new long[]
+                        { realLength }, getDeflateLevel(deflate), registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            BitSetConversionUtils.toStorageForm(data));
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     //
@@ -819,8 +837,18 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        final int dataTypeId = getOrCreateOpaqueTypeId(tag);
-        writeRank1Compact(objectPath, dataTypeId, dataTypeId, data, data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataTypeId = getOrCreateOpaqueTypeId(tag);
+                    final int dataSetId = getDataSetId(objectPath, dataTypeId, new long[]
+                        { data.length }, NO_DEFLATION, registry);
+                    H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -852,15 +880,25 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data,
-            boolean deflate)
+            final boolean deflate)
     {
         assert objectPath != null;
         assert tag != null;
         assert data != null;
 
         checkOpen();
-        final int dataTypeId = getOrCreateOpaqueTypeId(tag);
-        writeRank1(objectPath, dataTypeId, dataTypeId, getDeflateLevel(deflate), data, data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataTypeId = getOrCreateOpaqueTypeId(tag);
+                    final int dataSetId = getDataSetId(objectPath, dataTypeId, new long[]
+                        { data.length }, getDeflateLevel(deflate), registry);
+                    H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -893,7 +931,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      *         to represent this opaque type.
      */
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
-            final long size, final int blockSize, boolean deflate)
+            final long size, final int blockSize, final boolean deflate)
     {
         assert objectPath != null;
         assert tag != null;
@@ -902,8 +940,17 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
         checkOpen();
         final int dataTypeId = getOrCreateOpaqueTypeId(tag);
-        writeBlockRank1(objectPath, dataTypeId, dataTypeId, getDeflateLevel(deflate), null, size,
-                blockSize, 0);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, dataTypeId, getDeflateLevel(deflate), new long[]
+                        { size }, new long[]
+                        { blockSize }, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
         return new HDF5OpaqueType(fileId, dataTypeId, tag);
     }
 
@@ -934,8 +981,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
         checkOpen();
         dataType.check(fileId);
-        writeBlockRank1(objectPath, dataType.getStorageTypeId(), dataType.getNativeTypeId(),
-                HDF5.NO_DEFLATION, data, data.length, data.length, data.length * blockNumber);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { data.length };
+                    final long[] slabStartOrNull = new long[]
+                        { data.length * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite(dataSetId, dataType.getNativeTypeId(), memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -971,8 +1034,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
         checkOpen();
         dataType.check(fileId);
-        writeBlockRank1(objectPath, dataType.getStorageTypeId(), dataType.getNativeTypeId(),
-                HDF5.NO_DEFLATION, data, dataSize, dataSize, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite(dataSetId, dataType.getNativeTypeId(), memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     private int getOrCreateOpaqueTypeId(final String tag)
@@ -1022,7 +1101,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert length > 0;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, null, length);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I8LE, NO_DEFLATION, new long[]
+                        { length }, null, true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -1038,7 +1126,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, data, data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_STD_I8LE, dimensions, NO_DEFLATION,
+                                    registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1059,13 +1160,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param data The data to write. Must not be <code>null</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeByteArray(final String objectPath, final byte[] data, boolean deflate)
+    public void writeByteArray(final String objectPath, final byte[] data, final boolean deflate)
     {
         assert data != null;
 
         checkOpen();
-        writeRank1(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, getDeflateLevel(deflate), data,
-                data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I8LE, new long[]
+                        { data.length }, getDeflateLevel(deflate), registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1101,15 +1211,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createByteArray(final String objectPath, final long size, final int blockSize,
-            boolean deflate)
+            final boolean deflate)
     {
         assert objectPath != null;
         assert size >= 0;
         assert blockSize >= 0 && blockSize <= size;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, getDeflateLevel(deflate), null,
-                size, blockSize, 0);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I8LE, getDeflateLevel(deflate), new long[]
+                        { size }, new long[]
+                        { blockSize }, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -1133,8 +1252,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDF5.NO_DEFLATION, data,
-                data.length, data.length, data.length * blockNumber);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final long[] slabStartOrNull = new long[]
+                        { data.length * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1163,8 +1298,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDF5.NO_DEFLATION, data,
-                dataSize, dataSize, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1187,15 +1338,13 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      *            same length.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeByteMatrix(final String objectPath, final byte[][] data, boolean deflate)
+    public void writeByteMatrix(final String objectPath, final byte[][] data, final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
         assert checkDimensions(data);
 
-        checkOpen();
-        writeRankN(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, getDeflateLevel(deflate), data,
-                new long[]
-                    { data.length, data.length == 0 ? 0 : data[0].length });
+        writeByteMDArray(objectPath, new MDByteArray(data), deflate);
     }
 
     /**
@@ -1208,7 +1357,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param blockSizeY The size of one block in the y dimension.
      */
     public void createByteMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY)
+            final int blockSizeX, final int blockSizeY)
     {
         createByteMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
     }
@@ -1224,7 +1373,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createByteMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY, boolean deflate)
+            final int blockSizeX, final int blockSizeY, final boolean deflate)
     {
         assert objectPath != null;
         assert sizeX >= 0;
@@ -1233,11 +1382,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockSizeY >= 0 && blockSizeY <= sizeY;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, getDeflateLevel(deflate), null,
-                new long[]
-                    { sizeX, sizeY }, new long[]
-                    { blockSizeX, blockSizeY }, new long[]
-                    { 0, 0 });
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { sizeX, sizeY };
+                    final long[] blockDimensions = new long[]
+                        { blockSizeX, blockSizeY };
+                    createDataSet(objectPath, H5T_STD_I8LE, getDeflateLevel(deflate), dimensions,
+                            blockDimensions, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -1267,12 +1425,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { blockNumberX * data.length, blockNumberY * data[0].length });
+        writeByteMDArrayBlock(objectPath, new MDByteArray(data), new long[]
+            { blockNumberX, blockNumberY });
     }
 
     /**
@@ -1290,21 +1444,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
+     *            <code><= data.length</code> )
+     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
+     *            <code><= data[0].length</code> )
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
     public void writeByteMatrixBlockWithOffset(final String objectPath, final byte[][] data,
-            final long offsetX, final long offsetY)
+            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
     {
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { offsetX, offsetY });
+        writeByteMDArrayBlockWithOffset(objectPath, new MDByteArray(data, new int[]
+            { dataSizeX, dataSizeY }), new long[]
+            { offsetX, offsetY });
     }
 
     /**
@@ -1330,11 +1485,23 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeByteMDArray(final String objectPath, final MDByteArray data,
             final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
 
         checkOpen();
-        writeRankN(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, getDeflateLevel(deflate), data
-                .getAsFlatArray(), data.longDimensions());
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_STD_I8LE, data.longDimensions(),
+                                    getDeflateLevel(deflate), registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
+                            .getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1366,8 +1533,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockDimensions != null;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, getDeflateLevel(deflate), null,
-                dimensions, MDArray.toLong(blockDimensions), null);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I8LE, getDeflateLevel(deflate), dimensions,
+                            MDArray.toLong(blockDimensions), false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -1382,19 +1557,32 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeByteMDArrayBlock(final String objectPath, final MDByteArray data,
             final long[] blockNumber)
     {
+        assert objectPath != null;
         assert data != null;
         assert blockNumber != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == blockNumber.length;
-        final long[] offset = new long[dimensions.length];
-        for (int i = 0; i < offset.length; ++i)
-        {
-            offset[i] = blockNumber[i] * dimensions[i];
-        }
-        writeBlockRankN(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == blockNumber.length;
+                    final long[] offset = new long[dimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        offset[i] = blockNumber[i] * dimensions[i];
+                    }
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1408,14 +1596,27 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeByteMDArrayBlockWithOffset(final String objectPath, final MDByteArray data,
             final long[] offset)
     {
+        assert objectPath != null;
         assert data != null;
         assert offset != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == offset.length;
-        writeBlockRankN(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     //
@@ -1449,7 +1650,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert length > 0;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, null, length);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I16LE, NO_DEFLATION, new long[]
+                        { length }, null, true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -1465,7 +1675,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, data, data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_STD_I16LE, dimensions, NO_DEFLATION,
+                                    registry);
+                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1486,13 +1709,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param data The data to write. Must not be <code>null</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeShortArray(final String objectPath, final short[] data, boolean deflate)
+    public void writeShortArray(final String objectPath, final short[] data, final boolean deflate)
     {
         assert data != null;
 
         checkOpen();
-        writeRank1(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, getDeflateLevel(deflate), data,
-                data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I16LE, new long[]
+                        { data.length }, getDeflateLevel(deflate), registry);
+                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1528,15 +1760,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createShortArray(final String objectPath, final long size, final int blockSize,
-            boolean deflate)
+            final boolean deflate)
     {
         assert objectPath != null;
         assert size >= 0;
         assert blockSize >= 0 && blockSize <= size;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, getDeflateLevel(deflate),
-                null, size, blockSize, 0);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I16LE, getDeflateLevel(deflate), new long[]
+                        { size }, new long[]
+                        { blockSize }, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -1560,8 +1801,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, HDF5.NO_DEFLATION, data,
-                data.length, data.length, data.length * blockNumber);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final long[] slabStartOrNull = new long[]
+                        { data.length * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1590,8 +1847,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, HDF5.NO_DEFLATION, data,
-                dataSize, dataSize, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1614,15 +1887,14 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      *            same length.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeShortMatrix(final String objectPath, final short[][] data, boolean deflate)
+    public void writeShortMatrix(final String objectPath, final short[][] data,
+            final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
         assert checkDimensions(data);
 
-        checkOpen();
-        writeRankN(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, getDeflateLevel(deflate), data,
-                new long[]
-                    { data.length, data.length == 0 ? 0 : data[0].length });
+        writeShortMDArray(objectPath, new MDShortArray(data), deflate);
     }
 
     /**
@@ -1635,7 +1907,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param blockSizeY The size of one block in the y dimension.
      */
     public void createShortMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY)
+            final int blockSizeX, final int blockSizeY)
     {
         createShortMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
     }
@@ -1651,7 +1923,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createShortMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY, boolean deflate)
+            final int blockSizeX, final int blockSizeY, final boolean deflate)
     {
         assert objectPath != null;
         assert sizeX >= 0;
@@ -1660,11 +1932,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockSizeY >= 0 && blockSizeY <= sizeY;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, getDeflateLevel(deflate),
-                null, new long[]
-                    { sizeX, sizeY }, new long[]
-                    { blockSizeX, blockSizeY }, new long[]
-                    { 0, 0 });
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { sizeX, sizeY };
+                    final long[] blockDimensions = new long[]
+                        { blockSizeX, blockSizeY };
+                    createDataSet(objectPath, H5T_STD_I16LE, getDeflateLevel(deflate), dimensions,
+                            blockDimensions, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -1694,12 +1975,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { blockNumberX * data.length, blockNumberY * data[0].length });
+        writeShortMDArrayBlock(objectPath, new MDShortArray(data), new long[]
+            { blockNumberX, blockNumberY });
     }
 
     /**
@@ -1717,21 +1994,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
+     *            <code><= data.length</code> )
+     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
+     *            <code><= data[0].length</code> )
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
     public void writeShortMatrixBlockWithOffset(final String objectPath, final short[][] data,
-            final long offsetX, final long offsetY)
+            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
     {
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { offsetX, offsetY });
+        writeShortMDArrayBlockWithOffset(objectPath, new MDShortArray(data, new int[]
+            { dataSizeX, dataSizeY }), new long[]
+            { offsetX, offsetY });
     }
 
     /**
@@ -1757,11 +2035,23 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeShortMDArray(final String objectPath, final MDShortArray data,
             final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
 
         checkOpen();
-        writeRankN(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, getDeflateLevel(deflate), data
-                .getAsFlatArray(), data.longDimensions());
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_STD_I16LE, data.longDimensions(),
+                                    getDeflateLevel(deflate), registry);
+                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
+                            .getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1793,8 +2083,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockDimensions != null;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, getDeflateLevel(deflate),
-                null, dimensions, MDArray.toLong(blockDimensions), null);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I16LE, getDeflateLevel(deflate), dimensions,
+                            MDArray.toLong(blockDimensions), false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -1809,19 +2107,32 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeShortMDArrayBlock(final String objectPath, final MDShortArray data,
             final long[] blockNumber)
     {
+        assert objectPath != null;
         assert data != null;
         assert blockNumber != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == blockNumber.length;
-        final long[] offset = new long[dimensions.length];
-        for (int i = 0; i < offset.length; ++i)
-        {
-            offset[i] = blockNumber[i] * dimensions[i];
-        }
-        writeBlockRankN(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == blockNumber.length;
+                    final long[] offset = new long[dimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        offset[i] = blockNumber[i] * dimensions[i];
+                    }
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1835,14 +2146,27 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeShortMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
             final long[] offset)
     {
+        assert objectPath != null;
         assert data != null;
         assert offset != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == offset.length;
-        writeBlockRankN(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     //
@@ -1876,7 +2200,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert length > 0;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, null, length);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I32LE, NO_DEFLATION, new long[]
+                        { length }, null, true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -1892,7 +2225,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, data, data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_STD_I32LE, dimensions, NO_DEFLATION,
+                                    registry);
+                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1913,13 +2259,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param data The data to write. Must not be <code>null</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeIntArray(final String objectPath, final int[] data, boolean deflate)
+    public void writeIntArray(final String objectPath, final int[] data, final boolean deflate)
     {
         assert data != null;
 
         checkOpen();
-        writeRank1(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, getDeflateLevel(deflate), data,
-                data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I32LE, new long[]
+                        { data.length }, getDeflateLevel(deflate), registry);
+                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -1955,15 +2310,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createIntArray(final String objectPath, final long size, final int blockSize,
-            boolean deflate)
+            final boolean deflate)
     {
         assert objectPath != null;
         assert size >= 0;
         assert blockSize >= 0 && blockSize <= size;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, getDeflateLevel(deflate),
-                null, size, blockSize, 0);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I32LE, getDeflateLevel(deflate), new long[]
+                        { size }, new long[]
+                        { blockSize }, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -1986,8 +2350,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, HDF5.NO_DEFLATION, data,
-                data.length, data.length, data.length * blockNumber);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final long[] slabStartOrNull = new long[]
+                        { data.length * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2016,8 +2396,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, HDF5.NO_DEFLATION, data,
-                dataSize, dataSize, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2040,15 +2436,13 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      *            same length.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeIntMatrix(final String objectPath, final int[][] data, boolean deflate)
+    public void writeIntMatrix(final String objectPath, final int[][] data, final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
         assert checkDimensions(data);
 
-        checkOpen();
-        writeRankN(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, getDeflateLevel(deflate), data,
-                new long[]
-                    { data.length, data.length == 0 ? 0 : data[0].length });
+        writeIntMDArray(objectPath, new MDIntArray(data), deflate);
     }
 
     /**
@@ -2061,7 +2455,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param blockSizeY The size of one block in the y dimension.
      */
     public void createIntMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY)
+            final int blockSizeX, final int blockSizeY)
     {
         createIntMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
     }
@@ -2077,7 +2471,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createIntMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY, boolean deflate)
+            final int blockSizeX, final int blockSizeY, final boolean deflate)
     {
         assert objectPath != null;
         assert sizeX >= 0;
@@ -2086,11 +2480,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockSizeY >= 0 && blockSizeY <= sizeY;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, getDeflateLevel(deflate),
-                null, new long[]
-                    { sizeX, sizeY }, new long[]
-                    { blockSizeX, blockSizeY }, new long[]
-                    { 0, 0 });
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { sizeX, sizeY };
+                    final long[] blockDimensions = new long[]
+                        { blockSizeX, blockSizeY };
+                    createDataSet(objectPath, H5T_STD_I32LE, getDeflateLevel(deflate), dimensions,
+                            blockDimensions, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -2119,12 +2522,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { blockNumberX * data.length, blockNumberY * data[0].length });
+        writeIntMDArrayBlock(objectPath, new MDIntArray(data), new long[]
+            { blockNumberX, blockNumberY });
     }
 
     /**
@@ -2141,21 +2540,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
+     *            <code><= data.length</code> )
+     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
+     *            <code><= data[0].length</code> )
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
     public void writeIntMatrixBlockWithOffset(final String objectPath, final int[][] data,
-            final long offsetX, final long offsetY)
+            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
     {
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { offsetX, offsetY });
+        writeIntMDArrayBlockWithOffset(objectPath, new MDIntArray(data, new int[]
+            { dataSizeX, dataSizeY }), new long[]
+            { offsetX, offsetY });
     }
 
     /**
@@ -2181,11 +2581,23 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeIntMDArray(final String objectPath, final MDIntArray data,
             final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
 
         checkOpen();
-        writeRankN(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, getDeflateLevel(deflate), data
-                .getAsFlatArray(), data.longDimensions());
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_STD_I32LE, data.longDimensions(),
+                                    getDeflateLevel(deflate), registry);
+                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
+                            .getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2217,8 +2629,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockDimensions != null;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, getDeflateLevel(deflate),
-                null, dimensions, MDArray.toLong(blockDimensions), null);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I32LE, getDeflateLevel(deflate), dimensions,
+                            MDArray.toLong(blockDimensions), false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -2233,19 +2653,32 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeIntMDArrayBlock(final String objectPath, final MDIntArray data,
             final long[] blockNumber)
     {
+        assert objectPath != null;
         assert data != null;
         assert blockNumber != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == blockNumber.length;
-        final long[] offset = new long[dimensions.length];
-        for (int i = 0; i < offset.length; ++i)
-        {
-            offset[i] = blockNumber[i] * dimensions[i];
-        }
-        writeBlockRankN(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == blockNumber.length;
+                    final long[] offset = new long[dimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        offset[i] = blockNumber[i] * dimensions[i];
+                    }
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2259,14 +2692,27 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeIntMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
             final long[] offset)
     {
+        assert objectPath != null;
         assert data != null;
         assert offset != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == offset.length;
-        writeBlockRankN(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     //
@@ -2300,7 +2746,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert length > 0;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, null, length);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
+                        { length }, null, true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -2316,7 +2771,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, data, data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_STD_I64LE, dimensions, NO_DEFLATION,
+                                    registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2337,13 +2805,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param data The data to write. Must not be <code>null</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeLongArray(final String objectPath, final long[] data, boolean deflate)
+    public void writeLongArray(final String objectPath, final long[] data, final boolean deflate)
     {
         assert data != null;
 
         checkOpen();
-        writeRank1(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, getDeflateLevel(deflate), data,
-                data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                        { data.length }, getDeflateLevel(deflate), registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2379,15 +2856,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createLongArray(final String objectPath, final long size, final int blockSize,
-            boolean deflate)
+            final boolean deflate)
     {
         assert objectPath != null;
         assert size >= 0;
         assert blockSize >= 0 && blockSize <= size;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, getDeflateLevel(deflate),
-                null, size, blockSize, 0);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I64LE, getDeflateLevel(deflate), new long[]
+                        { size }, new long[]
+                        { blockSize }, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -2411,8 +2897,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDF5.NO_DEFLATION, data,
-                data.length, data.length, data.length * blockNumber);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final long[] slabStartOrNull = new long[]
+                        { data.length * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2441,8 +2943,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDF5.NO_DEFLATION, data,
-                dataSize, dataSize, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2465,15 +2983,13 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      *            same length.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeLongMatrix(final String objectPath, final long[][] data, boolean deflate)
+    public void writeLongMatrix(final String objectPath, final long[][] data, final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
         assert checkDimensions(data);
 
-        checkOpen();
-        writeRankN(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, getDeflateLevel(deflate), data,
-                new long[]
-                    { data.length, data.length == 0 ? 0 : data[0].length });
+        writeLongMDArray(objectPath, new MDLongArray(data), deflate);
     }
 
     /**
@@ -2486,7 +3002,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param blockSizeY The size of one block in the y dimension.
      */
     public void createLongMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY)
+            final int blockSizeX, final int blockSizeY)
     {
         createLongMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
     }
@@ -2502,7 +3018,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createLongMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY, boolean deflate)
+            final int blockSizeX, final int blockSizeY, final boolean deflate)
     {
         assert objectPath != null;
         assert sizeX >= 0;
@@ -2511,11 +3027,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockSizeY >= 0 && blockSizeY <= sizeY;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, getDeflateLevel(deflate),
-                null, new long[]
-                    { sizeX, sizeY }, new long[]
-                    { blockSizeX, blockSizeY }, new long[]
-                    { 0, 0 });
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { sizeX, sizeY };
+                    final long[] blockDimensions = new long[]
+                        { blockSizeX, blockSizeY };
+                    createDataSet(objectPath, H5T_STD_I64LE, getDeflateLevel(deflate), dimensions,
+                            blockDimensions, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -2545,12 +3070,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { blockNumberX * data.length, blockNumberY * data[0].length });
+        writeLongMDArrayBlock(objectPath, new MDLongArray(data), new long[]
+            { blockNumberX, blockNumberY });
     }
 
     /**
@@ -2568,21 +3089,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
+     *            <code><= data.length</code> )
+     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
+     *            <code><= data[0].length</code> )
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
     public void writeLongMatrixBlockWithOffset(final String objectPath, final long[][] data,
-            final long offsetX, final long offsetY)
+            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
     {
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { offsetX, offsetY });
+        writeLongMDArrayBlockWithOffset(objectPath, new MDLongArray(data, new int[]
+            { dataSizeX, dataSizeY }), new long[]
+            { offsetX, offsetY });
     }
 
     /**
@@ -2608,11 +3130,23 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeLongMDArray(final String objectPath, final MDLongArray data,
             final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
 
         checkOpen();
-        writeRankN(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, getDeflateLevel(deflate), data
-                .getAsFlatArray(), data.longDimensions());
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_STD_I64LE, data.longDimensions(),
+                                    getDeflateLevel(deflate), registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
+                            .getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2644,8 +3178,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockDimensions != null;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, getDeflateLevel(deflate),
-                null, dimensions, MDArray.toLong(blockDimensions), null);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I64LE, getDeflateLevel(deflate), dimensions,
+                            MDArray.toLong(blockDimensions), false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -2660,19 +3202,32 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeLongMDArrayBlock(final String objectPath, final MDLongArray data,
             final long[] blockNumber)
     {
+        assert objectPath != null;
         assert data != null;
         assert blockNumber != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == blockNumber.length;
-        final long[] offset = new long[dimensions.length];
-        for (int i = 0; i < offset.length; ++i)
-        {
-            offset[i] = blockNumber[i] * dimensions[i];
-        }
-        writeBlockRankN(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == blockNumber.length;
+                    final long[] offset = new long[dimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        offset[i] = blockNumber[i] * dimensions[i];
+                    }
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2686,14 +3241,27 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeLongMDArrayBlockWithOffset(final String objectPath, final MDLongArray data,
             final long[] offset)
     {
+        assert objectPath != null;
         assert data != null;
         assert offset != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == offset.length;
-        writeBlockRankN(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     //
@@ -2727,7 +3295,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert length > 0;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, null, length);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_IEEE_F32LE, NO_DEFLATION, new long[]
+                        { length }, null, true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -2743,7 +3320,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, data, data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_IEEE_F32LE, dimensions, NO_DEFLATION,
+                                    registry);
+                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2764,13 +3354,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param data The data to write. Must not be <code>null</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeFloatArray(final String objectPath, final float[] data, boolean deflate)
+    public void writeFloatArray(final String objectPath, final float[] data, final boolean deflate)
     {
         assert data != null;
 
         checkOpen();
-        writeRank1(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, getDeflateLevel(deflate), data,
-                data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, H5T_IEEE_F32LE, new long[]
+                        { data.length }, getDeflateLevel(deflate), registry);
+                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2806,15 +3405,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createFloatArray(final String objectPath, final long size, final int blockSize,
-            boolean deflate)
+            final boolean deflate)
     {
         assert objectPath != null;
         assert size >= 0;
         assert blockSize >= 0 && blockSize <= size;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, getDeflateLevel(deflate),
-                null, size, blockSize, 0);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_IEEE_F32LE, getDeflateLevel(deflate), new long[]
+                        { size }, new long[]
+                        { blockSize }, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -2838,8 +3446,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDF5.NO_DEFLATION, data,
-                data.length, data.length, data.length * blockNumber);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final long[] slabStartOrNull = new long[]
+                        { data.length * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2868,8 +3492,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDF5.NO_DEFLATION, data,
-                dataSize, dataSize, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -2892,15 +3532,14 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      *            same length.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeFloatMatrix(final String objectPath, final float[][] data, boolean deflate)
+    public void writeFloatMatrix(final String objectPath, final float[][] data,
+            final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
         assert checkDimensions(data);
 
-        checkOpen();
-        writeRankN(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, getDeflateLevel(deflate), data,
-                new long[]
-                    { data.length, data.length == 0 ? 0 : data[0].length });
+        writeFloatMDArray(objectPath, new MDFloatArray(data), deflate);
     }
 
     /**
@@ -2913,7 +3552,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param blockSizeY The size of one block in the y dimension.
      */
     public void createFloatMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY)
+            final int blockSizeX, final int blockSizeY)
     {
         createFloatMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
     }
@@ -2929,7 +3568,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createFloatMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY, boolean deflate)
+            final int blockSizeX, final int blockSizeY, final boolean deflate)
     {
         assert objectPath != null;
         assert sizeX >= 0;
@@ -2938,11 +3577,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockSizeY >= 0 && blockSizeY <= sizeY;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, getDeflateLevel(deflate),
-                null, new long[]
-                    { sizeX, sizeY }, new long[]
-                    { blockSizeX, blockSizeY }, new long[]
-                    { 0, 0 });
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { sizeX, sizeY };
+                    final long[] blockDimensions = new long[]
+                        { blockSizeX, blockSizeY };
+                    createDataSet(objectPath, H5T_IEEE_F32LE, getDeflateLevel(deflate), dimensions,
+                            blockDimensions, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -2972,12 +3620,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { blockNumberX * data.length, blockNumberY * data[0].length });
+        writeFloatMDArrayBlock(objectPath, new MDFloatArray(data), new long[]
+            { blockNumberX, blockNumberY });
     }
 
     /**
@@ -2995,21 +3639,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
+     *            <code><= data.length</code> )
+     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
+     *            <code><= data[0].length</code> )
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
     public void writeFloatMatrixBlockWithOffset(final String objectPath, final float[][] data,
-            final long offsetX, final long offsetY)
+            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
     {
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { offsetX, offsetY });
+        writeFloatMDArrayBlockWithOffset(objectPath, new MDFloatArray(data, new int[]
+            { dataSizeX, dataSizeY }), new long[]
+            { offsetX, offsetY });
     }
 
     /**
@@ -3035,11 +3680,23 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeFloatMDArray(final String objectPath, final MDFloatArray data,
             final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
 
         checkOpen();
-        writeRankN(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, getDeflateLevel(deflate), data
-                .getAsFlatArray(), data.longDimensions());
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_IEEE_F32LE, data.longDimensions(),
+                                    getDeflateLevel(deflate), registry);
+                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
+                            .getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -3071,8 +3728,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockDimensions != null;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, getDeflateLevel(deflate),
-                null, dimensions, MDArray.toLong(blockDimensions), null);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_IEEE_F32LE, getDeflateLevel(deflate), dimensions,
+                            MDArray.toLong(blockDimensions), false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -3087,19 +3752,32 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeFloatMDArrayBlock(final String objectPath, final MDFloatArray data,
             final long[] blockNumber)
     {
+        assert objectPath != null;
         assert data != null;
         assert blockNumber != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == blockNumber.length;
-        final long[] offset = new long[dimensions.length];
-        for (int i = 0; i < offset.length; ++i)
-        {
-            offset[i] = blockNumber[i] * dimensions[i];
-        }
-        writeBlockRankN(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == blockNumber.length;
+                    final long[] offset = new long[dimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        offset[i] = blockNumber[i] * dimensions[i];
+                    }
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -3113,14 +3791,27 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeFloatMDArrayBlockWithOffset(final String objectPath, final MDFloatArray data,
             final long[] offset)
     {
+        assert objectPath != null;
         assert data != null;
         assert offset != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == offset.length;
-        writeBlockRankN(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     //
@@ -3155,7 +3846,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert length > 0;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, null, length);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_IEEE_F64LE, NO_DEFLATION, new long[]
+                        { length }, null, true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -3171,7 +3871,21 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, data, data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_IEEE_F64LE, dimensions, NO_DEFLATION,
+                                    registry);
+                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -3192,13 +3906,23 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param data The data to write. Must not be <code>null</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeDoubleArray(final String objectPath, final double[] data, boolean deflate)
+    public void writeDoubleArray(final String objectPath, final double[] data, final boolean deflate)
     {
         assert data != null;
 
         checkOpen();
-        writeRank1(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, getDeflateLevel(deflate), data,
-                data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, H5T_IEEE_F64LE, new long[]
+                        { data.length }, getDeflateLevel(deflate), registry);
+                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -3234,15 +3958,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createDoubleArray(final String objectPath, final long size, final int blockSize,
-            boolean deflate)
+            final boolean deflate)
     {
         assert objectPath != null;
         assert size >= 0;
         assert blockSize >= 0 && blockSize <= size;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, getDeflateLevel(deflate),
-                null, size, blockSize, 0);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_IEEE_F64LE, getDeflateLevel(deflate), new long[]
+                        { size }, new long[]
+                        { blockSize }, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -3266,8 +3999,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDF5.NO_DEFLATION, data,
-                data.length, data.length, data.length * blockNumber);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final long[] slabStartOrNull = new long[]
+                        { data.length * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -3296,8 +4045,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDF5.NO_DEFLATION, data,
-                dataSize, dataSize, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -3320,15 +4085,14 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      *            same length.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void writeDoubleMatrix(final String objectPath, final double[][] data, boolean deflate)
+    public void writeDoubleMatrix(final String objectPath, final double[][] data,
+            final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
         assert checkDimensions(data);
 
-        checkOpen();
-        writeRankN(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, getDeflateLevel(deflate), data,
-                new long[]
-                    { data.length, data.length == 0 ? 0 : data[0].length });
+        writeDoubleMDArray(objectPath, new MDDoubleArray(data), deflate);
     }
 
     /**
@@ -3341,7 +4105,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param blockSizeY The size of one block in the y dimension.
      */
     public void createDoubleMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY)
+            final int blockSizeX, final int blockSizeY)
     {
         createDoubleMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
     }
@@ -3357,7 +4121,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void createDoubleMatrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY, boolean deflate)
+            final int blockSizeX, final int blockSizeY, final boolean deflate)
     {
         assert objectPath != null;
         assert sizeX >= 0;
@@ -3366,11 +4130,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockSizeY >= 0 && blockSizeY <= sizeY;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, getDeflateLevel(deflate),
-                null, new long[]
-                    { sizeX, sizeY }, new long[]
-                    { blockSizeX, blockSizeY }, new long[]
-                    { 0, 0 });
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { sizeX, sizeY };
+                    final long[] blockDimensions = new long[]
+                        { blockSizeX, blockSizeY };
+                    createDataSet(objectPath, H5T_IEEE_F64LE, getDeflateLevel(deflate), dimensions,
+                            blockDimensions, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -3400,12 +4173,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { blockNumberX * data.length, blockNumberY * data[0].length });
+        writeDoubleMDArrayBlock(objectPath, new MDDoubleArray(data), new long[]
+            { blockNumberX, blockNumberY });
     }
 
     /**
@@ -3423,21 +4192,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
+     *            <code><= data.length</code> )
+     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
+     *            <code><= data[0].length</code> )
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
     public void writeDoubleMatrixBlockWithOffset(final String objectPath, final double[][] data,
-            final long offsetX, final long offsetY)
+            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
     {
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { offsetX, offsetY });
+        writeDoubleMDArrayBlockWithOffset(objectPath, new MDDoubleArray(data, new int[]
+            { dataSizeX, dataSizeY }), new long[]
+            { offsetX, offsetY });
     }
 
     /**
@@ -3463,11 +4233,23 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeDoubleMDArray(final String objectPath, final MDDoubleArray data,
             final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
 
         checkOpen();
-        writeRankN(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, getDeflateLevel(deflate), data
-                .getAsFlatArray(), data.longDimensions());
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, H5T_IEEE_F64LE, data.longDimensions(),
+                                    getDeflateLevel(deflate), registry);
+                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -3499,8 +4281,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert blockDimensions != null;
 
         checkOpen();
-        writeBlockRankN(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, getDeflateLevel(deflate),
-                null, dimensions, MDArray.toLong(blockDimensions), null);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_IEEE_F64LE, getDeflateLevel(deflate), dimensions,
+                            MDArray.toLong(blockDimensions), false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -3515,19 +4305,32 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeDoubleMDArrayBlock(final String objectPath, final MDDoubleArray data,
             final long[] blockNumber)
     {
+        assert objectPath != null;
         assert data != null;
         assert blockNumber != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == blockNumber.length;
-        final long[] offset = new long[dimensions.length];
-        for (int i = 0; i < offset.length; ++i)
-        {
-            offset[i] = blockNumber[i] * dimensions[i];
-        }
-        writeBlockRankN(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == blockNumber.length;
+                    final long[] offset = new long[dimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        offset[i] = blockNumber[i] * dimensions[i];
+                    }
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -3541,14 +4344,27 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeDoubleMDArrayBlockWithOffset(final String objectPath,
             final MDDoubleArray data, final long[] offset)
     {
+        assert objectPath != null;
         assert data != null;
         assert offset != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == offset.length;
-        writeBlockRankN(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     // ------------------------------------------------------------------------------
@@ -3591,7 +4407,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert length > 0;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, null, length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
+                        { length }, null, true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
         addTypeVariantAttribute(objectPath,
                 HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH);
     }
@@ -3610,8 +4435,18 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert timeStamps != null;
 
         checkOpen();
-        writeRank1Compact(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, timeStamps,
-                timeStamps.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                        { timeStamps.length }, NO_DEFLATION, registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            timeStamps);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
         addTypeVariantAttribute(objectPath,
                 HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH);
     }
@@ -3645,8 +4480,18 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert timeStamps != null;
 
         checkOpen();
-        writeRank1(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, getDeflateLevel(deflate),
-                timeStamps, timeStamps.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                        { timeStamps.length }, getDeflateLevel(deflate), registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            timeStamps);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
         addTypeVariantAttribute(objectPath,
                 HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH);
     }
@@ -3788,7 +4633,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                                         chunkSizeOrNull, stringDataTypeId,
                                         getDeflateLevel(deflate), objectPath, layout, registry);
                     }
-                    h5.writeDataSet(dataSetId, stringDataTypeId, (data + '\0').getBytes());
+                    H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            (data + '\0').getBytes());
                     return null; // Nothing to return.
                 }
 
@@ -3897,7 +4743,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                                         stringDataTypeId, getDeflateLevel(deflate), objectPath,
                                         layout, registry);
                     }
-                    h5.writeDataSet(dataSetId, stringDataTypeId, data, maxLength);
+                    H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data,
+                            maxLength);
                     return null; // Nothing to return.
                 }
             };
@@ -3928,8 +4775,9 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final int dataSetId =
                             h5.createScalarDataSet(fileId, variableLengthStringDataTypeId,
                                     objectPath, registry);
-                    h5.writeDataSet(dataSetId, variableLengthStringDataTypeId, new String[]
-                        { data });
+                    H5DwriteString(dataSetId, variableLengthStringDataTypeId, H5S_ALL, H5S_ALL,
+                            H5P_DEFAULT, new String[]
+                                { data });
                     return null; // Nothing to return.
                 }
             };
@@ -4021,10 +4869,32 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
         checkOpen();
         data.getType().check(fileId);
-        final int storageDataTypeId = data.getType().getStorageTypeId();
-        final int nativeDataTypeId = data.getType().getNativeTypeId();
-        writeRank1Compact(objectPath, storageDataTypeId, nativeDataTypeId, data.getStorageForm(),
-                data.getLength());
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, data.getType().getStorageTypeId(), new long[]
+                                { data.getLength() }, NO_DEFLATION, registry);
+                    switch (data.getStorageForm())
+                    {
+                        case BYTE:
+                            H5Dwrite(dataSetId, data.getType().getNativeTypeId(), H5S_ALL, H5S_ALL,
+                                    H5P_DEFAULT, data.getStorageFormBArray());
+                            break;
+                        case SHORT:
+                            H5Dwrite_short(dataSetId, data.getType().getNativeTypeId(), H5S_ALL,
+                                    H5S_ALL, H5P_DEFAULT, data.getStorageFormSArray());
+                            break;
+                        case INT:
+                            H5Dwrite_int(dataSetId, data.getType().getNativeTypeId(), H5S_ALL,
+                                    H5S_ALL, H5P_DEFAULT, data.getStorageFormIArray());
+                            break;
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -4043,10 +4913,31 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
         checkOpen();
         data.getType().check(fileId);
-        final int storageDataTypeId = data.getType().getStorageTypeId();
-        final int nativeDataTypeId = data.getType().getNativeTypeId();
-        writeRank1(objectPath, storageDataTypeId, nativeDataTypeId, getDeflateLevel(deflate), data
-                .getStorageForm(), data.getLength());
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, data.getType().getStorageTypeId(), new long[]
+                                { data.getLength() }, getDeflateLevel(deflate), registry);
+                    switch (data.getStorageForm())
+                    {
+                        case BYTE:
+                            H5Dwrite(dataSetId, data.getType().getNativeTypeId(), H5S_ALL, H5S_ALL,
+                                    H5P_DEFAULT, data.getStorageFormBArray());
+                            break;
+                        case SHORT:
+                            H5Dwrite_short(dataSetId, data.getType().getNativeTypeId(), H5S_ALL,
+                                    H5S_ALL, H5P_DEFAULT, data.getStorageFormSArray());
+                            break;
+                        case INT:
+                            H5Dwrite_int(dataSetId, data.getType().getNativeTypeId(), H5S_ALL,
+                                    H5S_ALL, H5P_DEFAULT, data.getStorageFormIArray());
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     //
@@ -4108,10 +4999,9 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @param data The value of the data set.
-     * @param deflate If <code>true</code>, the data will be stored compressed.
      */
     public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
-            final T data, final boolean deflate)
+            final T data)
     {
         checkOpen();
         type.check(fileId);
@@ -4127,10 +5017,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param type The type definition of this compound type.
      * @param data The value of the data set.
      */
-    public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
-            final T data)
+    public <T> void writeCompoundArrayCompact(final String objectPath,
+            final HDF5CompoundType<T> type, final T[] data)
     {
-        writeCompound(objectPath, type, data, false);
+        writeCompoundArrayCompact(objectPath, type, data, false);
     }
 
     /**
@@ -4145,27 +5035,40 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public <T> void writeCompoundArrayCompact(final String objectPath,
             final HDF5CompoundType<T> type, final T[] data, final boolean deflate)
     {
+        assert objectPath != null;
+        assert type != null;
+        assert data != null;
+
         checkOpen();
         type.check(fileId);
-        writeCompoundArray(objectPath, type, new long[]
-            { data.length }, null, null, data, deflate, true);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, type.getStorageTypeId(), new long[]
+                                { data.length }, getDeflateLevel(deflate), registry);
+                    final byte[] byteArray =
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+                    H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            byteArray);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
-     * Writes out an array (of rank 1) of compound values. Uses a compact storage layout. Must only
-     * be used for small data sets.
+     * Writes out an array (of rank 1) of compound values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @param data The value of the data set.
      */
-    public <T> void writeCompoundArrayCompact(final String objectPath,
-            final HDF5CompoundType<T> type, final T[] data)
+    public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
+            final T[] data)
     {
-        checkOpen();
-        type.check(fileId);
-        writeCompoundArray(objectPath, type, new long[]
-            { data.length }, null, null, data, false, true);
+        writeCompoundArray(objectPath, type, data, false);
     }
 
     /**
@@ -4179,26 +5082,27 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final T[] data, final boolean deflate)
     {
-        checkOpen();
-        type.check(fileId);
-        writeCompoundArray(objectPath, type, new long[]
-            { data.length }, null, null, data, deflate, false);
-    }
+        assert objectPath != null;
+        assert type != null;
+        assert data != null;
 
-    /**
-     * Writes out an array (of rank 1) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     */
-    public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final T[] data)
-    {
         checkOpen();
         type.check(fileId);
-        writeCompoundArray(objectPath, type, new long[]
-            { data.length }, null, null, data, false, false);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, type.getStorageTypeId(), new long[]
+                                { data.length }, getDeflateLevel(deflate), registry);
+                    final byte[] byteArray =
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+                    H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            byteArray);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -4212,14 +5116,34 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public <T> void writeCompoundArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final T[] data, final long blockNumber)
     {
+        assert objectPath != null;
+        assert type != null;
+        assert data != null;
+        assert blockNumber >= 0;
+
         checkOpen();
         type.check(fileId);
-        final long size = data.length;
-        final long[] dimensions = new long[]
-            { size };
-        final long[] offset = new long[]
-            { size * blockNumber };
-        writeCompoundArray(objectPath, type, dimensions, dimensions, offset, data, false, false);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    final long size = data.length;
+                    final long[] dimensions = new long[]
+                        { size };
+                    final long[] offset = new long[]
+                        { size * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    final byte[] byteArray =
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, byteArray);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -4233,6 +5157,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public <T> void writeCompoundArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final T[] data, final long offset)
     {
+        assert objectPath != null;
+        assert type != null;
+        assert data != null;
+        assert offset >= 0;
+
         checkOpen();
         type.check(fileId);
         final long size = data.length;
@@ -4240,8 +5169,38 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             { size };
         final long[] offsetArray = new long[]
             { offset };
-        writeCompoundArray(objectPath, type, dimensions, dimensions, offsetArray, data, false,
-                false);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offsetArray, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    final byte[] byteArray =
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, byteArray);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Creates an array (of rank 1) of compound values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param size The size of the compound array to create.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link #dontUseExtendableDataTypes()}) and
+     *            <code>deflate == false</code>.
+     */
+    public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
+            final long size, final int blockSize)
+    {
+        createCompoundArray(objectPath, type, size, blockSize, false);
     }
 
     /**
@@ -4258,31 +5217,37 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final long size, final int blockSize, final boolean deflate)
     {
+        assert objectPath != null;
+        assert type != null;
+        assert blockSize >= 0;
+
         checkOpen();
         type.check(fileId);
-        writeCompoundArray(objectPath, type, new long[]
-            { size }, new long[]
-            { blockSize }, null, null, deflate, false);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, type.getStorageTypeId(), getDeflateLevel(deflate),
+                            new long[]
+                                { size }, new long[]
+                                { blockSize }, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
-     * Creates an array (of rank 1) of compound values.
+     * Writes out an array (of rank N) of compound values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
-     * @param size The size of the compound array to create.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link #dontUseExtendableDataTypes()}) and
-     *            <code>deflate == false</code>.
+     * @param data The data to write.
      */
-    public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final long size, final int blockSize)
+    public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
+            final MDArray<T> data)
     {
-        checkOpen();
-        type.check(fileId);
-        writeCompoundArray(objectPath, type, new long[]
-            { size }, new long[]
-            { blockSize }, null, null, false, false);
+        writeCompoundMDArray(objectPath, type, data, false);
     }
 
     /**
@@ -4296,10 +5261,28 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final MDArray<T> data, final boolean deflate)
     {
+        assert objectPath != null;
+        assert type != null;
+        assert data != null;
+
         checkOpen();
         type.check(fileId);
-        writeCompoundArray(objectPath, type, MDArray.toLong(data.dimensions()), null, null, data
-                .getAsFlatArray(), deflate, false);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, type.getStorageTypeId(), MDArray.toLong(data
+                                    .dimensions()), getDeflateLevel(deflate), registry);
+                    final byte[] byteArray =
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
+                                    data.getAsFlatArray());
+                    H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            byteArray);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -4313,6 +5296,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public <T> void writeCompoundMDArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockDimensions)
     {
+        assert objectPath != null;
+        assert type != null;
+        assert data != null;
+        assert blockDimensions != null;
+
         checkOpen();
         type.check(fileId);
         final long[] dimensions = data.longDimensions();
@@ -4321,8 +5309,23 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         {
             offset[i] = blockDimensions[i] * dimensions[i];
         }
-        writeCompoundArray(objectPath, type, dimensions, dimensions, offset, data.getAsFlatArray(),
-                false, false);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    final byte[] byteArray =
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
+                                    data.getAsFlatArray());
+                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, byteArray);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -4336,11 +5339,47 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final long[] offset)
     {
+        assert objectPath != null;
+        assert type != null;
+        assert data != null;
+        assert offset != null;
+
         checkOpen();
         type.check(fileId);
-        final long[] dimensions = data.longDimensions();
-        writeCompoundArray(objectPath, type, dimensions, dimensions, offset, data.getAsFlatArray(),
-                false, false);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    final byte[] byteArray =
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
+                                    data.getAsFlatArray());
+                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, byteArray);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Creates an array (of rank 1) of compound values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param dimensions The extent of the compound array along each of the axis.
+     * @param blockDimensions The extent of one block along each of the axis. (for block-wise IO).
+     *            Ignored if no extendable data sets are used (see
+     *            {@link #dontUseExtendableDataTypes()}) and <code>deflate == false</code>.
+     */
+    public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
+            final long[] dimensions, final int[] blockDimensions)
+    {
+        createCompoundMDArray(objectPath, type, dimensions, blockDimensions, false);
     }
 
     /**
@@ -4357,43 +5396,19 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final long[] dimensions, final int[] blockDimensions, final boolean deflate)
     {
+        assert objectPath != null;
+        assert type != null;
+        assert dimensions != null;
+        assert blockDimensions != null;
+
         checkOpen();
         type.check(fileId);
-        writeCompoundArray(objectPath, type, dimensions, MDArray.toLong(blockDimensions), null,
-                null, deflate, false);
-    }
-
-    /**
-     * Writes out an array (of rank 1) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param dimensions The dimensions of the array. Needs to match <code>dataOrNull.length</code>,
-     *            if <var>dataOrNull</var> is not <code>null</code>.
-     * @param blockDimensions The dimensions of the array. Needs to match
-     *            <code>dataOrNull.length</code>, if <var>dataOrNull</var> is not <code>null</code>.
-     * @param slabStartOrNull The offset of the block to write.
-     * @param dataOrNull The value of the data set, or <code>null</code>.
-     * @param deflate If <code>true</code>, the data will be stored compressed.
-     * @param enforceCompactLayout If <code>true</code>, a compact storage layout will be enforced.
-     */
-    private <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final long[] dimensions, final long[] blockDimensionsOrNull,
-            final long[] slabStartOrNull, final T[] dataOrNull, final boolean deflate,
-            final boolean enforceCompactLayout)
-    {
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(final ICleanUpRegistry registry)
                 {
-                    final int storageDataTypeId = type.getStorageTypeId();
-                    final int nativeDataTypeId = type.getNativeTypeId();
-                    final byte[] byteArray =
-                            (dataOrNull != null) ? type.getObjectByteifyer().byteify(
-                                    storageDataTypeId, dataOrNull) : null;
-                    primWrite(objectPath, storageDataTypeId, nativeDataTypeId,
-                            getDeflateLevel(deflate), byteArray, dimensions, blockDimensionsOrNull,
-                            enforceCompactLayout, slabStartOrNull, blockDimensionsOrNull, registry);
+                    createDataSet(objectPath, type.getStorageTypeId(), getDeflateLevel(deflate),
+                            dimensions, MDArray.toLong(blockDimensions), false, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -4404,79 +5419,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     // Internal methods for writing data sets.
     //
 
-    private void writeRank1(final String objectPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final int deflateLevel, final Object data, final int length)
-    {
-        writeRankN(objectPath, storageDataTypeId, nativeDataTypeId, deflateLevel, data, new long[]
-            { length });
-    }
-
-    private void writeRank1Compact(final String objectPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final Object dataOrNull, final long length)
-    {
-        writeRankNCompact(objectPath, storageDataTypeId, nativeDataTypeId, HDF5.NO_DEFLATION,
-                dataOrNull, new long[]
-                    { length });
-    }
-
-    private void writeBlockRank1(final String objectPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final int deflateLevel, final Object dataOrNull,
-            final long size, final long blockSize, final long offset)
-    {
-        final long[] blockDimensions = new long[]
-            { blockSize };
-        write(objectPath, storageDataTypeId, nativeDataTypeId, deflateLevel, false, dataOrNull,
-                new long[]
-                    { size }, blockDimensions, new long[]
-                    { offset }, blockDimensions);
-    }
-
-    private void writeBlockRankN(final String objectPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final int deflateLevel, final Object data,
-            final long[] dimensions, final long[] blockDimensions, final long[] offset)
-    {
-        write(objectPath, storageDataTypeId, nativeDataTypeId, deflateLevel, false, data,
-                dimensions, blockDimensions, offset, blockDimensions);
-    }
-
-    private void writeRankN(final String objectPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final int deflateLevel, final Object dataOrNull,
-            final long[] shape)
-    {
-        write(objectPath, storageDataTypeId, nativeDataTypeId, deflateLevel, false, dataOrNull,
-                shape, null, null, null);
-    }
-
-    private void writeRankNCompact(final String objectPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final int deflateLevel, final Object dataOrNull,
-            final long[] dimensions)
-    {
-        write(objectPath, storageDataTypeId, nativeDataTypeId, deflateLevel, true, dataOrNull,
-                dimensions, null, null, null);
-    }
-
-    private void write(final String objectPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final int deflateLevel, final boolean enforceCompactLayout,
-            final Object dataOrNull, final long[] dimensions, final long[] chunkSizeOrNull,
-            final long[] slabStartOrNull, final long[] slabCountOrNull)
-    {
-        assert objectPath != null;
-        assert storageDataTypeId >= 0;
-        assert deflateLevel >= 0;
-
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    primWrite(objectPath, storageDataTypeId, nativeDataTypeId, deflateLevel,
-                            dataOrNull, dimensions, chunkSizeOrNull, enforceCompactLayout,
-                            slabStartOrNull, slabCountOrNull, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        runner.call(writeRunnable);
-    }
-
     private void writeScalar(final String dataSetPath, final int storageDataTypeId,
             final int nativeDataTypeId, final byte[] value)
     {
@@ -4485,7 +5427,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert nativeDataTypeId >= 0;
         assert value != null;
 
-        ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
+        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
             {
                 public Object call(ICleanUpRegistry registry)
                 {
@@ -4499,68 +5441,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                                 h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath,
                                         registry);
                     }
-                    h5.writeScalarDataSet(dataSetId, nativeDataTypeId, value);
+                    H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT,
+                            value);
                     return null; // Nothing to return.
                 }
             };
         runner.call(writeScalarRunnable);
-    }
-
-    private void primWrite(final String objectPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final int deflateLevel, final Object dataOrNull,
-            final long[] dimensions, final long[] chunkSizeOrNull,
-            final boolean enforceCompactLayout, final long[] slabStartOrNull,
-            final long[] slabCountOrNull, ICleanUpRegistry registry)
-    {
-        assert objectPath != null;
-        assert storageDataTypeId >= 0;
-        assert nativeDataTypeId >= 0;
-        assert deflateLevel >= 0;
-
-        final boolean blockWrite = (slabStartOrNull != null);
-        final boolean blockWriteInProgress = blockWrite && (dataOrNull != null);
-        final int dataSetId;
-        final boolean overwriteDataSet = blockWriteInProgress || exists(objectPath);
-        if (overwriteDataSet)
-        {
-            dataSetId = h5.openDataSet(fileId, objectPath, registry);
-            // Implementation note: HDF5 1.8 seems to be able to change the size even if
-            // dimensions are not in bound of max dimensions, but the resulting file can
-            // no longer be read by HDF5 1.6, thus we may only do it if useLatestFileFormat == true.
-            if (blockWrite == false
-                    && (dimensionsInBounds(dataSetId, dimensions) || useLatestFileFormat))
-            {
-                h5.setDataSetExtent(dataSetId, dimensions);
-                // FIXME 2008-09-15, Bernd Rinn: This is a work-around for an apparent bug in HDF5
-                // 1.8.1 with contiguous data sets! Without the flush, the next
-                // h5.writeDataSet() call will not overwrite the data.
-                if (h5.getLayout(dataSetId, registry) == StorageLayout.CONTIGUOUS)
-                {
-                    h5.flushFile(fileId);
-                }
-            }
-        } else
-        {
-            dataSetId =
-                    createDataSet(objectPath, storageDataTypeId, deflateLevel, dimensions,
-                            chunkSizeOrNull, enforceCompactLayout, registry);
-        }
-        if (dataOrNull != null)
-        {
-            final int memorySpaceId;
-            final int dataSpaceId;
-            if (blockWrite)
-            {
-                dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
-                h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, slabCountOrNull);
-                memorySpaceId = h5.createSimpleDataSpace(slabCountOrNull, registry);
-            } else
-            {
-                memorySpaceId = HDF5Constants.H5S_ALL;
-                dataSpaceId = HDF5Constants.H5S_ALL;
-            }
-            h5.writeDataSet(dataSetId, nativeDataTypeId, memorySpaceId, dataSpaceId, dataOrNull);
-        }
     }
 
     private int createDataSet(final String objectPath, final int storageDataTypeId,
@@ -4568,7 +5454,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             boolean enforceCompactLayout, ICleanUpRegistry registry)
     {
         final int dataSetId;
-        final boolean deflate = (deflateLevel != HDF5.NO_DEFLATION);
+        final boolean deflate = (deflateLevel != NO_DEFLATION);
         final boolean empty = isEmpty(dimensions);
         final long[] definitiveChunkSizeOrNull;
         if (empty)
@@ -4640,7 +5526,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
     private int getDeflateLevel(boolean deflate)
     {
-        return deflate ? DEFAULT_DEFLATION : HDF5.NO_DEFLATION;
+        return deflate ? DEFAULT_DEFLATION : NO_DEFLATION;
     }
 
     private boolean checkDimensions(Object a)
@@ -4672,6 +5558,36 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             }
         }
         return true;
+    }
+
+    private int getDataSetId(final String objectPath, final int storageDataTypeId,
+            long[] dimensions, final int deflateLevel, ICleanUpRegistry registry)
+    {
+        final int dataSetId;
+        if (exists(objectPath))
+        {
+            dataSetId = h5.openDataSet(fileId, objectPath, registry);
+            // Implementation note: HDF5 1.8 seems to be able to change the size even if
+            // dimensions are not in bound of max dimensions, but the resulting file can
+            // no longer be read by HDF5 1.6, thus we may only do it if useLatestFileFormat == true.
+            if (dimensionsInBounds(dataSetId, dimensions) || useLatestFileFormat)
+            {
+                h5.setDataSetExtent(dataSetId, dimensions);
+                // FIXME 2008-09-15, Bernd Rinn: This is a work-around for an apparent bug in HDF5
+                // 1.8.1 with contiguous data sets! Without the flush, the next
+                // h5.writeDataSet() call will not overwrite the data.
+                if (h5.getLayout(dataSetId, registry) == StorageLayout.CONTIGUOUS)
+                {
+                    h5.flushFile(fileId);
+                }
+            }
+        } else
+        {
+            dataSetId =
+                    createDataSet(objectPath, storageDataTypeId, deflateLevel, dimensions, null,
+                            false, registry);
+        }
+        return dataSetId;
     }
 
 }

@@ -18,6 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 import java.util.Iterator;
 
+import ch.systemsx.cisd.hdf5.HDF5EnumerationType.StorageFormEnum;
+
 /**
  * A class the represents an array of HDF enumeration values.
  * 
@@ -25,11 +27,13 @@ import java.util.Iterator;
  */
 public class HDF5EnumerationValueArray implements Iterable<String>
 {
-
+    
     private final HDF5EnumerationType type;
 
     private final int length;
 
+    private StorageFormEnum storageForm;
+    
     private byte[] bArrayOrNull;
 
     private short[] sArrayOrNull;
@@ -49,12 +53,12 @@ public class HDF5EnumerationValueArray implements Iterable<String>
         {
             final short[] sArray = (short[]) array;
             this.length = sArray.length;
-            setArray(sArray);
+            setOrdinalArray(sArray);
         } else if (array instanceof int[])
         {
             final int[] iArray = (int[]) array;
             this.length = iArray.length;
-            setArray(iArray);
+            setOrdinalArray(iArray);
         } else
         {
             throw new IllegalArgumentException("array is of illegal type "
@@ -91,7 +95,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         this.type = type;
         this.length = ordinalArray.length;
-        setArray(ordinalArray);
+        setOrdinalArray(ordinalArray);
     }
 
     /**
@@ -107,7 +111,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         this.type = type;
         this.length = ordinalArray.length;
-        setArray(ordinalArray);
+        setOrdinalArray(ordinalArray);
     }
 
     /**
@@ -131,6 +135,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
+            storageForm = StorageFormEnum.BYTE;
             bArrayOrNull = new byte[array.length];
             for (int i = 0; i < array.length; ++i)
             {
@@ -146,6 +151,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
+            storageForm = StorageFormEnum.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = new short[array.length];
             for (int i = 0; i < array.length; ++i)
@@ -161,6 +167,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
             iArrayOrNull = null;
         } else
         {
+            storageForm = StorageFormEnum.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = new int[array.length];
@@ -181,18 +188,21 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
+            storageForm = StorageFormEnum.BYTE;
             bArrayOrNull = array;
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
+            storageForm = StorageFormEnum.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = toShortArray(array);
             checkOrdinalArray(sArrayOrNull);
             iArrayOrNull = null;
         } else
         {
+            storageForm = StorageFormEnum.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = toIntArray(array);
@@ -200,22 +210,25 @@ public class HDF5EnumerationValueArray implements Iterable<String>
         }
     }
 
-    private void setArray(short[] array) throws IllegalArgumentException
+    private void setOrdinalArray(short[] array) throws IllegalArgumentException
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
+            storageForm = StorageFormEnum.BYTE;
             bArrayOrNull = toByteArray(array);
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
+            storageForm = StorageFormEnum.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = array;
             checkOrdinalArray(sArrayOrNull);
             iArrayOrNull = null;
         } else
         {
+            storageForm = StorageFormEnum.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = toIntArray(array);
@@ -223,22 +236,25 @@ public class HDF5EnumerationValueArray implements Iterable<String>
         }
     }
 
-    private void setArray(int[] array) throws IllegalArgumentException
+    private void setOrdinalArray(int[] array) throws IllegalArgumentException
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
+            storageForm = StorageFormEnum.BYTE;
             bArrayOrNull = toByteArray(array);
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
+            storageForm = StorageFormEnum.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = toShortArray(array);
             checkOrdinalArray(sArrayOrNull);
             iArrayOrNull = null;
         } else
         {
+            storageForm = StorageFormEnum.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = array;
@@ -360,18 +376,24 @@ public class HDF5EnumerationValueArray implements Iterable<String>
         }
     }
 
-    Object getStorageForm()
+    StorageFormEnum getStorageForm()
     {
-        if (bArrayOrNull != null)
-        {
-            return bArrayOrNull;
-        } else if (sArrayOrNull != null)
-        {
-            return sArrayOrNull;
-        } else
-        {
-            return iArrayOrNull;
-        }
+        return storageForm;
+    }
+    
+    byte[] getStorageFormBArray()
+    {
+        return bArrayOrNull;
+    }
+
+    short[] getStorageFormSArray()
+    {
+        return sArrayOrNull;
+    }
+
+    int[] getStorageFormIArray()
+    {
+        return iArrayOrNull;
     }
 
     /**

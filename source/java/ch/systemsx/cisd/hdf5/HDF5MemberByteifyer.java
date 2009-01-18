@@ -71,7 +71,8 @@ abstract class HDF5MemberByteifyer
             final String memberName, final HDF5EnumerationType enumType, final int offset)
     {
         setAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, enumType.getStorageSize(), offset)
+        return new HDF5MemberByteifyer(field, memberName, enumType.getStorageForm()
+                .getStorageSize(), offset)
             {
                 @Override
                 protected int getMemberStorageTypeId()

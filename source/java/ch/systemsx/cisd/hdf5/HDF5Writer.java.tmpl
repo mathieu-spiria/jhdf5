@@ -29,9 +29,17 @@
         assert length > 0;
 
         checkOpen();
-        writeRank1Compact(objectPath, __Storagetype__, __Memorytype__, null, length);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, __Storagetype__, NO_DEFLATION, new long[]
+                        { length }, null, true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
-
     /**
      * Writes out a <code>__name__</code> array (of rank 1). Uses a compact storage layout. Should only
      * be used for small data sets.
@@ -45,7 +53,20 @@
         assert data != null;
 
         checkOpen();
-        writeRank1Compact(objectPath, __Storagetype__, __Memorytype__, data, data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final int dataSetId =
+                            getDataSetId(objectPath, __Storagetype__, dimensions, NO_DEFLATION,
+                                    registry);
+                    H5Dwrite__appendix__(dataSetId, __Memorytype__, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -66,13 +87,22 @@
      * @param data The data to write. Must not be <code>null</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void write__Name__Array(final String objectPath, final __name__[] data, boolean deflate)
+    public void write__Name__Array(final String objectPath, final __name__[] data, final boolean deflate)
     {
         assert data != null;
 
         checkOpen();
-        writeRank1(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate), data,
-                data.length);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, __Storagetype__, new long[]
+                        { data.length }, getDeflateLevel(deflate), registry);
+                    H5Dwrite__appendix__(dataSetId, __Memorytype__, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -108,15 +138,24 @@
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void create__Name__Array(final String objectPath, final long size, final int blockSize,
-            boolean deflate)
+            final boolean deflate)
     {
         assert objectPath != null;
         assert size >= 0;
         assert blockSize >= 0 && blockSize <= size;
 
         checkOpen();
-        writeBlockRank1(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate),
-                null, size, blockSize, 0);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, __Storagetype__, getDeflateLevel(deflate), new long[]
+                        { size }, new long[]
+                        { blockSize }, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -140,8 +179,24 @@
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data,
-                data.length, data.length, data.length * blockNumber);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final long[] slabStartOrNull = new long[]
+                        { data.length * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite__appendix__(dataSetId, __Memorytype__, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -170,8 +225,24 @@
         assert data != null;
 
         checkOpen();
-        writeBlockRank1(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data,
-                dataSize, dataSize, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite__appendix__(dataSetId, __Memorytype__, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -194,15 +265,13 @@
      *            same length.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
-    public void write__Name__Matrix(final String objectPath, final __name__[][] data, boolean deflate)
+    public void write__Name__Matrix(final String objectPath, final __name__[][] data, final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
         assert checkDimensions(data);
 
-        checkOpen();
-        writeRankN(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate), data,
-                new long[]
-                    { data.length, data.length == 0 ? 0 : data[0].length });
+        write__Name__MDArray(objectPath, new MD__Name__Array(data), deflate);
     }
 
     /**
@@ -215,7 +284,7 @@
      * @param blockSizeY The size of one block in the y dimension.
      */
     public void create__Name__Matrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY)
+            final int blockSizeX, final int blockSizeY)
     {
         create__Name__Matrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
     }
@@ -231,7 +300,7 @@
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
     public void create__Name__Matrix(final String objectPath, final long sizeX, final long sizeY,
-            int blockSizeX, int blockSizeY, boolean deflate)
+            final int blockSizeX, final int blockSizeY, final boolean deflate)
     {
         assert objectPath != null;
         assert sizeX >= 0;
@@ -240,11 +309,20 @@
         assert blockSizeY >= 0 && blockSizeY <= sizeY;
 
         checkOpen();
-        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate),
-                null, new long[]
-                    { sizeX, sizeY }, new long[]
-                    { blockSizeX, blockSizeY }, new long[]
-                    { 0, 0 });
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { sizeX, sizeY };
+                    final long[] blockDimensions = new long[]
+                        { blockSizeX, blockSizeY };
+                    createDataSet(objectPath, __Storagetype__, getDeflateLevel(deflate), dimensions,
+                            blockDimensions, false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -274,12 +352,8 @@
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { blockNumberX * data.length, blockNumberY * data[0].length });
+        write__Name__MDArrayBlock(objectPath, new MD__Name__Array(data), new long[]
+            { blockNumberX, blockNumberY });
     }
 
     /**
@@ -297,21 +371,22 @@
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
-     * @param offsetX The x offset in the data set  to start writing to.
-     * @param offsetY The y offset in the data set  to start writing to.
+     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
+     *            <code><= data.length</code> )
+     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
+     *            <code><= data[0].length</code> )
+     * @param offsetX The x offset in the data set to start writing to.
+     * @param offsetY The y offset in the data set to start writing to.
      */
     public void write__Name__MatrixBlockWithOffset(final String objectPath, final __name__[][] data,
-            final long offsetX, final long offsetY)
+            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
     {
         assert objectPath != null;
         assert data != null;
 
-        checkOpen();
-        final long[] blockDimensions = new long[]
-            { data.length, data[0].length };
-        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data,
-                blockDimensions, blockDimensions, new long[]
-                    { offsetX, offsetY });
+        write__Name__MDArrayBlockWithOffset(objectPath, new MD__Name__Array(data, new int[]
+            { dataSizeX, dataSizeY }), new long[]
+            { offsetX, offsetY });
     }
 
     /**
@@ -337,11 +412,23 @@
     public void write__Name__MDArray(final String objectPath, final MD__Name__Array data,
             final boolean deflate)
     {
+        assert objectPath != null;
         assert data != null;
 
         checkOpen();
-        writeRankN(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate), data
-                .getAsFlatArray(), data.longDimensions());
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            getDataSetId(objectPath, __Storagetype__, data.longDimensions(),
+                                    getDeflateLevel(deflate), registry);
+                    H5Dwrite__appendix__(dataSetId, __Memorytype__, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
+                            .getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -373,8 +460,16 @@
         assert blockDimensions != null;
 
         checkOpen();
-        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, getDeflateLevel(deflate),
-                null, dimensions, MDArray.toLong(blockDimensions), null);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    createDataSet(objectPath, __Storagetype__, getDeflateLevel(deflate), dimensions,
+                            MDArray.toLong(blockDimensions), false, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(createRunnable);
     }
 
     /**
@@ -389,19 +484,32 @@
     public void write__Name__MDArrayBlock(final String objectPath, final MD__Name__Array data,
             final long[] blockNumber)
     {
+        assert objectPath != null;
         assert data != null;
         assert blockNumber != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == blockNumber.length;
-        final long[] offset = new long[dimensions.length];
-        for (int i = 0; i < offset.length; ++i)
-        {
-            offset[i] = blockNumber[i] * dimensions[i];
-        }
-        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == blockNumber.length;
+                    final long[] offset = new long[dimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        offset[i] = blockNumber[i] * dimensions[i];
+                    }
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite__appendix__(dataSetId, __Memorytype__, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     /**
@@ -415,12 +523,25 @@
     public void write__Name__MDArrayBlockWithOffset(final String objectPath, final MD__Name__Array data,
             final long[] offset)
     {
+        assert objectPath != null;
         assert data != null;
         assert offset != null;
 
         checkOpen();
-        final long[] dimensions = data.longDimensions();
-        assert dimensions.length == offset.length;
-        writeBlockRankN(objectPath, __Storagetype__, __Memorytype__, HDF5.NO_DEFLATION, data
-                .getAsFlatArray(), dimensions, dimensions, offset);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite__appendix__(dataSetId, __Memorytype__, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }

@@ -32,6 +32,23 @@ import ncsa.hdf.hdf5lib.HDFNativeData;
  */
 public final class HDF5EnumerationType extends HDF5DataType implements Iterable<String>
 {
+    enum StorageFormEnum
+    {
+        BYTE(1), SHORT(2), INT(4);
+
+        private final byte storageSize;
+        
+        StorageFormEnum(int storageSize)
+        {
+            this.storageSize = (byte) storageSize;
+        }
+        
+        byte getStorageSize()
+        {
+            return storageSize;
+        }
+    }
+
     private final String nameOrNull;
 
     private final String[] values;
@@ -115,33 +132,33 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         return Collections.unmodifiableList(Arrays.asList(values));
     }
 
-    byte getStorageSize()
+    StorageFormEnum getStorageForm()
     {
         final int len = values.length;
         if (len < Byte.MAX_VALUE)
         {
-            return 1;
+            return StorageFormEnum.BYTE;
         } else if (len < Short.MAX_VALUE)
         {
-            return 2;
+            return StorageFormEnum.SHORT;
         } else
         {
-            return 4;
+            return StorageFormEnum.INT;
         }
     }
-
+    
     HDF5EnumerationValue createFromStorageForm(byte[] data, int offset)
     {
-        switch (getStorageSize())
+        switch (getStorageForm())
         {
-            case 1:
+            case BYTE:
                 return new HDF5EnumerationValue(this, data[offset]);
-            case 2:
+            case SHORT:
                 return new HDF5EnumerationValue(this, HDFNativeData.byteToShort(data, offset));
-            case 4:
+            case INT:
                 return new HDF5EnumerationValue(this, HDFNativeData.byteToInt(data, offset));
         }
-        throw new Error("Illegal storage size.");
+        throw new Error("Illegal storage form (" + getStorageForm() + ".)");
     }
 
     //

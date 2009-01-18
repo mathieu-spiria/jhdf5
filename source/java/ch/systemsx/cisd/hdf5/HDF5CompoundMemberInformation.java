@@ -112,7 +112,7 @@ public final class HDF5CompoundMemberInformation implements
         {
             typeInfo =
                     new HDF5DataTypeInformation(HDF5DataClass.ENUM, member.tryGetEnumerationType()
-                            .getStorageSize());
+                            .getStorageForm().getStorageSize());
         } else
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.OTHER, -1);

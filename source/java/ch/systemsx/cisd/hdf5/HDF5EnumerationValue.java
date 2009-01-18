@@ -102,13 +102,13 @@ public final class HDF5EnumerationValue
 
     byte[] toStorageForm()
     {
-        switch (type.getStorageSize())
+        switch (type.getStorageForm())
         {
-            case 1:
+            case BYTE:
                 return HDFNativeData.byteToByte((byte) ordinal);
-            case 2:
+            case SHORT:
                 return HDFNativeData.shortToByte((short) ordinal);
-            case 4:
+            case INT:
                 return HDFNativeData.intToByte(ordinal);
         }
         throw new Error("Illegal storage size.");

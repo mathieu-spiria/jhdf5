@@ -42,8 +42,12 @@
             {
                 public __name__[] call(ICleanUpRegistry registry)
                 {
-                    return (__name__[]) primReadArrayRank1(objectPath, __Memorytype__, __name__.class,
-                            -1, -1, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final __name__[] data = new __name__[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -70,8 +74,14 @@
             {
                 public __name__[] call(ICleanUpRegistry registry)
                 {
-                    return (__name__[]) primReadArrayRank1(objectPath, __Memorytype__, __name__.class,
-                            blockSize, blockNumber * blockSize, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
+                                    registry);
+                    final __name__[] data = new __name__[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -96,8 +106,13 @@
             {
                 public __name__[] call(ICleanUpRegistry registry)
                 {
-                    return (__name__[]) primReadArrayRank1(objectPath, __Memorytype__, __name__.class,
-                            blockSize, offset, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final __name__[] data = new __name__[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
                 }
             };
         return runner.call(readCallable);
@@ -108,21 +123,18 @@
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
+     *
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public __name__[][] read__Name__Matrix(final String objectPath)
+    public __name__[][] read__Name__Matrix(final String objectPath) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<__name__[][]> readCallable = new ICallableWithCleanUp<__name__[][]>()
-            {
-                public __name__[][] call(ICleanUpRegistry registry)
-                {
-                    return (__name__[][]) primReadMatrixRank2(objectPath, __Memorytype__,
-                            __name__.class, -1, -1, -1, -1, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MD__Name__Array array = read__Name__MDArray(objectPath);
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -136,23 +148,22 @@
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>blockSizeY</code>).
      * @return The data block read from the data set.
+     *
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public __name__[][] read__Name__MatrixBlock(final String objectPath, final int blockSizeX,
-            final int blockSizeY, final long blockNumberX, final long blockNumberY)
+            final int blockSizeY, final long blockNumberX, final long blockNumberY) 
+            throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<__name__[][]> readCallable = new ICallableWithCleanUp<__name__[][]>()
-            {
-                public __name__[][] call(ICleanUpRegistry registry)
-                {
-                    return (__name__[][]) primReadMatrixRank2(objectPath, __Memorytype__,
-                            __name__.class, blockSizeX, blockSizeY, blockNumberX * blockSizeX,
-                            blockNumberY * blockSizeY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MD__Name__Array array = read__Name__MDArrayBlock(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { blockNumberX, blockNumberY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -164,22 +175,21 @@
      * @param offsetX The offset in x dimension in the data set to start reading from.
      * @param offsetY The offset in y dimension in the data set to start reading from.
      * @return The data block read from the data set.
+     *
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
     public __name__[][] read__Name__MatrixBlockWithOffset(final String objectPath, final int blockSizeX,
-            final int blockSizeY, final long offsetX, final long offsetY)
+            final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        checkOpen();
-        final ICallableWithCleanUp<__name__[][]> readCallable = new ICallableWithCleanUp<__name__[][]>()
-            {
-                public __name__[][] call(ICleanUpRegistry registry)
-                {
-                    return (__name__[][]) primReadMatrixRank2(objectPath, __Memorytype__,
-                            __name__.class, blockSizeX, blockSizeY, offsetX, offsetY, registry);
-                }
-            };
-        return runner.call(readCallable);
+        final MD__Name__Array array = read__Name__MDArrayBlockWithOffset(objectPath, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { offsetX, offsetY });
+        if (array.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + array.rank());
+        }
+        return array.toMatrix();
     }
 
     /**
@@ -197,11 +207,15 @@
             {
                 public MD__Name__Array call(ICleanUpRegistry registry)
                 {
-                    final long[][] dimensionsContainer = new long[1][];
-                    final __name__[] data =
-                            (__name__[]) primReadArrayRankN(objectPath, __Memorytype__, __name__.class,
-                                    null, null, dimensionsContainer, registry);
-                    return new MD__Name__Array(data, dimensionsContainer[0]);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, registry);
+                    final int nativeDataTypeId =
+                            getNativeDataTypeId(dataSetId, __Memorytype__, registry);
+                    final __name__[] data = new __name__[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return new MD__Name__Array(data, spaceParams.dimensions);
                 }
             };
         return runner.call(readCallable);
@@ -233,9 +247,12 @@
                     {
                         offset[i] = blockNumber[i] * blockDimensions[i];
                     }
-                    final __name__[] dataBlock =
-                            (__name__[]) primReadArrayRankN(objectPath, __Memorytype__, __name__.class,
-                                    blockDimensions, offset, null, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                    final __name__[] dataBlock = new __name__[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, dataBlock);
                     return new MD__Name__Array(dataBlock, blockDimensions);
                 }
             };
@@ -262,9 +279,12 @@
             {
                 public MD__Name__Array call(ICleanUpRegistry registry)
                 {
-                    final __name__[] dataBlock =
-                            (__name__[]) primReadArrayRankN(objectPath, __Memorytype__, __name__.class,
-                                    blockDimensions, offset, null, registry);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                    final __name__[] dataBlock = new __name__[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, dataBlock);
                     return new MD__Name__Array(dataBlock, blockDimensions);
                 }
             };

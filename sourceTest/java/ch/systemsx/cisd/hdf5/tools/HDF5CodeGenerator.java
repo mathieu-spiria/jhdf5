@@ -31,6 +31,8 @@ public class HDF5CodeGenerator
     {
         final String name;
 
+        final String appendix;
+
         final String capitalizedName;
 
         final String wrapperName;
@@ -39,10 +41,11 @@ public class HDF5CodeGenerator
 
         final String memoryType;
 
-        TemplateParameters(String name, String capitalizedName, String wrapperName,
-                String storageType, String memoryType)
+        TemplateParameters(String name, String appendix, String capitalizedName,
+                String wrapperName, String storageType, String memoryType)
         {
             this.name = name;
+            this.appendix = appendix;
             this.capitalizedName = capitalizedName;
             this.wrapperName = wrapperName;
             this.storageType = storageType;
@@ -51,31 +54,46 @@ public class HDF5CodeGenerator
 
     }
 
+    static TemplateParameters tp(String name, String appendix, String capitalizedName,
+            String wrapperName, String storageType, String memoryType)
+    {
+        return new TemplateParameters(name, appendix, capitalizedName, wrapperName, storageType,
+                memoryType);
+    }
+
     static TemplateParameters tp(String name, String capitalizedName, String wrapperName,
             String storageType, String memoryType)
     {
-        return new TemplateParameters(name, capitalizedName, wrapperName, storageType, memoryType);
+        return new TemplateParameters(name, "_" + name, capitalizedName, wrapperName, storageType,
+                memoryType);
     }
 
     static TemplateParameters tp(String name, String wrapperName, String storageType,
             String memoryType)
     {
-        return new TemplateParameters(name, StringUtils.capitalize(name), wrapperName, storageType,
-                memoryType);
+        return new TemplateParameters(name, "_" + name, StringUtils.capitalize(name), wrapperName,
+                storageType, memoryType);
     }
 
     static TemplateParameters tp(String name, String storageType, String memoryType)
     {
-        return new TemplateParameters(name, StringUtils.capitalize(name), StringUtils
+        return new TemplateParameters(name, "_" + name, StringUtils.capitalize(name), StringUtils
+                .capitalize(name), storageType, memoryType);
+    }
+
+    static TemplateParameters tpna(String name, String storageType, String memoryType)
+    {
+        return new TemplateParameters(name, "", StringUtils.capitalize(name), StringUtils
                 .capitalize(name), storageType, memoryType);
     }
 
     static final TemplateParameters PLACEHOLDERS =
-            tp("__name__", "__Name__", "__Wrappername__", "__Storagetype__", "__Memorytype__");
+            tp("__name__", "__appendix__", "__Name__", "__Wrappername__", "__Storagetype__",
+                    "__Memorytype__");
 
     static final TemplateParameters[] NUMERICAL_TYPES =
             new TemplateParameters[]
-                { tp("byte", "H5T_STD_I8LE", "H5T_NATIVE_INT8"),
+                { tpna("byte", "H5T_STD_I8LE", "H5T_NATIVE_INT8"),
                         tp("short", "H5T_STD_I16LE", "H5T_NATIVE_INT16"),
                         tp("int", "Integer", "H5T_STD_I32LE", "H5T_NATIVE_INT32"),
                         tp("long", "H5T_STD_I64LE", "H5T_NATIVE_INT64"),
@@ -92,6 +110,7 @@ public class HDF5CodeGenerator
         {
             String s = codeTemplate;
             s = StringUtils.replace(s, PLACEHOLDERS.name, t.name);
+            s = StringUtils.replace(s, PLACEHOLDERS.appendix, t.appendix);
             s = StringUtils.replace(s, PLACEHOLDERS.capitalizedName, t.capitalizedName);
             s = StringUtils.replace(s, PLACEHOLDERS.wrapperName, t.wrapperName);
             s = StringUtils.replace(s, PLACEHOLDERS.storageType, t.storageType);

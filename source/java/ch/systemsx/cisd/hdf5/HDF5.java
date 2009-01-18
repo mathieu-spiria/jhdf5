@@ -63,7 +63,7 @@ class HDF5
         } else
         {
             this.numericConversionXferPropertyListID =
-                createDataSetXferPropertyListAbort(fileRegistry);
+                    createDataSetXferPropertyListAbort(fileRegistry);
         }
         this.lcplCreateIntermediateGroups = createLinkCreationPropertyList(true, fileRegistry);
 
@@ -562,54 +562,97 @@ class HDF5
         H5Dset_extent(dataSetId, dimensions);
     }
 
-    public void readDataSetNonNumeric(int dataSetId, int nativeDataTypeId, Object data)
+    public void readDataSetNonNumeric(int dataSetId, int nativeDataTypeId, byte[] data)
     {
-        readDataSet(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+        H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, Object data)
+    public void readDataSetNonNumeric(int dataSetId, int nativeDataTypeId, String[] data)
     {
-        readDataSet(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+        H5Dread_string(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+    }
+
+    public void readDataSet(int dataSetId, int nativeDataTypeId, byte[] data)
+    {
+        H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+                data);
+    }
+
+    public void readDataSet(int dataSetId, int nativeDataTypeId, short[] data)
+    {
+        H5Dread_short(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+                data);
+    }
+
+    public void readDataSet(int dataSetId, int nativeDataTypeId, int[] data)
+    {
+        H5Dread_int(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+                data);
+    }
+
+    public void readDataSet(int dataSetId, int nativeDataTypeId, long[] data)
+    {
+        H5Dread_long(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+                data);
+    }
+
+    public void readDataSet(int dataSetId, int nativeDataTypeId, float[] data)
+    {
+        H5Dread_float(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+                data);
+    }
+
+    public void readDataSet(int dataSetId, int nativeDataTypeId, double[] data)
+    {
+        H5Dread_double(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
                 data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
-            int fileSpaceId, Object data)
+            int fileSpaceId, byte[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
-    private void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
-            int fileSpaceId, int xferPlistId, Object data)
+    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
+            int fileSpaceId, short[] data)
     {
-        H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId, xferPlistId, data);
+        H5Dread_short(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+                numericConversionXferPropertyListID, data);
+    }
+
+    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
+            int fileSpaceId, int[] data)
+    {
+        H5Dread_int(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+                numericConversionXferPropertyListID, data);
+    }
+
+    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
+            int fileSpaceId, long[] data)
+    {
+        H5Dread_long(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+                numericConversionXferPropertyListID, data);
+    }
+
+    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
+            int fileSpaceId, float[] data)
+    {
+        H5Dread_float(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+                numericConversionXferPropertyListID, data);
+    }
+
+    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
+            int fileSpaceId, double[] data)
+    {
+        H5Dread_double(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+                numericConversionXferPropertyListID, data);
     }
 
     public void readDataSetVL(int dataSetId, int dataTypeId, Object[] data)
     {
         H5DreadVL(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-    }
-
-    public void writeScalarDataSet(int dataSetId, int dataTypeId, byte[] data)
-    {
-        H5Dwrite(dataSetId, dataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, data);
-    }
-
-    public void writeDataSet(int dataSetId, int dataTypeId, Object data)
-    {
-        writeDataSet(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, data);
-    }
-
-    public void writeDataSet(int dataSetId, int dataTypeId, int memorySpaceId, int fileSpaceId,
-            Object data)
-    {
-        H5Dwrite(dataSetId, dataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, data);
-    }
-
-    public void writeDataSet(int dataSetId, int dataTypeId, String[] data, int maxLength)
-    {
-        H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data, maxLength);
     }
 
     //
@@ -688,16 +731,6 @@ class HDF5
             attributeNames.add(nameContainer[0]);
         }
         return attributeNames;
-    }
-
-    public void readAttribute(int attributeId, int nativeDataTypeId, Object value)
-    {
-        H5Aread(attributeId, nativeDataTypeId, value);
-    }
-
-    public void writeAttribute(int attributeId, int nativeDataTypeId, Object value)
-    {
-        H5Awrite(attributeId, nativeDataTypeId, value);
     }
 
     //
