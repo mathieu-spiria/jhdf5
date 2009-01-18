@@ -114,6 +114,8 @@ public class HDF5RoundtripTest
         test.testStringCompression();
         test.testStringArrayCompression();
         test.testReadMDFloatArray();
+        test.testReadToFloatMDArray();
+        test.testReadToFloatMDArrayBlockWithOffset();
         test.testMDFloatArrayBlockWise();
         test.testCompressedDataSet();
         test.testFloatVectorLength1();
@@ -979,6 +981,100 @@ public class HDF5RoundtripTest
             {
                 assertEquals("Byte (" + i + "," + j + ")", (i / blockSizeX + j / blockSizeY),
                         byteMatrixRead[i][j]);
+            }
+        }
+    }
+
+    @Test
+    public void testReadToFloatMDArray()
+    {
+        final File datasetFile = new File(workingDirectory, "readToFloatMDArray.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).open();
+        final String dsName = "ds";
+        final MDFloatArray arrayWritten = new MDFloatArray(new float[]
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9 }, new int[]
+            { 3, 3 });
+        writer.writeFloatMDArray(dsName, arrayWritten);
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        final MDFloatArray arrayRead = new MDFloatArray(new int[]
+            { 10, 10 });
+        final int memOfsX = 2;
+        final int memOfsY = 3;
+        reader.readToFloatMDArrayWithOffset(dsName, arrayRead, new int[]
+            { memOfsX, memOfsY });
+        reader.close();
+        final boolean[][] isSet = new boolean[10][10];
+        for (int i = 0; i < arrayWritten.size(0); ++i)
+        {
+            for (int j = 0; j < arrayWritten.size(1); ++j)
+            {
+                isSet[memOfsX + i][memOfsY + j] = true;
+                assertEquals("(" + i + "," + j + ")", arrayWritten.get(i, j), arrayRead.get(memOfsX
+                        + i, memOfsY + j));
+            }
+        }
+        for (int i = 0; i < arrayRead.size(0); ++i)
+        {
+            for (int j = 0; j < arrayRead.size(1); ++j)
+            {
+                if (isSet[i][j] == false)
+                {
+                    assertEquals("(" + i + "," + j + ")", 0f, arrayRead.get(i, j));
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testReadToFloatMDArrayBlockWithOffset()
+    {
+        final File datasetFile = new File(workingDirectory, "readToFloatMDArrayBlockWithOffset.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).open();
+        final String dsName = "ds";
+        final MDFloatArray arrayWritten = new MDFloatArray(new float[]
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9 }, new int[]
+            { 3, 3 });
+        writer.writeFloatMDArray(dsName, arrayWritten);
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        final MDFloatArray arrayRead = new MDFloatArray(new int[]
+            { 10, 10 });
+        final int memOfsX = 2;
+        final int memOfsY = 3;
+        final int diskOfsX = 1;
+        final int diskOfsY = 0;
+        final int blockSizeX = 2;
+        final int blockSizeY = 2;
+        reader.readToFloatMDArrayBlockWithOffset(dsName, arrayRead, new int[]
+            { blockSizeX, blockSizeY }, new long[]
+            { diskOfsX, diskOfsY }, new int[]
+            { memOfsX, memOfsY });
+        reader.close();
+        final boolean[][] isSet = new boolean[10][10];
+        for (int i = 0; i < blockSizeX; ++i)
+        {
+            for (int j = 0; j < blockSizeY; ++j)
+            {
+                isSet[memOfsX + i][memOfsY + j] = true;
+                assertEquals("(" + i + "," + j + ")", arrayWritten.get(diskOfsX + i, diskOfsY + j),
+                        arrayRead.get(memOfsX + i, memOfsY + j));
+            }
+        }
+        for (int i = 0; i < arrayRead.size(0); ++i)
+        {
+            for (int j = 0; j < arrayRead.size(1); ++j)
+            {
+                if (isSet[i][j] == false)
+                {
+                    assertEquals("(" + i + "," + j + ")", 0f, arrayRead.get(i, j));
+                }
             }
         }
     }

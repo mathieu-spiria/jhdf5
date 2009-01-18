@@ -54,6 +54,73 @@
     }
 
     /**
+     * Reads a multi-dimensional <code>__name__</code> array data set <var>objectPath</var>
+     * into a given <var>array</var> in memory.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param array The array to read the data into.
+     * @param memoryOffset The offset in the array to write the data to.
+     */
+    public void readTo__Name__MDArrayWithOffset(final String objectPath, final MD__Name__Array array,
+            final int[] memoryOffset)
+    {
+        assert objectPath != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
+                                    registry);
+                    final int nativeDataTypeId =
+                            getNativeDataTypeId(dataSetId, __Memorytype__, registry);
+                    h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(readCallable);
+    }
+
+    /**
+     * Reads a block of the multi-dimensional <code>__name__</code> array data set
+     * <var>objectPath</var> into a given <var>array</var> in memory.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param array The array to read the data into.
+     * @param blockDimensions The size of the block to read along each axis.
+     * @param offset The offset of the block in the data set.
+     * @param memoryOffset The offset of the block in the array to write the data to.
+     */
+    public void readTo__Name__MDArrayBlockWithOffset(final String objectPath,
+            final MD__Name__Array array, final int[] blockDimensions, final long[] offset,
+            final int[] memoryOffset)
+    {
+        assert objectPath != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
+                                    offset, blockDimensions, registry);
+                    final int nativeDataTypeId =
+                            getNativeDataTypeId(dataSetId, __Memorytype__, registry);
+                    h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(readCallable);
+    }
+
+    /**
      * Reads a block from a <code>__name__</code> array (of rank 1) from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
