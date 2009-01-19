@@ -117,6 +117,7 @@ public class HDF5RoundtripTest
         test.testReadToFloatMDArray();
         test.testReadToFloatMDArrayBlockWithOffset();
         test.testMDFloatArrayBlockWise();
+        test.testMDFloatArrayBlockWiseWithMemoryOffset();
         test.testCompressedDataSet();
         test.testFloatVectorLength1();
         test.testFloatMatrixLength1();
@@ -367,6 +368,57 @@ public class HDF5RoundtripTest
         }
         reader.close();
 
+    }
+
+    @Test
+    public void testMDFloatArrayBlockWiseWithMemoryOffset()
+    {
+        final File datasetFile = new File(workingDirectory, "mdArrayBlockWiseWithMemoryOffset.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).open();
+        final String floatDatasetName = "/floatMatrix";
+        final long[] shape = new long[]
+            { 10, 10 };
+        writer.createFloatMDArray(floatDatasetName, shape, MDArray.toInt(shape));
+        final float[] flatArray = new float[MDArray.getLength(shape)];
+        for (int i = 0; i < flatArray.length; ++i)
+        {
+            flatArray[i] = i;
+        }
+        final MDFloatArray arrayBlockWritten = new MDFloatArray(flatArray, shape);
+        writer.writeFloatMDArrayBlockWithOffset(floatDatasetName, arrayBlockWritten, new int[]
+            { 2, 2 }, new long[]
+            { 0, 0 }, new int[]
+            { 1, 3 });
+        writer.writeFloatMDArrayBlockWithOffset(floatDatasetName, arrayBlockWritten, new int[]
+            { 2, 2 }, new long[]
+            { 2, 2 }, new int[]
+            { 5, 1 });
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        final float[][] matrixRead = reader.readFloatMatrix(floatDatasetName);
+        reader.close();
+        assertEquals(13f, matrixRead[0][0]);
+        assertEquals(14f, matrixRead[0][1]);
+        assertEquals(23f, matrixRead[1][0]);
+        assertEquals(24f, matrixRead[1][1]);
+        assertEquals(51f, matrixRead[2][2]);
+        assertEquals(52f, matrixRead[2][3]);
+        assertEquals(61f, matrixRead[3][2]);
+        assertEquals(62f, matrixRead[3][3]);
+        for (int i = 0; i < 10; ++i)
+        {
+            for (int j = 0; j < 10; ++j)
+            {
+                if ((i < 2 && j < 2) || (i > 1 && i < 4 && j > 1 && j < 4))
+                {
+                    continue;
+                }
+                assertEquals("(" + i + "," + j + "}", 0f, matrixRead[i][j]);
+            }
+        }
     }
 
     @Test

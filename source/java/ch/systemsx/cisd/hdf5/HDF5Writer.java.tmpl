@@ -574,3 +574,42 @@
             };
         runner.call(writeRunnable);
     }
+
+   /**
+     * Writes out a block of a multi-dimensional <code>__name__</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void write__Name__MDArrayBlockWithOffset(final String objectPath, final MD__Name__Array data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
+    {
+        assert objectPath != null;
+        assert data != null;
+        assert offset != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    assert memoryDimensions.length == offset.length;
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    assert longBlockDimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(memoryDimensions, registry);
+                    h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
+                    H5Dwrite__appendix__(dataSetId, __Memorytype__, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }

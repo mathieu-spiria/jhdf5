@@ -1648,6 +1648,45 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         runner.call(writeRunnable);
     }
 
+    /**
+     * Writes out a block of a multi-dimensional <code>byte</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeByteMDArrayBlockWithOffset(final String objectPath, final MDByteArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
+    {
+        assert objectPath != null;
+        assert data != null;
+        assert offset != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    assert memoryDimensions.length == offset.length;
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    assert longBlockDimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(memoryDimensions, registry);
+                    h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
     //
     // Short
     //
@@ -2219,6 +2258,45 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
                     h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
                     final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Writes out a block of a multi-dimensional <code>short</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeShortMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
+    {
+        assert objectPath != null;
+        assert data != null;
+        assert offset != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    assert memoryDimensions.length == offset.length;
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    assert longBlockDimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(memoryDimensions, registry);
+                    h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
                     H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -2801,6 +2879,45 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         runner.call(writeRunnable);
     }
 
+    /**
+     * Writes out a block of a multi-dimensional <code>int</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeIntMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
+    {
+        assert objectPath != null;
+        assert data != null;
+        assert offset != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    assert memoryDimensions.length == offset.length;
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    assert longBlockDimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(memoryDimensions, registry);
+                    h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
+                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
     //
     // Long
     //
@@ -3371,6 +3488,45 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
                     h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
                     final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Writes out a block of a multi-dimensional <code>long</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeLongMDArrayBlockWithOffset(final String objectPath, final MDLongArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
+    {
+        assert objectPath != null;
+        assert data != null;
+        assert offset != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    assert memoryDimensions.length == offset.length;
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    assert longBlockDimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(memoryDimensions, registry);
+                    h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -3958,6 +4114,45 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         runner.call(writeRunnable);
     }
 
+    /**
+     * Writes out a block of a multi-dimensional <code>float</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeFloatMDArrayBlockWithOffset(final String objectPath, final MDFloatArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
+    {
+        assert objectPath != null;
+        assert data != null;
+        assert offset != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    assert memoryDimensions.length == offset.length;
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    assert longBlockDimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(memoryDimensions, registry);
+                    h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
+                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
     //
     // Double
     //
@@ -4532,6 +4727,46 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
                     h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
                     final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Writes out a block of a multi-dimensional <code>double</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeDoubleMDArrayBlockWithOffset(final String objectPath,
+            final MDDoubleArray data, final int[] blockDimensions, final long[] offset,
+            final int[] memoryOffset)
+    {
+        assert objectPath != null;
+        assert data != null;
+        assert offset != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    assert memoryDimensions.length == offset.length;
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    assert longBlockDimensions.length == offset.length;
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(memoryDimensions, registry);
+                    h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
                     H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -5528,6 +5763,50 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
                     h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
                     final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    final byte[] byteArray =
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
+                                    data.getAsFlatArray());
+                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, byteArray);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Writes out a block of an array (of rank N) of compound values give a given <var>offset</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param data The data to write.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
+            final HDF5CompoundType<T> type, final MDArray<T> data, final int[] blockDimensions,
+            final long[] offset, final int[] memoryOffset)
+    {
+        assert objectPath != null;
+        assert type != null;
+        assert data != null;
+        assert offset != null;
+
+        checkOpen();
+        type.check(fileId);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(memoryDimensions, registry);
+                    h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
                                     data.getAsFlatArray());
