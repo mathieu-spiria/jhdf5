@@ -114,7 +114,7 @@ public class HDF5ArchiveTools
         for (int i = 0; i < entries.length; ++i)
         {
             final File file = entries[i];
-            final LinkInfo info = linkInfos[i];
+            final ILinkInfo info = linkInfos[i];
             final String absoluteEntry = file.getAbsolutePath();
             if (info.isDirectory())
             {
@@ -233,15 +233,15 @@ public class HDF5ArchiveTools
     private static void writeIndexMap(final HDF5Writer writer, final String hdf5GroupPath,
             final Map<String, LinkInfo> indexMap)
     {
-        final LinkInfo[] infos = indexMap.values().toArray(new LinkInfo[indexMap.size()]);
+        final ILinkInfo[] infos = indexMap.values().toArray(new LinkInfo[indexMap.size()]);
         writeIndex(writer, hdf5GroupPath, infos);
     }
 
     private static void writeIndex(final HDF5Writer writer, final String hdf5GroupPath,
-            final LinkInfo[] infos)
+            final ILinkInfo[] infos)
     {
         final String indexDataSetName = getIndexDataSetName(hdf5GroupPath);
-        final LinkInfo[] sortedInfos = new LinkInfo[infos.length];
+        final ILinkInfo[] sortedInfos = new ILinkInfo[infos.length];
         System.arraycopy(infos, 0, sortedInfos, 0, infos.length);
         Arrays.sort(sortedInfos);
         writer.writeOpaqueByteArray(indexDataSetName, OPAQUE_TAG_INDEX, LinkInfo
@@ -462,9 +462,9 @@ public class HDF5ArchiveTools
         final String indexDataSetName = getIndexDataSetName(dir);
         if (reader.exists(indexDataSetName))
         {
-            final LinkInfo[] infos =
+            final ILinkInfo[] infos =
                     LinkInfo.fromStorageForm(reader.readAsByteArray(indexDataSetName));
-            for (LinkInfo info : infos)
+            for (ILinkInfo info : infos)
             {
                 final String path = dirPrefix + info.getLinkName();
                 if (verbose)

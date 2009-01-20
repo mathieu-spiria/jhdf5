@@ -33,7 +33,7 @@ import ch.systemsx.cisd.common.os.Unix.Stat;
  * 
  * @author Bernd Rinn
  */
-public final class LinkInfo implements Serializable, Comparable<LinkInfo>
+public final class LinkInfo implements Serializable, Comparable<LinkInfo>, ILinkInfo
 {
     private static final long serialVersionUID = 1L;
 
@@ -109,7 +109,7 @@ public final class LinkInfo implements Serializable, Comparable<LinkInfo>
     /**
      * Returns the storage form (a byte array) of an array of {@link LinkInfo} objects.
      */
-    public static byte[] toStorageForm(LinkInfo[] infoArray)
+    public static byte[] toStorageForm(ILinkInfo[] infoArray)
     {
         final ByteArrayOutputStream ba = new ByteArrayOutputStream();
         try
