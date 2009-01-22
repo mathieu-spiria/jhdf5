@@ -109,6 +109,9 @@ public class HDF5ArchiverMain
     @Option(name = "v", longName = "verbose", usage = "Verbose output")
     private boolean verbose = false;
 
+    @Option(name = "n", longName = "numeric", usage = "Use numeric identifiers")
+    private boolean numeric = false;
+    
     @Option(longName = "latest-file-format", skipForExample = true, usage = "If true, an HDF5 file with the latest file format will be created")
     private boolean useLatestFileFormat = false;
 
@@ -278,7 +281,7 @@ public class HDF5ArchiverMain
                 case LIST:
                     createArchiver();
                     final String dir = (arguments.size() > 2) ? arguments.get(2) : "/";
-                    for (String s : archiver.list(dir, recursive, verbose))
+                    for (String s : archiver.list(dir, recursive, verbose, numeric))
                     {
                         System.out.println(s);
                     }

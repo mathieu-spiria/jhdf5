@@ -29,17 +29,17 @@ import ch.systemsx.cisd.common.os.FileLinkType;
 import ch.systemsx.cisd.common.os.Unix.Stat;
 
 /**
- * A class containing all information we need to store about a link.
+ * A class containing all information we need to store about a link in the HDF5 index.
  * 
  * @author Bernd Rinn
  */
-public final class LinkInfo implements Serializable, Comparable<LinkInfo>, ILinkInfo
+public final class LinkInfo implements Serializable, Comparable<LinkInfo>
 {
     private static final long serialVersionUID = 1L;
 
-    private final static int UNKNOWN = -1;
+    final static int UNKNOWN = -1;
 
-    private final static short UNKNOWN_S = -1;
+    final static short UNKNOWN_S = -1;
 
     private final String linkName;
 
@@ -109,7 +109,7 @@ public final class LinkInfo implements Serializable, Comparable<LinkInfo>, ILink
     /**
      * Returns the storage form (a byte array) of an array of {@link LinkInfo} objects.
      */
-    public static byte[] toStorageForm(ILinkInfo[] infoArray)
+    public static byte[] toStorageForm(LinkInfo[] infoArray)
     {
         final ByteArrayOutputStream ba = new ByteArrayOutputStream();
         try
@@ -198,10 +198,10 @@ public final class LinkInfo implements Serializable, Comparable<LinkInfo>, ILink
     {
         if (isDirectory() && o.isDirectory() == false)
         {
-            return 1;
+            return -1;
         } else if (isDirectory() == false && o.isDirectory())
         {
-            return -1;
+            return 1;
         } else
         {
             return getLinkName().compareTo(o.getLinkName());

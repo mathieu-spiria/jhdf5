@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,8 +34,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
+import ch.rinn.restrictions.Private;
 import ch.systemsx.cisd.common.exceptions.WrappedIOException;
 import ch.systemsx.cisd.common.os.FileLinkType;
+import ch.systemsx.cisd.common.os.Unix;
+import ch.systemsx.cisd.common.os.Unix.Group;
+import ch.systemsx.cisd.common.os.Unix.Password;
 import ch.systemsx.cisd.common.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.HDF5ObjectType;
@@ -114,7 +119,7 @@ public class HDF5ArchiveTools
         for (int i = 0; i < entries.length; ++i)
         {
             final File file = entries[i];
-            final ILinkInfo info = linkInfos[i];
+            final LinkInfo info = linkInfos[i];
             final String absoluteEntry = file.getAbsolutePath();
             if (info.isDirectory())
             {
@@ -205,7 +210,7 @@ public class HDF5ArchiveTools
         return map;
     }
 
-    private static FileLinkType translateType(final HDF5ObjectType hdf5Type)
+    static FileLinkType translateType(final HDF5ObjectType hdf5Type)
     {
         switch (hdf5Type)
         {
@@ -233,15 +238,15 @@ public class HDF5ArchiveTools
     private static void writeIndexMap(final HDF5Writer writer, final String hdf5GroupPath,
             final Map<String, LinkInfo> indexMap)
     {
-        final ILinkInfo[] infos = indexMap.values().toArray(new LinkInfo[indexMap.size()]);
+        final LinkInfo[] infos = indexMap.values().toArray(new LinkInfo[indexMap.size()]);
         writeIndex(writer, hdf5GroupPath, infos);
     }
 
     private static void writeIndex(final HDF5Writer writer, final String hdf5GroupPath,
-            final ILinkInfo[] infos)
+            final LinkInfo[] infos)
     {
         final String indexDataSetName = getIndexDataSetName(hdf5GroupPath);
-        final ILinkInfo[] sortedInfos = new ILinkInfo[infos.length];
+        final LinkInfo[] sortedInfos = new LinkInfo[infos.length];
         System.arraycopy(infos, 0, sortedInfos, 0, infos.length);
         Arrays.sort(sortedInfos);
         writer.writeOpaqueByteArray(indexDataSetName, OPAQUE_TAG_INDEX, LinkInfo
@@ -446,11 +451,165 @@ public class HDF5ArchiveTools
         }
     }
 
+    private static List<Link> getLinks(HDF5Reader reader, String dir, boolean verbose,
+            boolean continueOnError)
+    {
+        final String indexDataSetName = getIndexDataSetName(dir);
+        final List<Link> result = new LinkedList<Link>();
+        final String dirPrefix = dir.endsWith("/") ? dir : (dir + "/");
+        if (reader.exists(indexDataSetName))
+        {
+            final LinkInfo[] infos =
+                    LinkInfo.fromStorageForm(reader.readAsByteArray(indexDataSetName));
+            for (LinkInfo info : infos)
+            {
+                try
+                {
+                    final String path = dirPrefix + info.getLinkName();
+                    final String linkTargetOrNull =
+                            (verbose && info.isSymLink()) ? reader.getLinkInformation(path)
+                                    .tryGetSymbolicLinkTarget() : null;
+                    result.add(new Link(info, linkTargetOrNull));
+                } catch (HDF5Exception ex)
+                {
+                    HDF5ArchiveTools.dealWithError(new ListArchiveException(dir, ex),
+                            continueOnError);
+                }
+            }
+        } else
+        {
+            for (HDF5LinkInformation info : reader.getGroupMemberInformation(dir, verbose))
+            {
+                try
+                {
+                    result.add(new Link(info, verbose ? reader
+                            .getDataSetInformation(info.getPath()).getSize() : LinkInfo.UNKNOWN,
+                            LinkInfo.UNKNOWN));
+                } catch (HDF5Exception ex)
+                {
+                    HDF5ArchiveTools.dealWithError(new ListArchiveException(dir, ex),
+                            continueOnError);
+                }
+            }
+        }
+        return result;
+    }
+
+    @Private
+    static String describeLink(String dir, Link link, boolean verbose, boolean numeric)
+    {
+        final String path = dir + link.getLinkName();
+        if (verbose == false)
+        {
+            return path;
+        }
+        switch (link.getCompleteness())
+        {
+            case BASE:
+                if (link.isSymLink())
+                {
+                    return String.format("          \t%s -> %s", path, link.tryGetLinkTarget());
+                } else if (link.isDirectory())
+                {
+                    return String.format("       DIR\t%s", path);
+                } else
+                {
+                    return String.format("%10d\t%s%s", link.getSize(), path,
+                            link.isRegularFile() ? "" : "\t*");
+                }
+            case LAST_MODIFIED:
+                if (link.isSymLink())
+                {
+                    return String.format(
+                            "          \t%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS\t%2$s -> %3$s", link
+                                    .getLastModified() * 1000, path, link.tryGetLinkTarget());
+                } else if (link.isDirectory())
+                {
+                    return String.format("       DIR\t%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS\t%2$s",
+                            link.getLastModified() * 1000, path);
+                } else
+                {
+                    return String.format("%10d\t%2$tY-%2$tm-%2$td %2$tH:%2$tM:%2$tS\t%3$s%4$s",
+                            link.getSize(), link.getLastModified() * 1000, path, link
+                                    .isRegularFile() ? "" : "\t*");
+                }
+            case FULL:
+                if (link.isSymLink())
+                {
+                    return String
+                            .format(
+                                    "%s\t%s\t%s\t          \t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t%5$s -> %6$s",
+                                    getPermissions(link, numeric), getUser(link, numeric),
+                                    getGroup(link, numeric), link.getLastModified() * 1000, path,
+                                    link.tryGetLinkTarget());
+                } else if (link.isDirectory())
+                {
+                    return String.format(
+                            "%s\t%s\t%s\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t%5$s",
+                            getPermissions(link, numeric), getUser(link, numeric), getGroup(link,
+                                    numeric), link.getLastModified() * 1000, path);
+                } else
+                {
+                    return String.format(
+                            "%s\t%s\t%s\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s%7$s",
+                            getPermissions(link, numeric), getUser(link, numeric), getGroup(link,
+                                    numeric), link.getSize(), link.getLastModified() * 1000, path,
+                            link.isRegularFile() ? "" : "\t*");
+                }
+            default:
+                throw new Error("Unknown level of link information completeness: "
+                        + link.getCompleteness());
+        }
+    }
+
+    @Private
+    static String getPermissions(Link link, boolean numeric)
+    {
+        if (numeric)
+        {
+            return Integer.toString(link.getPermissions(), 8);
+        } else
+        {
+            final short perms = link.getPermissions();
+            final StringBuilder b = new StringBuilder();
+            b.append(link.isDirectory() ? 'd' : '-');
+            b.append((perms & Unix.S_IRUSR) != 0 ? 'r' : '-');
+            b.append((perms & Unix.S_IWUSR) != 0 ? 'w' : '-');
+            b.append((perms & Unix.S_IXUSR) != 0 ? ((perms & Unix.S_ISUID) != 0 ? 's' : 'x')
+                    : ((perms & Unix.S_ISUID) != 0 ? 'S' : '-'));
+            b.append((perms & Unix.S_IRGRP) != 0 ? 'r' : '-');
+            b.append((perms & Unix.S_IWGRP) != 0 ? 'w' : '-');
+            b.append((perms & Unix.S_IXGRP) != 0 ? ((perms & Unix.S_ISGID) != 0 ? 's' : 'x')
+                    : ((perms & Unix.S_ISGID) != 0 ? 'S' : '-'));
+            b.append((perms & Unix.S_IROTH) != 0 ? 'r' : '-');
+            b.append((perms & Unix.S_IWOTH) != 0 ? 'w' : '-');
+            b.append((perms & Unix.S_IXOTH) != 0 ? ((perms & Unix.S_ISVTX) != 0 ? 't' : 'x')
+                    : ((perms & Unix.S_ISVTX) != 0 ? 'T' : '-'));
+            return b.toString();
+        }
+    }
+
+    private static String getUser(Link link, boolean numeric)
+    {
+        final int uid = link.getUid();
+        final Password pwdOrNull =
+                (numeric == false && Unix.isOperational()) ? Unix.tryGetUserByUid(uid) : null;
+        return (pwdOrNull == null) ? Integer.toString(uid) : pwdOrNull.getUserName();
+    }
+
+    private static String getGroup(Link link, boolean numeric)
+    {
+        final int gid = link.getGid();
+        final Group grpOrNull =
+                (numeric == false && Unix.isOperational()) ? Unix.tryGetGroupByGid(gid) : null;
+        return (grpOrNull == null) ? Integer.toString(gid) : grpOrNull.getGroupName();
+    }
+
     /**
      * Adds the entries of <var>dir</var> to <var>entries</var> recursively.
      */
     public static void addEntries(HDF5Reader reader, List<String> entries, String dir,
-            boolean recursive, boolean verbose, boolean continueOnError)
+            boolean recursive, boolean verbose, boolean numeric, boolean continueOnError)
     {
         if (reader.exists(dir) == false)
         {
@@ -459,74 +618,13 @@ public class HDF5ArchiveTools
             return;
         }
         final String dirPrefix = dir.endsWith("/") ? dir : (dir + "/");
-        final String indexDataSetName = getIndexDataSetName(dir);
-        if (reader.exists(indexDataSetName))
+        for (Link link : getLinks(reader, dir, verbose, continueOnError))
         {
-            final ILinkInfo[] infos =
-                    LinkInfo.fromStorageForm(reader.readAsByteArray(indexDataSetName));
-            for (ILinkInfo info : infos)
+            entries.add(describeLink(dirPrefix, link, verbose, numeric));
+            if (recursive && link.isDirectory())
             {
-                final String path = dirPrefix + info.getLinkName();
-                if (verbose)
-                {
-                    if (info.isSymLink())
-                    {
-                        entries
-                                .add(String
-                                        .format(
-                                                "%o\t%d/%d\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s -> %7$s",
-                                                info.getPermissions(), info.getUid(),
-                                                info.getGid(), info.getSize(), info
-                                                        .getLastModified() * 1000, path, reader
-                                                        .getLinkInformation(path)
-                                                        .tryGetSymbolicLinkTarget()));
-                    } else if (info.isDirectory())
-                    {
-                        entries.add(String.format(
-                                "%o\t%d/%d\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t%5$s",
-                                info.getPermissions(), info.getUid(), info.getGid(), info
-                                        .getLastModified() * 1000, path));
-                    } else
-                    {
-                        entries.add(String.format(
-                                "%o\t%d/%d\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s", info
-                                        .getPermissions(), info.getUid(), info.getGid(), info
-                                        .getSize(), info.getLastModified() * 1000, path));
-                    }
-                } else
-                {
-                    entries.add(path);
-                }
-                if (recursive && info.isDirectory())
-                {
-                    addEntries(reader, entries, path, recursive, verbose, continueOnError);
-                }
-            }
-        } else
-        {
-            try
-            {
-                for (HDF5LinkInformation linkInfo : reader.getGroupMemberInformation(dir, false))
-                {
-                    if (recursive && linkInfo.isGroup())
-                    {
-                        addEntries(reader, entries, linkInfo.getPath(), recursive, verbose,
-                                continueOnError);
-                    } else
-                    {
-                        if (verbose && linkInfo.isDataSet())
-                        {
-                            entries.add(reader.getDataSetInformation(linkInfo.getPath()).getSize()
-                                    + "\t" + linkInfo.getPath());
-                        } else
-                        {
-                            entries.add(linkInfo.getPath());
-                        }
-                    }
-                }
-            } catch (HDF5Exception ex)
-            {
-                HDF5ArchiveTools.dealWithError(new ListArchiveException(dir, ex), continueOnError);
+                addEntries(reader, entries, dirPrefix + link.getLinkName(), recursive, verbose,
+                        numeric, continueOnError);
             }
         }
     }

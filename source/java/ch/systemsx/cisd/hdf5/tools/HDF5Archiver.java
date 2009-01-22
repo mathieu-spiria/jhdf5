@@ -101,10 +101,11 @@ public class HDF5Archiver
         return this;
     }
 
-    public List<String> list(String dir, boolean recursive, boolean verbose)
+    public List<String> list(String dir, boolean recursive, boolean verbose, boolean numeric)
     {
         final List<String> result = new ArrayList<String>();
-        HDF5ArchiveTools.addEntries(hdf5Reader, result, dir, recursive, verbose, continueOnError);
+        HDF5ArchiveTools.addEntries(hdf5Reader, result, dir, recursive, verbose, numeric,
+                continueOnError);
         return result;
     }
 
