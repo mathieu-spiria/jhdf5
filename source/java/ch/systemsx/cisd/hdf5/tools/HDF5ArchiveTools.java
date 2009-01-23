@@ -22,6 +22,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -192,15 +193,16 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static void archiveDirectory(HDF5Writer writer, ArchivingStrategy strategy, File root,
-            File dir, boolean continueOnError, boolean verbose) throws ArchivingException
+    private static boolean archiveDirectory(HDF5Writer writer, ArchivingStrategy strategy,
+            File root, File dir, boolean continueOnError, boolean verbose)
+            throws ArchivingException
     {
         final File[] entries = dir.listFiles();
         if (entries == null)
         {
             dealWithError(new ArchivingException(dir, new IOException("Cannot read directory")),
                     continueOnError);
-            return;
+            return false;
         }
         final String hdf5GroupPath = getRelativePath(root, dir);
         if (writer.isUseLatestFileFormat() == false
@@ -210,32 +212,34 @@ public class HDF5ArchiveTools
             int totalLength = computeSizeHint(entries);
             writer.createGroup(hdf5GroupPath, totalLength * SIZEHINT_FACTOR);
         }
-        final LinkInfo[] linkInfos = getLinkInfos(entries, strategy.doStoreOwnerAndPermissions());
-        try
-        {
-            updateIndex(writer, hdf5GroupPath, linkInfos);
-        } catch (HDF5Exception ex)
-        {
-            dealWithError(new ArchivingException(hdf5GroupPath, ex), continueOnError);
-        }
+        final List<LinkInfo> linkInfos =
+                getLinkInfos(entries, strategy.doStoreOwnerAndPermissions());
 
         writeToConsole(hdf5GroupPath, verbose);
+        Iterator<LinkInfo> infoIt = linkInfos.iterator();
         for (int i = 0; i < entries.length; ++i)
         {
             final File file = entries[i];
-            final LinkInfo info = linkInfos[i];
+            final LinkInfo info = infoIt.next();
             final String absoluteEntry = file.getAbsolutePath();
             if (info.isDirectory())
             {
                 if (strategy.doExclude(absoluteEntry, true))
                 {
+                    infoIt.remove();
                     continue;
                 }
-                archiveDirectory(writer, strategy, root, file, continueOnError, verbose);
+                final boolean ok =
+                        archiveDirectory(writer, strategy, root, file, continueOnError, verbose);
+                if (ok == false)
+                {
+                    infoIt.remove();
+                }
             } else
             {
                 if (strategy.doExclude(absoluteEntry, false))
                 {
+                    infoIt.remove();
                     continue;
                 }
                 if (info.isSymLink())
@@ -246,14 +250,36 @@ public class HDF5ArchiveTools
                         dealWithError(new ArchivingException(file, new IOException(
                                 "Cannot read link target of symbolic link.")), continueOnError);
                     }
-                    writer.createSoftLink(linkTargetOrNull, hdf5GroupPath + "/"
-                            + info.getLinkName());
+                    try
+                    {
+                        writer.createSoftLink(linkTargetOrNull, hdf5GroupPath + "/"
+                                + info.getLinkName());
+                    } catch (HDF5Exception ex)
+                    {
+                        infoIt.remove();
+                        dealWithError(new ArchivingException(hdf5GroupPath + "/"
+                                + info.getLinkName(), ex), continueOnError);
+                    }
                 } else
                 {
-                    archiveFile(writer, strategy, root, file, continueOnError, verbose);
+                    final boolean ok =
+                            archiveFile(writer, strategy, root, file, continueOnError, verbose);
+                    if (ok == false)
+                    {
+                        infoIt.remove();
+                    }
                 }
             }
         }
+
+        try
+        {
+            updateIndex(writer, hdf5GroupPath, linkInfos.toArray(new LinkInfo[linkInfos.size()]));
+        } catch (HDF5Exception ex)
+        {
+            dealWithError(new ArchivingException(hdf5GroupPath, ex), continueOnError);
+        }
+        return true;
     }
 
     private static String getIndexDataSetName(final String hdf5ObjectPath)
@@ -329,12 +355,13 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static LinkInfo[] getLinkInfos(final File[] entries, boolean storeOwnerAndPermissions)
+    private static List<LinkInfo> getLinkInfos(final File[] entries,
+            boolean storeOwnerAndPermissions)
     {
-        final LinkInfo[] infos = new LinkInfo[entries.length];
+        final List<LinkInfo> infos = new LinkedList<LinkInfo>();
         for (int i = 0; i < entries.length; ++i)
         {
-            infos[i] = LinkInfo.get(entries[i], storeOwnerAndPermissions);
+            infos.add(LinkInfo.get(entries[i], storeOwnerAndPermissions));
         }
         return infos;
     }
@@ -382,9 +409,10 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static void archiveFile(HDF5Writer writer, ArchivingStrategy strategy, File root,
+    private static boolean archiveFile(HDF5Writer writer, ArchivingStrategy strategy, File root,
             File file, boolean continueOnError, boolean verbose) throws ArchivingException
     {
+        boolean ok = true;
         final String hdf5ObjectPath = getRelativePath(root, file);
         final boolean compress = strategy.doCompress(hdf5ObjectPath);
         try
@@ -400,11 +428,14 @@ public class HDF5ArchiveTools
             writeToConsole(hdf5ObjectPath, verbose);
         } catch (IOException ex)
         {
+            ok = false;
             dealWithError(new ArchivingException(file, ex), continueOnError);
         } catch (HDF5Exception ex)
         {
+            ok = false;
             dealWithError(new ArchivingException(hdf5ObjectPath, ex), continueOnError);
         }
+        return ok;
     }
 
     private static String getRelativePath(File root, File entry)
@@ -644,7 +675,7 @@ public class HDF5ArchiveTools
             {
                 try
                 {
-                    result.add(new Link(info, verbose ? reader
+                    result.add(new Link(info, verbose && info.isDataSet() ? reader
                             .getDataSetInformation(info.getPath()).getSize() : LinkInfo.UNKNOWN,
                             LinkInfo.UNKNOWN));
                 } catch (HDF5Exception ex)
@@ -787,8 +818,8 @@ public class HDF5ArchiveTools
             final String path = dirPrefix + link.getLinkName();
             if (recursive && link.isDirectory() && "/.".equals(path) == false)
             {
-                addEntries(reader, entries, path, idCache, recursive,
-                        verbose, numeric, continueOnError);
+                addEntries(reader, entries, path, idCache, recursive, verbose, numeric,
+                        continueOnError);
             }
         }
     }
