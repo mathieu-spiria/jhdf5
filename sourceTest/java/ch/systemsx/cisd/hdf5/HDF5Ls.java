@@ -39,7 +39,7 @@ public class HDF5Ls
         final StopWatch watch = new StopWatch();
         watch.start();
         final HDF5Archiver archiver = new HDF5Archiver(new File(args[0]), true, false, false);
-        final List<String> entries = archiver.list("/", true, false);
+        final List<String> entries = archiver.list("/", true, false, false);
         archiver.close();
         for (String e : entries)
         {
