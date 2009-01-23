@@ -16,8 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.*;
-import static ncsa.hdf.hdf5lib.H5.H5Aread;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.*; //import static ncsa.hdf.hdf5lib.H5.H5Aread;
 import static ncsa.hdf.hdf5lib.HDF5Constants.*;
 
 import java.io.File;
@@ -871,8 +870,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     }
                     final int size = h5.getSize(dataTypeId);
                     final int stringDataTypeId = h5.createDataTypeString(size, registry);
-                    byte[] data = new byte[size];
-                    H5Aread(attributeId, stringDataTypeId, data);
+                    byte[] data = h5.readAttributeAsByteArray(attributeId, stringDataTypeId, size);
                     int termIdx;
                     for (termIdx = 0; termIdx < size && data[termIdx] != 0; ++termIdx)
                     {
@@ -907,8 +905,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
                     final int nativeDataTypeId =
                             h5.getNativeDataTypeForAttribute(attributeId, registry);
-                    byte[] data = new byte[1];
-                    H5Aread(attributeId, nativeDataTypeId, data);
+                    byte[] data = h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, 1);
                     final Boolean value = h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
                     if (value == null)
                     {
@@ -945,8 +942,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
                     final int storageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
                     final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
-                    final byte[] data = new byte[4];
-                    H5Aread(attributeId, nativeDataTypeId, data);
+                    final byte[] data =
+                            h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, 4);
                     final String value =
                             h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId, HDFNativeData
                                     .byteToInt(data, 0));
@@ -1001,8 +998,7 @@ public class HDF5Reader implements HDF5SimpleReader
         }
         final int attributeId = h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
         final int dataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
-        final byte[] data = new byte[4];
-        H5Aread(attributeId, dataTypeId, data);
+        final byte[] data = h5.readAttributeAsByteArray(attributeId, dataTypeId, 4);
         return HDFNativeData.byteToInt(data, 0);
     }
 
@@ -1036,21 +1032,24 @@ public class HDF5Reader implements HDF5SimpleReader
                             {
                                 case BYTE:
                                 {
-                                    final byte[] data = new byte[1];
-                                    H5Aread(attributeId, enumType.getNativeTypeId(), data);
+                                    final byte[] data =
+                                            h5.readAttributeAsByteArray(attributeId, enumType
+                                                    .getNativeTypeId(), 1);
                                     return new HDF5EnumerationValue(enumType, data[0]);
                                 }
                                 case SHORT:
                                 {
-                                    final byte[] data = new byte[2];
-                                    H5Aread(attributeId, enumType.getNativeTypeId(), data);
+                                    final byte[] data =
+                                            h5.readAttributeAsByteArray(attributeId, enumType
+                                                    .getNativeTypeId(), 2);
                                     return new HDF5EnumerationValue(enumType, HDFNativeData
                                             .byteToShort(data, 0));
                                 }
                                 case INT:
                                 {
-                                    final byte[] data = new byte[4];
-                                    H5Aread(attributeId, enumType.getNativeTypeId(), data);
+                                    final byte[] data =
+                                            h5.readAttributeAsByteArray(attributeId, enumType
+                                                    .getNativeTypeId(), 4);
                                     return new HDF5EnumerationValue(enumType, HDFNativeData
                                             .byteToInt(data, 0));
                                 }
@@ -1092,8 +1091,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int objectId = h5.openObject(fileId, objectPath, registry);
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
-                    final byte[] data = new byte[4];
-                    H5Aread(attributeId, H5T_NATIVE_INT32, data);
+                    final byte[] data =
+                            h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_INT32, 4);
                     return HDFNativeData.byteToInt(data, 0);
                 }
             };
@@ -1120,8 +1119,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int objectId = h5.openObject(fileId, objectPath, registry);
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
-                    final byte[] data = new byte[8];
-                    H5Aread(attributeId, H5T_NATIVE_INT64, data);
+                    final byte[] data =
+                            h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_INT64, 8);
                     return HDFNativeData.byteToLong(data, 0);
                 }
             };
@@ -1148,8 +1147,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int objectId = h5.openObject(fileId, objectPath, registry);
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
-                    final byte[] data = new byte[4];
-                    H5Aread(attributeId, H5T_NATIVE_FLOAT, data);
+                    final byte[] data =
+                            h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_FLOAT, 4);
                     return HDFNativeData.byteToFloat(data, 0);
                 }
             };
@@ -1176,8 +1175,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int objectId = h5.openObject(fileId, objectPath, registry);
                     final int attributeId = h5.openAttribute(objectId, attributeName, registry);
-                    final byte[] data = new byte[8];
-                    H5Aread(attributeId, H5T_NATIVE_DOUBLE, data);
+                    final byte[] data =
+                            h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_DOUBLE, 8);
                     return HDFNativeData.byteToDouble(data, 0);
                 }
             };

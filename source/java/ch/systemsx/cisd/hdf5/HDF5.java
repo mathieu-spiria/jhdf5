@@ -42,6 +42,8 @@ import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 class HDF5
 {
 
+    private final static int MAX_STRING_LENGTH = 4095;
+    
     private final CleanUpCallable runner;
 
     private final int dataSetCreationPropertyListCompactStorageLayout;
@@ -67,6 +69,14 @@ class HDF5
         }
         this.lcplCreateIntermediateGroups = createLinkCreationPropertyList(true, fileRegistry);
 
+    }
+
+    private static void checkMaxLength(String path) throws HDF5JavaException
+    {
+        if (path.length() > MAX_STRING_LENGTH)
+        {
+            throw new HDF5JavaException("Path too long (length=" + path.length() + ")");
+        }
     }
 
     //
@@ -153,6 +163,7 @@ class HDF5
 
     public int openObject(int fileId, String path, ICleanUpRegistry registry)
     {
+        checkMaxLength(path);
         final int groupId = H5Oopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
@@ -166,6 +177,7 @@ class HDF5
 
     public int deleteObject(int fileId, String path)
     {
+        checkMaxLength(path);
         final int success = H5Gunlink(fileId, path);
         return success;
     }
@@ -176,6 +188,7 @@ class HDF5
 
     public void createGroup(int fileId, String groupName)
     {
+        checkMaxLength(groupName);
         final int groupId =
                 H5Gcreate(fileId, groupName, lcplCreateIntermediateGroups, H5P_DEFAULT, H5P_DEFAULT);
         H5Gclose(groupId);
@@ -184,6 +197,7 @@ class HDF5
     public void createOldStyleGroup(int fileId, String groupName, int sizeHint,
             ICleanUpRegistry registry)
     {
+        checkMaxLength(groupName);
         final int gcplId = H5Pcreate(H5P_GROUP_CREATE);
         registry.registerCleanUp(new Runnable()
             {
@@ -201,6 +215,7 @@ class HDF5
     public void createNewStyleGroup(int fileId, String groupName, int maxCompact, int minDense,
             ICleanUpRegistry registry)
     {
+        checkMaxLength(groupName);
         final int gcplId = H5Pcreate(H5P_GROUP_CREATE);
         registry.registerCleanUp(new Runnable()
             {
@@ -217,6 +232,7 @@ class HDF5
 
     public int openGroup(int fileId, String path, ICleanUpRegistry registry)
     {
+        checkMaxLength(path);
         final int groupId = H5Gopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
@@ -230,6 +246,7 @@ class HDF5
 
     public long getNumberOfGroupMembers(int fileId, String path, ICleanUpRegistry registry)
     {
+        checkMaxLength(path);
         final int groupId = H5Gopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
@@ -243,17 +260,20 @@ class HDF5
 
     public boolean existsAttribute(final int objectId, final String attributeName)
     {
+        checkMaxLength(attributeName);
         return H5Aexists(objectId, attributeName);
     }
 
     public boolean exists(final int fileId, final String linkName)
     {
+        checkMaxLength(linkName);
         return H5Lexists(fileId, linkName);
     }
 
     public HDF5LinkInformation getLinkInfo(final int fileId, final String objectName,
             boolean exceptionWhenNonExistent)
     {
+        checkMaxLength(objectName);
         if ("/".equals(objectName))
         {
             return HDF5LinkInformation.ROOT_LINK_INFO;
@@ -266,6 +286,7 @@ class HDF5
     public HDF5ObjectType getTypeInfo(final int fileId, final String objectName,
             boolean exceptionWhenNonExistent)
     {
+        checkMaxLength(objectName);
         if ("/".equals(objectName))
         {
             return HDF5ObjectType.GROUP;
@@ -276,7 +297,8 @@ class HDF5
 
     public String[] getGroupMembers(final int fileId, final String groupName)
     {
-        ICallableWithCleanUp<String[]> dataDimensionRunnable = new ICallableWithCleanUp<String[]>()
+        checkMaxLength(groupName);
+        final ICallableWithCleanUp<String[]> dataDimensionRunnable = new ICallableWithCleanUp<String[]>()
             {
                 public String[] call(ICleanUpRegistry registry)
                 {
@@ -299,7 +321,8 @@ class HDF5
     public List<HDF5LinkInformation> getGroupMemberLinkInfo(final int fileId,
             final String groupName, final boolean includeInternal)
     {
-        ICallableWithCleanUp<List<HDF5LinkInformation>> dataDimensionRunnable =
+        checkMaxLength(groupName);
+        final ICallableWithCleanUp<List<HDF5LinkInformation>> dataDimensionRunnable =
                 new ICallableWithCleanUp<List<HDF5LinkInformation>>()
                     {
                         public List<HDF5LinkInformation> call(ICleanUpRegistry registry)
@@ -337,7 +360,8 @@ class HDF5
     public List<HDF5LinkInformation> getGroupMemberTypeInfo(final int fileId,
             final String groupName, final boolean includeInternal)
     {
-        ICallableWithCleanUp<List<HDF5LinkInformation>> dataDimensionRunnable =
+        checkMaxLength(groupName);
+        final ICallableWithCleanUp<List<HDF5LinkInformation>> dataDimensionRunnable =
                 new ICallableWithCleanUp<List<HDF5LinkInformation>>()
                     {
                         public List<HDF5LinkInformation> call(ICleanUpRegistry registry)
@@ -377,18 +401,25 @@ class HDF5
 
     public void createHardLink(int fileId, String objectName, String linkName)
     {
+        checkMaxLength(objectName);
+        checkMaxLength(linkName);
         H5Lcreate_hard(fileId, objectName, fileId, linkName, lcplCreateIntermediateGroups,
                 H5P_DEFAULT);
     }
 
     public void createSoftLink(int fileId, String linkName, String targetPath)
     {
+        checkMaxLength(linkName);
+        checkMaxLength(targetPath);
         H5Lcreate_soft(targetPath, fileId, linkName, lcplCreateIntermediateGroups, H5P_DEFAULT);
     }
 
     public void createExternalLink(int fileId, String linkName, String targetFileName,
             String targetPath)
     {
+        checkMaxLength(linkName);
+        checkMaxLength(targetFileName);
+        checkMaxLength(targetPath);
         H5Lcreate_external(targetFileName, targetPath, fileId, linkName,
                 lcplCreateIntermediateGroups, H5P_DEFAULT);
     }
@@ -410,6 +441,7 @@ class HDF5
     public int createDataSet(int fileId, long[] dimensions, long[] chunkSizeOrNull, int dataTypeId,
             int deflateLevel, String dataSetName, StorageLayout layout, ICleanUpRegistry registry)
     {
+        checkMaxLength(dataSetName);
         final int dataSpaceId =
                 H5Screate_simple(dimensions.length, dimensions, createMaxDimensions(dimensions,
                         (layout == StorageLayout.CHUNKED)));
@@ -519,6 +551,7 @@ class HDF5
     public int createScalarDataSet(int fileId, int dataTypeId, String dataSetName,
             ICleanUpRegistry registry)
     {
+        checkMaxLength(dataSetName);
         final int dataSpaceId = H5Screate(H5S_SCALAR);
         registry.registerCleanUp(new Runnable()
             {
@@ -543,6 +576,7 @@ class HDF5
 
     public int openDataSet(int fileId, String path, ICleanUpRegistry registry)
     {
+        checkMaxLength(path);
         final int dataSetId = H5Dopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
@@ -662,6 +696,7 @@ class HDF5
     public int createAttribute(int locationId, String attributeName, int dataTypeId,
             ICleanUpRegistry registry)
     {
+        checkMaxLength(attributeName);
         final int dataSpaceId = H5Screate(H5S_SCALAR);
         registry.registerCleanUp(new Runnable()
             {
@@ -685,12 +720,14 @@ class HDF5
 
     public int deleteAttribute(int locationId, String attributeName)
     {
+        checkMaxLength(attributeName);
         final int success = H5Adelete(locationId, attributeName);
         return success;
     }
 
     public int openAttribute(int locationId, String attributeName, ICleanUpRegistry registry)
     {
+        checkMaxLength(attributeName);
         final int attributeId = H5Aopen_name(locationId, attributeName);
         registry.registerCleanUp(new Runnable()
             {
@@ -731,6 +768,18 @@ class HDF5
             attributeNames.add(nameContainer[0]);
         }
         return attributeNames;
+    }
+    
+    public byte[] readAttributeAsByteArray(int attributeId, int dataTypeId, int length)
+    {
+        final byte[] data = new byte[length];
+        H5Aread(attributeId, dataTypeId, data);
+        return data;
+    }
+
+    public void writeAttribute(int attributeId, int dataTypeId, byte[] value)
+    {
+        H5Awrite(attributeId, dataTypeId, value);
     }
 
     //
@@ -799,6 +848,10 @@ class HDF5
 
     public int createDataTypeEnum(String[] names, ICleanUpRegistry registry)
     {
+        for (String name : names)
+        {
+            checkMaxLength(name);
+        }
         final EnumSize size =
                 (names.length < Byte.MAX_VALUE) ? EnumSize.BYTE8
                         : (names.length < Short.MAX_VALUE) ? EnumSize.SHORT16 : EnumSize.INT32;
@@ -939,6 +992,7 @@ class HDF5
      */
     public int getIndexForMemberName(int dataTypeId, String name)
     {
+        checkMaxLength(name);
         return H5Tget_member_index(dataTypeId, name);
     }
 
@@ -955,6 +1009,7 @@ class HDF5
      */
     public int getDataTypeForMemberName(int compoundDataTypeId, String memberName)
     {
+        checkMaxLength(memberName);
         final int index = H5Tget_member_index(compoundDataTypeId, memberName);
         return H5Tget_member_type(compoundDataTypeId, index);
     }
@@ -993,6 +1048,7 @@ class HDF5
 
     public int createDataTypeOpaque(int lengthInBytes, String tag, ICleanUpRegistry registry)
     {
+        checkMaxLength(tag);
         final int dataTypeId = H5Tcreate(H5T_OPAQUE, lengthInBytes);
         registry.registerCleanUp(new Runnable()
             {
@@ -1008,11 +1064,13 @@ class HDF5
 
     public void commitDataType(int fileId, String name, int dataTypeId)
     {
+        checkMaxLength(name);
         H5Tcommit(fileId, name, dataTypeId, lcplCreateIntermediateGroups, H5P_DEFAULT, H5P_DEFAULT);
     }
 
     public int openDataType(int fileId, String name, ICleanUpRegistry registry)
     {
+        checkMaxLength(name);
         final int dataTypeId = H5Topen(fileId, name, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {

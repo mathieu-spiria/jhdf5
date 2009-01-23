@@ -17,8 +17,14 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.*;
-import static ch.systemsx.cisd.hdf5.HDF5.NO_DEFLATION;
-import static ncsa.hdf.hdf5lib.H5.*;
+import static ch.systemsx.cisd.hdf5.HDF5.NO_DEFLATION; 
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite_int;
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite_short;
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite_long;
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite_float;
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite_double;
+import static ncsa.hdf.hdf5lib.H5.H5DwriteString;
 import static ncsa.hdf.hdf5lib.HDF5Constants.*;
 
 import java.io.File;
@@ -585,7 +591,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                                         h5.createAttribute(objectId, name, stringDataTypeId,
                                                 registry);
                             }
-                            H5Awrite(attributeId, stringDataTypeId, (value + '\0').getBytes());
+                            h5.writeAttribute(attributeId, stringDataTypeId, (value + '\0')
+                                    .getBytes());
                             return null; // Nothing to return.
                         }
                     };
@@ -702,7 +709,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                                         h5.createAttribute(objectId, name, storageDataTypeId,
                                                 registry);
                             }
-                            H5Awrite(attributeId, nativeDataTypeId, value);
+                            h5.writeAttribute(attributeId, nativeDataTypeId, value);
                             return null; // Nothing to return.
                         }
                     };
