@@ -170,9 +170,19 @@ public final class LinkInfo implements Serializable, Comparable<LinkInfo>
         return size;
     }
 
+    public boolean hasLastModified()
+    {
+        return lastModified >= 0;
+    }
+
     public long getLastModified()
     {
         return lastModified;
+    }
+
+    public boolean hasUnixPermissions()
+    {
+        return uid >= 0 && gid >= 0 && permissions >= 0;
     }
 
     public int getUid()
