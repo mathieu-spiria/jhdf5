@@ -183,13 +183,22 @@ public class HDF5ArchiveTools
     {
         final LinkInfo[] info = new LinkInfo[1];
         info[0] = LinkInfo.get(path, strategy.doStoreOwnerAndPermissions());
-        updateIndex(writer, "/", info);
+        final boolean ok;
         if (path.isDirectory())
         {
-            archiveDirectory(writer, strategy, root, path, continueOnError, verbose);
+            ok = archiveDirectory(writer, strategy, root, path, continueOnError, verbose);
+        } else if (path.isFile())
+        {
+            ok = archiveFile(writer, strategy, root, path, continueOnError, verbose);
         } else
         {
-            archiveFile(writer, strategy, root, path, continueOnError, verbose);
+            ok = false;
+            dealWithError(new ArchivingException(path, new IOException(
+                    "Path corresponds to neither a file nor a directory.")), continueOnError);
+        }
+        if (ok && ".".equals(info[0].getLinkName()) == false)
+        {
+            updateIndex(writer, "/", info);
         }
     }
 
@@ -260,7 +269,7 @@ public class HDF5ArchiveTools
                         dealWithError(new ArchivingException(hdf5GroupPath + "/"
                                 + info.getLinkName(), ex), continueOnError);
                     }
-                } else
+                } else if (info.isRegularFile())
                 {
                     final boolean ok =
                             archiveFile(writer, strategy, root, file, continueOnError, verbose);
@@ -268,6 +277,11 @@ public class HDF5ArchiveTools
                     {
                         infoIt.remove();
                     }
+                } else
+                {
+                    dealWithError(new ArchivingException(file, new IOException(
+                            "Path corresponds to neither a file nor a directory.")),
+                            continueOnError);
                 }
             }
         }
@@ -277,7 +291,8 @@ public class HDF5ArchiveTools
             updateIndex(writer, hdf5GroupPath, linkInfos.toArray(new LinkInfo[linkInfos.size()]));
         } catch (HDF5Exception ex)
         {
-            dealWithError(new ArchivingException(hdf5GroupPath, ex), continueOnError);
+            dealWithError(new ArchivingException(getIndexDataSetName(hdf5GroupPath), ex),
+                    continueOnError);
         }
         return true;
     }
@@ -323,9 +338,11 @@ public class HDF5ArchiveTools
                 for (int i = 0; i < hdf5LinkInfos.size(); ++i)
                 {
                     final HDF5LinkInformation linfo = hdf5LinkInfos.get(i);
-                    final long size = reader.getDataSetInformation(linfo.getPath()).getSize();
+                    final long size =
+                            linfo.isDataSet() ? reader.getDataSetInformation(linfo.getPath())
+                                    .getSize() : 0L;
                     final FileLinkType type = translateType(linfo.getType());
-                    infos[i] = new LinkInfo(linfo.getName(), type, size, 0L);
+                    infos[i] = new LinkInfo(linfo.getName(), type, size, LinkInfo.UNKNOWN);
                 }
             } else
             {
@@ -563,8 +580,8 @@ public class HDF5ArchiveTools
                                     + tryGetObjectTypeDescriptionForErrorMessage(reader,
                                             objectPathOrNull) + "."), continueOnError);
                 }
-                restoreAttributes(groupFile, dirLinkOrNull, groupCache);
             }
+            restoreAttributes(groupFile, dirLinkOrNull, groupCache);
         } catch (HDF5Exception ex)
         {
             dealWithError(new UnarchivingException(objectPathOrNull == null ? groupPath
