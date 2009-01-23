@@ -33,6 +33,7 @@ import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
 import ch.systemsx.cisd.common.array.MDArray;
 import ch.systemsx.cisd.common.array.MDByteArray;
 import ch.systemsx.cisd.common.array.MDDoubleArray;
@@ -240,9 +241,12 @@ public class HDF5Reader implements HDF5SimpleReader
     // /////////////////////
 
     /**
-     * Returns the link information for the given <var>objectPath</var>. If you want to ensure that
-     * the link given by <var>objectPath</var> exists, call
-     * {@link HDF5LinkInformation#checkExists()}.
+     * Returns the link information for the given <var>objectPath</var>. You need to ensure that the
+     * link given by <var>objectPath</var> exists, e.g. by calling
+     * {@link HDF5LinkInformation#checkExists()} first.
+     * 
+     * @throws ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException If the link specified by
+     *             <var>objectPath</var> doesn't exist.
      */
     public HDF5LinkInformation getLinkInformation(final String objectPath)
     {
