@@ -82,7 +82,7 @@ public class HDF5ArchiveTools
         private final Password userOrNull;
 
         /** Gid -> Is user member? */
-        private Map<Integer, Boolean> gidMap = new HashMap<Integer, Boolean>();
+        private final Map<Integer, Boolean> gidMap = new HashMap<Integer, Boolean>();
 
         GroupCache()
         {
@@ -114,6 +114,63 @@ public class HDF5ArchiveTools
                 gidMap.put(gid, Boolean.FALSE);
                 return false;
             }
+        }
+    }
+
+    /**
+     * Cache for ID -> Name mapping.
+     * 
+     * @author Bernd Rinn
+     */
+    @Private
+    static class IdCache
+    {
+        /** Gid -> Group Name */
+        private final Map<Integer, String> gidMap = new HashMap<Integer, String>();
+
+        /** Uid -> User Name */
+        private final Map<Integer, String> uidMap = new HashMap<Integer, String>();
+
+        /**
+         * Returns the name for the given <var>uid</var>.
+         */
+        String getUser(Link link, boolean numeric)
+        {
+            final int uid = link.getUid();
+            String userNameOrNull = uidMap.get(uidMap);
+            if (userNameOrNull == null)
+            {
+                userNameOrNull =
+                        (numeric == false && Unix.isOperational()) ? Unix.tryGetUserNameForUid(uid)
+                                : null;
+                if (userNameOrNull == null)
+                {
+                    userNameOrNull = Integer.toString(uid);
+                }
+                uidMap.put(uid, userNameOrNull);
+            }
+            return userNameOrNull;
+        }
+
+        /**
+         * Returns the name for the given <var>gid</var>.
+         */
+        String getGroup(Link link, boolean numeric)
+        {
+            final int gid = link.getGid();
+            String groupNameOrNull = gidMap.get(uidMap);
+            if (groupNameOrNull == null)
+            {
+                groupNameOrNull =
+                        (numeric == false && Unix.isOperational()) ? Unix
+                                .tryGetGroupNameForGid(gid) : null;
+                if (groupNameOrNull == null)
+                {
+                    groupNameOrNull = Integer.toString(gid);
+                }
+                gidMap.put(gid, groupNameOrNull);
+            }
+            return groupNameOrNull;
         }
     }
 
@@ -163,7 +220,7 @@ public class HDF5ArchiveTools
             dealWithError(new ArchivingException(hdf5GroupPath, ex), continueOnError);
         }
 
-        list(hdf5GroupPath, verbose);
+        writeToConsole(hdf5GroupPath, verbose);
         for (int i = 0; i < entries.length; ++i)
         {
             final File file = entries[i];
@@ -318,7 +375,7 @@ public class HDF5ArchiveTools
         }
     }
 
-    static void list(String hdf5ObjectPath, boolean verbose)
+    static void writeToConsole(String hdf5ObjectPath, boolean verbose)
     {
         if (verbose)
         {
@@ -341,7 +398,7 @@ public class HDF5ArchiveTools
             {
                 copyToHDF5Small(file, writer, hdf5ObjectPath, compress);
             }
-            list(hdf5ObjectPath, verbose);
+            writeToConsole(hdf5ObjectPath, verbose);
         } catch (IOException ex)
         {
             dealWithError(new ArchivingException(file, ex), continueOnError);
@@ -427,7 +484,7 @@ public class HDF5ArchiveTools
                     final String name = path.substring(groupDelimIndex + 1);
                     indexMapOrNull.remove(name);
                 }
-                list(path, verbose);
+                writeToConsole(path, verbose);
             } catch (HDF5Exception ex)
             {
                 HDF5ArchiveTools.dealWithError(new DeleteFromArchiveException(path, ex),
@@ -458,7 +515,7 @@ public class HDF5ArchiveTools
                     {
                         continue;
                     }
-                    list(objectPathOrNull, verbose);
+                    writeToConsole(objectPathOrNull, verbose);
                     extractDirectory(reader, strategy, groupCache, root, objectPathOrNull, link,
                             continueOnError, verbose);
                 } else if (link.isRegularFile())
@@ -516,7 +573,7 @@ public class HDF5ArchiveTools
                 copyFromHDF5Small(reader, hdf5ObjectPath, file);
             }
             restoreAttributes(file, linkOrNull, groupCache);
-            list(hdf5ObjectPath, verbose);
+            writeToConsole(hdf5ObjectPath, verbose);
         } catch (IOException ex)
         {
             dealWithError(new UnarchivingException(file, ex), continueOnError);
@@ -598,7 +655,8 @@ public class HDF5ArchiveTools
     }
 
     @Private
-    static String describeLink(String dir, Link link, boolean verbose, boolean numeric)
+    static String describeLink(String dir, Link link, IdCache idCache, boolean verbose,
+            boolean numeric)
     {
         final String path = dir + link.getLinkName();
         if (verbose == false)
@@ -642,21 +700,23 @@ public class HDF5ArchiveTools
                     return String
                             .format(
                                     "%s\t%s\t%s\t          \t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t%5$s -> %6$s",
-                                    getPermissions(link, numeric), getUser(link, numeric),
-                                    getGroup(link, numeric), link.getLastModified()
+                                    getPermissions(link, numeric), idCache.getUser(link, numeric),
+                                    idCache.getGroup(link, numeric), link.getLastModified()
                                             * MILLIS_PER_SECOND, path, link.tryGetLinkTarget());
                 } else if (link.isDirectory())
                 {
                     return String.format(
                             "%s\t%s\t%s\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t%5$s",
-                            getPermissions(link, numeric), getUser(link, numeric), getGroup(link,
-                                    numeric), link.getLastModified() * MILLIS_PER_SECOND, path);
+                            getPermissions(link, numeric), idCache.getUser(link, numeric), idCache
+                                    .getGroup(link, numeric), link.getLastModified()
+                                    * MILLIS_PER_SECOND, path);
                 } else
                 {
                     return String.format(
                             "%s\t%s\t%s\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s%7$s",
-                            getPermissions(link, numeric), getUser(link, numeric), getGroup(link,
-                                    numeric), link.getSize(), link.getLastModified()
+                            getPermissions(link, numeric), idCache.getUser(link, numeric), idCache
+                                    .getGroup(link, numeric), link.getSize(), link
+                                    .getLastModified()
                                     * MILLIS_PER_SECOND, path, link.isRegularFile() ? "" : "\t*");
                 }
             default:
@@ -692,27 +752,23 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static String getUser(Link link, boolean numeric)
+    /**
+     * Returns a listing of entries in <var>dir</var> in the archive provided by <var>reader</var>.
+     */
+    public static List<String> list(HDF5Reader reader, String dir, boolean recursive,
+            boolean verbose, boolean numeric, boolean continueOnError)
     {
-        final int uid = link.getUid();
-        final Password pwdOrNull =
-                (numeric == false && Unix.isOperational()) ? Unix.tryGetUserByUid(uid) : null;
-        return (pwdOrNull == null) ? Integer.toString(uid) : pwdOrNull.getUserName();
-    }
-
-    private static String getGroup(Link link, boolean numeric)
-    {
-        final int gid = link.getGid();
-        final Group grpOrNull =
-                (numeric == false && Unix.isOperational()) ? Unix.tryGetGroupByGid(gid) : null;
-        return (grpOrNull == null) ? Integer.toString(gid) : grpOrNull.getGroupName();
+        final List<String> result = new LinkedList<String>();
+        addEntries(reader, result, dir, new IdCache(), recursive, verbose, numeric, continueOnError);
+        return result;
     }
 
     /**
      * Adds the entries of <var>dir</var> to <var>entries</var> recursively.
      */
-    public static void addEntries(HDF5Reader reader, List<String> entries, String dir,
-            boolean recursive, boolean verbose, boolean numeric, boolean continueOnError)
+    private static void addEntries(HDF5Reader reader, List<String> entries, String dir,
+            IdCache idCache, boolean recursive, boolean verbose, boolean numeric,
+            boolean continueOnError)
     {
         if (reader.exists(dir) == false)
         {
@@ -723,11 +779,11 @@ public class HDF5ArchiveTools
         final String dirPrefix = dir.endsWith("/") ? dir : (dir + "/");
         for (Link link : getLinks(reader, dir, verbose, continueOnError))
         {
-            entries.add(describeLink(dirPrefix, link, verbose, numeric));
+            entries.add(describeLink(dirPrefix, link, idCache, verbose, numeric));
             if (recursive && link.isDirectory())
             {
-                addEntries(reader, entries, dirPrefix + link.getLinkName(), recursive, verbose,
-                        numeric, continueOnError);
+                addEntries(reader, entries, dirPrefix + link.getLinkName(), idCache, recursive,
+                        verbose, numeric, continueOnError);
             }
         }
     }

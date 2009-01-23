@@ -22,6 +22,7 @@ import org.testng.annotations.Test;
 
 import ch.rinn.restrictions.Friend;
 import ch.systemsx.cisd.common.os.FileLinkType;
+import ch.systemsx.cisd.common.os.Unix;
 
 /**
  * Tests for {@link HDF5ArchiveTools}.
@@ -62,31 +63,57 @@ public class HDF5ArchiveToolsTest
     @Test
     public void testDescribeLink()
     {
+        final HDF5ArchiveTools.IdCache idCache = new HDF5ArchiveTools.IdCache();
         assertEquals("dir/link_name", HDF5ArchiveTools.describeLink("dir/", new Link("link_name",
-                null, null, -1, -1, -1, -1, (short) -1), false, false));
+                null, null, -1, -1, -1, -1, (short) -1), idCache, false, false));
         assertEquals("       100\tdir/link_name", HDF5ArchiveTools.describeLink("dir/", new Link(
-                "link_name", null, FileLinkType.REGULAR_FILE, 100, -1, -1, -1, (short) -1), true,
-                false));
+                "link_name", null, FileLinkType.REGULAR_FILE, 100, -1, -1, -1, (short) -1),
+                idCache, true, false));
         assertEquals("-rwxr-xr-x\troot\troot\t       111\t2000-01-01 00:00:00\tdir/link_name",
                 HDF5ArchiveTools.describeLink("dir/",
                         new Link("link_name", null, FileLinkType.REGULAR_FILE, 111L,
-                                946681200491L / 1000L, 0, 0, (short) 0755), true, false));
-        assertEquals("d---------\troot\troot\t       DIR\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
-                .describeLink("dir/", new Link("link_name", null, FileLinkType.DIRECTORY, 111L,
-                        946681200491L / 1000L, 0, 0, (short) 0), true, false));
+                                946681200491L / 1000L, 0, 0, (short) 0755), idCache, true, false));
+        assertEquals("d---------\troot\troot\t       DIR\t2000-01-01 00:00:00\tdir/link_name",
+                HDF5ArchiveTools.describeLink("dir/", new Link("link_name", null,
+                        FileLinkType.DIRECTORY, 111L, 946681200491L / 1000L, 0, 0, (short) 0),
+                        idCache, true, false));
         assertEquals("755\t0\t0\t       111\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
                 .describeLink("dir/", new Link("link_name", null, FileLinkType.REGULAR_FILE, 111L,
-                        946681200491L / 1000L, 0, 0, (short) 0755), true, true));
+                        946681200491L / 1000L, 0, 0, (short) 0755), idCache, true, true));
         assertEquals("0\t0\t0\t       DIR\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
                 .describeLink("dir/", new Link("link_name", null, FileLinkType.DIRECTORY, 111L,
-                        946681200491L / 1000L, 0, 0, (short) 0), true, true));
-        assertEquals("       111\t2000-01-01 00:00:00\tdir/link_name",
-                HDF5ArchiveTools.describeLink("dir/",
-                        new Link("link_name", null, FileLinkType.REGULAR_FILE, 111L,
-                                946681200491L / 1000L, -1, 0, (short) 0755), true, false));
-        assertEquals("       111\tdir/link_name",
-                HDF5ArchiveTools.describeLink("dir/",
-                        new Link("link_name", null, FileLinkType.REGULAR_FILE, 111L, -1L, -1, 0, (short) 0755), true, false));
+                        946681200491L / 1000L, 0, 0, (short) 0), idCache, true, true));
+        assertEquals("       111\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
+                .describeLink("dir/", new Link("link_name", null, FileLinkType.REGULAR_FILE, 111L,
+                        946681200491L / 1000L, -1, 0, (short) 0755), idCache, true, false));
+        assertEquals("       111\tdir/link_name", HDF5ArchiveTools.describeLink("dir/", new Link(
+                "link_name", null, FileLinkType.REGULAR_FILE, 111L, -1L, -1, 0, (short) 0755),
+                idCache, true, false));
+    }
+
+    @Test(groups =
+        { "requires_unix" })
+    public void testIdCache()
+    {
+        if (Unix.isOperational() == false)
+        {
+            return;
+        }
+        final int uid = Unix.getUid();
+        final String uname = Unix.tryGetUserNameForUid(uid);
+        final HDF5ArchiveTools.IdCache idCache = new HDF5ArchiveTools.IdCache();
+        assertEquals("-17", idCache.getUser(
+                new Link(null, null, null, -1, -1, -17, -1, (short) -1), true));
+        assertEquals("root", idCache.getUser(new Link(null, null, null, -1, -1, 0, -1, (short) -1),
+                false));
+        assertEquals(uname, idCache.getUser(
+                new Link(null, null, null, -1, -1, uid, -1, (short) -1), false));
+        int invalidUid;
+        for (invalidUid = 60000; invalidUid < 65535 && Unix.tryGetUserByUid(invalidUid) != null; ++invalidUid)
+        {
+        }
+        assertEquals(Integer.toString(invalidUid), idCache.getUser(
+                new Link(null, null, null, -1, -1, invalidUid, -1, (short) -1), false));
     }
 
 }

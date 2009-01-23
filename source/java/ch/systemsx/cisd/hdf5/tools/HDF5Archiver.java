@@ -17,7 +17,6 @@
 package ch.systemsx.cisd.hdf5.tools;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import ch.systemsx.cisd.hdf5.HDF5Reader;
@@ -103,10 +102,7 @@ public class HDF5Archiver
 
     public List<String> list(String dir, boolean recursive, boolean verbose, boolean numeric)
     {
-        final List<String> result = new ArrayList<String>();
-        HDF5ArchiveTools.addEntries(hdf5Reader, result, dir, recursive, verbose, numeric,
-                continueOnError);
-        return result;
+        return HDF5ArchiveTools.list(hdf5Reader, dir, recursive, verbose, numeric, continueOnError);
     }
 
     public void close()
