@@ -784,9 +784,10 @@ public class HDF5ArchiveTools
         for (Link link : getLinks(reader, dir, verbose, continueOnError))
         {
             entries.add(describeLink(dirPrefix, link, idCache, verbose, numeric));
-            if (recursive && link.isDirectory())
+            final String path = dirPrefix + link.getLinkName();
+            if (recursive && link.isDirectory() && "/.".equals(path) == false)
             {
-                addEntries(reader, entries, dirPrefix + link.getLinkName(), idCache, recursive,
+                addEntries(reader, entries, path, idCache, recursive,
                         verbose, numeric, continueOnError);
             }
         }
