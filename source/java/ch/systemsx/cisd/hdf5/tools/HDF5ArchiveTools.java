@@ -41,7 +41,6 @@ import ch.systemsx.cisd.common.os.FileLinkType;
 import ch.systemsx.cisd.common.os.Unix;
 import ch.systemsx.cisd.common.os.Unix.Group;
 import ch.systemsx.cisd.common.os.Unix.Password;
-import ch.systemsx.cisd.common.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.HDF5ObjectType;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
@@ -421,7 +420,7 @@ public class HDF5ArchiveTools
             return "/";
         } else
         {
-            return OSUtilities.isWindows() ? FilenameUtils.separatorsToUnix(path) : path;
+            return FilenameUtils.separatorsToUnix(path);
         }
     }
 
@@ -431,18 +430,19 @@ public class HDF5ArchiveTools
     public static void extract(HDF5Reader reader, ArchivingStrategy strategy, File root,
             String path, boolean continueOnError, boolean verbose) throws UnarchivingException
     {
-        if (reader.exists(path) == false)
+        final String unixPath = FilenameUtils.separatorsToUnix(path);
+        if (reader.exists(unixPath) == false)
         {
-            throw new UnarchivingException(path, "Object does not exist in archive.");
+            throw new UnarchivingException(unixPath, "Object does not exist in archive.");
         }
-        final Link linkOrNull = getLinkForPath(reader, path);
-        if (reader.isGroup(path))
+        final Link linkOrNull = getLinkForPath(reader, unixPath);
+        if (reader.isGroup(unixPath))
         {
-            extractDirectory(reader, strategy, new GroupCache(), root, path, linkOrNull,
+            extractDirectory(reader, strategy, new GroupCache(), root, unixPath, linkOrNull,
                     continueOnError, verbose);
         } else
         {
-            extractFile(reader, strategy, new GroupCache(), root, path, linkOrNull,
+            extractFile(reader, strategy, new GroupCache(), root, unixPath, linkOrNull,
                     continueOnError, verbose);
         }
     }
@@ -450,7 +450,8 @@ public class HDF5ArchiveTools
     private static Link getLinkForPath(HDF5Reader reader, String path)
     {
         final Map<String, LinkInfo> indexMapOrNull =
-                tryGetIndexMap(reader, FilenameUtils.getFullPathNoEndSeparator(path));
+                tryGetIndexMap(reader, FilenameUtils.separatorsToUnix(FilenameUtils
+                        .getFullPathNoEndSeparator(path)));
         final LinkInfo linkInfoOrNull =
                 (indexMapOrNull != null) ? indexMapOrNull.get(FilenameUtils.getName(path)) : null;
         return (linkInfoOrNull != null) ? new Link(linkInfoOrNull, null) : null;
@@ -508,7 +509,9 @@ public class HDF5ArchiveTools
             groupFile.mkdir();
             for (Link link : getLinks(reader, groupPath, false, continueOnError))
             {
-                objectPathOrNull = FilenameUtils.concat(groupPath, link.getLinkName());
+                objectPathOrNull =
+                        (groupPath.endsWith("/") ? groupPath : (groupPath + "/"))
+                                + link.getLinkName();
                 if (link.isDirectory())
                 {
                     if (strategy.doExclude(objectPathOrNull, true))
@@ -759,7 +762,8 @@ public class HDF5ArchiveTools
             boolean verbose, boolean numeric, boolean continueOnError)
     {
         final List<String> result = new LinkedList<String>();
-        addEntries(reader, result, dir, new IdCache(), recursive, verbose, numeric, continueOnError);
+        addEntries(reader, result, FilenameUtils.separatorsToUnix(dir), new IdCache(), recursive,
+                verbose, numeric, continueOnError);
         return result;
     }
 
