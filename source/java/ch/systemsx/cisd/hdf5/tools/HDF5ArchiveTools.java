@@ -63,7 +63,7 @@ public class HDF5ArchiveTools
 
     private static final String OPAQUE_TAG_INDEX = "INDEX";
 
-    private static final int SIZEHINT_FACTOR = 10;
+    private static final int SIZEHINT_FACTOR = 5;
 
     private static final int MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT = 100;
 
