@@ -215,11 +215,18 @@ public class HDF5ArchiveTools
         }
         final String hdf5GroupPath = getRelativePath(root, dir);
         if (writer.isUseLatestFileFormat() == false
-                && entries.length > MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT)
+                && entries.length > MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT
+                && "/.".equals(hdf5GroupPath) == false)
         {
-            // Compute size hint and pre-create group in order to improve performance.
-            int totalLength = computeSizeHint(entries);
-            writer.createGroup(hdf5GroupPath, totalLength * SIZEHINT_FACTOR);
+            try
+            {
+                // Compute size hint and pre-create group in order to improve performance.
+                int totalLength = computeSizeHint(entries);
+                writer.createGroup(hdf5GroupPath, totalLength * SIZEHINT_FACTOR);
+            } catch (HDF5Exception ex)
+            {
+                dealWithError(new ArchivingException(hdf5GroupPath, ex), continueOnError);
+            }
         }
         final List<LinkInfo> linkInfos =
                 getLinkInfos(entries, strategy.doStoreOwnerAndPermissions());
