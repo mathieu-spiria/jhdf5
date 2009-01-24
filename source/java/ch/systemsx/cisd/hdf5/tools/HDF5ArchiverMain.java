@@ -34,6 +34,10 @@ import ch.systemsx.cisd.common.utilities.BuildAndEnvironmentInfo;
 public class HDF5ArchiverMain
 {
 
+    private static final String FILE_EXTENSION_H5 = ".h5";
+
+    private static final String FILE_EXTENSION_H5AR = ".h5ar";
+
     private enum Command
     {
         ARCHIVE(new String[]
@@ -82,6 +86,8 @@ public class HDF5ArchiverMain
 
     private File archiveFile;
 
+    private final boolean initializationOK;
+
     @Option(name = "i", longName = "include", metaVar = "REGEX", skipForExample = true, usage = "Regex of files to include")
     private List<String> fileWhiteList = new ArrayList<String>();
 
@@ -105,15 +111,15 @@ public class HDF5ArchiverMain
 
     @Option(name = "R", longName = "recursive", usage = "Recursive output")
     private boolean recursive = false;
-    
+
     @Option(name = "v", longName = "verbose", usage = "Verbose output")
     private boolean verbose = false;
 
     @Option(name = "n", longName = "numeric", usage = "Use numeric values for mode, uid and gid when listing")
     private boolean numeric = false;
-    
-    @Option(longName = "latest-file-format", skipForExample = true, usage = "If true, an HDF5 file with the latest file format will be created")
-    private boolean useLatestFileFormat = false;
+
+    @Option(longName = "file-format", skipForExample = true, usage = "Specifies the file format version when creating an archive (N=1 -> HDF51.6 (default), N=2 -> HDF51.8)")
+    private int fileFormat = 1;
 
     @Option(longName = "stop-on-error", skipForExample = true, usage = "Stop on first error and give detailed error report")
     private boolean stopOnError = false;
@@ -133,28 +139,46 @@ public class HDF5ArchiverMain
         } catch (CmdLineException ex)
         {
             System.err.printf("Error when parsing command line: '%s'\n", ex.getMessage());
-            printHelpAndExit(true);
+            printHelp(true);
+            initializationOK = false;
+            return;
         }
         if (arguments == null || arguments.size() < 2)
         {
-            printHelpAndExit(true);
+            printHelp(true);
+            initializationOK = false;
+            return;
         }
         command = Command.parse(arguments.get(0));
         if (command == null || command == Command.HELP)
         {
-            printHelpAndExit(true);
+            printHelp(true);
+            initializationOK = false;
+            return;
         }
-        if (arguments.get(1).endsWith(".h5"))
+        if (arguments.get(1).endsWith(FILE_EXTENSION_H5)
+                || arguments.get(1).endsWith(FILE_EXTENSION_H5AR))
         {
             archiveFile = new File(arguments.get(1));
         } else
         {
-            archiveFile = new File(arguments.get(1) + ".h5");
+            archiveFile = new File(arguments.get(1) + FILE_EXTENSION_H5AR);
+            if (command.isReadOnly() && archiveFile.exists() == false)
+            {
+                archiveFile = new File(arguments.get(1) + FILE_EXTENSION_H5);
+                if (command.isReadOnly() && archiveFile.exists() == false)
+                {
+                    archiveFile = new File(arguments.get(1));
+                }
+            }
         }
         if (command.isReadOnly() && archiveFile.exists() == false)
         {
             System.err.println("Archive '" + archiveFile.getAbsolutePath() + "' does not exist.");
+            initializationOK = false;
+            return;
         }
+        initializationOK = true;
     }
 
     @Option(longName = "version", skipForExample = true, usage = "Prints out the version information")
@@ -169,22 +193,24 @@ public class HDF5ArchiverMain
     }
 
     @Option(longName = "help", skipForExample = true, usage = "Shows this help text")
-    void printHelpAndExit(final boolean dummy)
+    void printHelp(final boolean dummy)
     {
-        parser.printHelp("hdf5archiver", "[option [...]]",
+        parser.printHelp("h5ar", "[option [...]]",
                 "[ARCHIVE <archive_file> <item-to-archive> [...] | "
                         + "EXTRACT <archive_file> [<item-to-unarchive> [...]] | "
                         + "DELETE <archive_file> <item-to-delete> [...] | "
                         + "LIST <archive_file>]", ExampleMode.NONE);
-        System.err.println("java -jar jhdf5.jar" + parser.printExample(ExampleMode.ALL)
-                + " ARCHIVE archive.h5 .");
-        System.exit(0);
+        System.err
+                .println("Command aliases: ARCHIVE: A, AR; EXTRACT: E, EX; DELETE: D, REMOVE, RM; LIST: L, LS");
+        System.err.println("Example: h5ar" + parser.printExample(ExampleMode.ALL)
+                + " ARCHIVE archive.h5ar .");
     }
 
     private void createArchiver()
     {
+        final boolean useLatestVersion = (fileFormat > 1);
         archiver =
-                new HDF5Archiver(archiveFile, command.isReadOnly(), useLatestFileFormat,
+                new HDF5Archiver(archiveFile, command.isReadOnly(), useLatestVersion,
                         (stopOnError == false));
         archiver.getStrategy().setCompressAll(compressAll);
         for (String pattern : fileWhiteList)
@@ -213,8 +239,12 @@ public class HDF5ArchiverMain
         }
     }
 
-    void run()
+    boolean run()
     {
+        if (initializationOK == false)
+        {
+            return false;
+        }
         try
         {
             switch (command)
@@ -223,7 +253,7 @@ public class HDF5ArchiverMain
                     if (arguments.size() == 2)
                     {
                         System.err.println("Nothing to archive.");
-                        printHelpAndExit(true);
+                        printHelp(true);
                     }
                     createArchiver();
                     if (rootOrNull != null)
@@ -273,7 +303,7 @@ public class HDF5ArchiverMain
                     if (arguments.size() == 2)
                     {
                         System.err.println("Nothing to delete.");
-                        printHelpAndExit(true);
+                        printHelp(true);
                     }
                     createArchiver();
                     archiver.delete(arguments.subList(2, arguments.size()), verbose);
@@ -287,9 +317,10 @@ public class HDF5ArchiverMain
                     }
                     break;
                 case HELP: // Can't happen any more at this point
-                    printHelpAndExit(true);
+                    printHelp(true);
                     break;
             }
+            return true;
         } finally
         {
             if (archiver != null)
