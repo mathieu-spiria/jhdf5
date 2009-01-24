@@ -109,7 +109,7 @@ public class HDF5ArchiverMain
     @Option(name = "v", longName = "verbose", usage = "Verbose output")
     private boolean verbose = false;
 
-    @Option(name = "n", longName = "numeric", usage = "Use numeric identifiers")
+    @Option(name = "n", longName = "numeric", usage = "Use numeric values for mode, uid and gid when listing")
     private boolean numeric = false;
     
     @Option(longName = "latest-file-format", skipForExample = true, usage = "If true, an HDF5 file with the latest file format will be created")
