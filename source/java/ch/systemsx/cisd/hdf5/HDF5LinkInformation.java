@@ -102,7 +102,23 @@ public final class HDF5LinkInformation
     {
         return path;
     }
-    
+
+    /**
+     * Returns the parent of the path of this link the HDF5 file. If this link corresponds to the
+     * root, then this method will return the root ("/") itself.
+     */
+    public String getParentPath()
+    {
+        final int lastSlashIndex = path.lastIndexOf('/');
+        if (lastSlashIndex <= 0)
+        {
+            return "/";
+        } else
+        {
+            return path.substring(0, lastSlashIndex);
+        }
+    }
+
     /**
      * Returns the name of this link in the HDF5 file (the path without the parent).
      */
