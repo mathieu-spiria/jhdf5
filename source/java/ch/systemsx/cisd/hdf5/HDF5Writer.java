@@ -17,7 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.*;
-import static ch.systemsx.cisd.hdf5.HDF5.NO_DEFLATION; 
+import static ch.systemsx.cisd.hdf5.HDF5.NO_DEFLATION;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_int;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_short;
@@ -5187,9 +5187,16 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
-                            h5.createScalarDataSet(fileId, variableLengthStringDataTypeId,
-                                    objectPath, registry);
+                    final int dataSetId;
+                    if (exists(objectPath))
+                    {
+                        dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    } else
+                    {
+                        dataSetId =
+                                h5.createScalarDataSet(fileId, variableLengthStringDataTypeId,
+                                        objectPath, registry);
+                    }
                     H5DwriteString(dataSetId, variableLengthStringDataTypeId, H5S_ALL, H5S_ALL,
                             H5P_DEFAULT, new String[]
                                 { data });
