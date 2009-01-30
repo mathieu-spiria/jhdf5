@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -38,12 +38,9 @@ import org.apache.commons.lang.ArrayUtils;
 
 import ch.rinn.restrictions.Private;
 import ch.systemsx.cisd.common.exceptions.WrappedIOException;
-import ch.systemsx.cisd.common.os.FileLinkType;
 import ch.systemsx.cisd.common.os.Unix;
 import ch.systemsx.cisd.common.os.Unix.Group;
 import ch.systemsx.cisd.common.os.Unix.Password;
-import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
-import ch.systemsx.cisd.hdf5.HDF5ObjectType;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.HDF5Reader;
 import ch.systemsx.cisd.hdf5.HDF5Writer;
@@ -60,8 +57,6 @@ public class HDF5ArchiveTools
     private static final int ROOT_UID = 0;
 
     private static final String OPAQUE_TAG_FILE = "FILE";
-
-    private static final String OPAQUE_TAG_INDEX = "INDEX";
 
     private static final int SIZEHINT_FACTOR = 5;
 
@@ -181,8 +176,6 @@ public class HDF5ArchiveTools
     public static void archive(HDF5Writer writer, ArchivingStrategy strategy, File root, File path,
             boolean continueOnError, boolean verbose) throws WrappedIOException
     {
-        final LinkInfo[] info = new LinkInfo[1];
-        info[0] = LinkInfo.get(path, strategy.doStoreOwnerAndPermissions());
         final boolean ok;
         if (path.isDirectory())
         {
@@ -196,9 +189,41 @@ public class HDF5ArchiveTools
             dealWithError(new ArchivingException(path, new IOException(
                     "Path corresponds to neither a file nor a directory.")), continueOnError);
         }
-        if (ok && ".".equals(info[0].getLinkName()) == false)
+        if (ok)
         {
-            updateIndex(writer, "/", info);
+            updateIndicesOnThePath(writer, strategy, root, path, continueOnError);
+        }
+    }
+
+    private static void updateIndicesOnThePath(HDF5Writer writer, ArchivingStrategy strategy,
+            File root, File path, boolean continueOnError)
+    {
+        final String rootAbsolute = root.getAbsolutePath();
+        File pathProcessing = path;
+        while (true)
+        {
+            File dirProcessingOrNull = pathProcessing.getParentFile();
+            String dirAbsolute =
+                    (dirProcessingOrNull != null) ? dirProcessingOrNull.getAbsolutePath() : "";
+            if (dirAbsolute.startsWith(rootAbsolute) == false)
+            {
+                break;
+            }
+            final String hdf5GroupPath = getRelativePath(rootAbsolute, dirAbsolute);
+            final DirectoryIndex index =
+                    new DirectoryIndex(writer, hdf5GroupPath, continueOnError, false);
+            final Link linkOrNull =
+                    Link.tryCreate(pathProcessing, strategy.doStoreOwnerAndPermissions(),
+                            continueOnError);
+            if (linkOrNull != null)
+            {
+                index.addToIndex(Collections.singletonList(linkOrNull));
+                index.writeIndexToArchive();
+            }
+            pathProcessing = dirProcessingOrNull;
+            dirProcessingOrNull = pathProcessing.getParentFile();
+            dirAbsolute =
+                    (dirProcessingOrNull != null) ? dirProcessingOrNull.getAbsolutePath() : "";
         }
     }
 
@@ -206,8 +231,8 @@ public class HDF5ArchiveTools
             File root, File dir, boolean continueOnError, boolean verbose)
             throws ArchivingException
     {
-        final File[] entries = dir.listFiles();
-        if (entries == null)
+        final File[] fileEntries = dir.listFiles();
+        if (fileEntries == null)
         {
             dealWithError(new ArchivingException(dir, new IOException("Cannot read directory")),
                     continueOnError);
@@ -215,52 +240,53 @@ public class HDF5ArchiveTools
         }
         final String hdf5GroupPath = getRelativePath(root, dir);
         if (writer.isUseLatestFileFormat() == false
-                && entries.length > MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT
+                && fileEntries.length > MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT
                 && "/.".equals(hdf5GroupPath) == false)
         {
             try
             {
                 // Compute size hint and pre-create group in order to improve performance.
-                int totalLength = computeSizeHint(entries);
+                int totalLength = computeSizeHint(fileEntries);
                 writer.createGroup(hdf5GroupPath, totalLength * SIZEHINT_FACTOR);
             } catch (HDF5Exception ex)
             {
                 dealWithError(new ArchivingException(hdf5GroupPath, ex), continueOnError);
             }
         }
-        final List<LinkInfo> linkInfos =
-                getLinkInfos(entries, strategy.doStoreOwnerAndPermissions());
+        final List<Link> linkEntries =
+                DirectoryIndex.convertFilesToLinks(fileEntries, strategy
+                        .doStoreOwnerAndPermissions(), continueOnError);
 
         writeToConsole(hdf5GroupPath, verbose);
-        Iterator<LinkInfo> infoIt = linkInfos.iterator();
-        for (int i = 0; i < entries.length; ++i)
+        final Iterator<Link> linkIt = linkEntries.iterator();
+        for (int i = 0; i < fileEntries.length; ++i)
         {
-            final File file = entries[i];
-            final LinkInfo info = infoIt.next();
+            final File file = fileEntries[i];
+            final Link link = linkIt.next();
             final String absoluteEntry = file.getAbsolutePath();
-            if (info.isDirectory())
+            if (link.isDirectory())
             {
                 if (strategy.doExclude(absoluteEntry, true))
                 {
-                    infoIt.remove();
+                    linkIt.remove();
                     continue;
                 }
                 final boolean ok =
                         archiveDirectory(writer, strategy, root, file, continueOnError, verbose);
                 if (ok == false)
                 {
-                    infoIt.remove();
+                    linkIt.remove();
                 }
             } else
             {
                 if (strategy.doExclude(absoluteEntry, false))
                 {
-                    infoIt.remove();
+                    linkIt.remove();
                     continue;
                 }
-                if (info.isSymLink())
+                if (link.isSymLink())
                 {
-                    final String linkTargetOrNull = LinkInfo.tryReadLinkTarget(file);
+                    final String linkTargetOrNull = Link.tryReadLinkTarget(file);
                     if (linkTargetOrNull == null)
                     {
                         dealWithError(new ArchivingException(file, new IOException(
@@ -269,20 +295,20 @@ public class HDF5ArchiveTools
                     try
                     {
                         writer.createSoftLink(linkTargetOrNull, hdf5GroupPath + "/"
-                                + info.getLinkName());
+                                + link.getLinkName());
                     } catch (HDF5Exception ex)
                     {
-                        infoIt.remove();
+                        linkIt.remove();
                         dealWithError(new ArchivingException(hdf5GroupPath + "/"
-                                + info.getLinkName(), ex), continueOnError);
+                                + link.getLinkName(), ex), continueOnError);
                     }
-                } else if (info.isRegularFile())
+                } else if (link.isRegularFile())
                 {
                     final boolean ok =
                             archiveFile(writer, strategy, root, file, continueOnError, verbose);
                     if (ok == false)
                     {
-                        infoIt.remove();
+                        linkIt.remove();
                     }
                 } else
                 {
@@ -293,20 +319,11 @@ public class HDF5ArchiveTools
             }
         }
 
-        try
-        {
-            updateIndex(writer, hdf5GroupPath, linkInfos.toArray(new LinkInfo[linkInfos.size()]));
-        } catch (HDF5Exception ex)
-        {
-            dealWithError(new ArchivingException(getIndexDataSetName(hdf5GroupPath), ex),
-                    continueOnError);
-        }
+        final DirectoryIndex index =
+                new DirectoryIndex(writer, hdf5GroupPath, continueOnError, verbose);
+        index.addToIndex(linkEntries);
+        index.writeIndexToArchive();
         return true;
-    }
-
-    private static String getIndexDataSetName(final String hdf5ObjectPath)
-    {
-        return hdf5ObjectPath + "/__INDEX__";
     }
 
     private static int computeSizeHint(final File[] entries)
@@ -319,113 +336,7 @@ public class HDF5ArchiveTools
         return totalLength;
     }
 
-    private static LinkInfo[] tryReadIndex(final HDF5Reader reader, final String hdf5GroupPath)
-    {
-        final String indexDataSetName = getIndexDataSetName(hdf5GroupPath);
-        if (reader.exists(indexDataSetName))
-        {
-            return LinkInfo.fromStorageForm(reader.readAsByteArray(indexDataSetName));
-        } else
-        {
-            return null;
-        }
-    }
-
-    private static Map<String, LinkInfo> tryGetIndexMap(final HDF5Reader reader,
-            final String hdf5GroupPath)
-    {
-        LinkInfo[] infos = tryReadIndex(reader, hdf5GroupPath);
-        if (infos == null)
-        {
-            if (reader.isGroup(hdf5GroupPath))
-            {
-                final List<HDF5LinkInformation> hdf5LinkInfos =
-                        reader.getGroupMemberInformation(hdf5GroupPath, false);
-                infos = new LinkInfo[hdf5LinkInfos.size()];
-                for (int i = 0; i < hdf5LinkInfos.size(); ++i)
-                {
-                    final HDF5LinkInformation linfo = hdf5LinkInfos.get(i);
-                    final long size =
-                            linfo.isDataSet() ? reader.getDataSetInformation(linfo.getPath())
-                                    .getSize() : 0L;
-                    final FileLinkType type = translateType(linfo.getType());
-                    infos[i] = new LinkInfo(linfo.getName(), type, size, LinkInfo.UNKNOWN);
-                }
-            } else
-            {
-                return null;
-            }
-        }
-        final HashMap<String, LinkInfo> map = new HashMap<String, LinkInfo>(infos.length);
-        for (LinkInfo info : infos)
-        {
-            map.put(info.getLinkName(), info);
-        }
-        return map;
-    }
-
-    static FileLinkType translateType(final HDF5ObjectType hdf5Type)
-    {
-        switch (hdf5Type)
-        {
-            case DATASET:
-                return FileLinkType.REGULAR_FILE;
-            case GROUP:
-                return FileLinkType.DIRECTORY;
-            case SOFT_LINK:
-                return FileLinkType.SYMLINK;
-            default:
-                return FileLinkType.OTHER;
-        }
-    }
-
-    private static List<LinkInfo> getLinkInfos(final File[] entries,
-            boolean storeOwnerAndPermissions)
-    {
-        final List<LinkInfo> infos = new LinkedList<LinkInfo>();
-        for (int i = 0; i < entries.length; ++i)
-        {
-            infos.add(LinkInfo.get(entries[i], storeOwnerAndPermissions));
-        }
-        return infos;
-    }
-
-    private static void writeIndexMap(final HDF5Writer writer, final String hdf5GroupPath,
-            final Map<String, LinkInfo> indexMap)
-    {
-        final LinkInfo[] infos = indexMap.values().toArray(new LinkInfo[indexMap.size()]);
-        writeIndex(writer, hdf5GroupPath, infos);
-    }
-
-    private static void writeIndex(final HDF5Writer writer, final String hdf5GroupPath,
-            final LinkInfo[] infos)
-    {
-        final String indexDataSetName = getIndexDataSetName(hdf5GroupPath);
-        final LinkInfo[] sortedInfos = new LinkInfo[infos.length];
-        System.arraycopy(infos, 0, sortedInfos, 0, infos.length);
-        Arrays.sort(sortedInfos);
-        writer.writeOpaqueByteArray(indexDataSetName, OPAQUE_TAG_INDEX, LinkInfo
-                .toStorageForm(sortedInfos));
-    }
-
-    private static void updateIndex(final HDF5Writer writer, final String hdf5GroupPath,
-            final LinkInfo[] newEntries)
-    {
-        final Map<String, LinkInfo> indexMapOrNull = tryGetIndexMap(writer, hdf5GroupPath);
-        if (indexMapOrNull == null)
-        {
-            writeIndex(writer, hdf5GroupPath, newEntries);
-        } else
-        {
-            for (LinkInfo info : newEntries)
-            {
-                indexMapOrNull.put(info.getLinkName(), info);
-            }
-            writeIndexMap(writer, hdf5GroupPath, indexMapOrNull);
-        }
-    }
-
-    static void writeToConsole(String hdf5ObjectPath, boolean verbose)
+    private static void writeToConsole(String hdf5ObjectPath, boolean verbose)
     {
         if (verbose)
         {
@@ -490,7 +401,7 @@ public class HDF5ArchiveTools
         {
             throw new UnarchivingException(unixPath, "Object does not exist in archive.");
         }
-        final Link linkOrNull = getLinkForPath(reader, unixPath);
+        final Link linkOrNull = tryGetLink(reader, unixPath, continueOnError);
         if (reader.isGroup(unixPath))
         {
             extractDirectory(reader, strategy, new GroupCache(), root, unixPath, linkOrNull,
@@ -502,54 +413,63 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static Link getLinkForPath(HDF5Reader reader, String path)
+    /**
+     * Returns the {@link Link} for <var>path</var> if that is stored in the directory index and
+     * <code>null</code> otherwise.
+     * <p>
+     * <em>Note that a return value of <code>null</code> does not necessarily mean that <var>path</var>
+     * is not in the archive!<em>
+     */
+    private static Link tryGetLink(HDF5Reader reader, String path, boolean continueOnError)
     {
-        final Map<String, LinkInfo> indexMapOrNull =
-                tryGetIndexMap(reader, FilenameUtils.separatorsToUnix(FilenameUtils
-                        .getFullPathNoEndSeparator(path)));
-        final LinkInfo linkInfoOrNull =
-                (indexMapOrNull != null) ? indexMapOrNull.get(FilenameUtils.getName(path)) : null;
-        return (linkInfoOrNull != null) ? new Link(linkInfoOrNull, null) : null;
+        final DirectoryIndex index =
+                new DirectoryIndex(reader, FilenameUtils.separatorsToUnix(FilenameUtils
+                        .getFullPathNoEndSeparator(path)), continueOnError, false);
+        return index.tryGetLink(FilenameUtils.getName(path));
     }
 
     /**
      * Deletes the <var>path</var> from the HDF5 archive.
      */
+    @SuppressWarnings("null")
     public static void delete(HDF5Writer writer, List<String> paths, boolean continueOnError,
             boolean verbose) throws UnarchivingException
     {
-        Map<String, LinkInfo> indexMapOrNull = null;
-        String lastGroup = null;
+        DirectoryIndex indexOrNull = null;
+        String lastGroupOrNull = null;
         for (String path : paths)
         {
-            int groupDelimIndex = path.lastIndexOf('/');
-            final String group = (groupDelimIndex < 2) ? "/" : path.substring(0, groupDelimIndex);
-            if (group.equals(lastGroup) == false)
+            String normalizedPath = path;
+            if (normalizedPath.endsWith("/"))
             {
-                if (indexMapOrNull != null)
+                normalizedPath = normalizedPath.substring(0, path.length() - 1);
+            }
+            int groupDelimIndex = normalizedPath.lastIndexOf('/');
+            final String group =
+                    (groupDelimIndex < 2) ? "/" : normalizedPath.substring(0, groupDelimIndex);
+            if (group.equals(lastGroupOrNull) == false)
+            {
+                if (indexOrNull != null)
                 {
-                    writeIndexMap(writer, lastGroup, indexMapOrNull);
+                    indexOrNull.writeIndexToArchive();
                 }
-                indexMapOrNull = tryGetIndexMap(writer, group);
+                indexOrNull = new DirectoryIndex(writer, group, continueOnError, false);
             }
             try
             {
-                writer.delete(path);
-                if (indexMapOrNull != null)
-                {
-                    final String name = path.substring(groupDelimIndex + 1);
-                    indexMapOrNull.remove(name);
-                }
-                writeToConsole(path, verbose);
+                writer.delete(normalizedPath);
+                final String name = normalizedPath.substring(groupDelimIndex + 1);
+                indexOrNull.remove(name);
+                writeToConsole(normalizedPath, verbose);
             } catch (HDF5Exception ex)
             {
                 HDF5ArchiveTools.dealWithError(new DeleteFromArchiveException(path, ex),
                         continueOnError);
             }
         }
-        if (indexMapOrNull != null)
+        if (indexOrNull != null)
         {
-            writeIndexMap(writer, lastGroup, indexMapOrNull);
+            indexOrNull.writeIndexToArchive();
         }
     }
 
@@ -562,7 +482,7 @@ public class HDF5ArchiveTools
         {
             final File groupFile = new File(root, groupPath);
             groupFile.mkdir();
-            for (Link link : getLinks(reader, groupPath, false, continueOnError))
+            for (Link link : new DirectoryIndex(reader, groupPath, continueOnError, false))
             {
                 objectPathOrNull =
                         (groupPath.endsWith("/") ? groupPath : (groupPath + "/"))
@@ -666,50 +586,6 @@ public class HDF5ArchiveTools
                 }
             }
         }
-    }
-
-    private static List<Link> getLinks(HDF5Reader reader, String dir, boolean verbose,
-            boolean continueOnError)
-    {
-        final String indexDataSetName = getIndexDataSetName(dir);
-        final List<Link> result = new LinkedList<Link>();
-        final String dirPrefix = dir.endsWith("/") ? dir : (dir + "/");
-        if (reader.exists(indexDataSetName))
-        {
-            final LinkInfo[] infos =
-                    LinkInfo.fromStorageForm(reader.readAsByteArray(indexDataSetName));
-            for (LinkInfo info : infos)
-            {
-                try
-                {
-                    final String path = dirPrefix + info.getLinkName();
-                    final String linkTargetOrNull =
-                            (verbose && info.isSymLink()) ? reader.getLinkInformation(path)
-                                    .tryGetSymbolicLinkTarget() : null;
-                    result.add(new Link(info, linkTargetOrNull));
-                } catch (HDF5Exception ex)
-                {
-                    HDF5ArchiveTools.dealWithError(new ListArchiveException(dir, ex),
-                            continueOnError);
-                }
-            }
-        } else
-        {
-            for (HDF5LinkInformation info : reader.getGroupMemberInformation(dir, verbose))
-            {
-                try
-                {
-                    result.add(new Link(info, verbose && info.isDataSet() ? reader
-                            .getDataSetInformation(info.getPath()).getSize() : LinkInfo.UNKNOWN,
-                            LinkInfo.UNKNOWN));
-                } catch (HDF5Exception ex)
-                {
-                    HDF5ArchiveTools.dealWithError(new ListArchiveException(dir, ex),
-                            continueOnError);
-                }
-            }
-        }
-        return result;
     }
 
     @Private
@@ -836,7 +712,7 @@ public class HDF5ArchiveTools
             return;
         }
         final String dirPrefix = dir.endsWith("/") ? dir : (dir + "/");
-        for (Link link : getLinks(reader, dir, verbose, continueOnError))
+        for (Link link : new DirectoryIndex(reader, dir, continueOnError, verbose))
         {
             entries.add(describeLink(dirPrefix, link, idCache, verbose, numeric));
             final String path = dirPrefix + link.getLinkName();

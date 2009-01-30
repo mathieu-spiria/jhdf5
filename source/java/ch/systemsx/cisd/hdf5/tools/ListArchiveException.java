@@ -38,6 +38,11 @@ public class ListArchiveException extends ArchiverException
         super(objectPath, OPERATION_NAME, cause);
     }
     
+    public ListArchiveException(String objectPath, RuntimeException cause)
+    {
+        super(objectPath, OPERATION_NAME, cause);
+    }
+    
     public ListArchiveException(File file, IOException cause)
     {
         super(file, OPERATION_NAME, cause);
