@@ -37,9 +37,6 @@ final class HDF5Utils
     static final long[] SCALAR_DIMENSIONS = new long[]
         { 1 };
 
-    /** The attribute to signal that a data set is empty. */
-    static final String DATASET_IS_EMPTY_ATTRIBUTE = "__EMPTY__";
-
     /** The attribute to signal that this is a variant of the data type. */
     static final String TYPE_VARIANT_ATTRIBUTE = "__TYPE_VARIANT__";
 
