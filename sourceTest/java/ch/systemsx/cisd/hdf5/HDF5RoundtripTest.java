@@ -32,6 +32,7 @@ import java.util.Set;
 
 import ncsa.hdf.hdf5lib.H5;
 import ncsa.hdf.hdf5lib.HDF5Constants;
+import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
@@ -172,6 +173,8 @@ public class HDF5RoundtripTest
         test.testExtendContiguousDataset();
         test.testTimestamps();
         test.testTimestampArray();
+        test.testTimeDurations();
+        test.testSmallTimeDurations();
         test.testNumericConversion();
         test.finalize();
     }
@@ -1722,9 +1725,13 @@ public class HDF5RoundtripTest
         writer.writeLong(noTimestampDS, someLong);
         writer.close();
         final HDF5Reader reader = new HDF5Reader(datasetFile).open();
-        final HDF5DataSetInformation info = reader.getDataSetInformation("prehistoric");
+        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, reader
+                .tryGetTypeVariant(timeStampDS));
+        final HDF5DataSetInformation info = reader.getDataSetInformation(timeStampDS);
         assertTrue(info.isScalar());
         assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
+        assertTrue(info.isTimeStamp());
+        assertFalse(info.isTimeDuration());
         assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, info
                 .tryGetTypeVariant());
         assertEquals(timestampValue, reader.readTimeStamp(timeStampDS));
@@ -1787,6 +1794,87 @@ public class HDF5RoundtripTest
             }
             // That is what we expect.
         }
+        reader.close();
+    }
+
+    @Test
+    public void testTimeDurations()
+    {
+        final File datasetFile = new File(workingDirectory, "timedurations.h5");
+        final String timeDurationDS = "someDuration";
+        final long timeDurationInSeconds = 10000L;
+        final long timeDurationInMilliSeconds = 10000L * 1000L;
+        final long timeDurationInHoursRounded = 3L;
+        final String noTimestampDS = "notatimeduration";
+        final long someLong = 173756123L;
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).open();
+        writer.writeTimeDuration(timeDurationDS, timeDurationInSeconds, HDF5TimeUnit.SECONDS);
+        writer.writeLong(noTimestampDS, someLong);
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationDS);
+        assertTrue(info.isScalar());
+        assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
+        assertTrue(info.isTimeDuration());
+        assertFalse(info.isTimeStamp());
+        assertEquals(HDF5TimeUnit.SECONDS, reader.tryGetTimeUnit(timeDurationDS));
+        assertEquals(HDF5DataTypeVariant.TIME_DURATION_SECONDS, info.tryGetTypeVariant());
+        assertEquals(HDF5TimeUnit.SECONDS, info.tryGetTimeUnit());
+        assertEquals(timeDurationInSeconds, reader.readTimeDuration(timeDurationDS,
+                HDF5TimeUnit.SECONDS));
+        assertEquals(timeDurationInMilliSeconds, reader.readTimeDuration(timeDurationDS,
+                HDF5TimeUnit.MILLISECONDS));
+        assertEquals(timeDurationInHoursRounded, reader.readTimeDuration(timeDurationDS,
+                HDF5TimeUnit.HOURS));
+        try
+        {
+            reader.readTimeDuration(noTimestampDS, HDF5TimeUnit.HOURS);
+            fail("Failed to detect non-timeduration value.");
+        } catch (HDF5JavaException ex)
+        {
+            if (ex.getMessage().contains("not a time duration") == false)
+            {
+                throw ex;
+            }
+            // That is what we expect.
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testSmallTimeDurations()
+    {
+        final File datasetFile = new File(workingDirectory, "smalltimedurations.h5");
+        final String timeDurationDS = "someDuration";
+        final short timeDurationInSeconds = 10000;
+        final long timeDurationInMilliSeconds = 10000L * 1000L;
+        final long timeDurationInHoursRounded = 3L;
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).open();
+        writer.writeShort(timeDurationDS, timeDurationInSeconds);
+        writer.addTypeVariant(timeDurationDS, HDF5TimeUnit.SECONDS.getTypeVariant());
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationDS);
+        assertTrue(info.isScalar());
+        assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
+        assertEquals(HDFNativeData.SHORT_SIZE, info.getTypeInformation().getElementSize());
+        assertTrue(info.isTimeDuration());
+        assertFalse(info.isTimeStamp());
+        assertEquals(HDF5TimeUnit.SECONDS, reader.tryGetTimeUnit(timeDurationDS));
+        assertEquals(HDF5DataTypeVariant.TIME_DURATION_SECONDS, info.tryGetTypeVariant());
+        assertEquals(HDF5TimeUnit.SECONDS, info.tryGetTimeUnit());
+        assertEquals(timeDurationInSeconds, reader.readTimeDuration(timeDurationDS,
+                HDF5TimeUnit.SECONDS));
+        assertEquals(timeDurationInMilliSeconds, reader.readTimeDuration(timeDurationDS,
+                HDF5TimeUnit.MILLISECONDS));
+        assertEquals(timeDurationInHoursRounded, reader.readTimeDuration(timeDurationDS,
+                HDF5TimeUnit.HOURS));
         reader.close();
     }
 

@@ -51,12 +51,38 @@ public final class HDF5DataSetInformation
     }
 
     /**
-     * Returns the data type variant of this data set, or <code>null</code>, if this data set does
-     * not have a variant.
+     * Returns the data type variant of this data set, or <code>null</code>, if this data set is not
+     * tagged with a type variant.
      */
     public HDF5DataTypeVariant tryGetTypeVariant()
     {
         return typeVariantOrNull;
+    }
+
+    /**
+     * Returns <code>true</code>, if the data set is a time stamp, or <code>false</code> otherwise.
+     */
+    public boolean isTimeStamp()
+    {
+        return (typeVariantOrNull != null) ? typeVariantOrNull.isTimeStamp() : false;
+    }
+
+    /**
+     * Returns <code>true</code>, if the data set is a time duration, or <code>false</code>
+     * otherwise.
+     */
+    public boolean isTimeDuration()
+    {
+        return (typeVariantOrNull != null) ? typeVariantOrNull.isTimeDuration() : false;
+    }
+
+    /**
+     * Returns the time unit of the data set, if the data set is a time duration, or
+     * <code>null</code> otherwise.
+     */
+    public HDF5TimeUnit tryGetTimeUnit()
+    {
+        return (typeVariantOrNull != null) ? typeVariantOrNull.tryGetTimeUnit() : null;
     }
 
     /**

@@ -530,14 +530,30 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     }
 
     /**
-     * Adds an attribute for the <var>typeVariant</var> of <var>objectPath</var>.
+     * Adds a <var>typeVariant</var> to <var>objectPath</var>.
+     * 
+     * @param objectPath The name of the object to add the type variant to.
+     * @param typeVariant The type variant to add.
      */
-    private void addTypeVariantAttribute(final String objectPath,
-            final HDF5DataTypeVariant typeVariant)
+    public void addTypeVariant(final String objectPath, final HDF5DataTypeVariant typeVariant)
     {
         checkOpen();
         addAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE, typeVariantDataTypeId,
                 typeVariantDataTypeId, HDFNativeData.intToByte(typeVariant.ordinal()));
+    }
+
+    /**
+     * Adds a <var>typeVariant</var> to <var>objectPath</var>.
+     * 
+     * @param objectId The id of the object to add the type variant to.
+     * @param typeVariant The type variant to add.
+     * @param registry The registry for clean up tasks.
+     */
+    private void addTypeVariant(final int objectId, final HDF5DataTypeVariant typeVariant,
+            ICleanUpRegistry registry)
+    {
+        addAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, typeVariantDataTypeId,
+                typeVariantDataTypeId, HDFNativeData.intToByte(typeVariant.ordinal()), registry);
     }
 
     /**
@@ -699,21 +715,26 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);
-                            final int attributeId;
-                            if (h5.existsAttribute(objectId, name))
-                            {
-                                attributeId = h5.openAttribute(objectId, name, registry);
-                            } else
-                            {
-                                attributeId =
-                                        h5.createAttribute(objectId, name, storageDataTypeId,
-                                                registry);
-                            }
-                            h5.writeAttribute(attributeId, nativeDataTypeId, value);
+                            addAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
+                                    value, registry);
                             return null; // Nothing to return.
                         }
                     };
         runner.call(addAttributeRunnable);
+    }
+
+    private void addAttribute(final int objectId, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final byte[] value, ICleanUpRegistry registry)
+    {
+        final int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+        } else
+        {
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+        }
+        h5.writeAttribute(attributeId, nativeDataTypeId, value);
     }
 
     // /////////////////////
@@ -4793,6 +4814,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Writes out a time stamp value. The data set will be tagged as type variant
      * {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeStamp The timestamp to write as number of milliseconds since January 1, 1970,
@@ -4803,15 +4826,27 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
 
         checkOpen();
-        writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData
-                .longToByte(timeStamp));
-        addTypeVariantAttribute(objectPath,
-                HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH);
+        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            writeScalar(objectPath, H5T_STD_I64LE, H5T_STD_I64LE, HDFNativeData
+                                    .longToByte(timeStamp), registry);
+                    addTypeVariant(dataSetId,
+                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                            registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeScalarRunnable);
     }
 
     /**
-     * Creates a <code>long</code> array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets.
+     * Creates a time stamp array (of rank 1). Uses a compact storage layout. Should only be used
+     * for small data sets.
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param length The length of the data set to create.
@@ -4826,19 +4861,23 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
-                        { length }, null, true, registry);
+                    final int dataSetId =
+                            createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
+                                { length }, null, true, registry);
+                    addTypeVariant(dataSetId,
+                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                            registry);
                     return null; // Nothing to return.
                 }
             };
         runner.call(writeRunnable);
-        addTypeVariantAttribute(objectPath,
-                HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH);
     }
 
     /**
-     * Writes out a <code>long</code> array (of rank 1). Uses a compact storage layout. Should only
-     * be used for small data sets.
+     * Writes out a time stamp array (of rank 1). Uses a compact storage layout. Should only be used
+     * for small data sets.
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
@@ -4858,17 +4897,20 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         { timeStamps.length }, NO_DEFLATION, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeStamps);
+                    addTypeVariant(dataSetId,
+                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                            registry);
                     return null; // Nothing to return.
                 }
             };
         runner.call(writeRunnable);
-        addTypeVariantAttribute(objectPath,
-                HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH);
     }
 
     /**
      * Writes out a time stamp array (of rank 1). The data set will be tagged as type variant
      * {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
@@ -4882,6 +4924,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Writes out a time stamp array (of rank 1). The data set will be tagged as type variant
      * {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
@@ -4903,22 +4947,24 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         { timeStamps.length }, getDeflateLevel(deflate), registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeStamps);
+                    addTypeVariant(dataSetId,
+                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                            registry);
                     return null; // Nothing to return.
                 }
             };
         runner.call(writeRunnable);
-        addTypeVariantAttribute(objectPath,
-                HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH);
     }
 
     /**
      * Writes out a time stamp value provided as a {@link Date}. The data set will be tagged as type
      * variant {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      * <p>
-     * <em>Note: This is a convenience method for <code></code> </em>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param date The date to write.
+     * @see #writeTimeStamp(String, long)
      */
     public void writeDate(final String objectPath, final Date date)
     {
@@ -4928,9 +4974,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     /**
      * Writes out a {@link Date} array (of rank 1). Uses a compact storage layout. Should only be
      * used for small data sets.
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dates The dates to write.
+     * @see #writeTimeStampArrayCompact(String, long[])
      */
     public void writeDateArrayCompact(final String objectPath, final Date[] dates)
     {
@@ -4939,9 +4988,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
     /**
      * Writes out a {@link Date} array (of rank 1).
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dates The dates to write.
+     * @see #writeTimeStampArray(String, long[])
      */
     public void writeDateArray(final String objectPath, final Date[] dates)
     {
@@ -4950,10 +5002,13 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
     /**
      * Writes out a {@link Date} array (of rank 1).
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dates The dates to write.
      * @param deflate If <code>true</code>, the data set will be compressed.
+     * @see #writeTimeStampArray(String, long[], boolean)
      */
     public void writeDateArray(final String objectPath, final Date[] dates, final boolean deflate)
     {
@@ -4970,6 +5025,179 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             timestamps[i] = dates[i].getTime();
         }
         return timestamps;
+    }
+
+    //
+    // Duration
+    //
+
+    /**
+     * Writes out a time duration value in seconds. The data set will be tagged as type variant
+     * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDuration The duration of time to write in seconds.
+     */
+    public void writeTimeDuration(final String objectPath, final long timeDuration)
+    {
+        writeTimeDuration(objectPath, timeDuration, HDF5TimeUnit.SECONDS);
+    }
+
+    /**
+     * Writes out a time duration value. The data set will be tagged as the according type variant.
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDuration The duration of time to write in the given <var>timeUnit</var>.
+     * @param timeUnit The unit of the time duration.
+     */
+    public void writeTimeDuration(final String objectPath, final long timeDuration,
+            final HDF5TimeUnit timeUnit)
+    {
+        assert objectPath != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            writeScalar(objectPath, H5T_STD_I64LE, H5T_STD_I64LE, HDFNativeData
+                                    .longToByte(timeDuration), registry);
+                    addTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeScalarRunnable);
+    }
+
+    /**
+     * Creates a time duration array (of rank 1). Uses a compact storage layout. Should only be used
+     * for small data sets. The data set will be tagged as the according type variant.
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param length The length of the data set to create.
+     * @param timeUnit The unit of the time duration.
+     */
+    public void createTimeDurationArrayCompact(final String objectPath, final long length,
+            final HDF5TimeUnit timeUnit)
+    {
+        assert objectPath != null;
+        assert length > 0;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
+                                { length }, null, true, registry);
+                    addTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Writes out a time duration array (of rank 1). Uses a compact storage layout. Should only be
+     * used for small data sets. The data set will be tagged as the according type variant.
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDurations The time durations to write in the given <var>timeUnit</var>.
+     * @param timeUnit The unit of the time duration.
+     */
+    public void writeTimeDurationArrayCompact(final String objectPath, final long[] timeDurations,
+            final HDF5TimeUnit timeUnit)
+    {
+        assert objectPath != null;
+        assert timeDurations != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                        { timeDurations.length }, NO_DEFLATION, registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            timeDurations);
+                    addTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Writes out a time duration array in seconds (of rank 1). The data set will be tagged as type
+     * variant {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDurations The time durations to write in seconds.
+     */
+    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations)
+    {
+        writeTimeDurationArray(objectPath, timeDurations, HDF5TimeUnit.SECONDS, false);
+    }
+
+    /**
+     * Writes out a time duration array (of rank 1). The data set will be tagged as the according
+     * type variant.
+     * <p>
+     * <em>Note: Time durations are stored as <code>long[]</code> arrays.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDurations The time durations to write in the given <var>timeUnit</var>.
+     * @param timeUnit The unit of the time duration.
+     */
+    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
+            final HDF5TimeUnit timeUnit)
+    {
+        writeTimeDurationArray(objectPath, timeDurations, timeUnit, false);
+    }
+
+    /**
+     * Writes out a time duration array (of rank 1). The data set will be tagged as the according
+     * type variant.
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDurations The time durations to write in the given <var>timeUnit</var>.
+     * @param timeUnit The unit of the time duration.
+     * @param deflate If <code>true</code>, the data set will be compressed.
+     */
+    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
+            final HDF5TimeUnit timeUnit, final boolean deflate)
+    {
+        assert objectPath != null;
+        assert timeDurations != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                        { timeDurations.length }, getDeflateLevel(deflate), registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            timeDurations);
+                    addTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
     }
 
     //
@@ -5897,22 +6125,26 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId;
-                    if (exists(dataSetPath))
-                    {
-                        dataSetId = h5.openObject(fileId, dataSetPath, registry);
-                    } else
-                    {
-                        dataSetId =
-                                h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath,
-                                        registry);
-                    }
-                    H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT,
-                            value);
+                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, registry);
                     return null; // Nothing to return.
                 }
             };
         runner.call(writeScalarRunnable);
+    }
+
+    private int writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final byte[] value, ICleanUpRegistry registry)
+    {
+        final int dataSetId;
+        if (exists(dataSetPath))
+        {
+            dataSetId = h5.openObject(fileId, dataSetPath, registry);
+        } else
+        {
+            dataSetId = h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath, registry);
+        }
+        H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, value);
+        return dataSetId;
     }
 
     private int createDataSet(final String objectPath, final int storageDataTypeId,

@@ -196,6 +196,22 @@ public interface HDF5SimpleWriter extends HDF5SimpleReader
     public void writeDateArray(final String objectPath, final Date[] dates);
 
     /**
+     * Writes out a time duration value in seconds.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDuration The duration of time to write in seconds.
+     */
+    public void writeTimeDuration(final String objectPath, final long timeDuration);
+
+    /**
+     * Writes out a time duration array in seconds (of rank 1).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDurations The time durations to write in seconds.
+     */
+    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations);
+    
+    /**
      * Writes out a <code>String</code> with a fixed maximal length.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.

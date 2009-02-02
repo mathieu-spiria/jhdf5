@@ -549,20 +549,6 @@ public class HDF5Reader implements HDF5SimpleReader
         }
     }
 
-    private HDF5DataTypeVariant tryGetTypeVariant(final int dataSetId, ICleanUpRegistry registry)
-    {
-        final Integer typeVariantOrdinal = tryGetAttributeTypeVariant(dataSetId, registry);
-        final HDF5DataTypeVariant typeVariantOrNull;
-        if (typeVariantOrdinal != null && typeVariantOrdinal < HDF5DataTypeVariant.values().length)
-        {
-            typeVariantOrNull = HDF5DataTypeVariant.values()[typeVariantOrdinal];
-        } else
-        {
-            typeVariantOrNull = null;
-        }
-        return typeVariantOrNull;
-    }
-
     // /////////////////////
     // Group
     // /////////////////////
@@ -959,42 +945,49 @@ public class HDF5Reader implements HDF5SimpleReader
     }
 
     /**
-     * Returns the ordinal for the type variant of <var>objectPath</var>, or <code>null</code>, if
-     * no type variant is defined for this <var>objectPath</var>.
+     * Returns the data type variant of <var>objectPath</var>, or <code>null</code>, if no type
+     * variant is defined for this <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The ordinal of the type variant or <code>null</code>.
+     * @return The data type variant or <code>null</code>.
      */
-    private Integer tryGetAttributeTypeVariant(final String objectPath) throws HDF5JavaException
+    public HDF5DataTypeVariant tryGetTypeVariant(final String objectPath)
     {
         assert objectPath != null;
 
         checkOpen();
-        final ICallableWithCleanUp<Integer> readRunnable = new ICallableWithCleanUp<Integer>()
-            {
-                public Integer call(ICleanUpRegistry registry)
-                {
-                    final int objectId = h5.openObject(fileId, objectPath, registry);
-                    return tryGetAttributeTypeVariant(objectId, registry);
-                }
-            };
+        final ICallableWithCleanUp<HDF5DataTypeVariant> readRunnable =
+                new ICallableWithCleanUp<HDF5DataTypeVariant>()
+                    {
+                        public HDF5DataTypeVariant call(ICleanUpRegistry registry)
+                        {
+                            final int objectId = h5.openObject(fileId, objectPath, registry);
+                            return tryGetTypeVariant(objectId, registry);
+                        }
+                    };
 
         return runner.call(readRunnable);
     }
 
+    private HDF5DataTypeVariant tryGetTypeVariant(final int dataSetId, ICleanUpRegistry registry)
+    {
+        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
+        return typeVariantOrdinal < 0 ? null : HDF5DataTypeVariant.values()[typeVariantOrdinal];
+    }
+
     /**
-     * Returns the ordinal for the type variant of <var>objectPath</var>, or <code>null</code>, if
-     * no type variant is defined for this <var>objectPath</var>.
+     * Returns the ordinal for the type variant of <var>objectPath</var>, or <code>-1</code>, if no
+     * type variant is defined for this <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The ordinal of the type variant or <code>null</code>.
      */
-    private Integer tryGetAttributeTypeVariant(final int objectId, ICleanUpRegistry registry)
+    private int getAttributeTypeVariant(final int objectId, ICleanUpRegistry registry)
     {
         checkOpen();
         if (h5.existsAttribute(objectId, TYPE_VARIANT_ATTRIBUTE) == false)
         {
-            return null;
+            return -1;
         }
         final int attributeId = h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
         final int dataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
@@ -3545,8 +3538,18 @@ public class HDF5Reader implements HDF5SimpleReader
     // ------------------------------------------------------------------------------
 
     //
-    // Date
+    // Time stamp
     //
+
+    /**
+     * Returns <code>true</code>, if the data set given by <var>objectPath</var> is a time stamp and
+     * <code>false</code> otherwise.
+     */
+    public boolean isTimeStamp(final String objectPath) throws HDF5JavaException
+    {
+        final HDF5DataTypeVariant typeVariantOrNull = tryGetTypeVariant(objectPath);
+        return typeVariantOrNull != null && typeVariantOrNull.isTimeStamp();
+    }
 
     /**
      * Reads a time stamp value from the data set <var>objectPath</var>. The time stamp is stored as
@@ -3561,11 +3564,21 @@ public class HDF5Reader implements HDF5SimpleReader
     public long readTimeStamp(final String objectPath) throws HDF5JavaException
     {
         checkOpen();
-        if (isTimeStamp(objectPath) == false)
-        {
-            throw new HDF5JavaException("Data set '" + objectPath + "' is not a time stamp.");
-        }
-        return readLong(objectPath);
+        assert objectPath != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Long> readCallable = new ICallableWithCleanUp<Long>()
+            {
+                public Long call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    checkIsTimeStamp(objectPath, dataSetId, registry);
+                    final long[] data = new long[1];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
+                    return data[0];
+                }
+            };
+        return runner.call(readCallable);
     }
 
     /**
@@ -3580,12 +3593,23 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public long[] readTimeStampArray(final String objectPath) throws HDF5JavaException
     {
+        assert objectPath != null;
+
         checkOpen();
-        if (isTimeStamp(objectPath) == false)
-        {
-            throw new HDF5JavaException("Data set '" + objectPath + "' is not a time stamp array.");
-        }
-        return readLongArray(objectPath);
+        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
+            {
+                public long[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    checkIsTimeStamp(objectPath, dataSetId, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
+                }
+            };
+        return runner.call(readCallable);
     }
 
     /**
@@ -3629,12 +3653,171 @@ public class HDF5Reader implements HDF5SimpleReader
         return dateArray;
     }
 
-    private boolean isTimeStamp(final String objectPath)
+    private void checkIsTimeStamp(final String objectPath, final int dataSetId,
+            ICleanUpRegistry registry) throws HDF5JavaException
     {
-        final Integer typeVariantOrdinalOrNull = tryGetAttributeTypeVariant(objectPath);
-        return typeVariantOrdinalOrNull != null
-                && typeVariantOrdinalOrNull == HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH
-                        .ordinal();
+        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
+        if (typeVariantOrdinal != HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH
+                .ordinal())
+        {
+            throw new HDF5JavaException("Data set '" + objectPath + "' is not a time stamp.");
+        }
+    }
+
+    //
+    // Duration
+    //
+
+    /**
+     * Returns <code>true</code>, if the data set given by <var>objectPath</var> is a time duration
+     * and <code>false</code> otherwise.
+     */
+    public boolean isTimeDuration(final String objectPath) throws HDF5JavaException
+    {
+        final HDF5DataTypeVariant typeVariantOrNull = tryGetTypeVariant(objectPath);
+        return typeVariantOrNull != null && typeVariantOrNull.isTimeDuration();
+    }
+
+    /**
+     * Returns <code>true</code>, if the data set given by <var>objectPath</var> is a time duration
+     * and <code>false</code> otherwise.
+     */
+    public HDF5TimeUnit tryGetTimeUnit(final String objectPath) throws HDF5JavaException
+    {
+        final HDF5DataTypeVariant typeVariantOrNull = tryGetTypeVariant(objectPath);
+        return (typeVariantOrNull != null) ? typeVariantOrNull.tryGetTimeUnit() : null;
+    }
+
+    /**
+     * Reads a time duration value from the data set <var>objectPath</var>, converts it to seconds
+     * and returns it as <code>long</code>. It needs to be tagged as one of the type variants that
+     * indicate a time duration, for example {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The time duration in seconds.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     * @see #readTimeDuration(String, HDF5TimeUnit)
+     */
+    public long readTimeDuration(final String objectPath) throws HDF5JavaException
+    {
+        return readTimeDuration(objectPath, HDF5TimeUnit.SECONDS);
+    }
+
+    /**
+     * Reads a time duration value from the data set <var>objectPath</var>, converts it to the given
+     * <var>timeUnit</var> and returns it as <code>long</code>. It needs to be tagged as one of the
+     * type variants that indicate a time duration, for example
+     * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * This tagging is done by the writer when using
+     * {@link HDF5Writer#writeTimeDuration(String, long, HDF5TimeUnit)} or can be done by calling
+     * {@link HDF5Writer#addTypeVariant(String, HDF5DataTypeVariant)}, most conveniantly by code
+     * like
+     * 
+     * <pre>
+     * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
+     * </pre>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeUnit The time unit that the duration should be converted to.
+     * @return The time duration in the given unit.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     */
+    public long readTimeDuration(final String objectPath, final HDF5TimeUnit timeUnit)
+            throws HDF5JavaException
+    {
+        assert objectPath != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Long> readCallable = new ICallableWithCleanUp<Long>()
+            {
+                public Long call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final HDF5TimeUnit storedUnit =
+                            checkIsTimeDuration(objectPath, dataSetId, registry);
+                    final long[] data = new long[1];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
+                    return timeUnit.convert(data[0], storedUnit);
+                }
+            };
+        return runner.call(readCallable);
+    }
+
+    /**
+     * Reads a time duration array from the data set <var>objectPath</var>, converts it to seconds
+     * and returns it as a <code>long[]</code> array. It needs to be tagged as one of the type
+     * variants that indicate a time duration, for example
+     * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * See {@link #readTimeDuration(String, HDF5TimeUnit)} for how the tagging is done.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The time duration in seconds.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not defined as type variant
+     *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * @see #readTimeDurationArray(String, HDF5TimeUnit)
+     */
+    public long[] readTimeDurationArray(final String objectPath) throws HDF5JavaException
+    {
+        return readTimeDurationArray(objectPath, HDF5TimeUnit.SECONDS);
+    }
+
+    /**
+     * Reads a time duration array from the data set <var>objectPath</var>, converts it to the given
+     * <var>timeUnit</var> and returns it as a <code>long[]</code> array. It needs to be tagged as
+     * one of the type variants that indicate a time duration, for example
+     * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * See {@link #readTimeDuration(String, HDF5TimeUnit)} for how the tagging is done.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeUnit The time unit that the duration should be converted to.
+     * @return The time duration in the given unit.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not defined as type variant
+     *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     */
+    public long[] readTimeDurationArray(final String objectPath, final HDF5TimeUnit timeUnit)
+            throws HDF5JavaException
+    {
+        assert objectPath != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
+            {
+                public long[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final HDF5TimeUnit storedUnit =
+                            checkIsTimeDuration(objectPath, dataSetId, registry);
+                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    if (timeUnit != storedUnit)
+                    {
+                        for (int i = 0; i < data.length; ++i)
+                        {
+                            data[i] = timeUnit.convert(data[i], storedUnit);
+                        }
+                    }
+                    return data;
+                }
+            };
+        return runner.call(readCallable);
+    }
+
+    private HDF5TimeUnit checkIsTimeDuration(final String objectPath, final int dataSetId,
+            ICleanUpRegistry registry) throws HDF5JavaException
+    {
+        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
+        if (HDF5DataTypeVariant.isTimeDuration(typeVariantOrdinal) == false)
+        {
+            throw new HDF5JavaException("Data set '" + objectPath + "' is not a time duration.");
+        }
+        return HDF5DataTypeVariant.getTimeUnit(typeVariantOrdinal);
     }
 
     //
