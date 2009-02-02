@@ -250,6 +250,11 @@ public class H5
         }
     }
 
+    /** Call to ensure that the native library is loaded. */
+    static void ensureNativeLibIsLoaded()
+    {
+    }
+    
     // ////////////////////////////////////////////////////////////////
 
     /**
@@ -718,7 +723,7 @@ public class H5
     public synchronized static int H5Dextend(final int dataset_id, final long[] size)
             throws HDF5Exception, NullPointerException
     {
-        final byte[] buf = HDFNativeData.longToByte(0, size.length, size);
+        final byte[] buf = HDFNativeData.longToByte(size);
 
         return H5Dextend(dataset_id, buf);
     }
@@ -740,7 +745,7 @@ public class H5
     public synchronized static int H5Dset_extent(final int dataset_id, final long[] size)
             throws HDF5Exception, NullPointerException
     {
-        final byte[] buf = HDFNativeData.longToByte(0, size.length, size);
+        final byte[] buf = HDFNativeData.longToByte(size);
 
         return H5Dset_extent(dataset_id, buf);
     }
@@ -1347,7 +1352,7 @@ public class H5
             return -1;
         }
 
-        final byte[] thedims = HDFNativeData.longToByte(0, dim.length, dim);
+        final byte[] thedims = HDFNativeData.longToByte(dim);
 
         return H5Pset_chunk(plist, ndims, thedims);
     }
@@ -2080,9 +2085,9 @@ public class H5
             return -1;
         }
 
-        final byte[] dimsAsByteArray = HDFNativeData.longToByte(0, dims.length, dims);
+        final byte[] dimsAsByteArray = HDFNativeData.longToByte(dims);
         final byte[] maxDimsAsByteArray =
-                (maxdims != null) ? HDFNativeData.longToByte(0, maxdims.length, maxdims) : null;
+                (maxdims != null) ? HDFNativeData.longToByte(maxdims) : null;
 
         return H5Screate_simple(rank, dimsAsByteArray, maxDimsAsByteArray);
     }
@@ -2219,9 +2224,9 @@ public class H5
         }
 
         final byte[] currentSizeAsByteArray =
-                HDFNativeData.longToByte(0, currentSize.length, currentSize);
+                HDFNativeData.longToByte(currentSize);
         final byte[] maxSizeAsByteArray =
-                (maxSize != null) ? HDFNativeData.longToByte(0, maxSize.length, maxSize) : null;
+                (maxSize != null) ? HDFNativeData.longToByte(maxSize) : null;
 
         return H5Screate_simple(rank, currentSizeAsByteArray, maxSizeAsByteArray);
     }
@@ -2256,7 +2261,7 @@ public class H5
             return -1;
         }
 
-        final byte[] offsetAsByteArray = HDFNativeData.longToByte(0, offset.length, offset);
+        final byte[] offsetAsByteArray = HDFNativeData.longToByte(offset);
 
         return H5Soffset_simple(space_id, offsetAsByteArray);
     }
@@ -2308,13 +2313,13 @@ public class H5
             throws HDF5Exception, NullPointerException, IllegalArgumentException
     {
         final byte[] startAsByteArray =
-                (start != null) ? HDFNativeData.longToByte(0, start.length, start) : null;
+                (start != null) ? HDFNativeData.longToByte(start) : null;
         final byte[] countAsByteArray =
-                (count != null) ? HDFNativeData.longToByte(0, count.length, count) : null;
+                (count != null) ? HDFNativeData.longToByte(count) : null;
         final byte[] strideAsByteArray =
-                (stride != null) ? HDFNativeData.longToByte(0, stride.length, stride) : null;
+                (stride != null) ? HDFNativeData.longToByte(stride) : null;
         final byte[] blockAsByteArray =
-                (block != null) ? HDFNativeData.longToByte(0, block.length, block) : null;
+                (block != null) ? HDFNativeData.longToByte(block) : null;
 
         return H5Sselect_hyperslab(space_id, op, startAsByteArray, strideAsByteArray,
                 countAsByteArray, blockAsByteArray);
