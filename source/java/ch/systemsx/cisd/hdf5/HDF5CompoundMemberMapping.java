@@ -67,7 +67,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  *                                 new HDF5EnumerationValue(enumType, &quot;THREE&quot;)),
  *                         new Record(2, &quot;some note&quot;,
  *                                 new HDF5EnumerationValue(enumType, &quot;1&quot;)), };
- *     writer.writeCompound("/testCompound", compoundType, recordWritten);
+ *     writer.writeCompound(&quot;/testCompound&quot;, compoundType, recordWritten);
  *     writer.close();
  * </pre>
  * 
@@ -85,8 +85,8 @@ public final class HDF5CompoundMemberMapping
     private final HDF5EnumerationType enumTypeOrNull;
 
     /**
-     * Adds a member mapping for <var>fieldName</var>. Can be used for all data types except
-     * Strings and Enumerations.
+     * Adds a member mapping for <var>fieldName</var>. Can be used for all data types except Strings
+     * and Enumerations.
      * 
      * @param fieldName The name of the field in the Java class. Will also be used as name of
      *            member.
@@ -97,8 +97,8 @@ public final class HDF5CompoundMemberMapping
     }
 
     /**
-     * Adds a member mapping for <var>fieldName</var>. Can be used for all data types except
-     * Strings and Enumerations.
+     * Adds a member mapping for <var>fieldName</var>. Can be used for all data types except Strings
+     * and Enumerations.
      * 
      * @param fieldName The name of the field in the Java class.
      * @param memberName The name of the member in the compound type.
@@ -109,11 +109,12 @@ public final class HDF5CompoundMemberMapping
     }
 
     /**
-     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings.
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings and primitive
+     * arrays.
      * 
      * @param fieldName The name of the field in the Java class. Will also be used as name of
      *            member.
-     * @param memberTypeLength The length of the String in the compound type.
+     * @param memberTypeLength The length of the String or the primitive array in the compound type.
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName, int memberTypeLength)
     {
@@ -121,11 +122,12 @@ public final class HDF5CompoundMemberMapping
     }
 
     /**
-     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings.
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings and primitive
+     * arrays.
      * 
      * @param fieldName The name of the field in the Java class.
      * @param memberName The name of the member in the compound type.
-     * @param memberTypeLength The length of the String in the compound type.
+     * @param memberTypeLength The length of the String or the primitive array in the compound type.
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName,
             int memberTypeLength)
@@ -179,7 +181,8 @@ public final class HDF5CompoundMemberMapping
         try
         {
             final Field field = clazz.getDeclaredField(fieldName);
-            if (memberTypeLength > 0 && field.getType() != String.class)
+            if (memberTypeLength > 0 && field.getType() != String.class
+                    && field.getType().isArray() == false)
             {
                 throw new HDF5JavaException("Field '" + fieldName + "' of class '"
                         + clazz.getCanonicalName() + "' is no String, but a length > 0 is given.");

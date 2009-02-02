@@ -86,22 +86,22 @@ public final class HDF5CompoundMemberInformation implements
         if (fieldType == boolean.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.BOOLEAN, 1);
-        } else if (fieldType == byte.class)
+        } else if (fieldType == byte.class || fieldType == byte[].class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 1);
-        } else if (fieldType == short.class)
+        } else if (fieldType == short.class || fieldType == short[].class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 2);
-        } else if (fieldType == int.class)
+        } else if (fieldType == int.class || fieldType == int[].class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 4);
-        } else if (fieldType == long.class)
+        } else if (fieldType == long.class || fieldType == long[].class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 8);
-        } else if (fieldType == float.class)
+        } else if (fieldType == float.class || fieldType == float[].class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, 4);
-        } else if (fieldType == double.class)
+        } else if (fieldType == double.class || fieldType == double[].class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, 8);
         } else if (fieldType == String.class)
