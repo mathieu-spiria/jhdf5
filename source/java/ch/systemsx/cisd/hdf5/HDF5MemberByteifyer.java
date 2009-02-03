@@ -536,7 +536,7 @@ abstract class HDF5MemberByteifyer
 
     public final String describe()
     {
-        return "field '" + field.getName() + "' of class '" + field.getClass().getCanonicalName()
-                + "'";
+        return "field '" + field.getName() + "' of class '"
+                + field.getDeclaringClass().getCanonicalName() + "'";
     }
 }
