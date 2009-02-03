@@ -17,6 +17,8 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mappingString;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mappingArray;
 import static org.testng.AssertJUnit.*;
 
 import java.io.File;
@@ -145,6 +147,7 @@ public class HDF5RoundtripTest
         test.testEnumArray16BitFromIntArray();
         test.testOpaqueType();
         test.testCompound();
+        test.testCompoundOverflow();
         test.testCompoundArray();
         test.testCompoundArrayBlockWise();
         test.testCompoundMDArray();
@@ -2589,18 +2592,18 @@ public class HDF5RoundtripTest
         {
             return new HDF5CompoundMemberMapping[]
                 { mapping("a"), mapping("b"), mapping("l"), mapping("c"), mapping("d"),
-                        mapping("e"), mapping("f", 3), mapping("g", enumType), mapping("ar", 3),
-                        mapping("br", 2), mapping("lr", 3), mapping("cr", 1), mapping("dr", 2),
-                        mapping("er", 4) };
+                        mapping("e"), mappingString("f", 3), mapping("g", enumType),
+                        mappingArray("ar", 3), mappingArray("br", 2), mappingArray("lr", 3),
+                        mappingArray("cr", 1), mappingArray("dr", 2), mappingArray("er", 4) };
         }
 
         private static HDF5CompoundMemberMapping[] getShuffledMapping(HDF5EnumerationType enumType)
         {
             return new HDF5CompoundMemberMapping[]
-                { mapping("er", 4), mapping("e"), mapping("b"), mapping("br", 2),
-                        mapping("g", enumType), mapping("lr", 3), mapping("c"), mapping("ar", 3),
-                        mapping("a"), mapping("d"), mapping("cr", 1), mapping("f", 3),
-                        mapping("dr", 2), mapping("l") };
+                { mappingArray("er", 4), mapping("e"), mapping("b"), mappingArray("br", 2),
+                        mapping("g", enumType), mappingArray("lr", 3), mapping("c"),
+                        mappingArray("ar", 3), mapping("a"), mapping("d"), mappingArray("cr", 1),
+                        mappingString("f", 3), mappingArray("dr", 2), mapping("l") };
         }
 
         //
@@ -2687,6 +2690,42 @@ public class HDF5RoundtripTest
         final Record recordRead = reader.readCompound("/testCompound", Record.getHDF5Type(reader));
         assertEquals(recordWritten, recordRead);
         reader.close();
+    }
+
+    @Test
+    public void testCompoundOverflow()
+    {
+        final File file = new File(workingDirectory, "compoundOverflow.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(file).open();
+        HDF5CompoundType<Record> compoundType = Record.getHDF5Type(writer);
+        HDF5EnumerationType enumType = writer.getEnumType("someEnumType");
+        final Record recordWritten =
+                new Record(1, 2.0f, 100000000L, 3.0, (short) 4, true, "one",
+                        new HDF5EnumerationValue(enumType, "THREE"), new int[]
+                            { 1, 2, 3 }, new float[]
+                            { 8.0f, -17.0f }, new long[]
+                            { -10, -11, -12 }, new double[]
+                            { 3.14159 }, new short[]
+                            { 1000, 2000 }, new byte[]
+                            { 11, 12, 13, 14, 0, 0, 0 });
+        try
+        {
+            writer.writeCompound("/testCompound", compoundType, recordWritten);
+            fail("Failed to detect overflow.");
+        } catch (IllegalArgumentException ex)
+        {
+            if (ex.getMessage().contains("must not exceed 4 bytes") == false)
+            {
+                throw ex;
+            }
+            // Expected.
+        } finally
+        {
+            writer.close();
+        }
     }
 
     @Test

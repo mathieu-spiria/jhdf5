@@ -126,6 +126,7 @@ class HDF5ValueObjectByteifyer<T>
     {
         final byte[] barray = new byte[arr.length * recordSize];
         int offset = 0;
+        int counter = 0;
         for (Object obj : arr)
         {
             for (HDF5MemberByteifyer byteifyer : byteifyers)
@@ -133,6 +134,13 @@ class HDF5ValueObjectByteifyer<T>
                 try
                 {
                     final byte[] b = byteifyer.byteify(compoundDataTypeId, obj);
+                    if (b.length > byteifyer.getSize())
+                    {
+                        throw new IllegalArgumentException("Compound " + byteifyer.describe()
+                                + " of array element " + counter + " must not exceed "
+                                + byteifyer.getSize() + " bytes, but is of size " + b.length
+                                + " bytes.");
+                    }
                     System.arraycopy(b, 0, barray, offset + byteifyer.getOffset(), b.length);
                 } catch (IllegalAccessException ex)
                 {
@@ -140,6 +148,7 @@ class HDF5ValueObjectByteifyer<T>
                 }
             }
             offset += recordSize;
+            ++counter;
         }
         return barray;
     }
@@ -152,6 +161,12 @@ class HDF5ValueObjectByteifyer<T>
             try
             {
                 final byte[] b = byteifyer.byteify(compoundDataTypeId, obj);
+                if (b.length > byteifyer.getSize())
+                {
+                    throw new IllegalArgumentException("Compound " + byteifyer.describe()
+                            + " must not exceed " + byteifyer.getSize() + " bytes, but is of size "
+                            + b.length + " bytes.");
+                }
                 System.arraycopy(b, 0, barray, byteifyer.getOffset(), b.length);
             } catch (IllegalAccessException ex)
             {
