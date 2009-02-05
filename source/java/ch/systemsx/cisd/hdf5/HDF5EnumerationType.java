@@ -147,6 +147,20 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         }
     }
     
+    byte[] toStorageForm(int ordinal)
+    {
+        switch (getStorageForm())
+        {
+            case BYTE:
+                return HDFNativeData.byteToByte((byte) ordinal);
+            case SHORT:
+                return HDFNativeData.shortToByte((short) ordinal);
+            case INT:
+                return HDFNativeData.intToByte(ordinal);
+        }
+        throw new Error("Illegal storage size.");
+    }
+
     HDF5EnumerationValue createFromStorageForm(byte[] data, int offset)
     {
         switch (getStorageForm())

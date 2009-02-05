@@ -185,7 +185,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         state = State.OPEN;
         readNamedDataTypes();
         booleanDataTypeId = openOrCreateBooleanDataType();
-        typeVariantDataTypeId = openOrCreateTypeVariantDataType();
+        typeVariantDataType = openOrCreateTypeVariantDataType();
         variableLengthStringDataTypeId = openOrCreateVLStringType();
 
         return this;
@@ -209,22 +209,31 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     }
 
     @Override
-    protected int openOrCreateTypeVariantDataType()
+    protected HDF5EnumerationType openOrCreateTypeVariantDataType()
     {
+        final HDF5EnumerationType dataType;
         int dataTypeId = getDataTypeId(HDF5Utils.TYPE_VARIANT_DATA_TYPE);
         if (dataTypeId < 0
                 || h5.getNumberOfMembers(dataTypeId) < HDF5DataTypeVariant.values().length)
         {
             final String typeVariantPath = findFirstUnusedTypeVariantPath();
-            dataTypeId = createTypeVariantDataType();
-            commitDataType(typeVariantPath, dataTypeId);
+            dataType = createTypeVariantDataType();
+            commitDataType(typeVariantPath, dataType.getStorageTypeId());
             createOrUpdateSoftLink(typeVariantPath.substring(DATATYPE_GROUP.length() + 1),
                     TYPE_VARIANT_DATA_TYPE);
+        } else
+        {
+            final int nativeDataTypeId = h5.getNativeDataType(dataTypeId, fileRegistry);
+            final String[] typeVariantNames = h5.getNamesForEnumOrCompoundMembers(dataTypeId);
+            dataType =
+                    new HDF5EnumerationType(fileId, dataTypeId, nativeDataTypeId,
+                            TYPE_VARIANT_DATA_TYPE, typeVariantNames);
+
         }
-        return dataTypeId;
+        return dataType;
     }
 
-    private final static int MAX_TYPE_VARIANTS = 1024;
+    private final static int MAX_TYPE_VARIANT_TYPES = 1024;
 
     private String findFirstUnusedTypeVariantPath()
     {
@@ -233,7 +242,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         do
         {
             path = TYPE_VARIANT_DATA_TYPE + "." + (number++);
-        } while (exists(path) && number < MAX_TYPE_VARIANTS);
+        } while (exists(path) && number < MAX_TYPE_VARIANT_TYPES);
         return path;
     }
 
@@ -538,8 +547,9 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void addTypeVariant(final String objectPath, final HDF5DataTypeVariant typeVariant)
     {
         checkOpen();
-        addAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE, typeVariantDataTypeId,
-                typeVariantDataTypeId, HDFNativeData.intToByte(typeVariant.ordinal()));
+        addAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE, typeVariantDataType.getStorageTypeId(),
+                typeVariantDataType.getNativeTypeId(), typeVariantDataType
+                        .toStorageForm(typeVariant.ordinal()));
     }
 
     /**
@@ -552,8 +562,9 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     private void addTypeVariant(final int objectId, final HDF5DataTypeVariant typeVariant,
             ICleanUpRegistry registry)
     {
-        addAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, typeVariantDataTypeId,
-                typeVariantDataTypeId, HDFNativeData.intToByte(typeVariant.ordinal()), registry);
+        addAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, typeVariantDataType.getStorageTypeId(),
+                typeVariantDataType.getNativeTypeId(), typeVariantDataType
+                        .toStorageForm(typeVariant.ordinal()), registry);
     }
 
     /**
@@ -4831,7 +4842,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            writeScalar(objectPath, H5T_STD_I64LE, H5T_STD_I64LE, HDFNativeData
+                            writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData
                                     .longToByte(timeStamp), registry);
                     addTypeVariant(dataSetId,
                             HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
@@ -5065,7 +5076,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            writeScalar(objectPath, H5T_STD_I64LE, H5T_STD_I64LE, HDFNativeData
+                            writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData
                                     .longToByte(timeDuration), registry);
                     addTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.

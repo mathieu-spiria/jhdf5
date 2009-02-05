@@ -16,8 +16,6 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ncsa.hdf.hdf5lib.HDFNativeData;
-
 /**
  * A class the represents an HDF enumeration value.
  * 
@@ -102,16 +100,7 @@ public final class HDF5EnumerationValue
 
     byte[] toStorageForm()
     {
-        switch (type.getStorageForm())
-        {
-            case BYTE:
-                return HDFNativeData.byteToByte((byte) ordinal);
-            case SHORT:
-                return HDFNativeData.shortToByte((short) ordinal);
-            case INT:
-                return HDFNativeData.intToByte(ordinal);
-        }
-        throw new Error("Illegal storage size.");
+        return type.toStorageForm(ordinal);
     }
 
     //
