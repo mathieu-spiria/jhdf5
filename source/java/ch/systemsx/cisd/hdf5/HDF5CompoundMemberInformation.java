@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import java.util.Arrays;
+import java.util.BitSet;
 
 /**
  * Contains information about one member of an HDF5 compound data type.
@@ -98,6 +99,9 @@ public final class HDF5CompoundMemberInformation implements
         } else if (fieldType == long.class || fieldType == long[].class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 8);
+        } else if (fieldType == BitSet.class)
+        {
+            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.BITFIELD, 8);
         } else if (fieldType == float.class || fieldType == float[].class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, 4);
@@ -151,7 +155,7 @@ public final class HDF5CompoundMemberInformation implements
     //
     // Comparable<HDF5CompoundMemberInformation>
     //
-    
+
     public int compareTo(HDF5CompoundMemberInformation o)
     {
         return memberName.compareTo(o.memberName);

@@ -25,6 +25,7 @@ import static ncsa.hdf.hdf5lib.HDFNativeData.FLOAT_SIZE;
 import static ncsa.hdf.hdf5lib.HDFNativeData.DOUBLE_SIZE;
 
 import java.lang.reflect.Field;
+import java.util.BitSet;
 
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ncsa.hdf.hdf5lib.HDFNativeData;
@@ -316,6 +317,40 @@ abstract class HDF5MemberByteifyer
                         field.set(obj, array);
                     }
                 };
+        } else if (memberClazz == BitSet.class)
+        {
+            final int lenInLongs = len / 64 + (len % 64 != 0 ? 1 : 0);
+            if (lenInLongs <= 0)
+            {
+                throw new IllegalArgumentException(
+                        "Length of a bit field must be a positive number.");
+            }
+            return new HDF5MemberByteifyer(field, memberName, lenInLongs * LONG_SIZE, offset)
+                {
+                    @Override
+                    protected int getMemberStorageTypeId()
+                    {
+                        return H5T_STD_B64LE;
+                    }
+
+                    @Override
+                    public byte[] byteify(int compoundDataTypeId, Object obj)
+                            throws IllegalAccessException
+                    {
+                        final BitSet bs = (BitSet) field.get(obj);
+                        return HDFNativeData.longToByte(BitSetConversionUtils.toStorageForm(bs));
+                    }
+
+                    @Override
+                    public void setFromByteArray(int compoundDataTypeId, Object obj,
+                            byte[] byteArr, int arrayOffset) throws IllegalAccessException
+                    {
+                        final BitSet bs =
+                                BitSetConversionUtils.fromStorageForm(HDFNativeData.byteToLong(
+                                        byteArr, arrayOffset + offset, lenInLongs));
+                        field.set(obj, bs);
+                    }
+                };
         } else
         {
             throw new IllegalArgumentException("The field '" + field.getName() + "' is of type '"
@@ -515,8 +550,16 @@ abstract class HDF5MemberByteifyer
 
     public final void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
     {
-        H5Tinsert(dataTypeId, memberName, offset, h5.getNativeDataType(getMemberStorageTypeId(),
-                registry));
+        // Workaround: calling H5Tget_native_type() on one of the bit field types in 1.8.2 throws an 
+        // "HDF5FunctionArgumentException: Invalid arguments to routine: Inappropriate type"
+        if (getMemberStorageTypeId() == H5T_STD_B64LE || getMemberStorageTypeId() == H5T_STD_B64BE)
+        {
+            H5Tinsert(dataTypeId, memberName, offset, H5T_NATIVE_B64);
+        } else
+        {
+            H5Tinsert(dataTypeId, memberName, offset, h5.getNativeDataType(getMemberStorageTypeId(),
+                    registry));
+        }
     }
 
     public final int getSize()

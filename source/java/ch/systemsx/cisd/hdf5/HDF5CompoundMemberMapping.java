@@ -112,7 +112,6 @@ public final class HDF5CompoundMemberMapping
      * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings.
      * 
      * @deprecated Use {@link #mappingString(String, String, int)} instead.
-     * 
      * @param fieldName The name of the field in the Java class. Will also be used as name of
      *            member.
      * @param memberTypeLength The length of the String or the primitive array in the compound type.
@@ -136,8 +135,7 @@ public final class HDF5CompoundMemberMapping
     }
 
     /**
-     * Adds a member mapping for <var>fieldName</var>. Only suitable for primitive
-     * arrays.
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for primitive arrays.
      * 
      * @param fieldName The name of the field in the Java class. Will also be used as name of
      *            member.
@@ -152,7 +150,6 @@ public final class HDF5CompoundMemberMapping
      * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings.
      * 
      * @deprecated Use {@link #mappingString(String, String, int)} instead.
-     * 
      * @param fieldName The name of the field in the Java class.
      * @param memberName The name of the member in the compound type.
      * @param memberTypeLength The length of the String or the primitive array in the compound type.
@@ -238,14 +235,19 @@ public final class HDF5CompoundMemberMapping
         {
             final Field field = clazz.getDeclaredField(fieldName);
             if (memberTypeLength > 0 && field.getType() != String.class
-                    && field.getType().isArray() == false)
+                    && field.getType().isArray() == false
+                    && field.getType() != java.util.BitSet.class)
             {
                 throw new HDF5JavaException("Field '" + fieldName + "' of class '"
-                        + clazz.getCanonicalName() + "' is no String, but a length > 0 is given.");
-            } else if (memberTypeLength == 0 && field.getType() == String.class)
+                        + clazz.getCanonicalName()
+                        + "' is no String or primitive array, but a length > 0 is given.");
+            } else if (memberTypeLength == 0
+                    && (field.getType() == String.class || field.getType().isArray() || field
+                            .getType() == java.util.BitSet.class))
             {
                 throw new HDF5JavaException("Field '" + fieldName + "' of class '"
-                        + clazz.getCanonicalName() + "' is a String, but a length == 0 is given.");
+                        + clazz.getCanonicalName()
+                        + "' is a String or primitive array, but a length == 0 is given.");
             }
             return field;
         } catch (NoSuchFieldException ex)

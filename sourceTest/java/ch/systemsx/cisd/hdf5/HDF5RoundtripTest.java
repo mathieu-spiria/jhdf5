@@ -148,6 +148,7 @@ public class HDF5RoundtripTest
         test.testOpaqueType();
         test.testCompound();
         test.testCompoundOverflow();
+        test.testBitFieldCompound();
         test.testCompoundArray();
         test.testCompoundArrayBlockWise();
         test.testCompoundMDArray();
@@ -2726,6 +2727,74 @@ public class HDF5RoundtripTest
         {
             writer.close();
         }
+    }
+
+    static class BitFieldRecord
+    {
+        BitSet bs;
+
+        BitFieldRecord(BitSet bs)
+        {
+            this.bs = bs;
+        }
+
+        BitFieldRecord()
+        {
+        }
+
+        static HDF5CompoundMemberInformation[] getMemberInfo()
+        {
+            return HDF5CompoundMemberInformation.create(BitFieldRecord.class,
+                    mappingArray("bs", 40));
+        }
+
+        static HDF5CompoundType<BitFieldRecord> getHDF5Type(HDF5Reader reader)
+        {
+            return reader.getCompoundType(BitFieldRecord.class, mappingArray("bs", 40));
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (obj instanceof BitFieldRecord == false)
+            {
+                return false;
+            }
+            final BitFieldRecord that = (BitFieldRecord) obj;
+            return this.bs.equals(that.bs);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return bs.hashCode();
+        }
+    }
+
+    @Test
+    public void testBitFieldCompound()
+    {
+        final File file = new File(workingDirectory, "compoundWithBitField.h5");
+        file.delete();
+        assertFalse(file.exists());
+        //file.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(file).open();
+        HDF5CompoundType<BitFieldRecord> compoundType = BitFieldRecord.getHDF5Type(writer);
+        final BitSet bs = new BitSet();
+        bs.set(39);
+        final BitFieldRecord recordWritten = new BitFieldRecord(bs);
+        writer.writeCompound("/testCompound", compoundType, recordWritten);
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(file).open();
+        final HDF5CompoundMemberInformation[] memMemberInfo = BitFieldRecord.getMemberInfo();
+        final HDF5CompoundMemberInformation[] diskMemberInfo =
+                reader.getCompoundDataSetInformation("/testCompound");
+        assertTrue(Arrays.equals(memMemberInfo, diskMemberInfo));
+        compoundType = BitFieldRecord.getHDF5Type(reader);
+        final BitFieldRecord recordRead =
+                reader.readCompound("/testCompound", compoundType);
+        assertEquals(recordWritten, recordRead);
+        reader.close();
     }
 
     @Test
