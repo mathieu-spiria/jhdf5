@@ -2716,7 +2716,7 @@ public class HDF5RoundtripTest
         {
             writer.writeCompound("/testCompound", compoundType, recordWritten);
             fail("Failed to detect overflow.");
-        } catch (IllegalArgumentException ex)
+        } catch (HDF5JavaException ex)
         {
             if (ex.getMessage().contains("must not exceed 4 bytes") == false)
             {

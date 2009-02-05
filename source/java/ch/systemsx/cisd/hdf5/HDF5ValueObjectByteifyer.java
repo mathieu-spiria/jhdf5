@@ -122,7 +122,11 @@ class HDF5ValueObjectByteifyer<T>
         return dataTypeId;
     }
 
-    public byte[] byteify(int compoundDataTypeId, T[] arr)
+    /**
+     * @throw {@link HDF5JavaException} if one of the elements in <var>arr</var> exceeding its
+     *        pre-defined size.
+     */
+    public byte[] byteify(int compoundDataTypeId, T[] arr) throws HDF5JavaException
     {
         final byte[] barray = new byte[arr.length * recordSize];
         int offset = 0;
@@ -136,7 +140,7 @@ class HDF5ValueObjectByteifyer<T>
                     final byte[] b = byteifyer.byteify(compoundDataTypeId, obj);
                     if (b.length > byteifyer.getSize())
                     {
-                        throw new IllegalArgumentException("Compound " + byteifyer.describe()
+                        throw new HDF5JavaException("Compound " + byteifyer.describe()
                                 + " of array element " + counter + " must not exceed "
                                 + byteifyer.getSize() + " bytes, but is of size " + b.length
                                 + " bytes.");
@@ -153,7 +157,10 @@ class HDF5ValueObjectByteifyer<T>
         return barray;
     }
 
-    public byte[] byteify(int compoundDataTypeId, T obj)
+    /**
+     * @throw {@link HDF5JavaException} if <var>obj</var> exceeding its pre-defined size.
+     */
+    public byte[] byteify(int compoundDataTypeId, T obj) throws HDF5JavaException
     {
         final byte[] barray = new byte[recordSize];
         for (HDF5MemberByteifyer byteifyer : byteifyers)
@@ -163,7 +170,7 @@ class HDF5ValueObjectByteifyer<T>
                 final byte[] b = byteifyer.byteify(compoundDataTypeId, obj);
                 if (b.length > byteifyer.getSize())
                 {
-                    throw new IllegalArgumentException("Compound " + byteifyer.describe()
+                    throw new HDF5JavaException("Compound " + byteifyer.describe()
                             + " must not exceed " + byteifyer.getSize() + " bytes, but is of size "
                             + b.length + " bytes.");
                 }
