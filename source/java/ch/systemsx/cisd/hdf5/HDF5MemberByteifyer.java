@@ -116,7 +116,7 @@ abstract class HDF5MemberByteifyer
             final int maxLength)
     {
         setAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, maxLength, offset)
+        return new HDF5MemberByteifyer(field, memberName, maxLength + 1, offset)
             {
                 @Override
                 protected int getMemberStorageTypeId()

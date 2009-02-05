@@ -109,80 +109,27 @@ public final class HDF5CompoundMemberMapping
     }
 
     /**
-     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings.
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings, primitive arrays.
+     * and {@link java.util.BitSet}s.
      * 
-     * @deprecated Use {@link #mappingString(String, String, int)} instead.
      * @param fieldName The name of the field in the Java class. Will also be used as name of
      *            member.
      * @param memberTypeLength The length of the String or the primitive array in the compound type.
      */
-    @Deprecated
     public static HDF5CompoundMemberMapping mapping(String fieldName, int memberTypeLength)
-    {
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, memberTypeLength + 1);
-    }
-
-    /**
-     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings.
-     * 
-     * @param fieldName The name of the field in the Java class. Will also be used as name of
-     *            member.
-     * @param memberTypeLength The length of the String or the primitive array in the compound type.
-     */
-    public static HDF5CompoundMemberMapping mappingString(String fieldName, int memberTypeLength)
-    {
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, memberTypeLength + 1);
-    }
-
-    /**
-     * Adds a member mapping for <var>fieldName</var>. Only suitable for primitive arrays.
-     * 
-     * @param fieldName The name of the field in the Java class. Will also be used as name of
-     *            member.
-     * @param memberTypeLength The length of the String or the primitive array in the compound type.
-     */
-    public static HDF5CompoundMemberMapping mappingArray(String fieldName, int memberTypeLength)
     {
         return new HDF5CompoundMemberMapping(fieldName, fieldName, null, memberTypeLength);
     }
 
     /**
-     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings.
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings, primitive arrays.
+     * and {@link java.util.BitSet}s.
      * 
-     * @deprecated Use {@link #mappingString(String, String, int)} instead.
      * @param fieldName The name of the field in the Java class.
      * @param memberName The name of the member in the compound type.
      * @param memberTypeLength The length of the String or the primitive array in the compound type.
      */
-    @Deprecated
     public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName,
-            int memberTypeLength)
-    {
-        return new HDF5CompoundMemberMapping(fieldName, memberName, null, memberTypeLength + 1);
-    }
-
-    /**
-     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings.
-     * 
-     * @param fieldName The name of the field in the Java class.
-     * @param memberName The name of the member in the compound type.
-     * @param memberTypeLength The length of the String or the primitive array in the compound type.
-     */
-    public static HDF5CompoundMemberMapping mappingString(String fieldName, String memberName,
-            int memberTypeLength)
-    {
-        return new HDF5CompoundMemberMapping(fieldName, memberName, null, memberTypeLength + 1);
-    }
-
-    /**
-     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings and primitive
-     * arrays.
-     * 
-     * @param fieldName The name of the field in the Java class.
-     * @param memberName The name of the member in the compound type.
-     * @param memberTypeLength The length of the String or the primitive array in the compound type.
-     */
-    public static HDF5CompoundMemberMapping mappingArray(String fieldName, String memberName,
             int memberTypeLength)
     {
         return new HDF5CompoundMemberMapping(fieldName, memberName, null, memberTypeLength);

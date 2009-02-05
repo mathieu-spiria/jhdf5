@@ -17,8 +17,6 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
-import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mappingString;
-import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mappingArray;
 import static org.testng.AssertJUnit.*;
 
 import java.io.File;
@@ -2593,18 +2591,18 @@ public class HDF5RoundtripTest
         {
             return new HDF5CompoundMemberMapping[]
                 { mapping("a"), mapping("b"), mapping("l"), mapping("c"), mapping("d"),
-                        mapping("e"), mappingString("f", 3), mapping("g", enumType),
-                        mappingArray("ar", 3), mappingArray("br", 2), mappingArray("lr", 3),
-                        mappingArray("cr", 1), mappingArray("dr", 2), mappingArray("er", 4) };
+                        mapping("e"), mapping("f", 3), mapping("g", enumType),
+                        mapping("ar", 3), mapping("br", 2), mapping("lr", 3),
+                        mapping("cr", 1), mapping("dr", 2), mapping("er", 4) };
         }
 
         private static HDF5CompoundMemberMapping[] getShuffledMapping(HDF5EnumerationType enumType)
         {
             return new HDF5CompoundMemberMapping[]
-                { mappingArray("er", 4), mapping("e"), mapping("b"), mappingArray("br", 2),
-                        mapping("g", enumType), mappingArray("lr", 3), mapping("c"),
-                        mappingArray("ar", 3), mapping("a"), mapping("d"), mappingArray("cr", 1),
-                        mappingString("f", 3), mappingArray("dr", 2), mapping("l") };
+                { mapping("er", 4), mapping("e"), mapping("b"), mapping("br", 2),
+                        mapping("g", enumType), mapping("lr", 3), mapping("c"),
+                        mapping("ar", 3), mapping("a"), mapping("d"), mapping("cr", 1),
+                        mapping("f", 3), mapping("dr", 2), mapping("l") };
         }
 
         //
@@ -2745,12 +2743,12 @@ public class HDF5RoundtripTest
         static HDF5CompoundMemberInformation[] getMemberInfo()
         {
             return HDF5CompoundMemberInformation.create(BitFieldRecord.class,
-                    mappingArray("bs", 40));
+                    mapping("bs", 40));
         }
 
         static HDF5CompoundType<BitFieldRecord> getHDF5Type(HDF5Reader reader)
         {
-            return reader.getCompoundType(BitFieldRecord.class, mappingArray("bs", 40));
+            return reader.getCompoundType(BitFieldRecord.class, mapping("bs", 40));
         }
 
         @Override
