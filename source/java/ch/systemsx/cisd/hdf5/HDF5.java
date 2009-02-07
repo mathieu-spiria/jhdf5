@@ -28,6 +28,7 @@ import ncsa.hdf.hdf5lib.H5;
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.common.array.MDArray;
 import ch.systemsx.cisd.common.process.CleanUpCallable;
 import ch.systemsx.cisd.common.process.CleanUpRegistry;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
@@ -1358,7 +1359,7 @@ class HDF5
                         if (layout == StorageLayout.CHUNKED)
                         {
                             H5Pget_chunk(creationPropertyList, rank, chunkSizes);
-                            dataSetInfo.setChunkSizes(chunkSizes);
+                            dataSetInfo.setChunkSizes(MDArray.toInt(chunkSizes));
                         }
                     }
                     return null; // Nothing to return

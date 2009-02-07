@@ -22,6 +22,8 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import ch.systemsx.cisd.common.array.MDArray;
+
 /**
  * A class that holds relevant information about a data set.
  * 
@@ -67,7 +69,7 @@ public final class HDF5DataSetInformation
 
     private StorageLayout storageLayout = StorageLayout.NOT_APPLICABLE;
 
-    private long[] chunkSizesOrNull;
+    private int[] chunkSizesOrNull;
 
     HDF5DataSetInformation(HDF5DataTypeInformation typeInformation,
             HDF5DataTypeVariant typeVariantOrNull)
@@ -162,12 +164,12 @@ public final class HDF5DataSetInformation
      * Returns the chunk size in each array dimension of the data set, or <code>null</code>, if the
      * data set is not of {@link StorageLayout#CHUNKED}.
      */
-    public long[] tryGetChunkSizes()
+    public int[] tryGetChunkSizes()
     {
         return chunkSizesOrNull;
     }
 
-    void setChunkSizes(long[] chunkSizes)
+    void setChunkSizes(int[] chunkSizes)
     {
         this.chunkSizesOrNull = chunkSizes;
     }
@@ -189,16 +191,19 @@ public final class HDF5DataSetInformation
     }
 
     /**
+     * Returns the total number of elements of this data set.
+     */
+    public long getNumberOfElements()
+    {
+        return MDArray.getLength(dimensions);
+    }
+
+    /**
      * Returns the total size (in bytes) of this data set.
      */
     public long getSize()
     {
-        int size = typeInformation.getElementSize();
-        for (long dim : dimensions)
-        {
-            size *= dim;
-        }
-        return size;
+        return MDArray.getLength(dimensions) * typeInformation.getElementSize();
     }
 
     //

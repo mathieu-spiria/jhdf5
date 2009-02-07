@@ -28,6 +28,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+
 import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
@@ -519,42 +521,13 @@ public class HDF5Reader implements HDF5SimpleReader
 
     private HDF5DataClass getDataClassForDataType(final int dataTypeId)
     {
-        HDF5DataClass dataClass = classIdToDataClass(h5.getClassType(dataTypeId));
+        HDF5DataClass dataClass = HDF5DataClass.classIdToDataClass(h5.getClassType(dataTypeId));
         // Is it a boolean?
         if (dataClass == HDF5DataClass.ENUM && h5.dataTypesAreEqual(dataTypeId, booleanDataTypeId))
         {
             dataClass = HDF5DataClass.BOOLEAN;
         }
         return dataClass;
-    }
-
-    private HDF5DataClass classIdToDataClass(final int classId)
-    {
-        if (H5T_BITFIELD == classId)
-        {
-            return HDF5DataClass.BITFIELD;
-        } else if (H5T_INTEGER == classId)
-        {
-            return HDF5DataClass.INTEGER;
-        } else if (H5T_FLOAT == classId)
-        {
-            return HDF5DataClass.FLOAT;
-        } else if (H5T_STRING == classId)
-        {
-            return HDF5DataClass.STRING;
-        } else if (H5T_OPAQUE == classId)
-        {
-            return HDF5DataClass.OPAQUE;
-        } else if (H5T_ENUM == classId)
-        {
-            return HDF5DataClass.ENUM;
-        } else if (H5T_COMPOUND == classId)
-        {
-            return HDF5DataClass.COMPOUND;
-        } else
-        {
-            return HDF5DataClass.OTHER;
-        }
     }
 
     // /////////////////////
@@ -711,10 +684,7 @@ public class HDF5Reader implements HDF5SimpleReader
     public HDF5EnumerationType getEnumType(final String name, final String[] values)
             throws HDF5JavaException
     {
-        checkOpen();
-        final HDF5EnumerationType dataType = getEnumType(name);
-        checkEnumValues(dataType.getStorageTypeId(), values, name);
-        return dataType;
+        return getEnumType(name, values, true);
     }
 
     /**
@@ -1191,6 +1161,7 @@ public class HDF5Reader implements HDF5SimpleReader
 
     /**
      * Reads a block from data set <var>objectPath</var> as byte array (of rank 1).
+     * <em>Must not be called for data sets of rank higher than 1!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSize The block size (this will be the length of the <code>byte[]</code>
@@ -1198,9 +1169,10 @@ public class HDF5Reader implements HDF5SimpleReader
      * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
      *            <var>blockSize</var>).
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set is not of rank 1.
      */
     public byte[] readAsByteArrayBlock(final String objectPath, final int blockSize,
-            final int blockNumber)
+            final long blockNumber) throws HDF5JavaException
     {
         checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
@@ -1224,15 +1196,17 @@ public class HDF5Reader implements HDF5SimpleReader
 
     /**
      * Reads a block from data set <var>objectPath</var> as byte array (of rank 1).
+     * <em>Must not be called for data sets of rank higher than 1!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSize The block size (this will be the length of the <code>byte[]</code>
      *            returned).
      * @param offset The offset of the block to read (starting with 0).
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the data set is not of rank 1.
      */
     public byte[] readAsByteArrayBlockWithOffset(final String objectPath, final int blockSize,
-            final int offset)
+            final long offset) throws HDF5JavaException
     {
         checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
@@ -1251,6 +1225,79 @@ public class HDF5Reader implements HDF5SimpleReader
                 }
             };
         return runner.call(readCallable);
+    }
+
+    /**
+     * Provides all natural blocks of this one-dimensional data set to iterate over.
+     * <em>Must not be called for data sets of rank higher than 1!</em>
+     * <p>
+     * <b>Note:</b> If the data set has a rank higher than 1, then the natural block size will be
+     * chosen to be the complete data set, even when the data set is chunked with a smaller chunk
+     * size!
+     * 
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<byte[]>> getAsByteArrayNaturalBlocks(final String dataSetPath)
+            throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<byte[]>>()
+            {
+                public Iterator<HDF5DataBlock<byte[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<byte[]>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<byte[]> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final byte[] block =
+                                        readAsByteArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                return new HDF5DataBlock<byte[]>(block, index++, offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
     }
 
     //
@@ -1699,6 +1746,167 @@ public class HDF5Reader implements HDF5SimpleReader
         return runner.call(readCallable);
     }
 
+    /**
+     * Provides all natural blocks of this one-dimensional data set to iterate over.
+     * 
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<byte[]>> getByteArrayNaturalBlocks(final String dataSetPath)
+            throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<byte[]>>()
+            {
+                public Iterator<HDF5DataBlock<byte[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<byte[]>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<byte[]> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final byte[] block =
+                                        readByteArrayBlockWithOffset(dataSetPath, blockSize, offset);
+                                return new HDF5DataBlock<byte[]>(block, index++, offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    /**
+     * Provides all natural blocks of this multi-dimensional data set to iterate over.
+     * 
+     * @see HDF5MDDataBlock
+     */
+    public Iterable<HDF5MDDataBlock<MDByteArray>> getByteMDArrayNaturalBlocks(
+            final String dataSetPath)
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        final int rank = info.getRank();
+        final int[] size = MDArray.toInt(info.getDimensions());
+        final int[] naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes() : size;
+        final long[] numberOfBlocks = new long[rank];
+        final int[] lastBlockSize = new int[rank];
+        for (int i = 0; i < size.length; ++i)
+        {
+            final int sizeModNaturalBlockSize = size[i] % naturalBlockSize[i];
+            numberOfBlocks[i] =
+                    (size[i] / naturalBlockSize[i]) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+            lastBlockSize[i] =
+                    (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize[i];
+        }
+
+        return new Iterable<HDF5MDDataBlock<MDByteArray>>()
+            {
+                public Iterator<HDF5MDDataBlock<MDByteArray>> iterator()
+                {
+                    return new Iterator<HDF5MDDataBlock<MDByteArray>>()
+                        {
+                            long[] index = new long[rank];
+
+                            long[] offset = new long[rank];
+
+                            int[] blockSize = naturalBlockSize.clone();
+
+                            boolean indexCalculated = true;
+
+                            public boolean hasNext()
+                            {
+                                if (indexCalculated)
+                                {
+                                    return true;
+                                }
+                                for (int i = index.length - 1; i >= 0; --i)
+                                {
+                                    ++index[i];
+                                    if (index[i] < numberOfBlocks[i])
+                                    {
+                                        offset[i] += naturalBlockSize[i];
+                                        if (index[i] == numberOfBlocks[i] - 1)
+                                        {
+                                            blockSize[i] = lastBlockSize[i];
+                                        }
+                                        indexCalculated = true;
+                                        break;
+                                    } else
+                                    {
+                                        index[i] = 0;
+                                        offset[i] = 0;
+                                        blockSize[i] = naturalBlockSize[i];
+                                    }
+                                }
+                                return indexCalculated;
+                            }
+
+                            public HDF5MDDataBlock<MDByteArray> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final MDByteArray data =
+                                        readByteMDArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                prepareNext();
+                                return new HDF5MDDataBlock<MDByteArray>(data, index.clone(), offset
+                                        .clone());
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+
+                            private void prepareNext()
+                            {
+                                indexCalculated = false;
+                            }
+                        };
+                }
+            };
+    }
+
     //
     // Short
     //
@@ -2062,6 +2270,168 @@ public class HDF5Reader implements HDF5SimpleReader
         return runner.call(readCallable);
     }
 
+    /**
+     * Provides all natural blocks of this one-dimensional data set to iterate over.
+     * 
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<short[]>> getShortArrayNaturalBlocks(final String dataSetPath)
+            throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<short[]>>()
+            {
+                public Iterator<HDF5DataBlock<short[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<short[]>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<short[]> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final short[] block =
+                                        readShortArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                return new HDF5DataBlock<short[]>(block, index++, offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    /**
+     * Provides all natural blocks of this multi-dimensional data set to iterate over.
+     * 
+     * @see HDF5MDDataBlock
+     */
+    public Iterable<HDF5MDDataBlock<MDShortArray>> getShortMDArrayNaturalBlocks(
+            final String dataSetPath)
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        final int rank = info.getRank();
+        final int[] size = MDArray.toInt(info.getDimensions());
+        final int[] naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes() : size;
+        final long[] numberOfBlocks = new long[rank];
+        final int[] lastBlockSize = new int[rank];
+        for (int i = 0; i < size.length; ++i)
+        {
+            final int sizeModNaturalBlockSize = size[i] % naturalBlockSize[i];
+            numberOfBlocks[i] =
+                    (size[i] / naturalBlockSize[i]) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+            lastBlockSize[i] =
+                    (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize[i];
+        }
+
+        return new Iterable<HDF5MDDataBlock<MDShortArray>>()
+            {
+                public Iterator<HDF5MDDataBlock<MDShortArray>> iterator()
+                {
+                    return new Iterator<HDF5MDDataBlock<MDShortArray>>()
+                        {
+                            long[] index = new long[rank];
+
+                            long[] offset = new long[rank];
+
+                            int[] blockSize = naturalBlockSize.clone();
+
+                            boolean indexCalculated = true;
+
+                            public boolean hasNext()
+                            {
+                                if (indexCalculated)
+                                {
+                                    return true;
+                                }
+                                for (int i = index.length - 1; i >= 0; --i)
+                                {
+                                    ++index[i];
+                                    if (index[i] < numberOfBlocks[i])
+                                    {
+                                        offset[i] += naturalBlockSize[i];
+                                        if (index[i] == numberOfBlocks[i] - 1)
+                                        {
+                                            blockSize[i] = lastBlockSize[i];
+                                        }
+                                        indexCalculated = true;
+                                        break;
+                                    } else
+                                    {
+                                        index[i] = 0;
+                                        offset[i] = 0;
+                                        blockSize[i] = naturalBlockSize[i];
+                                    }
+                                }
+                                return indexCalculated;
+                            }
+
+                            public HDF5MDDataBlock<MDShortArray> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final MDShortArray data =
+                                        readShortMDArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                prepareNext();
+                                return new HDF5MDDataBlock<MDShortArray>(data, index.clone(),
+                                        offset.clone());
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+
+                            private void prepareNext()
+                            {
+                                indexCalculated = false;
+                            }
+                        };
+                }
+            };
+    }
+
     //
     // Int
     //
@@ -2421,6 +2791,166 @@ public class HDF5Reader implements HDF5SimpleReader
                         }
                     };
         return runner.call(readCallable);
+    }
+
+    /**
+     * Provides all natural blocks of this one-dimensional data set to iterate over.
+     * 
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<int[]>> getIntArrayNaturalBlocks(final String dataSetPath)
+            throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<int[]>>()
+            {
+                public Iterator<HDF5DataBlock<int[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<int[]>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<int[]> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final int[] block =
+                                        readIntArrayBlockWithOffset(dataSetPath, blockSize, offset);
+                                return new HDF5DataBlock<int[]>(block, index++, offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    /**
+     * Provides all natural blocks of this multi-dimensional data set to iterate over.
+     * 
+     * @see HDF5MDDataBlock
+     */
+    public Iterable<HDF5MDDataBlock<MDIntArray>> getIntMDArrayNaturalBlocks(final String dataSetPath)
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        final int rank = info.getRank();
+        final int[] size = MDArray.toInt(info.getDimensions());
+        final int[] naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes() : size;
+        final long[] numberOfBlocks = new long[rank];
+        final int[] lastBlockSize = new int[rank];
+        for (int i = 0; i < size.length; ++i)
+        {
+            final int sizeModNaturalBlockSize = size[i] % naturalBlockSize[i];
+            numberOfBlocks[i] =
+                    (size[i] / naturalBlockSize[i]) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+            lastBlockSize[i] =
+                    (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize[i];
+        }
+
+        return new Iterable<HDF5MDDataBlock<MDIntArray>>()
+            {
+                public Iterator<HDF5MDDataBlock<MDIntArray>> iterator()
+                {
+                    return new Iterator<HDF5MDDataBlock<MDIntArray>>()
+                        {
+                            long[] index = new long[rank];
+
+                            long[] offset = new long[rank];
+
+                            int[] blockSize = naturalBlockSize.clone();
+
+                            boolean indexCalculated = true;
+
+                            public boolean hasNext()
+                            {
+                                if (indexCalculated)
+                                {
+                                    return true;
+                                }
+                                for (int i = index.length - 1; i >= 0; --i)
+                                {
+                                    ++index[i];
+                                    if (index[i] < numberOfBlocks[i])
+                                    {
+                                        offset[i] += naturalBlockSize[i];
+                                        if (index[i] == numberOfBlocks[i] - 1)
+                                        {
+                                            blockSize[i] = lastBlockSize[i];
+                                        }
+                                        indexCalculated = true;
+                                        break;
+                                    } else
+                                    {
+                                        index[i] = 0;
+                                        offset[i] = 0;
+                                        blockSize[i] = naturalBlockSize[i];
+                                    }
+                                }
+                                return indexCalculated;
+                            }
+
+                            public HDF5MDDataBlock<MDIntArray> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final MDIntArray data =
+                                        readIntMDArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                prepareNext();
+                                return new HDF5MDDataBlock<MDIntArray>(data, index.clone(), offset
+                                        .clone());
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+
+                            private void prepareNext()
+                            {
+                                indexCalculated = false;
+                            }
+                        };
+                }
+            };
     }
 
     //
@@ -2785,6 +3315,167 @@ public class HDF5Reader implements HDF5SimpleReader
         return runner.call(readCallable);
     }
 
+    /**
+     * Provides all natural blocks of this one-dimensional data set to iterate over.
+     * 
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<long[]>> getLongArrayNaturalBlocks(final String dataSetPath)
+            throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<long[]>>()
+            {
+                public Iterator<HDF5DataBlock<long[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<long[]>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<long[]> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final long[] block =
+                                        readLongArrayBlockWithOffset(dataSetPath, blockSize, offset);
+                                return new HDF5DataBlock<long[]>(block, index++, offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    /**
+     * Provides all natural blocks of this multi-dimensional data set to iterate over.
+     * 
+     * @see HDF5MDDataBlock
+     */
+    public Iterable<HDF5MDDataBlock<MDLongArray>> getLongMDArrayNaturalBlocks(
+            final String dataSetPath)
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        final int rank = info.getRank();
+        final int[] size = MDArray.toInt(info.getDimensions());
+        final int[] naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes() : size;
+        final long[] numberOfBlocks = new long[rank];
+        final int[] lastBlockSize = new int[rank];
+        for (int i = 0; i < size.length; ++i)
+        {
+            final int sizeModNaturalBlockSize = size[i] % naturalBlockSize[i];
+            numberOfBlocks[i] =
+                    (size[i] / naturalBlockSize[i]) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+            lastBlockSize[i] =
+                    (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize[i];
+        }
+
+        return new Iterable<HDF5MDDataBlock<MDLongArray>>()
+            {
+                public Iterator<HDF5MDDataBlock<MDLongArray>> iterator()
+                {
+                    return new Iterator<HDF5MDDataBlock<MDLongArray>>()
+                        {
+                            long[] index = new long[rank];
+
+                            long[] offset = new long[rank];
+
+                            int[] blockSize = naturalBlockSize.clone();
+
+                            boolean indexCalculated = true;
+
+                            public boolean hasNext()
+                            {
+                                if (indexCalculated)
+                                {
+                                    return true;
+                                }
+                                for (int i = index.length - 1; i >= 0; --i)
+                                {
+                                    ++index[i];
+                                    if (index[i] < numberOfBlocks[i])
+                                    {
+                                        offset[i] += naturalBlockSize[i];
+                                        if (index[i] == numberOfBlocks[i] - 1)
+                                        {
+                                            blockSize[i] = lastBlockSize[i];
+                                        }
+                                        indexCalculated = true;
+                                        break;
+                                    } else
+                                    {
+                                        index[i] = 0;
+                                        offset[i] = 0;
+                                        blockSize[i] = naturalBlockSize[i];
+                                    }
+                                }
+                                return indexCalculated;
+                            }
+
+                            public HDF5MDDataBlock<MDLongArray> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final MDLongArray data =
+                                        readLongMDArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                prepareNext();
+                                return new HDF5MDDataBlock<MDLongArray>(data, index.clone(), offset
+                                        .clone());
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+
+                            private void prepareNext()
+                            {
+                                indexCalculated = false;
+                            }
+                        };
+                }
+            };
+    }
+
     //
     // Float
     //
@@ -3146,6 +3837,168 @@ public class HDF5Reader implements HDF5SimpleReader
                         }
                     };
         return runner.call(readCallable);
+    }
+
+    /**
+     * Provides all natural blocks of this one-dimensional data set to iterate over.
+     * 
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<float[]>> getFloatArrayNaturalBlocks(final String dataSetPath)
+            throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<float[]>>()
+            {
+                public Iterator<HDF5DataBlock<float[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<float[]>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<float[]> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final float[] block =
+                                        readFloatArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                return new HDF5DataBlock<float[]>(block, index++, offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    /**
+     * Provides all natural blocks of this multi-dimensional data set to iterate over.
+     * 
+     * @see HDF5MDDataBlock
+     */
+    public Iterable<HDF5MDDataBlock<MDFloatArray>> getFloatMDArrayNaturalBlocks(
+            final String dataSetPath)
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        final int rank = info.getRank();
+        final int[] size = MDArray.toInt(info.getDimensions());
+        final int[] naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes() : size;
+        final long[] numberOfBlocks = new long[rank];
+        final int[] lastBlockSize = new int[rank];
+        for (int i = 0; i < size.length; ++i)
+        {
+            final int sizeModNaturalBlockSize = size[i] % naturalBlockSize[i];
+            numberOfBlocks[i] =
+                    (size[i] / naturalBlockSize[i]) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+            lastBlockSize[i] =
+                    (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize[i];
+        }
+
+        return new Iterable<HDF5MDDataBlock<MDFloatArray>>()
+            {
+                public Iterator<HDF5MDDataBlock<MDFloatArray>> iterator()
+                {
+                    return new Iterator<HDF5MDDataBlock<MDFloatArray>>()
+                        {
+                            long[] index = new long[rank];
+
+                            long[] offset = new long[rank];
+
+                            int[] blockSize = naturalBlockSize.clone();
+
+                            boolean indexCalculated = true;
+
+                            public boolean hasNext()
+                            {
+                                if (indexCalculated)
+                                {
+                                    return true;
+                                }
+                                for (int i = index.length - 1; i >= 0; --i)
+                                {
+                                    ++index[i];
+                                    if (index[i] < numberOfBlocks[i])
+                                    {
+                                        offset[i] += naturalBlockSize[i];
+                                        if (index[i] == numberOfBlocks[i] - 1)
+                                        {
+                                            blockSize[i] = lastBlockSize[i];
+                                        }
+                                        indexCalculated = true;
+                                        break;
+                                    } else
+                                    {
+                                        index[i] = 0;
+                                        offset[i] = 0;
+                                        blockSize[i] = naturalBlockSize[i];
+                                    }
+                                }
+                                return indexCalculated;
+                            }
+
+                            public HDF5MDDataBlock<MDFloatArray> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final MDFloatArray data =
+                                        readFloatMDArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                prepareNext();
+                                return new HDF5MDDataBlock<MDFloatArray>(data, index.clone(),
+                                        offset.clone());
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+
+                            private void prepareNext()
+                            {
+                                indexCalculated = false;
+                            }
+                        };
+                }
+            };
     }
 
     //
@@ -3512,6 +4365,168 @@ public class HDF5Reader implements HDF5SimpleReader
         return runner.call(readCallable);
     }
 
+    /**
+     * Provides all natural blocks of this one-dimensional data set to iterate over.
+     * 
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<double[]>> getDoubleArrayNaturalBlocks(final String dataSetPath)
+            throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<double[]>>()
+            {
+                public Iterator<HDF5DataBlock<double[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<double[]>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<double[]> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final double[] block =
+                                        readDoubleArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                return new HDF5DataBlock<double[]>(block, index++, offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    /**
+     * Provides all natural blocks of this multi-dimensional data set to iterate over.
+     * 
+     * @see HDF5MDDataBlock
+     */
+    public Iterable<HDF5MDDataBlock<MDDoubleArray>> getDoubleMDArrayNaturalBlocks(
+            final String dataSetPath)
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        final int rank = info.getRank();
+        final int[] size = MDArray.toInt(info.getDimensions());
+        final int[] naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes() : size;
+        final long[] numberOfBlocks = new long[rank];
+        final int[] lastBlockSize = new int[rank];
+        for (int i = 0; i < size.length; ++i)
+        {
+            final int sizeModNaturalBlockSize = size[i] % naturalBlockSize[i];
+            numberOfBlocks[i] =
+                    (size[i] / naturalBlockSize[i]) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+            lastBlockSize[i] =
+                    (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize[i];
+        }
+
+        return new Iterable<HDF5MDDataBlock<MDDoubleArray>>()
+            {
+                public Iterator<HDF5MDDataBlock<MDDoubleArray>> iterator()
+                {
+                    return new Iterator<HDF5MDDataBlock<MDDoubleArray>>()
+                        {
+                            long[] index = new long[rank];
+
+                            long[] offset = new long[rank];
+
+                            int[] blockSize = naturalBlockSize.clone();
+
+                            boolean indexCalculated = true;
+
+                            public boolean hasNext()
+                            {
+                                if (indexCalculated)
+                                {
+                                    return true;
+                                }
+                                for (int i = index.length - 1; i >= 0; --i)
+                                {
+                                    ++index[i];
+                                    if (index[i] < numberOfBlocks[i])
+                                    {
+                                        offset[i] += naturalBlockSize[i];
+                                        if (index[i] == numberOfBlocks[i] - 1)
+                                        {
+                                            blockSize[i] = lastBlockSize[i];
+                                        }
+                                        indexCalculated = true;
+                                        break;
+                                    } else
+                                    {
+                                        index[i] = 0;
+                                        offset[i] = 0;
+                                        blockSize[i] = naturalBlockSize[i];
+                                    }
+                                }
+                                return indexCalculated;
+                            }
+
+                            public HDF5MDDataBlock<MDDoubleArray> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final MDDoubleArray data =
+                                        readDoubleMDArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                prepareNext();
+                                return new HDF5MDDataBlock<MDDoubleArray>(data, index.clone(),
+                                        offset.clone());
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+
+                            private void prepareNext()
+                            {
+                                indexCalculated = false;
+                            }
+                        };
+                }
+            };
+    }
+
     // ------------------------------------------------------------------------------
     // GENERATED CODE SECTION - END
     // ------------------------------------------------------------------------------
@@ -3664,6 +4679,74 @@ public class HDF5Reader implements HDF5SimpleReader
     }
 
     /**
+     * Provides all natural blocks of this one-dimensional data set of time stamps to iterate over.
+     * 
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<long[]>> getTimeStampArrayNaturalBlocks(final String dataSetPath)
+            throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<long[]>>()
+            {
+                public Iterator<HDF5DataBlock<long[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<long[]>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<long[]> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final long[] block =
+                                        readTimeStampArrayBlockWithOffset(dataSetPath, blockSize,
+                                                offset);
+                                return new HDF5DataBlock<long[]>(block, index++, offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    /**
      * Reads a time stamp value from the data set <var>objectPath</var> and returns it as a
      * {@link Date}. The time stamp is stored as a <code>long</code> value in the HDF5 file. It
      * needs to be tagged as type variant
@@ -3700,7 +4783,7 @@ public class HDF5Reader implements HDF5SimpleReader
     public static Date[] timeStampsToDates(final long[] timeStampArray)
     {
         assert timeStampArray != null;
-        
+
         final Date[] dateArray = new Date[timeStampArray.length];
         for (int i = 0; i < dateArray.length; ++i)
         {
@@ -3937,6 +5020,75 @@ public class HDF5Reader implements HDF5SimpleReader
         return runner.call(readCallable);
     }
 
+    /**
+     * Provides all natural blocks of this one-dimensional data set of time stamps to iterate over.
+     * 
+     * @param timeUnit The time unit that the duration should be converted to.
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<long[]>> getTimeDurationArrayNaturalBlocks(
+            final String dataSetPath, final HDF5TimeUnit timeUnit) throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<long[]>>()
+            {
+                public Iterator<HDF5DataBlock<long[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<long[]>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<long[]> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final long[] block =
+                                        readTimeDurationArrayBlockWithOffset(dataSetPath,
+                                                blockSize, offset, timeUnit);
+                                return new HDF5DataBlock<long[]>(block, index++, offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
     protected HDF5TimeUnit checkIsTimeDuration(final String objectPath, final int dataSetId,
             ICleanUpRegistry registry) throws HDF5JavaException
     {
@@ -3948,8 +5100,8 @@ public class HDF5Reader implements HDF5SimpleReader
         return HDF5DataTypeVariant.getTimeUnit(typeVariantOrdinal);
     }
 
-    static void convertTimeDurations(final HDF5TimeUnit timeUnit,
-            final HDF5TimeUnit storedUnit, final long[] data)
+    static void convertTimeDurations(final HDF5TimeUnit timeUnit, final HDF5TimeUnit storedUnit,
+            final long[] data)
     {
         if (timeUnit != storedUnit)
         {
@@ -4549,6 +5701,75 @@ public class HDF5Reader implements HDF5SimpleReader
         checkOpen();
         type.check(fileId);
         return primReadCompoundArray(objectPath, blockSize, offset, type);
+    }
+
+    /**
+     * Provides all natural blocks of this one-dimensional data set of compounds to iterate over.
+     * 
+     * @param type The type definition of this compound type.
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String dataSetPath,
+            final HDF5CompoundType<T> type) throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<T[]>>()
+            {
+                public Iterator<HDF5DataBlock<T[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<T[]>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<T[]> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final T[] block =
+                                        readCompoundArrayBlockWithOffset(dataSetPath, type,
+                                                blockSize, offset);
+                                return new HDF5DataBlock<T[]>(block, index++, offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
     }
 
     private <T> T primReadCompound(final String objectPath, final int blockSize, final long offset,

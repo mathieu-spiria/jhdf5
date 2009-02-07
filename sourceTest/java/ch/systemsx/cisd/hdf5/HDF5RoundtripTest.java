@@ -43,6 +43,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import ch.systemsx.cisd.common.array.MDArray;
@@ -117,7 +118,59 @@ public class HDF5RoundtripTest
         test.testStringArrayCompression();
         test.testReadMDFloatArray();
         test.testReadToFloatMDArray();
+        test.testIterateOverFloatArrayInNaturalBlocks(10, 99);
+        test.testIterateOverFloatArrayInNaturalBlocks(10, 100);
+        test.testIterateOverFloatArrayInNaturalBlocks(10, 101);
         test.testReadToFloatMDArrayBlockWithOffset();
+        test.testIterateOverMDFloatArrayInNaturalBlocks(new int[]
+            { 2, 2 }, new long[]
+            { 4, 3 }, new float[]
+            { 0f, 2f, 6f, 8f }, new int[][]
+            {
+                { 2, 2 },
+                { 2, 1 },
+                { 2, 2 },
+                { 2, 1 } });
+        test.testIterateOverMDFloatArrayInNaturalBlocks(new int[]
+            { 2, 2 }, new long[]
+            { 4, 4 }, new float[]
+            { 0f, 2f, 8f, 10f }, new int[][]
+            {
+                { 2, 2 },
+                { 2, 2 },
+                { 2, 2 },
+                { 2, 2 } });
+        test.testIterateOverMDFloatArrayInNaturalBlocks(new int[]
+            { 2, 2 }, new long[]
+            { 4, 5 }, new float[]
+            { 0f, 2f, 4f, 10f, 12f, 14f }, new int[][]
+            {
+                { 2, 2 },
+                { 2, 2 },
+                { 2, 1 },
+                { 2, 2 },
+                { 2, 2 },
+                { 2, 1 } });
+        test.testIterateOverMDFloatArrayInNaturalBlocks(new int[]
+            { 3, 2 }, new long[]
+            { 5, 4 }, new float[]
+            { 0f, 2f, 12f, 14f }, new int[][]
+            {
+                { 3, 2 },
+                { 3, 2 },
+                { 2, 2 },
+                { 2, 2 } });
+        test.testIterateOverMDFloatArrayInNaturalBlocks(new int[]
+            { 2, 2 }, new long[]
+            { 5, 4 }, new float[]
+            { 0f, 2f, 8f, 10f, 16f, 18f }, new int[][]
+            {
+                { 2, 2 },
+                { 2, 2 },
+                { 2, 2 },
+                { 2, 2 },
+                { 1, 2 },
+                { 1, 2 } });
         test.testMDFloatArrayBlockWise();
         test.testMDFloatArrayBlockWiseWithMemoryOffset();
         test.testCompressedDataSet();
@@ -333,7 +386,7 @@ public class HDF5RoundtripTest
             final long... expectedChunkSize)
     {
         assertEquals(StorageLayout.CHUNKED, info.getStorageLayout());
-        final long[] chunkSize = info.tryGetChunkSizes();
+        final int[] chunkSize = info.tryGetChunkSizes();
         assertNotNull(chunkSize);
         assertEquals(expectedChunkSize.length, chunkSize.length);
         for (int i = 0; i < expectedChunkSize.length; ++i)
@@ -1122,6 +1175,59 @@ public class HDF5RoundtripTest
         }
     }
 
+    @SuppressWarnings("unused")
+    @DataProvider
+    private Object[][] provideSizes()
+    {
+        return new Object[][]
+            {
+                { 10, 99 },
+                { 10, 100 },
+                { 10, 101 } };
+    }
+
+    @Test(dataProvider = "provideSizes")
+    public void testIterateOverFloatArrayInNaturalBlocks(int blockSize, int dataSetSize)
+    {
+        final File datasetFile =
+                new File(workingDirectory, "iterateOverFloatArrayInNaturalBlocks.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).open();
+        final String dsName = "ds";
+        final float[] arrayWritten = new float[dataSetSize];
+        for (int i = 0; i < dataSetSize; ++i)
+        {
+            arrayWritten[i] = i;
+        }
+        writer.createFloatArray(dsName, dataSetSize, blockSize);
+        writer.writeFloatArray(dsName, arrayWritten);
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        int i = 0;
+        for (HDF5DataBlock<float[]> block : reader.getFloatArrayNaturalBlocks(dsName))
+        {
+            assertEquals(i, block.getIndex());
+            assertEquals(blockSize * i, block.getOffset());
+            final float[] arrayReadBlock = block.getData();
+            if (blockSize * (i + 1) > dataSetSize)
+            {
+                assertEquals(dataSetSize - i * blockSize, arrayReadBlock.length);
+            } else
+            {
+                assertEquals(blockSize, arrayReadBlock.length);
+            }
+            final float[] arrayWrittenBlock = new float[arrayReadBlock.length];
+            System.arraycopy(arrayWritten, (int) block.getOffset(), arrayWrittenBlock, 0,
+                    arrayWrittenBlock.length);
+            assertTrue(Arrays.equals(arrayWrittenBlock, arrayReadBlock));
+            ++i;
+        }
+        assertEquals(dataSetSize / blockSize + (dataSetSize % blockSize != 0 ? 1 : 0), i);
+        reader.close();
+    }
+
     @Test
     public void testReadToFloatMDArrayBlockWithOffset()
     {
@@ -1170,6 +1276,105 @@ public class HDF5RoundtripTest
                 }
             }
         }
+    }
+
+    @SuppressWarnings("unused")
+    @DataProvider
+    private Object[][] provideMDSizes()
+    {
+        return new Object[][]
+            {
+                { new int[]
+                    { 2, 2 }, new long[]
+                    { 4, 3 }, new float[]
+                    { 0f, 2f, 6f, 8f }, new int[][]
+                    {
+                        { 2, 2 },
+                        { 2, 1 },
+                        { 2, 2 },
+                        { 2, 1 } } },
+                { new int[]
+                    { 2, 2 }, new long[]
+                    { 4, 4 }, new float[]
+                    { 0f, 2f, 8f, 10f }, new int[][]
+                    {
+                        { 2, 2 },
+                        { 2, 2 },
+                        { 2, 2 },
+                        { 2, 2 } } },
+                { new int[]
+                    { 2, 2 }, new long[]
+                    { 4, 5 }, new float[]
+                    { 0f, 2f, 4f, 10f, 12f, 14f }, new int[][]
+                    {
+                        { 2, 2 },
+                        { 2, 2 },
+                        { 2, 1 },
+                        { 2, 2 },
+                        { 2, 2 },
+                        { 2, 1 } } },
+                { new int[]
+                    { 3, 2 }, new long[]
+                    { 5, 4 }, new float[]
+                    { 0f, 2f, 12f, 14f }, new int[][]
+                    {
+                        { 3, 2 },
+                        { 3, 2 },
+                        { 2, 2 },
+                        { 2, 2 } } },
+                { new int[]
+                    { 2, 2 }, new long[]
+                    { 5, 4 }, new float[]
+                    { 0f, 2f, 8f, 10f, 16f, 18f }, new int[][]
+                    {
+                        { 2, 2 },
+                        { 2, 2 },
+                        { 2, 2 },
+                        { 2, 2 },
+                        { 1, 2 },
+                        { 1, 2 } } }, };
+    }
+
+    @Test(dataProvider = "provideMDSizes")
+    public void testIterateOverMDFloatArrayInNaturalBlocks(int[] blockSize, long[] dataSetSize,
+            float[] firstNumberPerIteration, int[][] blockSizePerIteration)
+    {
+        final File datasetFile =
+                new File(workingDirectory, "iterateOverMDFloatArrayInNaturalBlocks.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5Writer(datasetFile).open();
+        final String dsName = "ds";
+        final float[] flattenedArray = new float[getNumberOfElements(dataSetSize)];
+        for (int i = 0; i < flattenedArray.length; ++i)
+        {
+            flattenedArray[i] = i;
+        }
+        final MDFloatArray arrayWritten = new MDFloatArray(flattenedArray, dataSetSize);
+        writer.createFloatMDArray(dsName, dataSetSize, blockSize);
+        writer.writeFloatMDArray(dsName, arrayWritten);
+        writer.close();
+        final HDF5Reader reader = new HDF5Reader(datasetFile).open();
+        int i = 0;
+        for (HDF5MDDataBlock<MDFloatArray> block : reader.getFloatMDArrayNaturalBlocks(dsName))
+        {
+            assertEquals(firstNumberPerIteration[i], block.getData().get(0, 0));
+            assertTrue(Arrays.equals(block.getData().dimensions(), blockSizePerIteration[i]));
+            ++i;
+        }
+        assertEquals(firstNumberPerIteration.length, i);
+        reader.close();
+    }
+
+    private static int getNumberOfElements(long[] size)
+    {
+        int elements = 1;
+        for (long dim : size)
+        {
+            elements *= dim;
+        }
+        return elements;
     }
 
     @Test

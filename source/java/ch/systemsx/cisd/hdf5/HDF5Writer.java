@@ -1004,7 +1004,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * created the data set.
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link #readAsByteArrayBlock(String, int, int)} instead.
+     * {@link #readAsByteArrayBlock(String, int, long)} instead.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -1055,7 +1055,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * created the data set.
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link #readAsByteArrayBlockWithOffset(String, int, int)} instead.
+     * {@link #readAsByteArrayBlockWithOffset(String, int, long)} instead.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
