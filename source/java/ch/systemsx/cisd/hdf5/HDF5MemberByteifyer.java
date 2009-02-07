@@ -550,16 +550,8 @@ abstract class HDF5MemberByteifyer
 
     public final void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
     {
-        // Workaround: calling H5Tget_native_type() on one of the bit field types in 1.8.2 throws an 
-        // "HDF5FunctionArgumentException: Invalid arguments to routine: Inappropriate type"
-        if (getMemberStorageTypeId() == H5T_STD_B64LE || getMemberStorageTypeId() == H5T_STD_B64BE)
-        {
-            H5Tinsert(dataTypeId, memberName, offset, H5T_NATIVE_B64);
-        } else
-        {
-            H5Tinsert(dataTypeId, memberName, offset, h5.getNativeDataType(getMemberStorageTypeId(),
-                    registry));
-        }
+        H5Tinsert(dataTypeId, memberName, offset, h5.getNativeDataTypeCheckBitFields(
+                getMemberStorageTypeId(), registry));
     }
 
     public final int getSize()
