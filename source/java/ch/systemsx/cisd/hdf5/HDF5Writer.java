@@ -44,7 +44,7 @@ import ch.systemsx.cisd.common.array.MDLongArray;
 import ch.systemsx.cisd.common.array.MDShortArray;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.HDF5.StorageLayout;
+import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 
 /**
  * A class for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).
@@ -4918,6 +4918,59 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     }
 
     /**
+     * Creates a time stamp array (of rank 1).
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param length The length of the data set to create.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link #dontUseExtendableDataTypes()}) and
+     *            <code>deflate == false</code>.
+     */
+    public void createTimeStampArray(final String objectPath, final long length, final int blockSize)
+    {
+        createTimeStampArray(objectPath, length, blockSize, false);
+    }
+
+    /**
+     * Creates a time stamp array (of rank 1).
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param length The length of the data set to create.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link #dontUseExtendableDataTypes()}) and
+     *            <code>deflate == false</code>.
+     * @param deflate If <code>true</code>, the data set will be compressed.
+     */
+    public void createTimeStampArray(final String objectPath, final long length,
+            final int blockSize, final boolean deflate)
+    {
+        assert objectPath != null;
+        assert length > 0;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            createDataSet(objectPath, H5T_STD_I64LE, getDeflateLevel(deflate),
+                                    new long[]
+                                        { length }, new long[]
+                                        { blockSize }, false, registry);
+                    addTypeVariant(dataSetId,
+                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                            registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
      * Writes out a time stamp array (of rank 1). The data set will be tagged as type variant
      * {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      * <p>
@@ -4961,6 +5014,97 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     addTypeVariant(dataSetId,
                             HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                             registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Writes out a block of a time stamp array (which is stored as a <code>long</code> array of
+     * rank 1). The data set needs to have been created by
+     * {@link #createTimeStampArray(String, long, int, boolean)} beforehand.
+     * <p>
+     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
+     * to the <var>blockSize</var> argument of the
+     * {@link #createLongArray(String, long, int, boolean)} call that was used to create the data
+     * set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param blockNumber The number of the block to write.
+     */
+    public void writeTimeStampArrayBlock(final String objectPath, final long[] data,
+            final long blockNumber)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final long[] slabStartOrNull = new long[]
+                        { data.length * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    checkIsTimeStamp(objectPath, dataSetId, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Writes out a block of a time stamp array (which is stored as a <code>long</code> array of
+     * rank 1). The data set needs to have been created by
+     * {@link #createTimeStampArray(String, long, int, boolean)} beforehand.
+     * <p>
+     * Use this method instead of {@link #writeTimeStampArrayBlock(String, long[], long)} if the
+     * total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #createLongArray(String, long, int, boolean)} call that was used to create the data
+     * set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
+     *            )
+     * @param offset The offset in the data set to start writing to.
+     */
+    public void writeTimeStampArrayBlockWithOffset(final String objectPath, final long[] data,
+            final int dataSize, final long offset)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    checkIsTimeStamp(objectPath, dataSetId, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
             };
@@ -5026,7 +5170,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         writeTimeStampArray(objectPath, datesToTimeStamps(dates), deflate);
     }
 
-    private long[] datesToTimeStamps(Date[] dates)
+    /**
+     * Converts an array of {@link Date}s into an array of time stamps.
+     */
+    public static long[] datesToTimeStamps(Date[] dates)
     {
         assert dates != null;
 
@@ -5149,6 +5296,60 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     }
 
     /**
+     * Creates a time duration array (of rank 1).
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param length The length of the data set to create.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link #dontUseExtendableDataTypes()}) and
+     *            <code>deflate == false</code>.
+     * @param timeUnit The unit of the time duration.
+     */
+    public void createTimeDurationArray(final String objectPath, final long length,
+            final int blockSize, final HDF5TimeUnit timeUnit)
+    {
+        createTimeDurationArray(objectPath, length, blockSize, timeUnit, false);
+    }
+
+    /**
+     * Creates a time duration array (of rank 1).
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param length The length of the data set to create.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link #dontUseExtendableDataTypes()}) and
+     *            <code>deflate == false</code>.
+     * @param timeUnit The unit of the time duration.
+     * @param deflate If <code>true</code>, the data set will be compressed.
+     */
+    public void createTimeDurationArray(final String objectPath, final long length,
+            final int blockSize, final HDF5TimeUnit timeUnit, final boolean deflate)
+    {
+        assert objectPath != null;
+        assert length > 0;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            createDataSet(objectPath, H5T_STD_I64LE, getDeflateLevel(deflate),
+                                    new long[]
+                                        { length }, new long[]
+                                        { blockSize }, false, registry);
+                    addTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
      * Writes out a time duration array in seconds (of rank 1). The data set will be tagged as type
      * variant {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
      * <p>
@@ -5205,6 +5406,102 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeDurations);
                     addTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Writes out a block of a time duration array (which is stored as a <code>long</code> array of
+     * rank 1). The data set needs to have been created by
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, boolean)} beforehand.
+     * <p>
+     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
+     * to the <var>blockSize</var> argument of the
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, boolean)} call that was used
+     * to create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param blockNumber The number of the block to write.
+     */
+    public void writeTimeDurationArrayBlock(final String objectPath, final long[] data,
+            final long blockNumber, final HDF5TimeUnit timeUnit)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { data.length };
+                    final long[] slabStartOrNull = new long[]
+                        { data.length * blockNumber };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final HDF5TimeUnit storedUnit =
+                            checkIsTimeDuration(objectPath, dataSetId, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(dimensions, registry);
+                    convertTimeDurations(timeUnit, storedUnit, data);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeRunnable);
+    }
+
+    /**
+     * Writes out a block of a time duration array (which is stored as a <code>long</code> array of
+     * rank 1). The data set needs to have been created by
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, boolean)} beforehand.
+     * <p>
+     * Use this method instead of
+     * {@link #writeTimeDurationArrayBlock(String, long[], long, HDF5TimeUnit)} if the total size
+     * of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, boolean)} call that was used
+     * to create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
+     *            )
+     * @param offset The offset in the data set to start writing to.
+     */
+    public void writeTimeDurationArrayBlockWithOffset(final String objectPath, final long[] data,
+            final int dataSize, final long offset, final HDF5TimeUnit timeUnit)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final HDF5TimeUnit storedUnit =
+                            checkIsTimeDuration(objectPath, dataSetId, registry);
+                    final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, registry);
+                    h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId = h5.createSimpleDataSpace(blockDimensions, registry);
+                    convertTimeDurations(timeUnit, storedUnit, data);
+                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
             };
@@ -5270,9 +5567,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int stringDataTypeId = h5.createDataTypeString(maxLength + 1, registry);
+                    final int definiteMaxLength = maxLength + 1;
+                    final int stringDataTypeId =
+                            h5.createDataTypeString(definiteMaxLength, registry);
                     final long[] chunkSizeOrNull =
-                            HDF5Utils.tryGetChunkSizeForString(maxLength, deflate);
+                            HDF5Utils.tryGetChunkSizeForString(definiteMaxLength, deflate);
                     final int dataSetId;
                     if (exists(objectPath))
                     {

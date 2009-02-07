@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import ch.rinn.restrictions.Private;
 import ch.systemsx.cisd.common.array.MDArray;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
@@ -28,7 +29,9 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 final class HDF5Utils
 {
 
-    private static final int MIN_CHUNK_SIZE = 4;
+    /** The minimal size of a chunk. */
+    @Private
+    static final int MIN_CHUNK_SIZE = 4;
 
     /** The minimal size of a data set in order to allow for chunking. */
     private static final long MIN_TOTAL_SIZE_FOR_CHUNKING = 128L;

@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import ncsa.hdf.hdf5lib.HDF5Constants;
+
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -27,6 +29,34 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  */
 public final class HDF5DataSetInformation
 {
+    /**
+     * The storage layout of a data set in the HDF5 file. Not applicable for attributes.
+     */
+    public enum StorageLayout
+    {
+        COMPACT(HDF5Constants.H5D_COMPACT), CONTIGUOUS(HDF5Constants.H5D_CONTIGUOUS), CHUNKED(
+                HDF5Constants.H5D_CHUNKED), VARIABLE_LENGTH(-1), NOT_APPLICABLE(-1);
+
+        private int id;
+
+        private StorageLayout(int id)
+        {
+            this.id = id;
+        }
+
+        static StorageLayout fromId(int id) throws IllegalArgumentException
+        {
+            for (StorageLayout layout : values())
+            {
+                if (layout.id == id)
+                {
+                    return layout;
+                }
+            }
+            throw new IllegalArgumentException("Illegal layout id " + id);
+        }
+    }
+
     private final HDF5DataTypeInformation typeInformation;
 
     private final HDF5DataTypeVariant typeVariantOrNull;
@@ -34,6 +64,10 @@ public final class HDF5DataSetInformation
     private long[] dimensions;
 
     private long[] maxDimensions;
+
+    private StorageLayout storageLayout = StorageLayout.NOT_APPLICABLE;
+
+    private long[] chunkSizesOrNull;
 
     HDF5DataSetInformation(HDF5DataTypeInformation typeInformation,
             HDF5DataTypeVariant typeVariantOrNull)
@@ -109,6 +143,33 @@ public final class HDF5DataSetInformation
     void setMaxDimensions(long[] maxDimensions)
     {
         this.maxDimensions = maxDimensions;
+    }
+
+    void setStorageLayout(StorageLayout storageLayout)
+    {
+        this.storageLayout = storageLayout;
+    }
+
+    /**
+     * Returns the storage layout of the data set in the HDF5 file.
+     */
+    public StorageLayout getStorageLayout()
+    {
+        return storageLayout;
+    }
+
+    /**
+     * Returns the chunk size in each array dimension of the data set, or <code>null</code>, if the
+     * data set is not of {@link StorageLayout#CHUNKED}.
+     */
+    public long[] tryGetChunkSizes()
+    {
+        return chunkSizesOrNull;
+    }
+
+    void setChunkSizes(long[] chunkSizes)
+    {
+        this.chunkSizesOrNull = chunkSizes;
     }
 
     /**

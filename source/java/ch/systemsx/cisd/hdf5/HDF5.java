@@ -32,6 +32,7 @@ import ch.systemsx.cisd.common.process.CleanUpCallable;
 import ch.systemsx.cisd.common.process.CleanUpRegistry;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 
 /**
  * A wrapper around {@link ncsa.hdf.hdf5lib.H5} that handles closing of resources automatically by
@@ -43,7 +44,7 @@ class HDF5
 {
 
     private final static int MAX_STRING_LENGTH = 4095;
-    
+
     private final CleanUpCallable runner;
 
     private final int dataSetCreationPropertyListCompactStorageLayout;
@@ -298,23 +299,24 @@ class HDF5
     public String[] getGroupMembers(final int fileId, final String groupName)
     {
         checkMaxLength(groupName);
-        final ICallableWithCleanUp<String[]> dataDimensionRunnable = new ICallableWithCleanUp<String[]>()
-            {
-                public String[] call(ICleanUpRegistry registry)
-                {
-                    final int groupId = openGroup(fileId, groupName, registry);
-                    final long nLong = H5Gget_nlinks(groupId);
-                    final int n = (int) nLong;
-                    if (n != nLong)
+        final ICallableWithCleanUp<String[]> dataDimensionRunnable =
+                new ICallableWithCleanUp<String[]>()
                     {
-                        throw new RuntimeException("Number of group members is too large (n="
-                                + nLong + ")");
-                    }
-                    final String[] names = new String[n];
-                    H5Lget_link_names_all(groupId, ".", names);
-                    return names;
-                }
-            };
+                        public String[] call(ICleanUpRegistry registry)
+                        {
+                            final int groupId = openGroup(fileId, groupName, registry);
+                            final long nLong = H5Gget_nlinks(groupId);
+                            final int n = (int) nLong;
+                            if (n != nLong)
+                            {
+                                throw new RuntimeException(
+                                        "Number of group members is too large (n=" + nLong + ")");
+                            }
+                            final String[] names = new String[n];
+                            H5Lget_link_names_all(groupId, ".", names);
+                            return names;
+                        }
+                    };
         return runner.call(dataDimensionRunnable);
     }
 
@@ -433,11 +435,6 @@ class HDF5
      */
     final static int NO_DEFLATION = 0;
 
-    enum StorageLayout
-    {
-        COMPACT, CONTIGUOUS, CHUNKED
-    }
-
     public int createDataSet(int fileId, long[] dimensions, long[] chunkSizeOrNull, int dataTypeId,
             int deflateLevel, String dataSetName, StorageLayout layout, ICleanUpRegistry registry)
     {
@@ -500,14 +497,7 @@ class HDF5
      */
     public StorageLayout getLayout(int dataSetId, ICleanUpRegistry registry)
     {
-        final int dataSetCreationPropertyListId = H5Dget_create_plist(dataSetId);
-        registry.registerCleanUp(new Runnable()
-            {
-                public void run()
-                {
-                    H5Pclose(dataSetCreationPropertyListId);
-                }
-            });
+        final int dataSetCreationPropertyListId = getCreationPropertyList(dataSetId, registry);
         final int layoutId = H5Pget_layout(dataSetCreationPropertyListId);
         if (layoutId == H5D_COMPACT)
         {
@@ -519,6 +509,19 @@ class HDF5
         {
             return StorageLayout.CONTIGUOUS;
         }
+    }
+
+    private int getCreationPropertyList(int dataSetId, ICleanUpRegistry registry)
+    {
+        final int dataSetCreationPropertyListId = H5Dget_create_plist(dataSetId);
+        registry.registerCleanUp(new Runnable()
+            {
+                public void run()
+                {
+                    H5Pclose(dataSetCreationPropertyListId);
+                }
+            });
+        return dataSetCreationPropertyListId;
     }
 
     private static final long[] createMaxDimensions(long[] dimensions, boolean unlimited)
@@ -614,32 +617,32 @@ class HDF5
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, short[] data)
     {
-        H5Dread_short(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
-                data);
+        H5Dread_short(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL,
+                numericConversionXferPropertyListID, data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, int[] data)
     {
-        H5Dread_int(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
-                data);
+        H5Dread_int(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL,
+                numericConversionXferPropertyListID, data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, long[] data)
     {
-        H5Dread_long(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
-                data);
+        H5Dread_long(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL,
+                numericConversionXferPropertyListID, data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, float[] data)
     {
-        H5Dread_float(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
-                data);
+        H5Dread_float(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL,
+                numericConversionXferPropertyListID, data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, double[] data)
     {
-        H5Dread_double(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
-                data);
+        H5Dread_double(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL,
+                numericConversionXferPropertyListID, data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
@@ -769,7 +772,7 @@ class HDF5
         }
         return attributeNames;
     }
-    
+
     public byte[] readAttributeAsByteArray(int attributeId, int dataTypeId, int length)
     {
         final byte[] data = new byte[length];
@@ -1319,6 +1322,20 @@ class HDF5
                     System.arraycopy(maxDimensions, 0, realMaxDimensions, 0, rank);
                     dataSetInfo.setDimensions(realDimensions);
                     dataSetInfo.setMaxDimensions(realMaxDimensions);
+                    if (isAttribute == false)
+                    {
+                        final long[] chunkSizes = new long[rank];
+                        final int creationPropertyList =
+                                getCreationPropertyList(dataSetOrAttributeId, registry);
+                        final StorageLayout layout =
+                                StorageLayout.fromId(H5Pget_layout(creationPropertyList));
+                        dataSetInfo.setStorageLayout(layout);
+                        if (layout == StorageLayout.CHUNKED)
+                        {
+                            H5Pget_chunk(creationPropertyList, rank, chunkSizes);
+                            dataSetInfo.setChunkSizes(chunkSizes);
+                        }
+                    }
                     return null; // Nothing to return
                 }
             };

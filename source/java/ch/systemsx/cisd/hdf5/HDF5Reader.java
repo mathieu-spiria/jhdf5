@@ -45,6 +45,7 @@ import ch.systemsx.cisd.common.process.CleanUpRegistry;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.common.utilities.OSUtilities;
+import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 
 /**
  * A class for reading HDF5 files (HDF5 1.8.x and older).
@@ -499,6 +500,7 @@ public class HDF5Reader implements HDF5SimpleReader
                                     { H5T_VARIABLE });
                                 dataSetInfo.setMaxDimensions(new long[]
                                     { H5T_VARIABLE });
+                                dataSetInfo.setStorageLayout(StorageLayout.VARIABLE_LENGTH);
                             } else
                             {
                                 h5.fillDataDimensions(dataSetId, false, dataSetInfo);
@@ -3559,7 +3561,7 @@ public class HDF5Reader implements HDF5SimpleReader
     }
 
     /**
-     * Reads a time stamp value from the data set <var>objectPath</var>. The time stamp is stored as
+     * Reads a time stamp array from the data set <var>objectPath</var>. The time stamp is stored as
      * a <code>long</code> value in the HDF5 file. It needs to be tagged as type variant
      * {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      * 
@@ -3580,6 +3582,78 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
                     checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
+                }
+            };
+        return runner.call(readCallable);
+    }
+
+    /**
+     * Reads a block of a time stamp array (of rank 1) from the data set <var>objectPath</var>. The
+     * time stamp is stored as a <code>long</code> value in the HDF5 file. It needs to be tagged as
+     * type variant {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The block size (this will be the length of the <code>long[]</code> returned
+     *            if the data set is long enough).
+     * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
+     *            <var>blockSize</var>).
+     * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
+     *         blockSize).
+     */
+    public long[] readTimeStampArrayBlock(final String objectPath, final int blockSize,
+            final long blockNumber)
+    {
+        assert objectPath != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
+            {
+                public long[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    checkIsTimeStamp(objectPath, dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
+                                    registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
+                }
+            };
+        return runner.call(readCallable);
+    }
+
+    /**
+     * Reads a block of a time stamp array (of rank 1) from the data set <var>objectPath</var>. The
+     * time stamp is stored as a <code>long</code> value in the HDF5 file. It needs to be tagged as
+     * type variant {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The block size (this will be the length of the <code>long[]</code>
+     *            returned).
+     * @param offset The offset of the block in the data set to start reading from (starting with
+     *            0).
+     * @return The data block read from the data set.
+     */
+    public long[] readTimeStampArrayBlockWithOffset(final String objectPath, final int blockSize,
+            final long offset)
+    {
+        assert objectPath != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
+            {
+                public long[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    checkIsTimeStamp(objectPath, dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -3620,8 +3694,13 @@ public class HDF5Reader implements HDF5SimpleReader
         return timeStampsToDates(timeStampArray);
     }
 
-    private Date[] timeStampsToDates(final long[] timeStampArray)
+    /**
+     * Converts an array of time stamps into an array of {@link Date}s.
+     */
+    public static Date[] timeStampsToDates(final long[] timeStampArray)
     {
+        assert timeStampArray != null;
+        
         final Date[] dateArray = new Date[timeStampArray.length];
         for (int i = 0; i < dateArray.length; ++i)
         {
@@ -3630,7 +3709,7 @@ public class HDF5Reader implements HDF5SimpleReader
         return dateArray;
     }
 
-    private void checkIsTimeStamp(final String objectPath, final int dataSetId,
+    protected void checkIsTimeStamp(final String objectPath, final int dataSetId,
             ICleanUpRegistry registry) throws HDF5JavaException
     {
         final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
@@ -3773,20 +3852,92 @@ public class HDF5Reader implements HDF5SimpleReader
                     final long[] data = new long[spaceParams.blockSize];
                     h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
-                    if (timeUnit != storedUnit)
-                    {
-                        for (int i = 0; i < data.length; ++i)
-                        {
-                            data[i] = timeUnit.convert(data[i], storedUnit);
-                        }
-                    }
+                    convertTimeDurations(timeUnit, storedUnit, data);
                     return data;
                 }
             };
         return runner.call(readCallable);
     }
 
-    private HDF5TimeUnit checkIsTimeDuration(final String objectPath, final int dataSetId,
+    /**
+     * Reads a block of a time stamp array (of rank 1) from the data set <var>objectPath</var>. The
+     * time stamp is stored as a <code>long</code> value in the HDF5 file. It needs to be tagged as
+     * type variant {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The block size (this will be the length of the <code>long[]</code> returned
+     *            if the data set is long enough).
+     * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
+     *            <var>blockSize</var>).
+     * @param timeUnit The time unit that the duration should be converted to.
+     * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
+     *         blockSize).
+     */
+    public long[] readTimeDurationArrayBlock(final String objectPath, final int blockSize,
+            final long blockNumber, final HDF5TimeUnit timeUnit)
+    {
+        assert objectPath != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
+            {
+                public long[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final HDF5TimeUnit storedUnit =
+                            checkIsTimeDuration(objectPath, dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
+                                    registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    convertTimeDurations(timeUnit, storedUnit, data);
+                    return data;
+                }
+            };
+        return runner.call(readCallable);
+    }
+
+    /**
+     * Reads a block of a time stamp array (of rank 1) from the data set <var>objectPath</var>. The
+     * time stamp is stored as a <code>long</code> value in the HDF5 file. It needs to be tagged as
+     * type variant {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The block size (this will be the length of the <code>long[]</code>
+     *            returned).
+     * @param offset The offset of the block in the data set to start reading from (starting with
+     *            0).
+     * @param timeUnit The time unit that the duration should be converted to.
+     * @return The data block read from the data set.
+     */
+    public long[] readTimeDurationArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset, final HDF5TimeUnit timeUnit)
+    {
+        assert objectPath != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
+            {
+                public long[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final HDF5TimeUnit storedUnit =
+                            checkIsTimeDuration(objectPath, dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    convertTimeDurations(timeUnit, storedUnit, data);
+                    return data;
+                }
+            };
+        return runner.call(readCallable);
+    }
+
+    protected HDF5TimeUnit checkIsTimeDuration(final String objectPath, final int dataSetId,
             ICleanUpRegistry registry) throws HDF5JavaException
     {
         final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
@@ -3795,6 +3946,18 @@ public class HDF5Reader implements HDF5SimpleReader
             throw new HDF5JavaException("Data set '" + objectPath + "' is not a time duration.");
         }
         return HDF5DataTypeVariant.getTimeUnit(typeVariantOrdinal);
+    }
+
+    static void convertTimeDurations(final HDF5TimeUnit timeUnit,
+            final HDF5TimeUnit storedUnit, final long[] data)
+    {
+        if (timeUnit != storedUnit)
+        {
+            for (int i = 0; i < data.length; ++i)
+            {
+                data[i] = timeUnit.convert(data[i], storedUnit);
+            }
+        }
     }
 
     //
@@ -4775,24 +4938,21 @@ public class HDF5Reader implements HDF5SimpleReader
             case BYTE:
             {
                 final byte[] data =
-                        h5.readAttributeAsByteArray(attributeId, enumType
-                                .getNativeTypeId(), 1);
+                        h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), 1);
                 enumOrdinal = data[0];
                 break;
             }
             case SHORT:
             {
                 final byte[] data =
-                        h5.readAttributeAsByteArray(attributeId, enumType
-                                .getNativeTypeId(), 2);
+                        h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), 2);
                 enumOrdinal = HDFNativeData.byteToShort(data, 0);
                 break;
             }
             case INT:
             {
                 final byte[] data =
-                        h5.readAttributeAsByteArray(attributeId, enumType
-                                .getNativeTypeId(), 4);
+                        h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), 4);
                 enumOrdinal = HDFNativeData.byteToInt(data, 0);
                 break;
             }
