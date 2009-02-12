@@ -296,7 +296,7 @@ public class HDFNativeData
      */
     public static short[] byteToShort(byte[] byteArr, int start, int len)
     {
-        final short[] array = new short[SHORT_SIZE * len];
+        final short[] array = new short[len];
         copyByteToShort(byteArr, start, array, 0, len);
         return array;
     }
@@ -325,7 +325,7 @@ public class HDFNativeData
      */
     public static int[] byteToInt(byte[] byteArr, int start, int len)
     {
-        final int[] array = new int[INT_SIZE * len];
+        final int[] array = new int[len];
         copyByteToInt(byteArr, start, array, 0, len);
         return array;
     }
@@ -340,7 +340,7 @@ public class HDFNativeData
      */
     public static long[] byteToLong(byte[] byteArr, int start, int len)
     {
-        final long[] array = new long[LONG_SIZE * len];
+        final long[] array = new long[len];
         copyByteToLong(byteArr, start, array, 0, len);
         return array;
     }
@@ -355,7 +355,7 @@ public class HDFNativeData
      */
     public static float[] byteToFloat(byte[] byteArr, int start, int len)
     {
-        final float[] array = new float[FLOAT_SIZE * len];
+        final float[] array = new float[len];
         copyByteToFloat(byteArr, start, array, 0, len);
         return array;
     }
@@ -370,7 +370,7 @@ public class HDFNativeData
      */
     public static double[] byteToDouble(byte[] byteArr, int start, int len)
     {
-        final double[] array = new double[DOUBLE_SIZE * len];
+        final double[] array = new double[len];
         copyByteToDouble(byteArr, start, array, 0, len);
         return array;
     }
