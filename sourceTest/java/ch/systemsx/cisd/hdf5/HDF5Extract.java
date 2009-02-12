@@ -41,7 +41,7 @@ public class HDF5Extract
         final File file = new File(args[1]);
         final StopWatch watch = new StopWatch();
         watch.start();
-        final HDF5Reader reader = new HDF5Reader(hdf5File);
+        final HDF5Reader reader = new HDF5ReaderConfig(hdf5File).reader();
         final byte[] data = reader.readByteArray(file.getAbsolutePath());
         FileUtils.writeByteArrayToFile(new File(file.getName()), data);
         reader.close();

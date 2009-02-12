@@ -20,6 +20,9 @@ import java.io.File;
 import java.util.BitSet;
 import java.util.List;
 
+import ncsa.hdf.hdf5lib.HDFNativeData;
+import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
+
 /**
  * @author Bernd Rinn
  */
@@ -28,36 +31,44 @@ public class HDF5ReadTest
 
     public static void main(String[] args)
     {
-        HDF5Reader reader = new HDF5Reader(new File("test.h5")).open();
-        System.out.println(reader.getGroupMemberPaths("/"));
-        describe(reader, "/Group1/MyBitSet", null);
-        describe(reader, "/Group1/MyDataSet", null);
-        long[] bsl = reader.readLongArray("/Group1/MyBitSet");
-        System.out.println("length of /Group1/MyBitSet=" + bsl.length);
-        for (long l : bsl)
+        try
         {
-            System.out.print(l + " ");
-        }
-        System.out.println();
-        BitSet bs = reader.readBitField("/Group1/MyBitSet");
-        System.out.println(bs);
-        System.out.println(reader.getDoubleAttribute("/", "version"));
-        List<String> members = reader.getGroupMemberPaths("/Group1");
-        for (String m : members)
+            HDF5Reader reader = new HDF5ReaderConfig(new File("test.h5")).reader();
+            System.out.println(reader.getGroupMemberPaths("/"));
+            describe(reader, "/Group1/MyBitSet", null);
+            describe(reader, "/Group1/MyDataSet", null);
+            byte[] bsb = reader.readAsByteArray("/Group1/MyBitSet");
+            long[] bsl = HDFNativeData.byteToLong(bsb, 0, bsb.length / HDFNativeData.LONG_SIZE);
+            System.out.println("length of /Group1/MyBitSet=" + bsl.length);
+            for (long l : bsl)
+            {
+                System.out.print(l + " ");
+            }
+            System.out.println();
+            BitSet bs = reader.readBitField("/Group1/MyBitSet");
+            System.out.println(bs);
+            System.out.println(reader.getDoubleAttribute("/", "version"));
+            List<String> members = reader.getGroupMemberPaths("/Group1");
+            for (String m : members)
+            {
+                System.out.println("  " + m);
+            }
+            listAttributes(reader, "/Group1");
+            listAttributes(reader, "/Group1/MyDataSet");
+            describe(reader, "/Group1/MyDataSet", "foo");
+            describe(reader, "/Group1", "active");
+            System.out.println(reader.getBooleanAttribute("/Group1", "active"));
+            System.out.println(reader.getStringAttribute("/Group1/MyDataSet", "foo"));
+            System.out.println(reader.getStringAttribute("/Group1/SubGroup1/MyDataSet", "foo"));
+            System.out.println(reader.readDoubleMatrix("/Group1/MyDataSet")[1][0]);
+            System.out.println(reader.readFloatMatrix("/Group1/SubGroup1/MyDataSet")[1][2]);
+            System.out.println(reader.readString("/Group1/MyString").length());
+            listAttributes(reader, "empty");
+        } catch (HDF5LibraryException ex)
         {
-            System.out.println("  " + m);
+            System.err.println(ex.getHDF5ErrorStackAsString());
+            ex.printStackTrace();
         }
-        listAttributes(reader, "/Group1");
-        listAttributes(reader, "/Group1/MyDataSet");
-        describe(reader, "/Group1/MyDataSet", "foo");
-        describe(reader, "/Group1", "active");
-        System.out.println(reader.getBooleanAttribute("/Group1", "active"));
-        System.out.println(reader.getStringAttribute("/Group1/MyDataSet", "foo"));
-        System.out.println(reader.getStringAttribute("/Group1/SubGroup1/MyDataSet", "foo"));
-        System.out.println(reader.readDoubleMatrix("/Group1/MyDataSet")[1][0]);
-        System.out.println(reader.readFloatMatrix("/Group1/SubGroup1/MyDataSet")[1][2]);
-        System.out.println(reader.readString("/Group1/MyString").length());
-        listAttributes(reader, "empty");
     }
 
     private static void listAttributes(HDF5Reader reader, String objectName)

@@ -1125,7 +1125,7 @@ class HDF5
     /**
      * Use this if <var>dataTypeId</var> can possibly be a bit field.
      */
-    public int getNativeDataTypeCheckBitFields(int dataTypeId, ICleanUpRegistry registry)
+    public int getNativeDataTypeCheckIdenticalToBitFields(int dataTypeId, ICleanUpRegistry registry)
     {
         // Workaround: calling H5Tget_native_type() on one of the bit field types in 1.8.2 throws an
         // "HDF5FunctionArgumentException: Invalid arguments to routine: Inappropriate type"
@@ -1139,6 +1139,36 @@ class HDF5
         {
             return H5T_NATIVE_B16;
         } else if (dataTypeId == H5T_STD_B8LE || dataTypeId == H5T_STD_B8BE)
+        {
+            return H5T_NATIVE_B8;
+        } else
+        {
+            return getNativeDataType(dataTypeId, registry);
+        }
+    }
+
+    /**
+     * Use this if <var>dataTypeId</var> can possibly be a bit field and if <var>dataTypeId</var>
+     * has been read from an HDF5 file.
+     */
+    public int getNativeDataTypeCheckEqualToBitFields(int dataTypeId, ICleanUpRegistry registry)
+    {
+        // Workaround: calling H5Tget_native_type() on one of the bit field types in 1.8.2 throws an
+        // "HDF5FunctionArgumentException: Invalid arguments to routine: Inappropriate type"
+        if (dataTypesAreEqual(dataTypeId, H5T_STD_B64LE)
+                || dataTypesAreEqual(dataTypeId, H5T_STD_B64BE))
+        {
+            return H5T_NATIVE_B64;
+        } else if (dataTypesAreEqual(dataTypeId, H5T_STD_B32LE)
+                || dataTypesAreEqual(dataTypeId, H5T_STD_B32BE))
+        {
+            return H5T_NATIVE_B32;
+        } else if (dataTypesAreEqual(dataTypeId, H5T_STD_B16LE)
+                || dataTypesAreEqual(dataTypeId, H5T_STD_B16BE))
+        {
+            return H5T_NATIVE_B16;
+        } else if (dataTypesAreEqual(dataTypeId, H5T_STD_B8LE)
+                || dataTypesAreEqual(dataTypeId, H5T_STD_B8BE))
         {
             return H5T_NATIVE_B8;
         } else
@@ -1171,6 +1201,19 @@ class HDF5
                 }
             });
         return getNativeDataType(dataTypeId, registry);
+    }
+
+    public int getNativeDataTypeForDataSetCheckBitFields(int dataSetId, ICleanUpRegistry registry)
+    {
+        final int dataTypeId = H5Dget_type(dataSetId);
+        registry.registerCleanUp(new Runnable()
+            {
+                public void run()
+                {
+                    H5Tclose(dataTypeId);
+                }
+            });
+        return getNativeDataTypeCheckEqualToBitFields(dataTypeId, registry);
     }
 
     public int getNativeDataTypeForAttribute(int attributeId, ICleanUpRegistry registry)

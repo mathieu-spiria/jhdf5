@@ -550,7 +550,7 @@ abstract class HDF5MemberByteifyer
 
     public final void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
     {
-        H5Tinsert(dataTypeId, memberName, offset, h5.getNativeDataTypeCheckBitFields(
+        H5Tinsert(dataTypeId, memberName, offset, h5.getNativeDataTypeCheckIdenticalToBitFields(
                 getMemberStorageTypeId(), registry));
     }
 

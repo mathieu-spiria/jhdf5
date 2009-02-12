@@ -18,6 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 import java.io.File;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
+
 /**
  * 
  *
@@ -29,13 +31,19 @@ public class HDF5WriteSpeedTest
     public static void main(String[] args)
     {
         final long start = System.currentTimeMillis();
-        final HDF5Writer writer = new HDF5Writer(new File("speedtest.h5"));
-        final byte[] arr = new byte[100];
-        for (int i = 0; i < 10000; ++i)
+        try
         {
-            writer.writeByteArray("/" + i, arr);
+            final HDF5Writer writer = new HDF5WriterConfig(new File("speedtest.h5")).writer();
+            final byte[] arr = new byte[100];
+            for (int i = 0; i < 10000; ++i)
+            {
+                writer.writeByteArray("/" + i, arr);
+            }
+            writer.close();
+        } catch (HDF5LibraryException ex)
+        {
+            System.err.println(ex.getHDF5ErrorStackAsString());
         }
-        writer.close();
         System.out.println("Took: " + (System.currentTimeMillis() - start) / 1000.f + " s");
     }
 
