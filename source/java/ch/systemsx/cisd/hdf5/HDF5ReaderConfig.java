@@ -65,6 +65,8 @@ public class HDF5ReaderConfig
     boolean performNumericConversions;
 
     protected State state;
+    
+    protected HDF5Reader readerWriterOrNull;
 
     public HDF5ReaderConfig(File hdf5File)
     {
@@ -87,7 +89,7 @@ public class HDF5ReaderConfig
         }
     }
 
-    void open(HDF5Reader reader)
+    private void open()
     {
         final String path = hdf5File.getAbsolutePath();
         if (hdf5File.exists() == false)
@@ -97,9 +99,9 @@ public class HDF5ReaderConfig
         h5 = new HDF5(fileRegistry, performNumericConversions);
         fileId = h5.openFileReadOnly(path, fileRegistry);
         state = State.OPEN;
-        readNamedDataTypes(reader);
-        booleanDataTypeId = openOrCreateBooleanDataType(reader);
-        typeVariantDataType = openOrCreateTypeVariantDataType(reader);
+        readNamedDataTypes();
+        booleanDataTypeId = openOrCreateBooleanDataType();
+        typeVariantDataType = openOrCreateTypeVariantDataType();
     }
 
     /**
@@ -112,9 +114,9 @@ public class HDF5ReaderConfig
         state = State.CLOSED;
     }
 
-    protected int openOrCreateBooleanDataType(HDF5Reader reader)
+    protected int openOrCreateBooleanDataType()
     {
-        int dataTypeId = getDataTypeId(BOOLEAN_DATA_TYPE, reader);
+        int dataTypeId = getDataTypeId(BOOLEAN_DATA_TYPE);
         if (dataTypeId < 0)
         {
             dataTypeId = createBooleanDataType();
@@ -123,13 +125,13 @@ public class HDF5ReaderConfig
         return dataTypeId;
     }
 
-    protected int getDataTypeId(final String dataTypePath, final HDF5Reader reader)
+    protected int getDataTypeId(final String dataTypePath)
     {
         final Integer dataTypeIdOrNull = namedDataTypeMap.get(dataTypePath);
         if (dataTypeIdOrNull == null)
         {
             // Just in case of data types added to other groups than HDF5Utils.DATATYPE_GROUP
-            if (reader.exists(dataTypePath))
+            if (readerWriterOrNull.exists(dataTypePath))
             {
                 final int dataTypeId = h5.openDataType(fileId, dataTypePath, fileRegistry);
                 namedDataTypeMap.put(dataTypePath, dataTypeId);
@@ -150,9 +152,9 @@ public class HDF5ReaderConfig
             { "FALSE", "TRUE" }, fileRegistry);
     }
 
-    protected HDF5EnumerationType openOrCreateTypeVariantDataType(HDF5Reader reader)
+    protected HDF5EnumerationType openOrCreateTypeVariantDataType()
     {
-        int dataTypeId = getDataTypeId(TYPE_VARIANT_DATA_TYPE, reader);
+        int dataTypeId = getDataTypeId(TYPE_VARIANT_DATA_TYPE);
         if (dataTypeId < 0)
         {
             return createTypeVariantDataType();
@@ -177,13 +179,13 @@ public class HDF5ReaderConfig
                 TYPE_VARIANT_DATA_TYPE, typeVariantNames);
     }
 
-    protected void readNamedDataTypes(HDF5Reader reader)
+    protected void readNamedDataTypes()
     {
-        if (reader.exists(DATATYPE_GROUP) == false)
+        if (readerWriterOrNull.exists(DATATYPE_GROUP) == false)
         {
             return;
         }
-        for (String dataTypePath : reader.getGroupMemberPaths(DATATYPE_GROUP))
+        for (String dataTypePath : readerWriterOrNull.getGroupMemberPaths(DATATYPE_GROUP))
         {
             final int dataTypeId = h5.openDataType(fileId, dataTypePath, fileRegistry);
             namedDataTypeMap.put(dataTypePath, dataTypeId);
@@ -230,7 +232,12 @@ public class HDF5ReaderConfig
      */
     public HDF5Reader reader()
     {
-        return new HDF5Reader(this, true);
+        if (readerWriterOrNull == null)
+        {
+            readerWriterOrNull = new HDF5Reader(this);
+            open();
+        }
+        return readerWriterOrNull;
     }
 
 }

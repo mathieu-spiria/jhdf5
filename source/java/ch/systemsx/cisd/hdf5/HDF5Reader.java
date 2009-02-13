@@ -82,15 +82,11 @@ public class HDF5Reader implements HDF5SimpleReader
 
     private final HDF5ReaderConfig config;
 
-    HDF5Reader(HDF5ReaderConfig config, boolean openFile)
+    HDF5Reader(HDF5ReaderConfig config)
     {
         assert config != null;
 
         this.config = config;
-        if (openFile)
-        {
-            config.open(this);
-        }
     }
 
     // /////////////////////
@@ -554,7 +550,7 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         config.checkOpen();
         final String dataTypePath = createDataTypePath(ENUM_PREFIX, name);
-        final int storageDataTypeId = config.getDataTypeId(dataTypePath, this);
+        final int storageDataTypeId = config.getDataTypeId(dataTypePath);
         final int nativeDataTypeId =
                 config.h5.getNativeDataType(storageDataTypeId, config.fileRegistry);
         final String[] values = config.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);

@@ -63,17 +63,16 @@ public final class HDF5WriterConfig extends HDF5ReaderConfig
         h5.commitDataType(fileId, dataTypePath, dataTypeId);
     }
 
-    @Override
-    void open(HDF5Reader reader)
+    private void open()
     {
         final String path = hdf5File.getAbsolutePath();
         h5 = new HDF5(fileRegistry, true);
         fileId = openOrCreateFile(path);
         state = State.OPEN;
-        readNamedDataTypes(reader);
-        booleanDataTypeId = openOrCreateBooleanDataType(reader);
-        typeVariantDataType = openOrCreateTypeVariantDataType(reader);
-        variableLengthStringDataTypeId = openOrCreateVLStringType(reader);
+        readNamedDataTypes();
+        booleanDataTypeId = openOrCreateBooleanDataType();
+        typeVariantDataType = openOrCreateTypeVariantDataType();
+        variableLengthStringDataTypeId = openOrCreateVLStringType();
     }
 
     private int openOrCreateFile(final String path)
@@ -96,7 +95,7 @@ public final class HDF5WriterConfig extends HDF5ReaderConfig
     protected HDF5EnumerationType openOrCreateTypeVariantDataType(final HDF5Writer writer)
     {
         final HDF5EnumerationType dataType;
-        int dataTypeId = getDataTypeId(HDF5Utils.TYPE_VARIANT_DATA_TYPE, writer);
+        int dataTypeId = getDataTypeId(HDF5Utils.TYPE_VARIANT_DATA_TYPE);
         if (dataTypeId < 0
                 || h5.getNumberOfMembers(dataTypeId) < HDF5DataTypeVariant.values().length)
         {
@@ -130,9 +129,9 @@ public final class HDF5WriterConfig extends HDF5ReaderConfig
         return path;
     }
 
-    private int openOrCreateVLStringType(final HDF5Reader reader)
+    private int openOrCreateVLStringType()
     {
-        int dataTypeId = getDataTypeId(HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE, reader);
+        int dataTypeId = getDataTypeId(HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE);
         if (dataTypeId < 0)
         {
             dataTypeId = h5.createDataTypeVariableString(fileRegistry);
@@ -189,7 +188,12 @@ public final class HDF5WriterConfig extends HDF5ReaderConfig
      */
     public HDF5Writer writer()
     {
-        return new HDF5Writer(this);
+        if (readerWriterOrNull == null)
+        {
+            readerWriterOrNull = new HDF5Writer(this);
+            open();
+        }
+        return (HDF5Writer) readerWriterOrNull;
     }
 
 }

@@ -90,9 +90,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 
     HDF5Writer(HDF5WriterConfig config)
     {
-        super(config, false);
+        super(config);
         this.config = config;
-        config.open(this);
     }
 
     // /////////////////////
@@ -966,7 +965,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     private int getOrCreateOpaqueTypeId(final String tag)
     {
         final String dataTypePath = createDataTypePath(OPAQUE_PREFIX, tag);
-        int dataTypeId = config.getDataTypeId(dataTypePath, this);
+        int dataTypeId = config.getDataTypeId(dataTypePath);
         if (dataTypeId < 0)
         {
             dataTypeId = config.h5.createDataTypeOpaque(1, tag, config.fileRegistry);
@@ -5701,7 +5700,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         config.checkOpen();
         final String dataTypePath = HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, name);
-        int storageDataTypeId = config.getDataTypeId(dataTypePath, this);
+        int storageDataTypeId = config.getDataTypeId(dataTypePath);
         if (storageDataTypeId < 0)
         {
             storageDataTypeId = config.h5.createDataTypeEnum(values, config.fileRegistry);
@@ -5866,7 +5865,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         final String dataTypePath =
                 HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName);
-        int storageDataTypeId = config.getDataTypeId(dataTypePath, this);
+        int storageDataTypeId = config.getDataTypeId(dataTypePath);
         if (storageDataTypeId < 0)
         {
             storageDataTypeId = createStorageCompoundDataType(objectByteifyer);
