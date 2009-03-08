@@ -6515,7 +6515,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 config.h5.setDataSetExtent(dataSetId, dimensions);
                 // FIXME 2008-09-15, Bernd Rinn: This is a work-around for an apparent bug in HDF5
-                // 1.8.1 with contiguous data sets! Without the flush, the next
+                // 1.8.1 and 1.8.2 with contiguous data sets! Without the flush, the next
                 // config.h5.writeDataSet() call will not overwrite the data.
                 if (config.h5.getLayout(dataSetId, registry) == StorageLayout.CONTIGUOUS)
                 {

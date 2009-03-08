@@ -113,6 +113,7 @@ public class HDF5RoundtripTest
         test.testDataSets();
         test.testAccessClosedReaderWriter();
         test.testDataSetsNonExtendable();
+        test.testOverwriteContiguousDataSet();
         test.testStringArray();
         test.testStringCompression();
         test.testStringArrayCompression();
@@ -576,7 +577,8 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final HDF5Writer writer = new HDF5WriterConfig(datasetFile).dontUseExtendableDataTypes().writer();
+        final HDF5Writer writer =
+                new HDF5WriterConfig(datasetFile).dontUseExtendableDataTypes().writer();
         final String floatDatasetName = "/Group1/floats";
         final float[] floatDataWritten = new float[]
             { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f };
@@ -635,6 +637,43 @@ public class HDF5RoundtripTest
         assertTrue(Arrays.equals(byteDataWritten, byteDataRead));
         final String stringDataRead = reader.readString(stringDatasetName);
         assertEquals(stringDataWritten, stringDataRead);
+        reader.close();
+    }
+
+    @Test
+    public void testOverwriteContiguousDataSet()
+    {
+        // Test for a bug in 1.8.1 and 1.8.2 when overwriting contiguous data sets and thereby
+        // changing its size.
+        // We have some workaround code in HDF5Writer.getDataSetId(), this is why this test runs
+        // green. As new versions of HDF5 become available, one can try to comment out the
+        // workaround code and see whether this test still runs red.
+        final File datasetFile = new File(workingDirectory, "overwriteContiguousDataSet.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final String dsName = "longArray";
+        HDF5Writer writer = new HDF5WriterConfig(datasetFile).dontUseExtendableDataTypes().writer();
+        // Creating the group is part of the "bug magic".
+        writer.createGroup("group");
+        final long[] arrayWritten1 = new long[1000];
+        for (int i = 0; i < arrayWritten1.length; ++i)
+        {
+            arrayWritten1[i] = i;
+        }
+        writer.writeLongArray(dsName, arrayWritten1);
+        writer.close();
+        writer = new HDF5WriterConfig(datasetFile).writer();
+        final long[] arrayWritten2 = new long[5];
+        for (int i = 0; i < arrayWritten1.length; ++i)
+        {
+            arrayWritten1[i] = i * i;
+        }
+        writer.writeLongArray(dsName, arrayWritten2);
+        writer.close();
+        HDF5Reader reader = new HDF5ReaderConfig(datasetFile).reader();
+        final long[] arrayRead = reader.readLongArray(dsName);
+        assertTrue(Arrays.equals(arrayWritten2, arrayRead));
         reader.close();
     }
 
@@ -1608,7 +1647,8 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final HDF5Writer writer = new HDF5WriterConfig(datasetFile).dontUseExtendableDataTypes().writer();
+        final HDF5Writer writer =
+                new HDF5WriterConfig(datasetFile).dontUseExtendableDataTypes().writer();
         final String floatDatasetName = "/float";
         writer.writeFloatArray(floatDatasetName, new float[0]);
         final String doubleDatasetName = "/double";
@@ -1703,7 +1743,8 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final HDF5Writer writer = new HDF5WriterConfig(datasetFile).dontUseExtendableDataTypes().writer();
+        final HDF5Writer writer =
+                new HDF5WriterConfig(datasetFile).dontUseExtendableDataTypes().writer();
         final String floatDatasetName = "/float";
         writer.writeFloatMatrix(floatDatasetName, new float[0][0]);
         final String doubleDatasetName = "/double";
