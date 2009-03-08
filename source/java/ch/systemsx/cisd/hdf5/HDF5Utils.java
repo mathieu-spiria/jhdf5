@@ -72,6 +72,12 @@ final class HDF5Utils
     static final String VARIABLE_LENGTH_STRING_DATA_TYPE =
             DATATYPE_GROUP + "/String_VariableLength";
 
+    /**
+     * The legacy attribute to signal that a data set is empty (for backward compatibility with
+     * 8.10).
+     */
+    static final String DATASET_IS_EMPTY_LEGACY_ATTRIBUTE = "__EMPTY__";
+
     static String getSuperGroup(String path)
     {
         assert path != null;
@@ -233,6 +239,22 @@ final class HDF5Utils
     {
         final T[] value = (T[]) java.lang.reflect.Array.newInstance(componentClass, vectorLength);
         return value;
+    }
+
+    /**
+     * If all elements of <var>dimensions</var> are 1, the data set might be empty, then check
+     * {@link #DATASET_IS_EMPTY_LEGACY_ATTRIBUTE} (for backward compatibility with 8.10)
+     */
+    static boolean mightBeEmptyInStorage(final long[] dimensions)
+    {
+        for (long d : dimensions)
+        {
+            if (d != 1L)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
 }

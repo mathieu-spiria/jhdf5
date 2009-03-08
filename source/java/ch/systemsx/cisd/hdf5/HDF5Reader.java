@@ -6006,7 +6006,14 @@ public class HDF5Reader implements HDF5SimpleReader
 
     private DataSpaceParameters getSpaceParameters(final int dataSetId, ICleanUpRegistry registry)
     {
-        final long[] dimensions = config.h5.getDataDimensions(dataSetId);
+        long[] dimensions = config.h5.getDataDimensions(dataSetId);
+        // Ensure backward compatibility with 8.10
+        if (HDF5Utils.mightBeEmptyInStorage(dimensions)
+                && config.h5
+                        .existsAttribute(dataSetId, HDF5Utils.DATASET_IS_EMPTY_LEGACY_ATTRIBUTE))
+        {
+            dimensions = new long[dimensions.length];
+        }
         return new DataSpaceParameters(H5S_ALL, H5S_ALL, MDArray.getLength(dimensions), dimensions);
     }
 
