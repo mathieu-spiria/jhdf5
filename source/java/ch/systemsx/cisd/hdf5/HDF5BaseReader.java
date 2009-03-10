@@ -43,7 +43,7 @@ import ch.systemsx.cisd.common.process.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-public class HDF5BaseReader
+class HDF5BaseReader
 {
 
     /** State that this reader / writer is currently in. */
@@ -73,7 +73,7 @@ public class HDF5BaseReader
 
     protected State state;
 
-    public HDF5BaseReader(File hdf5File, boolean performNumericConversions)
+    HDF5BaseReader(File hdf5File, boolean performNumericConversions)
     {
         assert hdf5File != null;
 
@@ -90,7 +90,7 @@ public class HDF5BaseReader
         typeVariantDataType = openOrCreateTypeVariantDataType();
     }
     
-    protected int openFile(boolean useLatestFileFormat, boolean overwrite)
+    int openFile(boolean useLatestFileFormat, boolean overwrite)
     {
         if (hdf5File.exists() == false)
         {
@@ -99,7 +99,7 @@ public class HDF5BaseReader
         return h5.openFileReadOnly(hdf5File.getPath(), fileRegistry);
     }
 
-    protected void checkOpen() throws HDF5JavaException
+    void checkOpen() throws HDF5JavaException
     {
         if (state != State.OPEN)
         {
@@ -120,7 +120,7 @@ public class HDF5BaseReader
         state = State.CLOSED;
     }
 
-    protected int openOrCreateBooleanDataType()
+    int openOrCreateBooleanDataType()
     {
         int dataTypeId = getDataTypeId(BOOLEAN_DATA_TYPE);
         if (dataTypeId < 0)
@@ -131,7 +131,7 @@ public class HDF5BaseReader
         return dataTypeId;
     }
 
-    protected int getDataTypeId(final String dataTypePath)
+    int getDataTypeId(final String dataTypePath)
     {
         final Integer dataTypeIdOrNull = namedDataTypeMap.get(dataTypePath);
         if (dataTypeIdOrNull == null)
@@ -152,13 +152,13 @@ public class HDF5BaseReader
         }
     }
 
-    protected int createBooleanDataType()
+    int createBooleanDataType()
     {
         return h5.createDataTypeEnum(new String[]
             { "FALSE", "TRUE" }, fileRegistry);
     }
 
-    protected HDF5EnumerationType openOrCreateTypeVariantDataType()
+    HDF5EnumerationType openOrCreateTypeVariantDataType()
     {
         int dataTypeId = getDataTypeId(TYPE_VARIANT_DATA_TYPE);
         if (dataTypeId < 0)
@@ -171,7 +171,7 @@ public class HDF5BaseReader
                 TYPE_VARIANT_DATA_TYPE, typeVariantNames);
     }
 
-    protected HDF5EnumerationType createTypeVariantDataType()
+    HDF5EnumerationType createTypeVariantDataType()
     {
         final HDF5DataTypeVariant[] typeVariants = HDF5DataTypeVariant.values();
         final String[] typeVariantNames = new String[typeVariants.length];
@@ -185,7 +185,7 @@ public class HDF5BaseReader
                 TYPE_VARIANT_DATA_TYPE, typeVariantNames);
     }
 
-    protected void readNamedDataTypes()
+    void readNamedDataTypes()
     {
         if (h5.exists(fileId, DATATYPE_GROUP) == false)
         {
@@ -198,9 +198,9 @@ public class HDF5BaseReader
         }
     }
 
-    protected void commitDataType(final String dataTypePath, final int dataTypeId)
+    void commitDataType(final String dataTypePath, final int dataTypeId)
     {
-        // Overwrite method in writer.
+        // Overwrite this method in writer.
     }
 
     /**

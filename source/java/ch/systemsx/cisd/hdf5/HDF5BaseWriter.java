@@ -39,8 +39,10 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * 
  * @author Bernd Rinn
  */
-public final class HDF5BaseWriter extends HDF5BaseReader
+final class HDF5BaseWriter extends HDF5BaseReader
 {
+
+    private final static int MAX_TYPE_VARIANT_TYPES = 1024;
 
     /**
      * The size threshold for the COMPACT storage layout.
@@ -55,7 +57,7 @@ public final class HDF5BaseWriter extends HDF5BaseReader
 
     final int variableLengthStringDataTypeId;
 
-    public HDF5BaseWriter(File hdf5File, boolean performNumericConversions,
+    HDF5BaseWriter(File hdf5File, boolean performNumericConversions,
             boolean useLatestFileFormat, boolean useExtentableDataTypes, boolean overwrite)
     {
         super(hdf5File, performNumericConversions);
@@ -67,7 +69,7 @@ public final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     @Override
-    protected int openFile(boolean useLatestFileFormatInit, boolean overwriteInit)
+    int openFile(boolean useLatestFileFormatInit, boolean overwriteInit)
     {
         if (hdf5File.exists() && overwriteInit == false)
         {
@@ -85,12 +87,12 @@ public final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     @Override
-    protected void commitDataType(final String dataTypePath, final int dataTypeId)
+    void commitDataType(final String dataTypePath, final int dataTypeId)
     {
         h5.commitDataType(fileId, dataTypePath, dataTypeId);
     }
 
-    protected HDF5EnumerationType openOrCreateTypeVariantDataType(final HDF5Writer writer)
+    HDF5EnumerationType openOrCreateTypeVariantDataType(final HDF5Writer writer)
     {
         final HDF5EnumerationType dataType;
         int dataTypeId = getDataTypeId(HDF5Utils.TYPE_VARIANT_DATA_TYPE);
@@ -113,8 +115,6 @@ public final class HDF5BaseWriter extends HDF5BaseReader
         }
         return dataType;
     }
-
-    private final static int MAX_TYPE_VARIANT_TYPES = 1024;
 
     private String findFirstUnusedTypeVariantPath(final HDF5Reader reader)
     {
@@ -295,9 +295,5 @@ public final class HDF5BaseWriter extends HDF5BaseReader
         }
         return dataSetId;
     }
-
-    //
-    // Config
-    //
 
 }
