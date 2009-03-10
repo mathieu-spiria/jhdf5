@@ -35,9 +35,7 @@ import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
- * The configuration of this writer config is done by chaining calls to methods {@link #overwrite()}
- * , {@link #dontUseExtendableDataTypes()} and {@link #useLatestFileFormat()} before calling
- * {@link #writer()}.
+ * Class that provides base methods for reading and writing HDF5 files.
  * 
  * @author Bernd Rinn
  */
@@ -49,42 +47,31 @@ public final class HDF5BaseWriter extends HDF5BaseReader
      */
     final static int COMPACT_LAYOUT_THRESHOLD = 256;
 
-    boolean useExtentableDataTypes = true;
+    final boolean useExtentableDataTypes;
 
-    boolean overwrite = false;
+    final boolean overwrite;
 
-    boolean useLatestFileFormat = false;
+    final boolean useLatestFileFormat;
 
-    int variableLengthStringDataTypeId;
+    final int variableLengthStringDataTypeId;
 
-    public HDF5BaseWriter(File hdf5File)
+    public HDF5BaseWriter(File hdf5File, boolean performNumericConversions,
+            boolean useLatestFileFormat, boolean useExtentableDataTypes, boolean overwrite)
     {
-        super(hdf5File);
-    }
-
-    @Override
-    protected void commitDataType(final String dataTypePath, final int dataTypeId)
-    {
-        h5.commitDataType(fileId, dataTypePath, dataTypeId);
-    }
-
-    private void open()
-    {
-        final String path = hdf5File.getAbsolutePath();
-        h5 = new HDF5(fileRegistry, true);
-        fileId = openOrCreateFile(path);
-        state = State.OPEN;
+        super(hdf5File, performNumericConversions);
+        this.useLatestFileFormat = useExtentableDataTypes;
+        this.useExtentableDataTypes = useExtentableDataTypes;
+        this.overwrite = overwrite;
         readNamedDataTypes();
-        booleanDataTypeId = openOrCreateBooleanDataType();
-        typeVariantDataType = openOrCreateTypeVariantDataType();
         variableLengthStringDataTypeId = openOrCreateVLStringType();
     }
 
-    private int openOrCreateFile(final String path)
+    @Override
+    protected int openFile(boolean useLatestFileFormatInit, boolean overwriteInit)
     {
-        if (hdf5File.exists() && overwrite == false)
+        if (hdf5File.exists() && overwriteInit == false)
         {
-            return h5.openFileReadWrite(path, useLatestFileFormat, fileRegistry);
+            return h5.openFileReadWrite(hdf5File.getPath(), useLatestFileFormatInit, fileRegistry);
         } else
         {
             final File directory = hdf5File.getParentFile();
@@ -93,8 +80,14 @@ public final class HDF5BaseWriter extends HDF5BaseReader
                 throw new HDF5JavaException("Directory '" + directory.getPath()
                         + "' does not exist.");
             }
-            return h5.createFile(path, useLatestFileFormat, fileRegistry);
+            return h5.createFile(hdf5File.getPath(), useLatestFileFormatInit, fileRegistry);
         }
+    }
+
+    @Override
+    protected void commitDataType(final String dataTypePath, final int dataTypeId)
+    {
+        h5.commitDataType(fileId, dataTypePath, dataTypeId);
     }
 
     protected HDF5EnumerationType openOrCreateTypeVariantDataType(final HDF5Writer writer)
@@ -306,61 +299,5 @@ public final class HDF5BaseWriter extends HDF5BaseReader
     //
     // Config
     //
-
-    /**
-     * The file will be truncated to length 0 if it already exists, that is its content will be
-     * deleted.
-     */
-    public HDF5BaseWriter overwrite()
-    {
-        this.overwrite = true;
-        return this;
-    }
-
-    /**
-     * Use data types which can not be extended later on. This may reduce the initial size of the
-     * HDF5 file.
-     */
-    public HDF5BaseWriter dontUseExtendableDataTypes()
-    {
-        this.useExtentableDataTypes = false;
-        return this;
-    }
-
-    /**
-     * A file will be created that uses the latest available file format. This may improve
-     * performance or space consumption but in general means that older versions of the library are
-     * no longer able to read this file.
-     */
-    public HDF5BaseWriter useLatestFileFormat()
-    {
-        this.useLatestFileFormat = true;
-        return this;
-    }
-
-    /**
-     * Will try to perform numeric conversions where appropriate if supported by the platform.
-     * <p>
-     * <strong>Numeric conversions can be platform dependent and are not available on all platforms.
-     * Be advised not to rely on numeric conversions if you can help it!</strong>
-     */
-    @Override
-    public HDF5BaseWriter performNumericConversions()
-    {
-        return (HDF5BaseWriter) super.performNumericConversions();
-    }
-
-    /**
-     * Returns an {@link HDF5Writer} based on this configuration.
-     */
-    public HDF5Writer writer()
-    {
-        if (readerWriterOrNull == null)
-        {
-            readerWriterOrNull = new HDF5Writer(this);
-            open();
-        }
-        return (HDF5Writer) readerWriterOrNull;
-    }
 
 }

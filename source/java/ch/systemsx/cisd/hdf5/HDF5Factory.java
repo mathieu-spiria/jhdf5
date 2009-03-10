@@ -43,7 +43,7 @@ public class HDF5Factory
      */
     public static HDF5SimpleWriter open(File file)
     {
-        return new HDF5BaseWriter(ensureExtension(file)).writer();
+        return new HDF5WriterConfigurator(ensureExtension(file)).writer();
     }
 
     /**
@@ -54,7 +54,7 @@ public class HDF5Factory
      */
     public static HDF5SimpleReader openForReading(File file)
     {
-        return new HDF5BaseReader(ensureExtension(file)).reader();
+        return new HDF5ReaderConfigurator(ensureExtension(file)).reader();
     }
 
     private static File ensureExtension(File file)

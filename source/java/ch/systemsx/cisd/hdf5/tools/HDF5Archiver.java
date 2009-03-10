@@ -20,9 +20,9 @@ import java.io.File;
 import java.util.List;
 
 import ch.systemsx.cisd.hdf5.HDF5Reader;
-import ch.systemsx.cisd.hdf5.HDF5BaseReader;
+import ch.systemsx.cisd.hdf5.HDF5ReaderConfigurator;
 import ch.systemsx.cisd.hdf5.HDF5Writer;
-import ch.systemsx.cisd.hdf5.HDF5BaseWriter;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator;
 
 /**
  * An archiver based on HDF5 as archive format for directory with fast random access to particular
@@ -47,10 +47,10 @@ public class HDF5Archiver
         if (readOnly)
         {
             this.hdf5WriterOrNull = null;
-            this.hdf5Reader = new HDF5BaseReader(archiveFile).reader();
+            this.hdf5Reader = new HDF5ReaderConfigurator(archiveFile).reader();
         } else
         {
-            final HDF5BaseWriter config = new HDF5BaseWriter(archiveFile);
+            final HDF5WriterConfigurator config = new HDF5WriterConfigurator(archiveFile);
             if (useLatestFileFormat)
             {
                 config.useLatestFileFormat();

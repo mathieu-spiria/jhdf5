@@ -19,6 +19,8 @@ package ch.systemsx.cisd.hdf5;
 import static ch.systemsx.cisd.hdf5.HDF5.NO_DEFLATION;
 
 import java.lang.reflect.Array;
+import java.util.Iterator;
+import java.util.List;
 
 import ch.rinn.restrictions.Private;
 import ch.systemsx.cisd.common.array.MDArray;
@@ -241,6 +243,24 @@ final class HDF5Utils
     static boolean isInternalName(final String name)
     {
         return name.startsWith("__") && name.endsWith("__");
+    }
+
+    /**
+     * Removes all internal names from the list <var>names</var>.
+     * 
+     * @return The list <var>names</var>.
+     */
+    static List<String> removeInternalNames(final List<String> names)
+    {
+        for (Iterator<String> iterator = names.iterator(); iterator.hasNext(); /**/)
+        {
+            final String memberName = iterator.next();
+            if (isInternalName(memberName))
+            {
+                iterator.remove();
+            }
+        }
+        return names;
     }
 
     @SuppressWarnings("unchecked")

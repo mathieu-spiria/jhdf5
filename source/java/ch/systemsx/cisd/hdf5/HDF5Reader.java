@@ -20,7 +20,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.ENUM_PREFIX;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.isInternalName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_COMPOUND;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
@@ -38,7 +38,6 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -79,13 +78,13 @@ import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 public class HDF5Reader implements HDF5SimpleReader
 {
 
-    private final HDF5BaseReader config;
+    private final HDF5BaseReader baseReader;
 
-    HDF5Reader(HDF5BaseReader config)
+    HDF5Reader(HDF5BaseReader baseReader)
     {
-        assert config != null;
+        assert baseReader != null;
 
-        this.config = config;
+        this.baseReader = baseReader;
     }
 
     // /////////////////////
@@ -98,7 +97,7 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public boolean isPerformNumericConversions()
     {
-        return config.performNumericConversions;
+        return baseReader.performNumericConversions;
     }
 
     /**
@@ -106,7 +105,7 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public File getFile()
     {
-        return config.hdf5File;
+        return baseReader.hdf5File;
     }
 
     /**
@@ -115,7 +114,7 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public void close()
     {
-        config.close();
+        baseReader.close();
     }
 
     // /////////////////////
@@ -132,8 +131,8 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public HDF5LinkInformation getLinkInformation(final String objectPath)
     {
-        config.checkOpen();
-        return config.h5.getLinkInfo(config.fileId, objectPath, false);
+        baseReader.checkOpen();
+        return baseReader.h5.getLinkInfo(baseReader.fileId, objectPath, false);
     }
 
     /**
@@ -141,8 +140,8 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public HDF5ObjectType getObjectType(final String objectPath)
     {
-        config.checkOpen();
-        return config.h5.getTypeInfo(config.fileId, objectPath, false);
+        baseReader.checkOpen();
+        return baseReader.h5.getTypeInfo(baseReader.fileId, objectPath, false);
     }
 
     /**
@@ -150,12 +149,12 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public boolean exists(final String objectPath)
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         if ("/".equals(objectPath))
         {
             return true;
         }
-        return config.h5.exists(config.fileId, objectPath);
+        return baseReader.h5.exists(baseReader.fileId, objectPath);
     }
 
     /**
@@ -220,20 +219,20 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<String> dataTypeNameCallable =
                 new ICallableWithCleanUp<String>()
                     {
                         public String call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final int dataTypeId =
-                                    config.h5.getDataTypeForDataSet(dataSetId, registry);
-                            return config.h5.tryGetDataTypePath(dataTypeId);
+                                    baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
+                            return baseReader.h5.tryGetDataTypePath(dataTypeId);
                         }
                     };
-        return config.runner.call(dataTypeNameCallable);
+        return baseReader.runner.call(dataTypeNameCallable);
     }
 
     /**
@@ -244,9 +243,9 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert type != null;
 
-        config.checkOpen();
-        type.check(config.fileId);
-        return config.h5.tryGetDataTypePath(type.getStorageTypeId());
+        baseReader.checkOpen();
+        type.check(baseReader.fileId);
+        return baseReader.h5.tryGetDataTypePath(type.getStorageTypeId());
     }
 
     /**
@@ -258,26 +257,8 @@ public class HDF5Reader implements HDF5SimpleReader
     public List<String> getAttributeNames(final String objectPath)
     {
         assert objectPath != null;
-        config.checkOpen();
+        baseReader.checkOpen();
         return removeInternalNames(getAllAttributeNames(objectPath));
-    }
-
-    /**
-     * Removes all internal names from the list <var>names</var>.
-     * 
-     * @return The list <var>names</var>.
-     */
-    private List<String> removeInternalNames(final List<String> names)
-    {
-        for (Iterator<String> iterator = names.iterator(); iterator.hasNext(); /**/)
-        {
-            final String memberName = iterator.next();
-            if (isInternalName(memberName))
-            {
-                iterator.remove();
-            }
-        }
-        return names;
     }
 
     /**
@@ -293,18 +274,18 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<List<String>> attributeNameReaderRunnable =
                 new ICallableWithCleanUp<List<String>>()
                     {
                         public List<String> call(ICleanUpRegistry registry)
                         {
                             final int objectId =
-                                    config.h5.openObject(config.fileId, objectPath, registry);
-                            return config.h5.getAttributeNames(objectId, registry);
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                            return baseReader.h5.getAttributeNames(objectId, registry);
                         }
                     };
-        return config.runner.call(attributeNameReaderRunnable);
+        return baseReader.runner.call(attributeNameReaderRunnable);
     }
 
     /**
@@ -319,7 +300,7 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert dataSetPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5DataTypeInformation> informationDeterminationRunnable =
                 new ICallableWithCleanUp<HDF5DataTypeInformation>()
                     {
@@ -328,11 +309,11 @@ public class HDF5Reader implements HDF5SimpleReader
                             try
                             {
                                 final int objectId =
-                                        config.h5.openObject(config.fileId, dataSetPath, registry);
+                                        baseReader.h5.openObject(baseReader.fileId, dataSetPath, registry);
                                 final int attributeId =
-                                        config.h5.openAttribute(objectId, attributeName, registry);
+                                        baseReader.h5.openAttribute(objectId, attributeName, registry);
                                 final int dataTypeId =
-                                        config.h5.getDataTypeForAttribute(attributeId, registry);
+                                        baseReader.h5.getDataTypeForAttribute(attributeId, registry);
                                 return getDataTypeInformation(dataTypeId);
                             } catch (RuntimeException ex)
                             {
@@ -340,7 +321,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             }
                         }
                     };
-        return config.runner.call(informationDeterminationRunnable);
+        return baseReader.runner.call(informationDeterminationRunnable);
     }
 
     /**
@@ -355,16 +336,16 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert dataSetPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5DataSetInformation> informationDeterminationRunnable =
                 new ICallableWithCleanUp<HDF5DataSetInformation>()
                     {
                         public HDF5DataSetInformation call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, dataSetPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath, registry);
                             final int dataTypeId =
-                                    config.h5.getDataTypeForDataSet(dataSetId, registry);
+                                    baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                             final HDF5DataTypeInformation dataTypeInfo =
                                     getDataTypeInformation(dataTypeId);
                             final HDF5DataSetInformation dataSetInfo =
@@ -372,7 +353,7 @@ public class HDF5Reader implements HDF5SimpleReader
                                             dataSetId, registry));
                             // Is it a variable-length string?
                             final boolean vlString =
-                                    (dataTypeInfo.getDataClass() == HDF5DataClass.STRING && config.h5
+                                    (dataTypeInfo.getDataClass() == HDF5DataClass.STRING && baseReader.h5
                                             .isVariableLengthString(dataTypeId));
                             if (vlString)
                             {
@@ -385,27 +366,27 @@ public class HDF5Reader implements HDF5SimpleReader
                                 dataSetInfo.setStorageLayout(StorageLayout.VARIABLE_LENGTH);
                             } else
                             {
-                                config.h5.fillDataDimensions(dataSetId, false, dataSetInfo);
+                                baseReader.h5.fillDataDimensions(dataSetId, false, dataSetInfo);
                             }
                             return dataSetInfo;
                         }
                     };
-        return config.runner.call(informationDeterminationRunnable);
+        return baseReader.runner.call(informationDeterminationRunnable);
     }
 
     private HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId)
     {
-        return new HDF5DataTypeInformation(getDataClassForDataType(dataTypeId), config.h5
+        return new HDF5DataTypeInformation(getDataClassForDataType(dataTypeId), baseReader.h5
                 .getSize(dataTypeId));
     }
 
     private HDF5DataClass getDataClassForDataType(final int dataTypeId)
     {
         HDF5DataClass dataClass =
-                HDF5DataClass.classIdToDataClass(config.h5.getClassType(dataTypeId));
+                HDF5DataClass.classIdToDataClass(baseReader.h5.getClassType(dataTypeId));
         // Is it a boolean?
         if (dataClass == HDF5DataClass.ENUM
-                && config.h5.dataTypesAreEqual(dataTypeId, config.booleanDataTypeId))
+                && baseReader.h5.dataTypesAreEqual(dataTypeId, baseReader.booleanDataTypeId))
         {
             dataClass = HDF5DataClass.BOOLEAN;
         }
@@ -425,8 +406,9 @@ public class HDF5Reader implements HDF5SimpleReader
     public List<String> getGroupMembers(final String groupPath)
     {
         assert groupPath != null;
-        config.checkOpen();
-        return removeInternalNames(getAllGroupMembers(groupPath));
+        
+        baseReader.checkOpen();
+        return baseReader.getGroupMembers(groupPath);
     }
 
     /**
@@ -438,9 +420,10 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public List<String> getAllGroupMembers(final String groupPath)
     {
-        config.checkOpen();
-        final String[] groupMemberArray = config.h5.getGroupMembers(config.fileId, groupPath);
-        return new LinkedList<String>(Arrays.asList(groupMemberArray));
+        assert groupPath != null;
+        
+        baseReader.checkOpen();
+        return baseReader.getAllGroupMembers(groupPath);
     }
 
     /**
@@ -452,14 +435,10 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public List<String> getGroupMemberPaths(final String groupPath)
     {
-        config.checkOpen();
-        final String superGroupName = (groupPath.equals("/") ? "/" : groupPath + "/");
-        final List<String> memberNames = getGroupMembers(groupPath);
-        for (int i = 0; i < memberNames.size(); ++i)
-        {
-            memberNames.set(i, superGroupName + memberNames.get(i));
-        }
-        return memberNames;
+        assert groupPath != null;
+        
+        baseReader.checkOpen();
+        return baseReader.getGroupMemberPaths(groupPath);
     }
 
     /**
@@ -474,13 +453,13 @@ public class HDF5Reader implements HDF5SimpleReader
     public List<HDF5LinkInformation> getGroupMemberInformation(final String groupPath,
             boolean readLinkTargets)
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         if (readLinkTargets)
         {
-            return config.h5.getGroupMemberLinkInfo(config.fileId, groupPath, false);
+            return baseReader.h5.getGroupMemberLinkInfo(baseReader.fileId, groupPath, false);
         } else
         {
-            return config.h5.getGroupMemberTypeInfo(config.fileId, groupPath, false);
+            return baseReader.h5.getGroupMemberTypeInfo(baseReader.fileId, groupPath, false);
         }
     }
 
@@ -499,13 +478,13 @@ public class HDF5Reader implements HDF5SimpleReader
     public List<HDF5LinkInformation> getAllGroupMemberInformation(final String groupPath,
             boolean readLinkTargets)
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         if (readLinkTargets)
         {
-            return config.h5.getGroupMemberLinkInfo(config.fileId, groupPath, true);
+            return baseReader.h5.getGroupMemberLinkInfo(baseReader.fileId, groupPath, true);
         } else
         {
-            return config.h5.getGroupMemberTypeInfo(config.fileId, groupPath, true);
+            return baseReader.h5.getGroupMemberTypeInfo(baseReader.fileId, groupPath, true);
         }
     }
 
@@ -525,18 +504,18 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public String tryGetOpaqueTag(final String objectPath)
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<String> readTagCallable = new ICallableWithCleanUp<String>()
             {
                 public String call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final int dataTypeId = config.h5.getDataTypeForDataSet(dataSetId, registry);
-                    return config.h5.getOpaqueTag(dataTypeId);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final int dataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
+                    return baseReader.h5.getOpaqueTag(dataTypeId);
                 }
             };
-        return config.runner.call(readTagCallable);
+        return baseReader.runner.call(readTagCallable);
     }
 
     /**
@@ -547,13 +526,13 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public HDF5EnumerationType getEnumType(final String name)
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final String dataTypePath = createDataTypePath(ENUM_PREFIX, name);
-        final int storageDataTypeId = config.getDataTypeId(dataTypePath);
+        final int storageDataTypeId = baseReader.getDataTypeId(dataTypePath);
         final int nativeDataTypeId =
-                config.h5.getNativeDataType(storageDataTypeId, config.fileRegistry);
-        final String[] values = config.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-        return new HDF5EnumerationType(config.fileId, storageDataTypeId, nativeDataTypeId, name,
+                baseReader.h5.getNativeDataType(storageDataTypeId, baseReader.fileRegistry);
+        final String[] values = baseReader.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
+        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId, name,
                 values);
     }
 
@@ -585,7 +564,7 @@ public class HDF5Reader implements HDF5SimpleReader
     public HDF5EnumerationType getEnumType(final String name, final String[] values,
             final boolean check) throws HDF5JavaException
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final HDF5EnumerationType dataType = getEnumType(name);
         if (check)
         {
@@ -596,7 +575,7 @@ public class HDF5Reader implements HDF5SimpleReader
 
     protected void checkEnumValues(int dataTypeId, final String[] values, final String nameOrNull)
     {
-        final String[] valuesStored = config.h5.getNamesForEnumOrCompoundMembers(dataTypeId);
+        final String[] valuesStored = baseReader.h5.getNamesForEnumOrCompoundMembers(dataTypeId);
         if (valuesStored.length != values.length)
         {
             throw new IllegalStateException("Enum "
@@ -621,7 +600,7 @@ public class HDF5Reader implements HDF5SimpleReader
             return nameOrNull;
         } else
         {
-            final String path = config.h5.tryGetDataTypePath(dataTypeId);
+            final String path = baseReader.h5.tryGetDataTypePath(dataTypeId);
             if (path == null)
             {
                 return "UNKNOWN";
@@ -640,28 +619,28 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public HDF5EnumerationType getEnumTypeForObject(final String dataSetPath)
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5EnumerationType> readEnumTypeCallable =
                 new ICallableWithCleanUp<HDF5EnumerationType>()
                     {
                         public HDF5EnumerationType call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, dataSetPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath, registry);
                             return getEnumTypeForDataSetId(dataSetId);
                         }
                     };
-        return config.runner.call(readEnumTypeCallable);
+        return baseReader.runner.call(readEnumTypeCallable);
     }
 
     private HDF5EnumerationType getEnumTypeForDataSetId(final int objectId)
     {
         final int storageDataTypeId =
-                config.h5.getDataTypeForDataSet(objectId, config.fileRegistry);
+                baseReader.h5.getDataTypeForDataSet(objectId, baseReader.fileRegistry);
         final int nativeDataTypeId =
-                config.h5.getNativeDataType(storageDataTypeId, config.fileRegistry);
-        final String[] values = config.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-        return new HDF5EnumerationType(config.fileId, storageDataTypeId, nativeDataTypeId, null,
+                baseReader.h5.getNativeDataType(storageDataTypeId, baseReader.fileRegistry);
+        final String[] values = baseReader.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
+        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId, null,
                 values);
     }
 
@@ -682,16 +661,16 @@ public class HDF5Reader implements HDF5SimpleReader
         assert objectPath != null;
         assert attributeName != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Boolean> writeRunnable = new ICallableWithCleanUp<Boolean>()
             {
                 public Boolean call(ICleanUpRegistry registry)
                 {
-                    final int objectId = config.h5.openObject(config.fileId, objectPath, registry);
-                    return config.h5.existsAttribute(objectId, attributeName);
+                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    return baseReader.h5.existsAttribute(objectId, attributeName);
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     /**
@@ -707,25 +686,25 @@ public class HDF5Reader implements HDF5SimpleReader
         assert objectPath != null;
         assert attributeName != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
             {
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int objectId = config.h5.openObject(config.fileId, objectPath, registry);
+                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
-                            config.h5.openAttribute(objectId, attributeName, registry);
-                    final int dataTypeId = config.h5.getDataTypeForAttribute(attributeId, registry);
-                    final boolean isString = (config.h5.getClassType(dataTypeId) == H5T_STRING);
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
+                    final int dataTypeId = baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                    final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
                     if (isString == false)
                     {
                         throw new IllegalArgumentException("Attribute " + attributeName
                                 + " of object " + objectPath + " needs to be a String.");
                     }
-                    final int size = config.h5.getSize(dataTypeId);
-                    final int stringDataTypeId = config.h5.createDataTypeString(size, registry);
+                    final int size = baseReader.h5.getSize(dataTypeId);
+                    final int stringDataTypeId = baseReader.h5.createDataTypeString(size, registry);
                     byte[] data =
-                            config.h5.readAttributeAsByteArray(attributeId, stringDataTypeId, size);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, stringDataTypeId, size);
                     int termIdx;
                     for (termIdx = 0; termIdx < size && data[termIdx] != 0; ++termIdx)
                     {
@@ -733,7 +712,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     return new String(data, 0, termIdx);
                 }
             };
-        return config.runner.call(readRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     /**
@@ -751,19 +730,19 @@ public class HDF5Reader implements HDF5SimpleReader
         assert objectPath != null;
         assert attributeName != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Boolean> writeRunnable = new ICallableWithCleanUp<Boolean>()
             {
                 public Boolean call(ICleanUpRegistry registry)
                 {
-                    final int objectId = config.h5.openObject(config.fileId, objectPath, registry);
+                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
-                            config.h5.openAttribute(objectId, attributeName, registry);
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final int nativeDataTypeId =
-                            config.h5.getNativeDataTypeForAttribute(attributeId, registry);
+                            baseReader.h5.getNativeDataTypeForAttribute(attributeId, registry);
                     byte[] data =
-                            config.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, 1);
-                    final Boolean value = config.h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, 1);
+                    final Boolean value = baseReader.h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
                     if (value == null)
                     {
                         throw new HDF5JavaException("Attribute " + attributeName + " of path "
@@ -772,7 +751,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     return value;
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     /**
@@ -790,22 +769,22 @@ public class HDF5Reader implements HDF5SimpleReader
         assert objectPath != null;
         assert attributeName != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
             {
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int objectId = config.h5.openObject(config.fileId, objectPath, registry);
+                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
-                            config.h5.openAttribute(objectId, attributeName, registry);
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final int storageDataTypeId =
-                            config.h5.getDataTypeForAttribute(attributeId, registry);
+                            baseReader.h5.getDataTypeForAttribute(attributeId, registry);
                     final int nativeDataTypeId =
-                            config.h5.getNativeDataType(storageDataTypeId, registry);
+                            baseReader.h5.getNativeDataType(storageDataTypeId, registry);
                     final byte[] data =
-                            config.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, 4);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, 4);
                     final String value =
-                            config.h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
+                            baseReader.h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
                                     HDFNativeData.byteToInt(data, 0));
                     if (value == null)
                     {
@@ -815,7 +794,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     return value;
                 }
             };
-        return config.runner.call(readRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     /**
@@ -829,19 +808,19 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5DataTypeVariant> readRunnable =
                 new ICallableWithCleanUp<HDF5DataTypeVariant>()
                     {
                         public HDF5DataTypeVariant call(ICleanUpRegistry registry)
                         {
                             final int objectId =
-                                    config.h5.openObject(config.fileId, objectPath, registry);
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                             return tryGetTypeVariant(objectId, registry);
                         }
                     };
 
-        return config.runner.call(readRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     private HDF5DataTypeVariant tryGetTypeVariant(final int dataSetId, ICleanUpRegistry registry)
@@ -859,13 +838,13 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     private int getAttributeTypeVariant(final int objectId, ICleanUpRegistry registry)
     {
-        config.checkOpen();
-        if (config.h5.existsAttribute(objectId, TYPE_VARIANT_ATTRIBUTE) == false)
+        baseReader.checkOpen();
+        if (baseReader.h5.existsAttribute(objectId, TYPE_VARIANT_ATTRIBUTE) == false)
         {
             return -1;
         }
-        final int attributeId = config.h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
-        return getEnumOrdinal(attributeId, config.typeVariantDataType);
+        final int attributeId = baseReader.h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
+        return getEnumOrdinal(attributeId, baseReader.typeVariantDataType);
     }
 
     /**
@@ -883,16 +862,16 @@ public class HDF5Reader implements HDF5SimpleReader
         assert objectPath != null;
         assert attributeName != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5EnumerationValue> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValue>()
                     {
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
                             final int objectId =
-                                    config.h5.openObject(config.fileId, objectPath, registry);
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                             final int attributeId =
-                                    config.h5.openAttribute(objectId, attributeName, registry);
+                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
                             final HDF5EnumerationType enumType =
                                     getEnumTypeForAttributeId(attributeId);
                             final int enumOrdinal = getEnumOrdinal(attributeId, enumType);
@@ -900,7 +879,7 @@ public class HDF5Reader implements HDF5SimpleReader
                         }
                     };
 
-        return config.runner.call(readRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     private int getEnumOrdinal(final int attributeId, final HDF5EnumerationType enumType)
@@ -911,7 +890,7 @@ public class HDF5Reader implements HDF5SimpleReader
             case BYTE:
             {
                 final byte[] data =
-                        config.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
+                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
                                 1);
                 enumOrdinal = data[0];
                 break;
@@ -919,7 +898,7 @@ public class HDF5Reader implements HDF5SimpleReader
             case SHORT:
             {
                 final byte[] data =
-                        config.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
+                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
                                 2);
                 enumOrdinal = HDFNativeData.byteToShort(data, 0);
                 break;
@@ -927,7 +906,7 @@ public class HDF5Reader implements HDF5SimpleReader
             case INT:
             {
                 final byte[] data =
-                        config.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
+                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
                                 4);
                 enumOrdinal = HDFNativeData.byteToInt(data, 0);
                 break;
@@ -942,11 +921,11 @@ public class HDF5Reader implements HDF5SimpleReader
     private HDF5EnumerationType getEnumTypeForAttributeId(final int objectId)
     {
         final int storageDataTypeId =
-                config.h5.getDataTypeForAttribute(objectId, config.fileRegistry);
+                baseReader.h5.getDataTypeForAttribute(objectId, baseReader.fileRegistry);
         final int nativeDataTypeId =
-                config.h5.getNativeDataType(storageDataTypeId, config.fileRegistry);
-        final String[] values = config.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-        return new HDF5EnumerationType(config.fileId, storageDataTypeId, nativeDataTypeId, null,
+                baseReader.h5.getNativeDataType(storageDataTypeId, baseReader.fileRegistry);
+        final String[] values = baseReader.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
+        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId, null,
                 values);
     }
 
@@ -963,20 +942,20 @@ public class HDF5Reader implements HDF5SimpleReader
         assert objectPath != null;
         assert attributeName != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Integer> writeRunnable = new ICallableWithCleanUp<Integer>()
             {
                 public Integer call(ICleanUpRegistry registry)
                 {
-                    final int objectId = config.h5.openObject(config.fileId, objectPath, registry);
+                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
-                            config.h5.openAttribute(objectId, attributeName, registry);
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final byte[] data =
-                            config.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_INT32, 4);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_INT32, 4);
                     return HDFNativeData.byteToInt(data, 0);
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     /**
@@ -992,20 +971,20 @@ public class HDF5Reader implements HDF5SimpleReader
         assert objectPath != null;
         assert attributeName != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Long> writeRunnable = new ICallableWithCleanUp<Long>()
             {
                 public Long call(ICleanUpRegistry registry)
                 {
-                    final int objectId = config.h5.openObject(config.fileId, objectPath, registry);
+                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
-                            config.h5.openAttribute(objectId, attributeName, registry);
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final byte[] data =
-                            config.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_INT64, 8);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_INT64, 8);
                     return HDFNativeData.byteToLong(data, 0);
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     /**
@@ -1021,20 +1000,20 @@ public class HDF5Reader implements HDF5SimpleReader
         assert objectPath != null;
         assert attributeName != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Float> writeRunnable = new ICallableWithCleanUp<Float>()
             {
                 public Float call(ICleanUpRegistry registry)
                 {
-                    final int objectId = config.h5.openObject(config.fileId, objectPath, registry);
+                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
-                            config.h5.openAttribute(objectId, attributeName, registry);
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final byte[] data =
-                            config.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_FLOAT, 4);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_FLOAT, 4);
                     return HDFNativeData.byteToFloat(data, 0);
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     /**
@@ -1050,20 +1029,20 @@ public class HDF5Reader implements HDF5SimpleReader
         assert objectPath != null;
         assert attributeName != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Double> writeRunnable = new ICallableWithCleanUp<Double>()
             {
                 public Double call(ICleanUpRegistry registry)
                 {
-                    final int objectId = config.h5.openObject(config.fileId, objectPath, registry);
+                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
-                            config.h5.openAttribute(objectId, attributeName, registry);
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final byte[] data =
-                            config.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_DOUBLE, 8);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_DOUBLE, 8);
                     return HDFNativeData.byteToDouble(data, 0);
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     // /////////////////////
@@ -1082,26 +1061,26 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public byte[] readAsByteArray(final String objectPath)
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final int nativeDataTypeId =
-                            config.h5
+                            baseReader.h5
                                     .getNativeDataTypeForDataSetCheckBitFields(dataSetId, registry);
                     final byte[] data =
-                            new byte[spaceParams.blockSize * config.h5.getSize(nativeDataTypeId)];
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            new byte[spaceParams.blockSize * baseReader.h5.getSize(nativeDataTypeId)];
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1119,25 +1098,25 @@ public class HDF5Reader implements HDF5SimpleReader
     public byte[] readAsByteArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber) throws HDF5JavaException
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final int nativeDataTypeId =
-                            config.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1154,24 +1133,24 @@ public class HDF5Reader implements HDF5SimpleReader
     public byte[] readAsByteArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset) throws HDF5JavaException
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int nativeDataTypeId =
-                            config.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1262,18 +1241,18 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Boolean> writeRunnable = new ICallableWithCleanUp<Boolean>()
             {
                 public Boolean call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final int nativeDataTypeId =
-                            config.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final byte[] data = new byte[1];
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, data);
-                    final Boolean value = config.h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
+                    final Boolean value = baseReader.h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
                     if (value == null)
                     {
                         throw new HDF5JavaException(objectPath + " needs to be a Boolean.");
@@ -1281,7 +1260,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     return value;
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     /**
@@ -1299,7 +1278,7 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public BitSet readBitField(final String objectPath) throws HDF5DatatypeInterfaceException
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         return BitSetConversionUtils.fromStorageForm(readBitFieldStorageForm(objectPath));
     }
 
@@ -1318,16 +1297,16 @@ public class HDF5Reader implements HDF5SimpleReader
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_B64, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_B64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     // ------------------------------------------------------------------------------
@@ -1349,19 +1328,19 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Byte> readCallable = new ICallableWithCleanUp<Byte>()
             {
                 public Byte call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final byte[] data = new byte[1];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, data);
                     return data[0];
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1374,22 +1353,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1405,24 +1384,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1440,24 +1419,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1477,23 +1456,23 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1512,22 +1491,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1611,27 +1590,27 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDByteArray> readCallable =
                 new ICallableWithCleanUp<MDByteArray>()
                     {
                         public MDByteArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, registry);
+                                    baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    config
+                                    baseReader
                                             .getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8,
                                                     registry);
                             final byte[] data = new byte[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                             return new MDByteArray(data, spaceParams.dimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1650,7 +1629,7 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert blockNumber != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDByteArray> readCallable =
                 new ICallableWithCleanUp<MDByteArray>()
                     {
@@ -1662,17 +1641,17 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final byte[] dataBlock = new byte[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDByteArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1690,24 +1669,24 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert offset != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDByteArray> readCallable =
                 new ICallableWithCleanUp<MDByteArray>()
                     {
                         public MDByteArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final byte[] dataBlock = new byte[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDByteArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1886,19 +1865,19 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Short> readCallable = new ICallableWithCleanUp<Short>()
             {
                 public Short call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final short[] data = new short[1];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, data);
                     return data[0];
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1911,22 +1890,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<short[]> readCallable = new ICallableWithCleanUp<short[]>()
             {
                 public short[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final short[] data = new short[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1942,24 +1921,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -1978,24 +1957,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2015,23 +1994,23 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<short[]> readCallable = new ICallableWithCleanUp<short[]>()
             {
                 public short[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final short[] data = new short[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2050,22 +2029,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<short[]> readCallable = new ICallableWithCleanUp<short[]>()
             {
                 public short[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final short[] data = new short[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2149,26 +2128,26 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDShortArray> readCallable =
                 new ICallableWithCleanUp<MDShortArray>()
                     {
                         public MDShortArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, registry);
+                                    baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16,
+                                    baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16,
                                             registry);
                             final short[] data = new short[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                             return new MDShortArray(data, spaceParams.dimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2187,7 +2166,7 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert blockNumber != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDShortArray> readCallable =
                 new ICallableWithCleanUp<MDShortArray>()
                     {
@@ -2199,17 +2178,17 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final short[] dataBlock = new short[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDShortArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2227,24 +2206,24 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert offset != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDShortArray> readCallable =
                 new ICallableWithCleanUp<MDShortArray>()
                     {
                         public MDShortArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final short[] dataBlock = new short[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDShortArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2424,19 +2403,19 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Integer> readCallable = new ICallableWithCleanUp<Integer>()
             {
                 public Integer call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final int[] data = new int[1];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, data);
                     return data[0];
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2449,22 +2428,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
                 public int[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final int[] data = new int[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2480,24 +2459,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2515,24 +2494,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2552,23 +2531,23 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
                 public int[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final int[] data = new int[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2586,22 +2565,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
                 public int[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int[] data = new int[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2685,26 +2664,26 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDIntArray> readCallable =
                 new ICallableWithCleanUp<MDIntArray>()
                     {
                         public MDIntArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, registry);
+                                    baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32,
+                                    baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32,
                                             registry);
                             final int[] data = new int[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                             return new MDIntArray(data, spaceParams.dimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2723,7 +2702,7 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert blockNumber != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDIntArray> readCallable =
                 new ICallableWithCleanUp<MDIntArray>()
                     {
@@ -2735,17 +2714,17 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final int[] dataBlock = new int[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDIntArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2763,24 +2742,24 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert offset != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDIntArray> readCallable =
                 new ICallableWithCleanUp<MDIntArray>()
                     {
                         public MDIntArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final int[] dataBlock = new int[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDIntArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2958,19 +2937,19 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Long> readCallable = new ICallableWithCleanUp<Long>()
             {
                 public Long call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final long[] data = new long[1];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
                     return data[0];
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -2983,22 +2962,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3014,24 +2993,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3049,24 +3028,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3086,23 +3065,23 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3121,22 +3100,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3220,26 +3199,26 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDLongArray> readCallable =
                 new ICallableWithCleanUp<MDLongArray>()
                     {
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, registry);
+                                    baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64,
+                                    baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64,
                                             registry);
                             final long[] data = new long[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                             return new MDLongArray(data, spaceParams.dimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3258,7 +3237,7 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert blockNumber != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDLongArray> readCallable =
                 new ICallableWithCleanUp<MDLongArray>()
                     {
@@ -3270,17 +3249,17 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final long[] dataBlock = new long[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDLongArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3298,24 +3277,24 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert offset != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDLongArray> readCallable =
                 new ICallableWithCleanUp<MDLongArray>()
                     {
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final long[] dataBlock = new long[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDLongArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3494,19 +3473,19 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Float> readCallable = new ICallableWithCleanUp<Float>()
             {
                 public Float call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final float[] data = new float[1];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, data);
                     return data[0];
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3519,22 +3498,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<float[]> readCallable = new ICallableWithCleanUp<float[]>()
             {
                 public float[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final float[] data = new float[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3550,24 +3529,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3586,24 +3565,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3623,23 +3602,23 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<float[]> readCallable = new ICallableWithCleanUp<float[]>()
             {
                 public float[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final float[] data = new float[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3658,22 +3637,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<float[]> readCallable = new ICallableWithCleanUp<float[]>()
             {
                 public float[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final float[] data = new float[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3757,26 +3736,26 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDFloatArray> readCallable =
                 new ICallableWithCleanUp<MDFloatArray>()
                     {
                         public MDFloatArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, registry);
+                                    baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    config.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT,
+                                    baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT,
                                             registry);
                             final float[] data = new float[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                             return new MDFloatArray(data, spaceParams.dimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3795,7 +3774,7 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert blockNumber != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDFloatArray> readCallable =
                 new ICallableWithCleanUp<MDFloatArray>()
                     {
@@ -3807,17 +3786,17 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final float[] dataBlock = new float[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDFloatArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -3835,24 +3814,24 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert offset != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDFloatArray> readCallable =
                 new ICallableWithCleanUp<MDFloatArray>()
                     {
                         public MDFloatArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final float[] dataBlock = new float[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDFloatArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4032,19 +4011,19 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Double> readCallable = new ICallableWithCleanUp<Double>()
             {
                 public Double call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final double[] data = new double[1];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, data);
                     return data[0];
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4057,22 +4036,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<double[]> readCallable = new ICallableWithCleanUp<double[]>()
             {
                 public double[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final double[] data = new double[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4088,24 +4067,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4124,24 +4103,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        config.runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4161,23 +4140,23 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<double[]> readCallable = new ICallableWithCleanUp<double[]>()
             {
                 public double[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final double[] data = new double[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4196,22 +4175,22 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<double[]> readCallable = new ICallableWithCleanUp<double[]>()
             {
                 public double[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final double[] data = new double[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4296,26 +4275,26 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDDoubleArray> readCallable =
                 new ICallableWithCleanUp<MDDoubleArray>()
                     {
                         public MDDoubleArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, registry);
+                                    baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    config.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE,
+                                    baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE,
                                             registry);
                             final double[] data = new double[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                             return new MDDoubleArray(data, spaceParams.dimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4334,7 +4313,7 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert blockNumber != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDDoubleArray> readCallable =
                 new ICallableWithCleanUp<MDDoubleArray>()
                     {
@@ -4346,17 +4325,17 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final double[] dataBlock = new double[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDDoubleArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4374,24 +4353,24 @@ public class HDF5Reader implements HDF5SimpleReader
         assert blockDimensions != null;
         assert offset != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDDoubleArray> readCallable =
                 new ICallableWithCleanUp<MDDoubleArray>()
                     {
                         public MDDoubleArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
                                             registry);
                             final double[] dataBlock = new double[spaceParams.blockSize];
-                            config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
                             return new MDDoubleArray(dataBlock, blockDimensions);
                         }
                     };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4586,23 +4565,23 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public long readTimeStamp(final String objectPath) throws HDF5JavaException
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Long> readCallable = new ICallableWithCleanUp<Long>()
             {
                 public Long call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     checkIsTimeStamp(objectPath, dataSetId, registry);
                     final long[] data = new long[1];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
                     return data[0];
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4619,23 +4598,23 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4656,24 +4635,24 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4693,23 +4672,23 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4903,21 +4882,21 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Long> readCallable = new ICallableWithCleanUp<Long>()
             {
                 public Long call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final HDF5TimeUnit storedUnit =
                             checkIsTimeDuration(objectPath, dataSetId, registry);
                     final long[] data = new long[1];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
                     return timeUnit.convert(data[0], storedUnit);
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4958,25 +4937,25 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final HDF5TimeUnit storedUnit =
                             checkIsTimeDuration(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     convertTimeDurations(timeUnit, storedUnit, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -4998,26 +4977,26 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final HDF5TimeUnit storedUnit =
                             checkIsTimeDuration(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     convertTimeDurations(timeUnit, storedUnit, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -5038,25 +5017,25 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final HDF5TimeUnit storedUnit =
                             checkIsTimeDuration(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     convertTimeDurations(timeUnit, storedUnit, data);
                     return data;
                 }
             };
-        return config.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     /**
@@ -5167,30 +5146,30 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<String> writeRunnable = new ICallableWithCleanUp<String>()
             {
                 public String call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final int dataTypeId =
-                            config.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final boolean isString = (config.h5.getClassType(dataTypeId) == H5T_STRING);
+                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
                     if (isString == false)
                     {
                         throw new HDF5JavaException(objectPath + " needs to be a String.");
                     }
-                    if (config.h5.isVariableLengthString(dataTypeId))
+                    if (baseReader.h5.isVariableLengthString(dataTypeId))
                     {
                         String[] data = new String[1];
-                        config.h5.readDataSetVL(dataSetId, dataTypeId, data);
+                        baseReader.h5.readDataSetVL(dataSetId, dataTypeId, data);
                         return data[0];
                     } else
                     {
-                        final int size = config.h5.getSize(dataTypeId);
+                        final int size = baseReader.h5.getSize(dataTypeId);
                         byte[] data = new byte[size];
-                        config.h5.readDataSetNonNumeric(dataSetId, dataTypeId, data);
+                        baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId, data);
                         int termIdx;
                         for (termIdx = 0; termIdx < size && data[termIdx] != 0; ++termIdx)
                         {
@@ -5199,7 +5178,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     }
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     /**
@@ -5214,27 +5193,27 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<String[]> writeRunnable = new ICallableWithCleanUp<String[]>()
             {
                 public String[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final long[] dimensions = config.h5.getDataDimensions(dataSetId);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId);
                     final String[] data = new String[getOneDimensionalArraySize(dimensions)];
                     final int dataTypeId =
-                            config.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final boolean isString = (config.h5.getClassType(dataTypeId) == H5T_STRING);
+                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
                     if (isString == false)
                     {
                         throw new HDF5JavaException(objectPath + " needs to be a String.");
                     }
-                    config.h5.readDataSetNonNumeric(dataSetId, dataTypeId, data);
+                    baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId, data);
                     return data;
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     //
@@ -5252,45 +5231,45 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<String> writeRunnable = new ICallableWithCleanUp<String>()
             {
                 public String call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final int storageDataTypeId =
-                            config.h5.getDataTypeForDataSet(dataSetId, registry);
+                            baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     final int nativeDataTypeId =
-                            config.h5.getNativeDataType(storageDataTypeId, registry);
-                    final int size = config.h5.getSize(nativeDataTypeId);
+                            baseReader.h5.getNativeDataType(storageDataTypeId, registry);
+                    final int size = baseReader.h5.getSize(nativeDataTypeId);
                     final String value;
                     switch (size)
                     {
                         case 1:
                         {
                             final byte[] data = new byte[1];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId, data);
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
                             value =
-                                    config.h5.getNameForEnumOrCompoundMemberIndex(
+                                    baseReader.h5.getNameForEnumOrCompoundMemberIndex(
                                             storageDataTypeId, data[0]);
                             break;
                         }
                         case 2:
                         {
                             final short[] data = new short[1];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId, data);
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
                             value =
-                                    config.h5.getNameForEnumOrCompoundMemberIndex(
+                                    baseReader.h5.getNameForEnumOrCompoundMemberIndex(
                                             storageDataTypeId, data[0]);
                             break;
                         }
                         case 4:
                         {
                             final int[] data = new int[1];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId, data);
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
                             value =
-                                    config.h5.getNameForEnumOrCompoundMemberIndex(
+                                    baseReader.h5.getNameForEnumOrCompoundMemberIndex(
                                             storageDataTypeId, data[0]);
                             break;
                         }
@@ -5305,7 +5284,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     return value;
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     /**
@@ -5319,20 +5298,20 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5EnumerationValue> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValue>()
                     {
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final HDF5EnumerationType enumType = getEnumTypeForDataSetId(dataSetId);
                             return readEnumValue(dataSetId, enumType);
                         }
                     };
 
-        return config.runner.call(readRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     /**
@@ -5352,20 +5331,20 @@ public class HDF5Reader implements HDF5SimpleReader
         assert objectPath != null;
         assert enumType != null;
 
-        config.checkOpen();
-        enumType.check(config.fileId);
+        baseReader.checkOpen();
+        enumType.check(baseReader.fileId);
         final ICallableWithCleanUp<HDF5EnumerationValue> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValue>()
                     {
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             return readEnumValue(dataSetId, enumType);
                         }
                     };
 
-        return config.runner.call(readRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     private HDF5EnumerationValue readEnumValue(final int dataSetId,
@@ -5376,19 +5355,19 @@ public class HDF5Reader implements HDF5SimpleReader
             case BYTE:
             {
                 final byte[] data = new byte[1];
-                config.h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
+                baseReader.h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
                 return new HDF5EnumerationValue(enumType, data[0]);
             }
             case SHORT:
             {
                 final short[] data = new short[1];
-                config.h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
+                baseReader.h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
                 return new HDF5EnumerationValue(enumType, data[0]);
             }
             case INT:
             {
                 final int[] data = new int[1];
-                config.h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
+                baseReader.h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
                 return new HDF5EnumerationValue(enumType, data[0]);
             }
             default:
@@ -5410,15 +5389,15 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5EnumerationValueArray> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValueArray>()
                     {
                         public HDF5EnumerationValueArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
-                            final long[] dimensions = config.h5.getDataDimensions(dataSetId);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                            final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId);
                             final HDF5EnumerationType actualEnumType =
                                     (enumType == null) ? getEnumTypeForDataSetId(dataSetId)
                                             : enumType;
@@ -5428,21 +5407,21 @@ public class HDF5Reader implements HDF5SimpleReader
                                 case BYTE:
                                 {
                                     final byte[] data = new byte[arraySize];
-                                    config.h5.readDataSet(dataSetId, actualEnumType
+                                    baseReader.h5.readDataSet(dataSetId, actualEnumType
                                             .getNativeTypeId(), data);
                                     return new HDF5EnumerationValueArray(actualEnumType, data);
                                 }
                                 case SHORT:
                                 {
                                     final short[] data = new short[arraySize];
-                                    config.h5.readDataSet(dataSetId, actualEnumType
+                                    baseReader.h5.readDataSet(dataSetId, actualEnumType
                                             .getNativeTypeId(), data);
                                     return new HDF5EnumerationValueArray(actualEnumType, data);
                                 }
                                 case INT:
                                 {
                                     final int[] data = new int[arraySize];
-                                    config.h5.readDataSet(dataSetId, actualEnumType
+                                    baseReader.h5.readDataSet(dataSetId, actualEnumType
                                             .getNativeTypeId(), data);
                                     return new HDF5EnumerationValueArray(actualEnumType, data);
                                 }
@@ -5452,7 +5431,7 @@ public class HDF5Reader implements HDF5SimpleReader
                         }
                     };
 
-        return config.runner.call(readRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     /**
@@ -5479,25 +5458,25 @@ public class HDF5Reader implements HDF5SimpleReader
     {
         assert objectPath != null;
 
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<String[]> writeRunnable = new ICallableWithCleanUp<String[]>()
             {
                 public String[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final long[] dimensions = config.h5.getDataDimensions(dataSetId);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId);
                     final int vectorLength = getOneDimensionalArraySize(dimensions);
                     final int storageDataTypeId =
-                            config.h5.getDataTypeForDataSet(dataSetId, registry);
+                            baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     final int nativeDataTypeId =
-                            config.h5.getNativeDataType(storageDataTypeId, registry);
-                    final boolean isEnum = (config.h5.getClassType(nativeDataTypeId) == H5T_ENUM);
+                            baseReader.h5.getNativeDataType(storageDataTypeId, registry);
+                    final boolean isEnum = (baseReader.h5.getClassType(nativeDataTypeId) == H5T_ENUM);
                     if (isEnum == false)
                     {
                         throw new HDF5JavaException(objectPath + " is not an enum.");
                     }
-                    final int size = config.h5.getSize(nativeDataTypeId);
+                    final int size = baseReader.h5.getSize(nativeDataTypeId);
 
                     final String[] value = new String[vectorLength];
                     switch (size)
@@ -5505,11 +5484,11 @@ public class HDF5Reader implements HDF5SimpleReader
                         case 1:
                         {
                             final byte[] data = new byte[vectorLength];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId, data);
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
                             for (int i = 0; i < data.length; ++i)
                             {
                                 value[i] =
-                                        config.h5.getNameForEnumOrCompoundMemberIndex(
+                                        baseReader.h5.getNameForEnumOrCompoundMemberIndex(
                                                 storageDataTypeId, data[i]);
                             }
                             break;
@@ -5517,11 +5496,11 @@ public class HDF5Reader implements HDF5SimpleReader
                         case 2:
                         {
                             final short[] data = new short[vectorLength];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId, data);
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
                             for (int i = 0; i < data.length; ++i)
                             {
                                 value[i] =
-                                        config.h5.getNameForEnumOrCompoundMemberIndex(
+                                        baseReader.h5.getNameForEnumOrCompoundMemberIndex(
                                                 storageDataTypeId, data[i]);
                             }
                             break;
@@ -5529,11 +5508,11 @@ public class HDF5Reader implements HDF5SimpleReader
                         case 4:
                         {
                             final int[] data = new int[vectorLength];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId, data);
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
                             for (int i = 0; i < data.length; ++i)
                             {
                                 value[i] =
-                                        config.h5.getNameForEnumOrCompoundMemberIndex(
+                                        baseReader.h5.getNameForEnumOrCompoundMemberIndex(
                                                 storageDataTypeId, data[i]);
                             }
                             break;
@@ -5545,7 +5524,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     return value;
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     //
@@ -5570,7 +5549,7 @@ public class HDF5Reader implements HDF5SimpleReader
      */
     public HDF5CompoundMemberInformation[] getCompoundMemberInformation(final String dataTypeName)
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5CompoundMemberInformation[]> writeRunnable =
                 new ICallableWithCleanUp<HDF5CompoundMemberInformation[]>()
                     {
@@ -5580,11 +5559,11 @@ public class HDF5Reader implements HDF5SimpleReader
                                     HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX,
                                             dataTypeName);
                             final int compoundDataTypeId =
-                                    config.h5.openDataType(config.fileId, dataTypePath, registry);
+                                    baseReader.h5.openDataType(baseReader.fileId, dataTypePath, registry);
                             return getCompoundMemberInformation(compoundDataTypeId);
                         }
                     };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     /**
@@ -5597,17 +5576,17 @@ public class HDF5Reader implements HDF5SimpleReader
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath)
             throws HDF5JavaException
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5CompoundMemberInformation[]> writeRunnable =
                 new ICallableWithCleanUp<HDF5CompoundMemberInformation[]>()
                     {
                         public HDF5CompoundMemberInformation[] call(final ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, dataSetPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath, registry);
                             final int compoundDataTypeId =
-                                    config.h5.getDataTypeForDataSet(dataSetId, registry);
-                            if (config.h5.getClassType(compoundDataTypeId) != H5T_COMPOUND)
+                                    baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
+                            if (baseReader.h5.getClassType(compoundDataTypeId) != H5T_COMPOUND)
                             {
                                 throw new HDF5JavaException("Data set '" + dataSetPath
                                         + "' is not of compound type.");
@@ -5615,21 +5594,21 @@ public class HDF5Reader implements HDF5SimpleReader
                             return getCompoundMemberInformation(compoundDataTypeId);
                         }
                     };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     private HDF5CompoundMemberInformation[] getCompoundMemberInformation(
             final int compoundDataTypeId)
     {
-        final String[] memberNames = config.h5.getNamesForEnumOrCompoundMembers(compoundDataTypeId);
+        final String[] memberNames = baseReader.h5.getNamesForEnumOrCompoundMembers(compoundDataTypeId);
         final HDF5CompoundMemberInformation[] memberInfo =
                 new HDF5CompoundMemberInformation[memberNames.length];
         for (int i = 0; i < memberInfo.length; ++i)
         {
-            final int dataTypeId = config.h5.getDataTypeForIndex(compoundDataTypeId, i);
+            final int dataTypeId = baseReader.h5.getDataTypeForIndex(compoundDataTypeId, i);
             memberInfo[i] =
                     new HDF5CompoundMemberInformation(memberNames[i], new HDF5DataTypeInformation(
-                            getDataClassForDataType(dataTypeId), config.h5.getSize(dataTypeId)));
+                            getDataClassForDataType(dataTypeId), baseReader.h5.getSize(dataTypeId)));
         }
         Arrays.sort(memberInfo);
         return memberInfo;
@@ -5645,20 +5624,20 @@ public class HDF5Reader implements HDF5SimpleReader
     public <T> HDF5CompoundType<T> getCompoundType(final String name, final Class<T> compoundType,
             final HDF5CompoundMemberMapping... members)
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectArrayifyer =
                 createByteifyers(compoundType, members);
         final int storageDataTypeId = createStorageCompoundDataType(objectArrayifyer);
         final int nativeDataTypeId = createNativeCompoundDataType(objectArrayifyer);
-        return new HDF5CompoundType<T>(config.fileId, storageDataTypeId, nativeDataTypeId, name,
+        return new HDF5CompoundType<T>(baseReader.fileId, storageDataTypeId, nativeDataTypeId, name,
                 compoundType, objectArrayifyer);
     }
 
     protected int createStorageCompoundDataType(HDF5ValueObjectByteifyer<?> objectArrayifyer)
     {
         final int storageDataTypeId =
-                config.h5.createDataTypeCompound(objectArrayifyer.getRecordSize(),
-                        config.fileRegistry);
+                baseReader.h5.createDataTypeCompound(objectArrayifyer.getRecordSize(),
+                        baseReader.fileRegistry);
         objectArrayifyer.insertMemberTypes(storageDataTypeId);
         return storageDataTypeId;
     }
@@ -5666,9 +5645,9 @@ public class HDF5Reader implements HDF5SimpleReader
     protected int createNativeCompoundDataType(HDF5ValueObjectByteifyer<?> objectArrayifyer)
     {
         final int nativeDataTypeId =
-                config.h5.createDataTypeCompound(objectArrayifyer.getRecordSize(),
-                        config.fileRegistry);
-        objectArrayifyer.insertNativeMemberTypes(nativeDataTypeId, config.h5, config.fileRegistry);
+                baseReader.h5.createDataTypeCompound(objectArrayifyer.getRecordSize(),
+                        baseReader.fileRegistry);
+        objectArrayifyer.insertNativeMemberTypes(nativeDataTypeId, baseReader.h5, baseReader.fileRegistry);
         return nativeDataTypeId;
     }
 
@@ -5681,7 +5660,7 @@ public class HDF5Reader implements HDF5SimpleReader
     public <T> HDF5CompoundType<T> getCompoundType(final Class<T> compoundType,
             final HDF5CompoundMemberMapping... members)
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         return getCompoundType(null, compoundType, members);
     }
 
@@ -5696,8 +5675,8 @@ public class HDF5Reader implements HDF5SimpleReader
     public <T> T readCompound(final String objectPath, final HDF5CompoundType<T> type)
             throws HDF5JavaException
     {
-        config.checkOpen();
-        type.check(config.fileId);
+        baseReader.checkOpen();
+        type.check(baseReader.fileId);
         return primReadCompound(objectPath, -1, -1, type);
     }
 
@@ -5712,8 +5691,8 @@ public class HDF5Reader implements HDF5SimpleReader
     public <T> T[] readCompoundArray(final String objectPath, final HDF5CompoundType<T> type)
             throws HDF5JavaException
     {
-        config.checkOpen();
-        type.check(config.fileId);
+        baseReader.checkOpen();
+        type.check(baseReader.fileId);
         return primReadCompoundArray(objectPath, -1, -1, type);
     }
 
@@ -5733,8 +5712,8 @@ public class HDF5Reader implements HDF5SimpleReader
             final int blockSize, final long blockNumber, final HDF5CompoundMemberMapping... members)
             throws HDF5JavaException
     {
-        config.checkOpen();
-        type.check(config.fileId);
+        baseReader.checkOpen();
+        type.check(baseReader.fileId);
         return primReadCompoundArray(objectPath, blockSize, blockSize * blockNumber, type);
     }
 
@@ -5753,8 +5732,8 @@ public class HDF5Reader implements HDF5SimpleReader
             final HDF5CompoundType<T> type, final int blockSize, final long offset)
             throws HDF5JavaException
     {
-        config.checkOpen();
-        type.check(config.fileId);
+        baseReader.checkOpen();
+        type.check(baseReader.fileId);
         return primReadCompoundArray(objectPath, blockSize, offset, type);
     }
 
@@ -5835,23 +5814,23 @@ public class HDF5Reader implements HDF5SimpleReader
                 public T call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final int storageDataTypeId =
-                            config.h5.getDataTypeForDataSet(dataSetId, registry);
+                            baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     checkCompoundType(storageDataTypeId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int nativeDataTypeId = type.getNativeTypeId();
                     final byte[] byteArr =
                             new byte[spaceParams.blockSize
                                     * type.getObjectByteifyer().getRecordSize()];
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, byteArr);
                     return type.getObjectByteifyer().arrayifyScalar(storageDataTypeId, byteArr,
                             type.getCompoundType());
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     private <T> T[] primReadCompoundArray(final String objectPath, final int blockSize,
@@ -5862,29 +5841,29 @@ public class HDF5Reader implements HDF5SimpleReader
                 public T[] call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            config.h5.openDataSet(config.fileId, objectPath, registry);
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final int storageDataTypeId =
-                            config.h5.getDataTypeForDataSet(dataSetId, registry);
+                            baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     checkCompoundType(storageDataTypeId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int nativeDataTypeId = type.getNativeTypeId();
                     final byte[] byteArr =
                             new byte[spaceParams.blockSize
                                     * type.getObjectByteifyer().getRecordSize()];
-                    config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, byteArr);
                     return type.getObjectByteifyer().arrayify(storageDataTypeId, byteArr,
                             type.getCompoundType());
                 }
             };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
     private void checkCompoundType(final int dataTypeId, final String path,
             final ICleanUpRegistry registry)
     {
-        final boolean isCompound = (config.h5.getClassType(dataTypeId) == H5T_COMPOUND);
+        final boolean isCompound = (baseReader.h5.getClassType(dataTypeId) == H5T_COMPOUND);
         if (isCompound == false)
         {
             throw new HDF5JavaException(path + " needs to be a Compound.");
@@ -5900,14 +5879,14 @@ public class HDF5Reader implements HDF5SimpleReader
                             {
                                 public int getBooleanDataTypeId()
                                 {
-                                    return config.booleanDataTypeId;
+                                    return baseReader.booleanDataTypeId;
                                 }
 
                                 public int getStringDataTypeId(int maxLength)
                                 {
                                     final int typeId =
-                                            config.h5.createDataTypeString(maxLength,
-                                                    config.fileRegistry);
+                                            baseReader.h5.createDataTypeString(maxLength,
+                                                    baseReader.fileRegistry);
                                     return typeId;
                                 }
                             }, compoundMembers);
@@ -5925,7 +5904,7 @@ public class HDF5Reader implements HDF5SimpleReader
     public <T> MDArray<T> readCompoundMDArray(final String objectPath,
             final HDF5CompoundType<T> type) throws HDF5JavaException
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         return primReadCompoundArrayRankN(objectPath, type, null, null);
     }
 
@@ -5943,7 +5922,7 @@ public class HDF5Reader implements HDF5SimpleReader
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] blockNumber)
             throws HDF5JavaException
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         final long[] offset = new long[blockDimensions.length];
         for (int i = 0; i < offset.length; ++i)
         {
@@ -5966,7 +5945,7 @@ public class HDF5Reader implements HDF5SimpleReader
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] offset)
             throws HDF5JavaException
     {
-        config.checkOpen();
+        baseReader.checkOpen();
         return primReadCompoundArrayRankN(objectPath, type, blockDimensions, offset);
     }
 
@@ -5980,25 +5959,25 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDArray<T> call(final ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    config.h5.openDataSet(config.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             final int storageDataTypeId =
-                                    config.h5.getDataTypeForDataSet(dataSetId, registry);
+                                    baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                             checkCompoundType(storageDataTypeId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    config.getSpaceParameters(dataSetId, offsetOrNull,
+                                    baseReader.getSpaceParameters(dataSetId, offsetOrNull,
                                             dimensionsOrNull, registry);
                             final int nativeDataTypeId = type.getNativeTypeId();
                             final byte[] byteArr =
                                     new byte[spaceParams.blockSize
                                             * type.getObjectByteifyer().getRecordSize()];
-                            config.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
                             return new MDArray<T>(type.getObjectByteifyer().arrayify(
                                     storageDataTypeId, byteArr, type.getCompoundType()),
                                     spaceParams.dimensions);
                         }
                     };
-        return config.runner.call(writeRunnable);
+        return baseReader.runner.call(writeRunnable);
     }
 
 }

@@ -33,7 +33,7 @@ public class HDF5WriteSpeedTest
         final long start = System.currentTimeMillis();
         try
         {
-            final HDF5Writer writer = new HDF5BaseWriter(new File("speedtest.h5")).writer();
+            final HDF5Writer writer = new HDF5WriterConfigurator(new File("speedtest.h5")).writer();
             final byte[] arr = new byte[100];
             for (int i = 0; i < 10000; ++i)
             {

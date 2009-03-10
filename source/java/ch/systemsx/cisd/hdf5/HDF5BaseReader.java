@@ -20,10 +20,14 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.BOOLEAN_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.DATATYPE_GROUP;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import ncsa.hdf.hdf5lib.HDF5Constants;
@@ -33,11 +37,9 @@ import ch.systemsx.cisd.common.array.MDArray;
 import ch.systemsx.cisd.common.process.CleanUpCallable;
 import ch.systemsx.cisd.common.process.CleanUpRegistry;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
-import ch.systemsx.cisd.common.utilities.OSUtilities;
 
 /**
- * If you want the reader to perform numeric conversions, call {@link #performNumericConversions()}
- * before calling {@link #reader()}.
+ * Class that provides base methods for reading HDF5 files.
  * 
  * @author Bernd Rinn
  */
@@ -56,31 +58,45 @@ public class HDF5BaseReader
 
     protected final CleanUpRegistry fileRegistry;
 
+    protected final boolean performNumericConversions;
+
     /** Map from named data types to ids. */
     final Map<String, Integer> namedDataTypeMap;
 
-    protected HDF5 h5;
+    protected final HDF5 h5;
 
-    protected int fileId;
+    protected final int fileId;
 
-    protected int booleanDataTypeId;
+    protected final int booleanDataTypeId;
 
-    protected HDF5EnumerationType typeVariantDataType;
-
-    boolean performNumericConversions;
+    protected final HDF5EnumerationType typeVariantDataType;
 
     protected State state;
 
-    protected HDF5Reader readerWriterOrNull;
-
-    public HDF5BaseReader(File hdf5File)
+    public HDF5BaseReader(File hdf5File, boolean performNumericConversions)
     {
         assert hdf5File != null;
 
+        this.performNumericConversions = performNumericConversions;
+        this.hdf5File = hdf5File.getAbsoluteFile();
         this.runner = new CleanUpCallable();
         this.fileRegistry = new CleanUpRegistry();
         this.namedDataTypeMap = new HashMap<String, Integer>();
-        this.hdf5File = hdf5File.getAbsoluteFile();
+        h5 = new HDF5(fileRegistry, performNumericConversions);
+        fileId = openFile(false, false);
+        state = State.OPEN;
+        readNamedDataTypes();
+        booleanDataTypeId = openOrCreateBooleanDataType();
+        typeVariantDataType = openOrCreateTypeVariantDataType();
+    }
+    
+    protected int openFile(boolean useLatestFileFormat, boolean overwrite)
+    {
+        if (hdf5File.exists() == false)
+        {
+            throw new IllegalArgumentException("The file " + this.hdf5File.getPath() + " does not exit.");
+        }
+        return h5.openFileReadOnly(hdf5File.getPath(), fileRegistry);
     }
 
     protected void checkOpen() throws HDF5JavaException
@@ -92,21 +108,6 @@ public class HDF5BaseReader
                             + (state == State.CLOSED ? "closed." : "not opened yet.");
             throw new HDF5JavaException(msg);
         }
-    }
-
-    private void open()
-    {
-        final String path = hdf5File.getAbsolutePath();
-        if (hdf5File.exists() == false)
-        {
-            throw new IllegalArgumentException("The file " + path + " does not exit.");
-        }
-        h5 = new HDF5(fileRegistry, performNumericConversions);
-        fileId = h5.openFileReadOnly(path, fileRegistry);
-        state = State.OPEN;
-        readNamedDataTypes();
-        booleanDataTypeId = openOrCreateBooleanDataType();
-        typeVariantDataType = openOrCreateTypeVariantDataType();
     }
 
     /**
@@ -136,7 +137,7 @@ public class HDF5BaseReader
         if (dataTypeIdOrNull == null)
         {
             // Just in case of data types added to other groups than HDF5Utils.DATATYPE_GROUP
-            if (readerWriterOrNull.exists(dataTypePath))
+            if (h5.exists(fileId, dataTypePath))
             {
                 final int dataTypeId = h5.openDataType(fileId, dataTypePath, fileRegistry);
                 namedDataTypeMap.put(dataTypePath, dataTypeId);
@@ -186,11 +187,11 @@ public class HDF5BaseReader
 
     protected void readNamedDataTypes()
     {
-        if (readerWriterOrNull.exists(DATATYPE_GROUP) == false)
+        if (h5.exists(fileId, DATATYPE_GROUP) == false)
         {
             return;
         }
-        for (String dataTypePath : readerWriterOrNull.getGroupMemberPaths(DATATYPE_GROUP))
+        for (String dataTypePath : getGroupMemberPaths(DATATYPE_GROUP))
         {
             final int dataTypeId = h5.openDataType(fileId, dataTypePath, fileRegistry);
             namedDataTypeMap.put(dataTypePath, dataTypeId);
@@ -402,51 +403,47 @@ public class HDF5BaseReader
         return nativeDataTypeId;
     }
 
-    //
-    // HDF5ReaderConfig
-    //
-
     /**
-     * Returns <code>true</code>, if this platform supports numeric conversions.
+     * Returns the members of <var>groupPath</var>. The order is <i>not</i> well defined.
+     * 
+     * @param groupPath The path of the group to get the members for.
+     * @throws IllegalArgumentException If <var>groupPath</var> is not a group.
      */
-    public boolean platformSupportsNumericConversions()
+    List<String> getGroupMembers(final String groupPath)
     {
-        // On HDF5 1.8.2, numeric conversions on sparcv9 can get us SEGFAULTS for converting between
-        // integers and floats.
-        if (OSUtilities.getCPUArchitecture().startsWith("sparc"))
-        {
-            return false;
-        }
-        return true;
+        assert groupPath != null;
+        return removeInternalNames(getAllGroupMembers(groupPath));
     }
 
     /**
-     * Will try to perform numeric conversions where appropriate if supported by the platform.
-     * <p>
-     * <strong>Numeric conversions can be platform dependent and are not available on all platforms.
-     * Be advised not to rely on numeric conversions if you can help it!</strong>
+     * Returns all members of <var>groupPath</var>, including internal groups that may be used by
+     * the library to do house-keeping. The order is <i>not</i> well defined.
+     * 
+     * @param groupPath The path of the group to get the members for.
+     * @throws IllegalArgumentException If <var>groupPath</var> is not a group.
      */
-    public HDF5BaseReader performNumericConversions()
+    List<String> getAllGroupMembers(final String groupPath)
     {
-        if (platformSupportsNumericConversions() == false)
-        {
-            return this;
-        }
-        this.performNumericConversions = true;
-        return this;
+        final String[] groupMemberArray = h5.getGroupMembers(fileId, groupPath);
+        return new LinkedList<String>(Arrays.asList(groupMemberArray));
     }
 
     /**
-     * Returns an {@link HDF5Reader} based on this configuration.
+     * Returns the paths of the members of <var>groupPath</var> (including the parent). The order is
+     * <i>not</i> well defined.
+     * 
+     * @param groupPath The path of the group to get the member paths for.
+     * @throws IllegalArgumentException If <var>groupPath</var> is not a group.
      */
-    public HDF5Reader reader()
+    List<String> getGroupMemberPaths(final String groupPath)
     {
-        if (readerWriterOrNull == null)
+        final String superGroupName = (groupPath.equals("/") ? "/" : groupPath + "/");
+        final List<String> memberNames = getGroupMembers(groupPath);
+        for (int i = 0; i < memberNames.size(); ++i)
         {
-            readerWriterOrNull = new HDF5Reader(this);
-            open();
+            memberNames.set(i, superGroupName + memberNames.get(i));
         }
-        return readerWriterOrNull;
+        return memberNames;
     }
 
 }
