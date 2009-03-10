@@ -6385,8 +6385,4 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         baseWriter.runner.call(writeRunnable);
     }
 
-    //
-    // Internal methods for writing data sets.
-    //
-
 }
