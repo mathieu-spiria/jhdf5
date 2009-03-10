@@ -16,6 +16,10 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ch.systemsx.cisd.hdf5.HDF5.NO_DEFLATION;
+
+import java.lang.reflect.Array;
+
 import ch.rinn.restrictions.Private;
 import ch.systemsx.cisd.common.array.MDArray;
 
@@ -32,6 +36,11 @@ final class HDF5Utils
     /** The minimal size of a chunk. */
     @Private
     static final int MIN_CHUNK_SIZE = 4;
+
+    /**
+     * A constant that specifies the default deflation level (gzip compression).
+     */
+    final static int DEFAULT_DEFLATION = 6;
 
     /** The minimal size of a data set in order to allow for chunking. */
     private static final long MIN_TOTAL_SIZE_FOR_CHUNKING = 128L;
@@ -252,6 +261,53 @@ final class HDF5Utils
             if (d != 1L)
             {
                 return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns the deflate level depending on whether deflation is enabled or not.
+     */
+    static int getDeflateLevel(boolean deflate)
+    {
+        return deflate ? DEFAULT_DEFLATION : NO_DEFLATION;
+    }
+
+    /**
+     * Checks the consistency of the dimension of a given array.
+     * <p> 
+     * As Java doesn't have a matrix data type, but only arrays of arrays, there is no way to ensure
+     * in the language itself whether all rows have the same length.
+     * 
+     * @return <code>true</code> if the given matrix is consisten and <code>false</code> otherwise.
+     */
+    static boolean areMatrixDimensionsConsistent(Object a)
+    {
+        if (a.getClass().isArray() == false)
+        {
+            return false;
+        }
+        final int length = Array.getLength(a);
+        if (length == 0)
+        {
+            return true;
+        }
+        final Object element = Array.get(a, 0);
+        if (element.getClass().isArray())
+        {
+            final int elementLength = Array.getLength(element);
+            for (int i = 0; i < length; ++i)
+            {
+                final Object o = Array.get(a, i);
+                if (areMatrixDimensionsConsistent(o) == false)
+                {
+                    return false;
+                }
+                if (elementLength != Array.getLength(o))
+                {
+                    return false;
+                }
             }
         }
         return true;

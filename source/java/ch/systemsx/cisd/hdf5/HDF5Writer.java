@@ -20,7 +20,6 @@ import static ch.systemsx.cisd.hdf5.HDF5.NO_DEFLATION;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.OPAQUE_PREFIX;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.H5.H5DwriteString;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_double;
@@ -30,8 +29,6 @@ import static ncsa.hdf.hdf5lib.H5.H5Dwrite_long;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_short;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_UNLIMITED;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F64LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
@@ -47,7 +44,6 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I32LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I8LE;
 
-import java.lang.reflect.Array;
 import java.util.BitSet;
 import java.util.Date;
 
@@ -86,9 +82,9 @@ import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
  */
 public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
 {
-    private final HDF5WriterConfig config;
+    private final HDF5BaseWriter config;
 
-    HDF5Writer(HDF5WriterConfig config)
+    HDF5Writer(HDF5BaseWriter config)
     {
         super(config);
         this.config = config;
@@ -99,8 +95,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     // /////////////////////
 
     /**
-     * Returns <code>true</code>, if the {@link HDF5WriterConfig} was <em>not</em> configured with
-     * {@link HDF5WriterConfig#dontUseExtendableDataTypes()}, that is if extendable data types are
+     * Returns <code>true</code>, if the {@link HDF5BaseWriter} was <em>not</em> configured with
+     * {@link HDF5BaseWriter#dontUseExtendableDataTypes()}, that is if extendable data types are
      * used for new data sets.
      */
     public boolean isUseExtendableDataTypes()
@@ -189,15 +185,15 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * Creates an external link, that is a link to a data set in another HDF5 file, the
      * <em>target</em> .
      * <p>
-     * <em>Note: This method is only allowed when the {@link HDF5WriterConfig} was configured with 
-     * {@link HDF5WriterConfig#config.useLatestFileFormat()}.</em>
+     * <em>Note: This method is only allowed when the {@link HDF5BaseWriter} was configured with 
+     * {@link HDF5BaseWriter#config.useLatestFileFormat()}.</em>
      * 
      * @param targetFileName The name of the file where the data set resides that should be linked.
      * @param targetPath The name of the data set (including path information) in the
      *            <var>targetFileName</var> to create a link to.
      * @param linkPath The name (including path information) of the link to create.
-     * @throws IllegalStateException If the {@link HDF5WriterConfig} was not configured with
-     *             {@link HDF5WriterConfig#useLatestFileFormat()}.
+     * @throws IllegalStateException If the {@link HDF5BaseWriter} was not configured with
+     *             {@link HDF5BaseWriter#useLatestFileFormat()}.
      */
     public void createExternalLink(String targetFileName, String targetPath, String linkPath)
             throws IllegalStateException
@@ -220,15 +216,15 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * <p>
      * <em>Note: This method will never overwrite a data set, but only a symbolic link.</em>
      * <p>
-     * <em>Note: This method is only allowed when the {@link HDF5WriterConfig} was configured with 
-     * {@link HDF5WriterConfig#useLatestFileFormat()}.</em>
+     * <em>Note: This method is only allowed when the {@link HDF5BaseWriter} was configured with 
+     * {@link HDF5BaseWriter#useLatestFileFormat()}.</em>
      * 
      * @param targetFileName The name of the file where the data set resides that should be linked.
      * @param targetPath The name of the data set (including path information) in the
      *            <var>targetFileName</var> to create a link to.
      * @param linkPath The name (including path information) of the link to create.
-     * @throws IllegalStateException If the {@link HDF5WriterConfig} was not configured with
-     *             {@link HDF5WriterConfig#useLatestFileFormat()}.
+     * @throws IllegalStateException If the {@link HDF5BaseWriter} was not configured with
+     *             {@link HDF5BaseWriter#useLatestFileFormat()}.
      */
     public void createOrUpdateExternalLink(String targetFileName, String targetPath, String linkPath)
             throws IllegalStateException
@@ -322,7 +318,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * <p>
      * <i>Note: This method creates a "new-style group", that is the type of group of HDF5 1.8 and
      * above. Thus it will fail, if you didn't configure the file to be
-     * {@link HDF5WriterConfig#useLatestFileFormat()}.</i>
+     * {@link HDF5BaseWriter#useLatestFileFormat()}.</i>
      * 
      * @param groupPath The path of the group to create.
      * @param maxCompact When the group grows to more than this number of entries, the library will
@@ -630,7 +626,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     public void writeBoolean(final String objectPath, final boolean value)
     {
         config.checkOpen();
-        writeScalar(objectPath, config.booleanDataTypeId, config.booleanDataTypeId, HDFNativeData
+        config.writeScalar(objectPath, config.booleanDataTypeId, config.booleanDataTypeId, HDFNativeData
                 .byteToByte((byte) (value ? 1 : 0)));
     }
 
@@ -659,7 +655,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 {
                     final int msb = data.length();
                     final int realLength = msb / 64 + (msb % 64 != 0 ? 1 : 0);
-                    final int dataSetId = getDataSetId(objectPath, H5T_STD_B64LE, new long[]
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_STD_B64LE, new long[]
                         { realLength }, NO_DEFLATION, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             BitSetConversionUtils.toStorageForm(data));
@@ -711,8 +707,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 {
                     final int msb = data.length();
                     final int realLength = msb / 64 + (msb % 64 != 0 ? 1 : 0);
-                    final int dataSetId = getDataSetId(objectPath, H5T_STD_B64LE, new long[]
-                        { realLength }, getDeflateLevel(deflate), registry);
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_STD_B64LE, new long[]
+                        { realLength }, HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             BitSetConversionUtils.toStorageForm(data));
                     return null; // Nothing to return.
@@ -746,7 +742,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataTypeId = getOrCreateOpaqueTypeId(tag);
-                    final int dataSetId = getDataSetId(objectPath, dataTypeId, new long[]
+                    final int dataSetId = config.getDataSetId(objectPath, dataTypeId, new long[]
                         { data.length }, NO_DEFLATION, registry);
                     H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
@@ -796,8 +792,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataTypeId = getOrCreateOpaqueTypeId(tag);
-                    final int dataSetId = getDataSetId(objectPath, dataTypeId, new long[]
-                        { data.length }, getDeflateLevel(deflate), registry);
+                    final int dataSetId = config.getDataSetId(objectPath, dataTypeId, new long[]
+                        { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
@@ -848,7 +844,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, dataTypeId, getDeflateLevel(deflate), new long[]
+                    config.createDataSet(objectPath, dataTypeId, HDF5Utils.getDeflateLevel(deflate), new long[]
                         { size }, new long[]
                         { blockSize }, false, registry);
                     return null; // Nothing to return.
@@ -993,7 +989,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
 
         config.checkOpen();
-        writeScalar(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDFNativeData.byteToByte(value));
+        config.writeScalar(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDFNativeData.byteToByte(value));
     }
 
     /**
@@ -1013,7 +1009,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I8LE, NO_DEFLATION, new long[]
+                    config.createDataSet(objectPath, H5T_STD_I8LE, NO_DEFLATION, new long[]
                         { length }, null, true, registry);
                     return null; // Nothing to return.
                 }
@@ -1041,7 +1037,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final long[] dimensions = new long[]
                         { data.length };
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_STD_I8LE, dimensions, NO_DEFLATION,
+                            config.getDataSetId(objectPath, H5T_STD_I8LE, dimensions, NO_DEFLATION,
                                     registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
@@ -1077,8 +1073,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I8LE, new long[]
-                        { data.length }, getDeflateLevel(deflate), registry);
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_STD_I8LE, new long[]
+                        { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
@@ -1091,10 +1087,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the byte vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}).
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}).
      */
     public void createByteArray(final String objectPath, final long size, final int blockSize)
     {
@@ -1111,10 +1107,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the byte array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
@@ -1130,7 +1126,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I8LE, getDeflateLevel(deflate), new long[]
+                    config.createDataSet(objectPath, H5T_STD_I8LE, HDF5Utils.getDeflateLevel(deflate), new long[]
                         { size }, new long[]
                         { blockSize }, false, registry);
                     return null; // Nothing to return.
@@ -1253,7 +1249,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         assert objectPath != null;
         assert data != null;
-        assert checkDimensions(data);
+        assert HDF5Utils.areMatrixDimensionsConsistent(data);
 
         writeByteMDArray(objectPath, new MDByteArray(data), deflate);
     }
@@ -1301,7 +1297,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         { sizeX, sizeY };
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
-                    createDataSet(objectPath, H5T_STD_I8LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_STD_I8LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             blockDimensions, false, registry);
                     return null; // Nothing to return.
                 }
@@ -1434,8 +1430,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_STD_I8LE, data.longDimensions(),
-                                    getDeflateLevel(deflate), registry);
+                            config.getDataSetId(objectPath, H5T_STD_I8LE, data.longDimensions(),
+                                    HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
                             .getAsFlatArray());
                     return null; // Nothing to return.
@@ -1477,7 +1473,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I8LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_STD_I8LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             MDArray.toLong(blockDimensions), false, registry);
                     return null; // Nothing to return.
                 }
@@ -1617,7 +1613,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
 
         config.checkOpen();
-        writeScalar(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, HDFNativeData.shortToByte(value));
+        config.writeScalar(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, HDFNativeData.shortToByte(value));
     }
 
     /**
@@ -1637,7 +1633,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I16LE, NO_DEFLATION, new long[]
+                    config.createDataSet(objectPath, H5T_STD_I16LE, NO_DEFLATION, new long[]
                         { length }, null, true, registry);
                     return null; // Nothing to return.
                 }
@@ -1665,7 +1661,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final long[] dimensions = new long[]
                         { data.length };
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_STD_I16LE, dimensions, NO_DEFLATION,
+                            config.getDataSetId(objectPath, H5T_STD_I16LE, dimensions, NO_DEFLATION,
                                     registry);
                     H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
@@ -1701,8 +1697,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I16LE, new long[]
-                        { data.length }, getDeflateLevel(deflate), registry);
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_STD_I16LE, new long[]
+                        { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
@@ -1715,10 +1711,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the short vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}).
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}).
      */
     public void createShortArray(final String objectPath, final long size, final int blockSize)
     {
@@ -1735,10 +1731,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the short array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
@@ -1754,7 +1750,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I16LE, getDeflateLevel(deflate), new long[]
+                    config.createDataSet(objectPath, H5T_STD_I16LE, HDF5Utils.getDeflateLevel(deflate), new long[]
                         { size }, new long[]
                         { blockSize }, false, registry);
                     return null; // Nothing to return.
@@ -1878,7 +1874,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         assert objectPath != null;
         assert data != null;
-        assert checkDimensions(data);
+        assert HDF5Utils.areMatrixDimensionsConsistent(data);
 
         writeShortMDArray(objectPath, new MDShortArray(data), deflate);
     }
@@ -1926,7 +1922,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         { sizeX, sizeY };
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
-                    createDataSet(objectPath, H5T_STD_I16LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_STD_I16LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             blockDimensions, false, registry);
                     return null; // Nothing to return.
                 }
@@ -2059,8 +2055,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_STD_I16LE, data.longDimensions(),
-                                    getDeflateLevel(deflate), registry);
+                            config.getDataSetId(objectPath, H5T_STD_I16LE, data.longDimensions(),
+                                    HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
                             .getAsFlatArray());
                     return null; // Nothing to return.
@@ -2102,7 +2098,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I16LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_STD_I16LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             MDArray.toLong(blockDimensions), false, registry);
                     return null; // Nothing to return.
                 }
@@ -2242,7 +2238,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
 
         config.checkOpen();
-        writeScalar(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, HDFNativeData.intToByte(value));
+        config.writeScalar(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, HDFNativeData.intToByte(value));
     }
 
     /**
@@ -2262,7 +2258,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I32LE, NO_DEFLATION, new long[]
+                    config.createDataSet(objectPath, H5T_STD_I32LE, NO_DEFLATION, new long[]
                         { length }, null, true, registry);
                     return null; // Nothing to return.
                 }
@@ -2290,7 +2286,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final long[] dimensions = new long[]
                         { data.length };
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_STD_I32LE, dimensions, NO_DEFLATION,
+                            config.getDataSetId(objectPath, H5T_STD_I32LE, dimensions, NO_DEFLATION,
                                     registry);
                     H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
@@ -2326,8 +2322,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I32LE, new long[]
-                        { data.length }, getDeflateLevel(deflate), registry);
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_STD_I32LE, new long[]
+                        { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
@@ -2340,10 +2336,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the int vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}).
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}).
      */
     public void createIntArray(final String objectPath, final long size, final int blockSize)
     {
@@ -2360,10 +2356,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the int array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
@@ -2379,7 +2375,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I32LE, getDeflateLevel(deflate), new long[]
+                    config.createDataSet(objectPath, H5T_STD_I32LE, HDF5Utils.getDeflateLevel(deflate), new long[]
                         { size }, new long[]
                         { blockSize }, false, registry);
                     return null; // Nothing to return.
@@ -2501,7 +2497,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         assert objectPath != null;
         assert data != null;
-        assert checkDimensions(data);
+        assert HDF5Utils.areMatrixDimensionsConsistent(data);
 
         writeIntMDArray(objectPath, new MDIntArray(data), deflate);
     }
@@ -2549,7 +2545,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         { sizeX, sizeY };
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
-                    createDataSet(objectPath, H5T_STD_I32LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_STD_I32LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             blockDimensions, false, registry);
                     return null; // Nothing to return.
                 }
@@ -2679,8 +2675,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_STD_I32LE, data.longDimensions(),
-                                    getDeflateLevel(deflate), registry);
+                            config.getDataSetId(objectPath, H5T_STD_I32LE, data.longDimensions(),
+                                    HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
                             .getAsFlatArray());
                     return null; // Nothing to return.
@@ -2722,7 +2718,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I32LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_STD_I32LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             MDArray.toLong(blockDimensions), false, registry);
                     return null; // Nothing to return.
                 }
@@ -2862,7 +2858,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
 
         config.checkOpen();
-        writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData.longToByte(value));
+        config.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData.longToByte(value));
     }
 
     /**
@@ -2882,7 +2878,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
+                    config.createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
                         { length }, null, true, registry);
                     return null; // Nothing to return.
                 }
@@ -2910,7 +2906,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final long[] dimensions = new long[]
                         { data.length };
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_STD_I64LE, dimensions, NO_DEFLATION,
+                            config.getDataSetId(objectPath, H5T_STD_I64LE, dimensions, NO_DEFLATION,
                                     registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
@@ -2946,8 +2942,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I64LE, new long[]
-                        { data.length }, getDeflateLevel(deflate), registry);
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                        { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
@@ -2960,10 +2956,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the long vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}).
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}).
      */
     public void createLongArray(final String objectPath, final long size, final int blockSize)
     {
@@ -2980,10 +2976,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the long array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
@@ -2999,7 +2995,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I64LE, getDeflateLevel(deflate), new long[]
+                    config.createDataSet(objectPath, H5T_STD_I64LE, HDF5Utils.getDeflateLevel(deflate), new long[]
                         { size }, new long[]
                         { blockSize }, false, registry);
                     return null; // Nothing to return.
@@ -3122,7 +3118,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         assert objectPath != null;
         assert data != null;
-        assert checkDimensions(data);
+        assert HDF5Utils.areMatrixDimensionsConsistent(data);
 
         writeLongMDArray(objectPath, new MDLongArray(data), deflate);
     }
@@ -3170,7 +3166,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         { sizeX, sizeY };
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
-                    createDataSet(objectPath, H5T_STD_I64LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_STD_I64LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             blockDimensions, false, registry);
                     return null; // Nothing to return.
                 }
@@ -3303,8 +3299,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_STD_I64LE, data.longDimensions(),
-                                    getDeflateLevel(deflate), registry);
+                            config.getDataSetId(objectPath, H5T_STD_I64LE, data.longDimensions(),
+                                    HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
                             .getAsFlatArray());
                     return null; // Nothing to return.
@@ -3346,7 +3342,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_STD_I64LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_STD_I64LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             MDArray.toLong(blockDimensions), false, registry);
                     return null; // Nothing to return.
                 }
@@ -3486,7 +3482,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
 
         config.checkOpen();
-        writeScalar(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDFNativeData.floatToByte(value));
+        config.writeScalar(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDFNativeData.floatToByte(value));
     }
 
     /**
@@ -3506,7 +3502,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_IEEE_F32LE, NO_DEFLATION, new long[]
+                    config.createDataSet(objectPath, H5T_IEEE_F32LE, NO_DEFLATION, new long[]
                         { length }, null, true, registry);
                     return null; // Nothing to return.
                 }
@@ -3534,7 +3530,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final long[] dimensions = new long[]
                         { data.length };
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_IEEE_F32LE, dimensions, NO_DEFLATION,
+                            config.getDataSetId(objectPath, H5T_IEEE_F32LE, dimensions, NO_DEFLATION,
                                     registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
@@ -3570,8 +3566,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = getDataSetId(objectPath, H5T_IEEE_F32LE, new long[]
-                        { data.length }, getDeflateLevel(deflate), registry);
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_IEEE_F32LE, new long[]
+                        { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
@@ -3584,10 +3580,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the float vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}).
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}).
      */
     public void createFloatArray(final String objectPath, final long size, final int blockSize)
     {
@@ -3604,10 +3600,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the float array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
@@ -3623,7 +3619,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_IEEE_F32LE, getDeflateLevel(deflate), new long[]
+                    config.createDataSet(objectPath, H5T_IEEE_F32LE, HDF5Utils.getDeflateLevel(deflate), new long[]
                         { size }, new long[]
                         { blockSize }, false, registry);
                     return null; // Nothing to return.
@@ -3747,7 +3743,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         assert objectPath != null;
         assert data != null;
-        assert checkDimensions(data);
+        assert HDF5Utils.areMatrixDimensionsConsistent(data);
 
         writeFloatMDArray(objectPath, new MDFloatArray(data), deflate);
     }
@@ -3795,7 +3791,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         { sizeX, sizeY };
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
-                    createDataSet(objectPath, H5T_IEEE_F32LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_IEEE_F32LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             blockDimensions, false, registry);
                     return null; // Nothing to return.
                 }
@@ -3928,8 +3924,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_IEEE_F32LE, data.longDimensions(),
-                                    getDeflateLevel(deflate), registry);
+                            config.getDataSetId(objectPath, H5T_IEEE_F32LE, data.longDimensions(),
+                                    HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
                             .getAsFlatArray());
                     return null; // Nothing to return.
@@ -3971,7 +3967,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_IEEE_F32LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_IEEE_F32LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             MDArray.toLong(blockDimensions), false, registry);
                     return null; // Nothing to return.
                 }
@@ -4111,7 +4107,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         assert objectPath != null;
 
         config.checkOpen();
-        writeScalar(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDFNativeData
+        config.writeScalar(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDFNativeData
                 .doubleToByte(value));
     }
 
@@ -4132,7 +4128,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_IEEE_F64LE, NO_DEFLATION, new long[]
+                    config.createDataSet(objectPath, H5T_IEEE_F64LE, NO_DEFLATION, new long[]
                         { length }, null, true, registry);
                     return null; // Nothing to return.
                 }
@@ -4160,7 +4156,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     final long[] dimensions = new long[]
                         { data.length };
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_IEEE_F64LE, dimensions, NO_DEFLATION,
+                            config.getDataSetId(objectPath, H5T_IEEE_F64LE, dimensions, NO_DEFLATION,
                                     registry);
                     H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             data);
@@ -4197,8 +4193,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = getDataSetId(objectPath, H5T_IEEE_F64LE, new long[]
-                        { data.length }, getDeflateLevel(deflate), registry);
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_IEEE_F64LE, new long[]
+                        { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             data);
                     return null; // Nothing to return.
@@ -4212,10 +4208,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the double vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}).
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}).
      */
     public void createDoubleArray(final String objectPath, final long size, final int blockSize)
     {
@@ -4232,10 +4228,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the double array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()})), then no data set smaller
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()})), then no data set smaller
      *            than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
@@ -4251,7 +4247,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_IEEE_F64LE, getDeflateLevel(deflate), new long[]
+                    config.createDataSet(objectPath, H5T_IEEE_F64LE, HDF5Utils.getDeflateLevel(deflate), new long[]
                         { size }, new long[]
                         { blockSize }, false, registry);
                     return null; // Nothing to return.
@@ -4375,7 +4371,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         assert objectPath != null;
         assert data != null;
-        assert checkDimensions(data);
+        assert HDF5Utils.areMatrixDimensionsConsistent(data);
 
         writeDoubleMDArray(objectPath, new MDDoubleArray(data), deflate);
     }
@@ -4423,7 +4419,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         { sizeX, sizeY };
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
-                    createDataSet(objectPath, H5T_IEEE_F64LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_IEEE_F64LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             blockDimensions, false, registry);
                     return null; // Nothing to return.
                 }
@@ -4556,8 +4552,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, H5T_IEEE_F64LE, data.longDimensions(),
-                                    getDeflateLevel(deflate), registry);
+                            config.getDataSetId(objectPath, H5T_IEEE_F64LE, data.longDimensions(),
+                                    HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -4599,7 +4595,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, H5T_IEEE_F64LE, getDeflateLevel(deflate), dimensions,
+                    config.createDataSet(objectPath, H5T_IEEE_F64LE, HDF5Utils.getDeflateLevel(deflate), dimensions,
                             MDArray.toLong(blockDimensions), false, registry);
                     return null; // Nothing to return.
                 }
@@ -4753,7 +4749,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData
+                            config.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData
                                     .longToByte(timeStamp), registry);
                     addTypeVariant(dataSetId,
                             HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
@@ -4784,7 +4780,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
+                            config.createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
                                 { length }, null, true, registry);
                     addTypeVariant(dataSetId,
                             HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
@@ -4815,7 +4811,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
                         { timeStamps.length }, NO_DEFLATION, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeStamps);
@@ -4836,7 +4832,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param length The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      */
     public void createTimeStampArray(final String objectPath, final long length, final int blockSize)
@@ -4852,7 +4848,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param length The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param deflate If <code>true</code>, the data set will be compressed.
      */
@@ -4868,7 +4864,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            createDataSet(objectPath, H5T_STD_I64LE, getDeflateLevel(deflate),
+                            config.createDataSet(objectPath, H5T_STD_I64LE, HDF5Utils.getDeflateLevel(deflate),
                                     new long[]
                                         { length }, new long[]
                                         { blockSize }, false, registry);
@@ -4918,8 +4914,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I64LE, new long[]
-                        { timeStamps.length }, getDeflateLevel(deflate), registry);
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                        { timeStamps.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeStamps);
                     addTypeVariant(dataSetId,
@@ -5137,7 +5133,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData
+                            config.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData
                                     .longToByte(timeDuration), registry);
                     addTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
@@ -5168,7 +5164,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
+                            config.createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
                                 { length }, null, true, registry);
                     addTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
@@ -5198,7 +5194,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
                         { timeDurations.length }, NO_DEFLATION, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeDurations);
@@ -5217,7 +5213,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param length The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param timeUnit The unit of the time duration.
      */
@@ -5235,7 +5231,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param length The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param timeUnit The unit of the time duration.
      * @param deflate If <code>true</code>, the data set will be compressed.
@@ -5252,7 +5248,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            createDataSet(objectPath, H5T_STD_I64LE, getDeflateLevel(deflate),
+                            config.createDataSet(objectPath, H5T_STD_I64LE, HDF5Utils.getDeflateLevel(deflate),
                                     new long[]
                                         { length }, new long[]
                                         { blockSize }, false, registry);
@@ -5315,8 +5311,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = getDataSetId(objectPath, H5T_STD_I64LE, new long[]
-                        { timeDurations.length }, getDeflateLevel(deflate), registry);
+                    final int dataSetId = config.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                        { timeDurations.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeDurations);
                     addTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
@@ -5496,12 +5492,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                     } else
                     {
                         final StorageLayout layout =
-                                determineLayout(stringDataTypeId, HDF5Utils.SCALAR_DIMENSIONS,
+                                config.determineLayout(stringDataTypeId, HDF5Utils.SCALAR_DIMENSIONS,
                                         chunkSizeOrNull, false);
                         dataSetId =
                                 config.h5.createDataSet(config.fileId, HDF5Utils.SCALAR_DIMENSIONS,
                                         chunkSizeOrNull, stringDataTypeId,
-                                        getDeflateLevel(deflate), objectPath, layout, registry);
+                                        HDF5Utils.getDeflateLevel(deflate), objectPath, layout, registry);
                     }
                     H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             (data + '\0').getBytes());
@@ -5597,7 +5593,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                         // Implementation note: HDF5 1.8 seems to be able to change the size even if
                         // dimensions are not in bound of max dimensions, but the resulting file can
                         // no longer be read correctly by a HDF5 1.6.x library.
-                        if (dimensionsInBounds(dataSetId, dimensions))
+                        if (config.areDimensionsInBounds(dataSetId, dimensions))
                         {
                             config.h5.setDataSetExtent(dataSetId, dimensions);
                         }
@@ -5607,11 +5603,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                                 HDF5Utils.tryGetChunkSizeForStringVector(data.length, maxLength,
                                         deflate, config.useExtentableDataTypes);
                         final StorageLayout layout =
-                                determineLayout(stringDataTypeId, dimensions, chunkSizeOrNull,
+                                config.determineLayout(stringDataTypeId, dimensions, chunkSizeOrNull,
                                         false);
                         dataSetId =
                                 config.h5.createDataSet(config.fileId, dimensions, chunkSizeOrNull,
-                                        stringDataTypeId, getDeflateLevel(deflate), objectPath,
+                                        stringDataTypeId, HDF5Utils.getDeflateLevel(deflate), objectPath,
                                         layout, registry);
                     }
                     H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data,
@@ -5732,7 +5728,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
         value.getType().check(config.fileId);
         final int storageDataTypeId = value.getType().getStorageTypeId();
         final int nativeDataTypeId = value.getType().getNativeTypeId();
-        writeScalar(objectPath, storageDataTypeId, nativeDataTypeId, value.toStorageForm());
+        config.writeScalar(objectPath, storageDataTypeId, nativeDataTypeId, value.toStorageForm());
     }
 
     /**
@@ -5756,7 +5752,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, data.getType().getStorageTypeId(), new long[]
+                            config.getDataSetId(objectPath, data.getType().getStorageTypeId(), new long[]
                                 { data.getLength() }, NO_DEFLATION, registry);
                     switch (data.getStorageForm())
                     {
@@ -5800,8 +5796,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, data.getType().getStorageTypeId(), new long[]
-                                { data.getLength() }, getDeflateLevel(deflate), registry);
+                            config.getDataSetId(objectPath, data.getType().getStorageTypeId(), new long[]
+                                { data.getLength() }, HDF5Utils.getDeflateLevel(deflate), registry);
                     switch (data.getStorageForm())
                     {
                         case BYTE:
@@ -5887,7 +5883,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     {
         config.checkOpen();
         type.check(config.fileId);
-        writeScalar(objectPath, type.getStorageTypeId(), type.getNativeTypeId(), type
+        config.writeScalar(objectPath, type.getStorageTypeId(), type.getNativeTypeId(), type
                 .getObjectByteifyer().byteify(type.getStorageTypeId(), data));
     }
 
@@ -5928,8 +5924,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, type.getStorageTypeId(), new long[]
-                                { data.length }, getDeflateLevel(deflate), registry);
+                            config.getDataSetId(objectPath, type.getStorageTypeId(), new long[]
+                                { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
                     H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -5975,8 +5971,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, type.getStorageTypeId(), new long[]
-                                { data.length }, getDeflateLevel(deflate), registry);
+                            config.getDataSetId(objectPath, type.getStorageTypeId(), new long[]
+                                { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
                     H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -6078,7 +6074,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param type The type definition of this compound type.
      * @param size The size of the compound array to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      */
     public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
@@ -6094,7 +6090,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param type The type definition of this compound type.
      * @param size The size of the compound array to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            sets are used (see {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param deflate If <code>true</code>, the data will be stored compressed.
      */
@@ -6111,7 +6107,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(final ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, type.getStorageTypeId(), getDeflateLevel(deflate),
+                    config.createDataSet(objectPath, type.getStorageTypeId(), HDF5Utils.getDeflateLevel(deflate),
                             new long[]
                                 { size }, new long[]
                                 { blockSize }, false, registry);
@@ -6156,8 +6152,8 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            getDataSetId(objectPath, type.getStorageTypeId(), MDArray.toLong(data
-                                    .dimensions()), getDeflateLevel(deflate), registry);
+                            config.getDataSetId(objectPath, type.getStorageTypeId(), MDArray.toLong(data
+                                    .dimensions()), HDF5Utils.getDeflateLevel(deflate), registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
                                     data.getAsFlatArray());
@@ -6306,7 +6302,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param dimensions The extent of the compound array along each of the axis.
      * @param blockDimensions The extent of one block along each of the axis. (for block-wise IO).
      *            Ignored if no extendable data sets are used (see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      */
     public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
@@ -6323,7 +6319,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
      * @param dimensions The extent of the compound array along each of the axis.
      * @param blockDimensions The extent of one block along each of the axis. (for block-wise IO).
      *            Ignored if no extendable data sets are used (see
-     *            {@link HDF5WriterConfig#dontUseExtendableDataTypes()}) and
+     *            {@link HDF5BaseWriter#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param deflate If <code>true</code>, the data will be stored compressed.
      */
@@ -6341,7 +6337,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
             {
                 public Void call(final ICleanUpRegistry registry)
                 {
-                    createDataSet(objectPath, type.getStorageTypeId(), getDeflateLevel(deflate),
+                    config.createDataSet(objectPath, type.getStorageTypeId(), HDF5Utils.getDeflateLevel(deflate),
                             dimensions, MDArray.toLong(blockDimensions), false, registry);
                     return null; // Nothing to return.
                 }
@@ -6352,183 +6348,5 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     //
     // Internal methods for writing data sets.
     //
-
-    private void writeScalar(final String dataSetPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final byte[] value)
-    {
-        assert dataSetPath != null;
-        assert storageDataTypeId >= 0;
-        assert nativeDataTypeId >= 0;
-        assert value != null;
-
-        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
-            {
-                public Object call(ICleanUpRegistry registry)
-                {
-                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        config.runner.call(writeScalarRunnable);
-    }
-
-    private int writeScalar(final String dataSetPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final byte[] value, ICleanUpRegistry registry)
-    {
-        final int dataSetId;
-        if (exists(dataSetPath))
-        {
-            dataSetId = config.h5.openObject(config.fileId, dataSetPath, registry);
-        } else
-        {
-            dataSetId =
-                    config.h5.createScalarDataSet(config.fileId, storageDataTypeId, dataSetPath,
-                            registry);
-        }
-        H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, value);
-        return dataSetId;
-    }
-
-    private int createDataSet(final String objectPath, final int storageDataTypeId,
-            final int deflateLevel, final long[] dimensions, final long[] chunkSizeOrNull,
-            boolean enforceCompactLayout, ICleanUpRegistry registry)
-    {
-        final int dataSetId;
-        final boolean deflate = (deflateLevel != NO_DEFLATION);
-        final boolean empty = isEmpty(dimensions);
-        final long[] definitiveChunkSizeOrNull;
-        if (empty)
-        {
-            definitiveChunkSizeOrNull = HDF5Utils.tryGetChunkSize(dimensions, deflate, true);
-        } else if (enforceCompactLayout)
-        {
-            definitiveChunkSizeOrNull = null;
-        } else if (chunkSizeOrNull != null)
-        {
-            definitiveChunkSizeOrNull = chunkSizeOrNull;
-        } else
-        {
-            definitiveChunkSizeOrNull =
-                    HDF5Utils.tryGetChunkSize(dimensions, deflate, config.useExtentableDataTypes);
-        }
-        final StorageLayout layout =
-                determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull,
-                        enforceCompactLayout);
-        dataSetId =
-                config.h5.createDataSet(config.fileId, dimensions, definitiveChunkSizeOrNull,
-                        storageDataTypeId, deflateLevel, objectPath, layout, registry);
-        return dataSetId;
-    }
-
-    private StorageLayout determineLayout(final int storageDataTypeId, final long[] dimensions,
-            final long[] chunkSizeOrNull, boolean enforceCompactLayout)
-    {
-        if (chunkSizeOrNull != null)
-        {
-            return StorageLayout.CHUNKED;
-        }
-        if (enforceCompactLayout
-                || computeSizeForDimensions(storageDataTypeId, dimensions) < HDF5WriterConfig.COMPACT_LAYOUT_THRESHOLD)
-        {
-            return StorageLayout.COMPACT;
-        }
-        return StorageLayout.CONTIGUOUS;
-    }
-
-    private int computeSizeForDimensions(int dataTypeId, long[] dimensions)
-    {
-        int size = config.h5.getSize(dataTypeId);
-        for (long d : dimensions)
-        {
-            size *= d;
-        }
-        return size;
-    }
-
-    private boolean dimensionsInBounds(final int dataSetId, final long[] dimensions)
-    {
-        final long[] maxDimensions = config.h5.getDataMaxDimensions(dataSetId);
-
-        if (dimensions.length != maxDimensions.length) // Actually an error condition
-        {
-            return false;
-        }
-
-        for (int i = 0; i < dimensions.length; ++i)
-        {
-            if (maxDimensions[i] != H5S_UNLIMITED && dimensions[i] > maxDimensions[i])
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private int getDeflateLevel(boolean deflate)
-    {
-        return deflate ? HDF5WriterConfig.DEFAULT_DEFLATION : NO_DEFLATION;
-    }
-
-    private boolean checkDimensions(Object a)
-    {
-        if (a.getClass().isArray() == false)
-        {
-            return false;
-        }
-        final int length = Array.getLength(a);
-        if (length == 0)
-        {
-            return true;
-        }
-        final Object element = Array.get(a, 0);
-        if (element.getClass().isArray())
-        {
-            final int elementLength = Array.getLength(element);
-            for (int i = 0; i < length; ++i)
-            {
-                final Object o = Array.get(a, i);
-                if (checkDimensions(o) == false)
-                {
-                    return false;
-                }
-                if (elementLength != Array.getLength(o))
-                {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private int getDataSetId(final String objectPath, final int storageDataTypeId,
-            long[] dimensions, final int deflateLevel, ICleanUpRegistry registry)
-    {
-        final int dataSetId;
-        if (exists(objectPath))
-        {
-            dataSetId = config.h5.openDataSet(config.fileId, objectPath, registry);
-            // Implementation note: HDF5 1.8 seems to be able to change the size even if
-            // dimensions are not in bound of max dimensions, but the resulting file can
-            // no longer be read by HDF5 1.6, thus we may only do it if config.useLatestFileFormat
-            // == true.
-            if (dimensionsInBounds(dataSetId, dimensions) || config.useLatestFileFormat)
-            {
-                config.h5.setDataSetExtent(dataSetId, dimensions);
-                // FIXME 2008-09-15, Bernd Rinn: This is a work-around for an apparent bug in HDF5
-                // 1.8.1 and 1.8.2 with contiguous data sets! Without the flush, the next
-                // config.h5.writeDataSet() call will not overwrite the data.
-                if (config.h5.getLayout(dataSetId, registry) == StorageLayout.CONTIGUOUS)
-                {
-                    config.h5.flushFile(config.fileId);
-                }
-            }
-        } else
-        {
-            dataSetId =
-                    createDataSet(objectPath, storageDataTypeId, deflateLevel, dimensions, null,
-                            false, registry);
-        }
-        return dataSetId;
-    }
 
 }

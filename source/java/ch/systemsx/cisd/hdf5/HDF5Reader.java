@@ -21,7 +21,6 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isInternalName;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_COMPOUND;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
@@ -43,7 +42,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
@@ -57,6 +55,7 @@ import ch.systemsx.cisd.common.array.MDLongArray;
 import ch.systemsx.cisd.common.array.MDShortArray;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 
 /**
@@ -80,9 +79,9 @@ import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 public class HDF5Reader implements HDF5SimpleReader
 {
 
-    private final HDF5ReaderConfig config;
+    private final HDF5BaseReader config;
 
-    HDF5Reader(HDF5ReaderConfig config)
+    HDF5Reader(HDF5BaseReader config)
     {
         assert config != null;
 
@@ -904,6 +903,42 @@ public class HDF5Reader implements HDF5SimpleReader
         return config.runner.call(readRunnable);
     }
 
+    private int getEnumOrdinal(final int attributeId, final HDF5EnumerationType enumType)
+    {
+        final int enumOrdinal;
+        switch (enumType.getStorageForm())
+        {
+            case BYTE:
+            {
+                final byte[] data =
+                        config.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
+                                1);
+                enumOrdinal = data[0];
+                break;
+            }
+            case SHORT:
+            {
+                final byte[] data =
+                        config.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
+                                2);
+                enumOrdinal = HDFNativeData.byteToShort(data, 0);
+                break;
+            }
+            case INT:
+            {
+                final byte[] data =
+                        config.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
+                                4);
+                enumOrdinal = HDFNativeData.byteToInt(data, 0);
+                break;
+            }
+            default:
+                throw new HDF5JavaException("Illegal storage form for enum ("
+                        + enumType.getStorageForm() + ")");
+        }
+        return enumOrdinal;
+    }
+
     private HDF5EnumerationType getEnumTypeForAttributeId(final int objectId)
     {
         final int storageDataTypeId =
@@ -1054,7 +1089,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            config.getSpaceParameters(dataSetId, registry);
                     final int nativeDataTypeId =
                             config.h5
                                     .getNativeDataTypeForDataSetCheckBitFields(dataSetId, registry);
@@ -1091,8 +1127,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
-                                    registry);
+                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
                     final int nativeDataTypeId =
                             config.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
@@ -1126,7 +1162,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int nativeDataTypeId =
                             config.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
@@ -1283,7 +1319,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            config.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_B64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -1344,7 +1381,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            config.getSpaceParameters(dataSetId, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -1375,10 +1413,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -1410,10 +1448,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    offset, blockDimensions, registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -1447,8 +1485,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
-                                    registry);
+                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -1482,7 +1520,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -1582,9 +1620,11 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, registry);
+                                    config.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
+                                    config
+                                            .getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8,
+                                                    registry);
                             final byte[] data = new byte[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
@@ -1624,7 +1664,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final byte[] dataBlock = new byte[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -1658,7 +1699,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final byte[] dataBlock = new byte[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -1876,7 +1918,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            config.getSpaceParameters(dataSetId, registry);
                     final short[] data = new short[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -1907,10 +1950,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -1943,10 +1986,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    offset, blockDimensions, registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -1980,8 +2023,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
-                                    registry);
+                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
                     final short[] data = new short[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -2015,7 +2058,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final short[] data = new short[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -2115,9 +2158,10 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, registry);
+                                    config.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
+                                    config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16,
+                                            registry);
                             final short[] data = new short[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
@@ -2157,7 +2201,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final short[] dataBlock = new short[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -2191,7 +2236,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final short[] dataBlock = new short[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -2410,7 +2456,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            config.getSpaceParameters(dataSetId, registry);
                     final int[] data = new int[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -2441,10 +2488,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -2476,10 +2523,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    offset, blockDimensions, registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -2513,8 +2560,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
-                                    registry);
+                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
                     final int[] data = new int[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -2547,7 +2594,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int[] data = new int[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -2647,9 +2694,10 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, registry);
+                                    config.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
+                                    config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32,
+                                            registry);
                             final int[] data = new int[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
@@ -2689,7 +2737,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final int[] dataBlock = new int[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -2723,7 +2772,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final int[] dataBlock = new int[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -2940,7 +2990,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            config.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -2971,10 +3022,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -3006,10 +3057,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    offset, blockDimensions, registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -3043,8 +3094,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
-                                    registry);
+                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -3078,7 +3129,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -3178,9 +3229,10 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, registry);
+                                    config.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
+                                    config.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64,
+                                            registry);
                             final long[] data = new long[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
@@ -3220,7 +3272,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final long[] dataBlock = new long[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -3254,7 +3307,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final long[] dataBlock = new long[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -3472,7 +3526,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            config.getSpaceParameters(dataSetId, registry);
                     final float[] data = new float[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -3503,10 +3558,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -3539,10 +3594,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    offset, blockDimensions, registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -3576,8 +3631,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
-                                    registry);
+                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
                     final float[] data = new float[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -3611,7 +3666,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final float[] data = new float[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -3711,9 +3766,10 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, registry);
+                                    config.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
+                                    config.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT,
+                                            registry);
                             final float[] data = new float[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
@@ -3753,7 +3809,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final float[] dataBlock = new float[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -3787,7 +3844,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final float[] dataBlock = new float[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -4006,7 +4064,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 {
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            config.getSpaceParameters(dataSetId, registry);
                     final double[] data = new double[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -4037,10 +4096,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -4073,10 +4132,10 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    offset, blockDimensions, registry);
+                            config.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
+                            config.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
                     config.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, array.getAsFlatArray());
                     return null; // Nothing to return.
@@ -4110,8 +4169,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
-                                    registry);
+                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
                     final double[] data = new double[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -4145,7 +4204,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final double[] data = new double[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -4246,9 +4305,10 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, registry);
+                                    config.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
+                                    config.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE,
+                                            registry);
                             final double[] data = new double[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
@@ -4288,7 +4348,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final double[] dataBlock = new double[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -4322,7 +4383,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int dataSetId =
                                     config.h5.openDataSet(config.fileId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                                    config.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                            registry);
                             final double[] dataBlock = new double[spaceParams.blockSize];
                             config.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -4565,7 +4627,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int dataSetId =
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     checkIsTimeStamp(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            config.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -4602,8 +4665,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
-                                    registry);
+                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -4639,7 +4702,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -4904,7 +4967,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             config.h5.openDataSet(config.fileId, objectPath, registry);
                     final HDF5TimeUnit storedUnit =
                             checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            config.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -4944,8 +5008,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final HDF5TimeUnit storedUnit =
                             checkIsTimeDuration(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
-                                    registry);
+                            config.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -4984,7 +5048,7 @@ public class HDF5Reader implements HDF5SimpleReader
                     final HDF5TimeUnit storedUnit =
                             checkIsTimeDuration(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
                     config.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
@@ -5776,7 +5840,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             config.h5.getDataTypeForDataSet(dataSetId, registry);
                     checkCompoundType(storageDataTypeId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int nativeDataTypeId = type.getNativeTypeId();
                     final byte[] byteArr =
                             new byte[spaceParams.blockSize
@@ -5803,7 +5867,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             config.h5.getDataTypeForDataSet(dataSetId, registry);
                     checkCompoundType(storageDataTypeId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            config.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int nativeDataTypeId = type.getNativeTypeId();
                     final byte[] byteArr =
                             new byte[spaceParams.blockSize
@@ -5921,8 +5985,8 @@ public class HDF5Reader implements HDF5SimpleReader
                                     config.h5.getDataTypeForDataSet(dataSetId, registry);
                             checkCompoundType(storageDataTypeId, objectPath, registry);
                             final DataSpaceParameters spaceParams =
-                                    getSpaceParameters(dataSetId, offsetOrNull, dimensionsOrNull,
-                                            registry);
+                                    config.getSpaceParameters(dataSetId, offsetOrNull,
+                                            dimensionsOrNull, registry);
                             final int nativeDataTypeId = type.getNativeTypeId();
                             final byte[] byteArr =
                                     new byte[spaceParams.blockSize
@@ -5935,228 +5999,6 @@ public class HDF5Reader implements HDF5SimpleReader
                         }
                     };
         return config.runner.call(writeRunnable);
-    }
-
-    @SuppressWarnings("unchecked")
-    protected <T> Class<T> getComponentType(final T[] value)
-    {
-        return (Class<T>) value.getClass().getComponentType();
-    }
-
-    /**
-     * Class to store the parameters of a 1d data space.
-     */
-    private static class DataSpaceParameters
-    {
-        final int memorySpaceId;
-
-        final int dataSpaceId;
-
-        final int blockSize;
-
-        final long[] dimensions;
-
-        DataSpaceParameters(int memorySpaceId, int dataSpaceId, int blockSize, long[] dimensions)
-        {
-            this.memorySpaceId = memorySpaceId;
-            this.dataSpaceId = dataSpaceId;
-            this.blockSize = blockSize;
-            this.dimensions = dimensions;
-        }
-    }
-
-    private DataSpaceParameters getSpaceParameters(final int dataSetId, final long offset,
-            final int blockSize, ICleanUpRegistry registry)
-    {
-        final int memorySpaceId;
-        final int dataSpaceId;
-        final int actualBlockSize;
-        final long[] dimensions;
-        if (blockSize > 0)
-        {
-            dataSpaceId = config.h5.getDataSpaceForDataSet(dataSetId, registry);
-            dimensions = config.h5.getDataSpaceDimensions(dataSpaceId);
-            if (dimensions.length != 1)
-            {
-                throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
-                        + dimensions.length + ")");
-            }
-            final long size = dimensions[0];
-            final long maxBlockSize = size - offset;
-            if (maxBlockSize <= 0)
-            {
-                throw new HDF5JavaException("Offset " + offset + " >= Size " + size);
-            }
-            actualBlockSize = (int) Math.min(blockSize, maxBlockSize);
-            final long[] blockShape = new long[]
-                { actualBlockSize };
-            config.h5.setHyperslabBlock(dataSpaceId, new long[]
-                { offset }, blockShape);
-            memorySpaceId = config.h5.createSimpleDataSpace(blockShape, registry);
-
-        } else
-        {
-            memorySpaceId = HDF5Constants.H5S_ALL;
-            dataSpaceId = HDF5Constants.H5S_ALL;
-            dimensions = config.h5.getDataDimensions(dataSetId);
-            actualBlockSize = getOneDimensionalArraySize(dimensions);
-        }
-        return new DataSpaceParameters(memorySpaceId, dataSpaceId, actualBlockSize, dimensions);
-    }
-
-    private DataSpaceParameters getSpaceParameters(final int dataSetId, ICleanUpRegistry registry)
-    {
-        long[] dimensions = config.h5.getDataDimensions(dataSetId);
-        // Ensure backward compatibility with 8.10
-        if (HDF5Utils.mightBeEmptyInStorage(dimensions)
-                && config.h5
-                        .existsAttribute(dataSetId, HDF5Utils.DATASET_IS_EMPTY_LEGACY_ATTRIBUTE))
-        {
-            dimensions = new long[dimensions.length];
-        }
-        return new DataSpaceParameters(H5S_ALL, H5S_ALL, MDArray.getLength(dimensions), dimensions);
-    }
-
-    private DataSpaceParameters getBlockSpaceParameters(final int dataSetId,
-            final int[] memoryOffset, final int[] memoryDimensions, ICleanUpRegistry registry)
-    {
-        final long[] dimensions = config.h5.getDataDimensions(dataSetId);
-        final int memorySpaceId =
-                config.h5.createSimpleDataSpace(MDArray.toLong(memoryDimensions), registry);
-        config.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset), dimensions);
-        return new DataSpaceParameters(memorySpaceId, H5S_ALL, MDArray.getLength(dimensions),
-                dimensions);
-    }
-
-    private DataSpaceParameters getBlockSpaceParameters(final int dataSetId,
-            final int[] memoryOffset, final int[] memoryDimensions, final long[] offset,
-            final int[] blockDimensions, ICleanUpRegistry registry)
-    {
-        assert memoryOffset != null;
-        assert memoryDimensions != null;
-        assert offset != null;
-        assert blockDimensions != null;
-        assert memoryOffset.length == offset.length;
-        assert memoryDimensions.length == memoryOffset.length;
-        assert blockDimensions.length == offset.length;
-
-        final int memorySpaceId;
-        final int dataSpaceId;
-        final long[] effectiveBlockDimensions;
-
-        dataSpaceId = config.h5.getDataSpaceForDataSet(dataSetId, registry);
-        final long[] dimensions = config.h5.getDataSpaceDimensions(dataSpaceId);
-        if (dimensions.length != blockDimensions.length)
-        {
-            throw new HDF5JavaException("Data Set is expected to be of rank "
-                    + blockDimensions.length + " (rank=" + dimensions.length + ")");
-        }
-        effectiveBlockDimensions = new long[blockDimensions.length];
-        for (int i = 0; i < offset.length; ++i)
-        {
-            final long maxBlockSize = dimensions[i] - offset[i];
-            if (maxBlockSize <= 0)
-            {
-                throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
-            }
-            effectiveBlockDimensions[i] = Math.min(blockDimensions[i], maxBlockSize);
-        }
-        config.h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
-        memorySpaceId = config.h5.createSimpleDataSpace(MDArray.toLong(memoryDimensions), registry);
-        config.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
-                effectiveBlockDimensions);
-        return new DataSpaceParameters(memorySpaceId, dataSpaceId, MDArray
-                .getLength(effectiveBlockDimensions), effectiveBlockDimensions);
-    }
-
-    private DataSpaceParameters getSpaceParameters(final int dataSetId, final long[] offset,
-            final int[] blockDimensionsOrNull, ICleanUpRegistry registry)
-    {
-        final int memorySpaceId;
-        final int dataSpaceId;
-        final long[] effectiveBlockDimensions;
-        if (blockDimensionsOrNull != null)
-        {
-            assert offset != null;
-            assert blockDimensionsOrNull.length == offset.length;
-
-            dataSpaceId = config.h5.getDataSpaceForDataSet(dataSetId, registry);
-            final long[] dimensions = config.h5.getDataSpaceDimensions(dataSpaceId);
-            if (dimensions.length != blockDimensionsOrNull.length)
-            {
-                throw new HDF5JavaException("Data Set is expected to be of rank "
-                        + blockDimensionsOrNull.length + " (rank=" + dimensions.length + ")");
-            }
-            effectiveBlockDimensions = new long[blockDimensionsOrNull.length];
-            for (int i = 0; i < offset.length; ++i)
-            {
-                final long maxBlockSize = dimensions[i] - offset[i];
-                if (maxBlockSize <= 0)
-                {
-                    throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
-                }
-                effectiveBlockDimensions[i] = Math.min(blockDimensionsOrNull[i], maxBlockSize);
-            }
-            config.h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
-            memorySpaceId = config.h5.createSimpleDataSpace(effectiveBlockDimensions, registry);
-        } else
-        {
-            memorySpaceId = H5S_ALL;
-            dataSpaceId = H5S_ALL;
-            effectiveBlockDimensions = config.h5.getDataDimensions(dataSetId);
-        }
-        return new DataSpaceParameters(memorySpaceId, dataSpaceId, MDArray
-                .getLength(effectiveBlockDimensions), effectiveBlockDimensions);
-    }
-
-    private int getNativeDataTypeId(final int dataSetId, final int specifiedDataSetTypeId,
-            ICleanUpRegistry registry)
-    {
-        final int nativeDataTypeId;
-        if (specifiedDataSetTypeId < 0)
-        {
-            nativeDataTypeId = config.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-        } else
-        {
-            nativeDataTypeId = specifiedDataSetTypeId;
-        }
-        return nativeDataTypeId;
-    }
-
-    private int getEnumOrdinal(final int attributeId, final HDF5EnumerationType enumType)
-    {
-        final int enumOrdinal;
-        switch (enumType.getStorageForm())
-        {
-            case BYTE:
-            {
-                final byte[] data =
-                        config.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
-                                1);
-                enumOrdinal = data[0];
-                break;
-            }
-            case SHORT:
-            {
-                final byte[] data =
-                        config.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
-                                2);
-                enumOrdinal = HDFNativeData.byteToShort(data, 0);
-                break;
-            }
-            case INT:
-            {
-                final byte[] data =
-                        config.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
-                                4);
-                enumOrdinal = HDFNativeData.byteToInt(data, 0);
-                break;
-            }
-            default:
-                throw new HDF5JavaException("Illegal storage form for enum ("
-                        + enumType.getStorageForm() + ")");
-        }
-        return enumOrdinal;
     }
 
 }
