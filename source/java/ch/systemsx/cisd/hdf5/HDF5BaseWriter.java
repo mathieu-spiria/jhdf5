@@ -75,25 +75,25 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     static
     {
-        // Ensure all fsync()s are finished.
+        // Ensure all sync() calls are finished.
         Runtime.getRuntime().addShutdownHook(new Thread()
-        {
-            @Override
-            public void run()
             {
-                syncExecutor.shutdown();
-                try
+                @Override
+                public void run()
                 {
-                    syncExecutor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-                } catch (InterruptedException ex)
-                {
-                    // Unexpected
-                    ex.printStackTrace();
+                    syncExecutor.shutdownNow();
+                    try
+                    {
+                        syncExecutor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                    } catch (InterruptedException ex)
+                    {
+                        // Unexpected
+                        ex.printStackTrace();
+                    }
                 }
-            }
-        });
+            });
     }
-    
+
     private final RandomAccessFile fileForSyncing;
 
     final boolean useExtentableDataTypes;
@@ -162,8 +162,10 @@ final class HDF5BaseWriter extends HDF5BaseReader
                             }
                         } catch (InterruptedException ex)
                         {
-                            // Unexpected event.
-                            ex.printStackTrace();
+                            // Shutdown has been triggered by showdownNow(), add <code>CLOSE</code>
+                            // to queue.
+                            // (Note that a close() on a closed RandomAccessFile is harmless.)
+                            commandQueue.add(Command.CLOSE);
                         }
                     }
                 }
@@ -248,7 +250,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
             {
                 commandQueue.add(Command.CLOSE);
-            } else {
+            } else
+            {
                 closeSync();
             }
         }
