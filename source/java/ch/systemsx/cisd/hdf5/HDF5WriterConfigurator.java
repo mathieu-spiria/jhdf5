@@ -34,6 +34,41 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
 
     private boolean useLatestFileFormat = false;
 
+    private SyncMode syncMode = SyncMode.SYNC_ON_FLUSH;
+
+    /**
+     * The mode of synchronizing changes (using a method like <code>fsync(2)</code>) to the HDF5
+     * file with the underlying storage. As <code>fsync(2)</code> is blocking, the synchonization is
+     * by default performed in a separate thread to minimize latency effects on the application. In
+     * order to ensure that <code>fsync(2)</code> is called in the same thread, use one of the
+     * <code>*_BLOCK</code> modes.
+     */
+    public enum SyncMode
+    {
+        /**
+         * Do not synchronize at all.
+         */
+        NO_SYNC,
+        /**
+         * Synchronize whenver {@link HDF5Writer#flush()} or {@link HDF5Writer#close()} are called.
+         */
+        SYNC,
+        /**
+         * Synchronize whenever {@link HDF5Writer#flush()} or {@link HDF5Writer#close()} are called.
+         * Block until synchronize is finished.
+         */
+        SYNC_BLOCK,
+        /**
+         * Synchronize whenever {@link HDF5Writer#flush()} is called. <i>Default</i>
+         */
+        SYNC_ON_FLUSH,
+        /**
+         * Synchronize whenever {@link HDF5Writer#flush()} is called. Block until synchronize is
+         * finished.
+         */
+        SYNC_ON_FLUSH_BLOCK,
+    }
+
     public HDF5WriterConfigurator(File hdf5File)
     {
         super(hdf5File);
@@ -71,6 +106,15 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
     }
 
     /**
+     * Sets the {@link SyncMode}.
+     */
+    public HDF5WriterConfigurator syncMode(SyncMode newSyncMode)
+    {
+        this.syncMode = newSyncMode;
+        return this;
+    }
+
+    /**
      * Will try to perform numeric conversions where appropriate if supported by the platform.
      * <p>
      * <strong>Numeric conversions can be platform dependent and are not available on all platforms.
@@ -91,7 +135,7 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
         {
             readerWriterOrNull =
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
-                            useLatestFileFormat, useExtentableDataTypes, overwrite));
+                            useLatestFileFormat, useExtentableDataTypes, overwrite, syncMode));
         }
         return (HDF5Writer) readerWriterOrNull;
     }

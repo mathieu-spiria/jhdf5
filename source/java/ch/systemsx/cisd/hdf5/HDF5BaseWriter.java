@@ -27,10 +27,20 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_UNLIMITED;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.util.EnumSet;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
+import ch.systemsx.cisd.common.concurrent.NamingThreadPoolExecutor;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.SyncMode;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
@@ -42,30 +52,122 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 final class HDF5BaseWriter extends HDF5BaseReader
 {
 
-    private final static int MAX_TYPE_VARIANT_TYPES = 1024;
+    private static final int SHUTDOWN_TIMEOUT_SECONDS = 60;
+
+    private static final int MAX_TYPE_VARIANT_TYPES = 1024;
+
+    private final static EnumSet<SyncMode> BLOCKING_SYNC_MODES =
+            EnumSet.of(SyncMode.SYNC_BLOCK, SyncMode.SYNC_ON_FLUSH_BLOCK);
+
+    private final static EnumSet<SyncMode> NON_BLOCKING_SYNC_MODES =
+            EnumSet.of(SyncMode.SYNC, SyncMode.SYNC_ON_FLUSH);
 
     /**
      * The size threshold for the COMPACT storage layout.
      */
     final static int COMPACT_LAYOUT_THRESHOLD = 256;
 
+    /**
+     * ExecutorService for calling <code>fsync(2)</code> in a non-blocking way.
+     */
+    private final static ExecutorService syncExecutor =
+            new NamingThreadPoolExecutor("HDF5 Sync").corePoolSize(3).daemonize();
+
+    static
+    {
+        // Ensure all fsync()s are finished.
+        Runtime.getRuntime().addShutdownHook(new Thread()
+        {
+            @Override
+            public void run()
+            {
+                syncExecutor.shutdown();
+                try
+                {
+                    syncExecutor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                } catch (InterruptedException ex)
+                {
+                    // Unexpected
+                    ex.printStackTrace();
+                }
+            }
+        });
+    }
+    
+    private final RandomAccessFile fileForSyncing;
+
     final boolean useExtentableDataTypes;
 
     final boolean overwrite;
+
+    final SyncMode syncMode;
 
     final boolean useLatestFileFormat;
 
     final int variableLengthStringDataTypeId;
 
-    HDF5BaseWriter(File hdf5File, boolean performNumericConversions,
-            boolean useLatestFileFormat, boolean useExtentableDataTypes, boolean overwrite)
+    private enum Command
     {
-        super(hdf5File, performNumericConversions);
+        SYNC, CLOSE
+    }
+
+    final BlockingQueue<Command> commandQueue;
+
+    HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useLatestFileFormat,
+            boolean useExtentableDataTypes, boolean overwrite, SyncMode syncMode)
+    {
+        super(hdf5File, performNumericConversions, useLatestFileFormat, overwrite);
+        try
+        {
+            this.fileForSyncing = new RandomAccessFile(hdf5File, "rw");
+        } catch (FileNotFoundException ex)
+        {
+            // Should not be happening as openFile() was called in super()
+            throw new HDF5JavaException("Cannot open RandomAccessFile: " + ex.getMessage());
+        }
         this.useLatestFileFormat = useExtentableDataTypes;
         this.useExtentableDataTypes = useExtentableDataTypes;
         this.overwrite = overwrite;
+        this.syncMode = syncMode;
         readNamedDataTypes();
         variableLengthStringDataTypeId = openOrCreateVLStringType();
+        if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
+        {
+            commandQueue = new LinkedBlockingQueue<Command>();
+            setupSyncThread();
+        } else
+        {
+            commandQueue = null;
+        }
+    }
+
+    private void setupSyncThread()
+    {
+        syncExecutor.execute(new Runnable()
+            {
+                public void run()
+                {
+                    while (true)
+                    {
+                        try
+                        {
+                            switch (commandQueue.take())
+                            {
+                                case SYNC:
+                                    sync();
+                                    break;
+                                case CLOSE:
+                                    closeSync();
+                                    return;
+                            }
+                        } catch (InterruptedException ex)
+                        {
+                            // Unexpected event.
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+            });
     }
 
     @Override
@@ -83,6 +185,72 @@ final class HDF5BaseWriter extends HDF5BaseReader
                         + "' does not exist.");
             }
             return h5.createFile(hdf5File.getPath(), useLatestFileFormatInit, fileRegistry);
+        }
+    }
+
+    /**
+     * Calls <code>fdatasync(2)</code> if available or else <code>fsync(2)</code>.
+     */
+    private void sync()
+    {
+        try
+        {
+            // Linux + Solaris: fdatasync(), MaxOSX: fsync(), Windows: FlushFileBuffers()
+            fileForSyncing.getChannel().force(false);
+        } catch (IOException ex)
+        {
+            throw new HDF5JavaException("Error syncing file: " + ex.getMessage());
+        }
+    }
+
+    private void closeSync()
+    {
+        try
+        {
+            fileForSyncing.close();
+        } catch (IOException ex)
+        {
+            throw new HDF5JavaException("Error closing file: " + ex.getMessage());
+        }
+    }
+
+    void flush()
+    {
+        h5.flushFile(fileId);
+        if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
+        {
+            commandQueue.add(Command.SYNC);
+        } else if (BLOCKING_SYNC_MODES.contains(syncMode))
+        {
+            sync();
+        }
+    }
+
+    void flushSyncBlocking()
+    {
+        h5.flushFile(fileId);
+        sync();
+    }
+
+    @Override
+    void close()
+    {
+        if (state == State.OPEN)
+        {
+            super.close();
+            if (SyncMode.SYNC == syncMode)
+            {
+                commandQueue.add(Command.SYNC);
+            } else if (SyncMode.SYNC_BLOCK == syncMode)
+            {
+                sync();
+            }
+            if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
+            {
+                commandQueue.add(Command.CLOSE);
+            } else {
+                closeSync();
+            }
         }
     }
 

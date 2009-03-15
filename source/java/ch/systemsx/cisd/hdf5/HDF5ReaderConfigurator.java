@@ -80,7 +80,8 @@ public class HDF5ReaderConfigurator
         if (readerWriterOrNull == null)
         {
             readerWriterOrNull =
-                    new HDF5Reader(new HDF5BaseReader(hdf5File, performNumericConversions));
+                    new HDF5Reader(new HDF5BaseReader(hdf5File, performNumericConversions, false,
+                            false));
         }
         return readerWriterOrNull;
     }

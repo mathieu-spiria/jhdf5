@@ -51,6 +51,7 @@ import ch.systemsx.cisd.common.array.MDFloatArray;
 import ch.systemsx.cisd.common.logging.LogInitializer;
 import ch.systemsx.cisd.common.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.SyncMode;
 
 /**
  * Test cases for {@link HDF5Writer} and {@link HDF5Reader}, doing "round-trips" to the HDF5 disk
@@ -111,6 +112,8 @@ public class HDF5RoundtripTest
         test.testGetGroupMembersIteratively();
         test.testScalarValues();
         test.testDataSets();
+        test.testMaxPathLength();
+        test.testExceedMaxPathLength();
         test.testAccessClosedReaderWriter();
         test.testDataSetsNonExtendable();
         test.testOverwriteContiguousDataSet();
@@ -521,6 +524,7 @@ public class HDF5RoundtripTest
             { 0, -1, 1, -128, 127 };
         final String shortDatasetName = "/Group2/shorts";
         writer.writeShortArray(shortDatasetName, shortDataWritten, true);
+        writer.flush();
         final String stringDataWritten = "Some Random String";
         final String stringDatasetName = "/Group3/strings";
         final String stringDatasetName2 = "/Group4/strings";
@@ -539,6 +543,47 @@ public class HDF5RoundtripTest
         final String stringDataRead = reader.readString(stringDatasetName);
         assertEquals(stringDataWritten, stringDataRead);
         reader.close();
+    }
+
+    @Test
+    public void testMaxPathLength()
+    {
+        final File datasetFile = new File(workingDirectory, "maxpathlength.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final String madnessOverwhelmesUs1 = StringUtils.repeat("a", 16384);
+        final String madnessOverwhelmesUs2 = StringUtils.repeat("/b", 8192);
+        writer.writeInt(madnessOverwhelmesUs1, 17);
+        writer.writeFloat(madnessOverwhelmesUs2, 0.0f);
+        writer.close();
+        final HDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        assertEquals(17, reader.readInt(madnessOverwhelmesUs1));
+        assertEquals(0.0f, reader.readFloat(madnessOverwhelmesUs2));
+        reader.close();
+    }
+
+    @Test
+    public void testExceedMaxPathLength()
+    {
+        final File datasetFile = new File(workingDirectory, "exceedmaxpathlength.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final String madnessOverwhelmesUs = StringUtils.repeat("a", 16385);
+        try
+        {
+            writer.writeInt(madnessOverwhelmesUs, 17);
+            fail("path overflow not detected");
+        } catch (HDF5JavaException ex)
+        {
+            assertEquals(0, ex.getMessage().indexOf("Path too long"));
+        } finally
+        {
+            writer.close();
+        }
     }
 
     @Test
@@ -578,7 +623,8 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final HDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().writer();
+                new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().syncMode(
+                        SyncMode.SYNC_BLOCK).writer();
         final String floatDatasetName = "/Group1/floats";
         final float[] floatDataWritten = new float[]
             { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f };
@@ -653,7 +699,8 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final String dsName = "longArray";
-        HDF5Writer writer = new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().writer();
+        HDF5Writer writer =
+                new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().writer();
         // Creating the group is part of the "bug magic".
         writer.createGroup("group");
         final long[] arrayWritten1 = new long[1000];
@@ -744,7 +791,8 @@ public class HDF5RoundtripTest
         final String dsName = "ds";
         long[] data = new long[]
             { 1, 2, 3 };
-        HDF5Writer writer = new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().writer();
+        HDF5Writer writer =
+                new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().writer();
         // Set maxdims such that COMPACT_LAYOUT_THRESHOLD (int bytes!) is exceeded so that we get a
         // contiguous data set.
         writer.createLongArray(dsName, 128, 1);
@@ -2646,7 +2694,8 @@ public class HDF5RoundtripTest
         linkFile.delete();
         assertFalse(linkFile.exists());
         linkFile.deleteOnExit();
-        final HDF5Writer writer2 = new HDF5WriterConfigurator(linkFile).useLatestFileFormat().writer();
+        final HDF5Writer writer2 =
+                new HDF5WriterConfigurator(linkFile).useLatestFileFormat().writer();
         final String linkName = "/data/link";
         writer2.createExternalLink(fileToLinkTo.getPath(), dataSetName, linkName);
         writer2.close();
@@ -3526,7 +3575,8 @@ public class HDF5RoundtripTest
         writer.writeLong("smallInteger", 17L);
         writer.writeLong("largeInteger", Long.MAX_VALUE);
         writer.close();
-        final HDF5ReaderConfigurator config = new HDF5ReaderConfigurator(file).performNumericConversions();
+        final HDF5ReaderConfigurator config =
+                new HDF5ReaderConfigurator(file).performNumericConversions();
         // If this platform doesn't support numeric conversions, the test would fail.
         if (config.platformSupportsNumericConversions() == false)
         {

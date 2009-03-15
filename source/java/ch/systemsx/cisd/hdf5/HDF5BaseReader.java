@@ -73,7 +73,8 @@ class HDF5BaseReader
 
     protected State state;
 
-    HDF5BaseReader(File hdf5File, boolean performNumericConversions)
+    HDF5BaseReader(File hdf5File, boolean performNumericConversions, boolean useLatestFileFormat,
+            boolean overwrite)
     {
         assert hdf5File != null;
 
@@ -83,18 +84,19 @@ class HDF5BaseReader
         this.fileRegistry = new CleanUpRegistry();
         this.namedDataTypeMap = new HashMap<String, Integer>();
         h5 = new HDF5(fileRegistry, performNumericConversions);
-        fileId = openFile(false, false);
+        fileId = openFile(useLatestFileFormat, overwrite);
         state = State.OPEN;
         readNamedDataTypes();
         booleanDataTypeId = openOrCreateBooleanDataType();
         typeVariantDataType = openOrCreateTypeVariantDataType();
     }
-    
+
     int openFile(boolean useLatestFileFormat, boolean overwrite)
     {
         if (hdf5File.exists() == false)
         {
-            throw new IllegalArgumentException("The file " + this.hdf5File.getPath() + " does not exit.");
+            throw new IllegalArgumentException("The file " + this.hdf5File.getPath()
+                    + " does not exit.");
         }
         return h5.openFileReadOnly(hdf5File.getPath(), fileRegistry);
     }
@@ -116,7 +118,10 @@ class HDF5BaseReader
      */
     void close()
     {
-        fileRegistry.cleanUp(false);
+        if (state == State.OPEN)
+        {
+            fileRegistry.cleanUp(false);
+        }
         state = State.CLOSED;
     }
 
