@@ -44,7 +44,7 @@ import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 class HDF5
 {
 
-    private final static int MAX_STRING_LENGTH = 4095;
+    private final static int MAX_PATH_LENGTH = 16384;
 
     private final CleanUpCallable runner;
 
@@ -75,7 +75,7 @@ class HDF5
 
     private static void checkMaxLength(String path) throws HDF5JavaException
     {
-        if (path.length() > MAX_STRING_LENGTH)
+        if (path.length() > MAX_PATH_LENGTH)
         {
             throw new HDF5JavaException("Path too long (length=" + path.length() + ")");
         }
