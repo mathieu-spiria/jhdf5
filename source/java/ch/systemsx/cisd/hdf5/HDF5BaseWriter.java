@@ -403,7 +403,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     private int computeSizeForDimensions(int dataTypeId, long[] dimensions)
     {
-        int size = h5.getSize(dataTypeId);
+        int size = h5.getDataTypeSize(dataTypeId);
         for (long d : dimensions)
         {
             size *= d;

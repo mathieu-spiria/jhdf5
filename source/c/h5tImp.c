@@ -33,6 +33,7 @@ extern jboolean h5JNIFatalError( JNIEnv *env, char *functName);
 extern jboolean h5nullArgument( JNIEnv *env, char *functName);
 extern jboolean h5badArgument( JNIEnv *env, char *functName);
 extern jboolean h5libraryError( JNIEnv *env );
+extern jboolean h5raiseException( JNIEnv *env, char *exception, char *message);
 
 /*
  * Class:     ncsa_hdf_hdf5lib_H5
@@ -231,12 +232,35 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tget_1class
 JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tget_1size
   (JNIEnv *env, jclass clss, jint type_id)
 {
-    size_t retVal = 0;
-    retVal =  H5Tget_size(type_id );
+    size_t retVal;
+    jint size;
+    retVal =  H5Tget_size(type_id);
     if (retVal == 0) {
         h5libraryError(env);
     }
-    return (jint)retVal;
+    size = retVal;
+    if (size != retVal) {
+        h5raiseException( env,
+          "ncsa/hdf/hdf5lib/exceptions/HDF5LibraryException",
+          "H5Tget_size() overflows jint");
+    }
+    return size;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Tget_size_long
+ * Signature: (J)I
+ */
+JNIEXPORT jlong JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tget_1size_1long
+  (JNIEnv *env, jclass clss, jint type_id)
+{
+    size_t retVal;
+    retVal =  H5Tget_size(type_id);
+    if (retVal == 0) {
+        h5libraryError(env);
+    }
+    return (jlong)retVal;
 }
 
 /*
@@ -1498,6 +1522,16 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tget_1array_1dims
 
     if ( dims == NULL ) {
         h5nullArgument( env, "H5Tget_array_dims:  value is NULL");
+        return -1;
+    }
+
+#ifdef __cplusplus
+    dimsP = env->GetIntArrayElements(dims,&isCopy);
+#else
+    dimsP = (*env)->GetIntArrayElements(env,dims,&isCopy);
+#endif
+    if (dimsP == NULL) {
+        h5JNIFatalError( env, "H5Tget_array_dims:  dimsP not pinned");
         return -1;
     }
 

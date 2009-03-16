@@ -28,10 +28,18 @@ public final class HDF5DataTypeInformation
 
     private int elementSize;
 
+    private int numberOfElements;
+
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize)
+    {
+        this(dataClass, elementSize, 1);
+    }
+    
+    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int numberOfElements)
     {
         this.dataClass = dataClass;
         this.elementSize = elementSize;
+        this.numberOfElements = numberOfElements;
     }
 
     /**
@@ -55,6 +63,21 @@ public final class HDF5DataTypeInformation
         this.elementSize = elementSize;
     }
 
+    /**
+     * Returns the number of elements of this type.
+     * <p>
+     * This will be 1 except for array data types.
+     */
+    public int getNumberOfElements()
+    {
+        return numberOfElements;
+    }
+
+    void setNumberOfElements(int numberOfElements)
+    {
+        this.numberOfElements = numberOfElements;
+    }
+
     //
     // Object
     //
@@ -67,19 +90,27 @@ public final class HDF5DataTypeInformation
             return false;
         }
         final HDF5DataTypeInformation that = (HDF5DataTypeInformation) obj;
-        return dataClass.equals(that.dataClass) && elementSize == that.elementSize;
+        return dataClass.equals(that.dataClass) && elementSize == that.elementSize
+                && numberOfElements == that.numberOfElements;
     }
 
     @Override
     public int hashCode()
     {
-        return (17 * 59 + dataClass.hashCode()) * 59 + elementSize;
+        return ((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + numberOfElements;
     }
 
     @Override
     public String toString()
     {
-        return dataClass + "(" + elementSize + ")";
+        if (numberOfElements == 1)
+        {
+            return dataClass + "(" + elementSize + ")";
+        } else
+        {
+            
+            return dataClass + "(" + elementSize + ", #" + numberOfElements + ")";
+        }
     }
 
 }

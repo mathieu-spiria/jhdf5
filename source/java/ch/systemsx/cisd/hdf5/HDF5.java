@@ -845,6 +845,19 @@ class HDF5
         return dataTypeId;
     }
 
+    public int createArrayType(int baseTypeId, int length, ICleanUpRegistry registry)
+    {
+        final int dataTypeId = H5Tarray_create(baseTypeId, 1, new int[] { length });
+        registry.registerCleanUp(new Runnable()
+        {
+            public void run()
+            {
+                H5Tclose(dataTypeId);
+            }
+        });
+        return dataTypeId;
+    }
+
     private enum EnumSize
     {
         BYTE8, SHORT16, INT32
@@ -1003,9 +1016,18 @@ class HDF5
     /**
      * Returns the data type id for a member of a compound data type, specified by index.
      */
-    public int getDataTypeForIndex(int compoundDataTypeId, int index)
+    public int getDataTypeForIndex(int compoundDataTypeId, int index, ICleanUpRegistry registry)
     {
-        return H5Tget_member_type(compoundDataTypeId, index);
+        final int memberTypeId = H5Tget_member_type(compoundDataTypeId, index);
+        registry.registerCleanUp(new Runnable()
+        {
+
+            public void run()
+            {
+                H5Tclose(memberTypeId);
+            }
+        });
+        return memberTypeId;
     }
 
     /**
@@ -1125,52 +1147,13 @@ class HDF5
     /**
      * Use this if <var>dataTypeId</var> can possibly be a bit field.
      */
-    public int getNativeDataTypeCheckIdenticalToBitFields(int dataTypeId, ICleanUpRegistry registry)
+    public int getNativeDataTypeCheckForBitField(int dataTypeId, ICleanUpRegistry registry)
     {
         // Workaround: calling H5Tget_native_type() on one of the bit field types in 1.8.2 throws an
         // "HDF5FunctionArgumentException: Invalid arguments to routine: Inappropriate type"
-        if (dataTypeId == H5T_STD_B64LE || dataTypeId == H5T_STD_B64BE)
+        if (H5Tdetect_class(dataTypeId, H5T_BITFIELD))
         {
-            return H5T_NATIVE_B64;
-        } else if (dataTypeId == H5T_STD_B32LE || dataTypeId == H5T_STD_B32BE)
-        {
-            return H5T_NATIVE_B32;
-        } else if (dataTypeId == H5T_STD_B16LE || dataTypeId == H5T_STD_B16BE)
-        {
-            return H5T_NATIVE_B16;
-        } else if (dataTypeId == H5T_STD_B8LE || dataTypeId == H5T_STD_B8BE)
-        {
-            return H5T_NATIVE_B8;
-        } else
-        {
-            return getNativeDataType(dataTypeId, registry);
-        }
-    }
-
-    /**
-     * Use this if <var>dataTypeId</var> can possibly be a bit field and if <var>dataTypeId</var>
-     * has been read from an HDF5 file.
-     */
-    public int getNativeDataTypeCheckEqualToBitFields(int dataTypeId, ICleanUpRegistry registry)
-    {
-        // Workaround: calling H5Tget_native_type() on one of the bit field types in 1.8.2 throws an
-        // "HDF5FunctionArgumentException: Invalid arguments to routine: Inappropriate type"
-        if (dataTypesAreEqual(dataTypeId, H5T_STD_B64LE)
-                || dataTypesAreEqual(dataTypeId, H5T_STD_B64BE))
-        {
-            return H5T_NATIVE_B64;
-        } else if (dataTypesAreEqual(dataTypeId, H5T_STD_B32LE)
-                || dataTypesAreEqual(dataTypeId, H5T_STD_B32BE))
-        {
-            return H5T_NATIVE_B32;
-        } else if (dataTypesAreEqual(dataTypeId, H5T_STD_B16LE)
-                || dataTypesAreEqual(dataTypeId, H5T_STD_B16BE))
-        {
-            return H5T_NATIVE_B16;
-        } else if (dataTypesAreEqual(dataTypeId, H5T_STD_B8LE)
-                || dataTypesAreEqual(dataTypeId, H5T_STD_B8BE))
-        {
-            return H5T_NATIVE_B8;
+            return dataTypeId;
         } else
         {
             return getNativeDataType(dataTypeId, registry);
@@ -1213,7 +1196,7 @@ class HDF5
                     H5Tclose(dataTypeId);
                 }
             });
-        return getNativeDataTypeCheckEqualToBitFields(dataTypeId, registry);
+        return getNativeDataTypeCheckForBitField(dataTypeId, registry);
     }
 
     public int getNativeDataTypeForAttribute(int attributeId, ICleanUpRegistry registry)
@@ -1229,9 +1212,14 @@ class HDF5
         return getNativeDataType(dataTypeId, registry);
     }
 
-    public int getSize(int dataTypeId)
+    public int getDataTypeSize(int dataTypeId)
     {
         return H5Tget_size(dataTypeId);
+    }
+
+    public long getDataTypeSizeLong(int dataTypeId) throws HDF5JavaException
+    {
+        return H5Tget_size_long(dataTypeId);
     }
 
     public boolean isVariableLengthString(int dataTypeId)
@@ -1411,6 +1399,14 @@ class HDF5
         runner.call(dataDimensionRunnable);
     }
 
+    public int[] getArrayDimensions(int arrayTypeId)
+    {
+        final int rank = H5Tget_array_ndims(arrayTypeId);
+        final int[] dims = new int[rank];
+        H5Tget_array_dims(arrayTypeId, dims);
+        return dims;
+    }
+    
     public int createSimpleDataSpace(long[] dimensions, ICleanUpRegistry registry)
     {
         final int dataSpaceId = H5Screate_simple(dimensions.length, dimensions, null);

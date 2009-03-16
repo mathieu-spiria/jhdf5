@@ -3113,7 +3113,11 @@ public class HDF5RoundtripTest
                 Record.getMemberInfo(reader.getEnumType("someEnumType"));
         final HDF5CompoundMemberInformation[] diskMemberInfo =
                 reader.getCompoundDataSetInformation("/testCompound");
-        assertTrue(Arrays.equals(memMemberInfo, diskMemberInfo));
+        assertEquals(memMemberInfo.length, diskMemberInfo.length);
+        for (int i = 0; i < memMemberInfo.length; ++i)
+        {
+            assertEquals(memMemberInfo[i], diskMemberInfo[i]);
+        }
         compoundType = Record.getHDF5Type(reader);
         final Record recordRead = reader.readCompound("/testCompound", Record.getHDF5Type(reader));
         assertEquals(recordWritten, recordRead);
@@ -3171,12 +3175,12 @@ public class HDF5RoundtripTest
 
         static HDF5CompoundMemberInformation[] getMemberInfo()
         {
-            return HDF5CompoundMemberInformation.create(BitFieldRecord.class, mapping("bs", 40));
+            return HDF5CompoundMemberInformation.create(BitFieldRecord.class, mapping("bs", 100));
         }
 
         static HDF5CompoundType<BitFieldRecord> getHDF5Type(HDF5Reader reader)
         {
-            return reader.getCompoundType(BitFieldRecord.class, mapping("bs", 40));
+            return reader.getCompoundType(BitFieldRecord.class, mapping("bs", 100));
         }
 
         @Override
@@ -3208,6 +3212,7 @@ public class HDF5RoundtripTest
         HDF5CompoundType<BitFieldRecord> compoundType = BitFieldRecord.getHDF5Type(writer);
         final BitSet bs = new BitSet();
         bs.set(39);
+        bs.set(100);
         final BitFieldRecord recordWritten = new BitFieldRecord(bs);
         writer.writeCompound("/testCompound", compoundType, recordWritten);
         writer.close();
@@ -3215,7 +3220,11 @@ public class HDF5RoundtripTest
         final HDF5CompoundMemberInformation[] memMemberInfo = BitFieldRecord.getMemberInfo();
         final HDF5CompoundMemberInformation[] diskMemberInfo =
                 reader.getCompoundDataSetInformation("/testCompound");
-        assertTrue(Arrays.equals(memMemberInfo, diskMemberInfo));
+        assertEquals(memMemberInfo.length, diskMemberInfo.length);
+        for (int i = 0; i < memMemberInfo.length; ++i)
+        {
+            assertEquals(memMemberInfo[i], diskMemberInfo[i]);
+        }
         compoundType = BitFieldRecord.getHDF5Type(reader);
         final BitFieldRecord recordRead = reader.readCompound("/testCompound", compoundType);
         assertEquals(recordWritten, recordRead);

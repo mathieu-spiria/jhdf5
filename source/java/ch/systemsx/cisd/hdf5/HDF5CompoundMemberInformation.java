@@ -101,7 +101,10 @@ public final class HDF5CompoundMemberInformation implements
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 8);
         } else if (fieldType == BitSet.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.BITFIELD, 8);
+            typeInfo =
+                    new HDF5DataTypeInformation(HDF5DataClass.BITFIELD, 8, member
+                            .getMemberTypeLength()
+                            / 64 + (member.getMemberTypeLength() % 64 != 0 ? 1 : 0));
         } else if (fieldType == float.class || fieldType == float[].class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, 4);
@@ -120,6 +123,10 @@ public final class HDF5CompoundMemberInformation implements
         } else
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.OTHER, -1);
+        }
+        if (fieldType.isArray())
+        {
+            typeInfo.setNumberOfElements(member.getMemberTypeLength());
         }
         return typeInfo;
     }

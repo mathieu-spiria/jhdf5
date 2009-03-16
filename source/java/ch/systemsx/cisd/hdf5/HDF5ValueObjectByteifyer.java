@@ -38,6 +38,8 @@ class HDF5ValueObjectByteifyer<T>
         public int getBooleanDataTypeId();
 
         public int getStringDataTypeId(int maxLength);
+
+        public int getArrayTypeId(int baseTypeId, int length);
     }
 
     public HDF5ValueObjectByteifyer(Class<T> clazz, FileInfoProvider fileInfoProvider,
@@ -91,7 +93,7 @@ class HDF5ValueObjectByteifyer<T>
             {
                 result[i] =
                         HDF5MemberByteifyer.createArrayMemberByteifyer(members[i].getField(clazz),
-                                members[i].getMemberName(), offset, members[i]
+                                members[i].getMemberName(), offset, fileInfoProvider, members[i]
                                         .getMemberTypeLength());
             } else
             {

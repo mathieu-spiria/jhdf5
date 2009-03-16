@@ -21,8 +21,14 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
+import static ncsa.hdf.hdf5lib.H5.H5Tdetect_class;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_BITFIELD;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_COMPOUND;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_OPAQUE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
@@ -226,7 +232,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public String call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             final int dataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                             return baseReader.h5.tryGetDataTypePath(dataTypeId);
@@ -281,7 +288,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public List<String> call(ICleanUpRegistry registry)
                         {
                             final int objectId =
-                                    baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
                             return baseReader.h5.getAttributeNames(objectId, registry);
                         }
                     };
@@ -309,11 +317,14 @@ public class HDF5Reader implements HDF5SimpleReader
                             try
                             {
                                 final int objectId =
-                                        baseReader.h5.openObject(baseReader.fileId, dataSetPath, registry);
+                                        baseReader.h5.openObject(baseReader.fileId, dataSetPath,
+                                                registry);
                                 final int attributeId =
-                                        baseReader.h5.openAttribute(objectId, attributeName, registry);
+                                        baseReader.h5.openAttribute(objectId, attributeName,
+                                                registry);
                                 final int dataTypeId =
-                                        baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                                        baseReader.h5
+                                                .getDataTypeForAttribute(attributeId, registry);
                                 return getDataTypeInformation(dataTypeId);
                             } catch (RuntimeException ex)
                             {
@@ -343,7 +354,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public HDF5DataSetInformation call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath,
+                                            registry);
                             final int dataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                             final HDF5DataTypeInformation dataTypeInfo =
@@ -377,13 +389,17 @@ public class HDF5Reader implements HDF5SimpleReader
     private HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId)
     {
         return new HDF5DataTypeInformation(getDataClassForDataType(dataTypeId), baseReader.h5
-                .getSize(dataTypeId));
+                .getDataTypeSize(dataTypeId));
     }
 
     private HDF5DataClass getDataClassForDataType(final int dataTypeId)
     {
-        HDF5DataClass dataClass =
-                HDF5DataClass.classIdToDataClass(baseReader.h5.getClassType(dataTypeId));
+        return getDataClassForClassType(baseReader.h5.getClassType(dataTypeId), dataTypeId);
+    }
+
+    private HDF5DataClass getDataClassForClassType(final int classTypeId, final int dataTypeId)
+    {
+        HDF5DataClass dataClass = HDF5DataClass.classIdToDataClass(classTypeId);
         // Is it a boolean?
         if (dataClass == HDF5DataClass.ENUM
                 && baseReader.h5.dataTypesAreEqual(dataTypeId, baseReader.booleanDataTypeId))
@@ -406,7 +422,7 @@ public class HDF5Reader implements HDF5SimpleReader
     public List<String> getGroupMembers(final String groupPath)
     {
         assert groupPath != null;
-        
+
         baseReader.checkOpen();
         return baseReader.getGroupMembers(groupPath);
     }
@@ -421,7 +437,7 @@ public class HDF5Reader implements HDF5SimpleReader
     public List<String> getAllGroupMembers(final String groupPath)
     {
         assert groupPath != null;
-        
+
         baseReader.checkOpen();
         return baseReader.getAllGroupMembers(groupPath);
     }
@@ -436,7 +452,7 @@ public class HDF5Reader implements HDF5SimpleReader
     public List<String> getGroupMemberPaths(final String groupPath)
     {
         assert groupPath != null;
-        
+
         baseReader.checkOpen();
         return baseReader.getGroupMemberPaths(groupPath);
     }
@@ -532,8 +548,8 @@ public class HDF5Reader implements HDF5SimpleReader
         final int nativeDataTypeId =
                 baseReader.h5.getNativeDataType(storageDataTypeId, baseReader.fileRegistry);
         final String[] values = baseReader.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId, name,
-                values);
+        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
+                name, values);
     }
 
     /**
@@ -626,7 +642,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public HDF5EnumerationType call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath,
+                                            registry);
                             return getEnumTypeForDataSetId(dataSetId);
                         }
                     };
@@ -640,8 +657,8 @@ public class HDF5Reader implements HDF5SimpleReader
         final int nativeDataTypeId =
                 baseReader.h5.getNativeDataType(storageDataTypeId, baseReader.fileRegistry);
         final String[] values = baseReader.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId, null,
-                values);
+        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
+                null, values);
     }
 
     // /////////////////////
@@ -666,7 +683,8 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public Boolean call(ICleanUpRegistry registry)
                 {
-                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     return baseReader.h5.existsAttribute(objectId, attributeName);
                 }
             };
@@ -691,20 +709,23 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final int dataTypeId = baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                    final int dataTypeId =
+                            baseReader.h5.getDataTypeForAttribute(attributeId, registry);
                     final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
                     if (isString == false)
                     {
                         throw new IllegalArgumentException("Attribute " + attributeName
                                 + " of object " + objectPath + " needs to be a String.");
                     }
-                    final int size = baseReader.h5.getSize(dataTypeId);
+                    final int size = baseReader.h5.getDataTypeSize(dataTypeId);
                     final int stringDataTypeId = baseReader.h5.createDataTypeString(size, registry);
                     byte[] data =
-                            baseReader.h5.readAttributeAsByteArray(attributeId, stringDataTypeId, size);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, stringDataTypeId,
+                                    size);
                     int termIdx;
                     for (termIdx = 0; termIdx < size && data[termIdx] != 0; ++termIdx)
                     {
@@ -735,14 +756,17 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public Boolean call(ICleanUpRegistry registry)
                 {
-                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForAttribute(attributeId, registry);
                     byte[] data =
-                            baseReader.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, 1);
-                    final Boolean value = baseReader.h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
+                            baseReader.h5
+                                    .readAttributeAsByteArray(attributeId, nativeDataTypeId, 1);
+                    final Boolean value =
+                            baseReader.h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
                     if (value == null)
                     {
                         throw new HDF5JavaException("Attribute " + attributeName + " of path "
@@ -774,7 +798,8 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final int storageDataTypeId =
@@ -782,7 +807,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataType(storageDataTypeId, registry);
                     final byte[] data =
-                            baseReader.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, 4);
+                            baseReader.h5
+                                    .readAttributeAsByteArray(attributeId, nativeDataTypeId, 4);
                     final String value =
                             baseReader.h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
                                     HDFNativeData.byteToInt(data, 0));
@@ -815,7 +841,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public HDF5DataTypeVariant call(ICleanUpRegistry registry)
                         {
                             final int objectId =
-                                    baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
                             return tryGetTypeVariant(objectId, registry);
                         }
                     };
@@ -843,7 +870,8 @@ public class HDF5Reader implements HDF5SimpleReader
         {
             return -1;
         }
-        final int attributeId = baseReader.h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
+        final int attributeId =
+                baseReader.h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
         return getEnumOrdinal(attributeId, baseReader.typeVariantDataType);
     }
 
@@ -869,7 +897,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
                             final int objectId =
-                                    baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
                             final int attributeId =
                                     baseReader.h5.openAttribute(objectId, attributeName, registry);
                             final HDF5EnumerationType enumType =
@@ -890,24 +919,24 @@ public class HDF5Reader implements HDF5SimpleReader
             case BYTE:
             {
                 final byte[] data =
-                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
-                                1);
+                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType
+                                .getNativeTypeId(), 1);
                 enumOrdinal = data[0];
                 break;
             }
             case SHORT:
             {
                 final byte[] data =
-                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
-                                2);
+                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType
+                                .getNativeTypeId(), 2);
                 enumOrdinal = HDFNativeData.byteToShort(data, 0);
                 break;
             }
             case INT:
             {
                 final byte[] data =
-                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(),
-                                4);
+                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType
+                                .getNativeTypeId(), 4);
                 enumOrdinal = HDFNativeData.byteToInt(data, 0);
                 break;
             }
@@ -925,8 +954,8 @@ public class HDF5Reader implements HDF5SimpleReader
         final int nativeDataTypeId =
                 baseReader.h5.getNativeDataType(storageDataTypeId, baseReader.fileRegistry);
         final String[] values = baseReader.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId, null,
-                values);
+        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
+                null, values);
     }
 
     /**
@@ -947,11 +976,13 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public Integer call(ICleanUpRegistry registry)
                 {
-                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final byte[] data =
-                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_INT32, 4);
+                            baseReader.h5
+                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_INT32, 4);
                     return HDFNativeData.byteToInt(data, 0);
                 }
             };
@@ -976,11 +1007,13 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public Long call(ICleanUpRegistry registry)
                 {
-                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final byte[] data =
-                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_INT64, 8);
+                            baseReader.h5
+                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_INT64, 8);
                     return HDFNativeData.byteToLong(data, 0);
                 }
             };
@@ -1005,11 +1038,13 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public Float call(ICleanUpRegistry registry)
                 {
-                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final byte[] data =
-                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_FLOAT, 4);
+                            baseReader.h5
+                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_FLOAT, 4);
                     return HDFNativeData.byteToFloat(data, 0);
                 }
             };
@@ -1034,11 +1069,13 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 public Double call(ICleanUpRegistry registry)
                 {
-                    final int objectId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final byte[] data =
-                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_DOUBLE, 8);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_DOUBLE,
+                                    8);
                     return HDFNativeData.byteToDouble(data, 0);
                 }
             };
@@ -1071,12 +1108,13 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final int nativeDataTypeId =
-                            baseReader.h5
-                                    .getNativeDataTypeForDataSetCheckBitFields(dataSetId, registry);
+                            baseReader.h5.getNativeDataTypeForDataSetCheckBitFields(dataSetId,
+                                    registry);
                     final byte[] data =
-                            new byte[spaceParams.blockSize * baseReader.h5.getSize(nativeDataTypeId)];
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                            new byte[(spaceParams.blockSize == 0 ? 1 : spaceParams.blockSize)
+                                    * baseReader.h5.getDataTypeSize(nativeDataTypeId)];
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -1111,8 +1149,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -1145,8 +1183,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -1252,7 +1290,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final byte[] data = new byte[1];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
-                    final Boolean value = baseReader.h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
+                    final Boolean value =
+                            baseReader.h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
                     if (value == null)
                     {
                         throw new HDF5JavaException(objectPath + " needs to be a Boolean.");
@@ -1363,8 +1402,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -1396,8 +1435,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -1431,8 +1471,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -1467,8 +1508,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -1501,8 +1542,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -1597,13 +1638,13 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDByteArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
-                                    baseReader
-                                            .getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8,
-                                                    registry);
+                                    baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT8,
+                                            registry);
                             final byte[] data = new byte[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
@@ -1641,10 +1682,11 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final byte[] dataBlock = new byte[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -1676,10 +1718,11 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDByteArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final byte[] dataBlock = new byte[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -1900,8 +1943,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final short[] data = new short[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -1933,8 +1976,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -1969,8 +2013,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -2005,8 +2050,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final short[] data = new short[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -2039,8 +2084,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final short[] data = new short[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -2135,7 +2180,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDShortArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
@@ -2178,10 +2224,11 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final short[] dataBlock = new short[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -2213,10 +2260,11 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDShortArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final short[] dataBlock = new short[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -2438,8 +2486,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final int[] data = new int[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -2471,8 +2519,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -2506,8 +2555,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT32, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -2542,8 +2592,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final int[] data = new int[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -2575,8 +2625,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int[] data = new int[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -2671,7 +2721,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDIntArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
@@ -2714,10 +2765,11 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final int[] dataBlock = new int[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -2749,10 +2801,11 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDIntArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final int[] dataBlock = new int[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -2972,8 +3025,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -3005,8 +3058,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -3040,8 +3094,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -3076,8 +3131,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -3110,8 +3165,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -3206,7 +3261,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
@@ -3249,10 +3305,11 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final long[] dataBlock = new long[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -3284,10 +3341,11 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final long[] dataBlock = new long[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -3508,8 +3566,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final float[] data = new float[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -3541,8 +3599,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -3577,8 +3636,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_FLOAT, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -3613,8 +3673,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final float[] data = new float[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -3647,8 +3707,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final float[] data = new float[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -3743,7 +3803,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDFloatArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
@@ -3786,10 +3847,11 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final float[] dataBlock = new float[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -3821,10 +3883,11 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDFloatArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final float[] dataBlock = new float[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_FLOAT,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -4046,8 +4109,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final double[] data = new double[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -4079,8 +4142,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -4115,8 +4179,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_DOUBLE, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                                    .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -4151,8 +4216,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final double[] data = new double[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -4185,8 +4250,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final double[] data = new double[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -4282,7 +4347,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDDoubleArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, registry);
                             final int nativeDataTypeId =
@@ -4325,10 +4391,11 @@ public class HDF5Reader implements HDF5SimpleReader
                                 offset[i] = blockNumber[i] * blockDimensions[i];
                             }
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final double[] dataBlock = new double[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -4360,10 +4427,11 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDDoubleArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset, blockDimensions,
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
                             final double[] dataBlock = new double[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
@@ -4609,8 +4677,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -4647,8 +4715,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -4683,8 +4751,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -4949,8 +5017,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     convertTimeDurations(timeUnit, storedUnit, data);
                     return data;
                 }
@@ -4990,8 +5058,8 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     convertTimeDurations(timeUnit, storedUnit, data);
                     return data;
                 }
@@ -5029,8 +5097,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     convertTimeDurations(timeUnit, storedUnit, data);
                     return data;
                 }
@@ -5167,7 +5235,7 @@ public class HDF5Reader implements HDF5SimpleReader
                         return data[0];
                     } else
                     {
-                        final int size = baseReader.h5.getSize(dataTypeId);
+                        final int size = baseReader.h5.getDataTypeSize(dataTypeId);
                         byte[] data = new byte[size];
                         baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId, data);
                         int termIdx;
@@ -5242,7 +5310,7 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataType(storageDataTypeId, registry);
-                    final int size = baseReader.h5.getSize(nativeDataTypeId);
+                    final int size = baseReader.h5.getDataTypeSize(nativeDataTypeId);
                     final String value;
                     switch (size)
                     {
@@ -5305,7 +5373,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             final HDF5EnumerationType enumType = getEnumTypeForDataSetId(dataSetId);
                             return readEnumValue(dataSetId, enumType);
                         }
@@ -5339,7 +5408,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             return readEnumValue(dataSetId, enumType);
                         }
                     };
@@ -5396,7 +5466,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public HDF5EnumerationValueArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId);
                             final HDF5EnumerationType actualEnumType =
                                     (enumType == null) ? getEnumTypeForDataSetId(dataSetId)
@@ -5471,12 +5542,13 @@ public class HDF5Reader implements HDF5SimpleReader
                             baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataType(storageDataTypeId, registry);
-                    final boolean isEnum = (baseReader.h5.getClassType(nativeDataTypeId) == H5T_ENUM);
+                    final boolean isEnum =
+                            (baseReader.h5.getClassType(nativeDataTypeId) == H5T_ENUM);
                     if (isEnum == false)
                     {
                         throw new HDF5JavaException(objectPath + " is not an enum.");
                     }
-                    final int size = baseReader.h5.getSize(nativeDataTypeId);
+                    final int size = baseReader.h5.getDataTypeSize(nativeDataTypeId);
 
                     final String[] value = new String[vectorLength];
                     switch (size)
@@ -5559,8 +5631,9 @@ public class HDF5Reader implements HDF5SimpleReader
                                     HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX,
                                             dataTypeName);
                             final int compoundDataTypeId =
-                                    baseReader.h5.openDataType(baseReader.fileId, dataTypePath, registry);
-                            return getCompoundMemberInformation(compoundDataTypeId);
+                                    baseReader.h5.openDataType(baseReader.fileId, dataTypePath,
+                                            registry);
+                            return getCompoundMemberInformation(compoundDataTypeId, registry);
                         }
                     };
         return baseReader.runner.call(writeRunnable);
@@ -5583,7 +5656,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public HDF5CompoundMemberInformation[] call(final ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath,
+                                            registry);
                             final int compoundDataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                             if (baseReader.h5.getClassType(compoundDataTypeId) != H5T_COMPOUND)
@@ -5591,27 +5665,84 @@ public class HDF5Reader implements HDF5SimpleReader
                                 throw new HDF5JavaException("Data set '" + dataSetPath
                                         + "' is not of compound type.");
                             }
-                            return getCompoundMemberInformation(compoundDataTypeId);
+                            return getCompoundMemberInformation(compoundDataTypeId, registry);
                         }
                     };
         return baseReader.runner.call(writeRunnable);
     }
 
     private HDF5CompoundMemberInformation[] getCompoundMemberInformation(
-            final int compoundDataTypeId)
+            final int compoundDataTypeId, final ICleanUpRegistry registry)
     {
-        final String[] memberNames = baseReader.h5.getNamesForEnumOrCompoundMembers(compoundDataTypeId);
+        final String[] memberNames =
+                baseReader.h5.getNamesForEnumOrCompoundMembers(compoundDataTypeId);
         final HDF5CompoundMemberInformation[] memberInfo =
                 new HDF5CompoundMemberInformation[memberNames.length];
         for (int i = 0; i < memberInfo.length; ++i)
         {
-            final int dataTypeId = baseReader.h5.getDataTypeForIndex(compoundDataTypeId, i);
-            memberInfo[i] =
-                    new HDF5CompoundMemberInformation(memberNames[i], new HDF5DataTypeInformation(
-                            getDataClassForDataType(dataTypeId), baseReader.h5.getSize(dataTypeId)));
+            final int dataTypeId =
+                    baseReader.h5.getDataTypeForIndex(compoundDataTypeId, i, registry);
+            final int sizeInBytes = baseReader.h5.getDataTypeSize(dataTypeId);
+            final int dataClassTypeId = baseReader.h5.getClassType(dataTypeId);
+            if (dataClassTypeId == H5T_ARRAY)
+            {
+                final int numberOfElements = getNumberOfArrayElements(dataTypeId);
+                final int elementSize = sizeInBytes / numberOfElements;
+                memberInfo[i] =
+                        new HDF5CompoundMemberInformation(memberNames[i],
+                                new HDF5DataTypeInformation(findDataClassForArray(dataTypeId),
+                                        elementSize, numberOfElements));
+            } else
+            {
+                memberInfo[i] =
+                        new HDF5CompoundMemberInformation(memberNames[i],
+                                new HDF5DataTypeInformation(getDataClassForClassType(
+                                        dataClassTypeId, dataTypeId), sizeInBytes));
+            }
         }
         Arrays.sort(memberInfo);
         return memberInfo;
+    }
+
+    private int getNumberOfArrayElements(int arrayDataTypeId)
+    {
+        final int[] dims = baseReader.h5.getArrayDimensions(arrayDataTypeId);
+        int numberOfElements = 1;
+        for (int d : dims)
+        {
+            numberOfElements *= d;
+        }
+        return numberOfElements;
+    }
+
+    private HDF5DataClass findDataClassForArray(int arrayDataTypeId)
+    {
+        if (H5Tdetect_class(arrayDataTypeId, H5T_FLOAT))
+        {
+            return HDF5DataClass.FLOAT;
+        } else if (H5Tdetect_class(arrayDataTypeId, H5T_INTEGER))
+        {
+            return HDF5DataClass.INTEGER;
+        } else if (H5Tdetect_class(arrayDataTypeId, H5T_STRING))
+        {
+            return HDF5DataClass.STRING;
+        } else if (H5Tdetect_class(arrayDataTypeId, H5T_BITFIELD))
+        {
+            return HDF5DataClass.BITFIELD;
+        } else if (H5Tdetect_class(arrayDataTypeId, H5T_COMPOUND))
+        {
+            return HDF5DataClass.COMPOUND;
+        } else if (H5Tdetect_class(arrayDataTypeId, H5T_ENUM))
+        {
+            return HDF5DataClass.ENUM;
+        } else if (H5Tdetect_class(arrayDataTypeId, H5T_OPAQUE))
+        {
+            return HDF5DataClass.OPAQUE;
+        } else
+        {
+            return HDF5DataClass.OTHER;
+        }
+
     }
 
     /**
@@ -5629,8 +5760,8 @@ public class HDF5Reader implements HDF5SimpleReader
                 createByteifyers(compoundType, members);
         final int storageDataTypeId = createStorageCompoundDataType(objectArrayifyer);
         final int nativeDataTypeId = createNativeCompoundDataType(objectArrayifyer);
-        return new HDF5CompoundType<T>(baseReader.fileId, storageDataTypeId, nativeDataTypeId, name,
-                compoundType, objectArrayifyer);
+        return new HDF5CompoundType<T>(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
+                name, compoundType, objectArrayifyer);
     }
 
     protected int createStorageCompoundDataType(HDF5ValueObjectByteifyer<?> objectArrayifyer)
@@ -5647,7 +5778,8 @@ public class HDF5Reader implements HDF5SimpleReader
         final int nativeDataTypeId =
                 baseReader.h5.createDataTypeCompound(objectArrayifyer.getRecordSize(),
                         baseReader.fileRegistry);
-        objectArrayifyer.insertNativeMemberTypes(nativeDataTypeId, baseReader.h5, baseReader.fileRegistry);
+        objectArrayifyer.insertNativeMemberTypes(nativeDataTypeId, baseReader.h5,
+                baseReader.fileRegistry);
         return nativeDataTypeId;
     }
 
@@ -5824,8 +5956,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final byte[] byteArr =
                             new byte[spaceParams.blockSize
                                     * type.getObjectByteifyer().getRecordSize()];
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, byteArr);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
                     return type.getObjectByteifyer().arrayifyScalar(storageDataTypeId, byteArr,
                             type.getCompoundType());
                 }
@@ -5851,8 +5983,8 @@ public class HDF5Reader implements HDF5SimpleReader
                     final byte[] byteArr =
                             new byte[spaceParams.blockSize
                                     * type.getObjectByteifyer().getRecordSize()];
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, byteArr);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
                     return type.getObjectByteifyer().arrayify(storageDataTypeId, byteArr,
                             type.getCompoundType());
                 }
@@ -5886,6 +6018,14 @@ public class HDF5Reader implements HDF5SimpleReader
                                 {
                                     final int typeId =
                                             baseReader.h5.createDataTypeString(maxLength,
+                                                    baseReader.fileRegistry);
+                                    return typeId;
+                                }
+
+                                public int getArrayTypeId(int baseTypeId, int length)
+                                {
+                                    final int typeId =
+                                            baseReader.h5.createArrayType(baseTypeId, length,
                                                     baseReader.fileRegistry);
                                     return typeId;
                                 }
@@ -5959,7 +6099,8 @@ public class HDF5Reader implements HDF5SimpleReader
                         public MDArray<T> call(final ICleanUpRegistry registry)
                         {
                             final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
                             final int storageDataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                             checkCompoundType(storageDataTypeId, objectPath, registry);
