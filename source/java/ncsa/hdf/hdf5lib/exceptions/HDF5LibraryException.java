@@ -31,6 +31,8 @@ import ncsa.hdf.hdf5lib.H5;
 
 public class HDF5LibraryException extends HDF5Exception
 {
+    private static final int UNKNOWN = -1;
+
     private static final long serialVersionUID = 1L;
 
     private final int majorErrorNumber;
@@ -67,7 +69,30 @@ public class HDF5LibraryException extends HDF5Exception
         this.majorErrorMessage = majorErrorMessage;
         this.minorErrorNumber = minorErrorNumber;
         this.minorErrorMessage = minorErrorMessage;
-        hdf5ErrorStackString = rerieveHDF5ErrorStackAsString();
+        this.hdf5ErrorStackString = retrieveHDF5ErrorStackAsString();
+    }
+
+    /**
+     * Constructs an <code>HDF5LibraryException</code> with the specified detail message.
+     * 
+     * @param errorMessage The error message for the minor error number of the HDF5 library.
+     */
+    public HDF5LibraryException(final String errorMessage)
+    {
+        super(errorMessage);
+        // this code forces the loading of the HDF-5 library
+        // to assure that the native methods are available
+        try
+        {
+            H5.H5open();
+        } catch (final Exception e)
+        {
+        }
+        this.majorErrorNumber = UNKNOWN;
+        this.majorErrorMessage = errorMessage;
+        this.minorErrorNumber = UNKNOWN;
+        this.minorErrorMessage = "";
+        this.hdf5ErrorStackString = "No error stack";
     }
 
     /**
@@ -117,7 +142,7 @@ public class HDF5LibraryException extends HDF5Exception
     /**
      * Returns the error stack as retrieved from the HDF5 library as a string.
      */
-    private String rerieveHDF5ErrorStackAsString()
+    private String retrieveHDF5ErrorStackAsString()
     {
         try
         {
