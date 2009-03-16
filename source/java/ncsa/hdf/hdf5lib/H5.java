@@ -254,7 +254,7 @@ public class H5
     static void ensureNativeLibIsLoaded()
     {
     }
-    
+
     // ////////////////////////////////////////////////////////////////
 
     /**
@@ -319,7 +319,7 @@ public class H5
      *            libversion[0] = The major version of the library. libversion[1] = The minor
      *            version of the library. libversion[2] = The release number of the library.
      * 
-     *            </pre>
+     * </pre>
      * @return a non-negative value if successful, along with the version information.
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      */
@@ -341,7 +341,7 @@ public class H5
 
     /**
      * H5garbage_collect collects on all free-lists of all types.
-     * <p> **
+     * <p>
      * Note: this is new with HDF5.1.2.2. If using an earlier version, use 'configure
      * --enable-hdf5_1_2_1' so this routine will fail safely.
      * 
@@ -819,12 +819,13 @@ public class H5
      * @param name Name of the file to access.
      * @param flags File access flags. Possible values include:
      *            <UL>
-     *            <LI> H5F_ACC_RDWR Allow read and write access to file. </LI> <LI> H5F_ACC_RDONLY
-     *            Allow read-only access to file. </LI> <LI> H5F_ACC_TRUNC Truncate file, if it
-     *            already exists, erasing all data previously stored in the file. </LI> <LI>
-     *            H5F_ACC_EXCL Fail if file already exists. </LI> <LI> H5F_ACC_DEBUG Print debug
-     *            information. </LI> <LI> H5P_DEFAULT Apply default file access and creation
-     *            properties. </LI>
+     *            <LI>H5F_ACC_RDWR Allow read and write access to file.</LI>
+     *            <LI>H5F_ACC_RDONLY Allow read-only access to file.</LI>
+     *            <LI>H5F_ACC_TRUNC Truncate file, if it already exists, erasing all data previously
+     *            stored in the file.</LI>
+     *            <LI>H5F_ACC_EXCL Fail if file already exists.</LI>
+     *            <LI>H5F_ACC_DEBUG Print debug information.</LI>
+     *            <LI>H5P_DEFAULT Apply default file access and creation properties.</LI>
      *            </UL>
      * @param create_id File creation property list identifier, used when modifying default file
      *            meta-data. Use H5P_DEFAULT for default access properties.
@@ -853,8 +854,8 @@ public class H5
      *            <P>
      *            Valid values are:
      *            <UL>
-     *            <LI> H5F_SCOPE_GLOBAL Flushes the entire virtual file. </LI> <LI> H5F_SCOPE_LOCAL
-     *            Flushes only the specified file. </LI>
+     *            <LI>H5F_SCOPE_GLOBAL Flushes the entire virtual file.</LI>
+     *            <LI>H5F_SCOPE_LOCAL Flushes only the specified file.</LI>
      *            </UL>
      * @return a non-negative value if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
@@ -993,7 +994,8 @@ public class H5
      * @param loc_id File, group, dataset, or datatype identifier.
      * @param link_type Link type. Possible values are:
      *            <UL>
-     *            <LI> H5G_LINK_HARD </LI> <LI> H5G_LINK_SOFT. </LI>
+     *            <LI>H5G_LINK_HARD</LI>
+     *            <LI>H5G_LINK_SOFT.</LI>
      *            </UL>
      * @param current_name A name of the existing object if link is a hard link. Can be anything for
      *            the soft link.
@@ -1161,7 +1163,7 @@ public class H5
      *            global freelist version version_info[2] = stab // symbol tabl version number
      *            version_info[3] = shhdr // hared object header version
      * 
-     *            </pre>
+     * </pre>
      * @return a non-negative value, with the values of version_info initialized, if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - version_info is null.
@@ -1243,7 +1245,7 @@ public class H5
      *            size[0] = sizeof_addr // offset size in bytes size[1] = sizeof_size // length size
      *            in bytes
      * 
-     *            </pre>
+     * </pre>
      * @return a non-negative value with the sizes initialized; if successful;
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - size is null.
@@ -1276,7 +1278,7 @@ public class H5
      *            size[0] = ik // the symbol table's B-tree 1/2 rank size[1] = lk // leaf node 1/2
      *            size
      * 
-     *            </pre>
+     * </pre>
      * @return a non-negative value if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - size is null.
@@ -1397,7 +1399,7 @@ public class H5
      *            alignment[0] = threshold // threshold value alignment[1] = alignment // alignment
      *            value
      * 
-     *            </pre>
+     * </pre>
      * @return a non-negative value if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - aligment array is null.
@@ -1445,7 +1447,7 @@ public class H5
      *            size[0] = offset // a location to return an offset value size[1] = size // a
      *            location to return the size of // the external file data.
      * 
-     *            </pre>
+     * </pre>
      * @return a non-negative value if successful
      * @exception ArrayIndexOutOfBoundsException Fatal error on Copyback
      * @exception ArrayStoreException Fatal error on Copyback
@@ -1864,7 +1866,7 @@ public class H5
     /**
      * H5Pget_gc_references Returns the current setting for the garbage collection refernces
      * property from a file access property list.
-     * <p> **
+     * <p>
      * Note: this routine changed name with HDF5.1.2.2. If using an earlier version, use 'configure
      * --enable-hdf5_1_2_1' so this routine will link to the old name.
      * 
@@ -2223,8 +2225,7 @@ public class H5
             return -1;
         }
 
-        final byte[] currentSizeAsByteArray =
-                HDFNativeData.longToByte(currentSize);
+        final byte[] currentSizeAsByteArray = HDFNativeData.longToByte(currentSize);
         final byte[] maxSizeAsByteArray =
                 (maxSize != null) ? HDFNativeData.longToByte(maxSize) : null;
 
@@ -2312,14 +2313,10 @@ public class H5
             final long[] start, final long[] stride, final long[] count, final long[] block)
             throws HDF5Exception, NullPointerException, IllegalArgumentException
     {
-        final byte[] startAsByteArray =
-                (start != null) ? HDFNativeData.longToByte(start) : null;
-        final byte[] countAsByteArray =
-                (count != null) ? HDFNativeData.longToByte(count) : null;
-        final byte[] strideAsByteArray =
-                (stride != null) ? HDFNativeData.longToByte(stride) : null;
-        final byte[] blockAsByteArray =
-                (block != null) ? HDFNativeData.longToByte(block) : null;
+        final byte[] startAsByteArray = (start != null) ? HDFNativeData.longToByte(start) : null;
+        final byte[] countAsByteArray = (count != null) ? HDFNativeData.longToByte(count) : null;
+        final byte[] strideAsByteArray = (stride != null) ? HDFNativeData.longToByte(stride) : null;
+        final byte[] blockAsByteArray = (block != null) ? HDFNativeData.longToByte(block) : null;
 
         return H5Sselect_hyperslab(space_id, op, startAsByteArray, strideAsByteArray,
                 countAsByteArray, blockAsByteArray);
@@ -2520,13 +2517,24 @@ public class H5
     public synchronized static native int H5Tget_class(int type_id) throws HDF5LibraryException;
 
     /**
-     * H5Tget_size returns the size of a datatype in bytes.
+     * H5Tget_size returns the size of a datatype in bytes as an int value.
+     * 
+     * @param type_id Identifier of datatype to query.
+     * @return the size of the datatype in bytes if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library, or if the size of the data
+     *                type exceeds an int
+     */
+    public synchronized static native int H5Tget_size(int type_id) throws HDF5LibraryException;
+
+    /**
+     * H5Tget_size returns the size of a datatype in bytes as a long value.
      * 
      * @param type_id Identifier of datatype to query.
      * @return the size of the datatype in bytes if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      */
-    public synchronized static native int H5Tget_size(int type_id) throws HDF5LibraryException;
+    public synchronized static native long H5Tget_size_long(int type_id)
+            throws HDF5LibraryException;
 
     /**
      * H5Tset_size sets the total size in bytes, size, for an atomic datatype (this operation is not
@@ -2611,7 +2619,7 @@ public class H5
      *            pad[0] = lsb // least-significant bit padding type pad[1] = msb //
      *            most-significant bit padding type
      * 
-     *            </pre>
+     * </pre>
      * @return a non-negative value if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - pad is null.
@@ -2665,7 +2673,7 @@ public class H5
      *            return size of exponent in bits. fields[3] = mpos OUT: location to return mantissa
      *            bit-position. fields[4] = msize OUT: location to return size of mantissa in bits.
      * 
-     *            </pre>
+     * </pre>
      * @return a non-negative value if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - fileds is null.
@@ -3230,7 +3238,7 @@ public class H5
      * 
      *            link_info[0] = nlink link_info[1] = type link_info[2] = linklen
      * 
-     *            </pre>
+     * </pre>
      * @param mtime OUT: modification time
      * @return a non-negative value if successful, with the fields of link_info and mtime (if
      *         non-null) initialized.
@@ -3640,14 +3648,16 @@ public class H5
      * Can be set on the file access property list.
      * <p>
      * As of 1.8.0, only the combinations <code>low=H5F_LIBVER_EARLIEST</code> / <code>
-     * high=H5F_LIBVER_LATEST</code> (which is the default and means that 1.6 compatible files are
-     * created if no features are used that require a 1.8 format) and <code>low=H5F_LIBVER_LATEST
-     * </code> / <code>high=H5F_LIBVER_LATEST</code> (which means that always 1.8 files are created
-     * which cannot be read by an earlier library) are allowed.
+     * high=H5F_LIBVER_LATEST</code>
+     * (which is the default and means that 1.6 compatible files are created if no features are used
+     * that require a 1.8 format) and <code>low=H5F_LIBVER_LATEST
+     * </code> / <code>high=H5F_LIBVER_LATEST</code> (which means
+     * that always 1.8 files are created which cannot be read by an earlier library) are allowed.
      * 
      * @param plist_id Property list identifier.
      * @param low The lower permissible bound. One of <code>H5F_LIBVER_LATEST</code> or <code>
-     *            H5F_LIBVER_LATEST</code>.
+     *            H5F_LIBVER_LATEST</code>
+     *            .
      * @param high The higher permissible bound. Must be <code>H5F_LIBVER_LATEST</code>.
      * @return a non-negative value if successful
      */
@@ -3770,7 +3780,8 @@ public class H5
 
     /**
      * H5Lexists returns <code>true</code> if a link with <var>name</var> exists and <code>false
-     * </code> otherwise.
+     * </code>
+     * otherwise.
      * <p>
      * <i>Note:</i> The Java wrapper differs from the low-level C routine in that it will return
      * <code>false</code> if <var>name</var> is a path that contains groups which don't exist (the C
