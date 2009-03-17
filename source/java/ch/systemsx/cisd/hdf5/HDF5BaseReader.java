@@ -116,7 +116,7 @@ class HDF5BaseReader
      * Closes this object and the file referenced by this object. This object must not be used after
      * being closed.
      */
-    void close()
+    synchronized void close()
     {
         if (state == State.OPEN)
         {

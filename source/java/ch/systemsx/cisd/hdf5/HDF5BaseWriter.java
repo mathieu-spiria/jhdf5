@@ -62,6 +62,9 @@ final class HDF5BaseWriter extends HDF5BaseReader
     private final static EnumSet<SyncMode> NON_BLOCKING_SYNC_MODES =
             EnumSet.of(SyncMode.SYNC, SyncMode.SYNC_ON_FLUSH);
 
+    private final static EnumSet<SyncMode> SYNC_ON_CLOSE_MODES =
+            EnumSet.of(SyncMode.SYNC_BLOCK, SyncMode.SYNC);
+
     /**
      * The size threshold for the COMPACT storage layout.
      */
@@ -108,7 +111,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     private enum Command
     {
-        SYNC, CLOSE
+        SYNC, CLOSE_ON_EXIT, CLOSE_SYNC
     }
 
     final BlockingQueue<Command> commandQueue;
@@ -154,18 +157,21 @@ final class HDF5BaseWriter extends HDF5BaseReader
                             switch (commandQueue.take())
                             {
                                 case SYNC:
-                                    sync();
+                                    syncNow();
                                     break;
-                                case CLOSE:
+                                case CLOSE_ON_EXIT:
+                                    closeNow();
+                                    return;
+                                case CLOSE_SYNC:
                                     closeSync();
                                     return;
                             }
                         } catch (InterruptedException ex)
                         {
-                            // Shutdown has been triggered by showdownNow(), add <code>CLOSE</code>
-                            // to queue.
+                            // Shutdown has been triggered by showdownNow(), add
+                            // <code>CLOSEHDF</code> to queue.
                             // (Note that a close() on a closed RandomAccessFile is harmless.)
-                            commandQueue.add(Command.CLOSE);
+                            commandQueue.add(Command.CLOSE_ON_EXIT);
                         }
                     }
                 }
@@ -191,9 +197,10 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     /**
-     * Calls <code>fdatasync(2)</code> if available or else <code>fsync(2)</code>.
+     * Calls <code>fdatasync(2)</code> if available or else <code>fsync(2)</code> in the current
+     * thread.
      */
-    private void sync()
+    private void syncNow()
     {
         try
         {
@@ -202,6 +209,24 @@ final class HDF5BaseWriter extends HDF5BaseReader
         } catch (IOException ex)
         {
             throw new HDF5JavaException("Error syncing file: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Closes and, depending on the sync mode, syncs the HDF5 file in the current thread.
+     * <p>
+     * To be called from the syncer thread only.
+     */
+    synchronized private void closeNow()
+    {
+        if (state == State.OPEN)
+        {
+            super.close();
+            if (SYNC_ON_CLOSE_MODES.contains(syncMode))
+            {
+                syncNow();
+            }
+            closeSync();
         }
     }
 
@@ -216,7 +241,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
     }
 
-    void flush()
+    synchronized void flush()
     {
         h5.flushFile(fileId);
         if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
@@ -224,18 +249,18 @@ final class HDF5BaseWriter extends HDF5BaseReader
             commandQueue.add(Command.SYNC);
         } else if (BLOCKING_SYNC_MODES.contains(syncMode))
         {
-            sync();
+            syncNow();
         }
     }
 
-    void flushSyncBlocking()
+    synchronized void flushSyncBlocking()
     {
         h5.flushFile(fileId);
-        sync();
+        syncNow();
     }
 
     @Override
-    void close()
+    synchronized void close()
     {
         if (state == State.OPEN)
         {
@@ -245,11 +270,14 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 commandQueue.add(Command.SYNC);
             } else if (SyncMode.SYNC_BLOCK == syncMode)
             {
-                sync();
+                syncNow();
             }
+
+            // Avoid a race condition as the syncer thread still may want to use the
+            // fileForSynching
             if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
             {
-                commandQueue.add(Command.CLOSE);
+                commandQueue.add(Command.CLOSE_SYNC);
             } else
             {
                 closeSync();
