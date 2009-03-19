@@ -17,7 +17,6 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.ENUM_PREFIX;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
@@ -37,8 +36,6 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_VARIABLE;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -325,7 +322,7 @@ public class HDF5Reader implements HDF5SimpleReader
                                 final int dataTypeId =
                                         baseReader.h5
                                                 .getDataTypeForAttribute(attributeId, registry);
-                                return getDataTypeInformation(dataTypeId);
+                                return baseReader.getDataTypeInformation(dataTypeId);
                             } catch (RuntimeException ex)
                             {
                                 throw ex;
@@ -348,65 +345,7 @@ public class HDF5Reader implements HDF5SimpleReader
         assert dataSetPath != null;
 
         baseReader.checkOpen();
-        final ICallableWithCleanUp<HDF5DataSetInformation> informationDeterminationRunnable =
-                new ICallableWithCleanUp<HDF5DataSetInformation>()
-                    {
-                        public HDF5DataSetInformation call(ICleanUpRegistry registry)
-                        {
-                            final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath,
-                                            registry);
-                            final int dataTypeId =
-                                    baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                            final HDF5DataTypeInformation dataTypeInfo =
-                                    getDataTypeInformation(dataTypeId);
-                            final HDF5DataSetInformation dataSetInfo =
-                                    new HDF5DataSetInformation(dataTypeInfo, tryGetTypeVariant(
-                                            dataSetId, registry));
-                            // Is it a variable-length string?
-                            final boolean vlString =
-                                    (dataTypeInfo.getDataClass() == HDF5DataClass.STRING && baseReader.h5
-                                            .isVariableLengthString(dataTypeId));
-                            if (vlString)
-                            {
-                                dataTypeInfo.setElementSize(1);
-
-                                dataSetInfo.setDimensions(new long[]
-                                    { H5T_VARIABLE });
-                                dataSetInfo.setMaxDimensions(new long[]
-                                    { H5T_VARIABLE });
-                                dataSetInfo.setStorageLayout(StorageLayout.VARIABLE_LENGTH);
-                            } else
-                            {
-                                baseReader.h5.fillDataDimensions(dataSetId, false, dataSetInfo);
-                            }
-                            return dataSetInfo;
-                        }
-                    };
-        return baseReader.runner.call(informationDeterminationRunnable);
-    }
-
-    private HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId)
-    {
-        return new HDF5DataTypeInformation(getDataClassForDataType(dataTypeId), baseReader.h5
-                .getDataTypeSize(dataTypeId));
-    }
-
-    private HDF5DataClass getDataClassForDataType(final int dataTypeId)
-    {
-        return getDataClassForClassType(baseReader.h5.getClassType(dataTypeId), dataTypeId);
-    }
-
-    private HDF5DataClass getDataClassForClassType(final int classTypeId, final int dataTypeId)
-    {
-        HDF5DataClass dataClass = HDF5DataClass.classIdToDataClass(classTypeId);
-        // Is it a boolean?
-        if (dataClass == HDF5DataClass.ENUM
-                && baseReader.h5.dataTypesAreEqual(dataTypeId, baseReader.booleanDataTypeId))
-        {
-            dataClass = HDF5DataClass.BOOLEAN;
-        }
-        return dataClass;
+        return baseReader.getDataSetInformation(dataSetPath);
     }
 
     // /////////////////////
@@ -843,36 +782,11 @@ public class HDF5Reader implements HDF5SimpleReader
                             final int objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            return tryGetTypeVariant(objectId, registry);
+                            return baseReader.tryGetTypeVariant(objectId, registry);
                         }
                     };
 
         return baseReader.runner.call(readRunnable);
-    }
-
-    private HDF5DataTypeVariant tryGetTypeVariant(final int dataSetId, ICleanUpRegistry registry)
-    {
-        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
-        return typeVariantOrdinal < 0 ? null : HDF5DataTypeVariant.values()[typeVariantOrdinal];
-    }
-
-    /**
-     * Returns the ordinal for the type variant of <var>objectPath</var>, or <code>-1</code>, if no
-     * type variant is defined for this <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The ordinal of the type variant or <code>null</code>.
-     */
-    private int getAttributeTypeVariant(final int objectId, ICleanUpRegistry registry)
-    {
-        baseReader.checkOpen();
-        if (baseReader.h5.existsAttribute(objectId, TYPE_VARIANT_ATTRIBUTE) == false)
-        {
-            return -1;
-        }
-        final int attributeId =
-                baseReader.h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
-        return getEnumOrdinal(attributeId, baseReader.typeVariantDataType);
     }
 
     /**
@@ -903,48 +817,12 @@ public class HDF5Reader implements HDF5SimpleReader
                                     baseReader.h5.openAttribute(objectId, attributeName, registry);
                             final HDF5EnumerationType enumType =
                                     getEnumTypeForAttributeId(attributeId);
-                            final int enumOrdinal = getEnumOrdinal(attributeId, enumType);
+                            final int enumOrdinal = baseReader.getEnumOrdinal(attributeId, enumType);
                             return new HDF5EnumerationValue(enumType, enumOrdinal);
                         }
                     };
 
         return baseReader.runner.call(readRunnable);
-    }
-
-    private int getEnumOrdinal(final int attributeId, final HDF5EnumerationType enumType)
-    {
-        final int enumOrdinal;
-        switch (enumType.getStorageForm())
-        {
-            case BYTE:
-            {
-                final byte[] data =
-                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType
-                                .getNativeTypeId(), 1);
-                enumOrdinal = data[0];
-                break;
-            }
-            case SHORT:
-            {
-                final byte[] data =
-                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType
-                                .getNativeTypeId(), 2);
-                enumOrdinal = HDFNativeData.byteToShort(data, 0);
-                break;
-            }
-            case INT:
-            {
-                final byte[] data =
-                        baseReader.h5.readAttributeAsByteArray(attributeId, enumType
-                                .getNativeTypeId(), 4);
-                enumOrdinal = HDFNativeData.byteToInt(data, 0);
-                break;
-            }
-            default:
-                throw new HDF5JavaException("Illegal storage form for enum ("
-                        + enumType.getStorageForm() + ")");
-        }
-        return enumOrdinal;
     }
 
     private HDF5EnumerationType getEnumTypeForAttributeId(final int objectId)
@@ -4876,7 +4754,7 @@ public class HDF5Reader implements HDF5SimpleReader
     protected void checkIsTimeStamp(final String objectPath, final int dataSetId,
             ICleanUpRegistry registry) throws HDF5JavaException
     {
-        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
+        final int typeVariantOrdinal = baseReader.getAttributeTypeVariant(dataSetId, registry);
         if (typeVariantOrdinal != HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH
                 .ordinal())
         {
@@ -5178,7 +5056,7 @@ public class HDF5Reader implements HDF5SimpleReader
     protected HDF5TimeUnit checkIsTimeDuration(final String objectPath, final int dataSetId,
             ICleanUpRegistry registry) throws HDF5JavaException
     {
-        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
+        final int typeVariantOrdinal = baseReader.getAttributeTypeVariant(dataSetId, registry);
         if (HDF5DataTypeVariant.isTimeDuration(typeVariantOrdinal) == false)
         {
             throw new HDF5JavaException("Data set '" + objectPath + "' is not a time duration.");
@@ -5696,7 +5574,7 @@ public class HDF5Reader implements HDF5SimpleReader
             {
                 memberInfo[i] =
                         new HDF5CompoundMemberInformation(memberNames[i],
-                                new HDF5DataTypeInformation(getDataClassForClassType(
+                                new HDF5DataTypeInformation(baseReader.getDataClassForClassType(
                                         dataClassTypeId, dataTypeId), sizeInBytes));
             }
         }

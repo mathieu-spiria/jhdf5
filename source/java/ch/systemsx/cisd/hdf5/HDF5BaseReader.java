@@ -18,10 +18,12 @@ package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.BOOLEAN_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.DATATYPE_GROUP;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_VARIABLE;
 
 import java.io.File;
 import java.util.Arrays;
@@ -31,12 +33,15 @@ import java.util.List;
 import java.util.Map;
 
 import ncsa.hdf.hdf5lib.HDF5Constants;
+import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.common.array.MDArray;
 import ch.systemsx.cisd.common.process.CleanUpCallable;
 import ch.systemsx.cisd.common.process.CleanUpRegistry;
+import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 
 /**
  * Class that provides base methods for reading HDF5 files.
@@ -449,6 +454,140 @@ class HDF5BaseReader
             memberNames.set(i, superGroupName + memberNames.get(i));
         }
         return memberNames;
+    }
+
+    /**
+     * Returns the information about a data set as a {@link HDF5DataTypeInformation} object. It is a
+     * failure condition if the <var>dataSetPath</var> does not exist or does not identify a data
+     * set.
+     * 
+     * @param dataSetPath The name (including path information) of the data set to return
+     *            information about.
+     */
+    HDF5DataSetInformation getDataSetInformation(final String dataSetPath)
+    {
+        assert dataSetPath != null;
+
+        final ICallableWithCleanUp<HDF5DataSetInformation> informationDeterminationRunnable =
+                new ICallableWithCleanUp<HDF5DataSetInformation>()
+                    {
+                        public HDF5DataSetInformation call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    h5.openDataSet(fileId, dataSetPath,
+                                            registry);
+                            final int dataTypeId =
+                                    h5.getDataTypeForDataSet(dataSetId, registry);
+                            final HDF5DataTypeInformation dataTypeInfo =
+                                    getDataTypeInformation(dataTypeId);
+                            final HDF5DataSetInformation dataSetInfo =
+                                    new HDF5DataSetInformation(dataTypeInfo, tryGetTypeVariant(
+                                            dataSetId, registry));
+                            // Is it a variable-length string?
+                            final boolean vlString =
+                                    (dataTypeInfo.getDataClass() == HDF5DataClass.STRING && h5
+                                            .isVariableLengthString(dataTypeId));
+                            if (vlString)
+                            {
+                                dataTypeInfo.setElementSize(1);
+
+                                dataSetInfo.setDimensions(new long[]
+                                    { H5T_VARIABLE });
+                                dataSetInfo.setMaxDimensions(new long[]
+                                    { H5T_VARIABLE });
+                                dataSetInfo.setStorageLayout(StorageLayout.VARIABLE_LENGTH);
+                            } else
+                            {
+                                h5.fillDataDimensions(dataSetId, false, dataSetInfo);
+                            }
+                            return dataSetInfo;
+                        }
+                    };
+        return runner.call(informationDeterminationRunnable);
+    }
+
+    HDF5DataTypeVariant tryGetTypeVariant(final int dataSetId, ICleanUpRegistry registry)
+    {
+        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
+        return typeVariantOrdinal < 0 ? null : HDF5DataTypeVariant.values()[typeVariantOrdinal];
+    }
+
+    /**
+     * Returns the ordinal for the type variant of <var>objectPath</var>, or <code>-1</code>, if no
+     * type variant is defined for this <var>objectPath</var>.
+     * 
+     * @param objectId The id of the data set object in the file.
+     * @return The ordinal of the type variant or <code>null</code>.
+     */
+    int getAttributeTypeVariant(final int objectId, ICleanUpRegistry registry)
+    {
+        checkOpen();
+        if (h5.existsAttribute(objectId, TYPE_VARIANT_ATTRIBUTE) == false)
+        {
+            return -1;
+        }
+        final int attributeId =
+                h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
+        return getEnumOrdinal(attributeId, typeVariantDataType);
+    }
+
+    int getEnumOrdinal(final int attributeId, final HDF5EnumerationType enumType)
+    {
+        final int enumOrdinal;
+        switch (enumType.getStorageForm())
+        {
+            case BYTE:
+            {
+                final byte[] data =
+                        h5.readAttributeAsByteArray(attributeId, enumType
+                                .getNativeTypeId(), 1);
+                enumOrdinal = data[0];
+                break;
+            }
+            case SHORT:
+            {
+                final byte[] data =
+                        h5.readAttributeAsByteArray(attributeId, enumType
+                                .getNativeTypeId(), 2);
+                enumOrdinal = HDFNativeData.byteToShort(data, 0);
+                break;
+            }
+            case INT:
+            {
+                final byte[] data =
+                        h5.readAttributeAsByteArray(attributeId, enumType
+                                .getNativeTypeId(), 4);
+                enumOrdinal = HDFNativeData.byteToInt(data, 0);
+                break;
+            }
+            default:
+                throw new HDF5JavaException("Illegal storage form for enum ("
+                        + enumType.getStorageForm() + ")");
+        }
+        return enumOrdinal;
+    }
+
+    HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId)
+    {
+        return new HDF5DataTypeInformation(getDataClassForDataType(dataTypeId), h5
+                .getDataTypeSize(dataTypeId));
+    }
+
+    private HDF5DataClass getDataClassForDataType(final int dataTypeId)
+    {
+        return getDataClassForClassType(h5.getClassType(dataTypeId), dataTypeId);
+    }
+
+    HDF5DataClass getDataClassForClassType(final int classTypeId, final int dataTypeId)
+    {
+        HDF5DataClass dataClass = HDF5DataClass.classIdToDataClass(classTypeId);
+        // Is it a boolean?
+        if (dataClass == HDF5DataClass.ENUM
+                && h5.dataTypesAreEqual(dataTypeId, booleanDataTypeId))
+        {
+            dataClass = HDF5DataClass.BOOLEAN;
+        }
+        return dataClass;
     }
 
 }
