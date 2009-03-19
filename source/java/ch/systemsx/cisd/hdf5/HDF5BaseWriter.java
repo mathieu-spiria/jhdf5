@@ -134,14 +134,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
         this.syncMode = syncMode;
         readNamedDataTypes();
         variableLengthStringDataTypeId = openOrCreateVLStringType();
-        if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
-        {
-            commandQueue = new LinkedBlockingQueue<Command>();
-            setupSyncThread();
-        } else
-        {
-            commandQueue = null;
-        }
+        commandQueue = new LinkedBlockingQueue<Command>();
+        setupSyncThread();
     }
 
     private void setupSyncThread()
@@ -273,15 +267,9 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 syncNow();
             }
 
-            // Avoid a race condition as the syncer thread still may want to use the
-            // fileForSynching
-            if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
-            {
-                commandQueue.add(Command.CLOSE_SYNC);
-            } else
-            {
-                closeSync();
-            }
+            // End syncer thread and avoid a race condition for non-blocking sync modes as the
+            // syncer thread still may want to use the fileForSynching
+            commandQueue.add(Command.CLOSE_SYNC);
         }
     }
 
