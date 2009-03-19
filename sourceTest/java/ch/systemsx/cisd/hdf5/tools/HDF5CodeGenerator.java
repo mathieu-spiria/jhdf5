@@ -16,6 +16,11 @@
 
 package ch.systemsx.cisd.hdf5.tools;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -108,15 +113,49 @@ public class HDF5CodeGenerator
     {
         for (TemplateParameters t : NUMERICAL_TYPES)
         {
-            String s = codeTemplate;
-            s = StringUtils.replace(s, PLACEHOLDERS.name, t.name);
-            s = StringUtils.replace(s, PLACEHOLDERS.appendix, t.appendix);
-            s = StringUtils.replace(s, PLACEHOLDERS.capitalizedName, t.capitalizedName);
-            s = StringUtils.replace(s, PLACEHOLDERS.wrapperName, t.wrapperName);
-            s = StringUtils.replace(s, PLACEHOLDERS.storageType, t.storageType);
-            s = StringUtils.replace(s, PLACEHOLDERS.memoryType, t.memoryType);
-            System.out.println(s);
+            generateCode(codeTemplate, t, System.out);
         }
     }
 
+    /**
+     * Generate the code for all numerical types from <var>codeTemplate</var> and write it to
+     * <code>out</code>.
+     */
+    static void generateCode(final String codeTemplate, final TemplateParameters params,
+            final PrintStream out)
+    {
+        String s = codeTemplate;
+        s = StringUtils.replace(s, PLACEHOLDERS.name, params.name);
+        s = StringUtils.replace(s, PLACEHOLDERS.appendix, params.appendix);
+        s = StringUtils.replace(s, PLACEHOLDERS.capitalizedName, params.capitalizedName);
+        s = StringUtils.replace(s, PLACEHOLDERS.wrapperName, params.wrapperName);
+        s = StringUtils.replace(s, PLACEHOLDERS.storageType, params.storageType);
+        s = StringUtils.replace(s, PLACEHOLDERS.memoryType, params.memoryType);
+        out.println(s);
+    }
+
+    public static void main(String[] args) throws IOException
+    {
+        for (TemplateParameters t : NUMERICAL_TYPES)
+        {
+            final String interfaceTemplate =
+                    FileUtils
+                            .readFileToString(new File(
+                                    "sourceTest/java/ch/systemsx/cisd/hdf5/IHDF5PrimitiveReader.java.templ"));
+            final PrintStream outInterface =
+                    new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/IHDF5"
+                            + t.capitalizedName + "Reader.java"));
+            generateCode(interfaceTemplate, t, outInterface);
+            outInterface.close();
+            final String classTemplate =
+                    FileUtils
+                            .readFileToString(new File(
+                                    "sourceTest/java/ch/systemsx/cisd/hdf5/HDF5PrimitiveReader.java.templ"));
+            final PrintStream outclass =
+                    new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
+                            + t.capitalizedName + "Reader.java"));
+            generateCode(classTemplate, t, outclass);
+            outclass.close();
+        }
+    }
 }

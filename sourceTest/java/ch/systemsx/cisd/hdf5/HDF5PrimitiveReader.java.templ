@@ -1,198 +1,187 @@
-    //
-    // __Name__
-    //
+/*
+ * Copyright 2009 ETH Zuerich, CISD.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-    /**
-     * Reads a <code>__name__</code> value from the data set <var>objectPath</var>. This method doesn't
-     * check the data space but simply reads the first value.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The value read from the data set.
-     */
+package ch.systemsx.cisd.hdf5;
+
+import static ncsa.hdf.hdf5lib.HDF5Constants.__Memorytype__;
+
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
+import ch.systemsx.cisd.common.array.MDArray;
+import ch.systemsx.cisd.common.array.MD__Name__Array;
+import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
+import ch.systemsx.cisd.common.process.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
+import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+
+class HDF5__Name__Reader implements IHDF5__Name__Reader
+{
+    private final HDF5BaseReader baseReader;
+
+    HDF5__Name__Reader(HDF5BaseReader baseReader)
+    {
+        assert baseReader != null;
+
+        this.baseReader = baseReader;
+    }
+
     public __name__ read__Name__(final String objectPath)
     {
         assert objectPath != null;
 
-        checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<__Wrappername__> readCallable = new ICallableWithCleanUp<__Wrappername__>()
             {
                 public __Wrappername__ call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final __name__[] data = new __name__[1];
-                    h5.readDataSet(dataSetId, __Memorytype__, data);
+                    baseReader.h5.readDataSet(dataSetId, __Memorytype__, data);
                     return data[0];
                 }
             };
-        return runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
-    /**
-     * Reads a <code>__name__</code> array (of rank 1) from the data set <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     */
     public __name__[] read__Name__Array(final String objectPath)
     {
         assert objectPath != null;
 
-        checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<__name__[]> readCallable = new ICallableWithCleanUp<__name__[]>()
             {
                 public __name__[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams = getSpaceParameters(dataSetId, registry);
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams = 
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final __name__[] data = new __name__[spaceParams.blockSize];
-                    h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
-    /**
-     * Reads a multi-dimensional <code>__name__</code> array data set <var>objectPath</var>
-     * into a given <var>array</var> in memory.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param array The array to read the data into.
-     * @param memoryOffset The offset in the array to write the data to.
-     */
     public void readTo__Name__MDArrayWithOffset(final String objectPath, final MD__Name__Array array,
             final int[] memoryOffset)
     {
         assert objectPath != null;
 
-        checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    registry);
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, __Memorytype__, registry);
-                    h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                            baseReader.getNativeDataTypeId(dataSetId, __Memorytype__, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array.
+                            getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
-    /**
-     * Reads a block of the multi-dimensional <code>__name__</code> array data set
-     * <var>objectPath</var> into a given <var>array</var> in memory.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param array The array to read the data into.
-     * @param blockDimensions The size of the block to read along each axis.
-     * @param offset The offset of the block in the data set.
-     * @param memoryOffset The offset of the block in the array to write the data to.
-     */
     public void readTo__Name__MDArrayBlockWithOffset(final String objectPath,
             final MD__Name__Array array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
     {
         assert objectPath != null;
 
-        checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getBlockSpaceParameters(dataSetId, memoryOffset, array.dimensions(),
-                                    offset, blockDimensions, registry);
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, __Memorytype__, registry);
-                    h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, array.getAsFlatArray());
+                            baseReader.getNativeDataTypeId(dataSetId, __Memorytype__, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                            .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
-        runner.call(readCallable);
+        baseReader.runner.call(readCallable);
     }
 
-    /**
-     * Reads a block from a <code>__name__</code> array (of rank 1) from the data set <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize The block size (this will be the length of the <code>__name__[]</code> returned
-     *            if the data set is long enough).
-     * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
-     *            <var>blockSize</var>).
-     * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
-     *         blockSize).
-     */
     public __name__[] read__Name__ArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
         assert objectPath != null;
 
-        checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<__name__[]> readCallable = new ICallableWithCleanUp<__name__[]>()
             {
                 public __name__[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, blockNumber * blockSize, blockSize,
-                                    registry);
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
                     final __name__[] data = new __name__[spaceParams.blockSize];
-                    h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
-    /**
-     * Reads a block from <code>__name__</code> array (of rank 1) from the data set <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize The block size (this will be the length of the <code>__name__[]</code>
-     *            returned).
-     * @param offset The offset of the block in the data set to start reading from (starting with 0).
-     * @return The data block read from the data set.
-     */
     public __name__[] read__Name__ArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset)
     {
         assert objectPath != null;
 
-        checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<__name__[]> readCallable = new ICallableWithCleanUp<__name__[]>()
             {
                 public __name__[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockSize, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final __name__[] data = new __name__[spaceParams.blockSize];
-                    h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
-        return runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
-    /**
-     * Reads a <code>__name__</code> matrix (array of arrays) from the data set <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     *
-     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
-     */
     public __name__[][] read__Name__Matrix(final String objectPath) throws HDF5JavaException
     {
         final MD__Name__Array array = read__Name__MDArray(objectPath);
@@ -204,20 +193,6 @@
         return array.toMatrix();
     }
 
-    /**
-     * Reads a <code>__name__</code> matrix (array of arrays) from the data set <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSizeX The size of the block in the x dimension.
-     * @param blockSizeY The size of the block in the y dimension.
-     * @param blockNumberX The block number in the x dimension (offset: multiply with
-     *            <code>blockSizeX</code>).
-     * @param blockNumberY The block number in the y dimension (offset: multiply with
-     *            <code>blockSizeY</code>).
-     * @return The data block read from the data set.
-     *
-     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
-     */
     public __name__[][] read__Name__MatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException
@@ -233,18 +208,6 @@
         return array.toMatrix();
     }
 
-    /**
-     * Reads a <code>__name__</code> matrix (array of arrays) from the data set <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSizeX The size of the block in the x dimension.
-     * @param blockSizeY The size of the block in the y dimension.
-     * @param offsetX The offset in x dimension in the data set to start reading from.
-     * @param offsetY The offset in y dimension in the data set to start reading from.
-     * @return The data block read from the data set.
-     *
-     * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
-     */
     public __name__[][] read__Name__MatrixBlockWithOffset(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
@@ -259,44 +222,30 @@
         return array.toMatrix();
     }
 
-    /**
-     * Reads a multi-dimensional <code>__name__</code> array from the data set <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     */
     public MD__Name__Array read__Name__MDArray(final String objectPath)
     {
         assert objectPath != null;
 
-        checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MD__Name__Array> readCallable = new ICallableWithCleanUp<MD__Name__Array>()
             {
                 public MD__Name__Array call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, registry);
+                            baseReader.getSpaceParameters(dataSetId, registry);
                     final int nativeDataTypeId =
-                            getNativeDataTypeId(dataSetId, __Memorytype__, registry);
+                            baseReader.getNativeDataTypeId(dataSetId, __Memorytype__, registry);
                     final __name__[] data = new __name__[spaceParams.blockSize];
-                    h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return new MD__Name__Array(data, spaceParams.dimensions);
                 }
             };
-        return runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
-    /**
-     * Reads a multi-dimensional <code>__name__</code> array from the data set <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockDimensions The extent of the block in each dimension.
-     * @param blockNumber The block number in each dimension (offset: multiply with the
-     *            <var>blockDimensions</var> in the according dimension).
-     * @return The data block read from the data set.
-     */
     public MD__Name__Array read__Name__MDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
@@ -304,7 +253,7 @@
         assert blockDimensions != null;
         assert blockNumber != null;
 
-        checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MD__Name__Array> readCallable = new ICallableWithCleanUp<MD__Name__Array>()
             {
                 public MD__Name__Array call(ICleanUpRegistry registry)
@@ -314,26 +263,20 @@
                     {
                         offset[i] = blockNumber[i] * blockDimensions[i];
                     }
-                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockDimensions, 
+                                    registry);
                     final __name__[] dataBlock = new __name__[spaceParams.blockSize];
-                    h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, dataBlock);
                     return new MD__Name__Array(dataBlock, blockDimensions);
                 }
             };
-        return runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
-    /**
-     * Reads a multi-dimensional <code>__name__</code> array from the data set <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockDimensions The extent of the block in each dimension.
-     * @param offset The offset in the data set to start reading from in each dimension.
-     * @return The data block read from the data set.
-     */
     public MD__Name__Array read__Name__MDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
     {
@@ -341,33 +284,30 @@
         assert blockDimensions != null;
         assert offset != null;
 
-        checkOpen();
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MD__Name__Array> readCallable = new ICallableWithCleanUp<MD__Name__Array>()
             {
                 public MD__Name__Array call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            getSpaceParameters(dataSetId, offset, blockDimensions, registry);
+                            baseReader.getSpaceParameters(dataSetId, offset, blockDimensions, 
+                                    registry);
                     final __name__[] dataBlock = new __name__[spaceParams.blockSize];
-                    h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
+                    baseReader.h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, dataBlock);
                     return new MD__Name__Array(dataBlock, blockDimensions);
                 }
             };
-        return runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
     
-    /**
-     * Provides all natural blocks of this one-dimensional data set to iterate over.
-     * 
-     * @see HDF5DataBlock
-     * @throws HDF5JavaException If the data set is not of rank 1.
-     */
     public Iterable<HDF5DataBlock<__name__[]>> get__Name__ArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
-        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        baseReader.checkOpen();
+        final HDF5DataSetInformation info = baseReader.getDataSetInformation(dataSetPath);
         if (info.getRank() > 1)
         {
             throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
@@ -426,14 +366,10 @@
             };
     }
 
-    /**
-     * Provides all natural blocks of this multi-dimensional data set to iterate over.
-     * 
-     * @see HDF5MDDataBlock
-     */
     public Iterable<HDF5MDDataBlock<MD__Name__Array>> get__Name__MDArrayNaturalBlocks(final String dataSetPath)
     {
-        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        baseReader.checkOpen();
+        final HDF5DataSetInformation info = baseReader.getDataSetInformation(dataSetPath);
         final int rank = info.getRank();
         final int[] size = MDArray.toInt(info.getDimensions());
         final int[] naturalBlockSize =
@@ -518,4 +454,4 @@
                 }
             };
     }
-
+}
