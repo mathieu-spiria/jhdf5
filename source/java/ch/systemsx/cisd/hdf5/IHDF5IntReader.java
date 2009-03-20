@@ -20,6 +20,11 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.common.array.MDIntArray;
 
+/**
+ * An interface that provides methods for reading <code>int</code> values from HDF5 files.
+ * 
+ * @author Bernd Rinn
+ */
 interface IHDF5IntReader
 {
     /**

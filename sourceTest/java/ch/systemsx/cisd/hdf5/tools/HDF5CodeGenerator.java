@@ -138,24 +138,42 @@ public class HDF5CodeGenerator
     {
         for (TemplateParameters t : NUMERICAL_TYPES)
         {
-            final String interfaceTemplate =
+            final String interfaceTemplateReader =
                     FileUtils
                             .readFileToString(new File(
                                     "sourceTest/java/ch/systemsx/cisd/hdf5/IHDF5PrimitiveReader.java.templ"));
-            final PrintStream outInterface =
+            final PrintStream outInterfaceReader =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/IHDF5"
                             + t.capitalizedName + "Reader.java"));
-            generateCode(interfaceTemplate, t, outInterface);
-            outInterface.close();
-            final String classTemplate =
+            generateCode(interfaceTemplateReader, t, outInterfaceReader);
+            outInterfaceReader.close();
+            final String classTemplateReader =
                     FileUtils
                             .readFileToString(new File(
                                     "sourceTest/java/ch/systemsx/cisd/hdf5/HDF5PrimitiveReader.java.templ"));
-            final PrintStream outclass =
+            final PrintStream outclassReader =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
                             + t.capitalizedName + "Reader.java"));
-            generateCode(classTemplate, t, outclass);
-            outclass.close();
+            generateCode(classTemplateReader, t, outclassReader);
+            outclassReader.close();
+            final String interfaceTemplateWriter =
+                    FileUtils
+                            .readFileToString(new File(
+                                    "sourceTest/java/ch/systemsx/cisd/hdf5/IHDF5PrimitiveWriter.java.templ"));
+            final PrintStream outInterfaceWriter =
+                    new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/IHDF5"
+                            + t.capitalizedName + "Writer.java"));
+            generateCode(interfaceTemplateWriter, t, outInterfaceWriter);
+            outInterfaceWriter.close();
+            final String classTemplateWriter =
+                    FileUtils
+                            .readFileToString(new File(
+                                    "sourceTest/java/ch/systemsx/cisd/hdf5/HDF5PrimitiveWriter.java.templ"));
+            final PrintStream outclassWriter =
+                    new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
+                            + t.capitalizedName + "Writer.java"));
+            generateCode(classTemplateWriter, t, outclassWriter);
+            outclassWriter.close();
         }
     }
 }

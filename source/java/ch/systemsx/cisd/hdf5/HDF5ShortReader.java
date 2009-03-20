@@ -30,6 +30,11 @@ import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 
+/**
+ * The implementation of {@link IHDF5ShortReader}.
+ * 
+ * @author Bernd Rinn
+ */
 class HDF5ShortReader implements IHDF5ShortReader
 {
     private final HDF5BaseReader baseReader;

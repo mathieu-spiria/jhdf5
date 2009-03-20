@@ -20,6 +20,11 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.common.array.MDByteArray;
 
+/**
+ * An interface that provides methods for reading <code>byte</code> values from HDF5 files.
+ * 
+ * @author Bernd Rinn
+ */
 interface IHDF5ByteReader
 {
     /**

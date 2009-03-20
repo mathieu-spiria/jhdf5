@@ -22,8 +22,6 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.H5.H5DwriteString;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_double;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_float;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_int;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_long;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_short;
@@ -34,15 +32,11 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F64LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_B64LE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I16LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I32LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I8LE;
 
 import java.util.BitSet;
 import java.util.Date;
@@ -80,14 +74,32 @@ import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
  * 
  * @author Bernd Rinn
  */
-public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
+public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IHDF5PrimitiveWriter
 {
     private final HDF5BaseWriter baseWriter;
+
+    private final IHDF5ByteWriter byteWriter;
+
+    private final IHDF5ShortWriter shortWriter;
+
+    private final IHDF5IntWriter intWriter;
+
+    private final IHDF5LongWriter longWriter;
+
+    private final IHDF5FloatWriter floatWriter;
+
+    private final IHDF5DoubleWriter doubleWriter;
 
     HDF5Writer(HDF5BaseWriter baseWriter)
     {
         super(baseWriter);
         this.baseWriter = baseWriter;
+        this.byteWriter = new HDF5ByteWriter(baseWriter);
+        this.shortWriter = new HDF5ShortWriter(baseWriter);
+        this.intWriter = new HDF5IntWriter(baseWriter);
+        this.longWriter = new HDF5LongWriter(baseWriter);
+        this.floatWriter = new HDF5FloatWriter(baseWriter);
+        this.doubleWriter = new HDF5DoubleWriter(baseWriter);
     }
 
     // /////////////////////
@@ -999,3842 +1011,755 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter
     // GENERATED CODE SECTION - START
     // ------------------------------------------------------------------------------
 
-    //
-    // Byte
-    //
-
-    /**
-     * Writes out a <code>byte</code> value.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param value The value to write.
-     */
-    public void writeByte(final String objectPath, final byte value)
-    {
-        assert objectPath != null;
-
-        baseWriter.checkOpen();
-        baseWriter.writeScalar(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDFNativeData
-                .byteToByte(value));
-    }
-
-    /**
-     * Creates a <code>byte</code> array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     */
-    public void createByteArrayCompact(final String objectPath, final long length)
-    {
-        assert objectPath != null;
-        assert length > 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I8LE, NO_DEFLATION, new long[]
-                        { length }, null, true, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a <code>byte</code> array (of rank 1). Uses a compact storage layout. Should only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeByteArrayCompact(final String objectPath, final byte[] data)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I8LE, dimensions,
-                                    NO_DEFLATION, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>byte</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeByteArray(final String objectPath, final byte[] data)
-    {
-        writeByteArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>byte</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeByteArray(final String objectPath, final byte[] data, final boolean deflate)
-    {
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I8LE, new long[]
-                                { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a <code>byte</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the byte vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}).
-     */
-    public void createByteArray(final String objectPath, final long size, final int blockSize)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        createByteArray(objectPath, size, blockSize, false);
-    }
-
-    /**
-     * Creates a <code>byte</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the byte array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createByteArray(final String objectPath, final long size, final int blockSize,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I8LE, HDF5Utils
-                            .getDeflateLevel(deflate), new long[]
-                        { size }, new long[]
-                        { blockSize }, false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>byte</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createByteArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
-     * to the <var>blockSize</var> argument of the
-     * {@link #createByteArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumber The number of the block to write.
-     */
-    public void writeByteArrayBlock(final String objectPath, final byte[] data,
-            final long blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final long[] slabStartOrNull = new long[]
-                        { data.length * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                            data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>byte</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createByteArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * Use this method instead of {@link #writeByteArrayBlock(String, byte[], long)} if the total
-     * size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createByteArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
-     *            )
-     * @param offset The offset in the data set to start writing to.
-     */
-    public void writeByteArrayBlockWithOffset(final String objectPath, final byte[] data,
-            final int dataSize, final long offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                            data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>byte</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeByteMatrix(final String objectPath, final byte[][] data)
-    {
-        writeByteMatrix(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>byte</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeByteMatrix(final String objectPath, final byte[][] data, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert HDF5Utils.areMatrixDimensionsConsistent(data);
-
-        writeByteMDArray(objectPath, new MDByteArray(data), deflate);
-    }
-
-    /**
-     * Creates a <code>byte</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the byte matrix to create.
-     * @param sizeY The size of the y dimension of the byte matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     */
-    public void createByteMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY)
-    {
-        createByteMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
-    }
-
-    /**
-     * Creates a <code>byte</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the byte matrix to create.
-     * @param sizeY The size of the y dimension of the byte matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createByteMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert sizeX >= 0;
-        assert sizeY >= 0;
-        assert blockSizeX >= 0 && blockSizeX <= sizeX;
-        assert blockSizeY >= 0 && blockSizeY <= sizeY;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { sizeX, sizeY };
-                    final long[] blockDimensions = new long[]
-                        { blockSizeX, blockSizeY };
-                    baseWriter
-                            .createDataSet(objectPath, H5T_STD_I8LE, HDF5Utils
-                                    .getDeflateLevel(deflate), dimensions, blockDimensions, false,
-                                    registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>byte</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createByteMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #createByteMatrix(String, long, long, int, int, boolean)}
-     * if the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
-     * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createByteMatrix(String, long, long, int, int, boolean)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumberX The block number in the x dimension (offset: multiply with
-     *            <code>data.length</code>).
-     * @param blockNumberY The block number in the y dimension (offset: multiply with
-     *            <code>data[0.length</code>).
-     */
-    public void writeByteMatrixBlock(final String objectPath, final byte[][] data,
-            final long blockNumberX, final long blockNumberY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeByteMDArrayBlock(objectPath, new MDByteArray(data), new long[]
-            { blockNumberX, blockNumberY });
-    }
-
-    /**
-     * Writes out a block of a <code>byte</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createByteMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #writeByteMatrixBlock(String, byte[][], long, long)} if the
-     * total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createByteMatrix(String, long, long, int, int, boolean)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeByteMatrixBlockWithOffset(final String objectPath, final byte[][] data,
-            final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeByteMDArrayBlockWithOffset(objectPath, new MDByteArray(data, new int[]
-            { data.length, data[0].length }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a block of a <code>byte</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createByteMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #writeByteMatrixBlock(String, byte[][], long, long)} if the
-     * total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createByteMatrix(String, long, long, int, int, boolean)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
-     *            <code><= data.length</code> )
-     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
-     *            <code><= data[0].length</code> )
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeByteMatrixBlockWithOffset(final String objectPath, final byte[][] data,
-            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeByteMDArrayBlockWithOffset(objectPath, new MDByteArray(data, new int[]
-            { dataSizeX, dataSizeY }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>byte</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeByteMDArray(final String objectPath, final MDByteArray data)
-    {
-        writeByteMDArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>byte</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeByteMDArray(final String objectPath, final MDByteArray data,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I8LE,
-                                    data.longDimensions(), HDF5Utils.getDeflateLevel(deflate),
-                                    registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
-                            .getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>byte</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     */
-    public void createByteMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions)
-    {
-        createByteMDArray(objectPath, dimensions, blockDimensions, false);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>byte</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createByteMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert dimensions != null;
-        assert blockDimensions != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I8LE, HDF5Utils
-                            .getDeflateLevel(deflate), dimensions, MDArray.toLong(blockDimensions),
-                            false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>byte</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
-     *            the according dimension).
-     */
-    public void writeByteMDArrayBlock(final String objectPath, final MDByteArray data,
-            final long[] blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert blockNumber != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == blockNumber.length;
-                    final long[] offset = new long[dimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * dimensions[i];
-                    }
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                            data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>byte</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param offset The offset in the data set to start writing to in each dimension.
-     */
-    public void writeByteMDArrayBlockWithOffset(final String objectPath, final MDByteArray data,
-            final long[] offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                            data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>byte</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param blockDimensions The dimensions of the block to write to the data set.
-     * @param offset The offset of the block in the data set to start writing to in each dimension.
-     * @param memoryOffset The offset of the block in the <var>data</var> array.
-     */
-    public void writeByteMDArrayBlockWithOffset(final String objectPath, final MDByteArray data,
-            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] memoryDimensions = data.longDimensions();
-                    assert memoryDimensions.length == offset.length;
-                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
-                    assert longBlockDimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
-                            longBlockDimensions);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                            data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    //
-    // Short
-    //
-
-    /**
-     * Writes out a <code>short</code> value.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param value The value to write.
-     */
-    public void writeShort(final String objectPath, final short value)
-    {
-        assert objectPath != null;
-
-        baseWriter.checkOpen();
-        baseWriter.writeScalar(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, HDFNativeData
-                .shortToByte(value));
-    }
-
-    /**
-     * Creates a <code>short</code> array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     */
-    public void createShortArrayCompact(final String objectPath, final long length)
-    {
-        assert objectPath != null;
-        assert length > 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I16LE, NO_DEFLATION, new long[]
-                        { length }, null, true, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a <code>short</code> array (of rank 1). Uses a compact storage layout. Should only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeShortArrayCompact(final String objectPath, final short[] data)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I16LE, dimensions,
-                                    NO_DEFLATION, registry);
-                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>short</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeShortArray(final String objectPath, final short[] data)
-    {
-        writeShortArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>short</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeShortArray(final String objectPath, final short[] data, final boolean deflate)
-    {
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I16LE, new long[]
-                                { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
-                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a <code>short</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the short vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}).
-     */
-    public void createShortArray(final String objectPath, final long size, final int blockSize)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        createShortArray(objectPath, size, blockSize, false);
-    }
-
-    /**
-     * Creates a <code>short</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the short array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createShortArray(final String objectPath, final long size, final int blockSize,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I16LE, HDF5Utils
-                            .getDeflateLevel(deflate), new long[]
-                        { size }, new long[]
-                        { blockSize }, false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createShortArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
-     * to the <var>blockSize</var> argument of the
-     * {@link #createShortArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumber The number of the block to write.
-     */
-    public void writeShortArrayBlock(final String objectPath, final short[] data,
-            final long blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final long[] slabStartOrNull = new long[]
-                        { data.length * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createShortArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * Use this method instead of {@link #writeShortArrayBlock(String, short[], long)} if the total
-     * size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createShortArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
-     *            )
-     * @param offset The offset in the data set to start writing to.
-     */
-    public void writeShortArrayBlockWithOffset(final String objectPath, final short[] data,
-            final int dataSize, final long offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>short</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeShortMatrix(final String objectPath, final short[][] data)
-    {
-        writeShortMatrix(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>short</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeShortMatrix(final String objectPath, final short[][] data,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert HDF5Utils.areMatrixDimensionsConsistent(data);
-
-        writeShortMDArray(objectPath, new MDShortArray(data), deflate);
-    }
-
-    /**
-     * Creates a <code>short</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the short matrix to create.
-     * @param sizeY The size of the y dimension of the short matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     */
-    public void createShortMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY)
-    {
-        createShortMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
-    }
-
-    /**
-     * Creates a <code>short</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the short matrix to create.
-     * @param sizeY The size of the y dimension of the short matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createShortMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert sizeX >= 0;
-        assert sizeY >= 0;
-        assert blockSizeX >= 0 && blockSizeX <= sizeX;
-        assert blockSizeY >= 0 && blockSizeY <= sizeY;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { sizeX, sizeY };
-                    final long[] blockDimensions = new long[]
-                        { blockSizeX, blockSizeY };
-                    baseWriter
-                            .createDataSet(objectPath, H5T_STD_I16LE, HDF5Utils
-                                    .getDeflateLevel(deflate), dimensions, blockDimensions, false,
-                                    registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createShortMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #createShortMatrix(String, long, long, int, int, boolean)}
-     * if the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
-     * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createShortMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumberX The block number in the x dimension (offset: multiply with
-     *            <code>data.length</code>).
-     * @param blockNumberY The block number in the y dimension (offset: multiply with
-     *            <code>data[0.length</code>).
-     */
-    public void writeShortMatrixBlock(final String objectPath, final short[][] data,
-            final long blockNumberX, final long blockNumberY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeShortMDArrayBlock(objectPath, new MDShortArray(data), new long[]
-            { blockNumberX, blockNumberY });
-    }
-
-    /**
-     * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createShortMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #writeShortMatrixBlock(String, short[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createShortMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeShortMatrixBlockWithOffset(final String objectPath, final short[][] data,
-            final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeShortMDArrayBlockWithOffset(objectPath, new MDShortArray(data, new int[]
-            { data.length, data[0].length }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createShortMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #writeShortMatrixBlock(String, short[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createShortMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
-     *            <code><= data.length</code> )
-     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
-     *            <code><= data[0].length</code> )
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeShortMatrixBlockWithOffset(final String objectPath, final short[][] data,
-            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeShortMDArrayBlockWithOffset(objectPath, new MDShortArray(data, new int[]
-            { dataSizeX, dataSizeY }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>short</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeShortMDArray(final String objectPath, final MDShortArray data)
-    {
-        writeShortMDArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>short</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeShortMDArray(final String objectPath, final MDShortArray data,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter
-                                    .getDataSetId(objectPath, H5T_STD_I16LE, data.longDimensions(),
-                                            HDF5Utils.getDeflateLevel(deflate), registry);
-                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
-                            .getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>short</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     */
-    public void createShortMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions)
-    {
-        createShortMDArray(objectPath, dimensions, blockDimensions, false);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>short</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createShortMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert dimensions != null;
-        assert blockDimensions != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I16LE, HDF5Utils
-                            .getDeflateLevel(deflate), dimensions, MDArray.toLong(blockDimensions),
-                            false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>short</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
-     *            the according dimension).
-     */
-    public void writeShortMDArrayBlock(final String objectPath, final MDShortArray data,
-            final long[] blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert blockNumber != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == blockNumber.length;
-                    final long[] offset = new long[dimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * dimensions[i];
-                    }
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>short</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param offset The offset in the data set to start writing to in each dimension.
-     */
-    public void writeShortMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
-            final long[] offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>short</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param blockDimensions The dimensions of the block to write to the data set.
-     * @param offset The offset of the block in the data set to start writing to in each dimension.
-     * @param memoryOffset The offset of the block in the <var>data</var> array.
-     */
-    public void writeShortMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
-            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] memoryDimensions = data.longDimensions();
-                    assert memoryDimensions.length == offset.length;
-                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
-                    assert longBlockDimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
-                            longBlockDimensions);
-                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    //
-    // Int
-    //
-
-    /**
-     * Writes out a <code>int</code> value.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param value The value to write.
-     */
-    public void writeInt(final String objectPath, final int value)
-    {
-        assert objectPath != null;
-
-        baseWriter.checkOpen();
-        baseWriter.writeScalar(objectPath, H5T_STD_I32LE, H5T_NATIVE_INT32, HDFNativeData
-                .intToByte(value));
-    }
-
-    /**
-     * Creates a <code>int</code> array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     */
-    public void createIntArrayCompact(final String objectPath, final long length)
-    {
-        assert objectPath != null;
-        assert length > 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I32LE, NO_DEFLATION, new long[]
-                        { length }, null, true, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a <code>int</code> array (of rank 1). Uses a compact storage layout. Should only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeIntArrayCompact(final String objectPath, final int[] data)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I32LE, dimensions,
-                                    NO_DEFLATION, registry);
-                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>int</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeIntArray(final String objectPath, final int[] data)
-    {
-        writeIntArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>int</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeIntArray(final String objectPath, final int[] data, final boolean deflate)
-    {
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I32LE, new long[]
-                                { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
-                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a <code>int</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the int vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}).
-     */
-    public void createIntArray(final String objectPath, final long size, final int blockSize)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        createIntArray(objectPath, size, blockSize, false);
-    }
-
-    /**
-     * Creates a <code>int</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the int array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createIntArray(final String objectPath, final long size, final int blockSize,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I32LE, HDF5Utils
-                            .getDeflateLevel(deflate), new long[]
-                        { size }, new long[]
-                        { blockSize }, false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>int</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createIntArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
-     * to the <var>blockSize</var> argument of the
-     * {@link #createIntArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumber The number of the block to write.
-     */
-    public void writeIntArrayBlock(final String objectPath, final int[] data, final long blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final long[] slabStartOrNull = new long[]
-                        { data.length * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>int</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createIntArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * Use this method instead of {@link #writeIntArrayBlock(String, int[], long)} if the total size
-     * of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createIntArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
-     *            )
-     * @param offset The offset in the data set to start writing to.
-     */
-    public void writeIntArrayBlockWithOffset(final String objectPath, final int[] data,
-            final int dataSize, final long offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>int</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeIntMatrix(final String objectPath, final int[][] data)
-    {
-        writeIntMatrix(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>int</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeIntMatrix(final String objectPath, final int[][] data, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert HDF5Utils.areMatrixDimensionsConsistent(data);
-
-        writeIntMDArray(objectPath, new MDIntArray(data), deflate);
-    }
-
-    /**
-     * Creates a <code>int</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the int matrix to create.
-     * @param sizeY The size of the y dimension of the int matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     */
-    public void createIntMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY)
-    {
-        createIntMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
-    }
-
-    /**
-     * Creates a <code>int</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the int matrix to create.
-     * @param sizeY The size of the y dimension of the int matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createIntMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert sizeX >= 0;
-        assert sizeY >= 0;
-        assert blockSizeX >= 0 && blockSizeX <= sizeX;
-        assert blockSizeY >= 0 && blockSizeY <= sizeY;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { sizeX, sizeY };
-                    final long[] blockDimensions = new long[]
-                        { blockSizeX, blockSizeY };
-                    baseWriter
-                            .createDataSet(objectPath, H5T_STD_I32LE, HDF5Utils
-                                    .getDeflateLevel(deflate), dimensions, blockDimensions, false,
-                                    registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to have
-     * been created by {@link #createIntMatrix(String, long, long, int, int, boolean)} beforehand.
-     * <p>
-     * Use this method instead of {@link #createIntMatrix(String, long, long, int, int, boolean)} if
-     * the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
-     * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createIntMatrix(String, long, long, int, int, boolean)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumberX The block number in the x dimension (offset: multiply with
-     *            <code>data.length</code>).
-     * @param blockNumberY The block number in the y dimension (offset: multiply with
-     *            <code>data[0.length</code>).
-     */
-    public void writeIntMatrixBlock(final String objectPath, final int[][] data,
-            final long blockNumberX, final long blockNumberY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeIntMDArrayBlock(objectPath, new MDIntArray(data), new long[]
-            { blockNumberX, blockNumberY });
-    }
-
-    /**
-     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to have
-     * been created by {@link #createIntMatrix(String, long, long, int, int, boolean)} beforehand.
-     * <p>
-     * Use this method instead of {@link #writeIntMatrixBlock(String, int[][], long, long)} if the
-     * total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createIntMatrix(String, long, long, int, int, boolean)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeIntMatrixBlockWithOffset(final String objectPath, final int[][] data,
-            final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeIntMDArrayBlockWithOffset(objectPath, new MDIntArray(data, new int[]
-            { data.length, data[0].length }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to have
-     * been created by {@link #createIntMatrix(String, long, long, int, int, boolean)} beforehand.
-     * <p>
-     * Use this method instead of {@link #writeIntMatrixBlock(String, int[][], long, long)} if the
-     * total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createIntMatrix(String, long, long, int, int, boolean)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
-     *            <code><= data.length</code> )
-     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
-     *            <code><= data[0].length</code> )
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeIntMatrixBlockWithOffset(final String objectPath, final int[][] data,
-            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeIntMDArrayBlockWithOffset(objectPath, new MDIntArray(data, new int[]
-            { dataSizeX, dataSizeY }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>int</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeIntMDArray(final String objectPath, final MDIntArray data)
-    {
-        writeIntMDArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>int</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeIntMDArray(final String objectPath, final MDIntArray data,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter
-                                    .getDataSetId(objectPath, H5T_STD_I32LE, data.longDimensions(),
-                                            HDF5Utils.getDeflateLevel(deflate), registry);
-                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
-                            .getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>int</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     */
-    public void createIntMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions)
-    {
-        createIntMDArray(objectPath, dimensions, blockDimensions, false);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>int</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createIntMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert dimensions != null;
-        assert blockDimensions != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I32LE, HDF5Utils
-                            .getDeflateLevel(deflate), dimensions, MDArray.toLong(blockDimensions),
-                            false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>int</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
-     *            the according dimension).
-     */
-    public void writeIntMDArrayBlock(final String objectPath, final MDIntArray data,
-            final long[] blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert blockNumber != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == blockNumber.length;
-                    final long[] offset = new long[dimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * dimensions[i];
-                    }
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>int</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param offset The offset in the data set to start writing to in each dimension.
-     */
-    public void writeIntMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
-            final long[] offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>int</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param blockDimensions The dimensions of the block to write to the data set.
-     * @param offset The offset of the block in the data set to start writing to in each dimension.
-     * @param memoryOffset The offset of the block in the <var>data</var> array.
-     */
-    public void writeIntMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
-            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] memoryDimensions = data.longDimensions();
-                    assert memoryDimensions.length == offset.length;
-                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
-                    assert longBlockDimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
-                            longBlockDimensions);
-                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    //
-    // Long
-    //
-
-    /**
-     * Writes out a <code>long</code> value.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param value The value to write.
-     */
-    public void writeLong(final String objectPath, final long value)
-    {
-        assert objectPath != null;
-
-        baseWriter.checkOpen();
-        baseWriter.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData
-                .longToByte(value));
-    }
-
-    /**
-     * Creates a <code>long</code> array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     */
-    public void createLongArrayCompact(final String objectPath, final long length)
-    {
-        assert objectPath != null;
-        assert length > 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I64LE, NO_DEFLATION, new long[]
-                        { length }, null, true, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a <code>long</code> array (of rank 1). Uses a compact storage layout. Should only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeLongArrayCompact(final String objectPath, final long[] data)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, dimensions,
-                                    NO_DEFLATION, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>long</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeLongArray(final String objectPath, final long[] data)
-    {
-        writeLongArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>long</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeLongArray(final String objectPath, final long[] data, final boolean deflate)
-    {
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
-                                { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a <code>long</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the long vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}).
-     */
-    public void createLongArray(final String objectPath, final long size, final int blockSize)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        createLongArray(objectPath, size, blockSize, false);
-    }
-
-    /**
-     * Creates a <code>long</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the long array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createLongArray(final String objectPath, final long size, final int blockSize,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I64LE, HDF5Utils
-                            .getDeflateLevel(deflate), new long[]
-                        { size }, new long[]
-                        { blockSize }, false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>long</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createLongArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
-     * to the <var>blockSize</var> argument of the
-     * {@link #createLongArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumber The number of the block to write.
-     */
-    public void writeLongArrayBlock(final String objectPath, final long[] data,
-            final long blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final long[] slabStartOrNull = new long[]
-                        { data.length * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>long</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createLongArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * Use this method instead of {@link #writeLongArrayBlock(String, long[], long)} if the total
-     * size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createLongArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
-     *            )
-     * @param offset The offset in the data set to start writing to.
-     */
-    public void writeLongArrayBlockWithOffset(final String objectPath, final long[] data,
-            final int dataSize, final long offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>long</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeLongMatrix(final String objectPath, final long[][] data)
-    {
-        writeLongMatrix(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>long</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeLongMatrix(final String objectPath, final long[][] data, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert HDF5Utils.areMatrixDimensionsConsistent(data);
-
-        writeLongMDArray(objectPath, new MDLongArray(data), deflate);
-    }
-
-    /**
-     * Creates a <code>long</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the long matrix to create.
-     * @param sizeY The size of the y dimension of the long matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     */
-    public void createLongMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY)
-    {
-        createLongMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
-    }
-
-    /**
-     * Creates a <code>long</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the long matrix to create.
-     * @param sizeY The size of the y dimension of the long matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createLongMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert sizeX >= 0;
-        assert sizeY >= 0;
-        assert blockSizeX >= 0 && blockSizeX <= sizeX;
-        assert blockSizeY >= 0 && blockSizeY <= sizeY;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { sizeX, sizeY };
-                    final long[] blockDimensions = new long[]
-                        { blockSizeX, blockSizeY };
-                    baseWriter
-                            .createDataSet(objectPath, H5T_STD_I64LE, HDF5Utils
-                                    .getDeflateLevel(deflate), dimensions, blockDimensions, false,
-                                    registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>long</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createLongMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #createLongMatrix(String, long, long, int, int, boolean)}
-     * if the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
-     * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createLongMatrix(String, long, long, int, int, boolean)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumberX The block number in the x dimension (offset: multiply with
-     *            <code>data.length</code>).
-     * @param blockNumberY The block number in the y dimension (offset: multiply with
-     *            <code>data[0.length</code>).
-     */
-    public void writeLongMatrixBlock(final String objectPath, final long[][] data,
-            final long blockNumberX, final long blockNumberY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeLongMDArrayBlock(objectPath, new MDLongArray(data), new long[]
-            { blockNumberX, blockNumberY });
-    }
-
-    /**
-     * Writes out a block of a <code>long</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createLongMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #writeLongMatrixBlock(String, long[][], long, long)} if the
-     * total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createLongMatrix(String, long, long, int, int, boolean)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeLongMatrixBlockWithOffset(final String objectPath, final long[][] data,
-            final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeLongMDArrayBlockWithOffset(objectPath, new MDLongArray(data, new int[]
-            { data.length, data[0].length }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a block of a <code>long</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createLongMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #writeLongMatrixBlock(String, long[][], long, long)} if the
-     * total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createLongMatrix(String, long, long, int, int, boolean)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
-     *            <code><= data.length</code> )
-     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
-     *            <code><= data[0].length</code> )
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeLongMatrixBlockWithOffset(final String objectPath, final long[][] data,
-            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeLongMDArrayBlockWithOffset(objectPath, new MDLongArray(data, new int[]
-            { dataSizeX, dataSizeY }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>long</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeLongMDArray(final String objectPath, final MDLongArray data)
-    {
-        writeLongMDArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>long</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeLongMDArray(final String objectPath, final MDLongArray data,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter
-                                    .getDataSetId(objectPath, H5T_STD_I64LE, data.longDimensions(),
-                                            HDF5Utils.getDeflateLevel(deflate), registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
-                            .getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>long</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     */
-    public void createLongMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions)
-    {
-        createLongMDArray(objectPath, dimensions, blockDimensions, false);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>long</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createLongMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert dimensions != null;
-        assert blockDimensions != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I64LE, HDF5Utils
-                            .getDeflateLevel(deflate), dimensions, MDArray.toLong(blockDimensions),
-                            false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>long</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
-     *            the according dimension).
-     */
-    public void writeLongMDArrayBlock(final String objectPath, final MDLongArray data,
-            final long[] blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert blockNumber != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == blockNumber.length;
-                    final long[] offset = new long[dimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * dimensions[i];
-                    }
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>long</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param offset The offset in the data set to start writing to in each dimension.
-     */
-    public void writeLongMDArrayBlockWithOffset(final String objectPath, final MDLongArray data,
-            final long[] offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>long</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param blockDimensions The dimensions of the block to write to the data set.
-     * @param offset The offset of the block in the data set to start writing to in each dimension.
-     * @param memoryOffset The offset of the block in the <var>data</var> array.
-     */
-    public void writeLongMDArrayBlockWithOffset(final String objectPath, final MDLongArray data,
-            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] memoryDimensions = data.longDimensions();
-                    assert memoryDimensions.length == offset.length;
-                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
-                    assert longBlockDimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
-                            longBlockDimensions);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    //
-    // Float
-    //
-
-    /**
-     * Writes out a <code>float</code> value.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param value The value to write.
-     */
-    public void writeFloat(final String objectPath, final float value)
-    {
-        assert objectPath != null;
-
-        baseWriter.checkOpen();
-        baseWriter.writeScalar(objectPath, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDFNativeData
-                .floatToByte(value));
-    }
-
-    /**
-     * Creates a <code>float</code> array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     */
-    public void createFloatArrayCompact(final String objectPath, final long length)
-    {
-        assert objectPath != null;
-        assert length > 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, NO_DEFLATION, new long[]
-                        { length }, null, true, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a <code>float</code> array (of rank 1). Uses a compact storage layout. Should only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeFloatArrayCompact(final String objectPath, final float[] data)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F32LE, dimensions,
-                                    NO_DEFLATION, registry);
-                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>float</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeFloatArray(final String objectPath, final float[] data)
-    {
-        writeFloatArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>float</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeFloatArray(final String objectPath, final float[] data, final boolean deflate)
-    {
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F32LE, new long[]
-                                { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
-                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a <code>float</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the float vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}).
-     */
-    public void createFloatArray(final String objectPath, final long size, final int blockSize)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        createFloatArray(objectPath, size, blockSize, false);
-    }
-
-    /**
-     * Creates a <code>float</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the float array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createFloatArray(final String objectPath, final long size, final int blockSize,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, HDF5Utils
-                            .getDeflateLevel(deflate), new long[]
-                        { size }, new long[]
-                        { blockSize }, false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>float</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createFloatArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
-     * to the <var>blockSize</var> argument of the
-     * {@link #createFloatArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumber The number of the block to write.
-     */
-    public void writeFloatArrayBlock(final String objectPath, final float[] data,
-            final long blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final long[] slabStartOrNull = new long[]
-                        { data.length * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>float</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createFloatArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * Use this method instead of {@link #writeFloatArrayBlock(String, float[], long)} if the total
-     * size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createFloatArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
-     *            )
-     * @param offset The offset in the data set to start writing to.
-     */
-    public void writeFloatArrayBlockWithOffset(final String objectPath, final float[] data,
-            final int dataSize, final long offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>float</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeFloatMatrix(final String objectPath, final float[][] data)
-    {
-        writeFloatMatrix(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>float</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeFloatMatrix(final String objectPath, final float[][] data,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert HDF5Utils.areMatrixDimensionsConsistent(data);
-
-        writeFloatMDArray(objectPath, new MDFloatArray(data), deflate);
-    }
-
-    /**
-     * Creates a <code>float</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the float matrix to create.
-     * @param sizeY The size of the y dimension of the float matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     */
-    public void createFloatMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY)
-    {
-        createFloatMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
-    }
-
-    /**
-     * Creates a <code>float</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the float matrix to create.
-     * @param sizeY The size of the y dimension of the float matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createFloatMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert sizeX >= 0;
-        assert sizeY >= 0;
-        assert blockSizeX >= 0 && blockSizeX <= sizeX;
-        assert blockSizeY >= 0 && blockSizeY <= sizeY;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { sizeX, sizeY };
-                    final long[] blockDimensions = new long[]
-                        { blockSizeX, blockSizeY };
-                    baseWriter
-                            .createDataSet(objectPath, H5T_IEEE_F32LE, HDF5Utils
-                                    .getDeflateLevel(deflate), dimensions, blockDimensions, false,
-                                    registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>float</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createFloatMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #createFloatMatrix(String, long, long, int, int, boolean)}
-     * if the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
-     * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createFloatMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumberX The block number in the x dimension (offset: multiply with
-     *            <code>data.length</code>).
-     * @param blockNumberY The block number in the y dimension (offset: multiply with
-     *            <code>data[0.length</code>).
-     */
-    public void writeFloatMatrixBlock(final String objectPath, final float[][] data,
-            final long blockNumberX, final long blockNumberY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeFloatMDArrayBlock(objectPath, new MDFloatArray(data), new long[]
-            { blockNumberX, blockNumberY });
-    }
-
-    /**
-     * Writes out a block of a <code>float</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createFloatMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #writeFloatMatrixBlock(String, float[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createFloatMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeFloatMatrixBlockWithOffset(final String objectPath, final float[][] data,
-            final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeFloatMDArrayBlockWithOffset(objectPath, new MDFloatArray(data, new int[]
-            { data.length, data[0].length }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a block of a <code>float</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createFloatMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #writeFloatMatrixBlock(String, float[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createFloatMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
-     *            <code><= data.length</code> )
-     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
-     *            <code><= data[0].length</code> )
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeFloatMatrixBlockWithOffset(final String objectPath, final float[][] data,
-            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeFloatMDArrayBlockWithOffset(objectPath, new MDFloatArray(data, new int[]
-            { dataSizeX, dataSizeY }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>float</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeFloatMDArray(final String objectPath, final MDFloatArray data)
-    {
-        writeFloatMDArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>float</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeFloatMDArray(final String objectPath, final MDFloatArray data,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter
-                                    .getDataSetId(objectPath, H5T_IEEE_F32LE,
-                                            data.longDimensions(), HDF5Utils
-                                                    .getDeflateLevel(deflate), registry);
-                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
-                            .getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>float</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     */
-    public void createFloatMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions)
-    {
-        createFloatMDArray(objectPath, dimensions, blockDimensions, false);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>float</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createFloatMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert dimensions != null;
-        assert blockDimensions != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, HDF5Utils
-                            .getDeflateLevel(deflate), dimensions, MDArray.toLong(blockDimensions),
-                            false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>float</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
-     *            the according dimension).
-     */
-    public void writeFloatMDArrayBlock(final String objectPath, final MDFloatArray data,
-            final long[] blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert blockNumber != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == blockNumber.length;
-                    final long[] offset = new long[dimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * dimensions[i];
-                    }
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>float</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param offset The offset in the data set to start writing to in each dimension.
-     */
-    public void writeFloatMDArrayBlockWithOffset(final String objectPath, final MDFloatArray data,
-            final long[] offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>float</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param blockDimensions The dimensions of the block to write to the data set.
-     * @param offset The offset of the block in the data set to start writing to in each dimension.
-     * @param memoryOffset The offset of the block in the <var>data</var> array.
-     */
-    public void writeFloatMDArrayBlockWithOffset(final String objectPath, final MDFloatArray data,
-            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] memoryDimensions = data.longDimensions();
-                    assert memoryDimensions.length == offset.length;
-                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
-                    assert longBlockDimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
-                            longBlockDimensions);
-                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    //
-    // Double
-    //
-
-    /**
-     * Writes out a <code>double</code> value.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param value The value to write.
-     */
-    public void writeDouble(final String objectPath, final double value)
-    {
-        assert objectPath != null;
-
-        baseWriter.checkOpen();
-        baseWriter.writeScalar(objectPath, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDFNativeData
-                .doubleToByte(value));
-    }
-
-    /**
-     * Creates a <code>double</code> array (of rank 1). Uses a compact storage layout. Should only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     */
-    public void createDoubleArrayCompact(final String objectPath, final long length)
-    {
-        assert objectPath != null;
-        assert length > 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, NO_DEFLATION, new long[]
-                        { length }, null, true, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a <code>double</code> array (of rank 1). Uses a compact storage layout. Should
-     * only be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeDoubleArrayCompact(final String objectPath, final double[] data)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F64LE, dimensions,
-                                    NO_DEFLATION, registry);
-                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>double</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeDoubleArray(final String objectPath, final double[] data)
-    {
-        writeDoubleArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>double</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeDoubleArray(final String objectPath, final double[] data, final boolean deflate)
-    {
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F64LE, new long[]
-                                { data.length }, HDF5Utils.getDeflateLevel(deflate), registry);
-                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a <code>double</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the double vector to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}).
-     */
-    public void createDoubleArray(final String objectPath, final long size, final int blockSize)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        createDoubleArray(objectPath, size, blockSize, false);
-    }
-
-    /**
-     * Creates a <code>double</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the double array to create. When using extendable data sets ((see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
-     *            smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createDoubleArray(final String objectPath, final long size, final int blockSize,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, HDF5Utils
-                            .getDeflateLevel(deflate), new long[]
-                        { size }, new long[]
-                        { blockSize }, false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>double</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createDoubleArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
-     * to the <var>blockSize</var> argument of the
-     * {@link #createDoubleArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumber The number of the block to write.
-     */
-    public void writeDoubleArrayBlock(final String objectPath, final double[] data,
-            final long blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final long[] slabStartOrNull = new long[]
-                        { data.length * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>double</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createDoubleArray(String, long, int, boolean)} beforehand.
-     * <p>
-     * Use this method instead of {@link #writeDoubleArrayBlock(String, double[], long)} if the
-     * total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createDoubleArray(String, long, int, boolean)} call that was used to create the data
-     * set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
-     *            )
-     * @param offset The offset in the data set to start writing to.
-     */
-    public void writeDoubleArrayBlockWithOffset(final String objectPath, final double[] data,
-            final int dataSize, final long offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a <code>double</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeDoubleMatrix(final String objectPath, final double[][] data)
-    {
-        writeDoubleMatrix(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a <code>double</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeDoubleMatrix(final String objectPath, final double[][] data,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert HDF5Utils.areMatrixDimensionsConsistent(data);
-
-        writeDoubleMDArray(objectPath, new MDDoubleArray(data), deflate);
-    }
-
-    /**
-     * Creates a <code>double</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the double matrix to create.
-     * @param sizeY The size of the y dimension of the double matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     */
-    public void createDoubleMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY)
-    {
-        createDoubleMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, false);
-    }
-
-    /**
-     * Creates a <code>double</code> matrix (array of rank 2).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the double matrix to create.
-     * @param sizeY The size of the y dimension of the double matrix to create.
-     * @param blockSizeX The size of one block in the x dimension.
-     * @param blockSizeY The size of one block in the y dimension.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createDoubleMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert sizeX >= 0;
-        assert sizeY >= 0;
-        assert blockSizeX >= 0 && blockSizeX <= sizeX;
-        assert blockSizeY >= 0 && blockSizeY <= sizeY;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { sizeX, sizeY };
-                    final long[] blockDimensions = new long[]
-                        { blockSizeX, blockSizeY };
-                    baseWriter
-                            .createDataSet(objectPath, H5T_IEEE_F64LE, HDF5Utils
-                                    .getDeflateLevel(deflate), dimensions, blockDimensions, false,
-                                    registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a <code>double</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createDoubleMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #createDoubleMatrix(String, long, long, int, int, boolean)}
-     * if the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
-     * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createDoubleMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumberX The block number in the x dimension (offset: multiply with
-     *            <code>data.length</code>).
-     * @param blockNumberY The block number in the y dimension (offset: multiply with
-     *            <code>data[0.length</code>).
-     */
-    public void writeDoubleMatrixBlock(final String objectPath, final double[][] data,
-            final long blockNumberX, final long blockNumberY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeDoubleMDArrayBlock(objectPath, new MDDoubleArray(data), new long[]
-            { blockNumberX, blockNumberY });
-    }
-
-    /**
-     * Writes out a block of a <code>double</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createDoubleMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #writeDoubleMatrixBlock(String, double[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createDoubleMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeDoubleMatrixBlockWithOffset(final String objectPath, final double[][] data,
-            final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeDoubleMDArrayBlockWithOffset(objectPath, new MDDoubleArray(data, new int[]
-            { data.length, data[0].length }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a block of a <code>double</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createDoubleMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
-     * <p>
-     * Use this method instead of {@link #writeDoubleMatrixBlock(String, double[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createDoubleMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param dataSizeX The (real) size of <code>data</code> along the x axis (needs to be
-     *            <code><= data.length</code> )
-     * @param dataSizeY The (real) size of <code>data</code> along the y axis (needs to be
-     *            <code><= data[0].length</code> )
-     * @param offsetX The x offset in the data set to start writing to.
-     * @param offsetY The y offset in the data set to start writing to.
-     */
-    public void writeDoubleMatrixBlockWithOffset(final String objectPath, final double[][] data,
-            final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeDoubleMDArrayBlockWithOffset(objectPath, new MDDoubleArray(data, new int[]
-            { dataSizeX, dataSizeY }), new long[]
-            { offsetX, offsetY });
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>double</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     */
-    public void writeDoubleMDArray(final String objectPath, final MDDoubleArray data)
-    {
-        writeDoubleMDArray(objectPath, data, false);
-    }
-
-    /**
-     * Writes out a multi-dimensional <code>double</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void writeDoubleMDArray(final String objectPath, final MDDoubleArray data,
-            final boolean deflate)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter
-                                    .getDataSetId(objectPath, H5T_IEEE_F64LE,
-                                            data.longDimensions(), HDF5Utils
-                                                    .getDeflateLevel(deflate), registry);
-                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>double</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     */
-    public void createDoubleMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions)
-    {
-        createDoubleMDArray(objectPath, dimensions, blockDimensions, false);
-    }
-
-    /**
-     * Creates a multi-dimensional <code>double</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array.
-     * @param blockDimensions The dimensions of one block (chunk) of the array.
-     * @param deflate If <code>true</code>, the data set will be compressed.
-     */
-    public void createDoubleMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final boolean deflate)
-    {
-        assert objectPath != null;
-        assert dimensions != null;
-        assert blockDimensions != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, HDF5Utils
-                            .getDeflateLevel(deflate), dimensions, MDArray.toLong(blockDimensions),
-                            false, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>double</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
-     *            the according dimension).
-     */
-    public void writeDoubleMDArrayBlock(final String objectPath, final MDDoubleArray data,
-            final long[] blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert blockNumber != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == blockNumber.length;
-                    final long[] offset = new long[dimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * dimensions[i];
-                    }
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>double</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param offset The offset in the data set to start writing to in each dimension.
-     */
-    public void writeDoubleMDArrayBlockWithOffset(final String objectPath,
-            final MDDoubleArray data, final long[] offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    /**
-     * Writes out a block of a multi-dimensional <code>double</code> array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param blockDimensions The dimensions of the block to write to the data set.
-     * @param offset The offset of the block in the data set to start writing to in each dimension.
-     * @param memoryOffset The offset of the block in the <var>data</var> array.
-     */
-    public void writeDoubleMDArrayBlockWithOffset(final String objectPath,
-            final MDDoubleArray data, final int[] blockDimensions, final long[] offset,
-            final int[] memoryOffset)
-    {
-        assert objectPath != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] memoryDimensions = data.longDimensions();
-                    assert memoryDimensions.length == offset.length;
-                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
-                    assert longBlockDimensions.length == offset.length;
-                    final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
-                            longBlockDimensions);
-                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+    public void createByteArray(String objectPath, long size, int blockSize)
+    {
+        byteWriter.createByteArray(objectPath, size, blockSize);
+    }
+
+    public void createByteArray(String objectPath, long size, int blockSize, boolean deflate)
+    {
+        byteWriter.createByteArray(objectPath, size, blockSize, deflate);
+    }
+
+    public void createByteArrayCompact(String objectPath, long length)
+    {
+        byteWriter.createByteArrayCompact(objectPath, length);
+    }
+
+    public void createByteMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
+    {
+        byteWriter.createByteMDArray(objectPath, dimensions, blockDimensions);
+    }
+
+    public void createByteMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            boolean deflate)
+    {
+        byteWriter.createByteMDArray(objectPath, dimensions, blockDimensions, deflate);
+    }
+
+    public void createByteMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY)
+    {
+        byteWriter.createByteMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+    }
+
+    public void createByteMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY, boolean deflate)
+    {
+        byteWriter.createByteMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, deflate);
+    }
+
+    public void writeByte(String objectPath, byte value)
+    {
+        byteWriter.writeByte(objectPath, value);
+    }
+
+    public void writeByteArray(String objectPath, byte[] data)
+    {
+        byteWriter.writeByteArray(objectPath, data);
+    }
+
+    public void writeByteArray(String objectPath, byte[] data, boolean deflate)
+    {
+        byteWriter.writeByteArray(objectPath, data, deflate);
+    }
+
+    public void writeByteArrayBlock(String objectPath, byte[] data, long blockNumber)
+    {
+        byteWriter.writeByteArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeByteArrayBlockWithOffset(String objectPath, byte[] data, int dataSize,
+            long offset)
+    {
+        byteWriter.writeByteArrayBlockWithOffset(objectPath, data, dataSize, offset);
+    }
+
+    public void writeByteArrayCompact(String objectPath, byte[] data)
+    {
+        byteWriter.writeByteArrayCompact(objectPath, data);
+    }
+
+    public void writeByteMDArray(String objectPath, MDByteArray data)
+    {
+        byteWriter.writeByteMDArray(objectPath, data);
+    }
+
+    public void writeByteMDArray(String objectPath, MDByteArray data, boolean deflate)
+    {
+        byteWriter.writeByteMDArray(objectPath, data, deflate);
+    }
+
+    public void writeByteMDArrayBlock(String objectPath, MDByteArray data, long[] blockNumber)
+    {
+        byteWriter.writeByteMDArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeByteMDArrayBlockWithOffset(String objectPath, MDByteArray data, long[] offset)
+    {
+        byteWriter.writeByteMDArrayBlockWithOffset(objectPath, data, offset);
+    }
+
+    public void writeByteMDArrayBlockWithOffset(String objectPath, MDByteArray data,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        byteWriter.writeByteMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void writeByteMatrix(String objectPath, byte[][] data)
+    {
+        byteWriter.writeByteMatrix(objectPath, data);
+    }
+
+    public void writeByteMatrix(String objectPath, byte[][] data, boolean deflate)
+    {
+        byteWriter.writeByteMatrix(objectPath, data, deflate);
+    }
+
+    public void writeByteMatrixBlock(String objectPath, byte[][] data, long blockNumberX,
+            long blockNumberY)
+    {
+        byteWriter.writeByteMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+    }
+
+    public void writeByteMatrixBlockWithOffset(String objectPath, byte[][] data, long offsetX,
+            long offsetY)
+    {
+        byteWriter.writeByteMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+    }
+
+    public void writeByteMatrixBlockWithOffset(String objectPath, byte[][] data, int dataSizeX,
+            int dataSizeY, long offsetX, long offsetY)
+    {
+        byteWriter.writeByteMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
+                offsetY);
+    }
+
+    public void createDoubleArray(String objectPath, long size, int blockSize)
+    {
+        doubleWriter.createDoubleArray(objectPath, size, blockSize);
+    }
+
+    public void createDoubleArray(String objectPath, long size, int blockSize, boolean deflate)
+    {
+        doubleWriter.createDoubleArray(objectPath, size, blockSize, deflate);
+    }
+
+    public void createDoubleArrayCompact(String objectPath, long length)
+    {
+        doubleWriter.createDoubleArrayCompact(objectPath, length);
+    }
+
+    public void createDoubleMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
+    {
+        doubleWriter.createDoubleMDArray(objectPath, dimensions, blockDimensions);
+    }
+
+    public void createDoubleMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            boolean deflate)
+    {
+        doubleWriter.createDoubleMDArray(objectPath, dimensions, blockDimensions, deflate);
+    }
+
+    public void createDoubleMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY)
+    {
+        doubleWriter.createDoubleMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+    }
+
+    public void createDoubleMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY, boolean deflate)
+    {
+        doubleWriter.createDoubleMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, deflate);
+    }
+
+    public void writeDouble(String objectPath, double value)
+    {
+        doubleWriter.writeDouble(objectPath, value);
+    }
+
+    public void writeDoubleArray(String objectPath, double[] data)
+    {
+        doubleWriter.writeDoubleArray(objectPath, data);
+    }
+
+    public void writeDoubleArray(String objectPath, double[] data, boolean deflate)
+    {
+        doubleWriter.writeDoubleArray(objectPath, data, deflate);
+    }
+
+    public void writeDoubleArrayBlock(String objectPath, double[] data, long blockNumber)
+    {
+        doubleWriter.writeDoubleArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeDoubleArrayBlockWithOffset(String objectPath, double[] data, int dataSize,
+            long offset)
+    {
+        doubleWriter.writeDoubleArrayBlockWithOffset(objectPath, data, dataSize, offset);
+    }
+
+    public void writeDoubleArrayCompact(String objectPath, double[] data)
+    {
+        doubleWriter.writeDoubleArrayCompact(objectPath, data);
+    }
+
+    public void writeDoubleMDArray(String objectPath, MDDoubleArray data)
+    {
+        doubleWriter.writeDoubleMDArray(objectPath, data);
+    }
+
+    public void writeDoubleMDArray(String objectPath, MDDoubleArray data, boolean deflate)
+    {
+        doubleWriter.writeDoubleMDArray(objectPath, data, deflate);
+    }
+
+    public void writeDoubleMDArrayBlock(String objectPath, MDDoubleArray data, long[] blockNumber)
+    {
+        doubleWriter.writeDoubleMDArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeDoubleMDArrayBlockWithOffset(String objectPath, MDDoubleArray data,
+            long[] offset)
+    {
+        doubleWriter.writeDoubleMDArrayBlockWithOffset(objectPath, data, offset);
+    }
+
+    public void writeDoubleMDArrayBlockWithOffset(String objectPath, MDDoubleArray data,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        doubleWriter.writeDoubleMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void writeDoubleMatrix(String objectPath, double[][] data)
+    {
+        doubleWriter.writeDoubleMatrix(objectPath, data);
+    }
+
+    public void writeDoubleMatrix(String objectPath, double[][] data, boolean deflate)
+    {
+        doubleWriter.writeDoubleMatrix(objectPath, data, deflate);
+    }
+
+    public void writeDoubleMatrixBlock(String objectPath, double[][] data, long blockNumberX,
+            long blockNumberY)
+    {
+        doubleWriter.writeDoubleMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+    }
+
+    public void writeDoubleMatrixBlockWithOffset(String objectPath, double[][] data, long offsetX,
+            long offsetY)
+    {
+        doubleWriter.writeDoubleMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+    }
+
+    public void writeDoubleMatrixBlockWithOffset(String objectPath, double[][] data, int dataSizeX,
+            int dataSizeY, long offsetX, long offsetY)
+    {
+        doubleWriter.writeDoubleMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
+                offsetX, offsetY);
+    }
+
+    public void createFloatArray(String objectPath, long size, int blockSize)
+    {
+        floatWriter.createFloatArray(objectPath, size, blockSize);
+    }
+
+    public void createFloatArray(String objectPath, long size, int blockSize, boolean deflate)
+    {
+        floatWriter.createFloatArray(objectPath, size, blockSize, deflate);
+    }
+
+    public void createFloatArrayCompact(String objectPath, long length)
+    {
+        floatWriter.createFloatArrayCompact(objectPath, length);
+    }
+
+    public void createFloatMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
+    {
+        floatWriter.createFloatMDArray(objectPath, dimensions, blockDimensions);
+    }
+
+    public void createFloatMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            boolean deflate)
+    {
+        floatWriter.createFloatMDArray(objectPath, dimensions, blockDimensions, deflate);
+    }
+
+    public void createFloatMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY)
+    {
+        floatWriter.createFloatMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+    }
+
+    public void createFloatMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY, boolean deflate)
+    {
+        floatWriter.createFloatMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, deflate);
+    }
+
+    public void writeFloat(String objectPath, float value)
+    {
+        floatWriter.writeFloat(objectPath, value);
+    }
+
+    public void writeFloatArray(String objectPath, float[] data)
+    {
+        floatWriter.writeFloatArray(objectPath, data);
+    }
+
+    public void writeFloatArray(String objectPath, float[] data, boolean deflate)
+    {
+        floatWriter.writeFloatArray(objectPath, data, deflate);
+    }
+
+    public void writeFloatArrayBlock(String objectPath, float[] data, long blockNumber)
+    {
+        floatWriter.writeFloatArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeFloatArrayBlockWithOffset(String objectPath, float[] data, int dataSize,
+            long offset)
+    {
+        floatWriter.writeFloatArrayBlockWithOffset(objectPath, data, dataSize, offset);
+    }
+
+    public void writeFloatArrayCompact(String objectPath, float[] data)
+    {
+        floatWriter.writeFloatArrayCompact(objectPath, data);
+    }
+
+    public void writeFloatMDArray(String objectPath, MDFloatArray data)
+    {
+        floatWriter.writeFloatMDArray(objectPath, data);
+    }
+
+    public void writeFloatMDArray(String objectPath, MDFloatArray data, boolean deflate)
+    {
+        floatWriter.writeFloatMDArray(objectPath, data, deflate);
+    }
+
+    public void writeFloatMDArrayBlock(String objectPath, MDFloatArray data, long[] blockNumber)
+    {
+        floatWriter.writeFloatMDArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeFloatMDArrayBlockWithOffset(String objectPath, MDFloatArray data, long[] offset)
+    {
+        floatWriter.writeFloatMDArrayBlockWithOffset(objectPath, data, offset);
+    }
+
+    public void writeFloatMDArrayBlockWithOffset(String objectPath, MDFloatArray data,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        floatWriter.writeFloatMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void writeFloatMatrix(String objectPath, float[][] data)
+    {
+        floatWriter.writeFloatMatrix(objectPath, data);
+    }
+
+    public void writeFloatMatrix(String objectPath, float[][] data, boolean deflate)
+    {
+        floatWriter.writeFloatMatrix(objectPath, data, deflate);
+    }
+
+    public void writeFloatMatrixBlock(String objectPath, float[][] data, long blockNumberX,
+            long blockNumberY)
+    {
+        floatWriter.writeFloatMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+    }
+
+    public void writeFloatMatrixBlockWithOffset(String objectPath, float[][] data, long offsetX,
+            long offsetY)
+    {
+        floatWriter.writeFloatMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+    }
+
+    public void writeFloatMatrixBlockWithOffset(String objectPath, float[][] data, int dataSizeX,
+            int dataSizeY, long offsetX, long offsetY)
+    {
+        floatWriter.writeFloatMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
+                offsetX, offsetY);
+    }
+
+    public void createIntArray(String objectPath, long size, int blockSize)
+    {
+        intWriter.createIntArray(objectPath, size, blockSize);
+    }
+
+    public void createIntArray(String objectPath, long size, int blockSize, boolean deflate)
+    {
+        intWriter.createIntArray(objectPath, size, blockSize, deflate);
+    }
+
+    public void createIntArrayCompact(String objectPath, long length)
+    {
+        intWriter.createIntArrayCompact(objectPath, length);
+    }
+
+    public void createIntMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
+    {
+        intWriter.createIntMDArray(objectPath, dimensions, blockDimensions);
+    }
+
+    public void createIntMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            boolean deflate)
+    {
+        intWriter.createIntMDArray(objectPath, dimensions, blockDimensions, deflate);
+    }
+
+    public void createIntMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY)
+    {
+        intWriter.createIntMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+    }
+
+    public void createIntMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY, boolean deflate)
+    {
+        intWriter.createIntMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, deflate);
+    }
+
+    public void writeInt(String objectPath, int value)
+    {
+        intWriter.writeInt(objectPath, value);
+    }
+
+    public void writeIntArray(String objectPath, int[] data)
+    {
+        intWriter.writeIntArray(objectPath, data);
+    }
+
+    public void writeIntArray(String objectPath, int[] data, boolean deflate)
+    {
+        intWriter.writeIntArray(objectPath, data, deflate);
+    }
+
+    public void writeIntArrayBlock(String objectPath, int[] data, long blockNumber)
+    {
+        intWriter.writeIntArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeIntArrayBlockWithOffset(String objectPath, int[] data, int dataSize,
+            long offset)
+    {
+        intWriter.writeIntArrayBlockWithOffset(objectPath, data, dataSize, offset);
+    }
+
+    public void writeIntArrayCompact(String objectPath, int[] data)
+    {
+        intWriter.writeIntArrayCompact(objectPath, data);
+    }
+
+    public void writeIntMDArray(String objectPath, MDIntArray data)
+    {
+        intWriter.writeIntMDArray(objectPath, data);
+    }
+
+    public void writeIntMDArray(String objectPath, MDIntArray data, boolean deflate)
+    {
+        intWriter.writeIntMDArray(objectPath, data, deflate);
+    }
+
+    public void writeIntMDArrayBlock(String objectPath, MDIntArray data, long[] blockNumber)
+    {
+        intWriter.writeIntMDArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeIntMDArrayBlockWithOffset(String objectPath, MDIntArray data, long[] offset)
+    {
+        intWriter.writeIntMDArrayBlockWithOffset(objectPath, data, offset);
+    }
+
+    public void writeIntMDArrayBlockWithOffset(String objectPath, MDIntArray data,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        intWriter.writeIntMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void writeIntMatrix(String objectPath, int[][] data)
+    {
+        intWriter.writeIntMatrix(objectPath, data);
+    }
+
+    public void writeIntMatrix(String objectPath, int[][] data, boolean deflate)
+    {
+        intWriter.writeIntMatrix(objectPath, data, deflate);
+    }
+
+    public void writeIntMatrixBlock(String objectPath, int[][] data, long blockNumberX,
+            long blockNumberY)
+    {
+        intWriter.writeIntMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+    }
+
+    public void writeIntMatrixBlockWithOffset(String objectPath, int[][] data, long offsetX,
+            long offsetY)
+    {
+        intWriter.writeIntMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+    }
+
+    public void writeIntMatrixBlockWithOffset(String objectPath, int[][] data, int dataSizeX,
+            int dataSizeY, long offsetX, long offsetY)
+    {
+        intWriter.writeIntMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
+                offsetY);
+    }
+
+    public void createLongArray(String objectPath, long size, int blockSize)
+    {
+        longWriter.createLongArray(objectPath, size, blockSize);
+    }
+
+    public void createLongArray(String objectPath, long size, int blockSize, boolean deflate)
+    {
+        longWriter.createLongArray(objectPath, size, blockSize, deflate);
+    }
+
+    public void createLongArrayCompact(String objectPath, long length)
+    {
+        longWriter.createLongArrayCompact(objectPath, length);
+    }
+
+    public void createLongMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
+    {
+        longWriter.createLongMDArray(objectPath, dimensions, blockDimensions);
+    }
+
+    public void createLongMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            boolean deflate)
+    {
+        longWriter.createLongMDArray(objectPath, dimensions, blockDimensions, deflate);
+    }
+
+    public void createLongMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY)
+    {
+        longWriter.createLongMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+    }
+
+    public void createLongMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY, boolean deflate)
+    {
+        longWriter.createLongMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, deflate);
+    }
+
+    public void writeLong(String objectPath, long value)
+    {
+        longWriter.writeLong(objectPath, value);
+    }
+
+    public void writeLongArray(String objectPath, long[] data)
+    {
+        longWriter.writeLongArray(objectPath, data);
+    }
+
+    public void writeLongArray(String objectPath, long[] data, boolean deflate)
+    {
+        longWriter.writeLongArray(objectPath, data, deflate);
+    }
+
+    public void writeLongArrayBlock(String objectPath, long[] data, long blockNumber)
+    {
+        longWriter.writeLongArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeLongArrayBlockWithOffset(String objectPath, long[] data, int dataSize,
+            long offset)
+    {
+        longWriter.writeLongArrayBlockWithOffset(objectPath, data, dataSize, offset);
+    }
+
+    public void writeLongArrayCompact(String objectPath, long[] data)
+    {
+        longWriter.writeLongArrayCompact(objectPath, data);
+    }
+
+    public void writeLongMDArray(String objectPath, MDLongArray data)
+    {
+        longWriter.writeLongMDArray(objectPath, data);
+    }
+
+    public void writeLongMDArray(String objectPath, MDLongArray data, boolean deflate)
+    {
+        longWriter.writeLongMDArray(objectPath, data, deflate);
+    }
+
+    public void writeLongMDArrayBlock(String objectPath, MDLongArray data, long[] blockNumber)
+    {
+        longWriter.writeLongMDArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeLongMDArrayBlockWithOffset(String objectPath, MDLongArray data, long[] offset)
+    {
+        longWriter.writeLongMDArrayBlockWithOffset(objectPath, data, offset);
+    }
+
+    public void writeLongMDArrayBlockWithOffset(String objectPath, MDLongArray data,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        longWriter.writeLongMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void writeLongMatrix(String objectPath, long[][] data)
+    {
+        longWriter.writeLongMatrix(objectPath, data);
+    }
+
+    public void writeLongMatrix(String objectPath, long[][] data, boolean deflate)
+    {
+        longWriter.writeLongMatrix(objectPath, data, deflate);
+    }
+
+    public void writeLongMatrixBlock(String objectPath, long[][] data, long blockNumberX,
+            long blockNumberY)
+    {
+        longWriter.writeLongMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+    }
+
+    public void writeLongMatrixBlockWithOffset(String objectPath, long[][] data, long offsetX,
+            long offsetY)
+    {
+        longWriter.writeLongMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+    }
+
+    public void writeLongMatrixBlockWithOffset(String objectPath, long[][] data, int dataSizeX,
+            int dataSizeY, long offsetX, long offsetY)
+    {
+        longWriter.writeLongMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
+                offsetY);
+    }
+
+    public void createShortArray(String objectPath, long size, int blockSize)
+    {
+        shortWriter.createShortArray(objectPath, size, blockSize);
+    }
+
+    public void createShortArray(String objectPath, long size, int blockSize, boolean deflate)
+    {
+        shortWriter.createShortArray(objectPath, size, blockSize, deflate);
+    }
+
+    public void createShortArrayCompact(String objectPath, long length)
+    {
+        shortWriter.createShortArrayCompact(objectPath, length);
+    }
+
+    public void createShortMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
+    {
+        shortWriter.createShortMDArray(objectPath, dimensions, blockDimensions);
+    }
+
+    public void createShortMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            boolean deflate)
+    {
+        shortWriter.createShortMDArray(objectPath, dimensions, blockDimensions, deflate);
+    }
+
+    public void createShortMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY)
+    {
+        shortWriter.createShortMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+    }
+
+    public void createShortMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
+            int blockSizeY, boolean deflate)
+    {
+        shortWriter.createShortMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, deflate);
+    }
+
+    public void writeShort(String objectPath, short value)
+    {
+        shortWriter.writeShort(objectPath, value);
+    }
+
+    public void writeShortArray(String objectPath, short[] data)
+    {
+        shortWriter.writeShortArray(objectPath, data);
+    }
+
+    public void writeShortArray(String objectPath, short[] data, boolean deflate)
+    {
+        shortWriter.writeShortArray(objectPath, data, deflate);
+    }
+
+    public void writeShortArrayBlock(String objectPath, short[] data, long blockNumber)
+    {
+        shortWriter.writeShortArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeShortArrayBlockWithOffset(String objectPath, short[] data, int dataSize,
+            long offset)
+    {
+        shortWriter.writeShortArrayBlockWithOffset(objectPath, data, dataSize, offset);
+    }
+
+    public void writeShortArrayCompact(String objectPath, short[] data)
+    {
+        shortWriter.writeShortArrayCompact(objectPath, data);
+    }
+
+    public void writeShortMDArray(String objectPath, MDShortArray data)
+    {
+        shortWriter.writeShortMDArray(objectPath, data);
+    }
+
+    public void writeShortMDArray(String objectPath, MDShortArray data, boolean deflate)
+    {
+        shortWriter.writeShortMDArray(objectPath, data, deflate);
+    }
+
+    public void writeShortMDArrayBlock(String objectPath, MDShortArray data, long[] blockNumber)
+    {
+        shortWriter.writeShortMDArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeShortMDArrayBlockWithOffset(String objectPath, MDShortArray data, long[] offset)
+    {
+        shortWriter.writeShortMDArrayBlockWithOffset(objectPath, data, offset);
+    }
+
+    public void writeShortMDArrayBlockWithOffset(String objectPath, MDShortArray data,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        shortWriter.writeShortMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void writeShortMatrix(String objectPath, short[][] data)
+    {
+        shortWriter.writeShortMatrix(objectPath, data);
+    }
+
+    public void writeShortMatrix(String objectPath, short[][] data, boolean deflate)
+    {
+        shortWriter.writeShortMatrix(objectPath, data, deflate);
+    }
+
+    public void writeShortMatrixBlock(String objectPath, short[][] data, long blockNumberX,
+            long blockNumberY)
+    {
+        shortWriter.writeShortMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+    }
+
+    public void writeShortMatrixBlockWithOffset(String objectPath, short[][] data, long offsetX,
+            long offsetY)
+    {
+        shortWriter.writeShortMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+    }
+
+    public void writeShortMatrixBlockWithOffset(String objectPath, short[][] data, int dataSizeX,
+            int dataSizeY, long offsetX, long offsetY)
+    {
+        shortWriter.writeShortMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
+                offsetX, offsetY);
     }
 
     // ------------------------------------------------------------------------------

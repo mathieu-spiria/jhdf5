@@ -20,6 +20,11 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.common.array.MDFloatArray;
 
+/**
+ * An interface that provides methods for reading <code>float</code> values from HDF5 files.
+ * 
+ * @author Bernd Rinn
+ */
 interface IHDF5FloatReader
 {
     /**
