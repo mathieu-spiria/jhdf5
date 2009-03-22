@@ -18,6 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 import java.io.File;
 
+import ch.systemsx.cisd.common.utilities.OSUtilities;
+
 /**
  * The configuration of this writer config is done by chaining calls to methods {@link #overwrite()}
  * , {@link #dontUseExtendableDataTypes()} and {@link #useLatestFileFormat()} before calling
@@ -34,7 +36,10 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
 
     private boolean useLatestFileFormat = false;
 
-    private SyncMode syncMode = SyncMode.SYNC_ON_FLUSH;
+    // For Windows, use a blocking sync mode by default as otherwise the mandatory locks are up for
+    // some surprises after the file has been closed.
+    private SyncMode syncMode =
+            OSUtilities.isWindows() ? SyncMode.SYNC_ON_FLUSH_BLOCK : SyncMode.SYNC_ON_FLUSH;
 
     /**
      * The mode of synchronizing changes (using a method like <code>fsync(2)</code>) to the HDF5
@@ -42,6 +47,11 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
      * by default performed in a separate thread to minimize latency effects on the application. In
      * order to ensure that <code>fsync(2)</code> is called in the same thread, use one of the
      * <code>*_BLOCK</code> modes.
+     * <p>
+     * Note that non-blocking modes can have unexpected interactions with mandatory locks on
+     * Windows. The symptom of that will be that the program holds a lock to the HDF5 file for some
+     * (short) time even after the file has been closed. Thus, on Windows by default a blocking mode
+     * is chosen.
      */
     public enum SyncMode
     {
@@ -50,7 +60,7 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
          */
         NO_SYNC,
         /**
-         * Synchronize whenver {@link HDF5Writer#flush()} or {@link HDF5Writer#close()} are called.
+         * Synchronize whenever {@link HDF5Writer#flush()} or {@link HDF5Writer#close()} are called.
          */
         SYNC,
         /**
@@ -59,12 +69,12 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
          */
         SYNC_BLOCK,
         /**
-         * Synchronize whenever {@link HDF5Writer#flush()} is called. <i>Default</i>
+         * Synchronize whenever {@link HDF5Writer#flush()} is called. <i>Default on Unix</i>
          */
         SYNC_ON_FLUSH,
         /**
          * Synchronize whenever {@link HDF5Writer#flush()} is called. Block until synchronize is
-         * finished.
+         * finished. <i>Default on Windows</i>.
          */
         SYNC_ON_FLUSH_BLOCK,
     }
