@@ -65,8 +65,13 @@ public enum HDF5DataTypeVariant
     /**
      * A time duration in days.
      */
-    TIME_DURATION_DAYS;
-
+    TIME_DURATION_DAYS,
+    
+    /**
+     * An enumeration.
+     */
+    ENUM;
+    
     /**
      * Returns <code>true</code>, if the type variant denoted by <var>typeVariantOrdinal</var>
      * corresponds to a time duration.

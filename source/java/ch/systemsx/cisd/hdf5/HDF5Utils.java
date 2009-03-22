@@ -16,8 +16,6 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5.NO_DEFLATION;
-
 import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.List;
@@ -39,11 +37,6 @@ final class HDF5Utils
     @Private
     static final int MIN_CHUNK_SIZE = 4;
 
-    /**
-     * A constant that specifies the default deflation level (gzip compression).
-     */
-    final static int DEFAULT_DEFLATION = 6;
-
     /** The minimal size of a data set in order to allow for chunking. */
     private static final long MIN_TOTAL_SIZE_FOR_CHUNKING = 128L;
 
@@ -53,6 +46,9 @@ final class HDF5Utils
 
     /** The attribute to signal that this is a variant of the data type. */
     static final String TYPE_VARIANT_ATTRIBUTE = "__TYPE_VARIANT__";
+
+    /** The attribute to store the name of the enum data type. */
+    static final String ENUM_TYPE_NAME_ATTRIBUTE = "__ENUM_TYPE_NAME__";
 
     /** The group to store all named derived data types in. */
     static final String DATATYPE_GROUP = "/__DATA_TYPES__";
@@ -284,14 +280,6 @@ final class HDF5Utils
             }
         }
         return true;
-    }
-
-    /**
-     * Returns the deflate level depending on whether deflation is enabled or not.
-     */
-    static int getDeflateLevel(boolean deflate)
-    {
-        return deflate ? DEFAULT_DEFLATION : NO_DEFLATION;
     }
 
     /**

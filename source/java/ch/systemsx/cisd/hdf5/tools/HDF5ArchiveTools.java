@@ -41,6 +41,7 @@ import ch.systemsx.cisd.common.exceptions.WrappedIOException;
 import ch.systemsx.cisd.common.os.Unix;
 import ch.systemsx.cisd.common.os.Unix.Group;
 import ch.systemsx.cisd.common.os.Unix.Password;
+import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.HDF5Reader;
 import ch.systemsx.cisd.hdf5.HDF5Writer;
@@ -349,16 +350,16 @@ public class HDF5ArchiveTools
     {
         boolean ok = true;
         final String hdf5ObjectPath = getRelativePath(root, file);
-        final boolean compress = strategy.doCompress(hdf5ObjectPath);
+        final HDF5GenericCompression compression = strategy.doCompress(hdf5ObjectPath);
         try
         {
             final long size = file.length();
             if (size > FILE_SIZE_THRESHOLD)
             {
-                copyToHDF5Large(file, writer, hdf5ObjectPath, size, compress);
+                copyToHDF5Large(file, writer, hdf5ObjectPath, size, compression);
             } else
             {
-                copyToHDF5Small(file, writer, hdf5ObjectPath, compress);
+                copyToHDF5Small(file, writer, hdf5ObjectPath, compression);
             }
             writeToConsole(hdf5ObjectPath, verbose);
         } catch (IOException ex)
@@ -742,20 +743,21 @@ public class HDF5ArchiveTools
     }
 
     private static void copyToHDF5Small(File source, HDF5Writer writer, final String objectPath,
-            final boolean compress) throws IOException
+            final HDF5GenericCompression compression) throws IOException
     {
         final byte[] data = FileUtils.readFileToByteArray(source);
-        writer.writeOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, data, compress);
+        writer.writeOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, data, compression);
     }
 
     private static void copyToHDF5Large(File source, final HDF5Writer writer,
-            final String objectPath, final long size, final boolean compress) throws IOException
+            final String objectPath, final long size, final HDF5GenericCompression compression)
+            throws IOException
     {
         final InputStream input = FileUtils.openInputStream(source);
         final byte[] buffer = new byte[FILE_SIZE_THRESHOLD];
         final HDF5OpaqueType type =
                 writer.createOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, size,
-                        FILE_SIZE_THRESHOLD, compress);
+                        FILE_SIZE_THRESHOLD, compression);
         try
         {
             long count = 0;

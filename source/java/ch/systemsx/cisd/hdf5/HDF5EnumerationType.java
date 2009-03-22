@@ -26,7 +26,7 @@ import java.util.Map;
 import ncsa.hdf.hdf5lib.HDFNativeData;
 
 /**
- * A class the represents an enumeration for a given HDF5 file and <var>values</var> array.
+ * A class that represents an enumeration for a given HDF5 file and <var>values</var> array.
  * 
  * @author Bernd Rinn
  */
@@ -37,12 +37,12 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         BYTE(1), SHORT(2), INT(4);
 
         private final byte storageSize;
-        
+
         StorageFormEnum(int storageSize)
         {
             this.storageSize = (byte) storageSize;
         }
-        
+
         byte getStorageSize()
         {
             return storageSize;
@@ -146,7 +146,26 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
             return StorageFormEnum.INT;
         }
     }
-    
+
+    byte getNumberOfBits()
+    {
+        final int n = (values.length > 0) ? values.length - 1 : 0;
+        // Binary search - decision tree (5 tests, rarely 6)
+        return (byte) (n < 1 << 15 ? (n < 1 << 7 ? (n < 1 << 3 ? (n < 1 << 1 ? (n < 1 << 0 ? (n < 0 ? 32
+                : 0)
+                : 1)
+                : (n < 1 << 2 ? 2 : 3))
+                : (n < 1 << 5 ? (n < 1 << 4 ? 4 : 5) : (n < 1 << 6 ? 6 : 7)))
+                : (n < 1 << 11 ? (n < 1 << 9 ? (n < 1 << 8 ? 8 : 9) : (n < 1 << 10 ? 10 : 11))
+                        : (n < 1 << 13 ? (n < 1 << 12 ? 12 : 13) : (n < 1 << 14 ? 14 : 15))))
+                : (n < 1 << 23 ? (n < 1 << 19 ? (n < 1 << 17 ? (n < 1 << 16 ? 16 : 17)
+                        : (n < 1 << 18 ? 18 : 19)) : (n < 1 << 21 ? (n < 1 << 20 ? 20 : 21)
+                        : (n < 1 << 22 ? 22 : 23)))
+                        : (n < 1 << 27 ? (n < 1 << 25 ? (n < 1 << 24 ? 24 : 25) : (n < 1 << 26 ? 26
+                                : 27)) : (n < 1 << 29 ? (n < 1 << 28 ? 28 : 29) : (n < 1 << 30 ? 30
+                                : 31)))));
+    }
+
     byte[] toStorageForm(int ordinal)
     {
         switch (getStorageForm())

@@ -431,13 +431,9 @@ class HDF5
     // Data Set
     //
 
-    /**
-     * A constant that specifies that no deflation (gzip compression) should be performed.
-     */
-    final static int NO_DEFLATION = 0;
-
     public int createDataSet(int fileId, long[] dimensions, long[] chunkSizeOrNull, int dataTypeId,
-            int deflateLevel, String dataSetName, StorageLayout layout, ICleanUpRegistry registry)
+            HDF5AbstractCompression compression, String dataSetName, StorageLayout layout,
+            ICleanUpRegistry registry)
     {
         checkMaxLength(dataSetName);
         final int dataSpaceId =
@@ -455,9 +451,23 @@ class HDF5
         {
             dataSetCreationPropertyListId = createDataSetCreationPropertyList(registry);
             setChunkedLayout(dataSetCreationPropertyListId, chunkSizeOrNull);
-            if (deflateLevel != NO_DEFLATION)
+            if (compression.isScaling())
             {
-                setDeflate(dataSetCreationPropertyListId, deflateLevel);
+                final int classTypeId = getClassType(dataTypeId);
+                assert compression.isCompatibleWithDataClass(classTypeId);
+                if (classTypeId == H5T_INTEGER)
+                {
+                    H5Pset_scaleoffset(dataSetCreationPropertyListId, H5Z_SO_INT, compression
+                            .getScalingFactor());
+                } else if (classTypeId == H5T_FLOAT)
+                {
+                    H5Pset_scaleoffset(dataSetCreationPropertyListId, H5Z_SO_FLOAT_DSCALE,
+                            compression.getScalingFactor());
+                }
+            }
+            if (compression.isDeflating())
+            {
+                setDeflate(dataSetCreationPropertyListId, compression.getDeflateLevel());
             }
         } else if (layout == StorageLayout.COMPACT)
         {
@@ -847,14 +857,15 @@ class HDF5
 
     public int createArrayType(int baseTypeId, int length, ICleanUpRegistry registry)
     {
-        final int dataTypeId = H5Tarray_create(baseTypeId, 1, new int[] { length });
+        final int dataTypeId = H5Tarray_create(baseTypeId, 1, new int[]
+            { length });
         registry.registerCleanUp(new Runnable()
-        {
-            public void run()
             {
-                H5Tclose(dataTypeId);
-            }
-        });
+                public void run()
+                {
+                    H5Tclose(dataTypeId);
+                }
+            });
         return dataTypeId;
     }
 
@@ -1020,13 +1031,13 @@ class HDF5
     {
         final int memberTypeId = H5Tget_member_type(compoundDataTypeId, index);
         registry.registerCleanUp(new Runnable()
-        {
-
-            public void run()
             {
-                H5Tclose(memberTypeId);
-            }
-        });
+
+                public void run()
+                {
+                    H5Tclose(memberTypeId);
+                }
+            });
         return memberTypeId;
     }
 
@@ -1406,7 +1417,7 @@ class HDF5
         H5Tget_array_dims(arrayTypeId, dims);
         return dims;
     }
-    
+
     public int createSimpleDataSpace(long[] dimensions, ICleanUpRegistry registry)
     {
         final int dataSpaceId = H5Screate_simple(dimensions.length, dimensions, null);

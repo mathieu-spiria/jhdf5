@@ -34,8 +34,8 @@ interface IHDF5ShortWriter
     public void writeShort(final String objectPath, final short value);
 
     /**
-     * Creates a <code>short</code> array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets.
+     * Creates a <code>short</code> array (of rank 1). Uses a compact storage layout. Should only 
+     * be used for small data sets.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param length The length of the data set to create.
@@ -43,8 +43,8 @@ interface IHDF5ShortWriter
     public void createShortArrayCompact(final String objectPath, final long length);
 
     /**
-     * Writes out a <code>short</code> array (of rank 1). Uses a compact storage layout. Should only
-     * be used for small data sets.
+     * Writes out a <code>short</code> array (of rank 1). Uses a compact storage layout. Should 
+     * only be used for small data sets.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
@@ -64,9 +64,10 @@ interface IHDF5ShortWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
+     * @param compression The compression parameters of the data set.
      */
-    public void writeShortArray(final String objectPath, final short[] data, final boolean deflate);
+    public void writeShortArray(final String objectPath, final short[] data, 
+            final HDF5IntCompression compression);
 
     /**
      * Creates a <code>short</code> array (of rank 1).
@@ -89,20 +90,21 @@ interface IHDF5ShortWriter
      *          set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
      *          sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>deflate == false</code>.
-     * @param deflate If <code>true</code>, the data set will be compressed.
+     *                <code>compression</code> is <code>HDF5IntCompression.NO_COMPRESSION</code>.
+     * @param compression The compression parameters of the data set.
      */
     public void createShortArray(final String objectPath, final long size, final int blockSize,
-            final boolean deflate);
+            final HDF5IntCompression compression);
 
     /**
-     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createShortArray(String, long, int, boolean)} beforehand.
+     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
+     * been created by {@link #createShortArray(String, long, int, HDF5IntCompression)}
+     * beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createShortArray(String, long, int, boolean)} call that was used to create the data
-     * set.
+     * {@link #createShortArray(String, long, int, HDF5IntCompression)} call that was used to
+     * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -113,23 +115,24 @@ interface IHDF5ShortWriter
             final long blockNumber);
 
     /**
-     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createShortArray(String, long, int, boolean)} beforehand.
+     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
+     * been created by {@link #createShortArray(String, long, int, HDF5IntCompression)}
+     * beforehand.
      * <p>
-     * Use this method instead of {@link #writeShortArrayBlock(String, short[], long)} if the total
-     * size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeShortArrayBlock(String, short[], long)} if the
+     * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createShortArray(String, long, int, boolean)} call that was used to create the data
-     * set.
+     * {@link #createShortArray(String, long, int, HDF5IntCompression)} call that was used to
+     * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
      *            )
-     * @param offset The offset in the data set  to start writing to.
+     * @param offset The offset in the data set to start writing to.
      */
     public void writeShortArrayBlockWithOffset(final String objectPath, final short[] data,
             final int dataSize, final long offset);
@@ -149,9 +152,10 @@ interface IHDF5ShortWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
+     * @param compression The compression parameters of the data set.
      */
-    public void writeShortMatrix(final String objectPath, final short[][] data, final boolean deflate);
+    public void writeShortMatrix(final String objectPath, final short[][] data, 
+            final HDF5IntCompression compression);
 
     /**
      * Creates a <code>short</code> matrix (array of rank 2).
@@ -173,23 +177,24 @@ interface IHDF5ShortWriter
      * @param sizeY The size of the y dimension of the short matrix to create.
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
-     * @param deflate If <code>true</code>, the data set will be compressed.
+     * @param compression The compression parameters of the data set.
      */
     public void createShortMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final boolean deflate);
+            final int blockSizeX, final int blockSizeY, final HDF5IntCompression compression);
 
     /**
      * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createShortMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
+     * have been created by
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntCompression)} beforehand.
      * <p>
-     * Use this method instead of {@link #createShortMatrix(String, long, long, int, int, boolean)}
-     * if the total size of the data set is not a multiple of the block size.
+     * Use this method instead of
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntCompression)} if the total
+     * size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
      * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createShortMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntCompression)} call that was
+     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -204,16 +209,16 @@ interface IHDF5ShortWriter
 
     /**
      * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createShortMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
+     * have been created by
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntCompression)} beforehand.
      * <p>
      * Use this method instead of {@link #writeShortMatrixBlock(String, short[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createShortMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntCompression)} call that was
+     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
@@ -225,16 +230,16 @@ interface IHDF5ShortWriter
 
     /**
      * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
-     * have been created by {@link #createShortMatrix(String, long, long, int, int, boolean)}
-     * beforehand.
+     * have been created by
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntCompression)} beforehand.
      * <p>
      * Use this method instead of {@link #writeShortMatrixBlock(String, short[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createShortMatrix(String, long, long, int, int, boolean)} call that was used to
-     * create the data set.
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntCompression)} call that was
+     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
@@ -263,10 +268,10 @@ interface IHDF5ShortWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param deflate If <code>true</code>, the data set will be compressed.
+     * @param compression The compression parameters of the data set.
      */
     public void writeShortMDArray(final String objectPath, final MDShortArray data,
-            final boolean deflate);
+            final HDF5IntCompression compression);
 
     /**
      * Creates a multi-dimensional <code>short</code> array.
@@ -284,10 +289,10 @@ interface IHDF5ShortWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The dimensions of the array.
      * @param blockDimensions The dimensions of one block (chunk) of the array.
-     * @param deflate If <code>true</code>, the data set will be compressed.
+     * @param compression The compression parameters of the data set.
      */
     public void createShortMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final boolean deflate);
+            final int[] blockDimensions, final HDF5IntCompression compression);
 
     /**
      * Writes out a block of a multi-dimensional <code>short</code> array.

@@ -17,6 +17,13 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
+import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_AUTO_SCALING;
+import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_AUTO_SCALING_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5FloatCompression.FLOAT_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5FloatCompression.FLOAT_SCALING1_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5GenericCompression.GENERIC_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5GenericCompression.GENERIC_DEFLATE_MAX;
 import static org.testng.AssertJUnit.*;
 
 import java.io.File;
@@ -28,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import ncsa.hdf.hdf5lib.H5;
@@ -117,6 +125,8 @@ public class HDF5RoundtripTest
         test.testAccessClosedReaderWriter();
         test.testDataSetsNonExtendable();
         test.testOverwriteContiguousDataSet();
+        test.testScaleOffsetFilterInt();
+        test.testScaleOffsetFilterFloat();
         test.testStringArray();
         test.testStringCompression();
         test.testStringArrayCompression();
@@ -201,6 +211,8 @@ public class HDF5RoundtripTest
         test.testEnumArray();
         test.testEnumArrayFromIntArray();
         test.testEnumArray16BitFromIntArray();
+        test.testEnumArray16BitFromIntArrayLarge();
+        test.testEnumArrayScaleCompression();
         test.testOpaqueType();
         test.testCompound();
         test.testCompoundOverflow();
@@ -519,11 +531,11 @@ public class HDF5RoundtripTest
         final byte[] byteDataWritten = new byte[]
             { 0, -1, 1, -128, 127 };
         final String byteDatasetName = "/Group2/bytes";
-        writer.writeByteArray(byteDatasetName, byteDataWritten, true);
+        writer.writeByteArray(byteDatasetName, byteDataWritten, INT_DEFLATE);
         final short[] shortDataWritten = new short[]
             { 0, -1, 1, -128, 127 };
         final String shortDatasetName = "/Group2/shorts";
-        writer.writeShortArray(shortDatasetName, shortDataWritten, true);
+        writer.writeShortArray(shortDatasetName, shortDataWritten, INT_DEFLATE);
         writer.flush();
         final String stringDataWritten = "Some Random String";
         final String stringDatasetName = "/Group3/strings";
@@ -542,6 +554,48 @@ public class HDF5RoundtripTest
         assertTrue(Arrays.equals(shortDataWritten, shortDataRead));
         final String stringDataRead = reader.readString(stringDatasetName);
         assertEquals(stringDataWritten, stringDataRead);
+        reader.close();
+    }
+
+    @Test
+    public void testScaleOffsetFilterInt()
+    {
+        final File datasetFile = new File(workingDirectory, "scaleoffsetfilterint.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final int[] intWritten = new int[1000000];
+        for (int i = 0; i < intWritten.length; ++i)
+        {
+            intWritten[i] = (i % 4);
+        }
+        writer.writeIntArray("ds", intWritten, INT_AUTO_SCALING_DEFLATE);
+        writer.close();
+        final HDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final int[] intRead = reader.readIntArray("ds");
+        assertTrue(Arrays.equals(intRead, intWritten));
+        reader.close();
+    }
+
+    @Test
+    public void testScaleOffsetFilterFloat()
+    {
+        final File datasetFile = new File(workingDirectory, "scaleoffsetfilterfloat.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final HDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final float[] floatWritten = new float[1000000];
+        for (int i = 0; i < floatWritten.length; ++i)
+        {
+            floatWritten[i] = (i % 10) / 10f;
+        }
+        writer.writeFloatArray("ds", floatWritten, FLOAT_SCALING1_DEFLATE);
+        writer.close();
+        final HDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final float[] floatRead = reader.readFloatArray("ds");
+        assertTrue(Arrays.equals(floatRead, floatWritten));
         reader.close();
     }
 
@@ -630,7 +684,8 @@ public class HDF5RoundtripTest
             { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f };
         writer.writeFloatArray(floatDatasetName, floatDataWritten);
         final String compressedFloatDatasetName = "/Group1/floatsCompressed";
-        writer.writeFloatArray(compressedFloatDatasetName, floatDataWritten, true);
+        writer.writeFloatArray(compressedFloatDatasetName, floatDataWritten,
+                FLOAT_DEFLATE);
         final long[] longDataWritten = new long[]
             { 10, -1000000, 1, 0, 100000000000L };
         final String longDatasetName = "/Group2/longs";
@@ -645,11 +700,11 @@ public class HDF5RoundtripTest
                 longDataWrittenAboveCompactThreshold);
         final String longDatasetNameAboveCompactThresholdCompress = "/Group2/longsChunked";
         writer.writeLongArray(longDatasetNameAboveCompactThresholdCompress,
-                longDataWrittenAboveCompactThreshold, true);
+                longDataWrittenAboveCompactThreshold, INT_DEFLATE);
         final byte[] byteDataWritten = new byte[]
             { 0, -1, 1, -128, 127 };
         final String byteDatasetName = "/Group2/bytes";
-        writer.writeByteArray(byteDatasetName, byteDataWritten, true);
+        writer.writeByteArray(byteDatasetName, byteDataWritten, INT_DEFLATE);
         final String stringDataWritten = "Some Random String";
         final String stringDatasetName = "/Group3/strings";
         final String stringDatasetName2 = "/Group4/strings";
@@ -1005,7 +1060,7 @@ public class HDF5RoundtripTest
         final int size = 100;
         final int blockSize = 10;
         final int numberOfBlocks = 10;
-        writer.createByteArray(dsName, size, blockSize, true);
+        writer.createByteArray(dsName, size, blockSize, INT_DEFLATE);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {
@@ -1035,7 +1090,7 @@ public class HDF5RoundtripTest
         final int size = 99;
         final int blockSize = 10;
         final int numberOfBlocks = 10;
-        writer.createByteArray(dsName, size, blockSize, true);
+        writer.createByteArray(dsName, size, blockSize, INT_DEFLATE);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {
@@ -1073,7 +1128,8 @@ public class HDF5RoundtripTest
         final int blockSize = 10;
         final int numberOfBlocks = 10;
         final HDF5OpaqueType opaqueDataType =
-                writer.createOpaqueByteArray(dsName, "TAG", size, blockSize, true);
+                writer.createOpaqueByteArray(dsName, "TAG", size, blockSize,
+                        GENERIC_DEFLATE_MAX);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {
@@ -1104,7 +1160,8 @@ public class HDF5RoundtripTest
         final int blockSize = 10;
         final int numberOfBlocks = 10;
         final HDF5OpaqueType opaqueDataType =
-                writer.createOpaqueByteArray(dsName, "TAG", size, blockSize, true);
+                writer.createOpaqueByteArray(dsName, "TAG", size, blockSize,
+                        GENERIC_DEFLATE);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {
@@ -1145,7 +1202,8 @@ public class HDF5RoundtripTest
         final int blockSizeY = 5;
         final int numberOfBlocksX = 10;
         final int numberOfBlocksY = 2;
-        writer.createByteMatrix(dsName, sizeX, sizeY, blockSizeX, blockSizeY, true);
+        writer.createByteMatrix(dsName, sizeX, sizeY, blockSizeX, blockSizeY,
+                INT_DEFLATE);
         final byte[][] block = new byte[blockSizeX][blockSizeY];
         for (int i = 0; i < numberOfBlocksX; ++i)
         {
@@ -1188,7 +1246,8 @@ public class HDF5RoundtripTest
         final int blockSizeY = 5;
         final int numberOfBlocksX = 10;
         final int numberOfBlocksY = 3;
-        writer.createByteMatrix(dsName, sizeX, sizeY, blockSizeX, blockSizeY, true);
+        writer.createByteMatrix(dsName, sizeX, sizeY, blockSizeX, blockSizeY,
+                INT_DEFLATE);
         final byte[][] block = new byte[blockSizeX][blockSizeY];
         for (int i = 0; i < numberOfBlocksX; ++i)
         {
@@ -1494,7 +1553,7 @@ public class HDF5RoundtripTest
         final int size = 100000;
         final String dataSetName = "/hopefullyCompressedString";
         final String longMonotonousString = StringUtils.repeat("a", size);
-        writer.writeString(dataSetName, longMonotonousString, true);
+        writer.writeString(dataSetName, longMonotonousString, GENERIC_DEFLATE);
         writer.close();
         final HDF5Reader reader = new HDF5ReaderConfigurator(compressedStringFile).reader();
         final String longMonotonousStringStored = reader.readString(dataSetName);
@@ -1518,7 +1577,7 @@ public class HDF5RoundtripTest
         final String[] data = new String[]
             { longMonotonousString, longMonotonousString, longMonotonousString };
         final String dataSetName = "/aHopeFullyCompressedStringArray";
-        writer.writeStringArray(dataSetName, data, size, true);
+        writer.writeStringArray(dataSetName, data, size, GENERIC_DEFLATE_MAX);
         writer.close();
         final HDF5Reader reader = new HDF5ReaderConfigurator(compressedStringArrayFile).reader();
         final String[] dataStored = reader.readStringArray(dataSetName);
@@ -1556,7 +1615,8 @@ public class HDF5RoundtripTest
         {
             b.append("easyToCompress");
         }
-        writer.writeByteArray(stringDatasetName, b.toString().getBytes(), true);
+        writer.writeByteArray(stringDatasetName, b.toString().getBytes(),
+                INT_DEFLATE);
         writer.close();
     }
 
@@ -2146,7 +2206,7 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final HDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
-        writer.createTimeStampArray(timeSeriesDS, 100, 10, true);
+        writer.createTimeStampArray(timeSeriesDS, 100, 10, GENERIC_DEFLATE);
         for (int i = 0; i < 10; ++i)
         {
             writer.writeTimeStampArrayBlock(timeSeriesDS, timeSeries, i);
@@ -2265,7 +2325,7 @@ public class HDF5RoundtripTest
         datasetFile.deleteOnExit();
         final HDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
         writer.createTimeDurationArray(timeDurationSeriesDS, 100, 10, HDF5TimeUnit.MILLISECONDS,
-                true);
+                GENERIC_DEFLATE);
         for (int i = 0; i < 10; ++i)
         {
             writer.writeTimeDurationArrayBlock(timeDurationSeriesDS, timeDurationSeries, i,
@@ -2817,7 +2877,7 @@ public class HDF5RoundtripTest
         HDF5EnumerationValueArray arrayWritten =
                 new HDF5EnumerationValueArray(enumType, new String[]
                     { "TWO", "ONE", "THREE" });
-        writer.writeEnumArray("/testEnum", arrayWritten, false);
+        writer.writeEnumArray("/testEnum", arrayWritten);
         writer.close();
         final HDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
         final HDF5EnumerationValueArray arrayRead = reader.readEnumArray("/testEnum");
@@ -2848,8 +2908,7 @@ public class HDF5RoundtripTest
         final HDF5EnumerationType enumType = createEnum16Bit(writer, enumTypeName);
         final int[] arrayWritten = new int[]
             { 8, 16, 722, 913, 333 };
-        writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten),
-                false);
+        writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten));
         writer.close();
         final HDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
         final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
@@ -2858,6 +2917,72 @@ public class HDF5RoundtripTest
         {
             assertEquals("Index " + i, enumType.getValues().get(arrayWritten[i]),
                     stringArrayRead[i]);
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testEnumArray16BitFromIntArrayLarge()
+    {
+        final File file = new File(workingDirectory, "enumArray16BitFromIntArrayLarge.h5");
+        final String enumTypeName = "testEnum";
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final HDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final HDF5EnumerationType enumType = createEnum16Bit(writer, enumTypeName);
+        final int[] arrayWritten = new int[100];
+        for (int i = 0; i < arrayWritten.length; ++i)
+        {
+            arrayWritten[i] = 10 * i;
+        }
+        writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten));
+        writer.close();
+        final HDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
+        assertEquals(arrayWritten.length, stringArrayRead.length);
+        for (int i = 0; i < stringArrayRead.length; ++i)
+        {
+            assertEquals("Index " + i, enumType.getValues().get(arrayWritten[i]),
+                    stringArrayRead[i]);
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testEnumArrayScaleCompression()
+    {
+        final File file = new File(workingDirectory, "enumArrayScaleCompression.h5");
+        final String enumTypeName = "testEnum";
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final HDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
+            { "A", "C", "G", "T" }, false);
+        final Random rng = new Random();
+        final String[] arrayWrittenString = new String[100000];
+        for (int i = 0; i < arrayWrittenString.length; ++i)
+        {
+            arrayWrittenString[i] = enumType.getValues().get(rng.nextInt(4));
+        }
+        final HDF5EnumerationValueArray arrayWritten =
+                new HDF5EnumerationValueArray(enumType, arrayWrittenString);
+        writer.writeEnumArray("/testEnum", arrayWritten, INT_AUTO_SCALING);
+        writer.close();
+        final HDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final HDF5EnumerationValueArray arrayRead = reader.readEnumArray("/testEnum");
+        enumType = reader.getEnumTypeForObject("/testEnum");
+        final HDF5EnumerationValueArray arrayRead2 = reader.readEnumArray("/testEnum", enumType);
+        final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
+        assertEquals(arrayWritten.getLength(), stringArrayRead.length);
+        assertEquals(arrayWritten.getLength(), arrayRead.getLength());
+        assertEquals(arrayWritten.getLength(), arrayRead2.getLength());
+        for (int i = 0; i < stringArrayRead.length; ++i)
+        {
+            assertEquals("Index " + i, arrayWritten.getValue(i), arrayRead.getValue(i));
+            assertEquals("Index " + i, arrayWritten.getValue(i), arrayRead2.getValue(i));
+            assertEquals("Index " + i, arrayWritten.getValue(i), stringArrayRead[i]);
         }
         reader.close();
     }
@@ -2921,8 +3046,7 @@ public class HDF5RoundtripTest
                     { enumType.tryGetIndexForValue("TWO").byteValue(),
                             enumType.tryGetIndexForValue("ONE").byteValue(),
                             enumType.tryGetIndexForValue("THREE").byteValue() };
-        writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten),
-                false);
+        writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten));
         writer.close();
         final HDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
         final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
@@ -3261,7 +3385,7 @@ public class HDF5RoundtripTest
                                         { 3.14159 }, new short[]
                                         { 1000, 2000 }, new byte[]
                                         { 11, 12, 13, 14 }), };
-        writer.writeCompoundArrayCompact("/testCompound", compoundType, arrayWritten, false);
+        writer.writeCompoundArrayCompact("/testCompound", compoundType, arrayWritten);
         writer.close();
         final HDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
         compoundType = Record.getHDF5Type(reader);
@@ -3285,7 +3409,7 @@ public class HDF5RoundtripTest
         final HDF5Writer writer = new HDF5WriterConfigurator(file).writer();
         HDF5CompoundType<Record> compoundType = Record.getHDF5Type(writer);
         HDF5EnumerationType enumType = writer.getEnumType("someEnumType");
-        writer.createCompoundArray("/testCompound", compoundType, 6, 3, false);
+        writer.createCompoundArray("/testCompound", compoundType, 6, 3);
         Record[] arrayWritten1 =
                 new Record[]
                     {
@@ -3411,7 +3535,7 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }), };
         final MDArray<Record> mdArrayWritten = new MDArray<Record>(arrayWritten, new int[]
             { 2, 2 });
-        writer.writeCompoundMDArray("/testCompound", compoundType, mdArrayWritten, false);
+        writer.writeCompoundMDArray("/testCompound", compoundType, mdArrayWritten);
         writer.close();
         final HDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
         compoundType = Record.getHDF5Type(reader);
@@ -3433,7 +3557,7 @@ public class HDF5RoundtripTest
         HDF5EnumerationType enumType = writer.getEnumType("someEnumType");
         writer.createCompoundMDArray("/testCompound", compoundType, new long[]
             { 2, 2 }, new int[]
-            { 2, 1 }, false);
+            { 2, 1 });
         final Record[] arrayWritten1 =
                 new Record[]
                     {

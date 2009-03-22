@@ -16,7 +16,6 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5.NO_DEFLATION;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.DATATYPE_GROUP;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE;
@@ -99,6 +98,13 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     private final RandomAccessFile fileForSyncing;
 
+    private enum Command
+    {
+        SYNC, CLOSE_ON_EXIT, CLOSE_SYNC, EXIT
+    }
+
+    private final BlockingQueue<Command> commandQueue;
+
     final boolean useExtentableDataTypes;
 
     final boolean overwrite;
@@ -108,13 +114,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
     final boolean useLatestFileFormat;
 
     final int variableLengthStringDataTypeId;
-
-    private enum Command
-    {
-        SYNC, CLOSE_ON_EXIT, CLOSE_SYNC
-    }
-
-    final BlockingQueue<Command> commandQueue;
 
     HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useLatestFileFormat,
             boolean useExtentableDataTypes, boolean overwrite, SyncMode syncMode)
@@ -158,6 +157,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
                                     return;
                                 case CLOSE_SYNC:
                                     closeSync();
+                                    return;
+                                case EXIT:
                                     return;
                             }
                         } catch (InterruptedException ex)
@@ -267,9 +268,16 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 syncNow();
             }
 
-            // End syncer thread and avoid a race condition for non-blocking sync modes as the
-            // syncer thread still may want to use the fileForSynching
-            commandQueue.add(Command.CLOSE_SYNC);
+            if (EnumSet.complementOf(NON_BLOCKING_SYNC_MODES).contains(syncMode))
+            {
+                closeSync();
+                commandQueue.add(Command.EXIT);
+            } else
+            {
+                // End syncer thread and avoid a race condition for non-blocking sync modes as the
+                // syncer thread still may want to use the fileForSynching
+                commandQueue.add(Command.CLOSE_SYNC);
+            }
         }
     }
 
@@ -368,17 +376,20 @@ final class HDF5BaseWriter extends HDF5BaseReader
     /**
      * Creates a data set.
      */
-    int createDataSet(final String objectPath, final int storageDataTypeId, final int deflateLevel,
-            final long[] dimensions, final long[] chunkSizeOrNull, boolean enforceCompactLayout,
-            ICleanUpRegistry registry)
+    /**
+     * Creates a data set.
+     */
+    int createDataSet(final String objectPath, final int storageDataTypeId,
+            final HDF5AbstractCompression compression, final long[] dimensions, final long[] chunkSizeOrNull,
+            boolean enforceCompactLayout, ICleanUpRegistry registry)
     {
         final int dataSetId;
-        final boolean deflate = (deflateLevel != NO_DEFLATION);
         final boolean empty = isEmpty(dimensions);
         final long[] definitiveChunkSizeOrNull;
         if (empty)
         {
-            definitiveChunkSizeOrNull = HDF5Utils.tryGetChunkSize(dimensions, deflate, true);
+            definitiveChunkSizeOrNull =
+                    HDF5Utils.tryGetChunkSize(dimensions, compression.requiresChunking(), true);
         } else if (enforceCompactLayout)
         {
             definitiveChunkSizeOrNull = null;
@@ -388,14 +399,15 @@ final class HDF5BaseWriter extends HDF5BaseReader
         } else
         {
             definitiveChunkSizeOrNull =
-                    HDF5Utils.tryGetChunkSize(dimensions, deflate, useExtentableDataTypes);
+                    HDF5Utils.tryGetChunkSize(dimensions, compression.requiresChunking(),
+                            useExtentableDataTypes);
         }
         final StorageLayout layout =
                 determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull,
                         enforceCompactLayout);
         dataSetId =
                 h5.createDataSet(fileId, dimensions, definitiveChunkSizeOrNull, storageDataTypeId,
-                        deflateLevel, objectPath, layout, registry);
+                        compression, objectPath, layout, registry);
         return dataSetId;
     }
 
@@ -452,8 +464,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
     /**
      * Returns the data set id for the given <var>objectPath</var>.
      */
-    int getDataSetId(final String objectPath, final int storageDataTypeId, long[] dimensions,
-            final int deflateLevel, ICleanUpRegistry registry)
+    int getDataSetId(final String objectPath, final int storageDataTypeId, final long[] dimensions,
+            final HDF5AbstractCompression compression, ICleanUpRegistry registry)
     {
         final int dataSetId;
         if (h5.exists(fileId, objectPath))
@@ -477,7 +489,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         } else
         {
             dataSetId =
-                    createDataSet(objectPath, storageDataTypeId, deflateLevel, dimensions, null,
+                    createDataSet(objectPath, storageDataTypeId, compression, dimensions, null,
                             false, registry);
         }
         return dataSetId;

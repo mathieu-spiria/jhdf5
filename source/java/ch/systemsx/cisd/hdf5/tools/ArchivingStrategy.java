@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
+
 /**
  * A class that represents a strategy for excluding files from archiving / extracting and for
  * compressing files in the archive.
@@ -37,7 +39,7 @@ public class ArchivingStrategy
     private List<Pattern> dirBlackListOrNull;
 
     private List<Pattern> compressionWhiteListOrNull;
-    
+
     private boolean compressAll;
 
     public final void setCompressAll(boolean compressAll)
@@ -53,7 +55,7 @@ public class ArchivingStrategy
         }
         return fileWhiteListOrNull;
     }
-    
+
     private List<Pattern> getOrCreateFileBlackList()
     {
         if (fileBlackListOrNull == null)
@@ -62,7 +64,7 @@ public class ArchivingStrategy
         }
         return fileBlackListOrNull;
     }
-    
+
     private List<Pattern> getOrCreateDirWhiteList()
     {
         if (dirWhiteListOrNull == null)
@@ -71,7 +73,7 @@ public class ArchivingStrategy
         }
         return dirWhiteListOrNull;
     }
-    
+
     private List<Pattern> getOrCreateDirBlackList()
     {
         if (dirBlackListOrNull == null)
@@ -80,7 +82,7 @@ public class ArchivingStrategy
         }
         return dirBlackListOrNull;
     }
-    
+
     private List<Pattern> getOrCreateCompressionWhiteList()
     {
         if (compressionWhiteListOrNull == null)
@@ -89,7 +91,7 @@ public class ArchivingStrategy
         }
         return compressionWhiteListOrNull;
     }
-    
+
     public ArchivingStrategy addToFileWhiteList(Pattern pattern)
     {
         getOrCreateFileWhiteList().add(pattern);
@@ -154,7 +156,7 @@ public class ArchivingStrategy
     {
         return true;
     }
-    
+
     public boolean doExclude(String path, boolean isDirectory)
     {
         if (isDirectory)
@@ -166,18 +168,19 @@ public class ArchivingStrategy
         }
     }
 
-    public boolean doCompress(String path)
+    public HDF5GenericCompression doCompress(String path)
     {
         if (compressAll)
         {
-            return true;
+            return HDF5GenericCompression.GENERIC_DEFLATE;
         }
         if (compressionWhiteListOrNull == null)
         {
-            return false;
+            return HDF5GenericCompression.GENERIC_NO_COMPRESSION;
         } else
         {
-            return match(null, compressionWhiteListOrNull, path);
+            return match(null, compressionWhiteListOrNull, path) ? HDF5GenericCompression.GENERIC_DEFLATE
+                    : HDF5GenericCompression.GENERIC_NO_COMPRESSION;
         }
     }
 
