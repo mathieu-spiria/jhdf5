@@ -193,9 +193,15 @@ public class HDF5ArchiverMain
         }
     }
 
+    private boolean helpPrinted = false;
+    
     @Option(longName = "help", skipForExample = true, usage = "Shows this help text")
     void printHelp(final boolean dummy)
     {
+        if (helpPrinted)
+        {
+            return;
+        }
         parser.printHelp("h5ar", "[option [...]]",
                 "[ARCHIVE <archive_file> <item-to-archive> [...] | "
                         + "EXTRACT <archive_file> [<item-to-unarchive> [...]] | "
@@ -205,6 +211,7 @@ public class HDF5ArchiverMain
                 .println("Command aliases: ARCHIVE: A, AR; EXTRACT: E, EX; DELETE: D, REMOVE, RM; LIST: L, LS");
         System.err.println("Example: h5ar" + parser.printExample(ExampleMode.ALL)
                 + " ARCHIVE archive.h5ar .");
+        helpPrinted = true;
     }
 
     private void createArchiver()
@@ -319,7 +326,6 @@ public class HDF5ArchiverMain
                     }
                     break;
                 case HELP: // Can't happen any more at this point
-                    printHelp(true);
                     break;
             }
             return true;
