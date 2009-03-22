@@ -1730,6 +1730,42 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pset_1deflate
 
 /*
  * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Pset_nbit
+ * Signature: (I)B
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pset_1nbit
+  (JNIEnv *env, jclass clss, jint plist)
+{
+    herr_t retValue;
+    retValue = H5Pset_nbit((hid_t)plist);
+    if (retValue < 0) {
+        h5libraryError(env);
+        return JNI_FALSE;
+    }
+
+    return (jint)retValue;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Pset_scaleoffset
+ * Signature: (III)B
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pset_1scaleoffset
+  (JNIEnv *env, jclass clss, jint plist, jint scale_type, jint scale_factor)
+{
+    herr_t retValue;
+    retValue = H5Pset_scaleoffset((hid_t)plist, scale_type, scale_factor);
+    if (retValue < 0) {
+        h5libraryError(env);
+        return JNI_FALSE;
+    }
+
+    return (jint)retValue;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
  * Method:    H5Pset_gc_references
  * Signature: (II)I
  */

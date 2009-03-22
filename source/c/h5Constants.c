@@ -523,6 +523,9 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_J2C
         case JH5Z_NO_EDC  : return  H5Z_NO_EDC;
         case JH5Z_FILTER_CONFIG_ENCODE_ENABLED  : return  H5Z_FILTER_CONFIG_ENCODE_ENABLED;
         case JH5Z_FILTER_CONFIG_DECODE_ENABLED  : return  H5Z_FILTER_CONFIG_DECODE_ENABLED;
+        case JH5Z_SO_INT : return H5Z_SO_INT;
+        case JH5Z_SO_FLOAT_DSCALE : return H5Z_SO_FLOAT_DSCALE;
+        case JH5Z_SO_FLOAT_ESCALE : return H5Z_SO_FLOAT_ESCALE;
 
         default:
             h5illegalConstantError(env);

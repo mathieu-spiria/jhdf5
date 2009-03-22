@@ -962,6 +962,12 @@ public class HDF5Constants
     final private static int JH5Z_MAX_NFILTERS = 5470;
 
     final private static int JH5Z_NO_EDC = 5480;
+    
+    final private static int JH5Z_SO_INT = 5481;
+
+    final private static int JH5Z_SO_FLOAT_DSCALE = 5482;
+
+    final private static int JH5Z_SO_FLOAT_ESCALE = 5483;
 
     final private static int JH5Z_FILTER_CONFIG_ENCODE_ENABLED = 5490;
 
@@ -1911,6 +1917,12 @@ public class HDF5Constants
 
     final public static int H5Z_NO_EDC = H5.J2C(JH5Z_NO_EDC);
 
+    final public static int H5Z_SO_INT = H5.J2C(JH5Z_SO_INT);
+    
+    final public static int H5Z_SO_FLOAT_DSCALE = H5.J2C(JH5Z_SO_FLOAT_DSCALE);
+    
+    final public static int H5Z_SO_FLOAT_ESCALE = H5.J2C(JH5Z_SO_FLOAT_ESCALE);
+    
     final public static int H5Z_FILTER_CONFIG_ENCODE_ENABLED =
             H5.J2C(JH5Z_FILTER_CONFIG_ENCODE_ENABLED);
 

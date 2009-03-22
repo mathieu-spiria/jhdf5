@@ -1852,6 +1852,35 @@ public class H5
             throws HDF5LibraryException;
 
     /**
+     * H5Pset_nbit sets the compression method for a dataset to n-bits.
+     * <p>
+     * Keeps only n-bits from an integer or float value.
+     * 
+     * @param plist IN: Identifier for the dataset creation property list.
+     * @return non-negative if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     */
+    public synchronized static native int H5Pset_nbit(int plist) throws HDF5LibraryException;
+
+    /**
+     * H5Pset_scaleoffset sets the compression method for a dataset to scale_offset.
+     * <p>
+     * Generally speaking, Scale-Offset compression performs a scale and/or offset operation on each
+     * data value and truncates the resulting value to a minimum number of bits (MinBits) before
+     * storing it. The current Scale-Offset filter supports integer and floating-point datatype.
+     * 
+     * @param plist IN: Identifier for the dataset creation property list.
+     * @param scale_type IN: One of {@link HDF5Constants#H5Z_SO_INT},
+     *            {@link HDF5Constants#H5Z_SO_FLOAT_DSCALE} or
+     *            {@link HDF5Constants#H5Z_SO_FLOAT_ESCALE}. Note that
+     *            {@link HDF5Constants#H5Z_SO_FLOAT_ESCALE} is not implemented as of HDF5 1.8.2.
+     * @return non-negative if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     */
+    public synchronized static native int H5Pset_scaleoffset(int plist, int scale_type,
+            int scale_factor) throws HDF5LibraryException;
+
+    /**
      * H5Pset_gc_references Sets the flag for garbage collecting references for the file. Default
      * value for garbage collecting references is off.
      * 
