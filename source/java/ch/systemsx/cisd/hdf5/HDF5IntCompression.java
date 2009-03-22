@@ -92,7 +92,7 @@ public final class HDF5IntCompression extends HDF5AbstractCompression
             new HDF5IntCompression(DEFAULT_DEFLATION_LEVEL, INTEGER_AUTO_SCALING_FACTOR);
 
     /**
-     * Creates a {@Link Compression} object that represents deflation with the given
+     * Creates a {@link HDF5IntCompression} object that represents deflation with the given
      * <var>deflationLevel</var>.
      */
     public static HDF5IntCompression createDeflation(int deflationLevel)
@@ -113,7 +113,7 @@ public final class HDF5IntCompression extends HDF5AbstractCompression
     }
 
     /**
-     * Creates a {@Link Compression} object that represents integer scaling with the given
+     * Creates a {@link HDF5IntCompression} object that represents integer scaling with the given
      * <var>scalingFactor</var>.
      */
     public static HDF5IntCompression createIntegerScaling(int scalingFactor)
@@ -128,7 +128,7 @@ public final class HDF5IntCompression extends HDF5AbstractCompression
     }
 
     /**
-     * Creates a {@Link Compression} object that represents deflation with the default
+     * Creates a {@link HDF5IntCompression} object that represents deflation with the default
      * deflation level and integer scaling with the given <var>scalingFactor</var>.
      */
     public static HDF5IntCompression createDeflateAndIntegerScaling(int scalingFactor)
@@ -137,7 +137,7 @@ public final class HDF5IntCompression extends HDF5AbstractCompression
     }
 
     /**
-     * Creates a {@Link Compression} object that represents deflation with the given
+     * Creates a {@link HDF5IntCompression} object that represents deflation with the given
      * <var>deflateLevel</var> and integer scaling with the given <var>scalingFactor</var>.
      */
     public static HDF5IntCompression createDeflateAndIntegerScaling(int deflateLevel,

@@ -47,7 +47,7 @@ public final class HDF5GenericCompression extends HDF5AbstractCompression
             new HDF5GenericCompression(MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
-     * Creates a {@Link Compression} object that represents deflation with the given
+     * Creates a {@link HDF5GenericCompression} object that represents deflation with the given
      * <var>deflationLevel</var>.
      */
     public static HDF5GenericCompression createDeflation(int deflationLevel)

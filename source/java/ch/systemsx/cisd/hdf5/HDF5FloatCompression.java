@@ -108,7 +108,7 @@ public final class HDF5FloatCompression extends HDF5AbstractCompression
             new HDF5FloatCompression(DEFAULT_DEFLATION_LEVEL, (byte) 3);
 
     /**
-     * Creates a {@Link Compression} object that represents deflation with the given
+     * Creates a {@link HDF5FloatCompression} object that represents deflation with the given
      * <var>deflationLevel</var>.
      */
     public static HDF5FloatCompression createDeflation(int deflationLevel)
@@ -129,7 +129,7 @@ public final class HDF5FloatCompression extends HDF5AbstractCompression
     }
 
     /**
-     * Creates a {@Link Compression} object that represents float scaling with the given
+     * Creates a {@link HDF5FloatCompression} object that represents float scaling with the given
      * <var>scalingFactor</var>.
      */
     public static HDF5FloatCompression createFloatScaling(int scalingFactor)
@@ -138,7 +138,7 @@ public final class HDF5FloatCompression extends HDF5AbstractCompression
     }
 
     /**
-     * Creates a {@Link Compression} object that represents deflation with the default
+     * Creates a {@link HDF5FloatCompression} object that represents deflation with the default
      * deflation level and float scaling with the given <var>scalingFactor</var>.
      */
     public static HDF5FloatCompression createDeflateAndFloatScaling(int scalingFactor)
@@ -147,7 +147,7 @@ public final class HDF5FloatCompression extends HDF5AbstractCompression
     }
 
     /**
-     * Creates a {@Link Compression} object that represents deflation with the given
+     * Creates a {@link HDF5FloatCompression} object that represents deflation with the given
      * <var>deflateLevel</var> and float scaling with the given <var>scalingFactor</var>.
      */
     public static HDF5FloatCompression createDeflateAndFloatScaling(int deflateLevel,
