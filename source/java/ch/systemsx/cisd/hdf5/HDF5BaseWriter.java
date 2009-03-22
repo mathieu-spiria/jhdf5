@@ -39,6 +39,7 @@ import ch.systemsx.cisd.common.concurrent.NamingThreadPoolExecutor;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.SyncMode;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
@@ -111,14 +112,14 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     final SyncMode syncMode;
 
-    final boolean useLatestFileFormat;
+    final FileFormat fileFormat;
 
     final int variableLengthStringDataTypeId;
 
-    HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useLatestFileFormat,
+    HDF5BaseWriter(File hdf5File, boolean performNumericConversions, FileFormat fileFormat,
             boolean useExtentableDataTypes, boolean overwrite, SyncMode syncMode)
     {
-        super(hdf5File, performNumericConversions, useLatestFileFormat, overwrite);
+        super(hdf5File, performNumericConversions, fileFormat, overwrite);
         try
         {
             this.fileForSyncing = new RandomAccessFile(hdf5File, "rw");
@@ -127,7 +128,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             // Should not be happening as openFile() was called in super()
             throw new HDF5JavaException("Cannot open RandomAccessFile: " + ex.getMessage());
         }
-        this.useLatestFileFormat = useExtentableDataTypes;
+        this.fileFormat = fileFormat;
         this.useExtentableDataTypes = useExtentableDataTypes;
         this.overwrite = overwrite;
         this.syncMode = syncMode;
@@ -174,11 +175,13 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     @Override
-    int openFile(boolean useLatestFileFormatInit, boolean overwriteInit)
+    int openFile(FileFormat fileFormatInit, boolean overwriteInit)
     {
+        final boolean enforce_1_8 = (fileFormat == FileFormat.STRICTLY_1_8);
         if (hdf5File.exists() && overwriteInit == false)
         {
-            return h5.openFileReadWrite(hdf5File.getPath(), useLatestFileFormatInit, fileRegistry);
+            return h5.openFileReadWrite(hdf5File.getPath(), enforce_1_8,
+                    fileRegistry);
         } else
         {
             final File directory = hdf5File.getParentFile();
@@ -187,7 +190,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 throw new HDF5JavaException("Directory '" + directory.getPath()
                         + "' does not exist.");
             }
-            return h5.createFile(hdf5File.getPath(), useLatestFileFormatInit, fileRegistry);
+            return h5.createFile(hdf5File.getPath(), enforce_1_8, fileRegistry);
         }
     }
 
@@ -380,8 +383,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * Creates a data set.
      */
     int createDataSet(final String objectPath, final int storageDataTypeId,
-            final HDF5AbstractCompression compression, final long[] dimensions, final long[] chunkSizeOrNull,
-            boolean enforceCompactLayout, ICleanUpRegistry registry)
+            final HDF5AbstractCompression compression, final long[] dimensions,
+            final long[] chunkSizeOrNull, boolean enforceCompactLayout, ICleanUpRegistry registry)
     {
         final int dataSetId;
         final boolean empty = isEmpty(dimensions);
@@ -407,7 +410,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
                         enforceCompactLayout);
         dataSetId =
                 h5.createDataSet(fileId, dimensions, definitiveChunkSizeOrNull, storageDataTypeId,
-                        compression, objectPath, layout, registry);
+                        compression, objectPath, layout, fileFormat, registry);
         return dataSetId;
     }
 
@@ -475,7 +478,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             // dimensions are not in bound of max dimensions, but the resulting file can
             // no longer be read by HDF5 1.6, thus we may only do it if config.useLatestFileFormat
             // == true.
-            if (areDimensionsInBounds(dataSetId, dimensions) || useLatestFileFormat)
+            if (areDimensionsInBounds(dataSetId, dimensions) || fileFormat.isHDF5_1_8_OK())
             {
                 h5.setDataSetExtent(dataSetId, dimensions);
                 // FIXME 2008-09-15, Bernd Rinn: This is a work-around for an apparent bug in HDF5

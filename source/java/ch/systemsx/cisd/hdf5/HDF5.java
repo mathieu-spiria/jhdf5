@@ -34,6 +34,7 @@ import ch.systemsx.cisd.common.process.CleanUpRegistry;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**
  * A wrapper around {@link ncsa.hdf.hdf5lib.H5} that handles closing of resources automatically by
@@ -101,10 +102,10 @@ class HDF5
         return fileId;
     }
 
-    private int createFileAccessPropertyListId(boolean useLatestFormat, ICleanUpRegistry registry)
+    private int createFileAccessPropertyListId(boolean enforce_1_8, ICleanUpRegistry registry)
     {
         int fileAccessPropertyListId = H5P_DEFAULT;
-        if (useLatestFormat)
+        if (enforce_1_8)
         {
             final int fapl = H5Pcreate(H5P_FILE_ACCESS);
             registry.registerCleanUp(new Runnable()
@@ -133,10 +134,9 @@ class HDF5
         return fileId;
     }
 
-    public int openFileReadWrite(String fileName, boolean useLatestFormat, ICleanUpRegistry registry)
+    public int openFileReadWrite(String fileName, boolean enforce_1_8, ICleanUpRegistry registry)
     {
-        final int fileAccessPropertyListId =
-                createFileAccessPropertyListId(useLatestFormat, registry);
+        final int fileAccessPropertyListId = createFileAccessPropertyListId(enforce_1_8, registry);
         final File f = new File(fileName);
         if (f.exists() && f.isFile() == false)
         {
@@ -433,7 +433,7 @@ class HDF5
 
     public int createDataSet(int fileId, long[] dimensions, long[] chunkSizeOrNull, int dataTypeId,
             HDF5AbstractCompression compression, String dataSetName, StorageLayout layout,
-            ICleanUpRegistry registry)
+            FileFormat fileFormat, ICleanUpRegistry registry)
     {
         checkMaxLength(dataSetName);
         final int dataSpaceId =
@@ -453,6 +453,7 @@ class HDF5
             setChunkedLayout(dataSetCreationPropertyListId, chunkSizeOrNull);
             if (compression.isScaling())
             {
+                compression.checkScalingOK(fileFormat);
                 final int classTypeId = getClassType(dataTypeId);
                 assert compression.isCompatibleWithDataClass(classTypeId);
                 if (classTypeId == H5T_INTEGER)

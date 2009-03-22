@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.commons.lang.time.StopWatch;
 
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.tools.HDF5Archiver;
 
 /**
@@ -46,7 +47,7 @@ public class HDF52Dir
         }
         final StopWatch watch = new StopWatch();
         watch.start();
-        final HDF5Archiver archiver = new HDF5Archiver(hdf5File, true, false, false);
+        final HDF5Archiver archiver = new HDF5Archiver(hdf5File, true, FileFormat.ALLOW_1_8, false);
         archiver.extract(rootDir, pathInFile, true);
         archiver.close();
         watch.stop();

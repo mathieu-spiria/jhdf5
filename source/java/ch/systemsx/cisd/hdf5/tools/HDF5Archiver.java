@@ -23,6 +23,7 @@ import ch.systemsx.cisd.hdf5.HDF5Reader;
 import ch.systemsx.cisd.hdf5.HDF5ReaderConfigurator;
 import ch.systemsx.cisd.hdf5.HDF5Writer;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**
  * An archiver based on HDF5 as archive format for directory with fast random access to particular
@@ -41,7 +42,7 @@ public class HDF5Archiver
 
     private final boolean continueOnError;
 
-    public HDF5Archiver(File archiveFile, boolean readOnly, boolean useLatestFileFormat,
+    public HDF5Archiver(File archiveFile, boolean readOnly, FileFormat fileFormat,
             boolean continueOnError)
     {
         if (readOnly)
@@ -51,10 +52,7 @@ public class HDF5Archiver
         } else
         {
             final HDF5WriterConfigurator config = new HDF5WriterConfigurator(archiveFile);
-            if (useLatestFileFormat)
-            {
-                config.useLatestFileFormat();
-            }
+            config.fileFormat(fileFormat);
             this.hdf5WriterOrNull = config.writer();
             this.hdf5Reader = hdf5WriterOrNull;
         }

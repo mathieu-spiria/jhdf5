@@ -57,6 +57,7 @@ import ch.systemsx.cisd.common.array.MDShortArray;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**
  * A class for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).
@@ -125,12 +126,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     }
 
     /**
-     * Returns <code>true</code>, if the latest file format will be used and <code>false</code>, if
-     * a file format with maximum compatibility will be used.
+     * Returns the {@link FileFormat} compatibility setting for this writer.
      */
-    public boolean isUseLatestFileFormat()
+    public FileFormat getFileFormat()
     {
-        return baseWriter.useLatestFileFormat;
+        return baseWriter.fileFormat;
     }
 
     // /////////////////////
@@ -219,15 +219,15 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
      * Creates an external link, that is a link to a data set in another HDF5 file, the
      * <em>target</em> .
      * <p>
-     * <em>Note: This method is only allowed when the {@link HDF5BaseWriter} was configured with 
-     * {@link HDF5WriterConfigurator#useLatestFileFormat()}.</em>
+     * <em>Note: This method is only allowed when the {@link HDF5BaseWriter} was not configured to 
+     * enforce strict HDF5 1.6 compatibility.</em>
      * 
      * @param targetFileName The name of the file where the data set resides that should be linked.
      * @param targetPath The name of the data set (including path information) in the
      *            <var>targetFileName</var> to create a link to.
      * @param linkPath The name (including path information) of the link to create.
-     * @throws IllegalStateException If the {@link HDF5BaseWriter} was not configured with
-     *             {@link HDF5WriterConfigurator#useLatestFileFormat()}.
+     * @throws IllegalStateException If the {@link HDF5BaseWriter} was configured to enforce strict
+     *             HDF5 1.6 compatibility.
      */
     public void createExternalLink(String targetFileName, String targetPath, String linkPath)
             throws IllegalStateException
@@ -237,9 +237,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         assert linkPath != null;
 
         baseWriter.checkOpen();
-        if (baseWriter.useLatestFileFormat == false)
+        if (baseWriter.fileFormat.isHDF5_1_8_OK() == false)
         {
-            throw new IllegalStateException("External links are not allowed with HDF5 1.6.x files.");
+            throw new IllegalStateException(
+                    "External links are not allowed in strict HDF5 1.6.x compatibility mode.");
         }
         baseWriter.h5.createExternalLink(baseWriter.fileId, linkPath, targetFileName, targetPath);
     }
@@ -250,15 +251,15 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
      * <p>
      * <em>Note: This method will never overwrite a data set, but only a symbolic link.</em>
      * <p>
-     * <em>Note: This method is only allowed when the {@link HDF5BaseWriter} was configured with 
-     * {@link HDF5WriterConfigurator#useLatestFileFormat()}.</em>
+     * <em>Note: This method is only allowed when the {@link HDF5BaseWriter} was not configured to 
+     * enforce strict HDF5 1.6 compatibility.</em>
      * 
      * @param targetFileName The name of the file where the data set resides that should be linked.
      * @param targetPath The name of the data set (including path information) in the
      *            <var>targetFileName</var> to create a link to.
      * @param linkPath The name (including path information) of the link to create.
-     * @throws IllegalStateException If the {@link HDF5BaseWriter} was not configured with
-     *             {@link HDF5WriterConfigurator#useLatestFileFormat()}.
+     * @throws IllegalStateException If the {@link HDF5BaseWriter} was configured to enforce strict
+     *             HDF5 1.6 compatibility.
      */
     public void createOrUpdateExternalLink(String targetFileName, String targetPath, String linkPath)
             throws IllegalStateException
@@ -268,9 +269,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         assert linkPath != null;
 
         baseWriter.checkOpen();
-        if (baseWriter.useLatestFileFormat == false)
+        if (baseWriter.fileFormat.isHDF5_1_8_OK() == false)
         {
-            throw new IllegalStateException("External links are not allowed with HDF5 1.6.x files.");
+            throw new IllegalStateException(
+                    "External links are not allowed in strict HDF5 1.6.x compatibility mode.");
         }
         if (isSymbolicLink(linkPath))
         {
@@ -351,8 +353,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
      * All intermediate groups will be created as well, if they do not already exist.
      * <p>
      * <i>Note: This method creates a "new-style group", that is the type of group of HDF5 1.8 and
-     * above. Thus it will fail, if you didn't configure the file to be
-     * {@link HDF5WriterConfigurator#useLatestFileFormat()}.</i>
+     * above. Thus it will fail, if the writer is configured to enforce HDF5 1.6 compatibility.</i>
      * 
      * @param groupPath The path of the group to create.
      * @param maxCompact When the group grows to more than this number of entries, the library will
@@ -2591,7 +2592,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                                         .createDataSet(baseWriter.fileId,
                                                 HDF5Utils.SCALAR_DIMENSIONS, chunkSizeOrNull,
                                                 stringDataTypeId, compression, objectPath, layout,
-                                                registry);
+                                                baseWriter.fileFormat, registry);
                     }
                     H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             (data + '\0').getBytes());
@@ -2706,7 +2707,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                         dataSetId =
                                 baseWriter.h5.createDataSet(baseWriter.fileId, dimensions,
                                         chunkSizeOrNull, stringDataTypeId, compression, objectPath,
-                                        layout, registry);
+                                        layout, baseWriter.fileFormat, registry);
                     }
                     H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data,
                             maxLength);
@@ -2913,6 +2914,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 {
                     if (compression.isScaling())
                     {
+                        compression.checkScalingOK(baseWriter.fileFormat);
                         final HDF5IntCompression actualCompression =
                                 HDF5IntCompression.createDeflateAndIntegerScaling(compression
                                         .getDeflateLevel(), data.getType().getNumberOfBits());

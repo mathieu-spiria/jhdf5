@@ -17,29 +17,16 @@
 package ch.systemsx.cisd.hdf5;
 
 import java.io.File;
-
 import ch.systemsx.cisd.common.utilities.OSUtilities;
 
 /**
- * The configuration of this writer config is done by chaining calls to methods {@link #overwrite()}
- * , {@link #dontUseExtendableDataTypes()} and {@link #useLatestFileFormat()} before calling
+ * The configuration of the writer is done by chaining calls to configuration methods before calling
  * {@link #writer()}.
  * 
  * @author Bernd Rinn
  */
 public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
 {
-
-    private boolean useExtentableDataTypes = true;
-
-    private boolean overwrite = false;
-
-    private boolean useLatestFileFormat = false;
-
-    // For Windows, use a blocking sync mode by default as otherwise the mandatory locks are up for
-    // some surprises after the file has been closed.
-    private SyncMode syncMode =
-            OSUtilities.isWindows() ? SyncMode.SYNC_ON_FLUSH_BLOCK : SyncMode.SYNC_ON_FLUSH;
 
     /**
      * The mode of synchronizing changes (using a method like <code>fsync(2)</code>) to the HDF5
@@ -79,6 +66,48 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
         SYNC_ON_FLUSH_BLOCK,
     }
 
+    /**
+     * Specify file format compatibility settings.
+     */
+    public enum FileFormat
+    {
+        /**
+         * Enforce compatibility with HDF5 1.6 format.
+         */
+        STRICTLY_1_6,
+
+        /**
+         * Start with HDF5 1.6 format, but allow usage of features which require HDF5 1.8 library to
+         * read. <i>Default</i>.
+         */
+        ALLOW_1_8,
+
+        /**
+         * Enforce compatibility with HDF5 1.8 format.
+         */
+        STRICTLY_1_8;
+        
+        /**
+         * Returns <code>true</code> if using HDF5 1.8 features is OK.
+         */
+        boolean isHDF5_1_8_OK()
+        {
+            return ordinal() > STRICTLY_1_6.ordinal();
+        }
+        
+    }
+
+    private boolean useExtentableDataTypes = true;
+
+    private boolean overwrite = false;
+
+    private FileFormat fileFormat = FileFormat.ALLOW_1_8;
+
+    // For Windows, use a blocking sync mode by default as otherwise the mandatory locks are up for
+    // some surprises after the file has been closed.
+    private SyncMode syncMode =
+            OSUtilities.isWindows() ? SyncMode.SYNC_ON_FLUSH_BLOCK : SyncMode.SYNC_ON_FLUSH;
+
     public HDF5WriterConfigurator(File hdf5File)
     {
         super(hdf5File);
@@ -105,13 +134,11 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
     }
 
     /**
-     * A file will be created that uses the latest available file format. This may improve
-     * performance or space consumption but in general means that older versions of the library are
-     * no longer able to read this file.
+     * Sets the file format compatibility for the writer.
      */
-    public HDF5WriterConfigurator useLatestFileFormat()
+    public HDF5WriterConfigurator fileFormat(FileFormat newFileFormat)
     {
-        this.useLatestFileFormat = true;
+        this.fileFormat = newFileFormat;
         return this;
     }
 
@@ -145,7 +172,7 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
         {
             readerWriterOrNull =
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
-                            useLatestFileFormat, useExtentableDataTypes, overwrite, syncMode));
+                            fileFormat, useExtentableDataTypes, overwrite, syncMode));
         }
         return (HDF5Writer) readerWriterOrNull;
     }

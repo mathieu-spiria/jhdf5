@@ -59,6 +59,7 @@ import ch.systemsx.cisd.common.array.MDFloatArray;
 import ch.systemsx.cisd.common.logging.LogInitializer;
 import ch.systemsx.cisd.common.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.SyncMode;
 
 /**
@@ -576,6 +577,20 @@ public class HDF5RoundtripTest
         final int[] intRead = reader.readIntArray("ds");
         assertTrue(Arrays.equals(intRead, intWritten));
         reader.close();
+
+        // Shouldn't work in strict HDF5 1.6 mode.
+        final HDF5Writer writer2 =
+                new HDF5WriterConfigurator(new File("scaleoffsetfilterintfailed.h5")).fileFormat(
+                        FileFormat.STRICTLY_1_6).writer();
+        try
+        {
+            writer2.writeIntArray("ds", intWritten, INT_AUTO_SCALING_DEFLATE);
+            fail("Usage of scaling compression in strict HDF5 1.6 mode not detected");
+        } catch (IllegalStateException ex)
+        {
+            assertTrue(ex.getMessage().indexOf("not allowed") >= 0);
+        }
+        writer2.close();
     }
 
     @Test
@@ -684,8 +699,7 @@ public class HDF5RoundtripTest
             { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f };
         writer.writeFloatArray(floatDatasetName, floatDataWritten);
         final String compressedFloatDatasetName = "/Group1/floatsCompressed";
-        writer.writeFloatArray(compressedFloatDatasetName, floatDataWritten,
-                FLOAT_DEFLATE);
+        writer.writeFloatArray(compressedFloatDatasetName, floatDataWritten, FLOAT_DEFLATE);
         final long[] longDataWritten = new long[]
             { 10, -1000000, 1, 0, 100000000000L };
         final String longDatasetName = "/Group2/longs";
@@ -798,7 +812,7 @@ public class HDF5RoundtripTest
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
         reader.close();
         // Now write a larger data set and see whether it is correctly extended.
-        writer = new HDF5WriterConfigurator(datasetFile).useLatestFileFormat().writer();
+        writer = new HDF5WriterConfigurator(datasetFile).writer();
         data = new long[]
             { 17, 42, 1, 2, 3 };
         writer.writeLongArray(dsName, data);
@@ -857,7 +871,7 @@ public class HDF5RoundtripTest
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
         reader.close();
         // Now write a larger data set and see whether the data set is correctly extended.
-        writer = new HDF5WriterConfigurator(datasetFile).useLatestFileFormat().writer();
+        writer = new HDF5WriterConfigurator(datasetFile).writer();
         data = new long[]
             { 17, 42, 1, 2, 3 };
         writer.writeLongArray(dsName, data);
@@ -1128,8 +1142,7 @@ public class HDF5RoundtripTest
         final int blockSize = 10;
         final int numberOfBlocks = 10;
         final HDF5OpaqueType opaqueDataType =
-                writer.createOpaqueByteArray(dsName, "TAG", size, blockSize,
-                        GENERIC_DEFLATE_MAX);
+                writer.createOpaqueByteArray(dsName, "TAG", size, blockSize, GENERIC_DEFLATE_MAX);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {
@@ -1160,8 +1173,7 @@ public class HDF5RoundtripTest
         final int blockSize = 10;
         final int numberOfBlocks = 10;
         final HDF5OpaqueType opaqueDataType =
-                writer.createOpaqueByteArray(dsName, "TAG", size, blockSize,
-                        GENERIC_DEFLATE);
+                writer.createOpaqueByteArray(dsName, "TAG", size, blockSize, GENERIC_DEFLATE);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {
@@ -1202,8 +1214,7 @@ public class HDF5RoundtripTest
         final int blockSizeY = 5;
         final int numberOfBlocksX = 10;
         final int numberOfBlocksY = 2;
-        writer.createByteMatrix(dsName, sizeX, sizeY, blockSizeX, blockSizeY,
-                INT_DEFLATE);
+        writer.createByteMatrix(dsName, sizeX, sizeY, blockSizeX, blockSizeY, INT_DEFLATE);
         final byte[][] block = new byte[blockSizeX][blockSizeY];
         for (int i = 0; i < numberOfBlocksX; ++i)
         {
@@ -1246,8 +1257,7 @@ public class HDF5RoundtripTest
         final int blockSizeY = 5;
         final int numberOfBlocksX = 10;
         final int numberOfBlocksY = 3;
-        writer.createByteMatrix(dsName, sizeX, sizeY, blockSizeX, blockSizeY,
-                INT_DEFLATE);
+        writer.createByteMatrix(dsName, sizeX, sizeY, blockSizeX, blockSizeY, INT_DEFLATE);
         final byte[][] block = new byte[blockSizeX][blockSizeY];
         for (int i = 0; i < numberOfBlocksX; ++i)
         {
@@ -1615,8 +1625,7 @@ public class HDF5RoundtripTest
         {
             b.append("easyToCompress");
         }
-        writer.writeByteArray(stringDatasetName, b.toString().getBytes(),
-                INT_DEFLATE);
+        writer.writeByteArray(stringDatasetName, b.toString().getBytes(), INT_DEFLATE);
         writer.close();
     }
 
@@ -2754,8 +2763,7 @@ public class HDF5RoundtripTest
         linkFile.delete();
         assertFalse(linkFile.exists());
         linkFile.deleteOnExit();
-        final HDF5Writer writer2 =
-                new HDF5WriterConfigurator(linkFile).useLatestFileFormat().writer();
+        final HDF5Writer writer2 = new HDF5WriterConfigurator(linkFile).writer();
         final String linkName = "/data/link";
         writer2.createExternalLink(fileToLinkTo.getPath(), dataSetName, linkName);
         writer2.close();
@@ -2985,6 +2993,24 @@ public class HDF5RoundtripTest
             assertEquals("Index " + i, arrayWritten.getValue(i), stringArrayRead[i]);
         }
         reader.close();
+
+        // Shouldn't work in strict HDF5 1.6 mode.
+        final HDF5Writer writer2 =
+                new HDF5WriterConfigurator(new File("scaleoffsetfilterintfailed.h5")).fileFormat(
+                        FileFormat.STRICTLY_1_6).writer();
+        HDF5EnumerationType enumType2 = writer2.getEnumType(enumTypeName, new String[]
+            { "A", "C", "G", "T" }, false);
+        final HDF5EnumerationValueArray arrayWritten2 =
+                new HDF5EnumerationValueArray(enumType2, arrayWrittenString);
+        try
+        {
+            writer2.writeEnumArray("/testEnum", arrayWritten2, INT_AUTO_SCALING);
+            fail("Usage of scaling compression in strict HDF5 1.6 mode not detected");
+        } catch (IllegalStateException ex)
+        {
+            assertTrue(ex.getMessage().indexOf("not allowed") >= 0);
+        }
+        writer2.close();
     }
 
     @Test

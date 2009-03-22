@@ -42,6 +42,7 @@ import ch.systemsx.cisd.common.process.CleanUpRegistry;
 import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
 import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**
  * Class that provides base methods for reading HDF5 files.
@@ -78,7 +79,7 @@ class HDF5BaseReader
 
     protected State state;
 
-    HDF5BaseReader(File hdf5File, boolean performNumericConversions, boolean useLatestFileFormat,
+    HDF5BaseReader(File hdf5File, boolean performNumericConversions, FileFormat fileFormat,
             boolean overwrite)
     {
         assert hdf5File != null;
@@ -89,14 +90,14 @@ class HDF5BaseReader
         this.fileRegistry = new CleanUpRegistry();
         this.namedDataTypeMap = new HashMap<String, Integer>();
         h5 = new HDF5(fileRegistry, performNumericConversions);
-        fileId = openFile(useLatestFileFormat, overwrite);
+        fileId = openFile(fileFormat, overwrite);
         state = State.OPEN;
         readNamedDataTypes();
         booleanDataTypeId = openOrCreateBooleanDataType();
         typeVariantDataType = openOrCreateTypeVariantDataType();
     }
 
-    int openFile(boolean useLatestFileFormat, boolean overwrite)
+    int openFile(FileFormat fileFormat, boolean overwrite)
     {
         if (hdf5File.exists() == false)
         {

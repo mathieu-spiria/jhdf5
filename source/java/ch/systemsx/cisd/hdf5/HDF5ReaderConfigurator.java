@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5;
 import java.io.File;
 
 import ch.systemsx.cisd.common.utilities.OSUtilities;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**
  * If you want the reader to perform numeric conversions, call {@link #performNumericConversions()}
@@ -80,8 +81,8 @@ public class HDF5ReaderConfigurator
         if (readerWriterOrNull == null)
         {
             readerWriterOrNull =
-                    new HDF5Reader(new HDF5BaseReader(hdf5File, performNumericConversions, false,
-                            false));
+                    new HDF5Reader(new HDF5BaseReader(hdf5File, performNumericConversions,
+                            FileFormat.ALLOW_1_8, false));
         }
         return readerWriterOrNull;
     }

@@ -25,6 +25,7 @@ import ch.systemsx.cisd.args4j.CmdLineParser;
 import ch.systemsx.cisd.args4j.ExampleMode;
 import ch.systemsx.cisd.args4j.Option;
 import ch.systemsx.cisd.common.utilities.BuildAndEnvironmentInfo;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**
  * The main class of the HDF5 based archiver.
@@ -208,9 +209,10 @@ public class HDF5ArchiverMain
 
     private void createArchiver()
     {
-        final boolean useLatestVersion = (fileFormat > 1);
+        final FileFormat fileFormatEnum =
+                (fileFormat == 1) ? FileFormat.STRICTLY_1_6 : FileFormat.STRICTLY_1_8;
         archiver =
-                new HDF5Archiver(archiveFile, command.isReadOnly(), useLatestVersion,
+                new HDF5Archiver(archiveFile, command.isReadOnly(), fileFormatEnum,
                         (stopOnError == false));
         archiver.getStrategy().setCompressAll(compressAll);
         for (String pattern : fileWhiteList)

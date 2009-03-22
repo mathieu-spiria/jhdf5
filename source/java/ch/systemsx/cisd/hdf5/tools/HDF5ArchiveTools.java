@@ -45,6 +45,7 @@ import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.HDF5Reader;
 import ch.systemsx.cisd.hdf5.HDF5Writer;
+import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**
  * Tools for using HDF5 as archive format for directory with fast random access to particular files.
@@ -240,7 +241,7 @@ public class HDF5ArchiveTools
             return false;
         }
         final String hdf5GroupPath = getRelativePath(root, dir);
-        if (writer.isUseLatestFileFormat() == false
+        if (writer.getFileFormat() != FileFormat.STRICTLY_1_8
                 && fileEntries.length > MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT
                 && "/.".equals(hdf5GroupPath) == false)
         {

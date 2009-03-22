@@ -24,7 +24,9 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
  * Currently two types of compressions are supported: <i>deflation</i> (the method used by
  * <code>gzip</code>) and <i>scaling</i>, which can be used if the accuracy of the values are
  * smaller than what the atomic data type can store. <b>Note that <i>scaling</i> in general is a
- * lossy compression</b> while <i>deflation</i> is always lossless.
+ * lossy compression</b> while <i>deflation</i> is always lossless. <i>Scaling</i> compression is
+ * only available with HDF5 1.8 and newer. Trying to use <i>scaling</i> in strict HDF5 1.6
+ * compatibility mode will throw an {@link IllegalStateException}.
  * <p>
  * For <i>deflation</i> the deflation level can be chosen to get the right balance between speed of
  * compression and compression ratio. Often the {@link #DEFAULT_DEFLATION_LEVEL} will be the right
