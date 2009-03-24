@@ -37,7 +37,7 @@ import java.util.concurrent.TimeUnit;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.systemsx.cisd.common.concurrent.NamingThreadPoolExecutor;
+import ch.systemsx.cisd.base.namedthread.NamingThreadPoolExecutor;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.SyncMode;
