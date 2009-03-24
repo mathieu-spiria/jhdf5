@@ -19,7 +19,7 @@ package ch.systemsx.cisd.hdf5.tools;
 import java.io.File;
 
 import ch.rinn.restrictions.Private;
-import ch.systemsx.cisd.common.exceptions.WrappedIOException;
+import ch.systemsx.cisd.common.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.common.os.FileLinkType;
 import ch.systemsx.cisd.common.os.Unix;
 import ch.systemsx.cisd.common.os.Unix.Stat;
@@ -76,7 +76,7 @@ public final class Link implements Comparable<Link>
         try
         {
             return new Link(file, includeOwnerAndPermissions);
-        } catch (WrappedIOException ex)
+        } catch (IOExceptionUnchecked ex)
         {
             HDF5ArchiveTools.dealWithError(new ArchivingException(file, ex.getCause()),
                     continueOnError);

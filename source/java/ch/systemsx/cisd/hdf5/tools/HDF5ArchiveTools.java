@@ -37,7 +37,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 
 import ch.rinn.restrictions.Private;
-import ch.systemsx.cisd.common.exceptions.WrappedIOException;
+import ch.systemsx.cisd.common.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.common.os.Unix;
 import ch.systemsx.cisd.common.os.Unix.Group;
 import ch.systemsx.cisd.common.os.Unix.Password;
@@ -176,7 +176,7 @@ public class HDF5ArchiveTools
      * <var>root</var> which will be removed from the path before adding any file to the archive.
      */
     public static void archive(HDF5Writer writer, ArchivingStrategy strategy, File root, File path,
-            boolean continueOnError, boolean verbose) throws WrappedIOException
+            boolean continueOnError, boolean verbose) throws IOExceptionUnchecked
     {
         final boolean ok;
         if (path.isDirectory())
