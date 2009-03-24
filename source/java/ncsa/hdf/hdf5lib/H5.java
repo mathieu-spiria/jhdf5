@@ -15,7 +15,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
-import ch.systemsx.cisd.common.filesystem.FileUtilities;
+import ch.systemsx.cisd.common.utilities.NativeLibraryUtilities;
 
 /**
  * This class is the Java interface for the HDF5 library.
@@ -217,7 +217,7 @@ public class H5
 
     static
     {
-        if (FileUtilities.loadNativeLibraryFromResource("jhdf5") == false)
+        if (NativeLibraryUtilities.loadNativeLibraryFromResource("jhdf5") == false)
         {
             System.err.println("No suitable HDF5 native library found for this platform.");
             System.exit(1);
