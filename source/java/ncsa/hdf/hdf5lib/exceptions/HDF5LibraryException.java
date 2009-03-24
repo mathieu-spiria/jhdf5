@@ -14,7 +14,7 @@ package ncsa.hdf.hdf5lib.exceptions;
 import java.io.File;
 import java.io.IOException;
 
-import ch.systemsx.cisd.common.filesystem.FileUtilities;
+import org.apache.commons.io.FileUtils;
 
 import ncsa.hdf.hdf5lib.H5;
 
@@ -150,7 +150,7 @@ public class HDF5LibraryException extends HDF5Exception
             try
             {
                 printStackTrace0(tempFile.getPath());
-                return FileUtilities.loadToString(tempFile).trim();
+                return FileUtils.readFileToString(tempFile).trim();
             } finally
             {
                 tempFile.delete();
