@@ -21,9 +21,9 @@ import static org.testng.AssertJUnit.assertEquals;
 import org.testng.annotations.Test;
 
 import ch.rinn.restrictions.Friend;
+import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.common.os.FileLinkType;
 import ch.systemsx.cisd.common.os.Unix;
-import ch.systemsx.cisd.common.utilities.OSUtilities;
 
 /**
  * Tests for {@link HDF5ArchiveTools}.

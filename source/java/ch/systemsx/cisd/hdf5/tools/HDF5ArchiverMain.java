@@ -24,7 +24,7 @@ import ch.systemsx.cisd.args4j.CmdLineException;
 import ch.systemsx.cisd.args4j.CmdLineParser;
 import ch.systemsx.cisd.args4j.ExampleMode;
 import ch.systemsx.cisd.args4j.Option;
-import ch.systemsx.cisd.common.utilities.BuildAndEnvironmentInfo;
+import ch.systemsx.cisd.base.utilities.BuildAndEnvironmentInfo;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**

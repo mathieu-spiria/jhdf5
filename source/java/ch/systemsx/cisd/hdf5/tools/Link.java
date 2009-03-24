@@ -19,7 +19,7 @@ package ch.systemsx.cisd.hdf5.tools;
 import java.io.File;
 
 import ch.rinn.restrictions.Private;
-import ch.systemsx.cisd.common.exceptions.IOExceptionUnchecked;
+import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.common.os.FileLinkType;
 import ch.systemsx.cisd.common.os.Unix;
 import ch.systemsx.cisd.common.os.Unix.Stat;

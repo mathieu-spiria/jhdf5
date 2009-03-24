@@ -15,7 +15,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
-import ch.systemsx.cisd.common.utilities.NativeLibraryUtilities;
+import ch.systemsx.cisd.base.utilities.NativeLibraryUtilities;
 
 /**
  * This class is the Java interface for the HDF5 library.

@@ -61,7 +61,7 @@ import org.testng.annotations.Test;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
-import ch.systemsx.cisd.common.utilities.OSUtilities;
+import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.SyncMode;

@@ -37,7 +37,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 
 import ch.rinn.restrictions.Private;
-import ch.systemsx.cisd.common.exceptions.IOExceptionUnchecked;
+import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.common.os.Unix;
 import ch.systemsx.cisd.common.os.Unix.Group;
 import ch.systemsx.cisd.common.os.Unix.Password;
