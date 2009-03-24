@@ -25,10 +25,10 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.common.array.MDArray;
 import ch.systemsx.cisd.common.array.MDFloatArray;
-import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
-import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * The implementation of {@link IHDF5FloatReader}.

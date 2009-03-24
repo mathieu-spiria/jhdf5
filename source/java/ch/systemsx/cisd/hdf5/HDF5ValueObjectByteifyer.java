@@ -16,7 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.common.process.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**

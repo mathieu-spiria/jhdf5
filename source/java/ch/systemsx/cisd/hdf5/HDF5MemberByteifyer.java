@@ -27,8 +27,8 @@ import static ncsa.hdf.hdf5lib.HDFNativeData.DOUBLE_SIZE;
 import java.lang.reflect.Field;
 import java.util.BitSet;
 
-import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 import ncsa.hdf.hdf5lib.HDFNativeData;
 

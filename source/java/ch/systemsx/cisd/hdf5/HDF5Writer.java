@@ -54,10 +54,10 @@ import ch.systemsx.cisd.common.array.MDFloatArray;
 import ch.systemsx.cisd.common.array.MDIntArray;
 import ch.systemsx.cisd.common.array.MDLongArray;
 import ch.systemsx.cisd.common.array.MDShortArray;
-import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
-import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * A class for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).
@@ -332,17 +332,17 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     public void createGroup(final String groupPath, final int sizeHint)
     {
         baseWriter.checkOpen();
-        final ICallableWithCleanUp<Object> addAttributeRunnable =
-                new ICallableWithCleanUp<Object>()
+        final ICallableWithCleanUp<Void> createGroupRunnable =
+                new ICallableWithCleanUp<Void>()
                     {
-                        public Object call(ICleanUpRegistry registry)
+                        public Void call(ICleanUpRegistry registry)
                         {
                             baseWriter.h5.createOldStyleGroup(baseWriter.fileId, groupPath,
                                     sizeHint, registry);
                             return null; // Nothing to return.
                         }
                     };
-        baseWriter.runner.call(addAttributeRunnable);
+        baseWriter.runner.call(createGroupRunnable);
     }
 
     /**
@@ -364,17 +364,17 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     public void createGroup(final String groupPath, final int maxCompact, final int minDense)
     {
         baseWriter.checkOpen();
-        final ICallableWithCleanUp<Object> addAttributeRunnable =
-                new ICallableWithCleanUp<Object>()
+        final ICallableWithCleanUp<Void> createGroupRunnable =
+                new ICallableWithCleanUp<Void>()
                     {
-                        public Object call(ICleanUpRegistry registry)
+                        public Void call(ICleanUpRegistry registry)
                         {
                             baseWriter.h5.createNewStyleGroup(baseWriter.fileId, groupPath,
                                     maxCompact, minDense, registry);
                             return null; // Nothing to return.
                         }
                     };
-        baseWriter.runner.call(addAttributeRunnable);
+        baseWriter.runner.call(createGroupRunnable);
     }
 
     // /////////////////////
@@ -393,10 +393,10 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     public void deleteAttribute(final String objectPath, final String name)
     {
         baseWriter.checkOpen();
-        final ICallableWithCleanUp<Object> addAttributeRunnable =
-                new ICallableWithCleanUp<Object>()
+        final ICallableWithCleanUp<Void> deleteAttributeRunnable =
+                new ICallableWithCleanUp<Void>()
                     {
-                        public Object call(ICleanUpRegistry registry)
+                        public Void call(ICleanUpRegistry registry)
                         {
                             final int objectId =
                                     baseWriter.h5.openObject(baseWriter.fileId, objectPath,
@@ -405,7 +405,7 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                             return null; // Nothing to return.
                         }
                     };
-        baseWriter.runner.call(addAttributeRunnable);
+        baseWriter.runner.call(deleteAttributeRunnable);
     }
 
     /**

@@ -55,10 +55,10 @@ import ch.systemsx.cisd.common.array.MDFloatArray;
 import ch.systemsx.cisd.common.array.MDIntArray;
 import ch.systemsx.cisd.common.array.MDLongArray;
 import ch.systemsx.cisd.common.array.MDShortArray;
-import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
-import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * A class for reading HDF5 files (HDF5 1.8.x and older).

@@ -36,11 +36,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import ch.systemsx.cisd.common.concurrent.NamingThreadPoolExecutor;
-import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
-import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.SyncMode;
+import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 

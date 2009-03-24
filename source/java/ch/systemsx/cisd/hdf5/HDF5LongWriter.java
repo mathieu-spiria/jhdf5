@@ -28,8 +28,8 @@ import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.common.array.MDArray;
 import ch.systemsx.cisd.common.array.MDLongArray;
-import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
-import ch.systemsx.cisd.common.process.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * The implementation of {@link IHDF5LongWriter}.

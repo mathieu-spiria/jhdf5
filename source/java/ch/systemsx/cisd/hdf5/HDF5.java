@@ -29,12 +29,12 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.common.array.MDArray;
-import ch.systemsx.cisd.common.process.CleanUpCallable;
-import ch.systemsx.cisd.common.process.CleanUpRegistry;
-import ch.systemsx.cisd.common.process.ICallableWithCleanUp;
-import ch.systemsx.cisd.common.process.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
+import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
+import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * A wrapper around {@link ncsa.hdf.hdf5lib.H5} that handles closing of resources automatically by
