@@ -56,7 +56,6 @@ import org.testng.annotations.Test;
 
 import ch.systemsx.cisd.common.array.MDArray;
 import ch.systemsx.cisd.common.array.MDFloatArray;
-import ch.systemsx.cisd.common.logging.LogInitializer;
 import ch.systemsx.cisd.common.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
@@ -78,7 +77,6 @@ public class HDF5RoundtripTest
     @BeforeSuite
     public void init()
     {
-        LogInitializer.init();
         workingDirectory.mkdirs();
         assertTrue(workingDirectory.isDirectory());
         workingDirectory.deleteOnExit();
