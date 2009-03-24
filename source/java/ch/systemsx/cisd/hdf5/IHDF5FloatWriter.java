@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.common.array.MDFloatArray;
+import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 
 /**
  * An interface that provides methods for writing <code>float</code> values to HDF5 files.

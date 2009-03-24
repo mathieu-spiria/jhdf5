@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.common.array.MDLongArray;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
  * An interface that provides methods for writing <code>long</code> values to HDF5 files.

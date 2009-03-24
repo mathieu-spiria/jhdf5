@@ -22,7 +22,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-import ch.systemsx.cisd.common.array.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * A class that holds relevant information about a data set.

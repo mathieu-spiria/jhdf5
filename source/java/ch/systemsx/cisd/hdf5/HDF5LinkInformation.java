@@ -22,7 +22,6 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_DATASET;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_NAMED_DATATYPE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_NTYPES;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**

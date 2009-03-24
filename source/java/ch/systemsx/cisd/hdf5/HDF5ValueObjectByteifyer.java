@@ -16,9 +16,9 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * A class that byteifies Java value objects. The fields have to be specified by name. This class

@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.common.array.MDShortArray;
+import ch.systemsx.cisd.base.mdarray.MDShortArray;
 
 /**
  * An interface that provides methods for writing <code>short</code> values to HDF5 files.

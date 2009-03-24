@@ -20,10 +20,10 @@ import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.List;
 
-import ch.rinn.restrictions.Private;
-import ch.systemsx.cisd.common.array.MDArray;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
+import ch.rinn.restrictions.Private;
+import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * Some utility methods used by {@link HDF5Reader} and {@link HDF5Writer}.

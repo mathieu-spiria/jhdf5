@@ -18,7 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.systemsx.cisd.common.array.MDShortArray;
+import ch.systemsx.cisd.base.mdarray.MDShortArray;
 
 /**
  * An interface that provides methods for reading <code>short</code> values from HDF5 files.

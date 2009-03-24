@@ -17,20 +17,26 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ncsa.hdf.hdf5lib.H5.H5Tinsert;
-import static ncsa.hdf.hdf5lib.HDF5Constants.*;
-import static ncsa.hdf.hdf5lib.HDFNativeData.SHORT_SIZE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F64LE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_B64LE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I16LE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I32LE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I8LE;
+import static ncsa.hdf.hdf5lib.HDFNativeData.DOUBLE_SIZE;
+import static ncsa.hdf.hdf5lib.HDFNativeData.FLOAT_SIZE;
 import static ncsa.hdf.hdf5lib.HDFNativeData.INT_SIZE;
 import static ncsa.hdf.hdf5lib.HDFNativeData.LONG_SIZE;
-import static ncsa.hdf.hdf5lib.HDFNativeData.FLOAT_SIZE;
-import static ncsa.hdf.hdf5lib.HDFNativeData.DOUBLE_SIZE;
+import static ncsa.hdf.hdf5lib.HDFNativeData.SHORT_SIZE;
 
 import java.lang.reflect.Field;
 import java.util.BitSet;
 
+import ncsa.hdf.hdf5lib.HDFNativeData;
+
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-
-import ncsa.hdf.hdf5lib.HDFNativeData;
 
 /**
  * A class that byteifies member fields of objects.

@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.common.array.MDByteArray;
+import ch.systemsx.cisd.base.mdarray.MDByteArray;
 
 /**
  * An interface that provides methods for writing <code>byte</code> values to HDF5 files.

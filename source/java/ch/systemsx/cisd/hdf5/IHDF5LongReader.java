@@ -18,7 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.systemsx.cisd.common.array.MDLongArray;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
  * An interface that provides methods for reading <code>long</code> values from HDF5 files.

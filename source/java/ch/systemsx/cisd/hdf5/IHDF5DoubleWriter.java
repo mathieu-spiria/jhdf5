@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.common.array.MDDoubleArray;
+import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
 
 /**
  * An interface that provides methods for writing <code>double</code> values to HDF5 files.

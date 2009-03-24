@@ -17,14 +17,19 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
-import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_DEFLATE;
-import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_AUTO_SCALING;
-import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_AUTO_SCALING_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5FloatCompression.FLOAT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5FloatCompression.FLOAT_SCALING1_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5GenericCompression.GENERIC_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5GenericCompression.GENERIC_DEFLATE_MAX;
-import static org.testng.AssertJUnit.*;
+import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_AUTO_SCALING;
+import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_AUTO_SCALING_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_DEFLATE;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.AssertJUnit.fail;
 
 import java.io.File;
 import java.lang.reflect.Array;
@@ -54,8 +59,8 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import ch.systemsx.cisd.common.array.MDArray;
-import ch.systemsx.cisd.common.array.MDFloatArray;
+import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.common.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;

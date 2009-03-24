@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.common.array.MDAbstractArray;
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 
 /**
  * A class that is used for iterating over a data set block by block, using
