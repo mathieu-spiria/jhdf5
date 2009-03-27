@@ -134,9 +134,13 @@
 				<attribute name="Version" value="${version.number}" />
 				<attribute name="Build-Number"
 				           value="${version.number} (r${revision.number},${clean.flag})" />
+				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
+				<attribute name="Class-Path" value="common-lang.jar commons-io.jar cisd-base.jar cisd-args4j.jar hdf5-core.jar hdf5-linux-intel.jar hdf5-solaris-intel.jar hdf5-solaris-sparc.jar hdf5-macosx-intel.jar hdf5-windows-intel.jar" />
 			</manifest>
 		</jar>
 	</target>
+	
+	<target name="jar-all" depends="jar, src-jar, jar-core, jar-tools, jar-platforms" />
 
 	<target name="jar-platforms"
 	        depends="jar-linux-intel, jar-solaris-intel, jar-solaris-sparc, jar-macosx-intel, jar-windows-intel" />
@@ -263,14 +267,14 @@
 
 	<target name="doc">
 		<delete dir="targets/doc" />
-		<javadoc sourcepath="source/java:../common/source/java"
-		         packagenames="ch.systemsx.cisd.hdf5,ch.systemsx.cisd.common.array"
-		         classpath="../common/targets/classes:../common/targets/ant/classes:../libraries/commons-lang/commons-lang.jar:../libraries/restrictionchecker/restrictions.jar"
+		<javadoc sourcepath="source/java:../base/source/java"
+		         packagenames="ch.systemsx.cisd.hdf5,ch.systemsx.cisd.base.mdarray"
+		         classpath="../base/targets/classes:../libraries/commons-lang/commons-lang.jar:../libraries/commons-io/commons-io.jar:../libraries/restrictionchecker/restrictions.jar"
 		         destdir="targets/doc"
 		         access="public" />
 	</target>
 
-	<target name="dist" depends="jar" />
+	<target name="dist" depends="clean, jar-all" />
 
 	<!--
 	// Task for continuous integration server.
