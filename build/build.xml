@@ -4,6 +4,8 @@
 
 	<property name="mainfolder" value="hdf5" />
 	<property name="jar.file" value="${dist}/jhdf5.jar" />
+	<property name="jar.core.file" value="${dist}/jhdf5-core.jar" />
+	<property name="jar.tools.file" value="${dist}/jhdf5-tools.jar" />
 	<property name="src.jar.file" value="${dist}/jhdf5-src.zip" />
 	<property name="test.jar.file" value="${dist}/jhdf5-test.jar" />
 	<property name="lib" value="../libraries" />
@@ -40,7 +42,6 @@
 			<fileset dir="${nativeroot}">
 				<include name="**/*.so" />
 			</fileset>
-			<zipfileset src="${lib}/log4j/log4j.jar" />
 			<zipfileset src="${lib}/testng/testng-jdk15.jar" />
 			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
 			<zipfileset src="${lib}/commons-io/commons-io.jar" />
@@ -100,6 +101,164 @@
 				           value="${version.number} (r${revision.number},${clean.flag})" />
 			</manifest>
 		</recursive-jar>
+	</target>
+
+	<target name="jar-core" depends="compile">
+		<mkdir dir="${dist.hdf5.lib}" />
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<jar destfile="${jar.core.file}">
+			<fileset dir="${classes}">
+				<include name="${build.info.filename}" />
+				<include name="**/*.class" />
+				<exclude name="**/tools/*.class" />
+			</fileset>
+			<manifest>
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number"
+				           value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="jar-tools" depends="compile">
+		<mkdir dir="${dist.hdf5.lib}" />
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<jar destfile="${jar.tools.file}">
+			<fileset dir="${classes}">
+				<include name="${build.info.filename}" />
+				<include name="**/tools/*.class" />
+			</fileset>
+			<manifest>
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number"
+				           value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="jar-platforms"
+	        depends="jar-linux-intel, jar-solaris-intel, jar-solaris-sparc, jar-macosx-intel, jar-windows-intel" />
+
+	<target name="jar-linux-intel" depends="prepare">
+		<delete dir="${native}" />
+		<mkdir dir="${native}" />
+		<mkdir dir="${dist.hdf5.lib}" />
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<copy todir="${native}">
+			<fileset dir="${nativesrc1}">
+				<include name="jhdf5/i386-Linux/jhdf5.so" />
+				<include name="jhdf5/amd64-Linux/jhdf5.so" />
+			</fileset>
+		</copy>
+		<jar destfile="${dist}/jhdf5-linux-intel.jar">
+			<fileset dir="${nativeroot}">
+				<include name="**/*.so" />
+			</fileset>
+			<manifest>
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number"
+				           value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="jar-solaris-intel" depends="prepare">
+		<delete dir="${native}" />
+		<mkdir dir="${native}" />
+		<mkdir dir="${dist.hdf5.lib}" />
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<copy todir="${native}">
+			<fileset dir="${nativesrc1}">
+				<include name="jhdf5/x86-SunOS/jhdf5.so" />
+				<include name="jhdf5/amd64-SunOS/jhdf5.so" />
+			</fileset>
+		</copy>
+		<jar destfile="${dist}/jhdf5-solaris-intel.jar">
+			<fileset dir="${nativeroot}">
+				<include name="**/*.so" />
+			</fileset>
+			<manifest>
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number"
+				           value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="jar-solaris-sparc" depends="prepare">
+		<delete dir="${native}" />
+		<mkdir dir="${native}" />
+		<mkdir dir="${dist.hdf5.lib}" />
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<copy todir="${native}">
+			<fileset dir="${nativesrc1}">
+				<include name="jhdf5/sparc-SunOS/jhdf5.so" />
+				<include name="jhdf5/sparcv9-SunOS/jhdf5.so" />
+			</fileset>
+		</copy>
+		<jar destfile="${dist}/jhdf5-solaris-sparc.jar">
+			<fileset dir="${nativeroot}">
+				<include name="**/*.so" />
+			</fileset>
+			<manifest>
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number"
+				           value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="jar-macosx-intel" depends="prepare">
+		<delete dir="${native}" />
+		<mkdir dir="${native}" />
+		<mkdir dir="${dist.hdf5.lib}" />
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<copy todir="${native}">
+			<fileset dir="${nativesrc1}">
+				<include name="jhdf5/i386-Mac OS X/jhdf5.so" />
+				<include name="jhdf5/x86_64-Mac OS X/jhdf5.so" />
+			</fileset>
+		</copy>
+		<jar destfile="${dist}/jhdf5-macosx-intel.jar">
+			<fileset dir="${nativeroot}">
+				<include name="**/*.so" />
+			</fileset>
+			<manifest>
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number"
+				           value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="jar-windows-intel" depends="prepare">
+		<delete dir="${native}" />
+		<mkdir dir="${native}" />
+		<mkdir dir="${dist.hdf5.lib}" />
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<copy todir="${native}">
+			<fileset dir="${nativesrc1}">
+				<include name="jhdf5/x86-Windows/jhdf5.so" />
+				<include name="jhdf5/amd64-Windows/jhdf5.so" />
+			</fileset>
+		</copy>
+		<jar destfile="${dist}/jhdf5-windows-intel.jar">
+			<fileset dir="${nativeroot}">
+				<include name="**/*.so" />
+			</fileset>
+			<manifest>
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number"
+				           value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</jar>
 	</target>
 
 	<target name="doc">
