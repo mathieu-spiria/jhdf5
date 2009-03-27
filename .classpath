@@ -4,7 +4,6 @@
 	<classpathentry kind="src" path="sourceTest/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/libraries/testng/testng-jdk15.jar" sourcepath="/libraries/testng/src.zip"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/common"/>
 	<classpathentry kind="lib" path="/libraries/commons-io/commons-io.jar" sourcepath="/libraries/commons-io/src.zip"/>
 	<classpathentry kind="lib" path="/libraries/commons-lang/commons-lang.jar" sourcepath="/libraries/commons-lang/src.zip"/>
 	<classpathentry kind="lib" path="/libraries/hdf5"/>
