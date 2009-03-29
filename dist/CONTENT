@@ -1,0 +1,47 @@
+Javadoc
+
+  doc/jhdf5-javadoc.zip
+
+Source
+
+  src/jhdf5-src.zip
+  
+Library
+
+  lib/jhdf5-core.jar: 
+    The Java class files of the JHDF5 library. Requires commons-io.jar, commons-lang.jar,  
+    cisd-base.jar and cisd-args4j.jar on the class path. Requires the native libraries to be 
+    provided separately (see below at lib/native).
+
+  lib/jhdf5-tools.jar: 
+    The Java class files of the JHDF5 archiver. It can be used like 'java -jar jhdf5-tools.jar'. 
+    Requires commons-io.jar, commons-lang.jar, cisd-base.jar, cisd-args4j.jar and cisd-core.jar on 
+    the class path. Requires the native libraries to be provided separately (see below at lib/native).
+
+  lib/jhdf5.jar: 
+    All Java class files packaged in one jar file. Requires the native libraries to be provided 
+    separately. 
+
+  lib/batteries_included:
+    Includes all Java class files of the JHDF5 library and the JHDF5 archiver and all native 
+    libraries necessary to use JHDF5.
+    No other file is needed when using one of these jar files. 
+
+	  All supported platforms:
+	    lib/batteries_included/jhdf5-batteries_included_lin_win_mac_sun.jar 
+	  
+	  Linux/MacOSX/Windows, but no Sun Solaris: 
+	    lib/batteries_included/jhdf5-batteries_included_lin_win_mac_sun.jar
+	    
+  lib/native:
+    The native libraries are provided in two forms: 
+      * as jar files, one jar file per platform (actually two platforms: 32bit and 64bit), e.g. 
+    		jhdf5-linux-intel.jar has the shared libraries for Linux on Intel/AMD. Note that these jar 
+    		files do not contain the Java class files. In order to use these files, ensure that the jar 
+    		file for your platform is in the class path.
+      * as files in folders jhdf5 and unix. In order to use them ensure that you point the Java 
+        property native.libpath to the root of this hierarchy, 
+        e.g.: "-Dnative.libpath=/home/tim/lib/native"
+        Note that instead of native.libpath the default Java property java.library.path can be set, 
+        but in this case no automatic resolution of the platform is provided. 
+ 
