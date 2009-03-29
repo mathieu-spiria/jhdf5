@@ -35,7 +35,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  * <pre>
  * float[] f = new float[100];
  * ...
- * IHDF5Writer writer = new HDF5WriterConfig(&quot;test.h5&quot;).writer();
+ * IHDF5Writer writer = HDF5Factory.configure(&quot;test.h5&quot;).writer();
  * writer.writeFloatArray(&quot;/some/path/dataset&quot;, f);
  * writer.addAttribute(&quot;some key&quot;, &quot;some value&quot;);
  * writer.close();
@@ -51,8 +51,8 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     // /////////////////////
 
     /**
-     * Returns <code>true</code>, if the {@link HDF5WriterConfigurator} was <em>not</em> configured
-     * with {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}, that is if extendable data
+     * Returns <code>true</code>, if the {@link IHDF5WriterConfigurator} was <em>not</em> configured
+     * with {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}, that is if extendable data
      * types are used for new data sets.
      */
     public boolean isUseExtendableDataTypes();
@@ -68,14 +68,14 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Flushes the cache to disk (without discarding it). Note that this may or may not trigger a
-     * <code>fsync(2)</code>, depending on the {@link HDF5WriterConfigurator.SyncMode} used.
+     * <code>fsync(2)</code>, depending on the {@link IHDF5WriterConfigurator.SyncMode} used.
      */
     public void flush();
 
     /**
      * Flushes the cache to disk (without discarding it) and synchronizes the file with the
      * underlying storage using a method like <code>fsync(2)</code>, regardless of what
-     * {@link HDF5WriterConfigurator.SyncMode} has been set for this file.
+     * {@link IHDF5WriterConfigurator.SyncMode} has been set for this file.
      * <p>
      * This method blocks until <code>fsync(2)</code> has returned.
      */
@@ -115,14 +115,14 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * Creates an external link, that is a link to a data set in another HDF5 file, the
      * <em>target</em> .
      * <p>
-     * <em>Note: This method is only allowed when the {@link HDF5WriterConfigurator} was not 
+     * <em>Note: This method is only allowed when the {@link IHDF5WriterConfigurator} was not 
      * configured to enforce strict HDF5 1.6 compatibility.</em>
      * 
      * @param targetFileName The name of the file where the data set resides that should be linked.
      * @param targetPath The name of the data set (including path information) in the
      *            <var>targetFileName</var> to create a link to.
      * @param linkPath The name (including path information) of the link to create.
-     * @throws IllegalStateException If the {@link HDF5WriterConfigurator} was configured to enforce
+     * @throws IllegalStateException If the {@link IHDF5WriterConfigurator} was configured to enforce
      *             strict HDF5 1.6 compatibility.
      */
     public void createExternalLink(String targetFileName, String targetPath, String linkPath)
@@ -134,14 +134,14 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <p>
      * <em>Note: This method will never overwrite a data set, but only a symbolic link.</em>
      * <p>
-     * <em>Note: This method is only allowed when the {@link HDF5WriterConfigurator} was not 
+     * <em>Note: This method is only allowed when the {@link IHDF5WriterConfigurator} was not 
      * configured to enforce strict HDF5 1.6 compatibility.</em>
      * 
      * @param targetFileName The name of the file where the data set resides that should be linked.
      * @param targetPath The name of the data set (including path information) in the
      *            <var>targetFileName</var> to create a link to.
      * @param linkPath The name (including path information) of the link to create.
-     * @throws IllegalStateException If the {@link HDF5WriterConfigurator} was configured to enforce
+     * @throws IllegalStateException If the {@link IHDF5WriterConfigurator} was configured to enforce
      *             strict HDF5 1.6 compatibility.
      */
     public void createOrUpdateExternalLink(String targetFileName, String targetPath, String linkPath)
@@ -550,7 +550,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param length The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      */
     public void createTimeStampArray(final String objectPath, final long length, final int blockSize);
@@ -563,7 +563,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param length The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      * @param compression The compression parameters of the data set.
      */
@@ -746,7 +746,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param length The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      * @param timeUnit The unit of the time duration.
      */
@@ -761,7 +761,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param length The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      * @param timeUnit The unit of the time duration.
      * @param compression The compression parameters of the data set.
@@ -1085,7 +1085,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param type The type definition of this compound type.
      * @param size The size of the compound array to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      */
     public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
@@ -1098,7 +1098,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param type The type definition of this compound type.
      * @param size The size of the compound array to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      * @param compression The compression parameters of the data set.
      */
@@ -1170,7 +1170,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param dimensions The extent of the compound array along each of the axis.
      * @param blockDimensions The extent of one block along each of the axis. (for block-wise IO).
      *            Ignored if no extendable data sets are used (see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      */
     public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
@@ -1184,7 +1184,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param dimensions The extent of the compound array along each of the axis.
      * @param blockDimensions The extent of one block along each of the axis. (for block-wise IO).
      *            Ignored if no extendable data sets are used (see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      * @param compression The compression parameters of the data set.
      */

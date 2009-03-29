@@ -74,10 +74,10 @@ interface IHDF5ByteWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the byte vector to create. When using extendable data sets 
-     *          ((see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
+     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
      *          set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      */
     public void createByteArray(final String objectPath, final long size, final int blockSize);
 
@@ -86,10 +86,10 @@ interface IHDF5ByteWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the byte array to create. When using extendable data sets 
-     *          ((see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
+     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
      *          set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
+     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
      *                <code>compression</code> is <code>HDF5IntCompression.NO_COMPRESSION</code>.
      * @param compression The compression parameters of the data set.
      */

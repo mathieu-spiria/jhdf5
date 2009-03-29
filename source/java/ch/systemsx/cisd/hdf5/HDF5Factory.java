@@ -21,8 +21,8 @@ import java.io.File;
 /**
  * A factory for creating simple writers and readers of HDF5 files.
  * <p>
- * If you need full control over the creation process, see the constructors and configuration
- * methods of {@link HDF5Writer} and {@link HDF5Reader}.
+ * If you need full control over the creation process, see the methods {@link #configure(File)} and
+ * {@link #configureForReading(File)}.
  * 
  * @author Bernd Rinn
  */
@@ -53,7 +53,7 @@ public class HDF5Factory
 
     /**
      * Opens a configurator for an HDF5 <var>file</var> for writing and reading. Call
-     * {@link HDF5WriterConfigurator#writer()} in order to start reading and writing the file.
+     * {@link IHDF5WriterConfigurator#writer()} in order to start reading and writing the file.
      */
     public static IHDF5WriterConfigurator configure(File file)
     {
@@ -62,7 +62,7 @@ public class HDF5Factory
 
     /**
      * Opens a configurator for an HDF5 <var>file</var> for reading. Call
-     * {@link HDF5ReaderConfigurator#reader()} in order to start reading the file.
+     * {@link IHDF5ReaderConfigurator#reader()} in order to start reading the file.
      */
     public static IHDF5ReaderConfigurator configureForReading(File file)
     {

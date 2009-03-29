@@ -21,8 +21,9 @@ import static ch.systemsx.cisd.hdf5.HDF5FloatCompression.FLOAT_NO_COMPRESSION;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_float;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
+
 import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
