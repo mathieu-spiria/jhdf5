@@ -4,9 +4,11 @@
 
 	<property name="mainfolder" value="hdf5" />
 	<property name="jar.file" value="${dist}/jhdf5.jar" />
+	<property name="jar.all-in-one.file" value="${dist}/jhdf5-all_in_one.jar" />
+	<property name="jar.except-solaris.file" value="${dist}/jhdf5-lin_win_mac.jar" />
 	<property name="jar.core.file" value="${dist}/jhdf5-core.jar" />
 	<property name="jar.tools.file" value="${dist}/jhdf5-tools.jar" />
-	<property name="src.jar.file" value="${dist}/jhdf5-src.zip" />
+	<property name="src.zip.file" value="${dist}/jhdf5-src.zip" />
 	<property name="test.jar.file" value="${dist}/jhdf5-test.jar" />
 	<property name="lib" value="../libraries" />
 	<property name="nativesrc1" value="${lib}/hdf5/native" />
@@ -43,6 +45,7 @@
 				<include name="**/*.so" />
 			</fileset>
 			<zipfileset src="${lib}/testng/testng-jdk15.jar" />
+			<zipfileset src="${lib}/cisd-base/cisd-base.jar" />
 			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
 			<zipfileset src="${lib}/commons-io/commons-io.jar" />
 			<manifest>
@@ -54,7 +57,7 @@
 		</recursive-jar>
 	</target>
 
-	<target name="jar" depends="compile">
+	<target name="jar-complete" depends="compile">
 		<mkdir dir="${dist.hdf5.lib}" />
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
@@ -66,7 +69,7 @@
 				<include name="**/unix.so" />
 			</fileset>
 		</copy>
-		<recursive-jar destfile="${jar.file}">
+		<recursive-jar destfile="${jar.all-in-one.file}">
 			<fileset dir="${classes}">
 				<include name="${build.info.filename}" />
 				<include name="**/*.class" />
@@ -74,6 +77,22 @@
 			<fileset dir="${nativeroot}">
 				<include name="**/*.so" />
 			</fileset>
+			<zipfileset src="${lib}/cisd-base/cisd-base.jar" />
+			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
+			<zipfileset src="${lib}/commons-io/commons-io.jar" />
+			<manifest>
+				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number"
+				           value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</recursive-jar>
+		<recursive-jar destfile="${jar.file}">
+			<fileset dir="${classes}">
+				<include name="${build.info.filename}" />
+				<include name="**/*.class" />
+			</fileset>
+			<zipfileset src="${lib}/cisd-base/cisd-base.jar" excludes="native/**" />
 			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
 			<zipfileset src="${lib}/commons-io/commons-io.jar" />
 			<manifest>
@@ -85,10 +104,43 @@
 		</recursive-jar>
 	</target>
 
-	<target name="src-jar">
+	<target name="jar-complete-except-solaris" depends="compile">
+		<mkdir dir="${dist.hdf5.lib}" />
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
-		<recursive-jar destfile="${src.jar.file}">
+		<copy todir="${native}">
+			<fileset dir="${nativesrc1}">
+				<include name="**/jhdf5.so" />
+			</fileset>
+			<fileset dir="${nativesrc2}">
+				<include name="**/unix.so" />
+			</fileset>
+		</copy>
+		<recursive-jar destfile="${jar.except-solaris.file}">
+			<fileset dir="${classes}">
+				<include name="${build.info.filename}" />
+				<include name="**/*.class" />
+			</fileset>
+			<fileset dir="${nativeroot}">
+				<include name="**/*.so" />
+				<exclude name="native/*/*-SunOS/*.so" />
+			</fileset>
+			<zipfileset src="${lib}/cisd-base/cisd-base.jar" />
+			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
+			<zipfileset src="${lib}/commons-io/commons-io.jar" />
+			<manifest>
+				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number"
+				           value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</recursive-jar>
+	</target>
+
+	<target name="src-zip">
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<recursive-jar destfile="${src.zip.file}">
 			<fileset dir="${classes}">
 				<include name="${build.info.filename}" />
 			</fileset>
@@ -135,12 +187,14 @@
 				<attribute name="Build-Number"
 				           value="${version.number} (r${revision.number},${clean.flag})" />
 				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
-				<attribute name="Class-Path" value="common-lang.jar commons-io.jar cisd-base.jar cisd-args4j.jar hdf5-core.jar hdf5-linux-intel.jar hdf5-solaris-intel.jar hdf5-solaris-sparc.jar hdf5-macosx-intel.jar hdf5-windows-intel.jar" />
+				<attribute name="Class-Path"
+				           value="common-lang.jar commons-io.jar cisd-base.jar cisd-args4j.jar hdf5-core.jar hdf5-linux-intel.jar hdf5-solaris-intel.jar hdf5-solaris-sparc.jar hdf5-macosx-intel.jar hdf5-windows-intel.jar" />
 			</manifest>
 		</jar>
 	</target>
-	
-	<target name="jar-all" depends="jar, src-jar, jar-core, jar-tools, jar-platforms" />
+
+	<target name="jar-all"
+	        depends="jar-complete, jar-complete-except-solaris, src-zip, jar-core, jar-tools, jar-platforms" />
 
 	<target name="jar-platforms"
 	        depends="jar-linux-intel, jar-solaris-intel, jar-solaris-sparc, jar-macosx-intel, jar-windows-intel" />
@@ -274,7 +328,11 @@
 		         access="public" />
 	</target>
 
-	<target name="dist" depends="clean, jar-all" />
+	<target name="dist" depends="clean, jar-all">
+		<copy file="${lib}/cisd-base/cisd-base.jar" todir="${dist}" />
+		<copy file="${lib}/commons-lang/commons-lang.jar" todir="${dist}" />
+		<copy file="${lib}/commons-io/commons-io.jar" todir="${dist}" />
+	</target>
 
 	<!--
 	// Task for continuous integration server.
