@@ -18,7 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 
 /**
  * An object representing the compression settings that are to be used for a data set.

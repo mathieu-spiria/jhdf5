@@ -45,7 +45,7 @@ import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 
 /**
  * Tools for using HDF5 as archive format for directory with fast random access to particular files.

@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.apache.commons.lang.time.StopWatch;
 
-import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.tools.HDF5Archiver;
 
 /**

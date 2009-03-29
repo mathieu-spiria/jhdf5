@@ -22,7 +22,7 @@ import java.util.Date;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
-import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 
 /**
  * An interface for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).

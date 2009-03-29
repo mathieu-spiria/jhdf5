@@ -39,8 +39,8 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.namedthread.NamingThreadPoolExecutor;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
-import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
-import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.SyncMode;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 

@@ -63,8 +63,8 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
-import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
-import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.SyncMode;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 
 /**
  * Test cases for {@link IHDF5Writer} and {@link IHDF5Reader}, doing "round-trips" to the HDF5 disk
@@ -264,7 +264,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String groupName = "/some/deep/and/non/existing/group";
         writer.createGroup(groupName);
         assertTrue(writer.isGroup(groupName));
@@ -278,7 +278,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String groupName = "/test/group/";
         final String dset1Name = "dset1";
         final String dset1Path = groupName + dset1Name;
@@ -307,7 +307,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String booleanDatasetName = "/boolean";
         writer.writeBoolean(booleanDatasetName, true);
         final String byteDatasetName = "/byte";
@@ -325,7 +325,7 @@ public class HDF5RoundtripTest
         final String stringDatasetName = "/string";
         writer.writeString(stringDatasetName, "some string");
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertTrue(reader.readBoolean(booleanDatasetName));
         assertEquals(17, reader.readByte(byteDatasetName));
         assertEquals(1000, reader.readShort(shortDatasetName));
@@ -344,7 +344,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "/floatMatrix";
         final MDFloatArray arrayWritten = new MDFloatArray(new int[]
             { 3, 2, 4 });
@@ -362,7 +362,7 @@ public class HDF5RoundtripTest
         }
         writer.writeFloatMDArray(floatDatasetName, arrayWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final MDFloatArray arrayRead = reader.readFloatMDArray(floatDatasetName);
         reader.close();
         assertEquals(arrayWritten, arrayRead);
@@ -376,7 +376,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String booleanDatasetName = "/booleanArray";
         final String longArrayDataSetName = "/longArray";
         final BitSet arrayWritten = new BitSet();
@@ -385,7 +385,7 @@ public class HDF5RoundtripTest
         writer.writeLongArray(longArrayDataSetName, BitSetConversionUtils
                 .toStorageForm(arrayWritten));
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final BitSet arrayRead = reader.readBitField(booleanDatasetName);
         try
         {
@@ -422,7 +422,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "/floatMatrix";
         final long[] shape = new long[]
             { 10, 10, 10 };
@@ -447,7 +447,7 @@ public class HDF5RoundtripTest
             }
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         for (int i = 0; i < 2; ++i)
         {
             for (int j = 0; j < 2; ++j)
@@ -472,7 +472,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "/floatMatrix";
         final long[] shape = new long[]
             { 10, 10 };
@@ -492,7 +492,7 @@ public class HDF5RoundtripTest
             { 2, 2 }, new int[]
             { 5, 1 });
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final float[][] matrixRead = reader.readFloatMatrix(floatDatasetName);
         reader.close();
         assertEquals(13f, matrixRead[0][0]);
@@ -523,7 +523,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "/Group1/floats";
         final float[] floatDataWritten = new float[]
             { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f };
@@ -547,7 +547,7 @@ public class HDF5RoundtripTest
         writer.writeString(stringDatasetName, stringDataWritten);
         writer.writeStringVariableLength(stringDatasetName2, stringDataWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final float[] floatDataRead = reader.readFloatArray(floatDatasetName);
         assertTrue(Arrays.equals(floatDataWritten, floatDataRead));
         final long[] longDataRead = reader.readLongArray(longDatasetName);
@@ -568,7 +568,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final int[] intWritten = new int[1000000];
         for (int i = 0; i < intWritten.length; ++i)
         {
@@ -576,14 +576,14 @@ public class HDF5RoundtripTest
         }
         writer.writeIntArray("ds", intWritten, INT_AUTO_SCALING_DEFLATE);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final int[] intRead = reader.readIntArray("ds");
         assertTrue(Arrays.equals(intRead, intWritten));
         reader.close();
 
         // Shouldn't work in strict HDF5 1.6 mode.
         final IHDF5Writer writer2 =
-                new HDF5WriterConfigurator(new File(workingDirectory,
+                HDF5Factory.configure(new File(workingDirectory,
                         "scaleoffsetfilterintfailed.h5")).fileFormat(FileFormat.STRICTLY_1_6)
                         .writer();
         try
@@ -604,7 +604,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final float[] floatWritten = new float[1000000];
         for (int i = 0; i < floatWritten.length; ++i)
         {
@@ -612,7 +612,7 @@ public class HDF5RoundtripTest
         }
         writer.writeFloatArray("ds", floatWritten, FLOAT_SCALING1_DEFLATE);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final float[] floatRead = reader.readFloatArray("ds");
         assertTrue(Arrays.equals(floatRead, floatWritten));
         reader.close();
@@ -625,13 +625,13 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String madnessOverwhelmesUs1 = StringUtils.repeat("a", 16384);
         final String madnessOverwhelmesUs2 = StringUtils.repeat("/b", 8192);
         writer.writeInt(madnessOverwhelmesUs1, 17);
         writer.writeFloat(madnessOverwhelmesUs2, 0.0f);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertEquals(17, reader.readInt(madnessOverwhelmesUs1));
         assertEquals(0.0f, reader.readFloat(madnessOverwhelmesUs2));
         reader.close();
@@ -644,7 +644,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String madnessOverwhelmesUs = StringUtils.repeat("a", 16385);
         try
         {
@@ -666,7 +666,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         writer.close();
         try
         {
@@ -676,7 +676,7 @@ public class HDF5RoundtripTest
             assertEquals(String.format("HDF5 file '%s' is closed.", datasetFile.getAbsolutePath()),
                     ex.getMessage());
         }
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         reader.close();
         try
         {
@@ -696,7 +696,7 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().syncMode(
+                HDF5Factory.configure(datasetFile).dontUseExtendableDataTypes().syncMode(
                         SyncMode.SYNC_BLOCK).writer();
         final String floatDatasetName = "/Group1/floats";
         final float[] floatDataWritten = new float[]
@@ -729,7 +729,7 @@ public class HDF5RoundtripTest
         writer.writeString(stringDatasetName, stringDataWritten);
         writer.writeStringVariableLength(stringDatasetName2, stringDataWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final float[] floatDataRead = reader.readFloatArray(floatDatasetName);
         HDF5DataSetInformation info = reader.getDataSetInformation(floatDatasetName);
         assertEquals(StorageLayout.COMPACT, info.getStorageLayout());
@@ -773,7 +773,7 @@ public class HDF5RoundtripTest
         datasetFile.deleteOnExit();
         final String dsName = "longArray";
         IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().writer();
+                HDF5Factory.configure(datasetFile).dontUseExtendableDataTypes().writer();
         // Creating the group is part of the "bug magic".
         writer.createGroup("group");
         final long[] arrayWritten1 = new long[1000];
@@ -783,7 +783,7 @@ public class HDF5RoundtripTest
         }
         writer.writeLongArray(dsName, arrayWritten1);
         writer.close();
-        writer = new HDF5WriterConfigurator(datasetFile).writer();
+        writer = HDF5Factory.configure(datasetFile).writer();
         final long[] arrayWritten2 = new long[5];
         for (int i = 0; i < arrayWritten1.length; ++i)
         {
@@ -791,7 +791,7 @@ public class HDF5RoundtripTest
         }
         writer.writeLongArray(dsName, arrayWritten2);
         writer.close();
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final long[] arrayRead = reader.readLongArray(dsName);
         assertTrue(Arrays.equals(arrayWritten2, arrayRead));
         reader.close();
@@ -807,21 +807,21 @@ public class HDF5RoundtripTest
         final String dsName = "ds";
         long[] data = new long[]
             { 1, 2, 3 };
-        IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         // Set maxdims of 5 so that we can overwrite the data set with a larger one later on.
         writer.createLongArrayCompact(dsName, 5);
         writer.writeLongArray(dsName, data);
         writer.close();
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
         reader.close();
         // Now write a larger data set and see whether it is correctly extended.
-        writer = new HDF5WriterConfigurator(datasetFile).writer();
+        writer = HDF5Factory.configure(datasetFile).writer();
         data = new long[]
             { 17, 42, 1, 2, 3 };
         writer.writeLongArray(dsName, data);
         writer.close();
-        reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
         reader.close();
     }
@@ -836,20 +836,20 @@ public class HDF5RoundtripTest
         final String dsName = "ds";
         long[] data = new long[]
             { 1, 2, 3, 4, 5 };
-        IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         writer.createLongArray(dsName, 5, 3);
         writer.writeLongArray(dsName, data);
         writer.close();
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
         reader.close();
         // Now write a larger data set and see whether the data set is correctly extended.
-        writer = new HDF5WriterConfigurator(datasetFile).writer();
+        writer = HDF5Factory.configure(datasetFile).writer();
         data = new long[]
             { 17, 42, 1, 2, 3, 101, -5 };
         writer.writeLongArray(dsName, data);
         writer.close();
-        reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
         reader.close();
     }
@@ -865,22 +865,22 @@ public class HDF5RoundtripTest
         long[] data = new long[]
             { 1, 2, 3 };
         IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().writer();
+                HDF5Factory.configure(datasetFile).dontUseExtendableDataTypes().writer();
         // Set maxdims such that COMPACT_LAYOUT_THRESHOLD (int bytes!) is exceeded so that we get a
         // contiguous data set.
         writer.createLongArray(dsName, 128, 1);
         writer.writeLongArray(dsName, data);
         writer.close();
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
         reader.close();
         // Now write a larger data set and see whether the data set is correctly extended.
-        writer = new HDF5WriterConfigurator(datasetFile).writer();
+        writer = HDF5Factory.configure(datasetFile).writer();
         data = new long[]
             { 17, 42, 1, 2, 3 };
         writer.writeLongArray(dsName, data);
         writer.close();
-        reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
         reader.close();
     }
@@ -892,13 +892,13 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "Float Dataset";
         final float[] floatDataWritten = new float[]
             { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f };
         writer.writeFloatArray(floatDatasetName, floatDataWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final float[] floatDataRead = reader.readFloatArray(floatDatasetName);
         assertTrue(Arrays.equals(floatDataWritten, floatDataRead));
         reader.close();
@@ -911,7 +911,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final float[][] floatMatrix = new float[10][10];
         for (int i = 0; i < floatMatrix.length; ++i)
@@ -923,7 +923,7 @@ public class HDF5RoundtripTest
         }
         writer.writeFloatMatrix(dsName, floatMatrix);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final int blockSize = 5;
         for (int i = 0; i < 2; ++i)
         {
@@ -954,7 +954,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final float[][] floatMatrixBlockWritten = new float[5][5];
         for (int i = 0; i < floatMatrixBlockWritten.length; ++i)
@@ -974,7 +974,7 @@ public class HDF5RoundtripTest
             }
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         for (int i = 0; i < 2; ++i)
         {
             for (int j = 0; j < 2; ++j)
@@ -995,7 +995,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final float[][] floatMatrixBlockWritten = new float[5][5];
         int count = 0;
@@ -1013,7 +1013,7 @@ public class HDF5RoundtripTest
         writer.writeFloatMatrixBlockWithOffset(dsName, floatMatrixBlockWritten, 5, 5, offsetX,
                 offsetY);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final float[][] floatMatrixBlockRead =
                 reader.readFloatMatrixBlockWithOffset(dsName, blockSize, blockSize, offsetX,
                         offsetY);
@@ -1044,7 +1044,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final byte[] byteArray = new byte[100];
         for (int i = 0; i < byteArray.length; ++i)
@@ -1053,7 +1053,7 @@ public class HDF5RoundtripTest
         }
         writer.writeByteArray(dsName, byteArray);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final int blockSize = 10;
         for (int i = 0; i < 10; ++i)
         {
@@ -1073,7 +1073,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final int size = 100;
         final int blockSize = 10;
@@ -1086,7 +1086,7 @@ public class HDF5RoundtripTest
             writer.writeByteArrayBlock(dsName, block, i);
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final byte[] byteArrayRead = reader.readAsByteArray(dsName);
         reader.close();
         assertEquals(size, byteArrayRead.length);
@@ -1103,7 +1103,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final int size = 99;
         final int blockSize = 10;
@@ -1123,7 +1123,7 @@ public class HDF5RoundtripTest
             }
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final byte[] byteArrayRead = reader.readByteArray(dsName);
         reader.close();
         assertEquals(size, byteArrayRead.length);
@@ -1140,7 +1140,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final int size = 100;
         final int blockSize = 10;
@@ -1154,7 +1154,7 @@ public class HDF5RoundtripTest
             writer.writeOpaqueByteArrayBlock(dsName, opaqueDataType, block, i);
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final byte[] byteArrayRead = reader.readAsByteArray(dsName);
         reader.close();
         assertEquals(size, byteArrayRead.length);
@@ -1171,7 +1171,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final int size = 99;
         final int blockSize = 10;
@@ -1193,7 +1193,7 @@ public class HDF5RoundtripTest
             }
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final byte[] byteArrayRead = reader.readAsByteArray(dsName);
         reader.close();
         assertEquals(size, byteArrayRead.length);
@@ -1210,7 +1210,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final int sizeX = 100;
         final int sizeY = 10;
@@ -1232,7 +1232,7 @@ public class HDF5RoundtripTest
             }
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final byte[][] byteMatrixRead = reader.readByteMatrix(dsName);
         reader.close();
         assertEquals(sizeX, byteMatrixRead.length);
@@ -1253,7 +1253,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final int sizeX = 99;
         final int sizeY = 12;
@@ -1277,7 +1277,7 @@ public class HDF5RoundtripTest
             }
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final byte[][] byteMatrixRead = reader.readByteMatrix(dsName);
         reader.close();
         assertEquals(sizeX, byteMatrixRead.length);
@@ -1298,14 +1298,14 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final MDFloatArray arrayWritten = new MDFloatArray(new float[]
             { 1, 2, 3, 4, 5, 6, 7, 8, 9 }, new int[]
             { 3, 3 });
         writer.writeFloatMDArray(dsName, arrayWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final MDFloatArray arrayRead = new MDFloatArray(new int[]
             { 10, 10 });
         final int memOfsX = 2;
@@ -1354,7 +1354,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final float[] arrayWritten = new float[dataSetSize];
         for (int i = 0; i < dataSetSize; ++i)
@@ -1364,7 +1364,7 @@ public class HDF5RoundtripTest
         writer.createFloatArray(dsName, dataSetSize, blockSize);
         writer.writeFloatArray(dsName, arrayWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         int i = 0;
         for (HDF5DataBlock<float[]> block : reader.getFloatArrayNaturalBlocks(dsName))
         {
@@ -1395,14 +1395,14 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final MDFloatArray arrayWritten = new MDFloatArray(new float[]
             { 1, 2, 3, 4, 5, 6, 7, 8, 9 }, new int[]
             { 3, 3 });
         writer.writeFloatMDArray(dsName, arrayWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final MDFloatArray arrayRead = new MDFloatArray(new int[]
             { 10, 10 });
         final int memOfsX = 2;
@@ -1504,7 +1504,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "ds";
         final float[] flattenedArray = new float[getNumberOfElements(dataSetSize)];
         for (int i = 0; i < flattenedArray.length; ++i)
@@ -1515,7 +1515,7 @@ public class HDF5RoundtripTest
         writer.createFloatMDArray(dsName, dataSetSize, blockSize);
         writer.writeFloatMDArray(dsName, arrayWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         int i = 0;
         for (HDF5MDDataBlock<MDFloatArray> block : reader.getFloatMDArrayNaturalBlocks(dsName))
         {
@@ -1544,13 +1544,13 @@ public class HDF5RoundtripTest
         stringArrayFile.delete();
         assertFalse(stringArrayFile.exists());
         stringArrayFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(stringArrayFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(stringArrayFile).writer();
         final String[] data = new String[]
             { "abc", "ABCxxx", "xyz" };
         final String dataSetName = "/aStringArray";
         writer.writeStringArray(dataSetName, data);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(stringArrayFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(stringArrayFile).reader();
         final String[] dataStored = reader.readStringArray(dataSetName);
         assertTrue(Arrays.equals(data, dataStored));
         reader.close();
@@ -1563,13 +1563,13 @@ public class HDF5RoundtripTest
         compressedStringFile.delete();
         assertFalse(compressedStringFile.exists());
         compressedStringFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(compressedStringFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(compressedStringFile).writer();
         final int size = 100000;
         final String dataSetName = "/hopefullyCompressedString";
         final String longMonotonousString = StringUtils.repeat("a", size);
         writer.writeString(dataSetName, longMonotonousString, GENERIC_DEFLATE);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(compressedStringFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(compressedStringFile).reader();
         final String longMonotonousStringStored = reader.readString(dataSetName);
         assertEquals(longMonotonousString, longMonotonousStringStored);
         reader.close();
@@ -1585,7 +1585,7 @@ public class HDF5RoundtripTest
         compressedStringArrayFile.delete();
         assertFalse(compressedStringArrayFile.exists());
         compressedStringArrayFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(compressedStringArrayFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(compressedStringArrayFile).writer();
         final int size = 100000;
         final String longMonotonousString = StringUtils.repeat("a", size);
         final String[] data = new String[]
@@ -1593,7 +1593,7 @@ public class HDF5RoundtripTest
         final String dataSetName = "/aHopeFullyCompressedStringArray";
         writer.writeStringArray(dataSetName, data, size, GENERIC_DEFLATE_MAX);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(compressedStringArrayFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(compressedStringArrayFile).reader();
         final String[] dataStored = reader.readStringArray(dataSetName);
         assertTrue(Arrays.equals(data, dataStored));
         reader.close();
@@ -1622,7 +1622,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String stringDatasetName = "/compressed";
         final StringBuilder b = new StringBuilder();
         for (int i = 0; i < 10000; ++i)
@@ -1640,13 +1640,13 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "/singleFloat";
         final float[] floatDataWritten = new float[]
             { 1.0f };
         writer.writeFloatArray(floatDatasetName, floatDataWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         reader.hasAttribute(floatDatasetName, "flag");
         final float[] floatDataRead = reader.readFloatArray(floatDatasetName);
         assertTrue(Arrays.equals(floatDataWritten, floatDataRead));
@@ -1660,14 +1660,14 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "/singleFloat";
         final float[][] floatDataWritten = new float[][]
             {
                 { 1.0f } };
         writer.writeFloatMatrix(floatDatasetName, floatDataWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final float[][] floatDataRead = reader.readFloatMatrix(floatDatasetName);
         assertTrue(equals(floatDataWritten, floatDataRead));
         reader.close();
@@ -1680,14 +1680,14 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "/singleFloat";
         final float[][] floatDataWritten = new float[][]
             {
                 { 1.0f, 2.0f } };
         writer.writeFloatMatrix(floatDatasetName, floatDataWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final float[][] floatDataRead = reader.readFloatMatrix(floatDatasetName);
         assertTrue(equals(floatDataWritten, floatDataRead));
         reader.close();
@@ -1736,7 +1736,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "/float";
         writer.writeFloatArray(floatDatasetName, new float[0]);
         final String doubleDatasetName = "/double";
@@ -1750,7 +1750,7 @@ public class HDF5RoundtripTest
         final String longDatasetName = "/long";
         writer.writeLongArray(longDatasetName, new long[0]);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertEquals(HDF5ObjectType.DATASET, reader.getObjectType(floatDatasetName));
         assertTrue(reader.readFloatArray(floatDatasetName).length == 0);
         assertTrue(reader.readDoubleArray(doubleDatasetName).length == 0);
@@ -1769,7 +1769,7 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().writer();
+                HDF5Factory.configure(datasetFile).dontUseExtendableDataTypes().writer();
         final String floatDatasetName = "/float";
         writer.writeFloatArray(floatDatasetName, new float[0]);
         final String doubleDatasetName = "/double";
@@ -1783,7 +1783,7 @@ public class HDF5RoundtripTest
         final String longDatasetName = "/long";
         writer.writeLongArray(longDatasetName, new long[0]);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertEquals(HDF5ObjectType.DATASET, reader.getObjectType(floatDatasetName));
         assertTrue(reader.readFloatArray(floatDatasetName).length == 0);
         assertTrue(reader.readDoubleArray(doubleDatasetName).length == 0);
@@ -1801,7 +1801,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "/float";
         writer.writeFloatArrayCompact(floatDatasetName, new float[0]);
         final String doubleDatasetName = "/double";
@@ -1815,7 +1815,7 @@ public class HDF5RoundtripTest
         final String longDatasetName = "/long";
         writer.writeLongArrayCompact(longDatasetName, new long[0]);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertEquals(HDF5ObjectType.DATASET, reader.getObjectType(floatDatasetName));
         assertTrue(reader.readFloatArray(floatDatasetName).length == 0);
         assertTrue(reader.readDoubleArray(doubleDatasetName).length == 0);
@@ -1833,7 +1833,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String floatDatasetName = "/float";
         writer.writeFloatMatrix(floatDatasetName, new float[0][0]);
         final String doubleDatasetName = "/double";
@@ -1847,7 +1847,7 @@ public class HDF5RoundtripTest
         final String longDatasetName = "/long";
         writer.writeLongMatrix(longDatasetName, new long[5][0]);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertTrue(isEmpty(reader.readFloatMatrix(floatDatasetName)));
         assertTrue(isEmpty(reader.readDoubleMatrix(doubleDatasetName)));
         assertTrue(isEmpty(reader.readByteMatrix(byteDatasetName)));
@@ -1865,7 +1865,7 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile).dontUseExtendableDataTypes().writer();
+                HDF5Factory.configure(datasetFile).dontUseExtendableDataTypes().writer();
         final String floatDatasetName = "/float";
         writer.writeFloatMatrix(floatDatasetName, new float[0][0]);
         final String doubleDatasetName = "/double";
@@ -1879,7 +1879,7 @@ public class HDF5RoundtripTest
         final String longDatasetName = "/long";
         writer.writeLongMatrix(longDatasetName, new long[5][0]);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertTrue(isEmpty(reader.readFloatMatrix(floatDatasetName)));
         assertTrue(isEmpty(reader.readDoubleMatrix(doubleDatasetName)));
         assertTrue(isEmpty(reader.readByteMatrix(byteDatasetName)));
@@ -1896,18 +1896,18 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "/vector";
         final float[] firstVector = new float[]
             { 1f, 2f, 3f };
         writer.writeFloatArray(dsName, firstVector);
         writer.close();
-        writer = new HDF5WriterConfigurator(datasetFile).writer();
+        writer = HDF5Factory.configure(datasetFile).writer();
         final float[] secondVector = new float[]
             { 1f, 2f, 3f, 4f };
         writer.writeFloatArray(dsName, secondVector);
         writer.close();
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final float[] vectorRead = reader.readFloatArray(dsName);
         reader.close();
         assertTrue(Arrays.equals(secondVector, vectorRead));
@@ -1920,17 +1920,17 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "/vector";
         final byte[] firstVector = new byte[]
             { 1, 2, 3 };
         writer.writeByteArray(dsName, firstVector);
         writer.close();
-        writer = new HDF5WriterConfigurator(datasetFile).writer();
+        writer = HDF5Factory.configure(datasetFile).writer();
         final byte[] emptyVector = new byte[0];
         writer.writeByteArray(dsName, emptyVector);
         writer.close();
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final byte[] vectorRead = reader.readByteArray(dsName);
         reader.close();
         assertTrue(Arrays.equals(emptyVector, vectorRead));
@@ -1943,17 +1943,17 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "/vector";
         final byte[] emptyVector = new byte[0];
         writer.writeByteArray(dsName, emptyVector);
         writer.close();
-        writer = new HDF5WriterConfigurator(datasetFile).writer();
+        writer = HDF5Factory.configure(datasetFile).writer();
         final byte[] nonEmptyVector = new byte[]
             { 1 };
         writer.writeByteArray(dsName, nonEmptyVector);
         writer.close();
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final byte[] vectorRead = reader.readByteArray(dsName);
         reader.close();
         assertTrue(Arrays.equals(nonEmptyVector, vectorRead));
@@ -1966,7 +1966,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         try
         {
             final String dsName = "/vector";
@@ -1974,13 +1974,13 @@ public class HDF5RoundtripTest
                 { 1, 2, 3 };
             writer.writeByteArray(dsName, firstVector);
             writer.close();
-            writer = new HDF5WriterConfigurator(datasetFile).writer();
+            writer = HDF5Factory.configure(datasetFile).writer();
             writer.delete(dsName.substring(1));
         } finally
         {
             writer.close();
         }
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         try
         {
             final List<String> members = reader.getAllGroupMembers("/");
@@ -1999,7 +1999,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         try
         {
             final String groupName = "/group";
@@ -2008,13 +2008,13 @@ public class HDF5RoundtripTest
                 { 1, 2, 3 };
             writer.writeByteArray(dsName, firstVector);
             writer.close();
-            writer = new HDF5WriterConfigurator(datasetFile).writer();
+            writer = HDF5Factory.configure(datasetFile).writer();
             writer.delete(groupName);
         } finally
         {
             writer.close();
         }
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         try
         {
             final List<String> members = reader.getAllGroupMembers("/");
@@ -2034,14 +2034,14 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "/string";
         writer.writeString(dsName, "non-empty");
         writer.close();
-        writer = new HDF5WriterConfigurator(datasetFile).writer();
+        writer = HDF5Factory.configure(datasetFile).writer();
         writer.writeString(dsName, "");
         writer.close();
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final String stringRead = reader.readString(dsName);
         reader.close();
         assertEquals("", stringRead);
@@ -2054,7 +2054,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "/matrix";
         final float[][] firstMatrix = new float[][]
             {
@@ -2062,7 +2062,7 @@ public class HDF5RoundtripTest
                 { 4f, 5f, 6f } };
         writer.writeFloatMatrix(dsName, firstMatrix);
         writer.close();
-        writer = new HDF5WriterConfigurator(datasetFile).writer();
+        writer = HDF5Factory.configure(datasetFile).writer();
         final float[][] secondMatrix = new float[][]
             {
                 { 1f, 2f, 3f, 4f },
@@ -2070,7 +2070,7 @@ public class HDF5RoundtripTest
                 { 9f, 10f, 11f, 12f } };
         writer.writeFloatMatrix(dsName, secondMatrix);
         writer.close();
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final float[][] matrixRead = reader.readFloatMatrix(dsName);
         reader.close();
         assertMatrixEquals(secondMatrix, matrixRead);
@@ -2083,18 +2083,18 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String dsName = "/vector";
         final String[] firstVector = new String[]
             { "a", "b", "c" };
         writer.writeStringArray(dsName, firstVector);
         writer.close();
-        writer = new HDF5WriterConfigurator(datasetFile).writer();
+        writer = HDF5Factory.configure(datasetFile).writer();
         final String[] secondVector = new String[]
             { "a", "b" };
         writer.writeStringArray(dsName, secondVector);
         writer.close();
-        IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final String[] vectorRead = reader.readStringArray(dsName);
         reader.close();
         assertTrue(Arrays.equals(secondVector, vectorRead));
@@ -2125,11 +2125,11 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         writer.writeTimeStamp(timeStampDS, timestampValue);
         writer.writeLong(noTimestampDS, someLong);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, reader
                 .tryGetTypeVariant(timeStampDS));
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeStampDS);
@@ -2173,11 +2173,11 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         writer.writeTimeStampArray(timeSeriesDS, timeSeries);
         writer.writeLongArray(noTimeseriesDS, notATimeSeries);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeSeriesDS);
         assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, info
                 .tryGetTypeVariant());
@@ -2218,14 +2218,14 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         writer.createTimeStampArray(timeSeriesDS, 100, 10, GENERIC_DEFLATE);
         for (int i = 0; i < 10; ++i)
         {
             writer.writeTimeStampArrayBlock(timeSeriesDS, timeSeries, i);
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeSeriesDS);
         assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, info
                 .tryGetTypeVariant());
@@ -2251,11 +2251,11 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         writer.writeTimeDuration(timeDurationDS, timeDurationInSeconds, HDF5TimeUnit.SECONDS);
         writer.writeLong(noTimestampDS, someLong);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationDS);
         assertTrue(info.isScalar());
         assertEquals(StorageLayout.COMPACT, info.getStorageLayout());
@@ -2298,11 +2298,11 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         writer.writeShort(timeDurationDS, timeDurationInSeconds);
         writer.addTypeVariant(timeDurationDS, HDF5TimeUnit.SECONDS.getTypeVariant());
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationDS);
         assertTrue(info.isScalar());
         assertEquals(StorageLayout.COMPACT, info.getStorageLayout());
@@ -2336,7 +2336,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         writer.createTimeDurationArray(timeDurationSeriesDS, 100, 10, HDF5TimeUnit.MILLISECONDS,
                 GENERIC_DEFLATE);
         for (int i = 0; i < 10; ++i)
@@ -2345,7 +2345,7 @@ public class HDF5RoundtripTest
                     HDF5TimeUnit.MILLISECONDS);
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationSeriesDS);
         assertEquals(HDF5DataTypeVariant.TIME_DURATION_MILLISECONDS, info.tryGetTypeVariant());
         assertChunkSizes(info, 10);
@@ -2366,7 +2366,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(datasetFile).writer();
         final String datasetName = "SomeDataSet";
         writer.writeIntArray(datasetName, new int[0]);
         final String booleanAttributeName = "Boolean Attribute";
@@ -2389,7 +2389,7 @@ public class HDF5RoundtripTest
         writer.addIntAttribute(datasetName, volatileAttributeName, 21);
         writer.deleteAttribute(datasetName, volatileAttributeName);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(datasetFile).reader();
         assertTrue(reader.hasAttribute(datasetName, booleanAttributeName));
         final boolean booleanAttributeValueRead =
                 reader.getBooleanAttribute(datasetName, booleanAttributeName);
@@ -2419,7 +2419,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         try
         {
             final List<String> initialDataTypes = writer.getGroupMembers(HDF5Utils.DATATYPE_GROUP);
@@ -2443,7 +2443,7 @@ public class HDF5RoundtripTest
         groupFile.delete();
         assertFalse(groupFile.exists());
         groupFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(groupFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(groupFile).writer();
         final String groupName1 = "/group";
         final String groupName2 = "/group2";
         final String groupName4 = "/dataSetGroup";
@@ -2459,7 +2459,7 @@ public class HDF5RoundtripTest
         assertFalse(writer.isGroup(dataSetName));
         assertFalse(writer.isGroup(groupName5));
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(groupFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(groupFile).reader();
         assertTrue(reader.isGroup(groupName1));
         assertEquals(HDF5ObjectType.GROUP, reader.getObjectType(groupName1));
         assertTrue(reader.isGroup(groupName4));
@@ -2475,7 +2475,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         writer.writeBoolean("/some/flag", false);
         assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/some"));
         assertEquals(HDF5ObjectType.DATASET, writer.getObjectType("/some/flag"));
@@ -2491,7 +2491,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         try
         {
             assertFalse(writer.exists("non_existent"));
@@ -2509,7 +2509,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         writer.writeShortMatrix("ds", new short[][]
             {
                 { (short) 1, (short) 2, (short) 3 },
@@ -2518,7 +2518,7 @@ public class HDF5RoundtripTest
         writer.writeString("stringDS", s);
         writer.writeStringVariableLength("stringDSVL", s);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         final HDF5DataSetInformation info = reader.getDataSetInformation("ds");
         assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
         assertEquals(2, info.getTypeInformation().getElementSize());
@@ -2555,7 +2555,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         try
         {
             assertFalse(writer.exists("non_existent"));
@@ -2578,7 +2578,7 @@ public class HDF5RoundtripTest
         final String dataSetName = groupName2 + "/dataset";
         final String dataSetName2 = "ds2";
         final String linkName = "/link";
-        final IHDF5Writer writer = new HDF5WriterConfigurator(groupFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(groupFile).writer();
         try
         {
             writer.createGroup(groupName1);
@@ -2590,7 +2590,7 @@ public class HDF5RoundtripTest
         {
             writer.close();
         }
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(groupFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(groupFile).reader();
         final Map<String, HDF5LinkInformation> map = new HashMap<String, HDF5LinkInformation>();
         for (HDF5LinkInformation info : reader.getAllGroupMemberInformation("/", false))
         {
@@ -2656,12 +2656,12 @@ public class HDF5RoundtripTest
         linkFile.delete();
         assertFalse(linkFile.exists());
         linkFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(linkFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(linkFile).writer();
         final String str = "BlaBlub";
         writer.writeString("/data/set", str);
         writer.createHardLink("/data/set", "/data/link");
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(linkFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(linkFile).reader();
         assertEquals(HDF5ObjectType.DATASET, reader.getObjectType("/data/link"));
         assertEquals(str, reader.readString("/data/link"));
         reader.close();
@@ -2674,11 +2674,11 @@ public class HDF5RoundtripTest
         linkFile.delete();
         assertFalse(linkFile.exists());
         linkFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(linkFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(linkFile).writer();
         writer.writeBoolean("/data/set", true);
         writer.createSoftLink("/data/set", "/data/link");
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(linkFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(linkFile).reader();
         assertEquals(HDF5ObjectType.SOFT_LINK, reader.getObjectType("/data/link"));
         assertEquals("/data/set", reader.getLinkInformation("/data/link")
                 .tryGetSymbolicLinkTarget());
@@ -2692,7 +2692,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         final long now = System.currentTimeMillis();
         final String dataSetName1 = "creationTime1";
         final String dataSetName2 = "creationTime2";
@@ -2709,7 +2709,7 @@ public class HDF5RoundtripTest
             assertEquals(HDF5Constants.H5E_EXISTS, ex.getMinorErrorNumber());
         }
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         assertEquals(dataSetName2, reader.getLinkInformation(linkName).tryGetSymbolicLinkTarget());
         reader.close();
     }
@@ -2721,10 +2721,10 @@ public class HDF5RoundtripTest
         linkFile.delete();
         assertFalse(linkFile.exists());
         linkFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(linkFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(linkFile).writer();
         writer.createSoftLink("/does/not/exist", "/linkToNowhere");
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(linkFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(linkFile).reader();
         assertEquals(HDF5ObjectType.SOFT_LINK, reader.getObjectType("/linkToNowhere"));
         assertEquals("/does/not/exist", reader.getLinkInformation("/linkToNowhere")
                 .tryGetSymbolicLinkTarget());
@@ -2738,10 +2738,10 @@ public class HDF5RoundtripTest
         noLinkFile.delete();
         assertFalse(noLinkFile.exists());
         noLinkFile.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(noLinkFile).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(noLinkFile).writer();
         writer.writeBoolean("/data/set", true);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(noLinkFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(noLinkFile).reader();
         try
         {
             assertNull(reader.getLinkInformation("/data/set").tryGetSymbolicLinkTarget());
@@ -2758,7 +2758,7 @@ public class HDF5RoundtripTest
         fileToLinkTo.delete();
         assertFalse(fileToLinkTo.exists());
         fileToLinkTo.deleteOnExit();
-        final IHDF5Writer writer1 = new HDF5WriterConfigurator(fileToLinkTo).writer();
+        final IHDF5Writer writer1 = HDF5Factory.configure(fileToLinkTo).writer();
         final String dataSetName = "/data/set";
         final String dataSetValue = "Some data set value...";
         writer1.writeString(dataSetName, dataSetValue);
@@ -2767,11 +2767,11 @@ public class HDF5RoundtripTest
         linkFile.delete();
         assertFalse(linkFile.exists());
         linkFile.deleteOnExit();
-        final IHDF5Writer writer2 = new HDF5WriterConfigurator(linkFile).writer();
+        final IHDF5Writer writer2 = HDF5Factory.configure(linkFile).writer();
         final String linkName = "/data/link";
         writer2.createExternalLink(fileToLinkTo.getPath(), dataSetName, linkName);
         writer2.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(linkFile).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(linkFile).reader();
         assertEquals(HDF5ObjectType.EXTERNAL_LINK, reader.getObjectType(linkName));
         assertEquals(dataSetValue, reader.readString(linkName));
         final String expectedLink =
@@ -2790,7 +2790,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5EnumerationType type = writer.getEnumType(enumTypeName, new String[]
             { "ONE", "TWO", "THREE" }, false);
         writer.writeEnum(dsName, new HDF5EnumerationValue(type, "THREE"));
@@ -2798,7 +2798,7 @@ public class HDF5RoundtripTest
         writer.getEnumType(enumTypeName, new String[]
             { "THREE", "ONE", "TWO" }, false);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         type = reader.getEnumType(enumTypeName);
         final String valueStr = reader.readEnumAsString(dsName);
         assertEquals("THREE", valueStr);
@@ -2811,7 +2811,7 @@ public class HDF5RoundtripTest
         type = reader.getEnumTypeForObject(dsName);
         assertEquals("THREE", reader.readEnum(dsName, type).getValue());
         reader.close();
-        final IHDF5Writer writer2 = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer2 = HDF5Factory.configure(file).writer();
         type = writer2.getEnumType(enumTypeName, new String[]
             { "ONE", "TWO", "THREE" }, true);
         assertEquals("THREE", writer2.readEnum(dsName, type).getValue());
@@ -2827,7 +2827,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5EnumerationType type = createEnum16Bit(writer, enumTypeName);
         writer.writeEnum(dsName, new HDF5EnumerationValue(type, "17"));
         final String[] confusedValues = new String[type.getValueArray().length];
@@ -2836,7 +2836,7 @@ public class HDF5RoundtripTest
         // This is wrong, but we disabled the check.
         writer.getEnumType(enumTypeName, confusedValues, false);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         type = reader.getEnumType(enumTypeName);
         final String valueStr = reader.readEnumAsString(dsName);
         assertEquals("17", valueStr);
@@ -2845,7 +2845,7 @@ public class HDF5RoundtripTest
         type = reader.getEnumTypeForObject(dsName);
         assertEquals("17", reader.readEnum(dsName, type).getValue());
         reader.close();
-        final IHDF5Writer writer2 = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer2 = HDF5Factory.configure(file).writer();
         type = writer2.getEnumType(enumTypeName, type.getValueArray(), true);
         assertEquals("17", writer2.readEnum(dsName, type).getValue());
         // That is wrong, but we disable the check, so no exception should be thrown.
@@ -2859,14 +2859,14 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5EnumerationType type = writer.getEnumType("testEnum", new String[]
             { "ONE", "TWO", "THREE" }, false);
         writer.writeEnum("/testEnum", new HDF5EnumerationValue(type, 2));
         writer.close();
         try
         {
-            writer = new HDF5WriterConfigurator(file).writer();
+            writer = HDF5Factory.configure(file).writer();
             writer.getEnumType("testEnum", new String[]
                 { "THREE", "ONE", "TWO" }, true);
         } finally
@@ -2883,7 +2883,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
             { "ONE", "TWO", "THREE" }, false);
         HDF5EnumerationValueArray arrayWritten =
@@ -2891,7 +2891,7 @@ public class HDF5RoundtripTest
                     { "TWO", "ONE", "THREE" });
         writer.writeEnumArray("/testEnum", arrayWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         final HDF5EnumerationValueArray arrayRead = reader.readEnumArray("/testEnum");
         enumType = reader.getEnumTypeForObject("/testEnum");
         final HDF5EnumerationValueArray arrayRead2 = reader.readEnumArray("/testEnum", enumType);
@@ -2916,13 +2916,13 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         final HDF5EnumerationType enumType = createEnum16Bit(writer, enumTypeName);
         final int[] arrayWritten = new int[]
             { 8, 16, 722, 913, 333 };
         writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten));
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
         assertEquals(arrayWritten.length, stringArrayRead.length);
         for (int i = 0; i < stringArrayRead.length; ++i)
@@ -2941,7 +2941,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         final HDF5EnumerationType enumType = createEnum16Bit(writer, enumTypeName);
         final int[] arrayWritten = new int[100];
         for (int i = 0; i < arrayWritten.length; ++i)
@@ -2950,7 +2950,7 @@ public class HDF5RoundtripTest
         }
         writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten));
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
         assertEquals(arrayWritten.length, stringArrayRead.length);
         for (int i = 0; i < stringArrayRead.length; ++i)
@@ -2969,7 +2969,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
             { "A", "C", "G", "T" }, false);
         final Random rng = new Random();
@@ -2982,7 +2982,7 @@ public class HDF5RoundtripTest
                 new HDF5EnumerationValueArray(enumType, arrayWrittenString);
         writer.writeEnumArray("/testEnum", arrayWritten, INT_AUTO_SCALING);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         final HDF5EnumerationValueArray arrayRead = reader.readEnumArray("/testEnum");
         enumType = reader.getEnumTypeForObject("/testEnum");
         final HDF5EnumerationValueArray arrayRead2 = reader.readEnumArray("/testEnum", enumType);
@@ -3000,7 +3000,7 @@ public class HDF5RoundtripTest
 
         // Shouldn't work in strict HDF5 1.6 mode.
         final IHDF5Writer writer2 =
-                new HDF5WriterConfigurator(new File(workingDirectory,
+                HDF5Factory.configure(new File(workingDirectory,
                         "scaleoffsetfilterenumfailed.h5")).fileFormat(FileFormat.STRICTLY_1_6)
                         .writer();
         HDF5EnumerationType enumType2 = writer2.getEnumType(enumTypeName, new String[]
@@ -3028,13 +3028,13 @@ public class HDF5RoundtripTest
         final String opaqueDataSetName = "/opaque/ds";
         final String byteArrayDataSetName = "/bytearr/ds";
         final String opaqueTag = "my opaque type";
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         final byte[] byteArrayWritten = new byte[]
             { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         writer.writeByteArray(byteArrayDataSetName, byteArrayWritten);
         writer.writeOpaqueByteArray(opaqueDataSetName, opaqueTag, byteArrayWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         HDF5DataSetInformation info = reader.getDataSetInformation(byteArrayDataSetName);
         assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
         assertChunkSizes(info, byteArrayWritten.length);
@@ -3069,7 +3069,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         final HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
             { "ONE", "TWO", "THREE" }, false);
         final int[] arrayWritten =
@@ -3079,7 +3079,7 @@ public class HDF5RoundtripTest
                             enumType.tryGetIndexForValue("THREE").byteValue() };
         writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten));
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
         assertEquals(arrayWritten.length, stringArrayRead.length);
         for (int i = 0; i < stringArrayRead.length; ++i)
@@ -3249,7 +3249,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5CompoundType<Record> compoundType = Record.getHDF5Type(writer);
         HDF5EnumerationType enumType = writer.getEnumType("someEnumType");
         final Record recordWritten =
@@ -3263,7 +3263,7 @@ public class HDF5RoundtripTest
                             { 11, 12, 13, 14 });
         writer.writeCompound("/testCompound", compoundType, recordWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         final HDF5CompoundMemberInformation[] memMemberInfo =
                 Record.getMemberInfo(reader.getEnumType("someEnumType"));
         final HDF5CompoundMemberInformation[] diskMemberInfo =
@@ -3286,7 +3286,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5CompoundType<Record> compoundType = Record.getHDF5Type(writer);
         HDF5EnumerationType enumType = writer.getEnumType("someEnumType");
         final Record recordWritten =
@@ -3363,7 +3363,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5CompoundType<BitFieldRecord> compoundType = BitFieldRecord.getHDF5Type(writer);
         final BitSet bs = new BitSet();
         bs.set(39);
@@ -3371,7 +3371,7 @@ public class HDF5RoundtripTest
         final BitFieldRecord recordWritten = new BitFieldRecord(bs);
         writer.writeCompound("/testCompound", compoundType, recordWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         final HDF5CompoundMemberInformation[] memMemberInfo = BitFieldRecord.getMemberInfo();
         final HDF5CompoundMemberInformation[] diskMemberInfo =
                 reader.getCompoundDataSetInformation("/testCompound");
@@ -3393,7 +3393,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5CompoundType<Record> compoundType = Record.getHDF5Type(writer);
         HDF5EnumerationType enumType = writer.getEnumType("someEnumType", new String[]
             { "1", "Two", "THREE" }, false);
@@ -3418,7 +3418,7 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }), };
         writer.writeCompoundArrayCompact("/testCompound", compoundType, arrayWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         compoundType = Record.getHDF5Type(reader);
         Record[] arrayRead = reader.readCompoundArray("/testCompound", Record.getHDF5Type(reader));
         Record firstElementRead = reader.readCompound("/testCompound", Record.getHDF5Type(reader));
@@ -3437,7 +3437,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5CompoundType<Record> compoundType = Record.getHDF5Type(writer);
         HDF5EnumerationType enumType = writer.getEnumType("someEnumType");
         writer.createCompoundArray("/testCompound", compoundType, 6, 3);
@@ -3498,7 +3498,7 @@ public class HDF5RoundtripTest
         writer.writeCompoundArrayBlock("/testCompound", compoundType, arrayWritten1, 0);
         writer.writeCompoundArrayBlock("/testCompound", compoundType, arrayWritten2, 1);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         compoundType = Record.getHDF5Type(reader);
         Record[] arrayRead = reader.readCompoundArrayBlock("/testCompound", compoundType, 3, 0);
         for (int i = 0; i < arrayRead.length; ++i)
@@ -3526,7 +3526,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5CompoundType<Record> compoundType = Record.getHDF5Type(writer);
         HDF5EnumerationType enumType = writer.getEnumType("someEnumType");
         final Record[] arrayWritten =
@@ -3568,7 +3568,7 @@ public class HDF5RoundtripTest
             { 2, 2 });
         writer.writeCompoundMDArray("/testCompound", compoundType, mdArrayWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         compoundType = Record.getHDF5Type(reader);
         final MDArray<Record> mdArrayRead =
                 reader.readCompoundMDArray("/testCompound", compoundType);
@@ -3583,7 +3583,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5CompoundType<Record> compoundType = Record.getHDF5Type(writer);
         HDF5EnumerationType enumType = writer.getEnumType("someEnumType");
         writer.createCompoundMDArray("/testCompound", compoundType, new long[]
@@ -3636,7 +3636,7 @@ public class HDF5RoundtripTest
         writer.writeCompoundMDArrayBlock("/testCompound", compoundType, mdArrayWritten2, new long[]
             { 0, 1 });
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         compoundType = Record.getHDF5Type(reader);
         final MDArray<Record> mdArrayRead1 =
                 reader.readCompoundMDArrayBlock("/testCompound", compoundType, new int[]
@@ -3707,12 +3707,12 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         HDF5CompoundType<RecordA> compoundTypeInt = RecordA.getHDF5Type(writer);
         final RecordA recordWritten = new RecordA(17, 42.0f);
         writer.writeCompound("/testCompound", compoundTypeInt, recordWritten);
         writer.close();
-        final IHDF5Reader reader = new HDF5ReaderConfigurator(file).reader();
+        final IHDF5Reader reader = HDF5Factory.configureForReading(file).reader();
         HDF5CompoundType<RecordB> compoundTypeFloat = RecordB.getHDF5Type(reader);
         final RecordB recordRead = reader.readCompound("/testCompound", compoundTypeFloat);
         assertTrue("written: " + recordWritten.a + ", read: " + recordRead.a,
@@ -3729,7 +3729,7 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = new HDF5WriterConfigurator(file).writer();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
         writer.writeFloat("pi", 3.14159f);
         writer.writeFloat("INFINITY", Float.POSITIVE_INFINITY);
         writer.writeDouble("DINFINITY", Double.NEGATIVE_INFINITY);
@@ -3740,7 +3740,7 @@ public class HDF5RoundtripTest
         writer.writeLong("largeInteger", Long.MAX_VALUE);
         writer.close();
         final HDF5ReaderConfigurator config =
-                new HDF5ReaderConfigurator(file).performNumericConversions();
+                HDF5Factory.configureForReading(file).performNumericConversions();
         // If this platform doesn't support numeric conversions, the test would fail.
         if (config.platformSupportsNumericConversions() == false)
         {

@@ -19,7 +19,6 @@ package ch.systemsx.cisd.hdf5;
 import java.io.File;
 
 import ch.systemsx.cisd.base.utilities.OSUtilities;
-import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**
  * If you want the reader to perform numeric conversions, call {@link #performNumericConversions()}
@@ -27,7 +26,7 @@ import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
  * 
  * @author Bernd Rinn
  */
-public class HDF5ReaderConfigurator
+class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
 {
 
     protected final File hdf5File;
@@ -36,16 +35,13 @@ public class HDF5ReaderConfigurator
 
     protected HDF5Reader readerWriterOrNull;
 
-    public HDF5ReaderConfigurator(File hdf5File)
+    HDF5ReaderConfigurator(File hdf5File)
     {
         assert hdf5File != null;
 
         this.hdf5File = hdf5File.getAbsoluteFile();
     }
 
-    /**
-     * Returns <code>true</code>, if this platform supports numeric conversions.
-     */
     public boolean platformSupportsNumericConversions()
     {
         // On HDF5 1.8.2, numeric conversions on sparcv9 can get us SEGFAULTS for converting between
@@ -57,12 +53,6 @@ public class HDF5ReaderConfigurator
         return true;
     }
 
-    /**
-     * Will try to perform numeric conversions where appropriate if supported by the platform.
-     * <p>
-     * <strong>Numeric conversions can be platform dependent and are not available on all platforms.
-     * Be advised not to rely on numeric conversions if you can help it!</strong>
-     */
     public HDF5ReaderConfigurator performNumericConversions()
     {
         if (platformSupportsNumericConversions() == false)
@@ -73,16 +63,13 @@ public class HDF5ReaderConfigurator
         return this;
     }
 
-    /**
-     * Returns an {@link HDF5Reader} based on this configuration.
-     */
     public IHDF5Reader reader()
     {
         if (readerWriterOrNull == null)
         {
             readerWriterOrNull =
                     new HDF5Reader(new HDF5BaseReader(hdf5File, performNumericConversions,
-                            FileFormat.ALLOW_1_8, false));
+                            IHDF5WriterConfigurator.FileFormat.ALLOW_1_8, false));
         }
         return readerWriterOrNull;
     }

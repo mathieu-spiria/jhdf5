@@ -37,33 +37,36 @@ public class HDF5Factory
     /**
      * Opens an HDF5 <var>file</var> for writing and reading. If the file does not yet exist, it
      * will be created.
-     * <p>
-     * Note: This method will add automatically add an extension <code>h5</code> to the file name if
-     * it doesn't already have one.
      */
     public static IHDF5SimpleWriter open(File file)
     {
-        return new HDF5WriterConfigurator(ensureExtension(file)).writer();
+        return new HDF5WriterConfigurator(file).writer();
     }
 
     /**
      * Opens an HDF5 <var>file</var> for reading. It is an error if the file does not exist.
-     * <p>
-     * Note: This method will add automatically add an extension <code>h5</code> to the file name if
-     * it doesn't already have one.
      */
     public static IHDF5SimpleReader openForReading(File file)
     {
-        return new HDF5ReaderConfigurator(ensureExtension(file)).reader();
+        return new HDF5ReaderConfigurator(file).reader();
     }
 
-    private static File ensureExtension(File file)
+    /**
+     * Opens a configurator for an HDF5 <var>file</var> for writing and reading. Call
+     * {@link HDF5WriterConfigurator#writer()} in order to start reading and writing the file.
+     */
+    public static IHDF5WriterConfigurator configure(File file)
     {
-        String fileName = file.getAbsolutePath();
-        if (fileName.endsWith(".h5") == false && file.exists() == false)
-        {
-            fileName += ".h5";
-        }
-        return new File(fileName);
+        return new HDF5WriterConfigurator(file);
     }
+
+    /**
+     * Opens a configurator for an HDF5 <var>file</var> for reading. Call
+     * {@link HDF5ReaderConfigurator#reader()} in order to start reading the file.
+     */
+    public static IHDF5ReaderConfigurator configureForReading(File file)
+    {
+        return new HDF5ReaderConfigurator(file);
+    }
+
 }
