@@ -32,7 +32,7 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 public final class HDF5DataSetInformation
 {
     /**
-     * The storage layout of a data set in the HDF5 file. Not applicable for attributes.
+     * The storage layout of a data set in the HDF5 file. Not applicable for attributes.
      */
     public enum StorageLayout
     {
