@@ -204,8 +204,6 @@ import ch.systemsx.cisd.base.utilities.NativeLibraryUtilities;
 public class H5
 {
 
-    public final static String H5PATH_PROPERTY_KEY = "ncsa.hdf.hdf5lib.H5.hdf5lib";
-
     /** Expected major number of the library. */
     private final static int expectedMajnum = 1;
 
