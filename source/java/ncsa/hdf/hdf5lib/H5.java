@@ -217,7 +217,7 @@ public class H5
 
     static
     {
-        if (NativeLibraryUtilities.loadNativeLibraryFromResource("jhdf5") == false)
+        if (NativeLibraryUtilities.loadNativeLibrary("jhdf5") == false)
         {
             System.err.println("No suitable HDF5 native library found for this platform.");
             System.exit(1);
