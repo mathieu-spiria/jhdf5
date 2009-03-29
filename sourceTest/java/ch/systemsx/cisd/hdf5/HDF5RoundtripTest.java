@@ -583,8 +583,9 @@ public class HDF5RoundtripTest
 
         // Shouldn't work in strict HDF5 1.6 mode.
         final HDF5Writer writer2 =
-                new HDF5WriterConfigurator(new File("scaleoffsetfilterintfailed.h5")).fileFormat(
-                        FileFormat.STRICTLY_1_6).writer();
+                new HDF5WriterConfigurator(new File(workingDirectory,
+                        "scaleoffsetfilterintfailed.h5")).fileFormat(FileFormat.STRICTLY_1_6)
+                        .writer();
         try
         {
             writer2.writeIntArray("ds", intWritten, INT_AUTO_SCALING_DEFLATE);
@@ -2999,8 +3000,9 @@ public class HDF5RoundtripTest
 
         // Shouldn't work in strict HDF5 1.6 mode.
         final HDF5Writer writer2 =
-                new HDF5WriterConfigurator(new File("scaleoffsetfilterintfailed.h5")).fileFormat(
-                        FileFormat.STRICTLY_1_6).writer();
+                new HDF5WriterConfigurator(new File(workingDirectory,
+                        "scaleoffsetfilterenumfailed.h5")).fileFormat(FileFormat.STRICTLY_1_6)
+                        .writer();
         HDF5EnumerationType enumType2 = writer2.getEnumType(enumTypeName, new String[]
             { "A", "C", "G", "T" }, false);
         final HDF5EnumerationValueArray arrayWritten2 =
