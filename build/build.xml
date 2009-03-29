@@ -1,9 +1,9 @@
-<project name="hdf5" default="dist" basedir="..">
+<project name="jhdf5" default="dist" basedir="..">
 	<import file="../../build_resources/ant/build-common.xml" />
 	<project-classpath name="ecp" classes="${classes}" />
 
-	<property name="mainfolder" value="hdf5" />
-	<property name="distfolder" value="jhdf5" />
+	<property name="mainfolder" value="${ant.project.name}" />
+	<property name="distfolder" value="${ant.project.name}" />
 	<property name="jar.file" value="${dist}/jhdf5.jar" />
 	<property name="dist.file" value="${dist}/jhdf5" />
 	<property name="jar.batteries-included.filename" value="jhdf5-batteries_included_lin_win_mac_sun.jar" />
