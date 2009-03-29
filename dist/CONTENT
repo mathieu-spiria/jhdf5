@@ -1,13 +1,10 @@
 Javadoc
-
   doc/jhdf5-javadoc.zip
 
 Source
-
   src/jhdf5-src.zip
   
 Library
-
   lib/jhdf5-core.jar: 
     The Java class files of the JHDF5 library. Requires commons-io.jar, commons-lang.jar and  
     cisd-base.jar on the class path. Requires the native libraries to be provided separately (see 
@@ -30,18 +27,17 @@ Library
 	  All supported platforms:
 	    lib/batteries_included/jhdf5-batteries_included_lin_win_mac_sun.jar 
 	  
-	  Linux/MacOSX/Windows, but no Sun Solaris: 
+	  Linux/MacOS X/Windows, but no Solaris support: 
 	    lib/batteries_included/jhdf5-batteries_included_lin_win_mac_sun.jar
 	    
   lib/native:
-    The native libraries are provided in two forms: 
-      * as jar files, one jar file per platform (actually two platforms: 32bit and 64bit), e.g. 
-    		jhdf5-linux-intel.jar has the shared libraries for Linux on Intel/AMD. Note that these jar 
-    		files do not contain the Java class files. In order to use these files, ensure that the jar 
-    		file for your platform is in the class path.
-      * as files in folders jhdf5 and unix. In order to use them ensure that you point the Java 
-        property native.libpath to the root of this hierarchy, 
-        e.g.: "-Dnative.libpath=/home/tim/lib/native"
-        Note that instead of native.libpath the default Java property java.library.path can be set, 
-        but in this case no automatic resolution of the platform is provided. 
+    The native libraries as files in folders jhdf5 and unix. In order to use them ensure that you 
+    point the Java property native.libpath to the root of this hierarchy,
+    e.g.: "-Dnative.libpath=/home/joe/lib/native"
+
+  lib/nativejar:
+    The jar files in this folder contain the native libraries for each platform, e.g. 
+    hdf5-linux-intel.jar has the shared libraries for Linux on Intel/AMD. Note that these jar 
+    files do not contain the Java class files. In order to make use of these jar files you need
+    to ensure that the file for your platform is in the class path of the jre.
  

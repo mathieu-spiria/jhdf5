@@ -6,7 +6,8 @@
 	<property name="distfolder" value="${ant.project.name}" />
 	<property name="jar.file" value="${dist}/jhdf5.jar" />
 	<property name="dist.file" value="${dist}/jhdf5" />
-	<property name="jar.batteries-included.filename" value="jhdf5-batteries_included_lin_win_mac_sun.jar" />
+	<property name="jar.batteries-included.filename"
+	          value="jhdf5-batteries_included_lin_win_mac_sun.jar" />
 	<property name="jar.batteries-included.file" value="${dist}/${jar.batteries-included.filename}" />
 	<property name="jar.batteries-included_lin_win_mac.file"
 	          value="${dist}/jhdf5-batteries_included_lin_win_mac.jar" />
@@ -30,16 +31,15 @@
 		<delete dir="${targets}/ant" />
 	</target>
 
-	<target name="jar-test" depends="compile-tests">
+	<target name="jar-test" depends="clean, compile-tests">
 		<mkdir dir="${dist.hdf5.lib}" />
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
 			<fileset dir="${nativesrc1}">
-				<include name="**/jhdf5.so" />
-			</fileset>
-			<fileset dir="${nativesrc2}">
-				<include name="**/unix.so" />
+				<include name="**/libjhdf5.so" />
+				<include name="**/libjhdf5.jnilib" />
+				<include name="**/jhdf5.dll" />
 			</fileset>
 		</copy>
 		<recursive-jar destfile="${test.jar.file}">
@@ -48,11 +48,13 @@
 				<include name="${build.info.filename}" />
 			</fileset>
 			<fileset dir="${nativeroot}">
-				<include name="**/*.so" />
+				<include name="native/**/*.so" />
+				<include name="native/**/*.jnilib" />
+				<include name="native/**/*.dll" />
 			</fileset>
 			<zipfileset src="${lib}/testng/testng-jdk15.jar" />
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar" />
-			<zipfileset src="${lib}/cisd-base/cisd-args4j.jar" />
+			<zipfileset src="${lib}/cisd-args4j/cisd-args4j.jar" />
 			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
 			<zipfileset src="${lib}/commons-io/commons-io.jar" />
 			<manifest>
@@ -70,7 +72,9 @@
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
 			<fileset dir="${nativesrc1}">
-				<include name="**/jhdf5.so" />
+				<include name="**/libjhdf5.so" />
+				<include name="**/libjhdf5.jnilib" />
+				<include name="**/jhdf5.dll" />
 			</fileset>
 		</copy>
 		<recursive-jar destfile="${jar.batteries-included.file}">
@@ -79,7 +83,9 @@
 				<include name="**/*.class" />
 			</fileset>
 			<fileset dir="${nativeroot}">
-				<include name="**/*.so" />
+				<include name="native/**/*.so" />
+				<include name="native/**/*.jnilib" />
+				<include name="native/**/*.dll" />
 			</fileset>
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
 				<exclude name="${build.info.filename}" />
@@ -102,11 +108,14 @@
 				<include name="**/*.class" />
 			</fileset>
 			<fileset dir="${nativeroot}">
-				<include name="**/*.so" />
-				<exclude name="native/*/*-SunOS/*.so" />
+				<include name="native/**/*.so" />
+				<exclude name="native/**/*-SunOS/*.so" />
+				<include name="native/**/*.jnilib" />
+				<include name="native/**/*.dll" />
 			</fileset>
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
 				<exclude name="${build.info.filename}" />
+				<exclude name="native/**/*-SunOS/*.so" />
 			</zipfileset>
 			<zipfileset src="${lib}/cisd-args4j/cisd-args4j.jar">
 				<exclude name="${build.info.filename}" />
@@ -139,6 +148,8 @@
 				<attribute name="Version" value="${version.number}" />
 				<attribute name="Build-Number"
 				           value="${version.number} (r${revision.number},${clean.flag})" />
+				<attribute name="Class-Path"
+				           value="jhdf5-linux-intel.jar jhdf5-solaris-intel.jar jhdf5-solaris-sparc.jar jhdf5-macosx-intel.jar jhdf5-windows-intel.jar" />
 			</manifest>
 		</recursive-jar>
 	</target>
@@ -220,8 +231,12 @@
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
 			<fileset dir="${nativesrc1}">
-				<include name="jhdf5/i386-Linux/jhdf5.so" />
-				<include name="jhdf5/amd64-Linux/jhdf5.so" />
+				<include name="jhdf5/i386-Linux/libjhdf5.so" />
+				<include name="jhdf5/amd64-Linux/libjhdf5.so" />
+			</fileset>
+			<fileset dir="${nativesrc2}">
+				<include name="unix/i386-Linux/libunix.so" />
+				<include name="unix/amd64-Linux/libunix.so" />
 			</fileset>
 		</copy>
 		<jar destfile="${dist}/jhdf5-linux-intel.jar">
@@ -229,7 +244,7 @@
 				<include name="${build.info.filename}" />
 			</fileset>
 			<fileset dir="${nativeroot}">
-				<include name="**/*.so" />
+				<include name="native/**/*.so" />
 			</fileset>
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
 				<include name="ch/systemsx/cisd/base/utilities/BuildAndEnvironmentInfo.class" />
@@ -252,8 +267,12 @@
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
 			<fileset dir="${nativesrc1}">
-				<include name="jhdf5/x86-SunOS/jhdf5.so" />
-				<include name="jhdf5/amd64-SunOS/jhdf5.so" />
+				<include name="jhdf5/x86-SunOS/libjhdf5.so" />
+				<include name="jhdf5/amd64-SunOS/libjhdf5.so" />
+			</fileset>
+			<fileset dir="${nativesrc2}">
+				<include name="unix/x86-SunOS/libunix.so" />
+				<include name="unix/amd64-SunOS/libunix.so" />
 			</fileset>
 		</copy>
 		<jar destfile="${dist}/jhdf5-solaris-intel.jar">
@@ -261,7 +280,7 @@
 				<include name="${build.info.filename}" />
 			</fileset>
 			<fileset dir="${nativeroot}">
-				<include name="**/*.so" />
+				<include name="native/**/*.so" />
 			</fileset>
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
 				<include name="ch/systemsx/cisd/base/utilities/BuildAndEnvironmentInfo.class" />
@@ -284,8 +303,12 @@
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
 			<fileset dir="${nativesrc1}">
-				<include name="jhdf5/sparc-SunOS/jhdf5.so" />
-				<include name="jhdf5/sparcv9-SunOS/jhdf5.so" />
+				<include name="jhdf5/sparc-SunOS/libjhdf5.so" />
+				<include name="jhdf5/sparcv9-SunOS/libjhdf5.so" />
+			</fileset>
+			<fileset dir="${nativesrc2}">
+				<include name="unix/sparc-SunOS/libunix.so" />
+				<include name="unix/sparcv9-SunOS/libunix.so" />
 			</fileset>
 		</copy>
 		<jar destfile="${dist}/jhdf5-solaris-sparc.jar">
@@ -293,7 +316,7 @@
 				<include name="${build.info.filename}" />
 			</fileset>
 			<fileset dir="${nativeroot}">
-				<include name="**/*.so" />
+				<include name="native/**/*.so" />
 			</fileset>
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
 				<include name="ch/systemsx/cisd/base/utilities/BuildAndEnvironmentInfo.class" />
@@ -316,8 +339,12 @@
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
 			<fileset dir="${nativesrc1}">
-				<include name="jhdf5/i386-Mac OS X/jhdf5.so" />
-				<include name="jhdf5/x86_64-Mac OS X/jhdf5.so" />
+				<include name="jhdf5/i386-Mac OS X/libjhdf5.jnilib" />
+				<include name="jhdf5/x86_64-Mac OS X/libjhdf5.jnilib" />
+			</fileset>
+			<fileset dir="${nativesrc2}">
+				<include name="unix/i386-Mac OS X/libunix.jnilib" />
+				<include name="unix/x86_64-Mac OS X/libunix.jnilib" />
 			</fileset>
 		</copy>
 		<jar destfile="${dist}/jhdf5-macosx-intel.jar">
@@ -325,7 +352,7 @@
 				<include name="${build.info.filename}" />
 			</fileset>
 			<fileset dir="${nativeroot}">
-				<include name="**/*.so" />
+				<include name="native/**/*.jnilib" />
 			</fileset>
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
 				<include name="ch/systemsx/cisd/base/utilities/BuildAndEnvironmentInfo.class" />
@@ -348,8 +375,8 @@
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
 			<fileset dir="${nativesrc1}">
-				<include name="jhdf5/x86-Windows/jhdf5.so" />
-				<include name="jhdf5/amd64-Windows/jhdf5.so" />
+				<include name="jhdf5/x86-Windows/jhdf5.dll" />
+				<include name="jhdf5/amd64-Windows/jhdf5.dll" />
 			</fileset>
 		</copy>
 		<jar destfile="${dist}/jhdf5-windows-intel.jar">
@@ -357,7 +384,7 @@
 				<include name="${build.info.filename}" />
 			</fileset>
 			<fileset dir="${nativeroot}">
-				<include name="**/*.so" />
+				<include name="native/**/*.dll" />
 			</fileset>
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
 				<include name="ch/systemsx/cisd/base/utilities/BuildAndEnvironmentInfo.class" />
@@ -392,11 +419,11 @@
 		      todir="${dist}/${distfolder}/lib/batteries_included" />
 		<move file="${jar.batteries-included_lin_win_mac.file}"
 		      todir="${dist}/${distfolder}/lib/batteries_included" />
-		<move file="${dist}/jhdf5-linux-intel.jar" todir="${dist}/${distfolder}/lib/native" />
-		<move file="${dist}/jhdf5-solaris-intel.jar" todir="${dist}/${distfolder}/lib/native" />
-		<move file="${dist}/jhdf5-solaris-sparc.jar" todir="${dist}/${distfolder}/lib/native" />
-		<move file="${dist}/jhdf5-macosx-intel.jar" todir="${dist}/${distfolder}/lib/native" />
-		<move file="${dist}/jhdf5-windows-intel.jar" todir="${dist}/${distfolder}/lib/native" />
+		<move file="${dist}/jhdf5-linux-intel.jar" todir="${dist}/${distfolder}/lib/nativejar" />
+		<move file="${dist}/jhdf5-solaris-intel.jar" todir="${dist}/${distfolder}/lib/nativejar" />
+		<move file="${dist}/jhdf5-solaris-sparc.jar" todir="${dist}/${distfolder}/lib/nativejar" />
+		<move file="${dist}/jhdf5-macosx-intel.jar" todir="${dist}/${distfolder}/lib/nativejar" />
+		<move file="${dist}/jhdf5-windows-intel.jar" todir="${dist}/${distfolder}/lib/nativejar" />
 		<move todir="${dist}/${distfolder}/lib">
 			<fileset dir="${dist}">
 				<include name="*.jar" />
@@ -410,9 +437,9 @@
 		</unzip>
 		<move file="${src.zip.file}" todir="${dist}/${distfolder}/src" />
 		<move file="${javadoc.zip.file}" todir="${dist}/${distfolder}/doc" />
-	  <copy todir="${dist}/${distfolder}">
-	    <fileset dir="${original.dist}"/>
-	  </copy>
+		<copy todir="${dist}/${distfolder}">
+			<fileset dir="${original.dist}" />
+		</copy>
 		<zip destfile="${dist.file}-${version.number}-r${revision.number}.zip"
 		     basedir="${dist}"
 		     includes="${distfolder}/**" />
