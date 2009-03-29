@@ -78,13 +78,8 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IHDF5PrimitiveWriter
+public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 {
-    /**
-     * The constant to be used in the scaling writing functions.
-     */
-    public final static int AUTO_SCALING = 0;
-
     private final HDF5BaseWriter baseWriter;
 
     private final IHDF5ByteWriter byteWriter;
@@ -115,19 +110,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // Configuration
     // /////////////////////
 
-    /**
-     * Returns <code>true</code>, if the {@link HDF5WriterConfigurator} was <em>not</em> configured
-     * with {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}, that is if extendable data
-     * types are used for new data sets.
-     */
     public boolean isUseExtendableDataTypes()
     {
         return baseWriter.useExtentableDataTypes;
     }
 
-    /**
-     * Returns the {@link FileFormat} compatibility setting for this writer.
-     */
     public FileFormat getFileFormat()
     {
         return baseWriter.fileFormat;
@@ -137,23 +124,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // File
     // /////////////////////
 
-    /**
-     * Flushes the cache to disk (without discarding it). Note that this may or may not trigger a
-     * <code>fsync(2)</code>, depending on the {@link HDF5WriterConfigurator.SyncMode} used.
-     */
     public void flush()
     {
         baseWriter.checkOpen();
         baseWriter.flush();
     }
 
-    /**
-     * Flushes the cache to disk (without discarding it) and synchronizes the file with the
-     * underlying storage using a method like <code>fsync(2)</code>, regardless of what
-     * {@link HDF5WriterConfigurator.SyncMode} has been set for this file.
-     * <p>
-     * This method blocks until <code>fsync(2)</code> has returned.
-     */
     public void flushSyncBlocking()
     {
         baseWriter.checkOpen();
@@ -164,12 +140,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // Objects & Links
     // /////////////////////
 
-    /**
-     * Creates a hard link.
-     * 
-     * @param currentPath The name of the data set (including path information) to create a link to.
-     * @param newPath The name (including path information) of the link to create.
-     */
     public void createHardLink(String currentPath, String newPath)
     {
         assert currentPath != null;
@@ -179,12 +149,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.h5.createHardLink(baseWriter.fileId, currentPath, newPath);
     }
 
-    /**
-     * Creates a soft link.
-     * 
-     * @param targetPath The name of the data set (including path information) to create a link to.
-     * @param linkPath The name (including path information) of the link to create.
-     */
     public void createSoftLink(String targetPath, String linkPath)
     {
         assert targetPath != null;
@@ -194,14 +158,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.h5.createSoftLink(baseWriter.fileId, linkPath, targetPath);
     }
 
-    /**
-     * Creates or updates a soft link.
-     * <p>
-     * <em>Note: This method will never overwrite a data set, but only a symbolic link.</em>
-     * 
-     * @param targetPath The name of the data set (including path information) to create a link to.
-     * @param linkPath The name (including path information) of the link to create.
-     */
     public void createOrUpdateSoftLink(String targetPath, String linkPath)
     {
         assert targetPath != null;
@@ -215,20 +171,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.h5.createSoftLink(baseWriter.fileId, linkPath, targetPath);
     }
 
-    /**
-     * Creates an external link, that is a link to a data set in another HDF5 file, the
-     * <em>target</em> .
-     * <p>
-     * <em>Note: This method is only allowed when the {@link HDF5WriterConfigurator} was not 
-     * configured to enforce strict HDF5 1.6 compatibility.</em>
-     * 
-     * @param targetFileName The name of the file where the data set resides that should be linked.
-     * @param targetPath The name of the data set (including path information) in the
-     *            <var>targetFileName</var> to create a link to.
-     * @param linkPath The name (including path information) of the link to create.
-     * @throws IllegalStateException If the {@link HDF5WriterConfigurator} was configured to enforce
-     *             strict HDF5 1.6 compatibility.
-     */
     public void createExternalLink(String targetFileName, String targetPath, String linkPath)
             throws IllegalStateException
     {
@@ -245,22 +187,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.h5.createExternalLink(baseWriter.fileId, linkPath, targetFileName, targetPath);
     }
 
-    /**
-     * Creates or updates an external link, that is a link to a data set in another HDF5 file, the
-     * <em>target</em> .
-     * <p>
-     * <em>Note: This method will never overwrite a data set, but only a symbolic link.</em>
-     * <p>
-     * <em>Note: This method is only allowed when the {@link HDF5WriterConfigurator} was not 
-     * configured to enforce strict HDF5 1.6 compatibility.</em>
-     * 
-     * @param targetFileName The name of the file where the data set resides that should be linked.
-     * @param targetPath The name of the data set (including path information) in the
-     *            <var>targetFileName</var> to create a link to.
-     * @param linkPath The name (including path information) of the link to create.
-     * @throws IllegalStateException If the {@link HDF5WriterConfigurator} was configured to enforce
-     *             strict HDF5 1.6 compatibility.
-     */
     public void createOrUpdateExternalLink(String targetFileName, String targetPath, String linkPath)
             throws IllegalStateException
     {
@@ -281,10 +207,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.h5.createExternalLink(baseWriter.fileId, linkPath, targetFileName, targetPath);
     }
 
-    /**
-     * Removes an object from the file. If there is more than one link to the object, only the
-     * specified link will be removed.
-     */
     public void delete(String objectPath)
     {
         baseWriter.checkOpen();
@@ -302,33 +224,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // Group
     // /////////////////////
 
-    /**
-     * Creates a group with path <var>objectPath</var> in the HDF5 file.
-     * <p>
-     * All intermediate groups will be created as well, if they do not already exist.
-     * 
-     * @param groupPath The path of the group to create.
-     */
     public void createGroup(final String groupPath)
     {
         baseWriter.checkOpen();
         baseWriter.h5.createGroup(baseWriter.fileId, groupPath);
     }
 
-    /**
-     * Creates a group with path <var>objectPath</var> in the HDF5 file, giving the library a hint
-     * about the size (<var>sizeHint</var>). If you have this information in advance, it will be
-     * more efficient to tell it the library rather than to let the library figure out itself, but
-     * the hint must not be misunderstood as a limit.
-     * <p>
-     * All intermediate groups will be created as well, if they do not already exist.
-     * <p>
-     * <i>Note: This method creates an "old-style group", that is the type of group of HDF5 1.6 and
-     * earlier.</i>
-     * 
-     * @param groupPath The path of the group to create.
-     * @param sizeHint The estimated size of all group entries (in bytes).
-     */
     public void createGroup(final String groupPath, final int sizeHint)
     {
         baseWriter.checkOpen();
@@ -345,22 +246,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(createGroupRunnable);
     }
 
-    /**
-     * Creates a group with path <var>objectPath</var> in the HDF5 file, giving the library hints
-     * about when to switch between compact and dense. Setting appropriate values may improve
-     * performance.
-     * <p>
-     * All intermediate groups will be created as well, if they do not already exist.
-     * <p>
-     * <i>Note: This method creates a "new-style group", that is the type of group of HDF5 1.8 and
-     * above. Thus it will fail, if the writer is configured to enforce HDF5 1.6 compatibility.</i>
-     * 
-     * @param groupPath The path of the group to create.
-     * @param maxCompact When the group grows to more than this number of entries, the library will
-     *            convert the group style from compact to dense.
-     * @param minDense When the group shrinks below this number of entries, the library will convert
-     *            the group style from dense to compact.
-     */
     public void createGroup(final String groupPath, final int maxCompact, final int minDense)
     {
         baseWriter.checkOpen();
@@ -381,15 +266,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // Attributes
     // /////////////////////
 
-    /**
-     * Deletes an attribute.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to delete the attribute from.
-     * @param name The name of the attribute to delete.
-     */
     public void deleteAttribute(final String objectPath, final String name)
     {
         baseWriter.checkOpen();
@@ -408,16 +284,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(deleteAttributeRunnable);
     }
 
-    /**
-     * Adds an enum attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
     public void addEnumAttribute(final String objectPath, final String name,
             final HDF5EnumerationValue value)
     {
@@ -432,12 +298,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         addAttribute(objectPath, name, storageDataTypeId, nativeDataTypeId, value.toStorageForm());
     }
 
-    /**
-     * Adds a <var>typeVariant</var> to <var>objectPath</var>.
-     * 
-     * @param objectPath The name of the object to add the type variant to.
-     * @param typeVariant The type variant to add.
-     */
     public void addTypeVariant(final String objectPath, final HDF5DataTypeVariant typeVariant)
     {
         baseWriter.checkOpen();
@@ -446,13 +306,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
     }
 
-    /**
-     * Adds a <var>typeVariant</var> to <var>objectPath</var>.
-     * 
-     * @param objectId The id of the object to add the type variant to.
-     * @param typeVariant The type variant to add.
-     * @param registry The registry for clean up tasks.
-     */
     private void addTypeVariant(final int objectId, final HDF5DataTypeVariant typeVariant,
             ICleanUpRegistry registry)
     {
@@ -461,32 +314,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
     }
 
-    /**
-     * Adds a string attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
     public void addStringAttribute(final String objectPath, final String name, final String value)
     {
         addStringAttribute(objectPath, name, value, value.length());
     }
 
-    /**
-     * Adds a string attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     * @param maxLength The maximal length of the value.
-     */
     public void addStringAttribute(final String objectPath, final String name, final String value,
             final int maxLength)
     {
@@ -524,16 +356,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.h5.writeAttribute(attributeId, stringDataTypeId, (value + '\0').getBytes());
     }
 
-    /**
-     * Adds a <code>boolean</code> attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
     public void addBooleanAttribute(final String objectPath, final String name, final boolean value)
     {
         baseWriter.checkOpen();
@@ -542,16 +364,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                     { (byte) (value ? 1 : 0) });
     }
 
-    /**
-     * Adds an <code>int</code> attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
     public void addIntAttribute(final String objectPath, final String name, final int value)
     {
         baseWriter.checkOpen();
@@ -559,16 +371,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 .intToByte(value));
     }
 
-    /**
-     * Adds a long attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
     public void addLongAttribute(final String objectPath, final String name, final long value)
     {
         baseWriter.checkOpen();
@@ -576,16 +378,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 .longToByte(value));
     }
 
-    /**
-     * Adds a <code>float</code> attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
     public void addFloatAttribute(final String objectPath, final String name, final float value)
     {
         baseWriter.checkOpen();
@@ -593,16 +385,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 .floatToByte(value));
     }
 
-    /**
-     * Adds a <code>double</code> attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
     public void addDoubleAttribute(final String objectPath, final String name, final double value)
     {
         baseWriter.checkOpen();
@@ -658,12 +440,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // Boolean
     //
 
-    /**
-     * Writes out a <code>boolean</code> value.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param value The value of the data set.
-     */
     public void writeBoolean(final String objectPath, final boolean value)
     {
         baseWriter.checkOpen();
@@ -671,19 +447,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 baseWriter.booleanDataTypeId, HDFNativeData.byteToByte((byte) (value ? 1 : 0)));
     }
 
-    /**
-     * Writes out a bit field ((which can be considered the equivalent to a boolean array of rank
-     * 1), provided as a Java {@link BitSet}. Uses a compact storage layout. Must only be used for
-     * small data sets.
-     * <p>
-     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
-     * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
-     * back by {@link #readLongArray(String)} but will throw a
-     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
     public void writeBitFieldCompact(final String objectPath, final BitSet data)
     {
         assert objectPath != null;
@@ -708,36 +471,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a bit field ((which can be considered the equivalent to a boolean array of rank
-     * 1), provided as a Java {@link BitSet}.
-     * <p>
-     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
-     * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
-     * back by {@link #readLongArray(String)} but will throw a
-     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
     public void writeBitField(final String objectPath, final BitSet data)
     {
         writeBitField(objectPath, data, HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out a bit field ((which can be considered the equivalent to a boolean array of rank
-     * 1), provided as a Java {@link BitSet}.
-     * <p>
-     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
-     * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
-     * back by {@link #readLongArray(String)} but will throw a
-     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param compression The compression parameters of the data set.
-     */
     public void writeBitField(final String objectPath, final BitSet data,
             final HDF5GenericCompression compression)
     {
@@ -766,14 +504,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // Opaque
     //
 
-    /**
-     * Writes out an opaque data type described by <var>tag</var> and defined by a <code>byte</code>
-     * array (of rank 1). Uses a compact storage layout. Must only be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param tag The tag of the data set.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
     public void writeOpaqueByteArrayCompact(final String objectPath, final String tag,
             final byte[] data)
     {
@@ -798,34 +528,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out an opaque data type described by <var>tag</var> and defined by a <code>byte</code>
-     * array (of rank 1).
-     * <p>
-     * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link #readAsByteArray(String)} instead.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param tag The tag of the data set.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
     public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data)
     {
         writeOpaqueByteArray(objectPath, tag, data, HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out an opaque data type described by <var>tag</var> and defined by a <code>byte</code>
-     * array (of rank 1).
-     * <p>
-     * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link #readAsByteArray(String)} instead.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param tag The tag of the data set.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param compression The compression parameters of the data set.
-     */
     public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data,
             final HDF5GenericCompression compression)
     {
@@ -849,17 +556,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Creates an opaque data set that will be represented as a <code>byte</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the byte vector to create.
-     * @param blockSize The size of on block (for block-wise IO)
-     * @return The {@link HDF5OpaqueType} that can be used in methods
-     *         {@link #writeOpaqueByteArrayBlock(String, HDF5OpaqueType, byte[], long)} and
-     *         {@link #writeOpaqueByteArrayBlockWithOffset(String, HDF5OpaqueType, byte[], int, long)}
-     *         to represent this opaque type.
-     */
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
             final long size, final int blockSize)
     {
@@ -867,18 +563,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Creates an opaque data set that will be represented as a <code>byte</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the byte vector to create.
-     * @param blockSize The size of on block (for block-wise IO)
-     * @param compression The compression parameters of the data set.
-     * @return The {@link HDF5OpaqueType} that can be used in methods
-     *         {@link #writeOpaqueByteArrayBlock(String, HDF5OpaqueType, byte[], long)} and
-     *         {@link #writeOpaqueByteArrayBlockWithOffset(String, HDF5OpaqueType, byte[], int, long)}
-     *         to represent this opaque type.
-     */
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
             final long size, final int blockSize, final HDF5GenericCompression compression)
     {
@@ -903,24 +587,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         return new HDF5OpaqueType(baseWriter.fileId, dataTypeId, tag);
     }
 
-    /**
-     * Writes out a block of an opaque data type represented by a <code>byte</code> array (of rank
-     * 1). The data set needs to have been created by
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericCompression)} beforehand.
-     * <p>
-     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
-     * to the <var>blockSize</var> argument of the
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericCompression)} call that
-     * was used to created the data set.
-     * <p>
-     * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link #readAsByteArrayBlock(String, int, long)} instead.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumber The number of the block to write.
-     */
     public void writeOpaqueByteArrayBlock(final String objectPath, final HDF5OpaqueType dataType,
             final byte[] data, final long blockNumber)
     {
@@ -953,30 +619,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a block of an opaque data type represented by a <code>byte</code> array (of rank
-     * 1). The data set needs to have been created by
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericCompression)} beforehand.
-     * <p>
-     * Use this method instead of
-     * {@link #writeOpaqueByteArrayBlock(String, HDF5OpaqueType, byte[], long)} if the total size of
-     * the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericCompression)} call that
-     * was used to created the data set.
-     * <p>
-     * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link #readAsByteArrayBlockWithOffset(String, int, long)} instead.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
-     *            )
-     * @param offset The offset in the data set to start writing to.
-     */
     public void writeOpaqueByteArrayBlockWithOffset(final String objectPath,
             final HDF5OpaqueType dataType, final byte[] data, final int dataSize, final long offset)
     {
@@ -1797,16 +1439,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // Date
     //
 
-    /**
-     * Writes out a time stamp value. The data set will be tagged as type variant
-     * {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeStamp The timestamp to write as number of milliseconds since January 1, 1970,
-     *            00:00:00 GMT.
-     */
     public void writeTimeStamp(final String objectPath, final long timeStamp)
     {
         assert objectPath != null;
@@ -1828,15 +1460,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeScalarRunnable);
     }
 
-    /**
-     * Creates a time stamp array (of rank 1). Uses a compact storage layout. Should only be used
-     * for small data sets.
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     */
     public void createTimeStampArrayCompact(final String objectPath, final long length)
     {
         assert objectPath != null;
@@ -1860,16 +1483,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a time stamp array (of rank 1). Uses a compact storage layout. Should only be used
-     * for small data sets.
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
-     *            00:00:00 GMT.
-     */
     public void writeTimeStampArrayCompact(final String objectPath, final long[] timeStamps)
     {
         assert objectPath != null;
@@ -1895,35 +1508,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Creates a time stamp array (of rank 1).
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     */
     public void createTimeStampArray(final String objectPath, final long length, final int blockSize)
     {
         createTimeStampArray(objectPath, length, blockSize,
                 HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Creates a time stamp array (of rank 1).
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     * @param compression The compression parameters of the data set.
-     */
     public void createTimeStampArray(final String objectPath, final long length,
             final int blockSize, final HDF5GenericCompression compression)
     {
@@ -1949,32 +1539,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a time stamp array (of rank 1). The data set will be tagged as type variant
-     * {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
-     *            00:00:00 GMT.
-     */
     public void writeTimeStampArray(final String objectPath, final long[] timeStamps)
     {
         writeTimeStampArray(objectPath, timeStamps, HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out a time stamp array (of rank 1). The data set will be tagged as type variant
-     * {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
-     *            00:00:00 GMT.
-     * @param compression The compression parameters of the data set.
-     */
     public void writeTimeStampArray(final String objectPath, final long[] timeStamps,
             final HDF5GenericCompression compression)
     {
@@ -2000,21 +1569,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a block of a time stamp array (which is stored as a <code>long</code> array of
-     * rank 1). The data set needs to have been created by
-     * {@link #createTimeStampArray(String, long, int, HDF5GenericCompression)} beforehand.
-     * <p>
-     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
-     * to the <var>blockSize</var> argument of the
-     * {@link #createLongArray(String, long, int, HDF5IntCompression)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumber The number of the block to write.
-     */
     public void writeTimeStampArrayBlock(final String objectPath, final long[] data,
             final long blockNumber)
     {
@@ -2046,26 +1600,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a block of a time stamp array (which is stored as a <code>long</code> array of
-     * rank 1). The data set needs to have been created by
-     * {@link #createTimeStampArray(String, long, int, HDF5GenericCompression)} beforehand.
-     * <p>
-     * Use this method instead of {@link #writeTimeStampArrayBlock(String, long[], long)} if the
-     * total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createLongArray(String, long, int, HDF5IntCompression)} call that was used to create
-     * the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
-     *            )
-     * @param offset The offset in the data set to start writing to.
-     */
     public void writeTimeStampArrayBlockWithOffset(final String objectPath, final long[] data,
             final int dataSize, final long offset)
     {
@@ -2097,70 +1631,28 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a time stamp value provided as a {@link Date}. The data set will be tagged as type
-     * variant {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param date The date to write.
-     * @see #writeTimeStamp(String, long)
-     */
     public void writeDate(final String objectPath, final Date date)
     {
         writeTimeStamp(objectPath, date.getTime());
     }
 
-    /**
-     * Writes out a {@link Date} array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets.
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dates The dates to write.
-     * @see #writeTimeStampArrayCompact(String, long[])
-     */
     public void writeDateArrayCompact(final String objectPath, final Date[] dates)
     {
         writeTimeStampArrayCompact(objectPath, datesToTimeStamps(dates));
     }
 
-    /**
-     * Writes out a {@link Date} array (of rank 1).
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dates The dates to write.
-     * @see #writeTimeStampArray(String, long[])
-     */
     public void writeDateArray(final String objectPath, final Date[] dates)
     {
         writeTimeStampArray(objectPath, datesToTimeStamps(dates));
     }
 
-    /**
-     * Writes out a {@link Date} array (of rank 1).
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dates The dates to write.
-     * @param compression The compression parameters of the data set.
-     * @see #writeTimeStampArray(String, long[], HDF5GenericCompression)
-     */
     public void writeDateArray(final String objectPath, final Date[] dates,
             final HDF5GenericCompression compression)
     {
         writeTimeStampArray(objectPath, datesToTimeStamps(dates), compression);
     }
 
-    /**
-     * Converts an array of {@link Date}s into an array of time stamps.
-     */
-    public static long[] datesToTimeStamps(Date[] dates)
+    private static long[] datesToTimeStamps(Date[] dates)
     {
         assert dates != null;
 
@@ -2176,29 +1668,11 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // Duration
     //
 
-    /**
-     * Writes out a time duration value in seconds. The data set will be tagged as type variant
-     * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
-     * <p>
-     * <em>Note: Time durations are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeDuration The duration of time to write in seconds.
-     */
     public void writeTimeDuration(final String objectPath, final long timeDuration)
     {
         writeTimeDuration(objectPath, timeDuration, HDF5TimeUnit.SECONDS);
     }
 
-    /**
-     * Writes out a time duration value. The data set will be tagged as the according type variant.
-     * <p>
-     * <em>Note: Time durations are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeDuration The duration of time to write in the given <var>timeUnit</var>.
-     * @param timeUnit The unit of the time duration.
-     */
     public void writeTimeDuration(final String objectPath, final long timeDuration,
             final HDF5TimeUnit timeUnit)
     {
@@ -2219,16 +1693,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeScalarRunnable);
     }
 
-    /**
-     * Creates a time duration array (of rank 1). Uses a compact storage layout. Should only be used
-     * for small data sets. The data set will be tagged as the according type variant.
-     * <p>
-     * <em>Note: Time durations are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     * @param timeUnit The unit of the time duration.
-     */
     public void createTimeDurationArrayCompact(final String objectPath, final long length,
             final HDF5TimeUnit timeUnit)
     {
@@ -2251,16 +1715,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a time duration array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets. The data set will be tagged as the according type variant.
-     * <p>
-     * <em>Note: Time durations are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeDurations The time durations to write in the given <var>timeUnit</var>.
-     * @param timeUnit The unit of the time duration.
-     */
     public void writeTimeDurationArrayCompact(final String objectPath, final long[] timeDurations,
             final HDF5TimeUnit timeUnit)
     {
@@ -2285,18 +1739,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Creates a time duration array (of rank 1).
-     * <p>
-     * <em>Note: Time durations are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     * @param timeUnit The unit of the time duration.
-     */
     public void createTimeDurationArray(final String objectPath, final long length,
             final int blockSize, final HDF5TimeUnit timeUnit)
     {
@@ -2304,19 +1746,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Creates a time duration array (of rank 1).
-     * <p>
-     * <em>Note: Time durations are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     * @param timeUnit The unit of the time duration.
-     * @param compression The compression parameters of the data set.
-     */
     public void createTimeDurationArray(final String objectPath, final long length,
             final int blockSize, final HDF5TimeUnit timeUnit,
             final HDF5GenericCompression compression)
@@ -2341,31 +1770,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a time duration array in seconds (of rank 1). The data set will be tagged as type
-     * variant {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
-     * <p>
-     * <em>Note: Time durations are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeDurations The time durations to write in seconds.
-     */
     public void writeTimeDurationArray(final String objectPath, final long[] timeDurations)
     {
         writeTimeDurationArray(objectPath, timeDurations, HDF5TimeUnit.SECONDS,
                 HDF5IntCompression.INT_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out a time duration array (of rank 1). The data set will be tagged as the according
-     * type variant.
-     * <p>
-     * <em>Note: Time durations are stored as <code>long[]</code> arrays.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeDurations The time durations to write in the given <var>timeUnit</var>.
-     * @param timeUnit The unit of the time duration.
-     */
     public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
             final HDF5TimeUnit timeUnit)
     {
@@ -2373,17 +1783,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 HDF5IntCompression.INT_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out a time duration array (of rank 1). The data set will be tagged as the according
-     * type variant.
-     * <p>
-     * <em>Note: Time durations are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeDurations The time durations to write in the given <var>timeUnit</var>.
-     * @param timeUnit The unit of the time duration.
-     * @param compression The compression parameters of the data set.
-     */
     public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
             final HDF5TimeUnit timeUnit, final HDF5IntCompression compression)
     {
@@ -2407,22 +1806,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a block of a time duration array (which is stored as a <code>long</code> array of
-     * rank 1). The data set needs to have been created by
-     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericCompression)}
-     * beforehand.
-     * <p>
-     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
-     * to the <var>blockSize</var> argument of the
-     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericCompression)}
-     * call that was used to create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param blockNumber The number of the block to write.
-     */
     public void writeTimeDurationArrayBlock(final String objectPath, final long[] data,
             final long blockNumber, final HDF5TimeUnit timeUnit)
     {
@@ -2456,28 +1839,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a block of a time duration array (which is stored as a <code>long</code> array of
-     * rank 1). The data set needs to have been created by
-     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericCompression)}
-     * beforehand.
-     * <p>
-     * Use this method instead of
-     * {@link #writeTimeDurationArrayBlock(String, long[], long, HDF5TimeUnit)} if the total size of
-     * the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericCompression)}
-     * call that was used to create the data set.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. The length defines the block size. Must not be
-     *            <code>null</code> or of length 0.
-     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
-     *            )
-     * @param offset The offset in the data set to start writing to.
-     */
     public void writeTimeDurationArrayBlockWithOffset(final String objectPath, final long[] data,
             final int dataSize, final long offset, final HDF5TimeUnit timeUnit)
     {
@@ -2515,51 +1876,22 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // String
     //
 
-    /**
-     * Writes out a <code>String</code> with a fixed maximal length.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param maxLength The maximal length of the <var>data</var>.
-     */
     public void writeString(final String objectPath, final String data, final int maxLength)
     {
         writeString(objectPath, data, maxLength, HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out a <code>String</code> with a fixed maximal length (which is the length of the
-     * string <var>data</var>).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
     public void writeString(final String objectPath, final String data)
     {
         writeString(objectPath, data, data.length(), HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out a <code>String</code> with a fixed maximal length.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param compression The compression parameters of the data set.
-     */
     public void writeString(final String objectPath, final String data,
             final HDF5GenericCompression compression)
     {
         writeString(objectPath, data, data.length(), compression);
     }
 
-    /**
-     * Writes out a <code>String</code> with a fixed maximal length.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param maxLength The maximal length of the <var>data</var>.
-     * @param compression The compression parameters of the data set.
-     */
     public void writeString(final String objectPath, final String data, final int maxLength,
             final HDF5GenericCompression compression)
     {
@@ -2602,13 +1934,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a <code>String</code> array (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param compression The compression parameters of the data set.
-     */
     public void writeStringArray(final String objectPath, final String[] data,
             final HDF5GenericCompression compression)
     {
@@ -2618,13 +1943,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         writeStringArray(objectPath, data, getMaxLength(data), compression);
     }
 
-    /**
-     * Writes out a <code>String</code> array (of rank 1). Each element of the array will have a
-     * fixed maximal length which is defined by the longest string in <var>data</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
     public void writeStringArray(final String objectPath, final String[] data)
     {
         assert objectPath != null;
@@ -2634,14 +1952,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out a <code>String</code> array (of rank 1). Each element of the array will have a
-     * fixed maximal length which is given by <var>maxLength</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param maxLength The maximal length of any of the strings in <var>data</var>.
-     */
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength)
     {
         writeStringArray(objectPath, data, maxLength, HDF5GenericCompression.GENERIC_NO_COMPRESSION);
@@ -2657,15 +1967,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         return maxLength;
     }
 
-    /**
-     * Writes out a <code>String</code> array (of rank 1). Each element of the array will have a
-     * fixed maximal length which is given by <var>maxLength</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     * @param maxLength The maximal length of any of the strings in <var>data</var>.
-     * @param compression The compression parameters of the data set.
-     */
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength,
             final HDF5GenericCompression compression)
     {
@@ -2716,17 +2017,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a <code>String</code> with variable maximal length.
-     * <p>
-     * The advantage of this method over {@link #writeString(String, String)} is that when writing a
-     * new string later it can have a different (also greater) length. The disadvantage is that it
-     * it is more time consuming to read and write this kind of string and that it can't be
-     * compressed.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
     public void writeStringVariableLength(final String objectPath, final String data)
     {
         assert objectPath != null;
@@ -2762,15 +2052,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // Enum
     //
 
-    /**
-     * Returns the enumeration type <var>name</var> for this HDF5 file, if necessary creating it. If
-     * it does already exist, the values of the type will be checked against <var>values</var>.
-     * 
-     * @param name The name of the enumeration in the HDF5 file.
-     * @param values The values of the enumeration.
-     * @throws HDF5JavaException If the data type exists and is not compatible with the
-     *             <var>values</var> provided.
-     */
     @Override
     public HDF5EnumerationType getEnumType(final String name, final String[] values)
             throws HDF5JavaException
@@ -2778,16 +2059,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         return getEnumType(name, values, true);
     }
 
-    /**
-     * Returns the enumeration type <var>name</var> for this HDF5 file, if necessary creating it.
-     * 
-     * @param name The name of the enumeration in the HDF5 file.
-     * @param values The values of the enumeration.
-     * @param check If <code>true</code> and if the data type already exists, check whether it is
-     *            compatible with the <var>values</var> provided.
-     * @throws HDF5JavaException If <code>check = true</code>, the data type exists and is not
-     *             compatible with the <var>values</var> provided.
-     */
     @Override
     public HDF5EnumerationType getEnumType(final String name, final String[] values,
             final boolean check) throws HDF5JavaException
@@ -2809,13 +2080,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 name, values);
     }
 
-    /**
-     * Writes out an enum value.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param value The value of the data set.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
-     */
     public void writeEnum(final String objectPath, final HDF5EnumerationValue value)
             throws HDF5JavaException
     {
@@ -2830,14 +2094,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 .toStorageForm());
     }
 
-    /**
-     * Writes out an array of enum values. Uses a compact storage layout. Must only be used for
-     * small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
-     */
     public void writeEnumArrayCompact(final String objectPath, final HDF5EnumerationValueArray data)
             throws HDF5JavaException
     {
@@ -2876,29 +2132,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out an array of enum values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
-     */
     public void writeEnumArray(final String objectPath, final HDF5EnumerationValueArray data)
             throws HDF5JavaException
     {
         writeEnumArray(objectPath, data, HDF5IntCompression.INT_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out an array of enum values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @param compression The compression parameters of the data set. Note that for scaling
-     *            compression the compression factor is ignored. Instead, the scaling factor is
-     *            computed from the number of entries in the enumeration.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
-     */
     public void writeEnumArray(final String objectPath, final HDF5EnumerationValueArray data,
             final HDF5IntCompression compression) throws HDF5JavaException
     {
@@ -2984,13 +2223,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
     // Compound
     //
 
-    /**
-     * Returns the compound type <var>name></var> for this HDF5 file, if necessary creating it.
-     * 
-     * @param name The name of the compound in the HDF5 file.
-     * @param compoundType The Java type that corresponds to this HDF5 type.
-     * @param members The mapping from the Java compound type to the HDF5 type.
-     */
     @Override
     public <T> HDF5CompoundType<T> getCompoundType(final String name, Class<T> compoundType,
             HDF5CompoundMemberMapping... members)
@@ -3005,12 +2237,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 dataTypeName, compoundType, objectByteifyer);
     }
 
-    /**
-     * Returns the compound type <var>name></var> for this HDF5 file, if necessary creating it.
-     * 
-     * @param compoundType The Java type that corresponds to this HDF5 type.
-     * @param members The mapping from the Java compound type to the HDF5 type.
-     */
     @Override
     public <T> HDF5CompoundType<T> getCompoundType(Class<T> compoundType,
             HDF5CompoundMemberMapping... members)
@@ -3032,14 +2258,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         return storageDataTypeId;
     }
 
-    /**
-     * Writes out an array (of rank 1) of compound values. Uses a compact storage layout. Must only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     */
     public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
             final T data)
     {
@@ -3049,14 +2267,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 .getObjectByteifyer().byteify(type.getStorageTypeId(), data));
     }
 
-    /**
-     * Writes out an array (of rank 1) of compound values. Uses a compact storage layout. Must only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     */
     public <T> void writeCompoundArrayCompact(final String objectPath,
             final HDF5CompoundType<T> type, final T[] data)
     {
@@ -3064,15 +2274,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out an array (of rank 1) of compound values. Uses a compact storage layout. Must only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     * @param compression The compression parameters of the data set.
-     */
     public <T> void writeCompoundArrayCompact(final String objectPath,
             final HDF5CompoundType<T> type, final T[] data, final HDF5GenericCompression compression)
     {
@@ -3099,27 +2300,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out an array (of rank 1) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     */
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final T[] data)
     {
         writeCompoundArray(objectPath, type, data, HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out an array (of rank 1) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     * @param compression The compression parameters of the data set.
-     */
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final T[] data, final HDF5GenericCompression compression)
     {
@@ -3146,14 +2332,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a block <var>blockNumber</var> of an array (of rank 1) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     * @param blockNumber The number of the block to write.
-     */
     public <T> void writeCompoundArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final T[] data, final long blockNumber)
     {
@@ -3190,14 +2368,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a block of an array (of rank 1) of compound values with given <var>offset</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     * @param offset The offset of the block in the data set.
-     */
     public <T> void writeCompoundArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final T[] data, final long offset)
     {
@@ -3234,16 +2404,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Creates an array (of rank 1) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param size The size of the compound array to create.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     */
     public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final long size, final int blockSize)
     {
@@ -3251,17 +2411,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Creates an array (of rank 1) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param size The size of the compound array to create.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
-     * @param compression The compression parameters of the data set.
-     */
     public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final long size, final int blockSize, final HDF5GenericCompression compression)
     {
@@ -3285,27 +2434,12 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out an array (of rank N) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The data to write.
-     */
     public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final MDArray<T> data)
     {
         writeCompoundMDArray(objectPath, type, data, HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Writes out an array (of rank N) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The data to write.
-     * @param compression The compression parameters of the data set.
-     */
     public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final MDArray<T> data, final HDF5GenericCompression compression)
     {
@@ -3333,14 +2467,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a block of an array (of rank N) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The data to write.
-     * @param blockDimensions The extent of the block to write on each axis.
-     */
     public <T> void writeCompoundMDArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockDimensions)
     {
@@ -3379,14 +2505,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a block of an array (of rank N) of compound values give a given <var>offset</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The data to write.
-     * @param offset The offset of the block to write on each axis.
-     */
     public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final long[] offset)
     {
@@ -3420,16 +2538,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Writes out a block of an array (of rank N) of compound values give a given <var>offset</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The data to write.
-     * @param blockDimensions The dimensions of the block to write to the data set.
-     * @param offset The offset of the block in the data set to start writing to in each dimension.
-     * @param memoryOffset The offset of the block in the <var>data</var> array.
-     */
     public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final int[] blockDimensions,
             final long[] offset, final int[] memoryOffset)
@@ -3467,17 +2575,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
         baseWriter.runner.call(writeRunnable);
     }
 
-    /**
-     * Creates an array (of rank 1) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param dimensions The extent of the compound array along each of the axis.
-     * @param blockDimensions The extent of one block along each of the axis. (for block-wise IO).
-     *            Ignored if no extendable data sets are used (see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
-     *            <code>deflate == false</code>.
-     */
     public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final long[] dimensions, final int[] blockDimensions)
     {
@@ -3485,18 +2582,6 @@ public final class HDF5Writer extends HDF5Reader implements HDF5SimpleWriter, IH
                 HDF5GenericCompression.GENERIC_NO_COMPRESSION);
     }
 
-    /**
-     * Creates an array (of rank 1) of compound values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param dimensions The extent of the compound array along each of the axis.
-     * @param blockDimensions The extent of one block along each of the axis. (for block-wise IO).
-     *            Ignored if no extendable data sets are used (see
-     *            {@link HDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
-     *            <code>deflate == false</code>.
-     * @param compression The compression parameters of the data set.
-     */
     public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final long[] dimensions, final int[] blockDimensions,
             final HDF5GenericCompression compression)

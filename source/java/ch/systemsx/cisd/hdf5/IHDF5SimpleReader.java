@@ -25,7 +25,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * A HDF5 reader which contains only the basic methods. If you feel overwhelmed with all the methods
- * of {@link HDF5Reader}, then assign the reader to a {@link HDF5SimpleReader} variable and let the
+ * of {@link HDF5Reader}, then assign the reader to a {@link IHDF5SimpleReader} variable and let the
  * code completion of your IDE help you find the method you are looking for.
  * <p>
  * Usage:
@@ -38,7 +38,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * 
  * @author Bernd Rinn
  */
-public interface HDF5SimpleReader
+public interface IHDF5SimpleReader
 {
 
     /**
@@ -210,7 +210,7 @@ public interface HDF5SimpleReader
 
     /**
      * Reads a date value from the data set <var>objectPath</var>. It needs to have been written by
-     * {@link HDF5SimpleWriter#writeDate(String, Date)}.
+     * {@link IHDF5SimpleWriter#writeDate(String, Date)}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The time stamp as {@link Date}.
@@ -220,7 +220,7 @@ public interface HDF5SimpleReader
 
     /**
      * Reads a date array (of rank 1) from the data set <var>objectPath</var>. It needs to have been
-     * written by {@link HDF5SimpleWriter#writeDateArray(String, Date[])}.
+     * written by {@link IHDF5SimpleWriter#writeDateArray(String, Date[])}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The time stamp as {@link Date}.
@@ -230,7 +230,7 @@ public interface HDF5SimpleReader
 
     /**
      * Reads a time duration value from the data set <var>objectPath</var>. It needs to have been
-     * written by {@link HDF5SimpleWriter#writeTimeDuration(String, long)}.
+     * written by {@link IHDF5SimpleWriter#writeTimeDuration(String, long)}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The time duration in seconds.
@@ -241,7 +241,7 @@ public interface HDF5SimpleReader
 
     /**
      * Reads a time duration array from the data set <var>objectPath</var>. It needs to have been
-     * written by {@link HDF5SimpleWriter#writeTimeDurationArray(String, long[])}.
+     * written by {@link IHDF5SimpleWriter#writeTimeDurationArray(String, long[])}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The time duration in seconds.

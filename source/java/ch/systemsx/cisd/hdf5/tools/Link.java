@@ -20,14 +20,14 @@ import java.io.File;
 
 import ch.rinn.restrictions.Private;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
-import ch.systemsx.cisd.common.os.FileLinkType;
-import ch.systemsx.cisd.common.os.Unix;
-import ch.systemsx.cisd.common.os.Unix.Stat;
+import ch.systemsx.cisd.base.unix.FileLinkType;
+import ch.systemsx.cisd.base.unix.Unix;
+import ch.systemsx.cisd.base.unix.Unix.Stat;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationValue;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.HDF5ObjectType;
-import ch.systemsx.cisd.hdf5.HDF5Reader;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 /**
  * A class containing all information we need have about a link either in the file sysstem or in an
@@ -185,7 +185,7 @@ public final class Link implements Comparable<Link>
      * 
      * @return The new start position in the concatenated names.
      */
-    int initAfterReading(String concatenatedNames, int startPos, HDF5Reader reader,
+    int initAfterReading(String concatenatedNames, int startPos, IHDF5Reader reader,
             String groupPath, boolean readLinkTarget)
     {
         try

@@ -76,7 +76,7 @@ public class HDF5ReaderConfigurator
     /**
      * Returns an {@link HDF5Reader} based on this configuration.
      */
-    public HDF5Reader reader()
+    public IHDF5Reader reader()
     {
         if (readerWriterOrNull == null)
         {

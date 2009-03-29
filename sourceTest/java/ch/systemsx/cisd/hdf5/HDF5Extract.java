@@ -22,8 +22,6 @@ import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.time.StopWatch;
 
-import ch.systemsx.cisd.hdf5.HDF5Reader;
-
 /**
  * @author Bernd Rinn
  */
@@ -41,7 +39,7 @@ public class HDF5Extract
         final File file = new File(args[1]);
         final StopWatch watch = new StopWatch();
         watch.start();
-        final HDF5Reader reader = new HDF5ReaderConfigurator(hdf5File).reader();
+        final IHDF5Reader reader = new HDF5ReaderConfigurator(hdf5File).reader();
         final byte[] data = reader.readByteArray(file.getAbsolutePath());
         FileUtils.writeByteArrayToFile(new File(file.getName()), data);
         reader.close();

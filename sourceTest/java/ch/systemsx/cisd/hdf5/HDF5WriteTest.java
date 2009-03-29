@@ -21,8 +21,6 @@ import java.util.BitSet;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
-import ch.systemsx.cisd.hdf5.HDF5Writer;
-
 /**
  * @author Bernd Rinn
  */
@@ -38,7 +36,7 @@ public class HDF5WriteTest
         // bs.set(191);
         try
         {
-            HDF5Writer writer = new HDF5WriterConfigurator(new File("test.h5")).overwrite().writer();
+            IHDF5Writer writer = new HDF5WriterConfigurator(new File("test.h5")).overwrite().writer();
             // writer.write("/Group1/SubGroup1/MyDataSet", new float[] { 1.0f, 2.0f, 3.0f, 4.0f });
             // writer.link("/Group1/SubGroup1/MyDataSet", "/Group1/MyDataSet");
             // writer.write("/Group1/MyDataSet", new float[] { 4.0f, 3.0f, 2.0f, 1.0f });

@@ -19,10 +19,10 @@ package ch.systemsx.cisd.hdf5.tools;
 import java.io.File;
 import java.util.List;
 
-import ch.systemsx.cisd.hdf5.HDF5Reader;
 import ch.systemsx.cisd.hdf5.HDF5ReaderConfigurator;
-import ch.systemsx.cisd.hdf5.HDF5Writer;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**
@@ -34,9 +34,9 @@ import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 public class HDF5Archiver
 {
 
-    private final HDF5Writer hdf5WriterOrNull;
+    private final IHDF5Writer hdf5WriterOrNull;
 
-    private final HDF5Reader hdf5Reader;
+    private final IHDF5Reader hdf5Reader;
 
     private final ArchivingStrategy strategy;
 

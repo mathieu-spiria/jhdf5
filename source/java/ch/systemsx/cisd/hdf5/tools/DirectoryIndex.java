@@ -33,15 +33,15 @@ import ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping;
 import ch.systemsx.cisd.hdf5.HDF5CompoundType;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
-import ch.systemsx.cisd.hdf5.HDF5Reader;
-import ch.systemsx.cisd.hdf5.HDF5Writer;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
 
 /**
  * Memory representation of the directory index stored in an HDF5 archive.
  * <p>
  * Can operate in read-only or read-write mode. The mode is automatically determined by the
- * <var>hdf5Reader</var> provided the constructor: If this is an instance of {@link HDF5Writer}, the
- * directory index will be read-write, otherwise read-only.
+ * <var>hdf5Reader</var> provided the constructor: If this is an instance of {@link IHDF5Writer},
+ * the directory index will be read-write, otherwise read-only.
  * <p>
  * Note that some methods are working exclusively on an internal list data structure, while other
  * methods work on a map data structure. While this is transparent to the caller in terms of
@@ -53,9 +53,9 @@ import ch.systemsx.cisd.hdf5.HDF5Writer;
  */
 public class DirectoryIndex implements Iterable<Link>
 {
-    private final HDF5Reader hdf5Reader;
+    private final IHDF5Reader hdf5Reader;
 
-    private final HDF5Writer hdf5WriterOrNull;
+    private final IHDF5Writer hdf5WriterOrNull;
 
     private final String groupPath;
 
@@ -93,17 +93,17 @@ public class DirectoryIndex implements Iterable<Link>
         return list;
     }
 
-    private static HDF5EnumerationType getHDF5LinkTypeEnumeration(HDF5Reader reader)
+    private static HDF5EnumerationType getHDF5LinkTypeEnumeration(IHDF5Reader reader)
     {
         return reader.getEnumType("linkTypeEnumeration", getFileLinkTypeValues());
     }
 
-    private static HDF5CompoundType<Link> getHDF5LinkCompoundType(HDF5Reader reader)
+    private static HDF5CompoundType<Link> getHDF5LinkCompoundType(IHDF5Reader reader)
     {
         return getHDF5LinkCompoundType(reader, getHDF5LinkTypeEnumeration(reader));
     }
 
-    private static HDF5CompoundType<Link> getHDF5LinkCompoundType(HDF5Reader reader,
+    private static HDF5CompoundType<Link> getHDF5LinkCompoundType(IHDF5Reader reader,
             HDF5EnumerationType hdf5LinkTypeEnumeration)
     {
         return reader.getCompoundType(null, Link.class, getMapping(hdf5LinkTypeEnumeration));
@@ -131,9 +131,9 @@ public class DirectoryIndex implements Iterable<Link>
 
     /**
      * Creates a new directory (group) index. Note that <var>hdf5Reader</var> needs to be an
-     * instance of {@link HDF5Writer} if you intend to write the index to the archive.
+     * instance of {@link IHDF5Writer} if you intend to write the index to the archive.
      */
-    public DirectoryIndex(HDF5Reader hdf5Reader, String groupPath, boolean continueOnError,
+    public DirectoryIndex(IHDF5Reader hdf5Reader, String groupPath, boolean continueOnError,
             boolean readSizeAndLinks)
     {
         assert hdf5Reader != null;
@@ -141,7 +141,8 @@ public class DirectoryIndex implements Iterable<Link>
         assert hdf5Reader.isGroup(groupPath);
 
         this.hdf5Reader = hdf5Reader;
-        this.hdf5WriterOrNull = (hdf5Reader instanceof HDF5Writer) ? (HDF5Writer) hdf5Reader : null;
+        this.hdf5WriterOrNull =
+                (hdf5Reader instanceof IHDF5Writer) ? (IHDF5Writer) hdf5Reader : null;
         this.groupPath = groupPath;
         this.continueOnError = continueOnError;
         this.readSizeAndLinkTarget = readSizeAndLinks;

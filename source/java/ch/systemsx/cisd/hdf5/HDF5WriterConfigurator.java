@@ -167,7 +167,7 @@ public class HDF5WriterConfigurator extends HDF5ReaderConfigurator
     /**
      * Returns an {@link HDF5Writer} based on this configuration.
      */
-    public HDF5Writer writer()
+    public IHDF5Writer writer()
     {
         if (readerWriterOrNull == null)
         {

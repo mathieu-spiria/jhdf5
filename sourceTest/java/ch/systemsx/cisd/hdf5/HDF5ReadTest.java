@@ -33,7 +33,7 @@ public class HDF5ReadTest
     {
         try
         {
-            HDF5Reader reader = new HDF5ReaderConfigurator(new File("test.h5")).reader();
+            IHDF5Reader reader = new HDF5ReaderConfigurator(new File("test.h5")).reader();
             System.out.println(reader.getGroupMemberPaths("/"));
             describe(reader, "/Group1/MyBitSet", null);
             describe(reader, "/Group1/MyDataSet", null);
@@ -71,7 +71,7 @@ public class HDF5ReadTest
         }
     }
 
-    private static void listAttributes(HDF5Reader reader, String objectName)
+    private static void listAttributes(IHDF5Reader reader, String objectName)
     {
         final List<String> attributeNames = reader.getAttributeNames(objectName);
         System.out.printf("Found %d attributes for object '%s':\n", attributeNames.size(),
@@ -82,7 +82,7 @@ public class HDF5ReadTest
         }
     }
 
-    private static void describe(HDF5Reader reader, String objectName, String attributeNameOrNull)
+    private static void describe(IHDF5Reader reader, String objectName, String attributeNameOrNull)
     {
         HDF5DataSetInformation dsInfo;
         HDF5DataTypeInformation dtInfo;

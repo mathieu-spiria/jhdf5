@@ -41,7 +41,7 @@ public class HDF5Factory
      * Note: This method will add automatically add an extension <code>h5</code> to the file name if
      * it doesn't already have one.
      */
-    public static HDF5SimpleWriter open(File file)
+    public static IHDF5SimpleWriter open(File file)
     {
         return new HDF5WriterConfigurator(ensureExtension(file)).writer();
     }
@@ -52,7 +52,7 @@ public class HDF5Factory
      * Note: This method will add automatically add an extension <code>h5</code> to the file name if
      * it doesn't already have one.
      */
-    public static HDF5SimpleReader openForReading(File file)
+    public static IHDF5SimpleReader openForReading(File file)
     {
         return new HDF5ReaderConfigurator(ensureExtension(file)).reader();
     }

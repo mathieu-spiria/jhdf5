@@ -38,13 +38,13 @@ import org.apache.commons.lang.ArrayUtils;
 
 import ch.rinn.restrictions.Private;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
-import ch.systemsx.cisd.common.os.Unix;
-import ch.systemsx.cisd.common.os.Unix.Group;
-import ch.systemsx.cisd.common.os.Unix.Password;
+import ch.systemsx.cisd.base.unix.Unix;
+import ch.systemsx.cisd.base.unix.Unix.Group;
+import ch.systemsx.cisd.base.unix.Unix.Password;
 import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
-import ch.systemsx.cisd.hdf5.HDF5Reader;
-import ch.systemsx.cisd.hdf5.HDF5Writer;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.HDF5WriterConfigurator.FileFormat;
 
 /**
@@ -175,7 +175,7 @@ public class HDF5ArchiveTools
      * Archives the <var>path</var>. It is expected that <var>path</var> is relative to
      * <var>root</var> which will be removed from the path before adding any file to the archive.
      */
-    public static void archive(HDF5Writer writer, ArchivingStrategy strategy, File root, File path,
+    public static void archive(IHDF5Writer writer, ArchivingStrategy strategy, File root, File path,
             boolean continueOnError, boolean verbose) throws IOExceptionUnchecked
     {
         final boolean ok;
@@ -197,7 +197,7 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static void updateIndicesOnThePath(HDF5Writer writer, ArchivingStrategy strategy,
+    private static void updateIndicesOnThePath(IHDF5Writer writer, ArchivingStrategy strategy,
             File root, File path, boolean continueOnError)
     {
         final String rootAbsolute = root.getAbsolutePath();
@@ -229,7 +229,7 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static boolean archiveDirectory(HDF5Writer writer, ArchivingStrategy strategy,
+    private static boolean archiveDirectory(IHDF5Writer writer, ArchivingStrategy strategy,
             File root, File dir, boolean continueOnError, boolean verbose)
             throws ArchivingException
     {
@@ -346,7 +346,7 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static boolean archiveFile(HDF5Writer writer, ArchivingStrategy strategy, File root,
+    private static boolean archiveFile(IHDF5Writer writer, ArchivingStrategy strategy, File root,
             File file, boolean continueOnError, boolean verbose) throws ArchivingException
     {
         boolean ok = true;
@@ -395,7 +395,7 @@ public class HDF5ArchiveTools
     /**
      * Extracts the <var>path</var> from the HDF5 archive and stores it relative to <var>root</var>.
      */
-    public static void extract(HDF5Reader reader, ArchivingStrategy strategy, File root,
+    public static void extract(IHDF5Reader reader, ArchivingStrategy strategy, File root,
             String path, boolean continueOnError, boolean verbose) throws UnarchivingException
     {
         final String unixPath = FilenameUtils.separatorsToUnix(path);
@@ -422,7 +422,7 @@ public class HDF5ArchiveTools
      * <em>Note that a return value of <code>null</code> does not necessarily mean that <var>path</var>
      * is not in the archive!<em>
      */
-    private static Link tryGetLink(HDF5Reader reader, String path, boolean continueOnError)
+    private static Link tryGetLink(IHDF5Reader reader, String path, boolean continueOnError)
     {
         final DirectoryIndex index =
                 new DirectoryIndex(reader, FilenameUtils.separatorsToUnix(FilenameUtils
@@ -434,7 +434,7 @@ public class HDF5ArchiveTools
      * Deletes the <var>path</var> from the HDF5 archive.
      */
     @SuppressWarnings("null")
-    public static void delete(HDF5Writer writer, List<String> paths, boolean continueOnError,
+    public static void delete(IHDF5Writer writer, List<String> paths, boolean continueOnError,
             boolean verbose) throws UnarchivingException
     {
         DirectoryIndex indexOrNull = null;
@@ -475,7 +475,7 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static void extractDirectory(HDF5Reader reader, ArchivingStrategy strategy,
+    private static void extractDirectory(IHDF5Reader reader, ArchivingStrategy strategy,
             GroupCache groupCache, File root, String groupPath, Link dirLinkOrNull,
             boolean continueOnError, boolean verbose) throws UnarchivingException
     {
@@ -518,7 +518,7 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static String tryGetObjectTypeDescriptionForErrorMessage(HDF5Reader reader,
+    private static String tryGetObjectTypeDescriptionForErrorMessage(IHDF5Reader reader,
             String objectPath)
     {
         assert reader != null;
@@ -532,7 +532,7 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static void extractFile(HDF5Reader reader, ArchivingStrategy strategy,
+    private static void extractFile(IHDF5Reader reader, ArchivingStrategy strategy,
             GroupCache groupCache, File root, String hdf5ObjectPath, Link linkOrNull,
             boolean continueOnError, boolean verbose) throws UnarchivingException
     {
@@ -691,7 +691,7 @@ public class HDF5ArchiveTools
     /**
      * Returns a listing of entries in <var>dir</var> in the archive provided by <var>reader</var>.
      */
-    public static List<String> list(HDF5Reader reader, String dir, boolean recursive,
+    public static List<String> list(IHDF5Reader reader, String dir, boolean recursive,
             boolean verbose, boolean numeric, boolean continueOnError)
     {
         final List<String> result = new LinkedList<String>();
@@ -703,7 +703,7 @@ public class HDF5ArchiveTools
     /**
      * Adds the entries of <var>dir</var> to <var>entries</var> recursively.
      */
-    private static void addEntries(HDF5Reader reader, List<String> entries, String dir,
+    private static void addEntries(IHDF5Reader reader, List<String> entries, String dir,
             IdCache idCache, boolean recursive, boolean verbose, boolean numeric,
             boolean continueOnError)
     {
@@ -743,14 +743,14 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static void copyToHDF5Small(File source, HDF5Writer writer, final String objectPath,
+    private static void copyToHDF5Small(File source, IHDF5Writer writer, final String objectPath,
             final HDF5GenericCompression compression) throws IOException
     {
         final byte[] data = FileUtils.readFileToByteArray(source);
         writer.writeOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, data, compression);
     }
 
-    private static void copyToHDF5Large(File source, final HDF5Writer writer,
+    private static void copyToHDF5Large(File source, final IHDF5Writer writer,
             final String objectPath, final long size, final HDF5GenericCompression compression)
             throws IOException
     {
@@ -774,14 +774,14 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static void copyFromHDF5Small(HDF5Reader reader, String objectPath,
+    private static void copyFromHDF5Small(IHDF5Reader reader, String objectPath,
             final File destination) throws IOException
     {
         final byte[] data = reader.readAsByteArray(objectPath);
         FileUtils.writeByteArrayToFile(destination, data);
     }
 
-    private static void copyFromHDF5Large(HDF5Reader reader, final String objectPath,
+    private static void copyFromHDF5Large(IHDF5Reader reader, final String objectPath,
             final long size, File destination) throws IOException
     {
         final OutputStream output = FileUtils.openOutputStream(destination);
