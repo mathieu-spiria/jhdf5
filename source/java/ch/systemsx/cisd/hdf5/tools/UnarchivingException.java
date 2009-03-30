@@ -19,6 +19,8 @@ package ch.systemsx.cisd.hdf5.tools;
 import java.io.File;
 import java.io.IOException;
 
+import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 
 /**
@@ -43,6 +45,11 @@ public class UnarchivingException extends ArchiverException
     }
     
     public UnarchivingException(File file, IOException cause)
+    {
+        super(file, OPERATION_NAME, cause);
+    }
+
+    public UnarchivingException(File file, IOExceptionUnchecked cause)
     {
         super(file, OPERATION_NAME, cause);
     }

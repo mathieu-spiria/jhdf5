@@ -175,8 +175,8 @@ public class HDF5ArchiveTools
      * Archives the <var>path</var>. It is expected that <var>path</var> is relative to
      * <var>root</var> which will be removed from the path before adding any file to the archive.
      */
-    public static void archive(IHDF5Writer writer, ArchivingStrategy strategy, File root, File path,
-            boolean continueOnError, boolean verbose) throws IOExceptionUnchecked
+    public static void archive(IHDF5Writer writer, ArchivingStrategy strategy, File root,
+            File path, boolean continueOnError, boolean verbose) throws IOExceptionUnchecked
     {
         final boolean ok;
         if (path.isDirectory())
@@ -498,7 +498,7 @@ public class HDF5ArchiveTools
                     writeToConsole(objectPathOrNull, verbose);
                     extractDirectory(reader, strategy, groupCache, root, objectPathOrNull, link,
                             continueOnError, verbose);
-                } else if (link.isRegularFile())
+                } else if (link.isRegularFile() || link.isSymLink())
                 {
                     extractFile(reader, strategy, groupCache, root, objectPathOrNull, link,
                             continueOnError, verbose);
@@ -542,6 +542,41 @@ public class HDF5ArchiveTools
         }
         final File file = new File(root, hdf5ObjectPath);
         file.getParentFile().mkdirs();
+        if (linkOrNull != null && linkOrNull.isSymLink())
+        {
+            if (Unix.isOperational())
+            {
+                try
+                {
+                    String linkTargetOrNull = linkOrNull.tryGetLinkTarget();
+                    if (linkTargetOrNull == null)
+                    {
+                        linkTargetOrNull =
+                                reader.getLinkInformation(hdf5ObjectPath).tryGetSymbolicLinkTarget();
+                    }
+                    if (linkTargetOrNull == null)
+                    {
+                        dealWithError(new UnarchivingException(hdf5ObjectPath,
+                                "Cannot extract symlink as no link target stored."), continueOnError);
+                    } else
+                    {
+                        Unix.createSymbolicLink(linkTargetOrNull, file.getAbsolutePath());
+                        writeToConsole(hdf5ObjectPath, verbose);
+                    }
+                } catch (IOExceptionUnchecked ex)
+                {
+                    dealWithError(new UnarchivingException(file, ex), continueOnError);
+                } catch (HDF5Exception ex)
+                {
+                    dealWithError(new UnarchivingException(hdf5ObjectPath, ex), continueOnError);
+                }
+                return;
+            } else
+            {
+                System.err.println("Warning: extracting symlink as regular file as Unix calls are "
+                        + "not available on this system.");
+            }
+        }
         try
         {
             final long size = reader.getDataSetInformation(hdf5ObjectPath).getSize();

@@ -19,6 +19,8 @@ package ch.systemsx.cisd.hdf5.tools;
 import java.io.File;
 import java.io.IOException;
 
+import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 
 /**
@@ -52,6 +54,11 @@ public abstract class ArchiverException extends RuntimeException
         this.fileOrObjectPath = objectPath;
     }
 
+    protected ArchiverException(File file, String operationName, IOExceptionUnchecked cause)
+    {
+        this(file, operationName, cause.getCause());
+    }
+    
     protected ArchiverException(File file, String operationName, IOException cause)
     {
         super("Error " + operationName + " file '" + file + "' [IO]: " + cause.getMessage(), cause);
