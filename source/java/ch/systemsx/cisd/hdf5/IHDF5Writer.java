@@ -35,7 +35,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  * <pre>
  * float[] f = new float[100];
  * ...
- * IHDF5Writer writer = HDF5Factory.configure(&quot;test.h5&quot;).writer();
+ * IHDF5Writer writer = HDF5FactoryProvider.get().open(&quot;test.h5&quot;);
  * writer.writeFloatArray(&quot;/some/path/dataset&quot;, f);
  * writer.addAttribute(&quot;some key&quot;, &quot;some value&quot;);
  * writer.close();

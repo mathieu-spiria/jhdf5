@@ -31,7 +31,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * Usage:
  * 
  * <pre>
- * HDF5SimpleReader reader = HDF5Factory.openForReading(&quot;test.h5&quot;);
+ * IHDF5SimpleReader reader = HDF5FactoryProvider.get().openForReading(&quot;test.h5&quot;);
  * float[] f = reader.readFloatArray(&quot;/some/path/dataset&quot;);
  * reader.close();
  * </pre>

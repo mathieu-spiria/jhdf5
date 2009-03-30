@@ -33,7 +33,7 @@ public class HDF5ReadTest
     {
         try
         {
-            IHDF5Reader reader = HDF5Factory.configureForReading(new File("test.h5")).reader();
+            IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(new File("test.h5"));
             System.out.println(reader.getGroupMemberPaths("/"));
             describe(reader, "/Group1/MyBitSet", null);
             describe(reader, "/Group1/MyDataSet", null);

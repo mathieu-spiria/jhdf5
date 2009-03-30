@@ -19,7 +19,7 @@ package ch.systemsx.cisd.hdf5.tools;
 import java.io.File;
 import java.util.List;
 
-import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
@@ -48,10 +48,10 @@ public class HDF5Archiver
         if (readOnly)
         {
             this.hdf5WriterOrNull = null;
-            this.hdf5Reader = HDF5Factory.configureForReading(archiveFile).reader();
+            this.hdf5Reader = HDF5FactoryProvider.get().openForReading(archiveFile);
         } else
         {
-            final IHDF5WriterConfigurator config = HDF5Factory.configure(archiveFile);
+            final IHDF5WriterConfigurator config = HDF5FactoryProvider.get().configure(archiveFile);
             config.fileFormat(fileFormat);
             this.hdf5WriterOrNull = config.writer();
             this.hdf5Reader = hdf5WriterOrNull;

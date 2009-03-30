@@ -29,7 +29,7 @@ import java.util.Date;
  * <pre>
  * float[] f = new float[100];
  * ...
- * HDF5SimpleWriter writer = HDF5Factory.open(&quot;test.h5&quot;);
+ * IHDF5SimpleWriter writer = HDF5FactoryProvider.get().open(&quot;test.h5&quot;);
  * writer.writeFloatArray(&quot;/some/path/dataset&quot;, f);
  * writer.close();
  * </pre>
