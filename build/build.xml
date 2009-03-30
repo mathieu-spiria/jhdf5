@@ -401,7 +401,9 @@
 
 	<target name="doc">
 		<delete dir="${targets}/doc" />
-		<javadoc sourcepath="source/java"
+		<delete dir="${targets}/source-base" />
+		<unzip src="../libraries/cisd-base/cisd-base-src.zip" dest="${targets}/source-base" />
+		<javadoc sourcepath="source/java:${targets}/source-base"
 		         packagenames="ch.systemsx.cisd.hdf5,ch.systemsx.cisd.base.mdarray"
 		         classpath="../base/targets/classes:../libraries/cisd-base/cisd-base.jar:../libraries/commons-lang/commons-lang.jar:../libraries/commons-io/commons-io.jar:../libraries/restrictionchecker/restrictions.jar"
 		         destdir="targets/doc"
