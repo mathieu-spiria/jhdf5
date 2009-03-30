@@ -68,7 +68,6 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      */
     public void close();
 
-    
     // /////////////////////
     // Objects & Links
     // /////////////////////
@@ -118,14 +117,14 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     public boolean isSoftLink(final String objectPath);
 
     /**
-     * Returns <code>true</code> if the <var>objectPath</var> exists and represents a soft link and
-     * <code>false</code> otherwise.
+     * Returns <code>true</code> if the <var>objectPath</var> exists and represents an external link
+     * and <code>false</code> otherwise.
      */
     public boolean isExternalLink(final String objectPath);
 
     /**
-     * Returns <code>true</code> if the <var>objectPath</var> exists and represents a soft link and
-     * <code>false</code> otherwise.
+     * Returns <code>true</code> if the <var>objectPath</var> exists and represents either a soft
+     * link or an external link and <code>false</code> otherwise.
      */
     public boolean isSymbolicLink(final String objectPath);
 
@@ -180,7 +179,6 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      */
     public HDF5DataSetInformation getDataSetInformation(final String dataSetPath);
 
-    
     // /////////////////////
     // Group
     // /////////////////////
@@ -238,7 +236,6 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     public List<HDF5LinkInformation> getAllGroupMemberInformation(final String groupPath,
             boolean readLinkTargets);
 
-    
     // /////////////////////
     // Types
     // /////////////////////
@@ -304,7 +301,6 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      */
     public HDF5DataTypeVariant tryGetTypeVariant(final String objectPath);
 
-    
     // /////////////////////
     // Attributes
     // /////////////////////
@@ -405,7 +401,6 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      */
     public double getDoubleAttribute(final String objectPath, final String attributeName);
 
-    
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -464,7 +459,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      */
     public Iterable<HDF5DataBlock<byte[]>> getAsByteArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException;
-    
+
     //
     // Boolean
     //
@@ -493,7 +488,6 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      */
     public BitSet readBitField(final String objectPath) throws HDF5DatatypeInterfaceException;
 
-    
     //
     // Time stamp
     //
