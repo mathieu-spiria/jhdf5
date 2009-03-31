@@ -3042,7 +3042,9 @@ public class HDF5RoundtripTest
         assertEquals(HDF5DataClass.OPAQUE, info.getTypeInformation().getDataClass());
         assertChunkSizes(info, byteArrayWritten.length);
         assertEquals(opaqueTag, reader.tryGetOpaqueTag(opaqueDataSetName));
+        assertEquals(opaqueTag, reader.tryGetOpaqueType(opaqueDataSetName).getTag());
         assertNull(reader.tryGetOpaqueTag(byteArrayDataSetName));
+        assertNull(reader.tryGetOpaqueType(byteArrayDataSetName));
         final byte[] byteArrayRead = reader.readAsByteArray(byteArrayDataSetName);
         assertTrue(Arrays.equals(byteArrayWritten, byteArrayRead));
         final byte[] byteArrayReadOpaque = reader.readAsByteArray(opaqueDataSetName);
