@@ -32,6 +32,11 @@ public class ArchivingException extends ArchiverException
     
     private static final String OPERATION_NAME = "archiving";
     
+    public ArchivingException(String msg)
+    {
+        super("GENERAL", OPERATION_NAME, msg);
+    }
+    
     public ArchivingException(String objectPath, HDF5Exception cause)
     {
         super(objectPath, OPERATION_NAME, cause);
