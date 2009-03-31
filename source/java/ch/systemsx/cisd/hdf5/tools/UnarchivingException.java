@@ -34,6 +34,11 @@ public class UnarchivingException extends ArchiverException
     
     private static final String OPERATION_NAME = "unarchiving";
     
+    public UnarchivingException(String msg)
+    {
+        super("GENERAL", OPERATION_NAME, msg);
+    }
+    
     public UnarchivingException(String objectPath, String detailedMsg)
     {
         super(objectPath, OPERATION_NAME, detailedMsg);
