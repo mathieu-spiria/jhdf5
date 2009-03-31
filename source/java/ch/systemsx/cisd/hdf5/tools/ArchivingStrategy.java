@@ -157,9 +157,9 @@ public class ArchivingStrategy
         return true;
     }
 
-    public boolean doComputeMD5Hash()
+    public CheckSum getChecksum()
     {
-        return false;
+        return CheckSum.MD5;
     }
 
     public boolean doExclude(String path, boolean isDirectory)

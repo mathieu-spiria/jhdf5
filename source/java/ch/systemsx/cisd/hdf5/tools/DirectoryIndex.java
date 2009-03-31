@@ -53,6 +53,8 @@ import ch.systemsx.cisd.hdf5.IHDF5Writer;
  */
 public class DirectoryIndex implements Iterable<Link>
 {
+    private static final String OPAQUE_TAG_HASHES = "CONCAT_HASHES";
+
     private final IHDF5Reader hdf5Reader;
 
     private final IHDF5Writer hdf5WriterOrNull;
@@ -62,6 +64,8 @@ public class DirectoryIndex implements Iterable<Link>
     private final boolean continueOnError;
 
     private final boolean readSizeAndLinkTarget;
+    
+    private final boolean readHashes;
 
     private Link[] linksOrNull;
 
@@ -95,18 +99,25 @@ public class DirectoryIndex implements Iterable<Link>
 
     private static HDF5EnumerationType getHDF5LinkTypeEnumeration(IHDF5Reader reader)
     {
-        return reader.getEnumType("linkTypeEnumeration", getFileLinkTypeValues());
+        return reader.getEnumType("linkType", getFileLinkTypeValues());
+    }
+
+    private static HDF5EnumerationType getHDF5ChecksumEnumeration(IHDF5Reader reader)
+    {
+        return reader.getEnumType("checkSum", getCheckSumValues());
     }
 
     private static HDF5CompoundType<Link> getHDF5LinkCompoundType(IHDF5Reader reader)
     {
-        return getHDF5LinkCompoundType(reader, getHDF5LinkTypeEnumeration(reader));
+        return getHDF5LinkCompoundType(reader, getHDF5LinkTypeEnumeration(reader),
+                getHDF5ChecksumEnumeration(reader));
     }
 
     private static HDF5CompoundType<Link> getHDF5LinkCompoundType(IHDF5Reader reader,
-            HDF5EnumerationType hdf5LinkTypeEnumeration)
+            HDF5EnumerationType hdf5LinkTypeEnumeration, HDF5EnumerationType hdf5CheckSumEnumeration)
     {
-        return reader.getCompoundType(null, Link.class, getMapping(hdf5LinkTypeEnumeration));
+        return reader.getCompoundType(null, Link.class, getMapping(hdf5LinkTypeEnumeration,
+                hdf5CheckSumEnumeration));
     }
 
     private static String[] getFileLinkTypeValues()
@@ -120,13 +131,26 @@ public class DirectoryIndex implements Iterable<Link>
         return values;
     }
 
-    private static HDF5CompoundMemberMapping[] getMapping(HDF5EnumerationType linkEnumerationType)
+    private static String[] getCheckSumValues()
+    {
+        final CheckSum[] checkSums = CheckSum.values();
+        final String[] values = new String[checkSums.length];
+        for (int i = 0; i < values.length; ++i)
+        {
+            values[i] = checkSums[i].name();
+        }
+        return values;
+    }
+
+    private static HDF5CompoundMemberMapping[] getMapping(HDF5EnumerationType linkEnumerationType,
+            HDF5EnumerationType checksumEnumeration)
     {
         return new HDF5CompoundMemberMapping[]
             { mapping("linkNameLength"),
                     mapping("hdf5EncodedLinkType", "linkType", linkEnumerationType),
                     mapping("size"), mapping("lastModified"), mapping("uid"), mapping("gid"),
-                    mapping("permissions") };
+                    mapping("permissions"),
+                    mapping("hdf5EncodedChecksum", "checksum", checksumEnumeration) };
     }
 
     /**
@@ -134,7 +158,7 @@ public class DirectoryIndex implements Iterable<Link>
      * instance of {@link IHDF5Writer} if you intend to write the index to the archive.
      */
     public DirectoryIndex(IHDF5Reader hdf5Reader, String groupPath, boolean continueOnError,
-            boolean readSizeAndLinks)
+            boolean readSizeAndLinks, boolean readHashes)
     {
         assert hdf5Reader != null;
         assert groupPath != null;
@@ -146,6 +170,7 @@ public class DirectoryIndex implements Iterable<Link>
         this.groupPath = groupPath;
         this.continueOnError = continueOnError;
         this.readSizeAndLinkTarget = readSizeAndLinks;
+        this.readHashes = readHashes;
     }
 
     private String getIndexDataSetName()
@@ -156,6 +181,11 @@ public class DirectoryIndex implements Iterable<Link>
     private String getIndexNamesDataSetName()
     {
         return groupPath + "/__INDEXNAMES__";
+    }
+
+    private String getIndexHashesDataSetName()
+    {
+        return groupPath + "/__INDEXHASHES__";
     }
 
     private Map<String, Link> indexMapOrNull = null;
@@ -195,13 +225,17 @@ public class DirectoryIndex implements Iterable<Link>
                 final Link[] linksProcessing =
                         hdf5Reader.readCompoundArray(getIndexDataSetName(), linkCompoundType);
                 final String concatenatedNames = hdf5Reader.readString(getIndexNamesDataSetName());
-                int namePos = 0;
+                final String indexHashesDataSetName = getIndexHashesDataSetName();
+                final byte[] concatenatedHashes =
+                        readHashes && hdf5Reader.exists(indexHashesDataSetName) ? hdf5Reader
+                                .readAsByteArray(indexHashesDataSetName)
+                                : null;
+                int[] pos = new int[2];
                 this.firstFileIndex = 0;
                 for (Link link : linksProcessing)
                 {
-                    namePos =
-                            link.initAfterReading(concatenatedNames, namePos, hdf5Reader,
-                                    groupPath, readSizeAndLinkTarget);
+                    link.initAfterReading(concatenatedNames, concatenatedHashes, pos, hdf5Reader,
+                            groupPath, readSizeAndLinkTarget);
                     // Note: only works because link array is ordered by directory / non-directory
                     if (link.isDirectory())
                     {
@@ -330,20 +364,56 @@ public class DirectoryIndex implements Iterable<Link>
         {
             final HDF5EnumerationType linkTypeEnumeration =
                     getHDF5LinkTypeEnumeration(hdf5WriterOrNull);
+            final HDF5EnumerationType checksumEnumeration =
+                    getHDF5ChecksumEnumeration(hdf5WriterOrNull);
             final StringBuilder concatenatedNames = new StringBuilder();
+            final HashArrayBuilder concatenatedHashes =
+                    new HashArrayBuilder(getConcatenatedHashLength());
             for (Link link : linksOrNull)
             {
-                link.prepareForWriting(linkTypeEnumeration, concatenatedNames);
+                link.prepareForWriting(linkTypeEnumeration, checksumEnumeration, concatenatedNames,
+                        concatenatedHashes);
             }
             hdf5WriterOrNull.writeStringVariableLength(getIndexNamesDataSetName(),
                     concatenatedNames.toString());
+            final String indexHashesDataSetName = getIndexHashesDataSetName();
+            if (hdf5WriterOrNull.exists(indexHashesDataSetName)
+                    && hdf5WriterOrNull.getDataSetInformation(indexHashesDataSetName).getSize() < concatenatedHashes
+                            .getHashes().length)
+            {
+                hdf5WriterOrNull.delete(indexHashesDataSetName);
+            }
+            if (concatenatedHashes.getHashes().length > 0)
+            {
+                hdf5WriterOrNull.writeOpaqueByteArray(indexHashesDataSetName, OPAQUE_TAG_HASHES,
+                        concatenatedHashes.getHashes());
+            }
             hdf5WriterOrNull.writeCompoundArray(getIndexDataSetName(), getHDF5LinkCompoundType(
-                    hdf5WriterOrNull, linkTypeEnumeration), linksOrNull);
+                    hdf5WriterOrNull, linkTypeEnumeration, checksumEnumeration), linksOrNull);
         } catch (HDF5Exception ex)
         {
             HDF5ArchiveTools
                     .dealWithError(new ListArchiveException(groupPath, ex), continueOnError);
         }
+    }
+
+    private int getConcatenatedHashLength()
+    {
+        int concatenatedHashLength = 0;
+        for (Link link : linksOrNull)
+        {
+            final CheckSum checksum = link.getCheckSum();
+            final byte[] hashOrNull = link.getHash();
+            final int hashLength = (hashOrNull != null) ? hashOrNull.length : 0;
+            if (checksum.hasCorrectLength(hashOrNull) == false)
+            {
+                // That is an error in the JRE
+                throw new Error("JRE delivers illegal hash length " + hashLength + " for checksum "
+                        + checksum);
+            }
+            concatenatedHashLength += hashLength;
+        }
+        return concatenatedHashLength;
     }
 
     /**
