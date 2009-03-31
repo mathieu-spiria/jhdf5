@@ -139,6 +139,7 @@ public final class HDF5CompoundMemberMapping
      * Adds a member mapping for <var>fieldName</var>. Only suitable for Enumerations.
      * 
      * @param fieldName The name of the field in the Java class.
+     * @param enumType The enumeration type in the HDF5 file.
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName, HDF5EnumerationType enumType)
     {
@@ -151,6 +152,7 @@ public final class HDF5CompoundMemberMapping
      * 
      * @param fieldName The name of the field in the Java class.
      * @param memberName The name of the member in the compound type.
+     * @param enumType The enumeration type in the HDF5 file.
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName,
             HDF5EnumerationType enumType)
