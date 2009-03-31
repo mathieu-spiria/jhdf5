@@ -1271,7 +1271,7 @@ class HDF5
         return dataTypeId;
     }
 
-    public String getOpaqueTag(int dataTypeId)
+    public String tryGetOpaqueTag(int dataTypeId)
     {
         return H5Tget_tag(dataTypeId);
     }

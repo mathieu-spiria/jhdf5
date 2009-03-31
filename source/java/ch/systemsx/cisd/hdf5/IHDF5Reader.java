@@ -253,6 +253,15 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     public String tryGetOpaqueTag(final String objectPath);
 
     /**
+     * Returns the opaque data type or <code>null</code>, if <var>objectPath</var> is not of such a
+     * data type.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The opaque data type, or <code>null</code>.
+     */
+    public HDF5OpaqueType tryGetOpaqueType(final String objectPath);
+
+    /**
      * Returns the enumeration type <var>name</var> for this HDF5 file. Use this method only when
      * you know that the type exists.
      * 

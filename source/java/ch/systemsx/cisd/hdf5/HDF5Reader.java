@@ -350,9 +350,37 @@ public class HDF5Reader implements IHDF5Reader
                     final int dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final int dataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                    return baseReader.h5.getOpaqueTag(dataTypeId);
+                    return baseReader.h5.tryGetOpaqueTag(dataTypeId);
                 }
             };
+        return baseReader.runner.call(readTagCallable);
+    }
+
+    public HDF5OpaqueType tryGetOpaqueType(final String objectPath)
+    {
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5OpaqueType> readTagCallable =
+                new ICallableWithCleanUp<HDF5OpaqueType>()
+                    {
+                        public HDF5OpaqueType call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final int dataTypeId =
+                                    baseReader.h5.getDataTypeForDataSet(dataSetId,
+                                            baseReader.fileRegistry);
+                            final String opaqueTagOrNull = baseReader.h5.tryGetOpaqueTag(dataTypeId);
+                            if (opaqueTagOrNull == null)
+                            {
+                                return null;
+                            } else
+                            {
+                                return new HDF5OpaqueType(baseReader.fileId, dataTypeId,
+                                        opaqueTagOrNull);
+                            }
+                        }
+                    };
         return baseReader.runner.call(readTagCallable);
     }
 
@@ -492,7 +520,6 @@ public class HDF5Reader implements IHDF5Reader
 
         return baseReader.runner.call(readRunnable);
     }
-
 
     // /////////////////////
     // Attributes
@@ -2099,7 +2126,8 @@ public class HDF5Reader implements IHDF5Reader
                                     final short[] data = new short[arraySize];
                                     if (scaledEnum)
                                     {
-                                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, data);
+                                        baseReader.h5
+                                                .readDataSet(dataSetId, H5T_NATIVE_INT16, data);
                                     } else
                                     {
                                         baseReader.h5.readDataSet(dataSetId, actualEnumType
@@ -2112,7 +2140,8 @@ public class HDF5Reader implements IHDF5Reader
                                     final int[] data = new int[arraySize];
                                     if (scaledEnum)
                                     {
-                                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32, data);
+                                        baseReader.h5
+                                                .readDataSet(dataSetId, H5T_NATIVE_INT32, data);
                                     } else
                                     {
                                         baseReader.h5.readDataSet(dataSetId, actualEnumType
