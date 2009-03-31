@@ -157,6 +157,11 @@ public class ArchivingStrategy
         return true;
     }
 
+    public boolean doComputeMD5Hash()
+    {
+        return false;
+    }
+
     public boolean doExclude(String path, boolean isDirectory)
     {
         if (isDirectory)

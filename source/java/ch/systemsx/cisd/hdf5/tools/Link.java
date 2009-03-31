@@ -66,6 +66,8 @@ public final class Link implements Comparable<Link>
 
     private short permissions;
 
+    private byte[] hash;
+
     /**
      * Returns a {@link Link} object for the given <var>link</var> {@link File}, or
      * <code>null</code> if a system call fails and <var>continueOnError</var> is <code>true</code>.
@@ -105,7 +107,7 @@ public final class Link implements Comparable<Link>
     public Link()
     {
     }
-    
+
     public Link(HDF5LinkInformation info, long size)
     {
         this.linkName = info.getName();
@@ -295,6 +297,16 @@ public final class Link implements Comparable<Link>
         }
     }
 
+    public byte[] getHash()
+    {
+        return hash;
+    }
+
+    public void setHash(byte[] hash)
+    {
+        this.hash = hash;
+    }
+
     //
     // Comparable
     //
@@ -312,6 +324,10 @@ public final class Link implements Comparable<Link>
             return getLinkName().compareTo(o.getLinkName());
         }
     }
+
+    //
+    // Object
+    //
 
     @Override
     public boolean equals(Object obj)
