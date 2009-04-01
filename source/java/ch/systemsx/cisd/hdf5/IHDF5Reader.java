@@ -47,6 +47,19 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
 {
 
+    /**
+     * An interface for inspecting the byte array of compounds and compound arrays just after they
+     * are read from or before they are written to the HDF5 file.
+     */
+    public interface IByteArrayInspector
+    {
+        /**
+         * Called with the byte array. The method can change the <var>byteArray</var> but does so on
+         * its own risk!.
+         */
+        void inspect(byte[] byteArray);
+    }
+
     // /////////////////////
     // Configuration
     // /////////////////////
@@ -874,6 +887,19 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
             throws HDF5JavaException;
 
     /**
+     * Reads a compound from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
+     *            file is translated back into a Java object.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
+     */
+    public <T> T readCompound(final String objectPath, final HDF5CompoundType<T> type,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
+
+    /**
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -889,6 +915,19 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
+     * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
+     *            file is translated back into Java objects.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public <T> T[] readCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
+
+    /**
+     * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
      * @param blockSize The block size (this will be the length of the <code>float[]</code> returned
      *            if the data set is long enough).
      * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
@@ -897,7 +936,24 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
      */
     public <T> T[] readCompoundArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
-            final int blockSize, final long blockNumber, final HDF5CompoundMemberMapping... members)
+            final int blockSize, final long blockNumber) throws HDF5JavaException;
+
+    /**
+     * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param blockSize The block size (this will be the length of the <code>float[]</code> returned
+     *            if the data set is long enough).
+     * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
+     *            <var>blockSize</var>).
+     * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
+     *            file is translated back into Java objects.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public <T> T[] readCompoundArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
+            final int blockSize, final long blockNumber, final IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException;
 
     /**
@@ -916,15 +972,47 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
             throws HDF5JavaException;
 
     /**
+     * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param blockSize The block size (this will be the length of the <code>float[]</code> returned
+     *            if the data set is long enough).
+     * @param offset The offset of the block to read (starting with 0).
+     * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
+     *            file is translated back into Java objects.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public <T> T[] readCompoundArrayBlockWithOffset(final String objectPath,
+            final HDF5CompoundType<T> type, final int blockSize, final long offset,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
+
+    /**
      * Provides all natural blocks of this one-dimensional data set of compounds to iterate over.
      * 
+     * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
-    public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String dataSetPath,
+    public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String objectPath,
             final HDF5CompoundType<T> type) throws HDF5JavaException;
 
+    /**
+     * Provides all natural blocks of this one-dimensional data set of compounds to iterate over.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
+     *            file is translated back into Java objects.
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String objectPath,
+            final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
+            throws HDF5JavaException;
+    
     /**
      * Reads a compound array from the data set <var>objectPath</var>.
      * 
@@ -936,6 +1024,20 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     public <T> MDArray<T> readCompoundMDArray(final String objectPath,
             final HDF5CompoundType<T> type) throws HDF5JavaException;
 
+    /**
+     * Reads a compound array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
+     *            file is translated back into Java objects.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public <T> MDArray<T> readCompoundMDArray(final String objectPath,
+            final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
+            throws HDF5JavaException;
+    
     /**
      * Reads a block from a compound array from the data set <var>objectPath</var>.
      * 
@@ -956,6 +1058,22 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @param blockDimensions The extent of the block to write along each axis.
+     * @param blockNumber The number of the block to write along each axis.
+     * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
+     *            file is translated back into Java objects.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public <T> MDArray<T> readCompoundMDArrayBlock(final String objectPath,
+            final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] blockNumber,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
+    
+    /**
+     * Reads a block from a compound array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param blockDimensions The extent of the block to write along each axis.
      * @param offset The offset of the block to write in the data set along each axis.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
@@ -964,4 +1082,19 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] offset)
             throws HDF5JavaException;
 
+    /**
+     * Reads a block from a compound array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param blockDimensions The extent of the block to write along each axis.
+     * @param offset The offset of the block to write in the data set along each axis.
+     * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
+     *            file is translated back into Java objects.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(final String objectPath,
+            final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] offset,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
 }

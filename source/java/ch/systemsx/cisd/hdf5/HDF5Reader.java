@@ -370,7 +370,8 @@ public class HDF5Reader implements IHDF5Reader
                             final int dataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId,
                                             baseReader.fileRegistry);
-                            final String opaqueTagOrNull = baseReader.h5.tryGetOpaqueTag(dataTypeId);
+                            final String opaqueTagOrNull =
+                                    baseReader.h5.tryGetOpaqueTag(dataTypeId);
                             if (opaqueTagOrNull == null)
                             {
                                 return null;
@@ -2449,41 +2450,74 @@ public class HDF5Reader implements IHDF5Reader
     public <T> T readCompound(final String objectPath, final HDF5CompoundType<T> type)
             throws HDF5JavaException
     {
+        return readCompound(objectPath, type, null);
+    }
+
+    public <T> T readCompound(final String objectPath, final HDF5CompoundType<T> type,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
+    {
         baseReader.checkOpen();
         type.check(baseReader.fileId);
-        return primReadCompound(objectPath, -1, -1, type);
+        return primReadCompound(objectPath, -1, -1, type, inspectorOrNull);
     }
 
     public <T> T[] readCompoundArray(final String objectPath, final HDF5CompoundType<T> type)
             throws HDF5JavaException
     {
+        return readCompoundArray(objectPath, type, null);
+    }
+
+    public <T> T[] readCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
+    {
         baseReader.checkOpen();
         type.check(baseReader.fileId);
-        return primReadCompoundArray(objectPath, -1, -1, type);
+        return primReadCompoundArray(objectPath, -1, -1, type, inspectorOrNull);
     }
 
     public <T> T[] readCompoundArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
-            final int blockSize, final long blockNumber, final HDF5CompoundMemberMapping... members)
+            final int blockSize, final long blockNumber) throws HDF5JavaException
+    {
+        return readCompoundArrayBlock(objectPath, type, blockSize, blockNumber, null);
+    }
+
+    public <T> T[] readCompoundArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
+            final int blockSize, final long blockNumber, final IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException
     {
         baseReader.checkOpen();
         type.check(baseReader.fileId);
-        return primReadCompoundArray(objectPath, blockSize, blockSize * blockNumber, type);
+        return primReadCompoundArray(objectPath, blockSize, blockSize * blockNumber, type,
+                inspectorOrNull);
     }
 
     public <T> T[] readCompoundArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final int blockSize, final long offset)
             throws HDF5JavaException
     {
-        baseReader.checkOpen();
-        type.check(baseReader.fileId);
-        return primReadCompoundArray(objectPath, blockSize, offset, type);
+        return readCompoundArrayBlockWithOffset(objectPath, type, blockSize, offset, null);
     }
 
-    public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String dataSetPath,
+    public <T> T[] readCompoundArrayBlockWithOffset(final String objectPath,
+            final HDF5CompoundType<T> type, final int blockSize, final long offset,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
+    {
+        baseReader.checkOpen();
+        type.check(baseReader.fileId);
+        return primReadCompoundArray(objectPath, blockSize, offset, type, inspectorOrNull);
+    }
+
+    public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String objectPath,
             final HDF5CompoundType<T> type) throws HDF5JavaException
     {
-        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
+        return getCompoundArrayNaturalBlocks(objectPath, type, null);
+    }
+
+    public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String objectPath,
+            final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
+            throws HDF5JavaException
+    {
+        final HDF5DataSetInformation info = getDataSetInformation(objectPath);
         if (info.getRank() > 1)
         {
             throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
@@ -2528,8 +2562,8 @@ public class HDF5Reader implements IHDF5Reader
                                         (index == numberOfBlocks - 1) ? lastBlockSize
                                                 : naturalBlockSize;
                                 final T[] block =
-                                        readCompoundArrayBlockWithOffset(dataSetPath, type,
-                                                blockSize, offset);
+                                        readCompoundArrayBlockWithOffset(objectPath, type,
+                                                blockSize, offset, inspectorOrNull);
                                 return new HDF5DataBlock<T[]>(block, index++, offset);
                             }
 
@@ -2543,7 +2577,8 @@ public class HDF5Reader implements IHDF5Reader
     }
 
     private <T> T primReadCompound(final String objectPath, final int blockSize, final long offset,
-            final HDF5CompoundType<T> type) throws HDF5JavaException
+            final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
+            throws HDF5JavaException
     {
         final ICallableWithCleanUp<T> writeRunnable = new ICallableWithCleanUp<T>()
             {
@@ -2562,6 +2597,10 @@ public class HDF5Reader implements IHDF5Reader
                                     * type.getObjectByteifyer().getRecordSize()];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArr);
+                    }
                     return type.getObjectByteifyer().arrayifyScalar(storageDataTypeId, byteArr,
                             type.getCompoundType());
                 }
@@ -2570,7 +2609,8 @@ public class HDF5Reader implements IHDF5Reader
     }
 
     private <T> T[] primReadCompoundArray(final String objectPath, final int blockSize,
-            final long offset, final HDF5CompoundType<T> type) throws HDF5JavaException
+            final long offset, final HDF5CompoundType<T> type,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
         final ICallableWithCleanUp<T[]> writeRunnable = new ICallableWithCleanUp<T[]>()
             {
@@ -2589,6 +2629,10 @@ public class HDF5Reader implements IHDF5Reader
                                     * type.getObjectByteifyer().getRecordSize()];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArr);
+                    }
                     return type.getObjectByteifyer().arrayify(storageDataTypeId, byteArr,
                             type.getCompoundType());
                 }
@@ -2640,13 +2684,27 @@ public class HDF5Reader implements IHDF5Reader
     public <T> MDArray<T> readCompoundMDArray(final String objectPath,
             final HDF5CompoundType<T> type) throws HDF5JavaException
     {
+        return readCompoundMDArray(objectPath, type, null);
+    }
+
+    public <T> MDArray<T> readCompoundMDArray(final String objectPath,
+            final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
+            throws HDF5JavaException
+    {
         baseReader.checkOpen();
-        return primReadCompoundArrayRankN(objectPath, type, null, null);
+        return primReadCompoundArrayRankN(objectPath, type, null, null, inspectorOrNull);
     }
 
     public <T> MDArray<T> readCompoundMDArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] blockNumber)
             throws HDF5JavaException
+    {
+        return readCompoundMDArrayBlock(objectPath, type, blockDimensions, blockNumber, null);
+    }
+
+    public <T> MDArray<T> readCompoundMDArrayBlock(final String objectPath,
+            final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] blockNumber,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
         baseReader.checkOpen();
         final long[] offset = new long[blockDimensions.length];
@@ -2654,19 +2712,29 @@ public class HDF5Reader implements IHDF5Reader
         {
             offset[i] = blockDimensions[i] * blockNumber[i];
         }
-        return primReadCompoundArrayRankN(objectPath, type, blockDimensions, offset);
+        return primReadCompoundArrayRankN(objectPath, type, blockDimensions, offset,
+                inspectorOrNull);
     }
 
     public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] offset)
             throws HDF5JavaException
     {
+        return readCompoundMDArrayBlockWithOffset(objectPath, type, blockDimensions, offset, null);
+    }
+
+    public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(final String objectPath,
+            final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] offset,
+            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
+    {
         baseReader.checkOpen();
-        return primReadCompoundArrayRankN(objectPath, type, blockDimensions, offset);
+        return primReadCompoundArrayRankN(objectPath, type, blockDimensions, offset,
+                inspectorOrNull);
     }
 
     private <T> MDArray<T> primReadCompoundArrayRankN(final String objectPath,
-            final HDF5CompoundType<T> type, final int[] dimensionsOrNull, final long[] offsetOrNull)
+            final HDF5CompoundType<T> type, final int[] dimensionsOrNull,
+            final long[] offsetOrNull, final IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException
     {
         final ICallableWithCleanUp<MDArray<T>> writeRunnable =
@@ -2689,6 +2757,10 @@ public class HDF5Reader implements IHDF5Reader
                                             * type.getObjectByteifyer().getRecordSize()];
                             baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
+                            if (inspectorOrNull != null)
+                            {
+                                inspectorOrNull.inspect(byteArr);
+                            }
                             return new MDArray<T>(type.getObjectByteifyer().arrayify(
                                     storageDataTypeId, byteArr, type.getCompoundType()),
                                     spaceParams.dimensions);

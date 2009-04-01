@@ -233,32 +233,30 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void createGroup(final String groupPath, final int sizeHint)
     {
         baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createGroupRunnable =
-                new ICallableWithCleanUp<Void>()
-                    {
-                        public Void call(ICleanUpRegistry registry)
-                        {
-                            baseWriter.h5.createOldStyleGroup(baseWriter.fileId, groupPath,
-                                    sizeHint, registry);
-                            return null; // Nothing to return.
-                        }
-                    };
+        final ICallableWithCleanUp<Void> createGroupRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    baseWriter.h5.createOldStyleGroup(baseWriter.fileId, groupPath, sizeHint,
+                            registry);
+                    return null; // Nothing to return.
+                }
+            };
         baseWriter.runner.call(createGroupRunnable);
     }
 
     public void createGroup(final String groupPath, final int maxCompact, final int minDense)
     {
         baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createGroupRunnable =
-                new ICallableWithCleanUp<Void>()
-                    {
-                        public Void call(ICleanUpRegistry registry)
-                        {
-                            baseWriter.h5.createNewStyleGroup(baseWriter.fileId, groupPath,
-                                    maxCompact, minDense, registry);
-                            return null; // Nothing to return.
-                        }
-                    };
+        final ICallableWithCleanUp<Void> createGroupRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    baseWriter.h5.createNewStyleGroup(baseWriter.fileId, groupPath, maxCompact,
+                            minDense, registry);
+                    return null; // Nothing to return.
+                }
+            };
         baseWriter.runner.call(createGroupRunnable);
     }
 
@@ -269,18 +267,16 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void deleteAttribute(final String objectPath, final String name)
     {
         baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> deleteAttributeRunnable =
-                new ICallableWithCleanUp<Void>()
-                    {
-                        public Void call(ICleanUpRegistry registry)
-                        {
-                            final int objectId =
-                                    baseWriter.h5.openObject(baseWriter.fileId, objectPath,
-                                            registry);
-                            baseWriter.h5.deleteAttribute(objectId, name);
-                            return null; // Nothing to return.
-                        }
-                    };
+        final ICallableWithCleanUp<Void> deleteAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
+                    baseWriter.h5.deleteAttribute(objectId, name);
+                    return null; // Nothing to return.
+                }
+            };
         baseWriter.runner.call(deleteAttributeRunnable);
     }
 
@@ -2261,10 +2257,21 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
             final T data)
     {
+        writeCompound(objectPath, type, data, null);
+    }
+
+    public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
+            final T data, final IByteArrayInspector inspectorOrNull)
+    {
         baseWriter.checkOpen();
         type.check(baseWriter.fileId);
-        baseWriter.writeScalar(objectPath, type.getStorageTypeId(), type.getNativeTypeId(), type
-                .getObjectByteifyer().byteify(type.getStorageTypeId(), data));
+        final byte[] byteArray = type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+        if (inspectorOrNull != null)
+        {
+            inspectorOrNull.inspect(byteArray);
+        }
+        baseWriter.writeScalar(objectPath, type.getStorageTypeId(), type.getNativeTypeId(),
+                byteArray);
     }
 
     public <T> void writeCompoundArrayCompact(final String objectPath,
@@ -2276,6 +2283,13 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     public <T> void writeCompoundArrayCompact(final String objectPath,
             final HDF5CompoundType<T> type, final T[] data, final HDF5GenericCompression compression)
+    {
+        writeCompoundArrayCompact(objectPath, type, data, compression, null);
+    }
+
+    public <T> void writeCompoundArrayCompact(final String objectPath,
+            final HDF5CompoundType<T> type, final T[] data,
+            final HDF5GenericCompression compression, final IByteArrayInspector inspectorOrNull)
     {
         assert objectPath != null;
         assert type != null;
@@ -2292,6 +2306,10 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                                 { data.length }, compression, registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArray);
+                    }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             byteArray);
                     return null; // Nothing to return.
@@ -2309,6 +2327,13 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final T[] data, final HDF5GenericCompression compression)
     {
+        writeCompoundArray(objectPath, type, data, compression, null);
+    }
+
+    public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
+            final T[] data, final HDF5GenericCompression compression,
+            final IByteArrayInspector inspectorOrNull)
+    {
         assert objectPath != null;
         assert type != null;
         assert data != null;
@@ -2324,6 +2349,10 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                                 { data.length }, compression, registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArray);
+                    }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             byteArray);
                     return null; // Nothing to return.
@@ -2334,6 +2363,13 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     public <T> void writeCompoundArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final T[] data, final long blockNumber)
+    {
+        writeCompoundArrayBlock(objectPath, type, data, blockNumber, null);
+    }
+
+    public <T> void writeCompoundArrayBlock(final String objectPath,
+            final HDF5CompoundType<T> type, final T[] data, final long blockNumber,
+            final IByteArrayInspector inspectorOrNull)
     {
         assert objectPath != null;
         assert type != null;
@@ -2360,6 +2396,10 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArray);
+                    }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, byteArray);
                     return null; // Nothing to return.
@@ -2370,6 +2410,13 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     public <T> void writeCompoundArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final T[] data, final long offset)
+    {
+        writeCompoundArrayBlockWithOffset(objectPath, type, data, offset, null);
+    }
+
+    public <T> void writeCompoundArrayBlockWithOffset(final String objectPath,
+            final HDF5CompoundType<T> type, final T[] data, final long offset,
+            final IByteArrayInspector inspectorOrNull)
     {
         assert objectPath != null;
         assert type != null;
@@ -2396,6 +2443,10 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArray);
+                    }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, byteArray);
                     return null; // Nothing to return.
@@ -2443,6 +2494,13 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final MDArray<T> data, final HDF5GenericCompression compression)
     {
+        writeCompoundMDArray(objectPath, type, data, compression, null);
+    }
+
+    public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
+            final MDArray<T> data, final HDF5GenericCompression compression,
+            final IByteArrayInspector inspectorOrNull)
+    {
         assert objectPath != null;
         assert type != null;
         assert data != null;
@@ -2459,6 +2517,10 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
                                     data.getAsFlatArray());
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArray);
+                    }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             byteArray);
                     return null; // Nothing to return.
@@ -2469,6 +2531,13 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     public <T> void writeCompoundMDArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockDimensions)
+    {
+        writeCompoundMDArrayBlock(objectPath, type, data, blockDimensions, null);
+    }
+
+    public <T> void writeCompoundMDArrayBlock(final String objectPath,
+            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockDimensions,
+            final IByteArrayInspector inspectorOrNull)
     {
         assert objectPath != null;
         assert type != null;
@@ -2497,6 +2566,10 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
                                     data.getAsFlatArray());
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArray);
+                    }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, byteArray);
                     return null; // Nothing to return.
@@ -2507,6 +2580,13 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final long[] offset)
+    {
+        writeCompoundMDArrayBlockWithOffset(objectPath, type, data, offset, null);
+    }
+
+    public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
+            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] offset,
+            final IByteArrayInspector inspectorOrNull)
     {
         assert objectPath != null;
         assert type != null;
@@ -2530,6 +2610,10 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
                                     data.getAsFlatArray());
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArray);
+                    }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, byteArray);
                     return null; // Nothing to return.
@@ -2541,6 +2625,14 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final int[] blockDimensions,
             final long[] offset, final int[] memoryOffset)
+    {
+        writeCompoundMDArrayBlockWithOffset(objectPath, type, data, blockDimensions, offset,
+                memoryOffset, null);
+    }
+
+    public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
+            final HDF5CompoundType<T> type, final MDArray<T> data, final int[] blockDimensions,
+            final long[] offset, final int[] memoryOffset, final IByteArrayInspector inspectorOrNull)
     {
         assert objectPath != null;
         assert type != null;
@@ -2567,6 +2659,10 @@ public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
                                     data.getAsFlatArray());
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArray);
+                    }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, byteArray);
                     return null; // Nothing to return.
