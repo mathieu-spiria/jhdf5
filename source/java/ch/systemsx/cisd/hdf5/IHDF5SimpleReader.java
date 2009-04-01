@@ -25,7 +25,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * A HDF5 reader which contains only the basic methods. If you feel overwhelmed with all the methods
- * of {@link HDF5Reader}, then assign the reader to a {@link IHDF5SimpleReader} variable and let the
+ * of {@link IHDF5Reader}, then assign the reader to a {@link IHDF5SimpleReader} variable and let the
  * code completion of your IDE help you find the method you are looking for.
  * <p>
  * Usage:
@@ -99,7 +99,7 @@ public interface IHDF5SimpleReader
      * <p>
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by
-     * {@link HDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but will
+     * {@link IHDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but will
      * throw a {@link HDF5DatatypeInterfaceException}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.

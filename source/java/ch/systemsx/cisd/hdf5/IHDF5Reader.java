@@ -501,7 +501,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * <p>
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by
-     * {@link HDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but will
+     * {@link IHDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but will
      * throw a {@link HDF5DatatypeInterfaceException}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -644,8 +644,8 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
      * <p>
      * This tagging is done by the writer when using
-     * {@link HDF5Writer#writeTimeDuration(String, long, HDF5TimeUnit)} or can be done by calling
-     * {@link HDF5Writer#addTypeVariant(String, HDF5DataTypeVariant)}, most conveniantly by code
+     * {@link IHDF5Writer#writeTimeDuration(String, long, HDF5TimeUnit)} or can be done by calling
+     * {@link IHDF5Writer#addTypeVariant(String, HDF5DataTypeVariant)}, most conveniantly by code
      * like
      * 
      * <pre>

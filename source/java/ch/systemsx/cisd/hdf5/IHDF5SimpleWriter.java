@@ -21,7 +21,7 @@ import java.util.Date;
 
 /**
  * A HDF5 writer which contains only the basic methods. If you feel overwhelmed with all the methods
- * of {@link HDF5Writer}, then assign the writer to a {@link IHDF5SimpleWriter} variable and let the
+ * of {@link IHDF5Writer}, then assign the writer to a {@link IHDF5SimpleWriter} variable and let the
  * code completion of your IDE help you find the method you are looking for.
  * <p>
  * Usage:

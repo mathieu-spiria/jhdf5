@@ -42,7 +42,7 @@ public interface IHDF5ReaderConfigurator
     public HDF5ReaderConfigurator performNumericConversions();
 
     /**
-     * Returns an {@link HDF5Reader} based on this configuration.
+     * Returns an {@link IHDF5Reader} based on this configuration.
      */
     public IHDF5Reader reader();
 

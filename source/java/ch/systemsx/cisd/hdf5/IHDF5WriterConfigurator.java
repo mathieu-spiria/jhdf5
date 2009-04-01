@@ -43,20 +43,20 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
          */
         NO_SYNC,
         /**
-         * Synchronize whenever {@link HDF5Writer#flush()} or {@link HDF5Writer#close()} are called.
+         * Synchronize whenever {@link IHDF5Writer#flush()} or {@link IHDF5Writer#close()} are called.
          */
         SYNC,
         /**
-         * Synchronize whenever {@link HDF5Writer#flush()} or {@link HDF5Writer#close()} are called.
+         * Synchronize whenever {@link IHDF5Writer#flush()} or {@link IHDF5Writer#close()} are called.
          * Block until synchronize is finished.
          */
         SYNC_BLOCK,
         /**
-         * Synchronize whenever {@link HDF5Writer#flush()} is called. <i>Default on Unix</i>
+         * Synchronize whenever {@link IHDF5Writer#flush()} is called. <i>Default on Unix</i>
          */
         SYNC_ON_FLUSH,
         /**
-         * Synchronize whenever {@link HDF5Writer#flush()} is called. Block until synchronize is
+         * Synchronize whenever {@link IHDF5Writer#flush()} is called. Block until synchronize is
          * finished. <i>Default on Windows</i>.
          */
         SYNC_ON_FLUSH_BLOCK,
@@ -124,7 +124,7 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
     public HDF5WriterConfigurator performNumericConversions();
 
     /**
-     * Returns an {@link HDF5Writer} based on this configuration.
+     * Returns an {@link IHDF5Writer} based on this configuration.
      */
     public IHDF5Writer writer();
 
