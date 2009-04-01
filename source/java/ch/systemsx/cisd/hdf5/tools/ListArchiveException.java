@@ -33,6 +33,11 @@ public class ListArchiveException extends ArchiverException
     
     private static final String OPERATION_NAME = "listing";
     
+    public ListArchiveException(String objectPath, String detailedMsg)
+    {
+        super(objectPath, OPERATION_NAME, detailedMsg);
+    }
+    
     public ListArchiveException(String objectPath, HDF5Exception cause)
     {
         super(objectPath, OPERATION_NAME, cause);

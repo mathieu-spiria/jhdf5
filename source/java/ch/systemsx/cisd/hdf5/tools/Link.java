@@ -66,11 +66,7 @@ public final class Link implements Comparable<Link>
 
     private short permissions;
 
-    private CheckSum checksum = CheckSum.NONE;
-
-    private HDF5EnumerationValue hdf5EncodedChecksum;
-
-    private byte[] hashOrNull;
+    private int crc32;
 
     /**
      * Returns a {@link Link} object for the given <var>link</var> {@link File}, or
@@ -189,8 +185,8 @@ public final class Link implements Comparable<Link>
     /**
      * Call this method after reading the link from the archive and before using it.
      */
-    void initAfterReading(String concatenatedNames, byte[] concatenatedHashesOrNull,
-            int[] startPos, IHDF5Reader reader, String groupPath, boolean readLinkTarget)
+    int initAfterReading(String concatenatedNames, int startPos, IHDF5Reader reader,
+            String groupPath, boolean readLinkTarget)
     {
         try
         {
@@ -199,56 +195,29 @@ public final class Link implements Comparable<Link>
         {
             this.linkType = FileLinkType.OTHER;
         }
-        try
-        {
-            if (concatenatedHashesOrNull != null)
-            {
-                this.checksum = CheckSum.valueOf(hdf5EncodedChecksum.getValue());
-            } else
-            {
-                this.checksum = CheckSum.NONE;
-            }
-        } catch (Exception ex)
-        {
-            this.checksum = CheckSum.NONE;
-        }
-        final int nameEndPos = startPos[0] + linkNameLength;
-        this.linkName = concatenatedNames.substring(startPos[0], nameEndPos);
-        startPos[0] = nameEndPos;
-        if (this.checksum.getHashLength() > 0)
-        {
-            this.hashOrNull = this.checksum.createHashBuffer();
-            System.arraycopy(concatenatedHashesOrNull, startPos[1], hashOrNull, 0,
-                    hashOrNull.length);
-            startPos[1] += hashOrNull.length;
-        }
+        final int endPos = startPos + linkNameLength;
+        this.linkName = concatenatedNames.substring(startPos, endPos);
         if (readLinkTarget && linkType == FileLinkType.SYMLINK)
         {
             this.linkTargetOrNull =
                     reader.getLinkInformation(groupPath + "/" + linkName)
                             .tryGetSymbolicLinkTarget();
         }
+        return endPos;
     }
 
     /**
      * Call this method before writing the link to the archive.
      */
     void prepareForWriting(HDF5EnumerationType hdf5LinkTypeEnumeration,
-            HDF5EnumerationType hdf5ChecksumEnumeration, StringBuilder concatenatedNames,
-            HashArrayBuilder concatenatedHashes)
+            StringBuilder concatenatedNames)
     {
         this.linkNameLength = this.linkName.length();
         concatenatedNames.append(linkName);
-        concatenatedHashes.append(hashOrNull);
         if (this.hdf5EncodedLinkType == null)
         {
             this.hdf5EncodedLinkType =
                     new HDF5EnumerationValue(hdf5LinkTypeEnumeration, linkType.name());
-        }
-        if (this.hdf5EncodedChecksum == null)
-        {
-            this.hdf5EncodedChecksum =
-                    new HDF5EnumerationValue(hdf5ChecksumEnumeration, checksum.name());
         }
     }
 
@@ -326,22 +295,14 @@ public final class Link implements Comparable<Link>
         }
     }
 
-    public CheckSum getCheckSum()
+    public int getCrc32()
     {
-        return checksum;
+        return crc32;
     }
 
-    public byte[] getHash()
+    public void setCrc32(int crc32)
     {
-        return hashOrNull;
-    }
-
-    public void setChecksum(CheckSum checksum, byte[] hash)
-    {
-        assert checksum != CheckSum.NONE;
-
-        this.checksum = checksum;
-        this.hashOrNull = hash;
+        this.crc32 = crc32;
     }
 
     //

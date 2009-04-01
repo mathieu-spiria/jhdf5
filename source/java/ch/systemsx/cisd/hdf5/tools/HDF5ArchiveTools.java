@@ -20,15 +20,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.CRC32;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
@@ -182,17 +180,17 @@ public class HDF5ArchiveTools
             File path, boolean continueOnError, boolean verbose) throws IOExceptionUnchecked
     {
         final boolean ok;
-        byte[] hashOrNull = null;
+        int crc32 = 0;
         if (path.isDirectory())
         {
             ok = archiveDirectory(writer, strategy, root, path, continueOnError, verbose);
         } else if (path.isFile())
         {
-            final Link pseudoLinkForHash = new Link();
+            final Link pseudoLinkForChecksum = new Link();
             ok =
-                    archiveFile(writer, strategy, root, path, pseudoLinkForHash, continueOnError,
-                            verbose);
-            hashOrNull = pseudoLinkForHash.getHash();
+                    archiveFile(writer, strategy, root, path, pseudoLinkForChecksum,
+                            continueOnError, verbose);
+            crc32 = pseudoLinkForChecksum.getCrc32();
         } else
         {
             ok = false;
@@ -201,17 +199,16 @@ public class HDF5ArchiveTools
         }
         if (ok)
         {
-            updateIndicesOnThePath(writer, strategy, root, path, hashOrNull, continueOnError);
+            updateIndicesOnThePath(writer, strategy, root, path, crc32, continueOnError);
         }
     }
 
     private static void updateIndicesOnThePath(IHDF5Writer writer, ArchivingStrategy strategy,
-            File root, File path, byte[] hashOrNull, boolean continueOnError)
+            File root, File path, int crc32, boolean continueOnError)
     {
         final String rootAbsolute = root.getAbsolutePath();
         File pathProcessing = path;
-        byte[] hashProcessingOrNull = hashOrNull;
-        CheckSum checksumProcessing = (hashOrNull != null) ? strategy.getChecksum() : CheckSum.NONE;
+        int crc32Processing = crc32;
         while (true)
         {
             File dirProcessingOrNull = pathProcessing.getParentFile();
@@ -223,15 +220,14 @@ public class HDF5ArchiveTools
             }
             final String hdf5GroupPath = getRelativePath(rootAbsolute, dirAbsolute);
             final DirectoryIndex index =
-                    new DirectoryIndex(writer, hdf5GroupPath, continueOnError, false, false);
+                    new DirectoryIndex(writer, hdf5GroupPath, continueOnError, false);
             final Link linkOrNull =
                     Link.tryCreate(pathProcessing, strategy.doStoreOwnerAndPermissions(),
                             continueOnError);
             if (linkOrNull != null)
             {
-                linkOrNull.setChecksum(checksumProcessing, hashProcessingOrNull);
-                checksumProcessing = CheckSum.NONE; // Directories don't have checksums
-                hashProcessingOrNull = null;
+                linkOrNull.setCrc32(crc32Processing);
+                crc32Processing = 0; // Directories don't have a checksum
                 index.addToIndex(Collections.singletonList(linkOrNull));
                 index.writeIndexToArchive();
             }
@@ -336,7 +332,7 @@ public class HDF5ArchiveTools
         }
 
         final DirectoryIndex index =
-                new DirectoryIndex(writer, hdf5GroupPath, continueOnError, verbose, true);
+                new DirectoryIndex(writer, hdf5GroupPath, continueOnError, verbose);
         index.addToIndex(linkEntries);
         index.writeIndexToArchive();
         return true;
@@ -360,17 +356,17 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static void writeToConsole(String hdf5ObjectPath, boolean checksumOK,
-            byte[] hashOrNull, boolean verbose)
+    private static void writeToConsole(String hdf5ObjectPath, boolean checksumOK, int crc32,
+            boolean verbose)
     {
         if (verbose)
         {
             if (checksumOK)
             {
-                System.out.println(hdf5ObjectPath + "\t" + hashToString(hashOrNull) + "\tOK");
+                System.out.println(hdf5ObjectPath + "\t" + hashToString(crc32) + "\tOK");
             } else
             {
-                System.out.println(hdf5ObjectPath + "\t" + hashToString(hashOrNull) + "\tFAILED");
+                System.out.println(hdf5ObjectPath + "\t" + hashToString(crc32) + "\tFAILED");
             }
         }
     }
@@ -385,17 +381,9 @@ public class HDF5ArchiveTools
         try
         {
             final long size = file.length();
-            final byte[] hash =
-                    copyToHDF5(file, writer, hdf5ObjectPath, size, compression, strategy
-                            .getChecksum());
-            link.setChecksum(strategy.getChecksum(), hash);
+            final int crc32 = copyToHDF5(file, writer, hdf5ObjectPath, size, compression);
+            link.setCrc32(crc32);
             writeToConsole(hdf5ObjectPath, verbose);
-        } catch (NoSuchAlgorithmException ex)
-        {
-            ok = false;
-            dealWithError(
-                    new ArchivingException("Error creating digest: " + strategy.getChecksum()),
-                    continueOnError);
         } catch (IOException ex)
         {
             ok = false;
@@ -459,7 +447,7 @@ public class HDF5ArchiveTools
     {
         final DirectoryIndex index =
                 new DirectoryIndex(reader, FilenameUtils.separatorsToUnix(FilenameUtils
-                        .getFullPathNoEndSeparator(path)), continueOnError, false, true);
+                        .getFullPathNoEndSeparator(path)), continueOnError, false);
         return index.tryGetLink(FilenameUtils.getName(path));
     }
 
@@ -488,7 +476,7 @@ public class HDF5ArchiveTools
                 {
                     indexOrNull.writeIndexToArchive();
                 }
-                indexOrNull = new DirectoryIndex(writer, group, continueOnError, false, true);
+                indexOrNull = new DirectoryIndex(writer, group, continueOnError, false);
             }
             try
             {
@@ -517,7 +505,7 @@ public class HDF5ArchiveTools
         {
             final File groupFile = new File(root, groupPath);
             groupFile.mkdir();
-            for (Link link : new DirectoryIndex(reader, groupPath, continueOnError, false, true))
+            for (Link link : new DirectoryIndex(reader, groupPath, continueOnError, false))
             {
                 objectPathOrNull =
                         (groupPath.endsWith("/") ? groupPath : (groupPath + "/"))
@@ -612,36 +600,27 @@ public class HDF5ArchiveTools
                         + "not available on this system.");
             }
         }
-        final CheckSum storedChecksum;
-        final byte[] storedHashOrNull;
+        final int storedCrc32;
         if (linkOrNull != null)
         {
-            storedChecksum = linkOrNull.getCheckSum();
-            storedHashOrNull = linkOrNull.getHash();
+            storedCrc32 = linkOrNull.getCrc32();
         } else
         {
-            storedChecksum = CheckSum.NONE;
-            storedHashOrNull = null;
+            storedCrc32 = 0;
         }
         try
         {
             final long size = reader.getDataSetInformation(hdf5ObjectPath).getSize();
-            final byte[] hashOrNull =
-                    copyFromHDF5(reader, hdf5ObjectPath, size, file, storedChecksum);
+            final int crc32 = copyFromHDF5(reader, hdf5ObjectPath, size, file);
             restoreAttributes(file, linkOrNull, groupCache);
-            final boolean checksumOK =
-                    (storedHashOrNull == null) ? true : Arrays.equals(hashOrNull, storedHashOrNull);
-            writeToConsole(hdf5ObjectPath, checksumOK, hashOrNull, verbose);
+            final boolean checksumOK = (crc32 == storedCrc32);
+            writeToConsole(hdf5ObjectPath, checksumOK, crc32, verbose);
             if (checksumOK == false)
             {
                 dealWithError(new UnarchivingException(hdf5ObjectPath,
-                        "Checksum mismatch. Expected: " + hashToString(storedHashOrNull)
-                                + ", found: " + hashToString(hashOrNull)), continueOnError);
+                        "CRC checksum mismatch. Expected: " + hashToString(storedCrc32)
+                                + ", found: " + hashToString(crc32)), continueOnError);
             }
-        } catch (NoSuchAlgorithmException ex)
-        {
-            dealWithError(new UnarchivingException("Error creating digest: " + storedChecksum),
-                    continueOnError);
         } catch (IOException ex)
         {
             dealWithError(new UnarchivingException(file, ex), continueOnError);
@@ -736,9 +715,6 @@ public class HDF5ArchiveTools
                                     * MILLIS_PER_SECOND, path);
                 } else
                 {
-                    final String hashStr =
-                            (link.getHash() == null) ? "-"
-                                    : (link.getCheckSum() + ":" + hashToString(link.getHash()));
                     return String
                             .format(
                                     "%s\t%s\t%s\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s%7$s\t%8$s",
@@ -746,7 +722,7 @@ public class HDF5ArchiveTools
                                     idCache.getGroup(link, numeric), link.getSize(), link
                                             .getLastModified()
                                             * MILLIS_PER_SECOND, path, link.isRegularFile() ? ""
-                                            : "\t*", hashStr);
+                                            : "\t*", hashToString(link.getCrc32()));
                 }
             default:
                 throw new Error("Unknown level of link information completeness: "
@@ -807,7 +783,7 @@ public class HDF5ArchiveTools
             return;
         }
         final String dirPrefix = dir.endsWith("/") ? dir : (dir + "/");
-        for (Link link : new DirectoryIndex(reader, dir, continueOnError, verbose, verbose))
+        for (Link link : new DirectoryIndex(reader, dir, continueOnError, verbose))
         {
             entries.add(describeLink(dirPrefix, link, idCache, verbose, numeric));
             final String path = dirPrefix + link.getLinkName();
@@ -836,9 +812,8 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static byte[] copyToHDF5(File source, final IHDF5Writer writer,
-            final String objectPath, final long size, final HDF5GenericCompression compression,
-            final CheckSum checkSum) throws IOException, NoSuchAlgorithmException
+    private static int copyToHDF5(File source, final IHDF5Writer writer, final String objectPath,
+            final long size, final HDF5GenericCompression compression) throws IOException
     {
         final InputStream input = FileUtils.openInputStream(source);
         final byte[] buffer = new byte[FILE_SIZE_THRESHOLD];
@@ -859,7 +834,7 @@ public class HDF5ArchiveTools
                             compression);
 
         }
-        final MessageDigest digestOrNull = tryGetDigest(checkSum);
+        final CRC32 crc32 = new CRC32();
         try
         {
             long count = 0;
@@ -868,21 +843,20 @@ public class HDF5ArchiveTools
             {
                 writer.writeOpaqueByteArrayBlockWithOffset(objectPath, type, buffer, n, count);
                 count += n;
-                updateDigest(digestOrNull, buffer, n);
+                crc32.update(buffer, 0, n);
             }
         } finally
         {
             IOUtils.closeQuietly(input);
         }
-        return tryGetHash(digestOrNull);
+        return (int) crc32.getValue();
     }
 
-    private static byte[] copyFromHDF5(IHDF5Reader reader, final String objectPath,
-            final long size, File destination, final CheckSum checkSum) throws IOException,
-            NoSuchAlgorithmException
+    private static int copyFromHDF5(IHDF5Reader reader, final String objectPath, final long size,
+            File destination) throws IOException
     {
         final OutputStream output = FileUtils.openOutputStream(destination);
-        final MessageDigest digestOrNull = tryGetDigest(checkSum);
+        final CRC32 crc32 = new CRC32();
         try
         {
             final long blockCount =
@@ -892,50 +866,32 @@ public class HDF5ArchiveTools
                 final byte[] buffer =
                         reader.readAsByteArrayBlock(objectPath, FILE_SIZE_THRESHOLD, i);
                 output.write(buffer);
-                updateDigest(digestOrNull, buffer, buffer.length);
+                crc32.update(buffer);
             }
             output.close(); // Make sure we don't silence exceptions on closing.
         } finally
         {
             IOUtils.closeQuietly(output);
         }
-        return tryGetHash(digestOrNull);
-    }
-
-    private static MessageDigest tryGetDigest(final CheckSum checkSum)
-            throws NoSuchAlgorithmException
-    {
-        return checkSum.tryGetAlgorithm() != null ? MessageDigest.getInstance(checkSum
-                .tryGetAlgorithm()) : null;
-    }
-
-    private static void updateDigest(MessageDigest digestOrNull, byte[] data, int size)
-    {
-        if (digestOrNull != null)
-        {
-            digestOrNull.update(data, 0, size);
-        }
-    }
-
-    private static byte[] tryGetHash(MessageDigest digestOrNull)
-    {
-        return (digestOrNull == null) ? null : digestOrNull.digest();
+        return (int) crc32.getValue();
     }
 
     private static final char[] HEX_CHARACTERS =
         { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', };
 
-    private static String hashToString(final byte[] hashOrNull)
+    static String hashToString(final int checksum)
     {
-        if (hashOrNull == null)
+        if (checksum == 0)
         {
             return "-";
         }
-        final char buf[] = new char[hashOrNull.length * 2];
-        for (int i = 0, x = 0; i < hashOrNull.length; i++)
+        final char buf[] = new char[8];
+        int w = checksum;
+        for (int i = 0, x = 7; i < 4; i++)
         {
-            buf[x++] = HEX_CHARACTERS[(hashOrNull[i] >>> 4) & 0xf];
-            buf[x++] = HEX_CHARACTERS[hashOrNull[i] & 0xf];
+            buf[x--] = HEX_CHARACTERS[w & 0xf];
+            buf[x--] = HEX_CHARACTERS[(w >>> 4) & 0xf];
+            w >>= 8;
         }
         return new String(buf);
     }

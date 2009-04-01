@@ -157,11 +157,6 @@ public class ArchivingStrategy
         return true;
     }
 
-    public CheckSum getChecksum()
-    {
-        return CheckSum.MD5;
-    }
-
     public boolean doExclude(String path, boolean isDirectory)
     {
         if (isDirectory)

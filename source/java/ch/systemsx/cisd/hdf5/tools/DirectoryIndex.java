@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.CRC32;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 
@@ -32,7 +33,10 @@ import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping;
 import ch.systemsx.cisd.hdf5.HDF5CompoundType;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType;
+import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
+import ch.systemsx.cisd.hdf5.HDF5Reader;
+import ch.systemsx.cisd.hdf5.HDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 
@@ -53,7 +57,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Writer;
  */
 public class DirectoryIndex implements Iterable<Link>
 {
-    private static final String OPAQUE_TAG_HASHES = "CONCAT_HASHES";
+    private final String CRC32_ATTRIBUTE_NAME = "CRC32";
 
     private final IHDF5Reader hdf5Reader;
 
@@ -64,8 +68,6 @@ public class DirectoryIndex implements Iterable<Link>
     private final boolean continueOnError;
 
     private final boolean readSizeAndLinkTarget;
-    
-    private final boolean readHashes;
 
     private Link[] linksOrNull;
 
@@ -102,22 +104,15 @@ public class DirectoryIndex implements Iterable<Link>
         return reader.getEnumType("linkType", getFileLinkTypeValues());
     }
 
-    private static HDF5EnumerationType getHDF5ChecksumEnumeration(IHDF5Reader reader)
-    {
-        return reader.getEnumType("checkSum", getCheckSumValues());
-    }
-
     private static HDF5CompoundType<Link> getHDF5LinkCompoundType(IHDF5Reader reader)
     {
-        return getHDF5LinkCompoundType(reader, getHDF5LinkTypeEnumeration(reader),
-                getHDF5ChecksumEnumeration(reader));
+        return getHDF5LinkCompoundType(reader, getHDF5LinkTypeEnumeration(reader));
     }
 
     private static HDF5CompoundType<Link> getHDF5LinkCompoundType(IHDF5Reader reader,
-            HDF5EnumerationType hdf5LinkTypeEnumeration, HDF5EnumerationType hdf5CheckSumEnumeration)
+            HDF5EnumerationType hdf5LinkTypeEnumeration)
     {
-        return reader.getCompoundType(null, Link.class, getMapping(hdf5LinkTypeEnumeration,
-                hdf5CheckSumEnumeration));
+        return reader.getCompoundType(null, Link.class, getMapping(hdf5LinkTypeEnumeration));
     }
 
     private static String[] getFileLinkTypeValues()
@@ -131,26 +126,13 @@ public class DirectoryIndex implements Iterable<Link>
         return values;
     }
 
-    private static String[] getCheckSumValues()
-    {
-        final CheckSum[] checkSums = CheckSum.values();
-        final String[] values = new String[checkSums.length];
-        for (int i = 0; i < values.length; ++i)
-        {
-            values[i] = checkSums[i].name();
-        }
-        return values;
-    }
-
-    private static HDF5CompoundMemberMapping[] getMapping(HDF5EnumerationType linkEnumerationType,
-            HDF5EnumerationType checksumEnumeration)
+    private static HDF5CompoundMemberMapping[] getMapping(HDF5EnumerationType linkEnumerationType)
     {
         return new HDF5CompoundMemberMapping[]
             { mapping("linkNameLength"),
                     mapping("hdf5EncodedLinkType", "linkType", linkEnumerationType),
                     mapping("size"), mapping("lastModified"), mapping("uid"), mapping("gid"),
-                    mapping("permissions"),
-                    mapping("hdf5EncodedChecksum", "checksum", checksumEnumeration) };
+                    mapping("permissions"), mapping("crc32", "checksum") };
     }
 
     /**
@@ -158,7 +140,7 @@ public class DirectoryIndex implements Iterable<Link>
      * instance of {@link IHDF5Writer} if you intend to write the index to the archive.
      */
     public DirectoryIndex(IHDF5Reader hdf5Reader, String groupPath, boolean continueOnError,
-            boolean readSizeAndLinks, boolean readHashes)
+            boolean readSizeAndLinks)
     {
         assert hdf5Reader != null;
         assert groupPath != null;
@@ -170,7 +152,6 @@ public class DirectoryIndex implements Iterable<Link>
         this.groupPath = groupPath;
         this.continueOnError = continueOnError;
         this.readSizeAndLinkTarget = readSizeAndLinks;
-        this.readHashes = readHashes;
     }
 
     private String getIndexDataSetName()
@@ -181,11 +162,6 @@ public class DirectoryIndex implements Iterable<Link>
     private String getIndexNamesDataSetName()
     {
         return groupPath + "/__INDEXNAMES__";
-    }
-
-    private String getIndexHashesDataSetName()
-    {
-        return groupPath + "/__INDEXHASHES__";
     }
 
     private Map<String, Link> indexMapOrNull = null;
@@ -222,20 +198,46 @@ public class DirectoryIndex implements Iterable<Link>
                     && hdf5Reader.exists(getIndexNamesDataSetName()))
             {
                 final HDF5CompoundType<Link> linkCompoundType = getHDF5LinkCompoundType(hdf5Reader);
+                final CRC32 crc32Digester = new CRC32();
+                final String indexDataSetName = getIndexDataSetName();
                 final Link[] linksProcessing =
-                        hdf5Reader.readCompoundArray(getIndexDataSetName(), linkCompoundType);
-                final String concatenatedNames = hdf5Reader.readString(getIndexNamesDataSetName());
-                final String indexHashesDataSetName = getIndexHashesDataSetName();
-                final byte[] concatenatedHashes =
-                        readHashes && hdf5Reader.exists(indexHashesDataSetName) ? hdf5Reader
-                                .readAsByteArray(indexHashesDataSetName)
-                                : null;
-                int[] pos = new int[2];
+                        hdf5Reader.readCompoundArray(indexDataSetName, linkCompoundType,
+                                new HDF5Reader.IByteArrayInspector()
+                                    {
+                                        public void inspect(byte[] byteArray)
+                                        {
+                                            crc32Digester.update(byteArray);
+                                        }
+                                    });
+                int crc32 = (int) crc32Digester.getValue();
+                int crc32Stored =
+                        hdf5Reader.getIntegerAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME);
+                if (crc32 != crc32Stored)
+                {
+                    throw new ListArchiveException(groupPath,
+                            "CRC checksum mismatch on index (links). Expected: "
+                                    + HDF5ArchiveTools.hashToString(crc32Stored) + ", found: "
+                                    + HDF5ArchiveTools.hashToString(crc32));
+                }
+                final String indexNamesDataSetName = getIndexNamesDataSetName();
+                final String concatenatedNames = hdf5Reader.readString(indexNamesDataSetName);
+                crc32 = calcCrc32(concatenatedNames);
+                crc32Stored =
+                        hdf5Reader.getIntegerAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME);
+                if (crc32 != crc32Stored)
+                {
+                    throw new ListArchiveException(groupPath,
+                            "CRC checksum mismatch on index (names). Expected: "
+                                    + HDF5ArchiveTools.hashToString(crc32Stored) + ", found: "
+                                    + HDF5ArchiveTools.hashToString(crc32));
+                }
+                int namePos = 0;
                 this.firstFileIndex = 0;
                 for (Link link : linksProcessing)
                 {
-                    link.initAfterReading(concatenatedNames, concatenatedHashes, pos, hdf5Reader,
-                            groupPath, readSizeAndLinkTarget);
+                    namePos =
+                            link.initAfterReading(concatenatedNames, namePos, hdf5Reader,
+                                    groupPath, readSizeAndLinkTarget);
                     // Note: only works because link array is ordered by directory / non-directory
                     if (link.isDirectory())
                     {
@@ -364,32 +366,30 @@ public class DirectoryIndex implements Iterable<Link>
         {
             final HDF5EnumerationType linkTypeEnumeration =
                     getHDF5LinkTypeEnumeration(hdf5WriterOrNull);
-            final HDF5EnumerationType checksumEnumeration =
-                    getHDF5ChecksumEnumeration(hdf5WriterOrNull);
             final StringBuilder concatenatedNames = new StringBuilder();
-            final HashArrayBuilder concatenatedHashes =
-                    new HashArrayBuilder(getConcatenatedHashLength());
             for (Link link : linksOrNull)
             {
-                link.prepareForWriting(linkTypeEnumeration, checksumEnumeration, concatenatedNames,
-                        concatenatedHashes);
+                link.prepareForWriting(linkTypeEnumeration, concatenatedNames);
             }
-            hdf5WriterOrNull.writeStringVariableLength(getIndexNamesDataSetName(),
-                    concatenatedNames.toString());
-            final String indexHashesDataSetName = getIndexHashesDataSetName();
-            if (hdf5WriterOrNull.exists(indexHashesDataSetName)
-                    && hdf5WriterOrNull.getDataSetInformation(indexHashesDataSetName).getSize() < concatenatedHashes
-                            .getHashes().length)
-            {
-                hdf5WriterOrNull.delete(indexHashesDataSetName);
-            }
-            if (concatenatedHashes.getHashes().length > 0)
-            {
-                hdf5WriterOrNull.writeOpaqueByteArray(indexHashesDataSetName, OPAQUE_TAG_HASHES,
-                        concatenatedHashes.getHashes());
-            }
-            hdf5WriterOrNull.writeCompoundArray(getIndexDataSetName(), getHDF5LinkCompoundType(
-                    hdf5WriterOrNull, linkTypeEnumeration, checksumEnumeration), linksOrNull);
+            final String indexNamesDataSetName = getIndexNamesDataSetName();
+            final String concatenatedNamesStr = concatenatedNames.toString();
+            hdf5WriterOrNull.writeStringVariableLength(indexNamesDataSetName, concatenatedNamesStr);
+            hdf5WriterOrNull.addIntAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME,
+                    calcCrc32(concatenatedNamesStr));
+            final String indexDataSetName = getIndexDataSetName();
+            final CRC32 crc32 = new CRC32();
+            ((HDF5Writer) hdf5WriterOrNull).writeCompoundArray(indexDataSetName,
+                    getHDF5LinkCompoundType(hdf5WriterOrNull, linkTypeEnumeration), linksOrNull,
+                    HDF5GenericCompression.GENERIC_NO_COMPRESSION,
+                    new HDF5Reader.IByteArrayInspector()
+                        {
+                            public void inspect(byte[] byteArray)
+                            {
+                                crc32.update(byteArray);
+                            }
+                        });
+            hdf5WriterOrNull.addIntAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME, (int) crc32
+                    .getValue());
         } catch (HDF5Exception ex)
         {
             HDF5ArchiveTools
@@ -397,23 +397,11 @@ public class DirectoryIndex implements Iterable<Link>
         }
     }
 
-    private int getConcatenatedHashLength()
+    private int calcCrc32(String names)
     {
-        int concatenatedHashLength = 0;
-        for (Link link : linksOrNull)
-        {
-            final CheckSum checksum = link.getCheckSum();
-            final byte[] hashOrNull = link.getHash();
-            final int hashLength = (hashOrNull != null) ? hashOrNull.length : 0;
-            if (checksum.hasCorrectLength(hashOrNull) == false)
-            {
-                // That is an error in the JRE
-                throw new Error("JRE delivers illegal hash length " + hashLength + " for checksum "
-                        + checksum);
-            }
-            concatenatedHashLength += hashLength;
-        }
-        return concatenatedHashLength;
+        final CRC32 crc32 = new CRC32();
+        crc32.update(names.getBytes());
+        return (int) crc32.getValue();
     }
 
     /**
