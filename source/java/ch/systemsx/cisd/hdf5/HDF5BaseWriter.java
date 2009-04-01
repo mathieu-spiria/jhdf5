@@ -180,8 +180,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final boolean enforce_1_8 = (fileFormat == FileFormat.STRICTLY_1_8);
         if (hdf5File.exists() && overwriteInit == false)
         {
-            return h5.openFileReadWrite(hdf5File.getPath(), enforce_1_8,
-                    fileRegistry);
+            return h5.openFileReadWrite(hdf5File.getPath(), enforce_1_8, fileRegistry);
         } else
         {
             final File directory = hdf5File.getParentFile();
@@ -202,11 +201,17 @@ final class HDF5BaseWriter extends HDF5BaseReader
     {
         try
         {
-            // Linux + Solaris: fdatasync(), MaxOSX: fsync(), Windows: FlushFileBuffers()
-            fileForSyncing.getChannel().force(false);
+            // Implementation note 1: Unix will call fsync(), , Windows: FlushFileBuffers()
+            // Implementation note 2: We do not call fileForSyncing.getChannel().force(false) which
+            // might be better in terms of performance as if shutdownNow() already has been
+            // triggered on the syncExecutor and thus this thread has already been interrupted,
+            // channel methods would throw a ClosedByInterruptException at us no matter what we do.
+            fileForSyncing.getFD().sync();
         } catch (IOException ex)
         {
-            throw new HDF5JavaException("Error syncing file: " + ex.getMessage());
+            final String msg =
+                    (ex.getMessage() == null) ? ex.getClass().getSimpleName() : ex.getMessage();
+            throw new HDF5JavaException("Error syncing file: " + msg);
         }
     }
 
