@@ -488,7 +488,7 @@ public class HDF5ArchiveTools
                 {
                     indexOrNull.writeIndexToArchive();
                 }
-                indexOrNull = new DirectoryIndex(writer, group, continueOnError, false, false);
+                indexOrNull = new DirectoryIndex(writer, group, continueOnError, false, true);
             }
             try
             {
