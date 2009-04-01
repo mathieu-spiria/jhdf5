@@ -332,7 +332,9 @@ public class HDF5ArchiverMain
                         for (HDF5ArchiveTools.ListEntry s : list)
                         {
                             final boolean ok = (s.crc32Expected == s.crc32Found);
-                            System.out.printf("%s\t%s\n", s.outputLine, ok ? "OK" : "FAILED");
+                            final String statusStr =
+                                    (s.crc32Found == 0) ? "" : (ok ? "\tOK" : "\tFAILED");
+                            System.out.printf("%s%s\n", s.outputLine, statusStr);
                             if (ok == false)
                             {
                                 ++checkSumFailures;
