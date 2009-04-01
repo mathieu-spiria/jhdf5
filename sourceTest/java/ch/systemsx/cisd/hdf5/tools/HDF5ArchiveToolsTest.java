@@ -21,9 +21,9 @@ import static org.testng.AssertJUnit.assertEquals;
 import org.testng.annotations.Test;
 
 import ch.rinn.restrictions.Friend;
+import ch.systemsx.cisd.base.unix.FileLinkType;
+import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
-import ch.systemsx.cisd.common.os.FileLinkType;
-import ch.systemsx.cisd.common.os.Unix;
 
 /**
  * Tests for {@link HDF5ArchiveTools}.
@@ -67,31 +67,33 @@ public class HDF5ArchiveToolsTest
     {
         final String rootGroupName = OSUtilities.isMacOS() ? "wheel" : "root";
         final HDF5ArchiveTools.IdCache idCache = new HDF5ArchiveTools.IdCache();
-        assertEquals("dir/link_name", HDF5ArchiveTools.describeLink("dir/", new Link("link_name",
+        assertEquals("dir/link_name", HDF5ArchiveTools.describeLink("dir/link_name", new Link(null,
                 null, null, -1, -1, -1, -1, (short) -1), idCache, false, false));
-        assertEquals("       100\tdir/link_name", HDF5ArchiveTools.describeLink("dir/", new Link(
-                "link_name", null, FileLinkType.REGULAR_FILE, 100, -1, -1, -1, (short) -1),
+        assertEquals("       100\tdir/link_name", HDF5ArchiveTools.describeLink("dir/link_name",
+                new Link(null, null, FileLinkType.REGULAR_FILE, 100, -1, -1, -1, (short) -1),
                 idCache, true, false));
         assertEquals("-rwxr-xr-x\troot\t" + rootGroupName
-                + "\t       111\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
-                .describeLink("dir/", new Link("link_name", null, FileLinkType.REGULAR_FILE, 111L,
-                        946681200491L / 1000L, 0, 0, (short) 0755), idCache, true, false));
+                + "\t       111\t2000-01-01 00:00:00\tdir/link_name\t-", HDF5ArchiveTools
+                .describeLink("dir/link_name", new Link(null, null, FileLinkType.REGULAR_FILE,
+                        111L, 946681200491L / 1000L, 0, 0, (short) 0755), idCache, true, false));
         assertEquals("d---------\troot\t" + rootGroupName
                 + "\t       DIR\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
-                .describeLink("dir/", new Link("link_name", null, FileLinkType.DIRECTORY, 111L,
-                        946681200491L / 1000L, 0, 0, (short) 0), idCache, true, false));
-        assertEquals("755\t0\t0\t       111\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
-                .describeLink("dir/", new Link("link_name", null, FileLinkType.REGULAR_FILE, 111L,
-                        946681200491L / 1000L, 0, 0, (short) 0755), idCache, true, true));
+                .describeLink("dir/link_name", new Link(null, null, FileLinkType.DIRECTORY, 111L,
+                        946681200491L / 1000L, 0, 0, (short) 0, 0), idCache, true, false));
+        assertEquals("755\t0\t0\t       111\t2000-01-01 00:00:00\tdir/link_name\t"
+                + HDF5ArchiveTools.hashToString(200), HDF5ArchiveTools.describeLink(
+                "dir/link_name", new Link(null, null, FileLinkType.REGULAR_FILE, 111L,
+                        946681200491L / 1000L, 0, 0, (short) 0755, 200), idCache, true, true));
         assertEquals("0\t0\t0\t       DIR\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
-                .describeLink("dir/", new Link("link_name", null, FileLinkType.DIRECTORY, 111L,
-                        946681200491L / 1000L, 0, 0, (short) 0), idCache, true, true));
+                .describeLink("dir/link_name", new Link("link_name2", null, FileLinkType.DIRECTORY,
+                        111L, 946681200491L / 1000L, 0, 0, (short) 0), idCache, true, true));
         assertEquals("       111\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
-                .describeLink("dir/", new Link("link_name", null, FileLinkType.REGULAR_FILE, 111L,
-                        946681200491L / 1000L, -1, 0, (short) 0755), idCache, true, false));
-        assertEquals("       111\tdir/link_name", HDF5ArchiveTools.describeLink("dir/", new Link(
-                "link_name", null, FileLinkType.REGULAR_FILE, 111L, -1L, -1, 0, (short) 0755),
-                idCache, true, false));
+                .describeLink("dir/link_name",
+                        new Link("link_name", null, FileLinkType.REGULAR_FILE, 111L,
+                                946681200491L / 1000L, -1, 0, (short) 0755), idCache, true, false));
+        assertEquals("       111\tdir/link_name", HDF5ArchiveTools.describeLink("dir/link_name",
+                new Link("link_name2", null, FileLinkType.REGULAR_FILE, 111L, -1L, -1, 0,
+                        (short) 0755), idCache, true, false));
     }
 
     @Test(groups =

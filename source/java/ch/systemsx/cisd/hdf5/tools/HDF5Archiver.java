@@ -100,9 +100,11 @@ public class HDF5Archiver
         return this;
     }
 
-    public List<String> list(String dir, boolean recursive, boolean verbose, boolean numeric)
+    public List<HDF5ArchiveTools.ListEntry> list(String dir, boolean recursive, boolean verbose,
+            boolean numeric, boolean testAgainstChecksum)
     {
-        return HDF5ArchiveTools.list(hdf5Reader, dir, recursive, verbose, numeric, continueOnError);
+        return HDF5ArchiveTools.list(hdf5Reader, dir, recursive, verbose, numeric,
+                testAgainstChecksum, continueOnError);
     }
 
     public void close()

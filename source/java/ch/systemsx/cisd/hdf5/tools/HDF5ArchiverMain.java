@@ -120,6 +120,9 @@ public class HDF5ArchiverMain
     @Option(name = "n", longName = "numeric", usage = "Use numeric values for mode, uid and gid when listing")
     private boolean numeric = false;
 
+    @Option(name = "t", longName = "test-checksums", usage = "Test CRC32 checksums of files in archive when listing")
+    private boolean testAgainstChecksums = false;
+
     @Option(longName = "file-format", skipForExample = true, usage = "Specifies the file format version when creating an archive (N=1 -> HDF51.6 (default), N=2 -> HDF51.8)")
     private int fileFormat = 1;
 
@@ -195,7 +198,7 @@ public class HDF5ArchiverMain
     }
 
     private boolean helpPrinted = false;
-    
+
     @Option(longName = "help", skipForExample = true, usage = "Shows this help text")
     void printHelp(final boolean dummy)
     {
@@ -321,9 +324,32 @@ public class HDF5ArchiverMain
                 case LIST:
                     createArchiver();
                     final String dir = (arguments.size() > 2) ? arguments.get(2) : "/";
-                    for (String s : archiver.list(dir, recursive, verbose, numeric))
+                    final List<HDF5ArchiveTools.ListEntry> list =
+                            archiver.list(dir, recursive, verbose, numeric, testAgainstChecksums);
+                    if (testAgainstChecksums)
                     {
-                        System.out.println(s);
+                        int checkSumFailures = 0;
+                        for (HDF5ArchiveTools.ListEntry s : list)
+                        {
+                            final boolean ok = (s.crc32Expected == s.crc32Found);
+                            System.out.printf("%s\t%s\n", s.outputLine, ok ? "OK" : "FAILED");
+                            if (ok == false)
+                            {
+                                ++checkSumFailures;
+                            }
+                        }
+                        if (checkSumFailures > 0)
+                        {
+                            System.err.println(checkSumFailures
+                                    + " files failed the CRC checksum test.");
+                            return false;
+                        }
+                    } else
+                    {
+                        for (HDF5ArchiveTools.ListEntry s : list)
+                        {
+                            System.out.println(s.outputLine);
+                        }
                     }
                     break;
                 case HELP: // Can't happen any more at this point
@@ -342,7 +368,10 @@ public class HDF5ArchiverMain
     public static void main(String[] args)
     {
         final HDF5ArchiverMain main = new HDF5ArchiverMain(args);
-        main.run();
+        if (main.run() == false)
+        {
+            System.exit(1);
+        }
     }
 
 }

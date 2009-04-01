@@ -658,10 +658,9 @@ public class HDF5ArchiveTools
     }
 
     @Private
-    static String describeLink(String dir, Link link, IdCache idCache, boolean verbose,
+    static String describeLink(String path, Link link, IdCache idCache, boolean verbose,
             boolean numeric)
     {
-        final String path = dir + link.getLinkName();
         if (verbose == false)
         {
             return path;
@@ -758,23 +757,42 @@ public class HDF5ArchiveTools
     }
 
     /**
+     * One entry of the listing. Contains a list for output and
+     */
+    static class ListEntry
+    {
+        final String outputLine;
+
+        final int crc32Expected;
+
+        final int crc32Found;
+
+        ListEntry(String outputLine, int crc32Expected, int crc32Found)
+        {
+            this.outputLine = outputLine;
+            this.crc32Expected = crc32Expected;
+            this.crc32Found = crc32Found;
+        }
+    }
+
+    /**
      * Returns a listing of entries in <var>dir</var> in the archive provided by <var>reader</var>.
      */
-    public static List<String> list(IHDF5Reader reader, String dir, boolean recursive,
-            boolean verbose, boolean numeric, boolean continueOnError)
+    public static List<ListEntry> list(IHDF5Reader reader, String dir, boolean recursive,
+            boolean verbose, boolean numeric, boolean testAgainstChecksum, boolean continueOnError)
     {
-        final List<String> result = new LinkedList<String>();
+        final List<ListEntry> result = new LinkedList<ListEntry>();
         addEntries(reader, result, FilenameUtils.separatorsToUnix(dir), new IdCache(), recursive,
-                verbose, numeric, continueOnError);
+                verbose, numeric, testAgainstChecksum, continueOnError);
         return result;
     }
 
     /**
      * Adds the entries of <var>dir</var> to <var>entries</var> recursively.
      */
-    private static void addEntries(IHDF5Reader reader, List<String> entries, String dir,
+    private static void addEntries(IHDF5Reader reader, List<ListEntry> entries, String dir,
             IdCache idCache, boolean recursive, boolean verbose, boolean numeric,
-            boolean continueOnError)
+            boolean testAgainstChecksum, boolean continueOnError)
     {
         if (reader.exists(dir) == false)
         {
@@ -785,14 +803,31 @@ public class HDF5ArchiveTools
         final String dirPrefix = dir.endsWith("/") ? dir : (dir + "/");
         for (Link link : new DirectoryIndex(reader, dir, continueOnError, verbose))
         {
-            entries.add(describeLink(dirPrefix, link, idCache, verbose, numeric));
             final String path = dirPrefix + link.getLinkName();
+            final int crc32 =
+                    (testAgainstChecksum && link.isRegularFile()) ? calcCRC32(reader, path, link
+                            .getSize()) : 0;
+            entries.add(new ListEntry(describeLink(path, link, idCache, verbose, numeric), link
+                    .getCrc32(), crc32));
             if (recursive && link.isDirectory() && "/.".equals(path) == false)
             {
                 addEntries(reader, entries, path, idCache, recursive, verbose, numeric,
-                        continueOnError);
+                        testAgainstChecksum, continueOnError);
             }
         }
+    }
+
+    private static int calcCRC32(IHDF5Reader reader, String objectPath, long size)
+    {
+        final CRC32 crc32Digest = new CRC32();
+        final long blockCount =
+                (size / FILE_SIZE_THRESHOLD) + (size % FILE_SIZE_THRESHOLD != 0 ? 1 : 0);
+        for (int i = 0; i < blockCount; ++i)
+        {
+            final byte[] buffer = reader.readAsByteArrayBlock(objectPath, FILE_SIZE_THRESHOLD, i);
+            crc32Digest.update(buffer);
+        }
+        return (int) crc32Digest.getValue();
     }
 
     static void dealWithError(final ArchiverException ex, boolean continueOnError)

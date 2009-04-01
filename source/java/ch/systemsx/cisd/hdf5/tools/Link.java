@@ -167,6 +167,22 @@ public final class Link implements Comparable<Link>
         this.permissions = permissions;
     }
 
+    /** For unit tests only! */
+    @Private
+    Link(String linkName, String linkTargetOrNull, FileLinkType linkType, long size,
+            long lastModified, int uid, int gid, short permissions, int crc32)
+    {
+        this.linkName = linkName;
+        this.linkTargetOrNull = linkTargetOrNull;
+        this.linkType = linkType;
+        this.size = size;
+        this.lastModified = lastModified;
+        this.uid = uid;
+        this.gid = gid;
+        this.permissions = permissions;
+        this.crc32 = crc32;
+    }
+
     private static FileLinkType translateType(final HDF5ObjectType hdf5Type)
     {
         switch (hdf5Type)
