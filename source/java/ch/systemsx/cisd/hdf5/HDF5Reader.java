@@ -79,7 +79,7 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-public class HDF5Reader implements IHDF5Reader
+class HDF5Reader implements IHDF5Reader
 {
 
     private static final int MIN_ENUM_SIZE_FOR_UPFRONT_LOADING = 10;

@@ -78,7 +78,7 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-public final class HDF5Writer extends HDF5Reader implements IHDF5Writer
+final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 {
     private final HDF5BaseWriter baseWriter;
 

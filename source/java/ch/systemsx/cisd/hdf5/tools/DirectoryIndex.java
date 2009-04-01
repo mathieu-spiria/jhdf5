@@ -35,8 +35,6 @@ import ch.systemsx.cisd.hdf5.HDF5CompoundType;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType;
 import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
-import ch.systemsx.cisd.hdf5.HDF5Reader;
-import ch.systemsx.cisd.hdf5.HDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 
@@ -202,7 +200,7 @@ public class DirectoryIndex implements Iterable<Link>
                 final String indexDataSetName = getIndexDataSetName();
                 final Link[] linksProcessing =
                         hdf5Reader.readCompoundArray(indexDataSetName, linkCompoundType,
-                                new HDF5Reader.IByteArrayInspector()
+                                new IHDF5Reader.IByteArrayInspector()
                                     {
                                         public void inspect(byte[] byteArray)
                                         {
@@ -378,10 +376,10 @@ public class DirectoryIndex implements Iterable<Link>
                     calcCrc32(concatenatedNamesStr));
             final String indexDataSetName = getIndexDataSetName();
             final CRC32 crc32 = new CRC32();
-            ((HDF5Writer) hdf5WriterOrNull).writeCompoundArray(indexDataSetName,
-                    getHDF5LinkCompoundType(hdf5WriterOrNull, linkTypeEnumeration), linksOrNull,
+            hdf5WriterOrNull.writeCompoundArray(indexDataSetName, getHDF5LinkCompoundType(
+                    hdf5WriterOrNull, linkTypeEnumeration), linksOrNull,
                     HDF5GenericCompression.GENERIC_NO_COMPRESSION,
-                    new HDF5Reader.IByteArrayInspector()
+                    new IHDF5Reader.IByteArrayInspector()
                         {
                             public void inspect(byte[] byteArray)
                             {
