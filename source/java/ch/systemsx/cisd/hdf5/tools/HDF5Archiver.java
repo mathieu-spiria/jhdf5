@@ -24,6 +24,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 
 /**
  * An archiver based on HDF5 as archive format for directory with fast random access to particular
@@ -42,7 +43,7 @@ public class HDF5Archiver
 
     private final boolean continueOnError;
 
-    public HDF5Archiver(File archiveFile, boolean readOnly, FileFormat fileFormat,
+    public HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat, 
             boolean continueOnError)
     {
         if (readOnly)
@@ -53,6 +54,10 @@ public class HDF5Archiver
         {
             final IHDF5WriterConfigurator config = HDF5FactoryProvider.get().configure(archiveFile);
             config.fileFormat(fileFormat);
+            if (noSync == false)
+            {
+                config.syncMode(SyncMode.SYNC);
+            }
             this.hdf5WriterOrNull = config.writer();
             this.hdf5Reader = hdf5WriterOrNull;
         }

@@ -42,7 +42,8 @@ public class Dir2HDF5
         final File hdf5File = new File(args[0]);
         final StopWatch watch = new StopWatch();
         watch.start();
-        final HDF5Archiver archiver = new HDF5Archiver(hdf5File, false, FileFormat.ALLOW_1_8, false);
+        final HDF5Archiver archiver =
+                new HDF5Archiver(hdf5File, false, true, FileFormat.ALLOW_1_8, false);
         if (args.length > 1)
         {
             for (int i = 1; i < args.length; ++i)

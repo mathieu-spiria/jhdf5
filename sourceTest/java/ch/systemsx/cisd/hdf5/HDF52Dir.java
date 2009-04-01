@@ -47,7 +47,8 @@ public class HDF52Dir
         }
         final StopWatch watch = new StopWatch();
         watch.start();
-        final HDF5Archiver archiver = new HDF5Archiver(hdf5File, true, FileFormat.ALLOW_1_8, false);
+        final HDF5Archiver archiver =
+                new HDF5Archiver(hdf5File, true, true, FileFormat.ALLOW_1_8, false);
         archiver.extract(rootDir, pathInFile, true);
         archiver.close();
         watch.stop();

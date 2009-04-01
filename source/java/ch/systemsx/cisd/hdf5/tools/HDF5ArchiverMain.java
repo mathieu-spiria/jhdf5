@@ -129,6 +129,9 @@ public class HDF5ArchiverMain
     @Option(longName = "stop-on-error", skipForExample = true, usage = "Stop on first error and give detailed error report")
     private boolean stopOnError = false;
 
+    @Option(longName = "no-sync", skipForExample = true, usage = "Do not sync to disk before program exits (writing mode only)")
+    private boolean noSync = false;
+
     private HDF5Archiver archiver;
 
     /**
@@ -223,7 +226,7 @@ public class HDF5ArchiverMain
         final FileFormat fileFormatEnum =
                 (fileFormat == 1) ? FileFormat.STRICTLY_1_6 : FileFormat.STRICTLY_1_8;
         archiver =
-                new HDF5Archiver(archiveFile, command.isReadOnly(), fileFormatEnum,
+                new HDF5Archiver(archiveFile, command.isReadOnly(), noSync, fileFormatEnum,
                         (stopOnError == false));
         archiver.getStrategy().setCompressAll(compressAll);
         for (String pattern : fileWhiteList)
