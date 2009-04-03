@@ -47,18 +47,18 @@ public class HDF5ArchiveToolsTest
     @Test
     public void testGetPermissions()
     {
-        assertEquals("----------", HDF5ArchiveTools.getPermissions(createPerms(0), false));
-        assertEquals("-rw-rw-rw-", HDF5ArchiveTools.getPermissions(createPerms(0666), false));
-        assertEquals("-r--r--r--", HDF5ArchiveTools.getPermissions(createPerms(0444), false));
-        assertEquals("-rwx------", HDF5ArchiveTools.getPermissions(createPerms(0700), false));
-        assertEquals("-rwsr-xr-x", HDF5ArchiveTools.getPermissions(createPerms(04755), false));
-        assertEquals("-rwSr-xr-x", HDF5ArchiveTools.getPermissions(createPerms(04655), false));
-        assertEquals("-rwxr-sr-x", HDF5ArchiveTools.getPermissions(createPerms(02755), false));
-        assertEquals("-rwxr-Sr-x", HDF5ArchiveTools.getPermissions(createPerms(02745), false));
-        assertEquals("-rwxr-xr-t", HDF5ArchiveTools.getPermissions(createPerms(01755), false));
-        assertEquals("-rwxr-xr-T", HDF5ArchiveTools.getPermissions(createPerms(01754), false));
-        assertEquals("d---------", HDF5ArchiveTools.getPermissions(createDirPerms(0), false));
-        assertEquals("drwxr-xr-x", HDF5ArchiveTools.getPermissions(createDirPerms(0755), false));
+        assertEquals("----------", HDF5ArchiveTools.getPermissionString(createPerms(0), false));
+        assertEquals("-rw-rw-rw-", HDF5ArchiveTools.getPermissionString(createPerms(0666), false));
+        assertEquals("-r--r--r--", HDF5ArchiveTools.getPermissionString(createPerms(0444), false));
+        assertEquals("-rwx------", HDF5ArchiveTools.getPermissionString(createPerms(0700), false));
+        assertEquals("-rwsr-xr-x", HDF5ArchiveTools.getPermissionString(createPerms(04755), false));
+        assertEquals("-rwSr-xr-x", HDF5ArchiveTools.getPermissionString(createPerms(04655), false));
+        assertEquals("-rwxr-sr-x", HDF5ArchiveTools.getPermissionString(createPerms(02755), false));
+        assertEquals("-rwxr-Sr-x", HDF5ArchiveTools.getPermissionString(createPerms(02745), false));
+        assertEquals("-rwxr-xr-t", HDF5ArchiveTools.getPermissionString(createPerms(01755), false));
+        assertEquals("-rwxr-xr-T", HDF5ArchiveTools.getPermissionString(createPerms(01754), false));
+        assertEquals("d---------", HDF5ArchiveTools.getPermissionString(createDirPerms(0), false));
+        assertEquals("drwxr-xr-x", HDF5ArchiveTools.getPermissionString(createDirPerms(0755), false));
     }
 
     @Test(groups =

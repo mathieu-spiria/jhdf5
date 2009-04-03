@@ -43,7 +43,7 @@ public class HDF5Archiver
 
     private final boolean continueOnError;
 
-    public HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat, 
+    public HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat,
             boolean continueOnError)
     {
         if (readOnly)
@@ -105,11 +105,12 @@ public class HDF5Archiver
         return this;
     }
 
-    public List<HDF5ArchiveTools.ListEntry> list(String dir, boolean recursive, boolean verbose,
-            boolean numeric, boolean testAgainstChecksum)
+    public List<HDF5ArchiveTools.ListEntry> list(String dir, String rootOrNull, boolean recursive,
+            boolean verbose, boolean numeric, HDF5ArchiveTools.Check check)
     {
-        return HDF5ArchiveTools.list(hdf5Reader, dir, recursive, verbose, numeric,
-                testAgainstChecksum, continueOnError);
+        return HDF5ArchiveTools.list(hdf5Reader, new HDF5ArchiveTools.ListParameters()
+                .directoryInArchive(dir).directoryOnFileSystem(rootOrNull).recursive(recursive)
+                .numeric(numeric).verbose(verbose).check(check), continueOnError);
     }
 
     public void close()

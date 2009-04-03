@@ -261,6 +261,11 @@ public final class Link implements Comparable<Link>
     {
         return linkType == FileLinkType.REGULAR_FILE;
     }
+    
+    public FileLinkType getLinkType()
+    {
+        return linkType;
+    }
 
     public long getSize()
     {

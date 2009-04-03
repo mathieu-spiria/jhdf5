@@ -21,11 +21,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.zip.CRC32;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
@@ -42,6 +44,8 @@ import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.base.unix.Unix.Group;
 import ch.systemsx.cisd.base.unix.Unix.Password;
+import ch.systemsx.cisd.base.unix.Unix.Stat;
+import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
@@ -134,7 +138,19 @@ public class HDF5ArchiveTools
          */
         String getUser(Link link, boolean numeric)
         {
-            final int uid = link.getUid();
+            return getUser(link.getUid(), numeric);
+        }
+
+        /**
+         * Returns the name for the given <var>uid</var>.
+         */
+        String getUser(Stat link, boolean numeric)
+        {
+            return getUser(link.getUid(), numeric);
+        }
+
+        private String getUser(int uid, boolean numeric)
+        {
             String userNameOrNull = uidMap.get(uidMap);
             if (userNameOrNull == null)
             {
@@ -155,7 +171,22 @@ public class HDF5ArchiveTools
          */
         String getGroup(Link link, boolean numeric)
         {
-            final int gid = link.getGid();
+            return getGroup(link.getGid(), numeric);
+        }
+
+        /**
+         * Returns the name for the given <var>gid</var>.
+         */
+        String getGroup(Stat link, boolean numeric)
+        {
+            return getGroup(link.getGid(), numeric);
+        }
+
+        /**
+         * Returns the name for the given <var>gid</var>.
+         */
+        private String getGroup(int gid, boolean numeric)
+        {
             String groupNameOrNull = gidMap.get(uidMap);
             if (groupNameOrNull == null)
             {
@@ -420,12 +451,15 @@ public class HDF5ArchiveTools
             String path, boolean continueOnError, boolean verbose) throws UnarchivingException
     {
         final String unixPath = FilenameUtils.separatorsToUnix(path);
-        if (reader.exists(unixPath) == false)
+        if (reader.exists(unixPath, false) == false)
         {
             throw new UnarchivingException(unixPath, "Object does not exist in archive.");
         }
         final Link linkOrNull = tryGetLink(reader, unixPath, continueOnError);
-        if (reader.isGroup(unixPath))
+        final boolean isDir =
+                (linkOrNull != null && linkOrNull.isDirectory())
+                        || ((linkOrNull == null && reader.isGroup(unixPath, false)));
+        if (isDir)
         {
             extractDirectory(reader, strategy, new GroupCache(), root, unixPath, linkOrNull,
                     continueOnError, verbose);
@@ -563,19 +597,18 @@ public class HDF5ArchiveTools
         }
         final File file = new File(root, hdf5ObjectPath);
         file.getParentFile().mkdirs();
-        if (linkOrNull != null && linkOrNull.isSymLink())
+        final boolean isSymLink =
+                (linkOrNull != null && linkOrNull.isSymLink())
+                        || (linkOrNull == null && reader.isSoftLink(hdf5ObjectPath));
+        if (isSymLink)
         {
             if (Unix.isOperational())
             {
                 try
                 {
-                    String linkTargetOrNull = linkOrNull.tryGetLinkTarget();
-                    if (linkTargetOrNull == null)
-                    {
-                        linkTargetOrNull =
-                                reader.getLinkInformation(hdf5ObjectPath)
-                                        .tryGetSymbolicLinkTarget();
-                    }
+                    final String linkTargetOrNull =
+                            (linkOrNull != null) ? linkOrNull.tryGetLinkTarget() : reader
+                                    .tryGetSymbolicLinkTarget(hdf5ObjectPath);
                     if (linkTargetOrNull == null)
                     {
                         dealWithError(new UnarchivingException(hdf5ObjectPath,
@@ -596,18 +629,11 @@ public class HDF5ArchiveTools
                 return;
             } else
             {
-                System.err.println("Warning: extracting symlink as regular file as Unix calls are "
-                        + "not available on this system.");
+                System.err.println("Warning: extracting symlink as regular file because"
+                        + " Unix calls are not available on this system.");
             }
         }
-        final int storedCrc32;
-        if (linkOrNull != null)
-        {
-            storedCrc32 = linkOrNull.getCrc32();
-        } else
-        {
-            storedCrc32 = 0;
-        }
+        final int storedCrc32 = (linkOrNull != null) ? linkOrNull.getCrc32() : 0;
         try
         {
             final long size = reader.getDataSetInformation(hdf5ObjectPath).getSize();
@@ -702,26 +728,27 @@ public class HDF5ArchiveTools
                     return String
                             .format(
                                     "%s\t%s\t%s\t          \t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t%5$s -> %6$s",
-                                    getPermissions(link, numeric), idCache.getUser(link, numeric),
-                                    idCache.getGroup(link, numeric), link.getLastModified()
+                                    getPermissionString(link, numeric), idCache.getUser(link,
+                                            numeric), idCache.getGroup(link, numeric), link
+                                            .getLastModified()
                                             * MILLIS_PER_SECOND, path, link.tryGetLinkTarget());
                 } else if (link.isDirectory())
                 {
                     return String.format(
                             "%s\t%s\t%s\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t%5$s",
-                            getPermissions(link, numeric), idCache.getUser(link, numeric), idCache
-                                    .getGroup(link, numeric), link.getLastModified()
+                            getPermissionString(link, numeric), idCache.getUser(link, numeric),
+                            idCache.getGroup(link, numeric), link.getLastModified()
                                     * MILLIS_PER_SECOND, path);
                 } else
                 {
                     return String
                             .format(
                                     "%s\t%s\t%s\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s%7$s\t%8$s",
-                                    getPermissions(link, numeric), idCache.getUser(link, numeric),
-                                    idCache.getGroup(link, numeric), link.getSize(), link
-                                            .getLastModified()
-                                            * MILLIS_PER_SECOND, path, link.isRegularFile() ? ""
-                                            : "\t*", hashToString(link.getCrc32()));
+                                    getPermissionString(link, numeric), idCache.getUser(link,
+                                            numeric), idCache.getGroup(link, numeric), link
+                                            .getSize(), link.getLastModified() * MILLIS_PER_SECOND,
+                                    path, link.isRegularFile() ? "" : "\t*", hashToString(link
+                                            .getCrc32()));
                 }
             default:
                 throw new Error("Unknown level of link information completeness: "
@@ -730,7 +757,7 @@ public class HDF5ArchiveTools
     }
 
     @Private
-    static String getPermissions(Link link, boolean numeric)
+    static String getPermissionString(Link link, boolean numeric)
     {
         if (numeric)
         {
@@ -763,61 +790,221 @@ public class HDF5ArchiveTools
     {
         final String outputLine;
 
-        final int crc32Expected;
+        final String errorLineOrNull;
 
-        final int crc32Found;
-
-        ListEntry(String outputLine, int crc32Expected, int crc32Found)
+        ListEntry(String outputLine, String errorLineOrNull)
         {
             this.outputLine = outputLine;
-            this.crc32Expected = crc32Expected;
-            this.crc32Found = crc32Found;
+            this.errorLineOrNull = errorLineOrNull;
+        }
+
+        boolean checkOK()
+        {
+            return errorLineOrNull == null;
+        }
+    }
+
+    /**
+     * An enumeration for the checks to be performed while running
+     * {@link HDF5ArchiveTools#list(IHDF5Reader, ListParameters, boolean)}.
+     */
+    public enum Check
+    {
+        /** Do not perform any check. */
+        NO_CHECK,
+        /** Check CRC32 checksums against archive content. */
+        CHECK_CRC_ARCHIVE,
+        /** Verify CRC32 checksums against the file system. */
+        VERIFY_CRC_FS,
+        /** Verify CRC32 checksums and attributes against the file system. */
+        VERIFY_CRC_ATTR_FS;
+    }
+
+    public static final Set<Check> VERIFY_FS =
+            EnumSet.of(Check.VERIFY_CRC_FS, Check.VERIFY_CRC_ATTR_FS);
+
+    /**
+     * A class to hold all parameters for the listing operation.
+     */
+    public static final class ListParameters
+    {
+        private String directoryInArchive;
+
+        private String directoryOnFileSystem;
+
+        private boolean recursive;
+
+        private boolean verbose;
+
+        private boolean numeric;
+
+        private Check check = Check.NO_CHECK;
+
+        public ListParameters directoryInArchive(String newDirectoryInArchive)
+        {
+            this.directoryInArchive = newDirectoryInArchive;
+            return this;
+        }
+
+        public ListParameters directoryOnFileSystem(String newDirectoryOnFileSystem)
+        {
+            this.directoryOnFileSystem = newDirectoryOnFileSystem;
+            return this;
+        }
+
+        public ListParameters recursive(boolean newRecursive)
+        {
+            this.recursive = newRecursive;
+            return this;
+        }
+
+        public ListParameters verbose(boolean newVerbose)
+        {
+            this.verbose = newVerbose;
+            return this;
+        }
+
+        public ListParameters numeric(boolean newNumeric)
+        {
+            this.numeric = newNumeric;
+            return this;
+        }
+
+        public ListParameters check(Check newCheck)
+        {
+            this.check = newCheck;
+            return this;
+        }
+
+        public void check()
+        {
+            if (directoryInArchive == null)
+            {
+                throw new NullPointerException("directoryInArchive most not be null.");
+            }
+            directoryInArchive = FilenameUtils.separatorsToUnix(directoryInArchive);
+            if (VERIFY_FS.contains(check) && directoryOnFileSystem == null)
+            {
+                throw new NullPointerException(
+                        "directoryOnFileSystem most not be null when verifying.");
+            }
+            if (check == null)
+            {
+                throw new NullPointerException("check most not be null.");
+            }
+        }
+
+        public String getDirectoryInArchive()
+        {
+            return directoryInArchive;
+        }
+
+        public String getDirectoryOnFileSystem()
+        {
+            return directoryOnFileSystem;
+        }
+
+        public boolean isRecursive()
+        {
+            return recursive;
+        }
+
+        public boolean isVerbose()
+        {
+            return verbose;
+        }
+
+        public boolean isNumeric()
+        {
+            return numeric;
+        }
+
+        public Check getCheck()
+        {
+            return check;
         }
     }
 
     /**
      * Returns a listing of entries in <var>dir</var> in the archive provided by <var>reader</var>.
      */
-    public static List<ListEntry> list(IHDF5Reader reader, String dir, boolean recursive,
-            boolean verbose, boolean numeric, boolean testAgainstChecksum, boolean continueOnError)
+    public static List<ListEntry> list(IHDF5Reader reader, ListParameters params,
+            boolean continueOnError)
     {
+        params.check();
         final List<ListEntry> result = new LinkedList<ListEntry>();
-        addEntries(reader, result, FilenameUtils.separatorsToUnix(dir), new IdCache(), recursive,
-                verbose, numeric, testAgainstChecksum, continueOnError);
+        addEntries(reader, result, new IdCache(), params.getDirectoryInArchive(), params,
+                continueOnError);
         return result;
     }
 
     /**
      * Adds the entries of <var>dir</var> to <var>entries</var> recursively.
      */
-    private static void addEntries(IHDF5Reader reader, List<ListEntry> entries, String dir,
-            IdCache idCache, boolean recursive, boolean verbose, boolean numeric,
-            boolean testAgainstChecksum, boolean continueOnError)
+    private static void addEntries(IHDF5Reader reader, List<ListEntry> entries, IdCache idCache,
+            String dir, ListParameters params, boolean continueOnError)
     {
-        if (reader.exists(dir) == false)
+        if (reader.exists(dir, false) == false)
         {
-            HDF5ArchiveTools.dealWithError(new ListArchiveException(dir, new HDF5JavaException(
+            dealWithError(new ListArchiveException(dir, new HDF5JavaException(
                     "Directory not found in archive.")), continueOnError);
             return;
         }
         final String dirPrefix = dir.endsWith("/") ? dir : (dir + "/");
-        for (Link link : new DirectoryIndex(reader, dir, continueOnError, verbose))
+        String path = "UNKNOWN";
+        for (Link link : new DirectoryIndex(reader, dir, continueOnError, params.isVerbose()))
         {
-            final String path = dirPrefix + link.getLinkName();
-            final int crc32 =
-                    (testAgainstChecksum && link.isRegularFile()) ? calcCRC32(reader, path, link
-                            .getSize()) : 0;
-            entries.add(new ListEntry(describeLink(path, link, idCache, verbose, numeric), link
-                    .getCrc32(), crc32));
-            if (recursive && link.isDirectory() && "/.".equals(path) == false)
+            try
             {
-                addEntries(reader, entries, path, idCache, recursive, verbose, numeric,
-                        testAgainstChecksum, continueOnError);
+                path = dirPrefix + link.getLinkName();
+                final String errorLineOrNull = doCheck(reader, path, idCache, params, link);
+                entries.add(new ListEntry(describeLink(path, link, idCache, params.isVerbose(),
+                        params.isNumeric()), errorLineOrNull));
+                if (params.isRecursive() && link.isDirectory() && "/.".equals(path) == false)
+                {
+                    addEntries(reader, entries, idCache, path, params, continueOnError);
+                }
+            } catch (IOException ex)
+            {
+                final File f = new File(path);
+                dealWithError(new ListArchiveException(f, ex), continueOnError);
+            } catch (HDF5Exception ex)
+            {
+                dealWithError(new ListArchiveException(path, ex), continueOnError);
             }
         }
     }
 
-    private static int calcCRC32(IHDF5Reader reader, String objectPath, long size)
+    private static String doCheck(IHDF5Reader reader, String path, IdCache idCache,
+            ListParameters params, Link link) throws IOException
+    {
+        if (VERIFY_FS.contains(params.getCheck()))
+        {
+            return doFileSystemCheck(path, idCache, params, link);
+        } else if (Check.CHECK_CRC_ARCHIVE == params.getCheck())
+        {
+            return doArchiveCheck(reader, path, params, link);
+        }
+        return null;
+    }
+
+    private static String doArchiveCheck(IHDF5Reader reader, String path, ListParameters params,
+            Link link)
+    {
+        if (link.isRegularFile() == false || link.getCrc32() == 0)
+        {
+            return null;
+        }
+        final int crc32 = calcCRC32Archive(reader, path, link.getSize());
+        if (link.getCrc32() != crc32)
+        {
+            return "Archive file " + path + " failed CRC checksum test, expected: "
+                    + hashToString(link.getCrc32()) + ", found: " + hashToString(crc32);
+        }
+        return null;
+    }
+
+    private static int calcCRC32Archive(IHDF5Reader reader, String objectPath, long size)
     {
         final CRC32 crc32Digest = new CRC32();
         final long blockCount =
@@ -828,6 +1015,152 @@ public class HDF5ArchiveTools
             crc32Digest.update(buffer);
         }
         return (int) crc32Digest.getValue();
+    }
+
+    private static String doFileSystemCheck(String path, IdCache idCache, ListParameters params,
+            Link link) throws IOException
+    {
+        final File f = new File(params.getDirectoryOnFileSystem(), path);
+        if (f.exists() == false)
+        {
+            return "Object " + path + " does not exist on the file system.";
+        }
+        final String symbolicLinkOrNull = tryGetSymbolicLink(f);
+        if (symbolicLinkOrNull != null)
+        {
+            if (link.isSymLink() == false)
+            {
+                return "Object " + path + " is a " + link.getLinkType()
+                        + " in archive, but a symlink on the file system.";
+            }
+            if (symbolicLinkOrNull.equals(link.tryGetLinkTarget()) == false)
+            {
+                return "Symlink " + path + " links to " + link.tryGetLinkTarget()
+                        + " in archive, but to " + symbolicLinkOrNull + " on file system";
+            }
+        } else if (f.isDirectory())
+        {
+            if (link.isDirectory() == false)
+            {
+                if (Unix.isOperational() || OSUtilities.isWindows())
+                {
+                    return "Object " + path + " is a " + link.getLinkType()
+                            + " in archive, but a directory on the file system.";
+                } else
+                {
+                    return "Object " + path + " is a " + link.getLinkType()
+                            + " in archive, but a directory on the file system (error may be "
+                            + "inaccurate because Unix system calls are not available.)";
+                }
+            }
+        } else
+        {
+            if (link.isDirectory())
+            {
+                return "Object " + path
+                        + " is a directory in archive, but a file on the file system.";
+
+            }
+            if (link.isSymLink())
+            {
+                if (Unix.isOperational() || OSUtilities.isWindows())
+                {
+                    return "Object " + path
+                            + " is a symbolic link in archive, but a file on the file system.";
+                } else
+                {
+                    return "Object "
+                            + path
+                            + " is a symbolic link in archive, but a file on the file system "
+                            + "(error may be inaccurate because Unix system calls are not available.).";
+                }
+
+            }
+            if (link.getCrc32() == 0 && link.getSize() > 0)
+            {
+                return "Cannot verify " + f.getAbsolutePath() + " (missing CRC checksum).";
+            }
+            final int crc32 = calcCRC32FileSystem(f);
+            if (link.getCrc32() != crc32)
+            {
+                return "File " + f.getAbsolutePath() + " failed CRC checksum test, expected: "
+                        + hashToString(link.getCrc32()) + ", found: " + hashToString(crc32) + ".";
+            }
+        }
+        if (Check.VERIFY_CRC_ATTR_FS == params.check)
+        {
+            return doFileSystemAttributeCheck(f, idCache, link, params.isNumeric());
+        }
+        return null;
+    }
+
+    private static String tryGetSymbolicLink(File f)
+    {
+        if (Unix.isOperational())
+        {
+            return Unix.getFileInfo(f.getPath()).tryGetSymbolicLink();
+        } else
+        {
+            return null;
+        }
+    }
+
+    private static int calcCRC32FileSystem(File source) throws IOException
+    {
+        final InputStream input = FileUtils.openInputStream(source);
+        final byte[] buffer = new byte[FILE_SIZE_THRESHOLD];
+        final CRC32 crc32 = new CRC32();
+        try
+        {
+            int n = 0;
+            while (-1 != (n = input.read(buffer)))
+            {
+                crc32.update(buffer, 0, n);
+            }
+        } finally
+        {
+            IOUtils.closeQuietly(input);
+        }
+        return (int) crc32.getValue();
+    }
+
+    private static String doFileSystemAttributeCheck(File file, IdCache idCache, Link link,
+            boolean numeric)
+    {
+        final StringBuilder sb = new StringBuilder();
+        if (link.hasLastModified())
+        {
+            final long foundLastModified = file.lastModified();
+            if (link.getLastModified() != foundLastModified)
+            {
+                sb.append(String.format("'last modified time': (expected: "
+                        + "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS, found: "
+                        + "%2$tY-%2$tm-%2$td %2$tH:%2$tM:%2$tS) ", link.getLastModified(),
+                        foundLastModified));
+            }
+        }
+        if (link.hasUnixPermissions() && Unix.isOperational())
+        {
+            final Stat info = Unix.getLinkInfo(file.getPath(), false);
+            if (link.getPermissions() != info.getPermissions())
+            {
+                sb.append(String.format("'access permissions': (expected: %s, found: %s) ",
+                        getPermissionString(link, numeric), getPermissionString(link, numeric)));
+            }
+            if (link.getUid() != info.getUid() || link.getGid() != info.getGid())
+            {
+                sb.append(String.format("'ownerwhip': (expected: %s:%s, found: %s:%s", idCache
+                        .getUser(link, numeric), idCache.getGroup(link, numeric), idCache.getUser(
+                        info, numeric), idCache.getGroup(info, numeric)));
+            }
+        }
+        if (sb.length() == 0)
+        {
+            return null;
+        } else
+        {
+            return sb.toString();
+        }
     }
 
     static void dealWithError(final ArchiverException ex, boolean continueOnError)
@@ -854,7 +1187,7 @@ public class HDF5ArchiveTools
         final byte[] buffer = new byte[FILE_SIZE_THRESHOLD];
         final int blockSize = (int) Math.min(size, FILE_SIZE_THRESHOLD);
         final HDF5OpaqueType type;
-        if (writer.exists(objectPath))
+        if (writer.exists(objectPath, false))
         {
             type = writer.tryGetOpaqueType(objectPath);
             if (type == null || OPAQUE_TAG_FILE.equals(type.getTag()) == false)
