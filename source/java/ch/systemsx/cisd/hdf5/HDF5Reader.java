@@ -140,20 +140,55 @@ class HDF5Reader implements IHDF5Reader
         return baseReader.h5.getLinkInfo(baseReader.fileId, objectPath, false);
     }
 
-    public HDF5ObjectType getObjectType(final String objectPath)
+    public HDF5ObjectInformation getObjectInformation(final String objectPath)
     {
         baseReader.checkOpen();
-        return baseReader.h5.getTypeInfo(baseReader.fileId, objectPath, false);
+        return baseReader.h5.getObjectInfo(baseReader.fileId, objectPath, false);
     }
 
-    public boolean exists(final String objectPath)
+    public HDF5ObjectType getObjectType(final String objectPath, boolean followLink)
+    {
+        baseReader.checkOpen();
+        if (followLink)
+        {
+            return baseReader.h5.getObjectTypeInfo(baseReader.fileId, objectPath, false);
+        } else
+        {
+            return baseReader.h5.getLinkTypeInfo(baseReader.fileId, objectPath, false);
+        }
+    }
+
+    public HDF5ObjectType getObjectType(final String objectPath)
+    {
+        return getObjectType(objectPath, true);
+    }
+
+    public boolean exists(final String objectPath, boolean followLink)
     {
         baseReader.checkOpen();
         if ("/".equals(objectPath))
         {
             return true;
         }
-        return baseReader.h5.exists(baseReader.fileId, objectPath);
+        if (followLink == false)
+        {
+            // Optimization
+            return baseReader.h5.exists(baseReader.fileId, objectPath);
+        } else
+        {
+            return exists(objectPath);
+        }
+    }
+
+    public boolean exists(final String objectPath)
+    {
+        baseReader.checkOpen();
+        return baseReader.h5.getObjectTypeId(baseReader.fileId, objectPath, false) >= 0;
+    }
+
+    public boolean isGroup(final String objectPath, boolean followLink)
+    {
+        return HDF5ObjectType.isGroup(getObjectType(objectPath, followLink));
     }
 
     public boolean isGroup(final String objectPath)
@@ -161,9 +196,19 @@ class HDF5Reader implements IHDF5Reader
         return HDF5ObjectType.isGroup(getObjectType(objectPath));
     }
 
+    public boolean isDataSet(final String objectPath, boolean followLink)
+    {
+        return HDF5ObjectType.isDataSet(getObjectType(objectPath, followLink));
+    }
+
     public boolean isDataSet(final String objectPath)
     {
         return HDF5ObjectType.isDataSet(getObjectType(objectPath));
+    }
+
+    public boolean isDataType(final String objectPath, boolean followLink)
+    {
+        return HDF5ObjectType.isDataType(getObjectType(objectPath, followLink));
     }
 
     public boolean isDataType(final String objectPath)
@@ -173,17 +218,22 @@ class HDF5Reader implements IHDF5Reader
 
     public boolean isSoftLink(final String objectPath)
     {
-        return HDF5ObjectType.isSoftLink(getObjectType(objectPath));
+        return HDF5ObjectType.isSoftLink(getObjectType(objectPath, false));
     }
 
     public boolean isExternalLink(final String objectPath)
     {
-        return HDF5ObjectType.isExternalLink(getObjectType(objectPath));
+        return HDF5ObjectType.isExternalLink(getObjectType(objectPath, false));
     }
 
     public boolean isSymbolicLink(final String objectPath)
     {
-        return HDF5ObjectType.isSymbolicLink(getObjectType(objectPath));
+        return HDF5ObjectType.isSymbolicLink(getObjectType(objectPath, false));
+    }
+    
+    public String tryGetSymbolicLinkTarget(final String objectPath)
+    {
+        return getLinkInformation(objectPath).tryGetSymbolicLinkTarget();
     }
 
     public String tryGetDataTypePath(final String objectPath)

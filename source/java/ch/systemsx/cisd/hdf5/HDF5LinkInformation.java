@@ -16,36 +16,22 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5L_TYPE_EXTERNAL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5L_TYPE_SOFT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_DATASET;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_NAMED_DATATYPE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_NTYPES;
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
- * Information about an HDF5 link.
+ * Information about a link in an HDF5 file.
  * 
  * @author Bernd Rinn
  */
-public final class HDF5LinkInformation
+public final class HDF5LinkInformation extends HDF5CommonInformation
 {
     static final HDF5LinkInformation ROOT_LINK_INFO =
             new HDF5LinkInformation("/", HDF5ObjectType.GROUP, null);
-
-    private final String path;
-
-    private final HDF5ObjectType type;
 
     private final String symbolicLinkTargetOrNull;
 
     private HDF5LinkInformation(String path, HDF5ObjectType type, String symbolicLinkTargetOrNull)
     {
-        assert path != null;
-
-        this.path = path;
-        this.type = type;
+        super(path, type);
         this.symbolicLinkTargetOrNull = symbolicLinkTargetOrNull;
     }
 
@@ -53,85 +39,6 @@ public final class HDF5LinkInformation
     {
         final HDF5ObjectType type = objectTypeIdToObjectType(typeId);
         return new HDF5LinkInformation(path, type, symbolicLinkTargetOrNull);
-    }
-
-    static HDF5ObjectType objectTypeIdToObjectType(final int objectTypeId)
-    {
-        if (-1 == objectTypeId)
-        {
-            return HDF5ObjectType.NONEXISTENT;
-        } else if (H5O_TYPE_GROUP == objectTypeId)
-        {
-            return HDF5ObjectType.GROUP;
-        } else if (H5O_TYPE_DATASET == objectTypeId)
-        {
-            return HDF5ObjectType.DATASET;
-        } else if (H5O_TYPE_NAMED_DATATYPE == objectTypeId)
-        {
-            return HDF5ObjectType.DATATYPE;
-        } else if (objectTypeId >= H5O_TYPE_NTYPES)
-        {
-            final int linkTypeId = objectTypeId - H5O_TYPE_NTYPES;
-            if (linkTypeId == H5L_TYPE_SOFT)
-            {
-                return HDF5ObjectType.SOFT_LINK;
-            } else if (linkTypeId == H5L_TYPE_EXTERNAL)
-            {
-                return HDF5ObjectType.EXTERNAL_LINK;
-            }
-        }
-        return HDF5ObjectType.OTHER;
-    }
-
-    /**
-     * @throws HDF5JavaException If the link does not exist.
-     */
-    public void checkExists() throws HDF5JavaException
-    {
-        if (exists() == false)
-        {
-            throw new HDF5JavaException("Link '" + getPath() + "' does not exist.");
-        }
-    }
-
-    /**
-     * Returns the path of this link in the HDF5 file.
-     */
-    public String getPath()
-    {
-        return path;
-    }
-
-    /**
-     * Returns the parent of the path of this link the HDF5 file. If this link corresponds to the
-     * root, then this method will return the root ("/") itself.
-     */
-    public String getParentPath()
-    {
-        final int lastSlashIndex = path.lastIndexOf('/');
-        if (lastSlashIndex <= 0)
-        {
-            return "/";
-        } else
-        {
-            return path.substring(0, lastSlashIndex);
-        }
-    }
-
-    /**
-     * Returns the name of this link in the HDF5 file (the path without the parent).
-     */
-    public String getName()
-    {
-        return path.substring(path.lastIndexOf('/') + 1);
-    }
-
-    /**
-     * Returns the type of this link.
-     */
-    public HDF5ObjectType getType()
-    {
-        return type;
     }
 
     /**
@@ -147,38 +54,6 @@ public final class HDF5LinkInformation
     public String tryGetSymbolicLinkTarget()
     {
         return symbolicLinkTargetOrNull;
-    }
-
-    /**
-     * Returns <code>true</code>, if the link exists.
-     */
-    public boolean exists()
-    {
-        return HDF5ObjectType.exists(type);
-    }
-
-    /**
-     * Returns <code>true</code>, if the link is a group.
-     */
-    public boolean isGroup()
-    {
-        return HDF5ObjectType.isGroup(type);
-    }
-
-    /**
-     * Returns <code>true</code>, if the link is a data set.
-     */
-    public boolean isDataSet()
-    {
-        return HDF5ObjectType.isDataSet(type);
-    }
-
-    /**
-     * Returns <code>true</code>, if the link is a data type.
-     */
-    public boolean isDataType()
-    {
-        return HDF5ObjectType.isDataType(type);
     }
 
     /**

@@ -3755,11 +3755,38 @@ public class H5
     /**
      * H5Oclose releases resources used by an object which was opened by a call to H5Oopen().
      * 
-     * @param group_id Object identifier to release.
+     * @param loc_id Object identifier to release.
      * @return a non-negative value if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      */
-    public synchronized static native int H5Oclose(int group_id) throws HDF5LibraryException;
+    public synchronized static native int H5Oclose(int loc_id) throws HDF5LibraryException;
+
+    /**
+     * H5Oget_info_by_name returns information about the object. This method follows soft links and
+     * returns information about the link target, rather than the link.
+     * <p>
+     * If not <code>null</code>, <var>info</var> needs to be an array of length 5 and will return
+     * the following information in each index:
+     * <ul>
+     * <li>0: filenumber that the object is in</li>
+     * <li>1: address of the object in the file</li>
+     * <li>2: reference count of the object (will be {@code > 1} if more than one hard link exists
+     * to the object)</li>
+     * <li>3: creation time of the object (in seconds since start of the epoch)</li>
+     * <li>4: number of attributes that this object has</li>
+     * </ul>
+     * 
+     * @param loc_id File or group identifier within which object is to be open.
+     * @param object_name Name of object to get info for.
+     * @param infoOrNull If not <code>null</code>, it will return additional information about this
+     *            object. Needs to be either <code>null</code> or an array of length 5.
+     * @param exception_when_non_existent If <code>true</code>, -1 will be returned when the object
+     *            does not exist, otherwise a HDF5LibraryException will be thrown.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     */
+    public synchronized static native int H5Oget_info_by_name(int loc_id, String object_name,
+            long[] infoOrNull, boolean exception_when_non_existent) throws HDF5LibraryException;
 
     /**
      * H5Lcreate_hard creates a hard link for an already existing object.

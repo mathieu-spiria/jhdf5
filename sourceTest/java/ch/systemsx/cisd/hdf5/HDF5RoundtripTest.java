@@ -208,6 +208,7 @@ public class HDF5RoundtripTest
         test.testGroups();
         test.testSoftLink();
         test.testBrokenSoftLink();
+        test.testDeleteSoftLink();
         test.testNullOnGetSymbolicLinkTargetForNoLink();
         test.testUpdateSoftLink();
         test.testExternalLink();
@@ -582,9 +583,12 @@ public class HDF5RoundtripTest
         reader.close();
 
         // Shouldn't work in strict HDF5 1.6 mode.
+        final File file2 = new File(workingDirectory, "scaleoffsetfilterintfailed.h5");
+        file2.delete();
+        assertFalse(file2.exists());
+        file2.deleteOnExit();
         final IHDF5Writer writer2 =
-                HDF5FactoryProvider.get().configure(new File(workingDirectory,
-                        "scaleoffsetfilterintfailed.h5")).fileFormat(FileFormat.STRICTLY_1_6)
+                HDF5FactoryProvider.get().configure(file2).fileFormat(FileFormat.STRICTLY_1_6)
                         .writer();
         try
         {
@@ -696,8 +700,8 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer =
-                HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes().syncMode(
-                        SyncMode.SYNC_BLOCK).writer();
+                HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes()
+                        .syncMode(SyncMode.SYNC_BLOCK).writer();
         final String floatDatasetName = "/Group1/floats";
         final float[] floatDataWritten = new float[]
             { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f };
@@ -773,7 +777,8 @@ public class HDF5RoundtripTest
         datasetFile.deleteOnExit();
         final String dsName = "longArray";
         IHDF5Writer writer =
-                HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes().writer();
+                HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes()
+                        .writer();
         // Creating the group is part of the "bug magic".
         writer.createGroup("group");
         final long[] arrayWritten1 = new long[1000];
@@ -865,7 +870,8 @@ public class HDF5RoundtripTest
         long[] data = new long[]
             { 1, 2, 3 };
         IHDF5Writer writer =
-                HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes().writer();
+                HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes()
+                        .writer();
         // Set maxdims such that COMPACT_LAYOUT_THRESHOLD (int bytes!) is exceeded so that we get a
         // contiguous data set.
         writer.createLongArray(dsName, 128, 1);
@@ -1593,7 +1599,8 @@ public class HDF5RoundtripTest
         final String dataSetName = "/aHopeFullyCompressedStringArray";
         writer.writeStringArray(dataSetName, data, size, GENERIC_DEFLATE_MAX);
         writer.close();
-        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(compressedStringArrayFile);
+        final IHDF5Reader reader =
+                HDF5FactoryProvider.get().openForReading(compressedStringArrayFile);
         final String[] dataStored = reader.readStringArray(dataSetName);
         assertTrue(Arrays.equals(data, dataStored));
         reader.close();
@@ -1769,7 +1776,8 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer =
-                HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes().writer();
+                HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes()
+                        .writer();
         final String floatDatasetName = "/float";
         writer.writeFloatArray(floatDatasetName, new float[0]);
         final String doubleDatasetName = "/double";
@@ -1865,7 +1873,8 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer =
-                HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes().writer();
+                HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes()
+                        .writer();
         final String floatDatasetName = "/float";
         writer.writeFloatMatrix(floatDatasetName, new float[0][0]);
         final String doubleDatasetName = "/double";
@@ -2477,8 +2486,18 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         writer.writeBoolean("/some/flag", false);
+        writer.createSoftLink("/some", "/linkToSome");
+        writer.createSoftLink("/some/flag", "/linkToFlag");
+        writer.createHardLink("/some/flag", "/some/flag2");
+        writer.addBooleanAttribute("/some/flag2", "test", true);
         assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/some"));
+        assertEquals(HDF5ObjectType.SOFT_LINK, writer.getObjectType("/linkToSome", false));
+        assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/some"));
+        assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/linkToSome"));
+        assertEquals(HDF5ObjectType.DATASET, writer.getObjectType("/some/flag", false));
         assertEquals(HDF5ObjectType.DATASET, writer.getObjectType("/some/flag"));
+        assertEquals(HDF5ObjectType.SOFT_LINK, writer.getObjectType("/linkToFlag", false));
+        assertEquals(HDF5ObjectType.DATASET, writer.getObjectType("/linkToFlag"));
         assertFalse(writer.exists("non_existent"));
         assertEquals(HDF5ObjectType.NONEXISTENT, writer.getObjectType("non_existent"));
         writer.close();
@@ -2679,7 +2698,7 @@ public class HDF5RoundtripTest
         writer.createSoftLink("/data/set", "/data/link");
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(linkFile);
-        assertEquals(HDF5ObjectType.SOFT_LINK, reader.getObjectType("/data/link"));
+        assertEquals(HDF5ObjectType.SOFT_LINK, reader.getObjectType("/data/link", false));
         assertEquals("/data/set", reader.getLinkInformation("/data/link")
                 .tryGetSymbolicLinkTarget());
         reader.close();
@@ -2725,9 +2744,30 @@ public class HDF5RoundtripTest
         writer.createSoftLink("/does/not/exist", "/linkToNowhere");
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(linkFile);
-        assertEquals(HDF5ObjectType.SOFT_LINK, reader.getObjectType("/linkToNowhere"));
+        assertFalse(reader.exists("/linkToNowhere"));
+        assertTrue(reader.exists("/linkToNowhere", false));
+        assertEquals(HDF5ObjectType.SOFT_LINK, reader.getObjectType("/linkToNowhere", false));
         assertEquals("/does/not/exist", reader.getLinkInformation("/linkToNowhere")
                 .tryGetSymbolicLinkTarget());
+        reader.close();
+    }
+
+    @Test
+    public void testDeleteSoftLink()
+    {
+        final File linkFile = new File(workingDirectory, "deleteSoftLink.h5");
+        linkFile.delete();
+        assertFalse(linkFile.exists());
+        linkFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(linkFile);
+        writer.writeBoolean("/group/boolean", true);
+        writer.createSoftLink("/group", "/link");
+        writer.delete("/link");
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(linkFile);
+        assertFalse(reader.exists("/link", false));
+        assertTrue(reader.exists("/group"));
+        assertTrue(reader.exists("/group/boolean"));
         reader.close();
     }
 
@@ -2772,7 +2812,7 @@ public class HDF5RoundtripTest
         writer2.createExternalLink(fileToLinkTo.getPath(), dataSetName, linkName);
         writer2.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(linkFile);
-        assertEquals(HDF5ObjectType.EXTERNAL_LINK, reader.getObjectType(linkName));
+        assertEquals(HDF5ObjectType.EXTERNAL_LINK, reader.getObjectType(linkName, false));
         assertEquals(dataSetValue, reader.readString(linkName));
         final String expectedLink =
                 OSUtilities.isWindows() ? "EXTERNAL::targets\\unit-test-wd\\hdf5-roundtrip-wd\\fileToLinkTo.h5::/data/set"
@@ -2999,9 +3039,12 @@ public class HDF5RoundtripTest
         reader.close();
 
         // Shouldn't work in strict HDF5 1.6 mode.
+        final File file2 = new File(workingDirectory, "scaleoffsetfilterenumfailed.h5");
+        file2.delete();
+        assertFalse(file2.exists());
+        file2.deleteOnExit();
         final IHDF5Writer writer2 =
-                HDF5FactoryProvider.get().configure(new File(workingDirectory,
-                        "scaleoffsetfilterenumfailed.h5")).fileFormat(FileFormat.STRICTLY_1_6)
+                HDF5FactoryProvider.get().configure(file2).fileFormat(FileFormat.STRICTLY_1_6)
                         .writer();
         HDF5EnumerationType enumType2 = writer2.getEnumType(enumTypeName, new String[]
             { "A", "C", "G", "T" }, false);

@@ -326,7 +326,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         do
         {
             path = TYPE_VARIANT_DATA_TYPE + "." + (number++);
-        } while (reader.exists(path) && number < MAX_TYPE_VARIANT_TYPES);
+        } while (reader.exists(path, false) && number < MAX_TYPE_VARIANT_TYPES);
         return path;
     }
 

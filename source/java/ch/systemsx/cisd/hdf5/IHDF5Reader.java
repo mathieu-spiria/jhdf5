@@ -86,40 +86,94 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     // /////////////////////
 
     /**
-     * Returns the link information for the given <var>objectPath</var>. You need to ensure that the
-     * link given by <var>objectPath</var> exists, e.g. by calling
-     * {@link HDF5LinkInformation#checkExists()} first.
-     * 
-     * @throws ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException If the link specified by
-     *             <var>objectPath</var> doesn't exist.
+     * Returns the link information for the given <var>objectPath</var>. If <var>objectPath</var>
+     * does not exist, the link information will have a type {@link HDF5ObjectType#NONEXISTENT}.
      */
     public HDF5LinkInformation getLinkInformation(final String objectPath);
 
     /**
-     * Returns the type of the given <var>objectPath</var>.
+     * Returns the object information for the given <var>objectPath</var>. If <var>objectPath</var>
+     * is a symbolic link, this method will return the type of the object that this link points to
+     * rather than the type of the link. If <var>objectPath</var> does not exist, the object
+     * information will have a type {@link HDF5ObjectType#NONEXISTENT} and the other fields will not
+     * be set.
+     */
+    public HDF5ObjectInformation getObjectInformation(final String objectPath);
+
+    /**
+     * Returns the type of the given <var>objectPath<var>. If <var>followLink</var> is
+     * <code>false</code> and <var>objectPath<var> is a symbolic link, this method will return the
+     * type of the link rather than the type of the object that the link points to.
+     */
+    public HDF5ObjectType getObjectType(final String objectPath, boolean followLink);
+
+    /**
+     * Returns the type of the given <var>objectPath</var>. If <var>objectPath</var> is a symbolic
+     * link, this method will return the type of the object that this link points to rather than the
+     * type of the link, that is, it will follow symbolic links.
      */
     public HDF5ObjectType getObjectType(final String objectPath);
 
     /**
      * Returns <code>true</code>, if <var>objectPath</var> exists and <code>false</code> otherwise.
+     * if <var>followLink</var> is <code>false</code> and <var>objectPath</var> is a symbolic link,
+     * this method will return <code>true</code> regardless of whether the link target exists or
+     * not.
+     */
+    public boolean exists(final String objectPath, boolean followLink);
+
+    /**
+     * Returns <code>true</code>, if <var>objectPath</var> exists and <code>false</code> otherwise.
+     * If <var>objectPath</var> is a symbolic link, the method will return <code>true</code> if the
+     * link target exists, that is, this method will follow symbolic links.
      */
     public boolean exists(final String objectPath);
 
     /**
      * Returns <code>true</code> if the <var>objectPath</var> exists and represents a group and
-     * <code>false</code> otherwise.
+     * <code>false</code> otherwise. Note that if <var>followLink</var> is <code>false</code> this
+     * method will return <code>false</code> if <var>objectPath</var> is a symbolic link that 
+     * points to a group.
+     */
+    public boolean isGroup(final String objectPath, boolean followLink);
+
+    /**
+     * Returns <code>true</code> if the <var>objectPath</var> exists and represents a group and
+     * <code>false</code> otherwise. Note that if <var>objectPath</var> is a symbolic link, this
+     * method will return <code>true</code> if the link target of the symbolic link is a group, that
+     * is, this method will follow symbolic links.
      */
     public boolean isGroup(final String objectPath);
 
     /**
      * Returns <code>true</code> if the <var>objectPath</var> exists and represents a data set and
-     * <code>false</code> otherwise.
+     * <code>false</code> otherwise. Note that if <var>followLink</var> is <code>false</code> this
+     * method will return <code>false</code> if <var>objectPath</var> is a symbolic link that 
+     * points to a data set.
+     */
+    public boolean isDataSet(final String objectPath, boolean followLink);
+
+    /**
+     * Returns <code>true</code> if the <var>objectPath</var> exists and represents a data set and
+     * <code>false</code> otherwise. Note that if <var>objectPath</var> is a symbolic link, this
+     * method will return <code>true</code> if the link target of the symbolic link is a data set,
+     * that is, this method will follow symbolic links.
      */
     public boolean isDataSet(final String objectPath);
 
     /**
      * Returns <code>true</code> if the <var>objectPath</var> exists and represents a data type and
-     * <code>false</code> otherwise.
+     * <code>false</code> otherwise. Note that if <var>followLink</var> is <code>false</code> this
+     * method will return <code>false</code> if <var>objectPath</var> is a symbolic link that 
+     * points to a data type.
+     */
+    public boolean isDataType(final String objectPath, boolean followLink);
+
+    /**
+     * Returns <code>true</code> if the <var>objectPath</var> exists and represents a data type and
+     * <code>false</code> otherwise. Note that if <var>objectPath</var> is a symbolic link, this
+     * method will return <code>true</code> if the link target of the symbolic link is a data type,
+     * that is, this method will follow symbolic links.
      */
     public boolean isDataType(final String objectPath);
 
@@ -140,6 +194,12 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * link or an external link and <code>false</code> otherwise.
      */
     public boolean isSymbolicLink(final String objectPath);
+
+    /**
+     * Returns the target of the symbolic link that <var>objectPath</var> points to, or
+     * <code>null</code>, if <var>objectPath</var> is not a symbolic link.
+     */
+    public String tryGetSymbolicLinkTarget(final String objectPath);
 
     /**
      * Returns the path of the data type of the data set <var>objectPath</var>, or <code>null</code>
@@ -501,8 +561,8 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * <p>
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by
-     * {@link IHDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but will
-     * throw a {@link HDF5DatatypeInterfaceException}.
+     * {@link IHDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but
+     * will throw a {@link HDF5DatatypeInterfaceException}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The {@link BitSet} read from the data set.
@@ -1012,7 +1072,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String objectPath,
             final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException;
-    
+
     /**
      * Reads a compound array from the data set <var>objectPath</var>.
      * 
@@ -1037,7 +1097,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     public <T> MDArray<T> readCompoundMDArray(final String objectPath,
             final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException;
-    
+
     /**
      * Reads a block from a compound array from the data set <var>objectPath</var>.
      * 
@@ -1067,7 +1127,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     public <T> MDArray<T> readCompoundMDArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] blockNumber,
             final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
-    
+
     /**
      * Reads a block from a compound array from the data set <var>objectPath</var>.
      * 

@@ -210,7 +210,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void delete(String objectPath)
     {
         baseWriter.checkOpen();
-        if (isGroup(objectPath))
+        if (isGroup(objectPath, false))
         {
             for (String path : getGroupMemberPaths(objectPath))
             {
@@ -1906,7 +1906,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                             HDF5Utils.tryGetChunkSizeForString(definiteMaxLength, compression
                                     .requiresChunking());
                     final int dataSetId;
-                    if (exists(objectPath))
+                    if (exists(objectPath, false))
                     {
                         dataSetId =
                                 baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
@@ -1980,7 +1980,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final int dataSetId;
                     final long[] dimensions = new long[]
                         { data.length };
-                    if (exists(objectPath))
+                    if (exists(objectPath, false))
                     {
                         dataSetId =
                                 baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
@@ -2024,7 +2024,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int dataSetId;
-                    if (exists(objectPath))
+                    if (exists(objectPath, false))
                     {
                         dataSetId =
                                 baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);

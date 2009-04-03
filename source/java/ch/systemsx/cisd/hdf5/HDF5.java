@@ -62,6 +62,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Lget_link_info_all;
 import static ncsa.hdf.hdf5lib.H5.H5Lget_link_names_all;
 import static ncsa.hdf.hdf5lib.H5.H5Oclose;
 import static ncsa.hdf.hdf5lib.H5.H5Oopen;
+import static ncsa.hdf.hdf5lib.H5.H5Oget_info_by_name;
 import static ncsa.hdf.hdf5lib.H5.H5Pclose;
 import static ncsa.hdf.hdf5lib.H5.H5Pcreate;
 import static ncsa.hdf.hdf5lib.H5.H5Pcreate_xfer_abort;
@@ -114,6 +115,7 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_RDWR;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_TRUNC;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_LIBVER_LATEST;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_SCOPE_GLOBAL;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DATASET_CREATE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_FILE_ACCESS;
@@ -405,7 +407,7 @@ class HDF5
         return HDF5LinkInformation.create(objectName, typeId, lname[0]);
     }
 
-    public HDF5ObjectType getTypeInfo(final int fileId, final String objectName,
+    public HDF5ObjectType getLinkTypeInfo(final int fileId, final String objectName,
             boolean exceptionWhenNonExistent)
     {
         checkMaxLength(objectName);
@@ -415,6 +417,34 @@ class HDF5
         }
         final int typeId = H5Lget_link_info(fileId, objectName, null, exceptionWhenNonExistent);
         return HDF5LinkInformation.objectTypeIdToObjectType(typeId);
+    }
+
+    public HDF5ObjectInformation getObjectInfo(final int fileId, final String objectName,
+            boolean exceptionWhenNonExistent)
+    {
+        checkMaxLength(objectName);
+        final long[] info = new long[5];
+        final int typeId = H5Oget_info_by_name(fileId, objectName, info, exceptionWhenNonExistent);
+        return new HDF5ObjectInformation(objectName, HDF5LinkInformation
+                .objectTypeIdToObjectType(typeId), info);
+    }
+
+    public int getObjectTypeId(final int fileId, final String objectName,
+            boolean exceptionWhenNonExistent)
+    {
+        checkMaxLength(objectName);
+        if ("/".equals(objectName))
+        {
+            return H5O_TYPE_GROUP;
+        }
+        return H5Oget_info_by_name(fileId, objectName, null, exceptionWhenNonExistent);
+    }
+
+    public HDF5ObjectType getObjectTypeInfo(final int fileId, final String objectName,
+            boolean exceptionWhenNonExistent)
+    {
+        return HDF5LinkInformation.objectTypeIdToObjectType(getObjectTypeId(fileId, objectName,
+                exceptionWhenNonExistent));
     }
 
     public String[] getGroupMembers(final int fileId, final String groupName)

@@ -142,7 +142,7 @@ public class DirectoryIndex implements Iterable<Link>
     {
         assert hdf5Reader != null;
         assert groupPath != null;
-        assert hdf5Reader.isGroup(groupPath);
+        assert hdf5Reader.isGroup(groupPath, false);
 
         this.hdf5Reader = hdf5Reader;
         this.hdf5WriterOrNull =
@@ -251,7 +251,7 @@ public class DirectoryIndex implements Iterable<Link>
         }
         if (this.linksOrNull == null)
         {
-            if (hdf5Reader.isGroup(groupPath))
+            if (hdf5Reader.isGroup(groupPath, false))
             {
                 final List<HDF5LinkInformation> hdf5LinkInfos =
                         hdf5Reader.getGroupMemberInformation(groupPath, readSizeAndLinkTarget);
