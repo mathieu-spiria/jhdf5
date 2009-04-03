@@ -87,7 +87,14 @@ class BitSetConversionUtils
         {
             final BitSet result = new BitSet();
             BIT_SET_WORDS.set(result, serializedWordArray);
-            BIT_SET_WORDS_IN_USE.set(result, serializedWordArray.length);
+            // This is a Java 1.6 "speciality"
+            if (serializedWordArray[serializedWordArray.length - 1] == 0)
+            {
+                BIT_SET_WORDS_IN_USE.set(result, serializedWordArray.length - 1);
+            } else
+            {
+                BIT_SET_WORDS_IN_USE.set(result, serializedWordArray.length);
+            }
             return result;
         } catch (final IllegalAccessException ex)
         {
