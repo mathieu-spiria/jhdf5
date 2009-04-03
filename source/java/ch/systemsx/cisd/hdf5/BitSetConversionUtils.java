@@ -86,15 +86,9 @@ class BitSetConversionUtils
         try
         {
             final BitSet result = new BitSet();
-            BIT_SET_WORDS.set(result, serializedWordArray);
-            // This is a Java 1.6 "speciality"
-            if (serializedWordArray[serializedWordArray.length - 1] == 0)
-            {
-                BIT_SET_WORDS_IN_USE.set(result, serializedWordArray.length - 1);
-            } else
-            {
-                BIT_SET_WORDS_IN_USE.set(result, serializedWordArray.length);
-            }
+            int inUse = calcInUse(serializedWordArray, serializedWordArray.length);
+            BIT_SET_WORDS_IN_USE.set(result, inUse);
+            BIT_SET_WORDS.set(result, trim(serializedWordArray, inUse));
             return result;
         } catch (final IllegalAccessException ex)
         {
@@ -135,13 +129,37 @@ class BitSetConversionUtils
     {
         try
         {
-            return (long[]) BIT_SET_WORDS.get(data);
+            long[] storageForm = (long[]) BIT_SET_WORDS.get(data);
+            int inUse = BIT_SET_WORDS_IN_USE.getInt(data);
+            return trim(storageForm, inUse);
         } catch (final IllegalAccessException ex)
         {
             throw new IllegalAccessError(ex.getMessage());
         }
     }
 
+    private static long[] trim(final long[] array, int len)
+    {
+        final int inUse = calcInUse(array, len);
+        if (inUse < array.length)
+        {
+            final long[] trimmedArray = new long[inUse];
+            System.arraycopy(array, 0, trimmedArray, 0, inUse);
+            return trimmedArray;
+        }
+        return array;
+    }
+    
+    private static int calcInUse(final long[] array, int inUse)
+    {
+        int result = inUse;
+        while (result > 0 && array[result - 1] == 0)
+        {
+            --result;
+        }
+        return result;
+    }
+    
     private static int wordIndex(final int bitIndex)
     {
         return bitIndex >> ADDRESS_BITS_PER_WORD;
