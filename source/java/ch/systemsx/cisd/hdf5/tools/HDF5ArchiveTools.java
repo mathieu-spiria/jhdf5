@@ -3,6 +3,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
+ * Copyright 2008 ETH Zuerich, CISD
  * You may obtain a copy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
@@ -991,9 +992,19 @@ public class HDF5ArchiveTools
     private static String doArchiveCheck(IHDF5Reader reader, String path, ListParameters params,
             Link link)
     {
-        if (link.isRegularFile() == false || link.getCrc32() == 0)
+        if (link.isRegularFile() == false)
         {
             return null;
+        }
+        final long size = reader.getSize(path);
+        if (link.getSize() != size)
+        {
+            return "Archive file " + path + " failed size test, expected: " + link.getSize()
+                    + ", found: " + size;
+        }
+        if (link.getSize() != 0 && link.getCrc32() == 0)
+        {
+            return "Archive file " + path + ": cannot verify (missing CRC checksum).";
         }
         final int crc32 = calcCRC32Archive(reader, path, link.getSize());
         if (link.getCrc32() != crc32)
@@ -1023,7 +1034,7 @@ public class HDF5ArchiveTools
         final File f = new File(params.getDirectoryOnFileSystem(), path);
         if (f.exists() == false)
         {
-            return "Object " + path + " does not exist on the file system.";
+            return "Object " + path + " does not exist on file system.";
         }
         final String symbolicLinkOrNull = tryGetSymbolicLink(f);
         if (symbolicLinkOrNull != null)
@@ -1031,7 +1042,7 @@ public class HDF5ArchiveTools
             if (link.isSymLink() == false)
             {
                 return "Object " + path + " is a " + link.getLinkType()
-                        + " in archive, but a symlink on the file system.";
+                        + " in archive, but a symlink on file system.";
             }
             if (symbolicLinkOrNull.equals(link.tryGetLinkTarget()) == false)
             {
@@ -1045,11 +1056,11 @@ public class HDF5ArchiveTools
                 if (Unix.isOperational() || OSUtilities.isWindows())
                 {
                     return "Object " + path + " is a " + link.getLinkType()
-                            + " in archive, but a directory on the file system.";
+                            + " in archive, but a directory on file system.";
                 } else
                 {
                     return "Object " + path + " is a " + link.getLinkType()
-                            + " in archive, but a directory on the file system (error may be "
+                            + " in archive, but a directory on file system (error may be "
                             + "inaccurate because Unix system calls are not available.)";
                 }
             }
@@ -1057,8 +1068,7 @@ public class HDF5ArchiveTools
         {
             if (link.isDirectory())
             {
-                return "Object " + path
-                        + " is a directory in archive, but a file on the file system.";
+                return "Object " + path + " is a directory in archive, but a file on file system.";
 
             }
             if (link.isSymLink())
@@ -1066,19 +1076,25 @@ public class HDF5ArchiveTools
                 if (Unix.isOperational() || OSUtilities.isWindows())
                 {
                     return "Object " + path
-                            + " is a symbolic link in archive, but a file on the file system.";
+                            + " is a symbolic link in archive, but a file on file system.";
                 } else
                 {
                     return "Object "
                             + path
-                            + " is a symbolic link in archive, but a file on the file system "
+                            + " is a symbolic link in archive, but a file on file system "
                             + "(error may be inaccurate because Unix system calls are not available.).";
                 }
 
             }
-            if (link.getCrc32() == 0 && link.getSize() > 0)
+            final long size = f.length();
+            if (link.getSize() != size)
             {
-                return "Cannot verify " + f.getAbsolutePath() + " (missing CRC checksum).";
+                return "File " + f.getAbsolutePath() + " failed size test, expected: "
+                        + link.getSize() + ", found: " + size;
+            }
+            if (link.getSize() > 0 && link.getCrc32() == 0)
+            {
+                return "File " + f.getAbsolutePath() + ": cannot verify (missing CRC checksum).";
             }
             final int crc32 = calcCRC32FileSystem(f);
             if (link.getCrc32() != crc32)
