@@ -65,7 +65,7 @@ public class DirectoryIndex implements Iterable<Link>
 
     private final boolean continueOnError;
 
-    private final boolean readSizeAndLinkTarget;
+    private final boolean readLinkTargets;
 
     private Link[] linksOrNull;
 
@@ -138,7 +138,7 @@ public class DirectoryIndex implements Iterable<Link>
      * instance of {@link IHDF5Writer} if you intend to write the index to the archive.
      */
     public DirectoryIndex(IHDF5Reader hdf5Reader, String groupPath, boolean continueOnError,
-            boolean readSizeAndLinks)
+            boolean readLinkTargets)
     {
         assert hdf5Reader != null;
         assert groupPath != null;
@@ -149,7 +149,7 @@ public class DirectoryIndex implements Iterable<Link>
                 (hdf5Reader instanceof IHDF5Writer) ? (IHDF5Writer) hdf5Reader : null;
         this.groupPath = groupPath;
         this.continueOnError = continueOnError;
-        this.readSizeAndLinkTarget = readSizeAndLinks;
+        this.readLinkTargets = readLinkTargets;
     }
 
     private String getIndexDataSetName()
@@ -235,7 +235,7 @@ public class DirectoryIndex implements Iterable<Link>
                 {
                     namePos =
                             link.initAfterReading(concatenatedNames, namePos, hdf5Reader,
-                                    groupPath, readSizeAndLinkTarget);
+                                    groupPath, readLinkTargets);
                     // Note: only works because link array is ordered by directory / non-directory
                     if (link.isDirectory())
                     {
@@ -254,13 +254,13 @@ public class DirectoryIndex implements Iterable<Link>
             if (hdf5Reader.isGroup(groupPath, false))
             {
                 final List<HDF5LinkInformation> hdf5LinkInfos =
-                        hdf5Reader.getGroupMemberInformation(groupPath, readSizeAndLinkTarget);
+                        hdf5Reader.getGroupMemberInformation(groupPath, readLinkTargets);
                 linksOrNull = new Link[hdf5LinkInfos.size()];
                 int idx = 0;
                 for (HDF5LinkInformation linfo : hdf5LinkInfos)
                 {
                     final long size =
-                            (readSizeAndLinkTarget && linfo.isDataSet()) ? hdf5Reader
+                            (readLinkTargets && linfo.isDataSet()) ? hdf5Reader
                                     .getDataSetInformation(linfo.getPath()).getSize()
                                     : Link.UNKNOWN;
                     linksOrNull[idx++] = new Link(linfo, size);
