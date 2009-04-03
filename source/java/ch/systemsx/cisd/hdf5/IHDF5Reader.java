@@ -132,8 +132,8 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     /**
      * Returns <code>true</code> if the <var>objectPath</var> exists and represents a group and
      * <code>false</code> otherwise. Note that if <var>followLink</var> is <code>false</code> this
-     * method will return <code>false</code> if <var>objectPath</var> is a symbolic link that 
-     * points to a group.
+     * method will return <code>false</code> if <var>objectPath</var> is a symbolic link that points
+     * to a group.
      */
     public boolean isGroup(final String objectPath, boolean followLink);
 
@@ -148,8 +148,8 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     /**
      * Returns <code>true</code> if the <var>objectPath</var> exists and represents a data set and
      * <code>false</code> otherwise. Note that if <var>followLink</var> is <code>false</code> this
-     * method will return <code>false</code> if <var>objectPath</var> is a symbolic link that 
-     * points to a data set.
+     * method will return <code>false</code> if <var>objectPath</var> is a symbolic link that points
+     * to a data set.
      */
     public boolean isDataSet(final String objectPath, boolean followLink);
 
@@ -164,8 +164,8 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     /**
      * Returns <code>true</code> if the <var>objectPath</var> exists and represents a data type and
      * <code>false</code> otherwise. Note that if <var>followLink</var> is <code>false</code> this
-     * method will return <code>false</code> if <var>objectPath</var> is a symbolic link that 
-     * points to a data type.
+     * method will return <code>false</code> if <var>objectPath</var> is a symbolic link that points
+     * to a data type.
      */
     public boolean isDataType(final String objectPath, boolean followLink);
 
@@ -251,6 +251,18 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      *            information about.
      */
     public HDF5DataSetInformation getDataSetInformation(final String dataSetPath);
+
+    /**
+     * Returns the total size (in bytes) of <var>objectPath</var>, if it is a data set. If it exists
+     * but is not data set, it return 0 and if it does not exist, -1 is returned.
+     */
+    public long getSize(final String objectPath);
+
+    /**
+     * Returns the total number of elements of <var>objectPath</var>, if it is a data set. If it
+     * exists but is not data set, it return 0 and if it does not exist, -1 is returned.
+     */
+    public long getNumberOfElement(final String objectPath);
 
     // /////////////////////
     // Group

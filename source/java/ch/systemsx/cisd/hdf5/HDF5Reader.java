@@ -45,6 +45,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
@@ -330,6 +331,42 @@ class HDF5Reader implements IHDF5Reader
 
         baseReader.checkOpen();
         return baseReader.getDataSetInformation(dataSetPath);
+    }
+    
+    public long getSize(final String objectPath)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final int objectId = baseReader.h5.getObjectTypeId(baseReader.fileId, objectPath, false);
+        if (objectId < 0)
+        {
+            return -1;
+        } else if (objectId == HDF5Constants.H5O_TYPE_DATASET)
+        {
+            return getDataSetInformation(objectPath).getSize();
+        } else
+        {
+            return 0;
+        }
+    }
+
+    public long getNumberOfElement(final String objectPath)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final int objectId = baseReader.h5.getObjectTypeId(baseReader.fileId, objectPath, false);
+        if (objectId < 0)
+        {
+            return -1;
+        } else if (objectId == HDF5Constants.H5O_TYPE_DATASET)
+        {
+            return getDataSetInformation(objectPath).getNumberOfElements();
+        } else
+        {
+            return 0;
+        }
     }
 
     // /////////////////////
