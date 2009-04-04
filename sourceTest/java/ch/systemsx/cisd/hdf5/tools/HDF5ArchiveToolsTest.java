@@ -58,7 +58,8 @@ public class HDF5ArchiveToolsTest
         assertEquals("-rwxr-xr-t", HDF5ArchiveTools.getPermissionString(createPerms(01755), false));
         assertEquals("-rwxr-xr-T", HDF5ArchiveTools.getPermissionString(createPerms(01754), false));
         assertEquals("d---------", HDF5ArchiveTools.getPermissionString(createDirPerms(0), false));
-        assertEquals("drwxr-xr-x", HDF5ArchiveTools.getPermissionString(createDirPerms(0755), false));
+        assertEquals("drwxr-xr-x", HDF5ArchiveTools
+                .getPermissionString(createDirPerms(0755), false));
     }
 
     @Test(groups =
@@ -73,17 +74,17 @@ public class HDF5ArchiveToolsTest
                 new Link(null, null, FileLinkType.REGULAR_FILE, 100, -1, -1, -1, (short) -1),
                 idCache, true, false));
         assertEquals("-rwxr-xr-x\troot\t" + rootGroupName
-                + "\t       111\t2000-01-01 00:00:00\tdir/link_name\t-", HDF5ArchiveTools
+                + "\t       111\t2000-01-01 00:00:00\t00000000\tdir/link_name", HDF5ArchiveTools
                 .describeLink("dir/link_name", new Link(null, null, FileLinkType.REGULAR_FILE,
                         111L, 946681200491L / 1000L, 0, 0, (short) 0755), idCache, true, false));
         assertEquals("d---------\troot\t" + rootGroupName
                 + "\t       DIR\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
                 .describeLink("dir/link_name", new Link(null, null, FileLinkType.DIRECTORY, 111L,
                         946681200491L / 1000L, 0, 0, (short) 0, 0), idCache, true, false));
-        assertEquals("755\t0\t0\t       111\t2000-01-01 00:00:00\tdir/link_name\t"
-                + HDF5ArchiveTools.hashToString(200), HDF5ArchiveTools.describeLink(
-                "dir/link_name", new Link(null, null, FileLinkType.REGULAR_FILE, 111L,
-                        946681200491L / 1000L, 0, 0, (short) 0755, 200), idCache, true, true));
+        assertEquals("755\t0\t0\t       111\t2000-01-01 00:00:00\t"
+                + HDF5ArchiveTools.hashToString(200) + "\tdir/link_name", HDF5ArchiveTools
+                .describeLink("dir/link_name", new Link(null, null, FileLinkType.REGULAR_FILE,
+                        111L, 946681200491L / 1000L, 0, 0, (short) 0755, 200), idCache, true, true));
         assertEquals("0\t0\t0\t       DIR\t2000-01-01 00:00:00\tdir/link_name", HDF5ArchiveTools
                 .describeLink("dir/link_name", new Link("link_name2", null, FileLinkType.DIRECTORY,
                         111L, 946681200491L / 1000L, 0, 0, (short) 0), idCache, true, true));

@@ -728,28 +728,21 @@ public class HDF5ArchiveTools
                 {
                     return String
                             .format(
-                                    "%s\t%s\t%s\t          \t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t%5$s -> %6$s",
+                                    "%s\t%s\t%s\t          \t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t00000000\t%5$s -> %6$s",
                                     getPermissionString(link, numeric), idCache.getUser(link,
                                             numeric), idCache.getGroup(link, numeric), link
                                             .getLastModified()
                                             * MILLIS_PER_SECOND, path, link.tryGetLinkTarget());
-                } else if (link.isDirectory())
-                {
-                    return String.format(
-                            "%s\t%s\t%s\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t%5$s",
-                            getPermissionString(link, numeric), idCache.getUser(link, numeric),
-                            idCache.getGroup(link, numeric), link.getLastModified()
-                                    * MILLIS_PER_SECOND, path);
                 } else
                 {
                     return String
                             .format(
-                                    "%s\t%s\t%s\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s%7$s\t%8$s",
+                                    "%s\t%s\t%s\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s\t%7$s%8$s",
                                     getPermissionString(link, numeric), idCache.getUser(link,
                                             numeric), idCache.getGroup(link, numeric), link
                                             .getSize(), link.getLastModified() * MILLIS_PER_SECOND,
-                                    path, link.isRegularFile() ? "" : "\t*", hashToString(link
-                                            .getCrc32()));
+                                    hashToString(link.getCrc32()), path,
+                                    (link.isRegularFile() || link.isDirectory()) ? "" : "\t*");
                 }
             default:
                 throw new Error("Unknown level of link information completeness: "
@@ -1267,7 +1260,7 @@ public class HDF5ArchiveTools
     {
         if (checksum == 0)
         {
-            return "-";
+            return "00000000";
         }
         final char buf[] = new char[8];
         int w = checksum;
