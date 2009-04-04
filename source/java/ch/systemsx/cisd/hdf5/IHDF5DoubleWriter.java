@@ -25,6 +25,39 @@ import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
  */
 interface IHDF5DoubleWriter
 {
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    /**
+     * Adds a <code>double</code> attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void addDoubleAttribute(final String objectPath, final String name, final double value);
+
+    /**
+     * Adds a <code>double[]</code> attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void addDoubleArrayAttribute(final String objectPath, final String name,
+            final double[] value);
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     /**
      * Writes out a <code>double</code> value.
      * 

@@ -47,6 +47,48 @@ class HDF5FloatWriter implements IHDF5FloatWriter
         this.baseWriter = baseWriter;
     }
 
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    public void addFloatAttribute(final String objectPath, final String name, final float value)
+    {
+        assert objectPath != null;
+        assert name != null;
+
+        baseWriter.checkOpen();
+        baseWriter.addAttribute(objectPath, name, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, HDFNativeData
+                .floatToByte(value));
+    }
+
+    public void addFloatArrayAttribute(final String objectPath, final String name,
+            final float[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(H5T_NATIVE_FLOAT, value.length, registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(H5T_IEEE_F32LE, value.length, registry);
+                    baseWriter.addAttribute(objectPath, name, storageTypeId, memoryTypeId,
+                            HDFNativeData.floatToByte(value));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(addAttributeRunnable);
+    }
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     public void writeFloat(final String objectPath, final float value)
     {
         assert objectPath != null;

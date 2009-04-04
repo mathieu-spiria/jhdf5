@@ -46,6 +46,76 @@ class HDF5ByteReader implements IHDF5ByteReader
         this.baseReader = baseReader;
     }
 
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    public byte getByteAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<Byte> getAttributeRunnable = new ICallableWithCleanUp<Byte>()
+            {
+                public Byte call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int attributeId =
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
+                    final byte[] data =
+                            baseReader.h5
+                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_INT8, 1);
+                    return data[0];
+                }
+            };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    public byte[] getByteArrayAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<byte[]> getAttributeRunnable =
+                new ICallableWithCleanUp<byte[]>()
+                    {
+                        public byte[] call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            final int attributeId =
+                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
+                            final int attributeTypeId =
+                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                            final int[] arrayDimensions =
+                                    baseReader.h5.getArrayDimensions(attributeTypeId);
+                            if (arrayDimensions.length != 1)
+                            {
+                                throw new HDF5JavaException(
+                                        "Array needs to be of rank 1, but is of rank "
+                                                + arrayDimensions.length);
+                            }
+                            final int len = arrayDimensions[0];
+                            final int memoryTypeId =
+                                    baseReader.h5.createArrayType(H5T_NATIVE_INT8,
+                                            len, registry);
+                            final byte[] data =
+                                    baseReader.h5.readAttributeAsByteArray(attributeId,
+                                            memoryTypeId, 1 * len);
+                            return data;
+                        }
+                    };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     public byte readByte(final String objectPath)
     {
         assert objectPath != null;

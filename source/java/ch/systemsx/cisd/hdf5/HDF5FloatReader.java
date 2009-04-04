@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
@@ -45,6 +46,76 @@ class HDF5FloatReader implements IHDF5FloatReader
 
         this.baseReader = baseReader;
     }
+
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    public float getFloatAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<Float> getAttributeRunnable = new ICallableWithCleanUp<Float>()
+            {
+                public Float call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int attributeId =
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
+                    final byte[] data =
+                            baseReader.h5
+                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_FLOAT, 4);
+                    return HDFNativeData.byteToFloat(data, 0);
+                }
+            };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    public float[] getFloatArrayAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<float[]> getAttributeRunnable =
+                new ICallableWithCleanUp<float[]>()
+                    {
+                        public float[] call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            final int attributeId =
+                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
+                            final int attributeTypeId =
+                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                            final int[] arrayDimensions =
+                                    baseReader.h5.getArrayDimensions(attributeTypeId);
+                            if (arrayDimensions.length != 1)
+                            {
+                                throw new HDF5JavaException(
+                                        "Array needs to be of rank 1, but is of rank "
+                                                + arrayDimensions.length);
+                            }
+                            final int len = arrayDimensions[0];
+                            final int memoryTypeId =
+                                    baseReader.h5.createArrayType(H5T_NATIVE_FLOAT,
+                                            len, registry);
+                            final byte[] data =
+                                    baseReader.h5.readAttributeAsByteArray(attributeId,
+                                            memoryTypeId, 4 * len);
+                            return HDFNativeData.byteToFloat(data, 0, len);
+                        }
+                    };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
 
     public float readFloat(final String objectPath)
     {

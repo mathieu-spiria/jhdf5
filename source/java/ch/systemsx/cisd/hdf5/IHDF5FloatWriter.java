@@ -25,6 +25,39 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
  */
 interface IHDF5FloatWriter
 {
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    /**
+     * Adds a <code>float</code> attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void addFloatAttribute(final String objectPath, final String name, final float value);
+
+    /**
+     * Adds a <code>float[]</code> attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void addFloatArrayAttribute(final String objectPath, final String name,
+            final float[] value);
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     /**
      * Writes out a <code>float</code> value.
      * 

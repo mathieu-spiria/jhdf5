@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
@@ -45,6 +46,76 @@ class HDF5LongReader implements IHDF5LongReader
 
         this.baseReader = baseReader;
     }
+
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    public long getLongAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<Long> getAttributeRunnable = new ICallableWithCleanUp<Long>()
+            {
+                public Long call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int attributeId =
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
+                    final byte[] data =
+                            baseReader.h5
+                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_INT64, 8);
+                    return HDFNativeData.byteToLong(data, 0);
+                }
+            };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    public long[] getLongArrayAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<long[]> getAttributeRunnable =
+                new ICallableWithCleanUp<long[]>()
+                    {
+                        public long[] call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            final int attributeId =
+                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
+                            final int attributeTypeId =
+                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                            final int[] arrayDimensions =
+                                    baseReader.h5.getArrayDimensions(attributeTypeId);
+                            if (arrayDimensions.length != 1)
+                            {
+                                throw new HDF5JavaException(
+                                        "Array needs to be of rank 1, but is of rank "
+                                                + arrayDimensions.length);
+                            }
+                            final int len = arrayDimensions[0];
+                            final int memoryTypeId =
+                                    baseReader.h5.createArrayType(H5T_NATIVE_INT64,
+                                            len, registry);
+                            final byte[] data =
+                                    baseReader.h5.readAttributeAsByteArray(attributeId,
+                                            memoryTypeId, 8 * len);
+                            return HDFNativeData.byteToLong(data, 0, len);
+                        }
+                    };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
 
     public long readLong(final String objectPath)
     {

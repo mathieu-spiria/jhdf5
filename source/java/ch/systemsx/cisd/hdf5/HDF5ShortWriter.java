@@ -47,6 +47,48 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         this.baseWriter = baseWriter;
     }
 
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    public void addShortAttribute(final String objectPath, final String name, final short value)
+    {
+        assert objectPath != null;
+        assert name != null;
+
+        baseWriter.checkOpen();
+        baseWriter.addAttribute(objectPath, name, H5T_STD_I16LE, H5T_NATIVE_INT16, HDFNativeData
+                .shortToByte(value));
+    }
+
+    public void addShortArrayAttribute(final String objectPath, final String name,
+            final short[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(H5T_NATIVE_INT16, value.length, registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(H5T_STD_I16LE, value.length, registry);
+                    baseWriter.addAttribute(objectPath, name, storageTypeId, memoryTypeId,
+                            HDFNativeData.shortToByte(value));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(addAttributeRunnable);
+    }
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     public void writeShort(final String objectPath, final short value)
     {
         assert objectPath != null;

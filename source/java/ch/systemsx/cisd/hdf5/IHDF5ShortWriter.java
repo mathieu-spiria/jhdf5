@@ -25,6 +25,39 @@ import ch.systemsx.cisd.base.mdarray.MDShortArray;
  */
 interface IHDF5ShortWriter
 {
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    /**
+     * Adds a <code>short</code> attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void addShortAttribute(final String objectPath, final String name, final short value);
+
+    /**
+     * Adds a <code>short[]</code> attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void addShortArrayAttribute(final String objectPath, final String name,
+            final short[] value);
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     /**
      * Writes out a <code>short</code> value.
      * 

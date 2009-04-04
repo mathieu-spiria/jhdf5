@@ -47,6 +47,48 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
         this.baseWriter = baseWriter;
     }
 
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    public void addDoubleAttribute(final String objectPath, final String name, final double value)
+    {
+        assert objectPath != null;
+        assert name != null;
+
+        baseWriter.checkOpen();
+        baseWriter.addAttribute(objectPath, name, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, HDFNativeData
+                .doubleToByte(value));
+    }
+
+    public void addDoubleArrayAttribute(final String objectPath, final String name,
+            final double[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(H5T_NATIVE_DOUBLE, value.length, registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(H5T_IEEE_F64LE, value.length, registry);
+                    baseWriter.addAttribute(objectPath, name, storageTypeId, memoryTypeId,
+                            HDFNativeData.doubleToByte(value));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(addAttributeRunnable);
+    }
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     public void writeDouble(final String objectPath, final double value)
     {
         assert objectPath != null;

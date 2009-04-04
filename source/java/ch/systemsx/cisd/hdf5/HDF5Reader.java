@@ -28,8 +28,6 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
@@ -778,98 +776,6 @@ class HDF5Reader implements IHDF5Reader
                 null, values);
     }
 
-    public int getIntAttribute(final String objectPath, final String attributeName)
-    {
-        assert objectPath != null;
-        assert attributeName != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Integer> writeRunnable = new ICallableWithCleanUp<Integer>()
-            {
-                public Integer call(ICleanUpRegistry registry)
-                {
-                    final int objectId =
-                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
-                            baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final byte[] data =
-                            baseReader.h5
-                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_INT32, 4);
-                    return HDFNativeData.byteToInt(data, 0);
-                }
-            };
-        return baseReader.runner.call(writeRunnable);
-    }
-
-    public long getLongAttribute(final String objectPath, final String attributeName)
-    {
-        assert objectPath != null;
-        assert attributeName != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Long> writeRunnable = new ICallableWithCleanUp<Long>()
-            {
-                public Long call(ICleanUpRegistry registry)
-                {
-                    final int objectId =
-                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
-                            baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final byte[] data =
-                            baseReader.h5
-                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_INT64, 8);
-                    return HDFNativeData.byteToLong(data, 0);
-                }
-            };
-        return baseReader.runner.call(writeRunnable);
-    }
-
-    public float getFloatAttribute(final String objectPath, final String attributeName)
-    {
-        assert objectPath != null;
-        assert attributeName != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Float> writeRunnable = new ICallableWithCleanUp<Float>()
-            {
-                public Float call(ICleanUpRegistry registry)
-                {
-                    final int objectId =
-                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
-                            baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final byte[] data =
-                            baseReader.h5
-                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_FLOAT, 4);
-                    return HDFNativeData.byteToFloat(data, 0);
-                }
-            };
-        return baseReader.runner.call(writeRunnable);
-    }
-
-    public double getDoubleAttribute(final String objectPath, final String attributeName)
-    {
-        assert objectPath != null;
-        assert attributeName != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Double> writeRunnable = new ICallableWithCleanUp<Double>()
-            {
-                public Double call(ICleanUpRegistry registry)
-                {
-                    final int objectId =
-                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
-                            baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final byte[] data =
-                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_DOUBLE,
-                                    8);
-                    return HDFNativeData.byteToDouble(data, 0);
-                }
-            };
-        return baseReader.runner.call(writeRunnable);
-    }
-
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -1069,491 +975,6 @@ class HDF5Reader implements IHDF5Reader
             };
         return baseReader.runner.call(readCallable);
     }
-
-    // ------------------------------------------------------------------------------
-    // GENERATED CODE SECTION - START
-    // ------------------------------------------------------------------------------
-
-    public Iterable<HDF5DataBlock<byte[]>> getByteArrayNaturalBlocks(String dataSetPath)
-            throws HDF5JavaException
-    {
-        return byteReader.getByteArrayNaturalBlocks(dataSetPath);
-    }
-
-    public Iterable<HDF5MDDataBlock<MDByteArray>> getByteMDArrayNaturalBlocks(String dataSetPath)
-    {
-        return byteReader.getByteMDArrayNaturalBlocks(dataSetPath);
-    }
-
-    public byte readByte(String objectPath)
-    {
-        return byteReader.readByte(objectPath);
-    }
-
-    public byte[] readByteArray(String objectPath)
-    {
-        return byteReader.readByteArray(objectPath);
-    }
-
-    public byte[] readByteArrayBlock(String objectPath, int blockSize, long blockNumber)
-    {
-        return byteReader.readByteArrayBlock(objectPath, blockSize, blockNumber);
-    }
-
-    public byte[] readByteArrayBlockWithOffset(String objectPath, int blockSize, long offset)
-    {
-        return byteReader.readByteArrayBlockWithOffset(objectPath, blockSize, offset);
-    }
-
-    public MDByteArray readByteMDArray(String objectPath)
-    {
-        return byteReader.readByteMDArray(objectPath);
-    }
-
-    public MDByteArray readByteMDArrayBlock(String objectPath, int[] blockDimensions,
-            long[] blockNumber)
-    {
-        return byteReader.readByteMDArrayBlock(objectPath, blockDimensions, blockNumber);
-    }
-
-    public MDByteArray readByteMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
-            long[] offset)
-    {
-        return byteReader.readByteMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
-    }
-
-    public byte[][] readByteMatrix(String objectPath) throws HDF5JavaException
-    {
-        return byteReader.readByteMatrix(objectPath);
-    }
-
-    public byte[][] readByteMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
-            long blockNumberX, long blockNumberY) throws HDF5JavaException
-    {
-        return byteReader.readByteMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
-                blockNumberY);
-    }
-
-    public byte[][] readByteMatrixBlockWithOffset(String objectPath, int blockSizeX,
-            int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
-    {
-        return byteReader.readByteMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
-                offsetX, offsetY);
-    }
-
-    public void readToByteMDArrayBlockWithOffset(String objectPath, MDByteArray array,
-            int[] blockDimensions, long[] offset, int[] memoryOffset)
-    {
-        byteReader.readToByteMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
-                memoryOffset);
-    }
-
-    public void readToByteMDArrayWithOffset(String objectPath, MDByteArray array, int[] memoryOffset)
-    {
-        byteReader.readToByteMDArrayWithOffset(objectPath, array, memoryOffset);
-    }
-
-    public Iterable<HDF5DataBlock<double[]>> getDoubleArrayNaturalBlocks(String dataSetPath)
-            throws HDF5JavaException
-    {
-        return doubleReader.getDoubleArrayNaturalBlocks(dataSetPath);
-    }
-
-    public Iterable<HDF5MDDataBlock<MDDoubleArray>> getDoubleMDArrayNaturalBlocks(String dataSetPath)
-    {
-        return doubleReader.getDoubleMDArrayNaturalBlocks(dataSetPath);
-    }
-
-    public double readDouble(String objectPath)
-    {
-        return doubleReader.readDouble(objectPath);
-    }
-
-    public double[] readDoubleArray(String objectPath)
-    {
-        return doubleReader.readDoubleArray(objectPath);
-    }
-
-    public double[] readDoubleArrayBlock(String objectPath, int blockSize, long blockNumber)
-    {
-        return doubleReader.readDoubleArrayBlock(objectPath, blockSize, blockNumber);
-    }
-
-    public double[] readDoubleArrayBlockWithOffset(String objectPath, int blockSize, long offset)
-    {
-        return doubleReader.readDoubleArrayBlockWithOffset(objectPath, blockSize, offset);
-    }
-
-    public MDDoubleArray readDoubleMDArray(String objectPath)
-    {
-        return doubleReader.readDoubleMDArray(objectPath);
-    }
-
-    public MDDoubleArray readDoubleMDArrayBlock(String objectPath, int[] blockDimensions,
-            long[] blockNumber)
-    {
-        return doubleReader.readDoubleMDArrayBlock(objectPath, blockDimensions, blockNumber);
-    }
-
-    public MDDoubleArray readDoubleMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
-            long[] offset)
-    {
-        return doubleReader.readDoubleMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
-    }
-
-    public double[][] readDoubleMatrix(String objectPath) throws HDF5JavaException
-    {
-        return doubleReader.readDoubleMatrix(objectPath);
-    }
-
-    public double[][] readDoubleMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
-            long blockNumberX, long blockNumberY) throws HDF5JavaException
-    {
-        return doubleReader.readDoubleMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
-                blockNumberY);
-    }
-
-    public double[][] readDoubleMatrixBlockWithOffset(String objectPath, int blockSizeX,
-            int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
-    {
-        return doubleReader.readDoubleMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
-                offsetX, offsetY);
-    }
-
-    public void readToDoubleMDArrayBlockWithOffset(String objectPath, MDDoubleArray array,
-            int[] blockDimensions, long[] offset, int[] memoryOffset)
-    {
-        doubleReader.readToDoubleMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
-                memoryOffset);
-    }
-
-    public void readToDoubleMDArrayWithOffset(String objectPath, MDDoubleArray array,
-            int[] memoryOffset)
-    {
-        doubleReader.readToDoubleMDArrayWithOffset(objectPath, array, memoryOffset);
-    }
-
-    public Iterable<HDF5DataBlock<float[]>> getFloatArrayNaturalBlocks(String dataSetPath)
-            throws HDF5JavaException
-    {
-        return floatReader.getFloatArrayNaturalBlocks(dataSetPath);
-    }
-
-    public Iterable<HDF5MDDataBlock<MDFloatArray>> getFloatMDArrayNaturalBlocks(String dataSetPath)
-    {
-        return floatReader.getFloatMDArrayNaturalBlocks(dataSetPath);
-    }
-
-    public float readFloat(String objectPath)
-    {
-        return floatReader.readFloat(objectPath);
-    }
-
-    public float[] readFloatArray(String objectPath)
-    {
-        return floatReader.readFloatArray(objectPath);
-    }
-
-    public float[] readFloatArrayBlock(String objectPath, int blockSize, long blockNumber)
-    {
-        return floatReader.readFloatArrayBlock(objectPath, blockSize, blockNumber);
-    }
-
-    public float[] readFloatArrayBlockWithOffset(String objectPath, int blockSize, long offset)
-    {
-        return floatReader.readFloatArrayBlockWithOffset(objectPath, blockSize, offset);
-    }
-
-    public MDFloatArray readFloatMDArray(String objectPath)
-    {
-        return floatReader.readFloatMDArray(objectPath);
-    }
-
-    public MDFloatArray readFloatMDArrayBlock(String objectPath, int[] blockDimensions,
-            long[] blockNumber)
-    {
-        return floatReader.readFloatMDArrayBlock(objectPath, blockDimensions, blockNumber);
-    }
-
-    public MDFloatArray readFloatMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
-            long[] offset)
-    {
-        return floatReader.readFloatMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
-    }
-
-    public float[][] readFloatMatrix(String objectPath) throws HDF5JavaException
-    {
-        return floatReader.readFloatMatrix(objectPath);
-    }
-
-    public float[][] readFloatMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
-            long blockNumberX, long blockNumberY) throws HDF5JavaException
-    {
-        return floatReader.readFloatMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
-                blockNumberY);
-    }
-
-    public float[][] readFloatMatrixBlockWithOffset(String objectPath, int blockSizeX,
-            int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
-    {
-        return floatReader.readFloatMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
-                offsetX, offsetY);
-    }
-
-    public void readToFloatMDArrayBlockWithOffset(String objectPath, MDFloatArray array,
-            int[] blockDimensions, long[] offset, int[] memoryOffset)
-    {
-        floatReader.readToFloatMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
-                memoryOffset);
-    }
-
-    public void readToFloatMDArrayWithOffset(String objectPath, MDFloatArray array,
-            int[] memoryOffset)
-    {
-        floatReader.readToFloatMDArrayWithOffset(objectPath, array, memoryOffset);
-    }
-
-    public Iterable<HDF5DataBlock<int[]>> getIntArrayNaturalBlocks(String dataSetPath)
-            throws HDF5JavaException
-    {
-        return intReader.getIntArrayNaturalBlocks(dataSetPath);
-    }
-
-    public Iterable<HDF5MDDataBlock<MDIntArray>> getIntMDArrayNaturalBlocks(String dataSetPath)
-    {
-        return intReader.getIntMDArrayNaturalBlocks(dataSetPath);
-    }
-
-    public int readInt(String objectPath)
-    {
-        return intReader.readInt(objectPath);
-    }
-
-    public int[] readIntArray(String objectPath)
-    {
-        return intReader.readIntArray(objectPath);
-    }
-
-    public int[] readIntArrayBlock(String objectPath, int blockSize, long blockNumber)
-    {
-        return intReader.readIntArrayBlock(objectPath, blockSize, blockNumber);
-    }
-
-    public int[] readIntArrayBlockWithOffset(String objectPath, int blockSize, long offset)
-    {
-        return intReader.readIntArrayBlockWithOffset(objectPath, blockSize, offset);
-    }
-
-    public MDIntArray readIntMDArray(String objectPath)
-    {
-        return intReader.readIntMDArray(objectPath);
-    }
-
-    public MDIntArray readIntMDArrayBlock(String objectPath, int[] blockDimensions,
-            long[] blockNumber)
-    {
-        return intReader.readIntMDArrayBlock(objectPath, blockDimensions, blockNumber);
-    }
-
-    public MDIntArray readIntMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
-            long[] offset)
-    {
-        return intReader.readIntMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
-    }
-
-    public int[][] readIntMatrix(String objectPath) throws HDF5JavaException
-    {
-        return intReader.readIntMatrix(objectPath);
-    }
-
-    public int[][] readIntMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
-            long blockNumberX, long blockNumberY) throws HDF5JavaException
-    {
-        return intReader.readIntMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
-                blockNumberY);
-    }
-
-    public int[][] readIntMatrixBlockWithOffset(String objectPath, int blockSizeX, int blockSizeY,
-            long offsetX, long offsetY) throws HDF5JavaException
-    {
-        return intReader.readIntMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY, offsetX,
-                offsetY);
-    }
-
-    public void readToIntMDArrayBlockWithOffset(String objectPath, MDIntArray array,
-            int[] blockDimensions, long[] offset, int[] memoryOffset)
-    {
-        intReader.readToIntMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
-                memoryOffset);
-    }
-
-    public void readToIntMDArrayWithOffset(String objectPath, MDIntArray array, int[] memoryOffset)
-    {
-        intReader.readToIntMDArrayWithOffset(objectPath, array, memoryOffset);
-    }
-
-    public Iterable<HDF5DataBlock<long[]>> getLongArrayNaturalBlocks(String dataSetPath)
-            throws HDF5JavaException
-    {
-        return longReader.getLongArrayNaturalBlocks(dataSetPath);
-    }
-
-    public Iterable<HDF5MDDataBlock<MDLongArray>> getLongMDArrayNaturalBlocks(String dataSetPath)
-    {
-        return longReader.getLongMDArrayNaturalBlocks(dataSetPath);
-    }
-
-    public long readLong(String objectPath)
-    {
-        return longReader.readLong(objectPath);
-    }
-
-    public long[] readLongArray(String objectPath)
-    {
-        return longReader.readLongArray(objectPath);
-    }
-
-    public long[] readLongArrayBlock(String objectPath, int blockSize, long blockNumber)
-    {
-        return longReader.readLongArrayBlock(objectPath, blockSize, blockNumber);
-    }
-
-    public long[] readLongArrayBlockWithOffset(String objectPath, int blockSize, long offset)
-    {
-        return longReader.readLongArrayBlockWithOffset(objectPath, blockSize, offset);
-    }
-
-    public MDLongArray readLongMDArray(String objectPath)
-    {
-        return longReader.readLongMDArray(objectPath);
-    }
-
-    public MDLongArray readLongMDArrayBlock(String objectPath, int[] blockDimensions,
-            long[] blockNumber)
-    {
-        return longReader.readLongMDArrayBlock(objectPath, blockDimensions, blockNumber);
-    }
-
-    public MDLongArray readLongMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
-            long[] offset)
-    {
-        return longReader.readLongMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
-    }
-
-    public long[][] readLongMatrix(String objectPath) throws HDF5JavaException
-    {
-        return longReader.readLongMatrix(objectPath);
-    }
-
-    public long[][] readLongMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
-            long blockNumberX, long blockNumberY) throws HDF5JavaException
-    {
-        return longReader.readLongMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
-                blockNumberY);
-    }
-
-    public long[][] readLongMatrixBlockWithOffset(String objectPath, int blockSizeX,
-            int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
-    {
-        return longReader.readLongMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
-                offsetX, offsetY);
-    }
-
-    public void readToLongMDArrayBlockWithOffset(String objectPath, MDLongArray array,
-            int[] blockDimensions, long[] offset, int[] memoryOffset)
-    {
-        longReader.readToLongMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
-                memoryOffset);
-    }
-
-    public void readToLongMDArrayWithOffset(String objectPath, MDLongArray array, int[] memoryOffset)
-    {
-        longReader.readToLongMDArrayWithOffset(objectPath, array, memoryOffset);
-    }
-
-    public Iterable<HDF5DataBlock<short[]>> getShortArrayNaturalBlocks(String dataSetPath)
-            throws HDF5JavaException
-    {
-        return shortReader.getShortArrayNaturalBlocks(dataSetPath);
-    }
-
-    public Iterable<HDF5MDDataBlock<MDShortArray>> getShortMDArrayNaturalBlocks(String dataSetPath)
-    {
-        return shortReader.getShortMDArrayNaturalBlocks(dataSetPath);
-    }
-
-    public short readShort(String objectPath)
-    {
-        return shortReader.readShort(objectPath);
-    }
-
-    public short[] readShortArray(String objectPath)
-    {
-        return shortReader.readShortArray(objectPath);
-    }
-
-    public short[] readShortArrayBlock(String objectPath, int blockSize, long blockNumber)
-    {
-        return shortReader.readShortArrayBlock(objectPath, blockSize, blockNumber);
-    }
-
-    public short[] readShortArrayBlockWithOffset(String objectPath, int blockSize, long offset)
-    {
-        return shortReader.readShortArrayBlockWithOffset(objectPath, blockSize, offset);
-    }
-
-    public MDShortArray readShortMDArray(String objectPath)
-    {
-        return shortReader.readShortMDArray(objectPath);
-    }
-
-    public MDShortArray readShortMDArrayBlock(String objectPath, int[] blockDimensions,
-            long[] blockNumber)
-    {
-        return shortReader.readShortMDArrayBlock(objectPath, blockDimensions, blockNumber);
-    }
-
-    public MDShortArray readShortMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
-            long[] offset)
-    {
-        return shortReader.readShortMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
-    }
-
-    public short[][] readShortMatrix(String objectPath) throws HDF5JavaException
-    {
-        return shortReader.readShortMatrix(objectPath);
-    }
-
-    public short[][] readShortMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
-            long blockNumberX, long blockNumberY) throws HDF5JavaException
-    {
-        return shortReader.readShortMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
-                blockNumberY);
-    }
-
-    public short[][] readShortMatrixBlockWithOffset(String objectPath, int blockSizeX,
-            int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
-    {
-        return shortReader.readShortMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
-                offsetX, offsetY);
-    }
-
-    public void readToShortMDArrayBlockWithOffset(String objectPath, MDShortArray array,
-            int[] blockDimensions, long[] offset, int[] memoryOffset)
-    {
-        shortReader.readToShortMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
-                memoryOffset);
-    }
-
-    public void readToShortMDArrayWithOffset(String objectPath, MDShortArray array,
-            int[] memoryOffset)
-    {
-        shortReader.readToShortMDArrayWithOffset(objectPath, array, memoryOffset);
-    }
-
-    // ------------------------------------------------------------------------------
-    // GENERATED CODE SECTION - END
-    // ------------------------------------------------------------------------------
 
     //
     // Time stamp
@@ -2855,5 +2276,550 @@ class HDF5Reader implements IHDF5Reader
                     };
         return baseReader.runner.call(writeRunnable);
     }
+
+    // ------------------------------------------------------------------------------
+    // GENERATED CODE SECTION - START
+    // ------------------------------------------------------------------------------
+
+    public byte[] getByteArrayAttribute(String objectPath, String attributeName)
+    {
+        return byteReader.getByteArrayAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5DataBlock<byte[]>> getByteArrayNaturalBlocks(String dataSetPath)
+            throws HDF5JavaException
+    {
+        return byteReader.getByteArrayNaturalBlocks(dataSetPath);
+    }
+
+    public byte getByteAttribute(String objectPath, String attributeName)
+    {
+        return byteReader.getByteAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5MDDataBlock<MDByteArray>> getByteMDArrayNaturalBlocks(String dataSetPath)
+    {
+        return byteReader.getByteMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public byte readByte(String objectPath)
+    {
+        return byteReader.readByte(objectPath);
+    }
+
+    public byte[] readByteArray(String objectPath)
+    {
+        return byteReader.readByteArray(objectPath);
+    }
+
+    public byte[] readByteArrayBlock(String objectPath, int blockSize, long blockNumber)
+    {
+        return byteReader.readByteArrayBlock(objectPath, blockSize, blockNumber);
+    }
+
+    public byte[] readByteArrayBlockWithOffset(String objectPath, int blockSize, long offset)
+    {
+        return byteReader.readByteArrayBlockWithOffset(objectPath, blockSize, offset);
+    }
+
+    public MDByteArray readByteMDArray(String objectPath)
+    {
+        return byteReader.readByteMDArray(objectPath);
+    }
+
+    public MDByteArray readByteMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber)
+    {
+        return byteReader.readByteMDArrayBlock(objectPath, blockDimensions, blockNumber);
+    }
+
+    public MDByteArray readByteMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
+            long[] offset)
+    {
+        return byteReader.readByteMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
+    public byte[][] readByteMatrix(String objectPath) throws HDF5JavaException
+    {
+        return byteReader.readByteMatrix(objectPath);
+    }
+
+    public byte[][] readByteMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
+            long blockNumberX, long blockNumberY) throws HDF5JavaException
+    {
+        return byteReader.readByteMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+                blockNumberY);
+    }
+
+    public byte[][] readByteMatrixBlockWithOffset(String objectPath, int blockSizeX,
+            int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
+    {
+        return byteReader.readByteMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
+                offsetX, offsetY);
+    }
+
+    public void readToByteMDArrayBlockWithOffset(String objectPath, MDByteArray array,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        byteReader.readToByteMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void readToByteMDArrayWithOffset(String objectPath, MDByteArray array, int[] memoryOffset)
+    {
+        byteReader.readToByteMDArrayWithOffset(objectPath, array, memoryOffset);
+    }
+
+    public double[] getDoubleArrayAttribute(String objectPath, String attributeName)
+    {
+        return doubleReader.getDoubleArrayAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5DataBlock<double[]>> getDoubleArrayNaturalBlocks(String dataSetPath)
+            throws HDF5JavaException
+    {
+        return doubleReader.getDoubleArrayNaturalBlocks(dataSetPath);
+    }
+
+    public double getDoubleAttribute(String objectPath, String attributeName)
+    {
+        return doubleReader.getDoubleAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5MDDataBlock<MDDoubleArray>> getDoubleMDArrayNaturalBlocks(String dataSetPath)
+    {
+        return doubleReader.getDoubleMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public double readDouble(String objectPath)
+    {
+        return doubleReader.readDouble(objectPath);
+    }
+
+    public double[] readDoubleArray(String objectPath)
+    {
+        return doubleReader.readDoubleArray(objectPath);
+    }
+
+    public double[] readDoubleArrayBlock(String objectPath, int blockSize, long blockNumber)
+    {
+        return doubleReader.readDoubleArrayBlock(objectPath, blockSize, blockNumber);
+    }
+
+    public double[] readDoubleArrayBlockWithOffset(String objectPath, int blockSize, long offset)
+    {
+        return doubleReader.readDoubleArrayBlockWithOffset(objectPath, blockSize, offset);
+    }
+
+    public MDDoubleArray readDoubleMDArray(String objectPath)
+    {
+        return doubleReader.readDoubleMDArray(objectPath);
+    }
+
+    public MDDoubleArray readDoubleMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber)
+    {
+        return doubleReader.readDoubleMDArrayBlock(objectPath, blockDimensions, blockNumber);
+    }
+
+    public MDDoubleArray readDoubleMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
+            long[] offset)
+    {
+        return doubleReader.readDoubleMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
+    public double[][] readDoubleMatrix(String objectPath) throws HDF5JavaException
+    {
+        return doubleReader.readDoubleMatrix(objectPath);
+    }
+
+    public double[][] readDoubleMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
+            long blockNumberX, long blockNumberY) throws HDF5JavaException
+    {
+        return doubleReader.readDoubleMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+                blockNumberY);
+    }
+
+    public double[][] readDoubleMatrixBlockWithOffset(String objectPath, int blockSizeX,
+            int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
+    {
+        return doubleReader.readDoubleMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
+                offsetX, offsetY);
+    }
+
+    public void readToDoubleMDArrayBlockWithOffset(String objectPath, MDDoubleArray array,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        doubleReader.readToDoubleMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void readToDoubleMDArrayWithOffset(String objectPath, MDDoubleArray array,
+            int[] memoryOffset)
+    {
+        doubleReader.readToDoubleMDArrayWithOffset(objectPath, array, memoryOffset);
+    }
+
+    public float[] getFloatArrayAttribute(String objectPath, String attributeName)
+    {
+        return floatReader.getFloatArrayAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5DataBlock<float[]>> getFloatArrayNaturalBlocks(String dataSetPath)
+            throws HDF5JavaException
+    {
+        return floatReader.getFloatArrayNaturalBlocks(dataSetPath);
+    }
+
+    public float getFloatAttribute(String objectPath, String attributeName)
+    {
+        return floatReader.getFloatAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5MDDataBlock<MDFloatArray>> getFloatMDArrayNaturalBlocks(String dataSetPath)
+    {
+        return floatReader.getFloatMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public float readFloat(String objectPath)
+    {
+        return floatReader.readFloat(objectPath);
+    }
+
+    public float[] readFloatArray(String objectPath)
+    {
+        return floatReader.readFloatArray(objectPath);
+    }
+
+    public float[] readFloatArrayBlock(String objectPath, int blockSize, long blockNumber)
+    {
+        return floatReader.readFloatArrayBlock(objectPath, blockSize, blockNumber);
+    }
+
+    public float[] readFloatArrayBlockWithOffset(String objectPath, int blockSize, long offset)
+    {
+        return floatReader.readFloatArrayBlockWithOffset(objectPath, blockSize, offset);
+    }
+
+    public MDFloatArray readFloatMDArray(String objectPath)
+    {
+        return floatReader.readFloatMDArray(objectPath);
+    }
+
+    public MDFloatArray readFloatMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber)
+    {
+        return floatReader.readFloatMDArrayBlock(objectPath, blockDimensions, blockNumber);
+    }
+
+    public MDFloatArray readFloatMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
+            long[] offset)
+    {
+        return floatReader.readFloatMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
+    public float[][] readFloatMatrix(String objectPath) throws HDF5JavaException
+    {
+        return floatReader.readFloatMatrix(objectPath);
+    }
+
+    public float[][] readFloatMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
+            long blockNumberX, long blockNumberY) throws HDF5JavaException
+    {
+        return floatReader.readFloatMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+                blockNumberY);
+    }
+
+    public float[][] readFloatMatrixBlockWithOffset(String objectPath, int blockSizeX,
+            int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
+    {
+        return floatReader.readFloatMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
+                offsetX, offsetY);
+    }
+
+    public void readToFloatMDArrayBlockWithOffset(String objectPath, MDFloatArray array,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        floatReader.readToFloatMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void readToFloatMDArrayWithOffset(String objectPath, MDFloatArray array,
+            int[] memoryOffset)
+    {
+        floatReader.readToFloatMDArrayWithOffset(objectPath, array, memoryOffset);
+    }
+
+    public int[] getIntArrayAttribute(String objectPath, String attributeName)
+    {
+        return intReader.getIntArrayAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5DataBlock<int[]>> getIntArrayNaturalBlocks(String dataSetPath)
+            throws HDF5JavaException
+    {
+        return intReader.getIntArrayNaturalBlocks(dataSetPath);
+    }
+
+    public int getIntAttribute(String objectPath, String attributeName)
+    {
+        return intReader.getIntAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5MDDataBlock<MDIntArray>> getIntMDArrayNaturalBlocks(String dataSetPath)
+    {
+        return intReader.getIntMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public int readInt(String objectPath)
+    {
+        return intReader.readInt(objectPath);
+    }
+
+    public int[] readIntArray(String objectPath)
+    {
+        return intReader.readIntArray(objectPath);
+    }
+
+    public int[] readIntArrayBlock(String objectPath, int blockSize, long blockNumber)
+    {
+        return intReader.readIntArrayBlock(objectPath, blockSize, blockNumber);
+    }
+
+    public int[] readIntArrayBlockWithOffset(String objectPath, int blockSize, long offset)
+    {
+        return intReader.readIntArrayBlockWithOffset(objectPath, blockSize, offset);
+    }
+
+    public MDIntArray readIntMDArray(String objectPath)
+    {
+        return intReader.readIntMDArray(objectPath);
+    }
+
+    public MDIntArray readIntMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber)
+    {
+        return intReader.readIntMDArrayBlock(objectPath, blockDimensions, blockNumber);
+    }
+
+    public MDIntArray readIntMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
+            long[] offset)
+    {
+        return intReader.readIntMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
+    public int[][] readIntMatrix(String objectPath) throws HDF5JavaException
+    {
+        return intReader.readIntMatrix(objectPath);
+    }
+
+    public int[][] readIntMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
+            long blockNumberX, long blockNumberY) throws HDF5JavaException
+    {
+        return intReader.readIntMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+                blockNumberY);
+    }
+
+    public int[][] readIntMatrixBlockWithOffset(String objectPath, int blockSizeX, int blockSizeY,
+            long offsetX, long offsetY) throws HDF5JavaException
+    {
+        return intReader.readIntMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY, offsetX,
+                offsetY);
+    }
+
+    public void readToIntMDArrayBlockWithOffset(String objectPath, MDIntArray array,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        intReader.readToIntMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void readToIntMDArrayWithOffset(String objectPath, MDIntArray array, int[] memoryOffset)
+    {
+        intReader.readToIntMDArrayWithOffset(objectPath, array, memoryOffset);
+    }
+
+    public long[] getLongArrayAttribute(String objectPath, String attributeName)
+    {
+        return longReader.getLongArrayAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5DataBlock<long[]>> getLongArrayNaturalBlocks(String dataSetPath)
+            throws HDF5JavaException
+    {
+        return longReader.getLongArrayNaturalBlocks(dataSetPath);
+    }
+
+    public long getLongAttribute(String objectPath, String attributeName)
+    {
+        return longReader.getLongAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5MDDataBlock<MDLongArray>> getLongMDArrayNaturalBlocks(String dataSetPath)
+    {
+        return longReader.getLongMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public long readLong(String objectPath)
+    {
+        return longReader.readLong(objectPath);
+    }
+
+    public long[] readLongArray(String objectPath)
+    {
+        return longReader.readLongArray(objectPath);
+    }
+
+    public long[] readLongArrayBlock(String objectPath, int blockSize, long blockNumber)
+    {
+        return longReader.readLongArrayBlock(objectPath, blockSize, blockNumber);
+    }
+
+    public long[] readLongArrayBlockWithOffset(String objectPath, int blockSize, long offset)
+    {
+        return longReader.readLongArrayBlockWithOffset(objectPath, blockSize, offset);
+    }
+
+    public MDLongArray readLongMDArray(String objectPath)
+    {
+        return longReader.readLongMDArray(objectPath);
+    }
+
+    public MDLongArray readLongMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber)
+    {
+        return longReader.readLongMDArrayBlock(objectPath, blockDimensions, blockNumber);
+    }
+
+    public MDLongArray readLongMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
+            long[] offset)
+    {
+        return longReader.readLongMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
+    public long[][] readLongMatrix(String objectPath) throws HDF5JavaException
+    {
+        return longReader.readLongMatrix(objectPath);
+    }
+
+    public long[][] readLongMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
+            long blockNumberX, long blockNumberY) throws HDF5JavaException
+    {
+        return longReader.readLongMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+                blockNumberY);
+    }
+
+    public long[][] readLongMatrixBlockWithOffset(String objectPath, int blockSizeX,
+            int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
+    {
+        return longReader.readLongMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
+                offsetX, offsetY);
+    }
+
+    public void readToLongMDArrayBlockWithOffset(String objectPath, MDLongArray array,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        longReader.readToLongMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void readToLongMDArrayWithOffset(String objectPath, MDLongArray array, int[] memoryOffset)
+    {
+        longReader.readToLongMDArrayWithOffset(objectPath, array, memoryOffset);
+    }
+
+    public short[] getShortArrayAttribute(String objectPath, String attributeName)
+    {
+        return shortReader.getShortArrayAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5DataBlock<short[]>> getShortArrayNaturalBlocks(String dataSetPath)
+            throws HDF5JavaException
+    {
+        return shortReader.getShortArrayNaturalBlocks(dataSetPath);
+    }
+
+    public short getShortAttribute(String objectPath, String attributeName)
+    {
+        return shortReader.getShortAttribute(objectPath, attributeName);
+    }
+
+    public Iterable<HDF5MDDataBlock<MDShortArray>> getShortMDArrayNaturalBlocks(String dataSetPath)
+    {
+        return shortReader.getShortMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public short readShort(String objectPath)
+    {
+        return shortReader.readShort(objectPath);
+    }
+
+    public short[] readShortArray(String objectPath)
+    {
+        return shortReader.readShortArray(objectPath);
+    }
+
+    public short[] readShortArrayBlock(String objectPath, int blockSize, long blockNumber)
+    {
+        return shortReader.readShortArrayBlock(objectPath, blockSize, blockNumber);
+    }
+
+    public short[] readShortArrayBlockWithOffset(String objectPath, int blockSize, long offset)
+    {
+        return shortReader.readShortArrayBlockWithOffset(objectPath, blockSize, offset);
+    }
+
+    public MDShortArray readShortMDArray(String objectPath)
+    {
+        return shortReader.readShortMDArray(objectPath);
+    }
+
+    public MDShortArray readShortMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber)
+    {
+        return shortReader.readShortMDArrayBlock(objectPath, blockDimensions, blockNumber);
+    }
+
+    public MDShortArray readShortMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
+            long[] offset)
+    {
+        return shortReader.readShortMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
+    public short[][] readShortMatrix(String objectPath) throws HDF5JavaException
+    {
+        return shortReader.readShortMatrix(objectPath);
+    }
+
+    public short[][] readShortMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
+            long blockNumberX, long blockNumberY) throws HDF5JavaException
+    {
+        return shortReader.readShortMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+                blockNumberY);
+    }
+
+    public short[][] readShortMatrixBlockWithOffset(String objectPath, int blockSizeX,
+            int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
+    {
+        return shortReader.readShortMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
+                offsetX, offsetY);
+    }
+
+    public void readToShortMDArrayBlockWithOffset(String objectPath, MDShortArray array,
+            int[] blockDimensions, long[] offset, int[] memoryOffset)
+    {
+        shortReader.readToShortMDArrayBlockWithOffset(objectPath, array, blockDimensions, offset,
+                memoryOffset);
+    }
+
+    public void readToShortMDArrayWithOffset(String objectPath, MDShortArray array,
+            int[] memoryOffset)
+    {
+        shortReader.readToShortMDArrayWithOffset(objectPath, array, memoryOffset);
+    }
+
+    // ------------------------------------------------------------------------------
+    // GENERATED CODE SECTION - END
+    // ------------------------------------------------------------------------------
 
 }

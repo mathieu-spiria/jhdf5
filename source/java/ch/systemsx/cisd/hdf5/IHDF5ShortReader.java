@@ -27,6 +27,34 @@ import ch.systemsx.cisd.base.mdarray.MDShortArray;
  */
 interface IHDF5ShortReader
 {
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    /**
+     * Reads a <code>short</code> attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute value read from the data set.
+     */
+    public short getShortAttribute(final String objectPath, final String attributeName);
+
+    /**
+     * Reads a <code>short[]</code> attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute value read from the data set.
+     */
+    public short[] getShortArrayAttribute(final String objectPath, final String attributeName);
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     /**
      * Reads a <code>short</code> value from the data set <var>objectPath</var>. This method 
      * doesn't check the data space but simply reads the first value.

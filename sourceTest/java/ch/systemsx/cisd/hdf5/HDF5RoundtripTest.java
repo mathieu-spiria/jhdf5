@@ -2385,6 +2385,9 @@ public class HDF5RoundtripTest
         final String integerAttributeName = "Integer Attribute";
         final int integerAttributeValueWritten = 17;
         writer.addIntAttribute(datasetName, integerAttributeName, integerAttributeValueWritten);
+        final String byteAttributeName = "Byte Attribute";
+        final byte byteAttributeValueWritten = 17;
+        writer.addByteAttribute(datasetName, byteAttributeName, byteAttributeValueWritten);
         final String stringAttributeName = "String Attribute";
         final String stringAttributeValueWritten = "Some String Value";
         writer.addStringAttribute(datasetName, stringAttributeName, stringAttributeValueWritten);
@@ -2397,6 +2400,14 @@ public class HDF5RoundtripTest
         final String volatileAttributeName = "Some Volatile Attribute";
         writer.addIntAttribute(datasetName, volatileAttributeName, 21);
         writer.deleteAttribute(datasetName, volatileAttributeName);
+        final String floatArrayAttributeName = "Float Array Attribute";
+        final float[] floatArrayAttribute = new float[]
+            { 3f, 3.1f, 3.14f, 3.142f, 3.1416f };
+        writer.addFloatArrayAttribute(datasetName, floatArrayAttributeName, floatArrayAttribute);
+        final String byteArrayAttributeName = "Byte Array Attribute";
+        final byte[] byteArrayAttribute = new byte[]
+            { 1, 2, 3 };
+        writer.addByteArrayAttribute(datasetName, byteArrayAttributeName, byteArrayAttribute);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertTrue(reader.hasAttribute(datasetName, booleanAttributeName));
@@ -2406,6 +2417,9 @@ public class HDF5RoundtripTest
         final int integerAttributeValueRead =
                 reader.getIntAttribute(datasetName, integerAttributeName);
         assertEquals(integerAttributeValueWritten, integerAttributeValueRead);
+        final byte byteAttributeValueRead =
+                reader.getByteAttribute(datasetName, byteAttributeName);
+        assertEquals(byteAttributeValueWritten, byteAttributeValueRead);
         HDF5DataTypeInformation info =
                 reader.getAttributeInformation(datasetName, integerAttributeName);
         assertEquals(HDF5DataClass.INTEGER, info.getDataClass());
@@ -2417,6 +2431,10 @@ public class HDF5RoundtripTest
                 reader.getEnumAttribute(datasetName, enumAttributeName);
         assertEquals(enumAttributeValueWritten.getValue(), enumAttributeValueRead.getValue());
         assertFalse(reader.hasAttribute(datasetName, volatileAttributeName));
+        assertTrue(Arrays.equals(floatArrayAttribute, reader.getFloatArrayAttribute(datasetName,
+                floatArrayAttributeName)));
+        assertTrue(Arrays.equals(byteArrayAttribute, reader.getByteArrayAttribute(datasetName,
+                byteArrayAttributeName)));
         reader.close();
     }
 

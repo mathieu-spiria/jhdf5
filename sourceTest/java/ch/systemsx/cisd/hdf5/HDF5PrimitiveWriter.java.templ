@@ -47,6 +47,48 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
         this.baseWriter = baseWriter;
     }
 
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    public void add__Name__Attribute(final String objectPath, final String name, final __name__ value)
+    {
+        assert objectPath != null;
+        assert name != null;
+
+        baseWriter.checkOpen();
+        baseWriter.addAttribute(objectPath, name, __Storagetype__, __Memorytype__, HDFNativeData
+                .__name__ToByte(value));
+    }
+
+    public void add__Name__ArrayAttribute(final String objectPath, final String name,
+            final __name__[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(__Memorytype__, value.length, registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(__Storagetype__, value.length, registry);
+                    baseWriter.addAttribute(objectPath, name, storageTypeId, memoryTypeId,
+                            HDFNativeData.__name__ToByte(value));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(addAttributeRunnable);
+    }
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     public void write__Name__(final String objectPath, final __name__ value)
     {
         assert objectPath != null;

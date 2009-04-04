@@ -41,7 +41,7 @@ public class HDF5CodeGenerator
         final String capitalizedName;
 
         final String capitalizedClassName;
-        
+
         final String upperCaseClassName;
 
         final String wrapperName;
@@ -50,9 +50,11 @@ public class HDF5CodeGenerator
 
         final String memoryType;
 
+        final String elementSize;
+
         TemplateParameters(String name, String appendix, String capitalizedName,
                 String capitalizedClassName, String wrapperName, String storageType,
-                String memoryType)
+                String memoryType, String elementSize)
         {
             this.name = name;
             this.appendix = appendix;
@@ -62,35 +64,37 @@ public class HDF5CodeGenerator
             this.wrapperName = wrapperName;
             this.storageType = storageType;
             this.memoryType = memoryType;
+            this.elementSize = elementSize;
         }
 
     }
 
     static TemplateParameters tp(String name, String appendix, String capitalizedName,
-            String capitalizedClassName, String wrapperName, String storageType, String memoryType)
+            String capitalizedClassName, String wrapperName, String storageType, String memoryType,
+            String elementSize)
     {
         return new TemplateParameters(name, appendix, capitalizedName, capitalizedClassName,
-                wrapperName, storageType, memoryType);
+                wrapperName, storageType, memoryType, elementSize);
     }
 
     static final TemplateParameters PLACEHOLDERS =
             tp("__name__", "__appendix__", "__Name__", "__Classname__", "__Wrappername__",
-                    "__Storagetype__", "__Memorytype__");
+                    "__Storagetype__", "__Memorytype__", "__elementsize__");
 
     static final TemplateParameters[] NUMERICAL_TYPES =
             new TemplateParameters[]
                 {
-                        tp("byte", "", "Byte", "Int", "Byte", "H5T_STD_I8LE", "H5T_NATIVE_INT8"),
+                        tp("byte", "", "Byte", "Int", "Byte", "H5T_STD_I8LE", "H5T_NATIVE_INT8", "1"),
                         tp("short", "_short", "Short", "Int", "Short", "H5T_STD_I16LE",
-                                "H5T_NATIVE_INT16"),
+                                "H5T_NATIVE_INT16", "2"),
                         tp("int", "_int", "Int", "Int", "Integer", "H5T_STD_I32LE",
-                                "H5T_NATIVE_INT32"),
+                                "H5T_NATIVE_INT32", "4"),
                         tp("long", "_long", "Long", "Int", "Long", "H5T_STD_I64LE",
-                                "H5T_NATIVE_INT64"),
+                                "H5T_NATIVE_INT64", "8"),
                         tp("float", "_float", "Float", "Float", "Float", "H5T_IEEE_F32LE",
-                                "H5T_NATIVE_FLOAT"),
+                                "H5T_NATIVE_FLOAT", "4"),
                         tp("double", "_double", "Double", "Float", "Double", "H5T_IEEE_F64LE",
-                                "H5T_NATIVE_DOUBLE") };
+                                "H5T_NATIVE_DOUBLE", "8") };
 
     /**
      * Generate the code for all numerical types from <var>codeTemplate</var> and write it to
@@ -120,6 +124,7 @@ public class HDF5CodeGenerator
         s = StringUtils.replace(s, PLACEHOLDERS.wrapperName, params.wrapperName);
         s = StringUtils.replace(s, PLACEHOLDERS.storageType, params.storageType);
         s = StringUtils.replace(s, PLACEHOLDERS.memoryType, params.memoryType);
+        s = StringUtils.replace(s, PLACEHOLDERS.elementSize, params.elementSize);
         out.println(s);
     }
 

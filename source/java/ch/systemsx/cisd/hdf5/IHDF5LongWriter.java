@@ -25,6 +25,39 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
  */
 interface IHDF5LongWriter
 {
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    /**
+     * Adds a <code>long</code> attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void addLongAttribute(final String objectPath, final String name, final long value);
+
+    /**
+     * Adds a <code>long[]</code> attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void addLongArrayAttribute(final String objectPath, final String name,
+            final long[] value);
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     /**
      * Writes out a <code>long</code> value.
      * 

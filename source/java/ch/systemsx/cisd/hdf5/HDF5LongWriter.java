@@ -47,6 +47,48 @@ class HDF5LongWriter implements IHDF5LongWriter
         this.baseWriter = baseWriter;
     }
 
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    public void addLongAttribute(final String objectPath, final String name, final long value)
+    {
+        assert objectPath != null;
+        assert name != null;
+
+        baseWriter.checkOpen();
+        baseWriter.addAttribute(objectPath, name, H5T_STD_I64LE, H5T_NATIVE_INT64, HDFNativeData
+                .longToByte(value));
+    }
+
+    public void addLongArrayAttribute(final String objectPath, final String name,
+            final long[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(H5T_NATIVE_INT64, value.length, registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(H5T_STD_I64LE, value.length, registry);
+                    baseWriter.addAttribute(objectPath, name, storageTypeId, memoryTypeId,
+                            HDFNativeData.longToByte(value));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(addAttributeRunnable);
+    }
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     public void writeLong(final String objectPath, final long value)
     {
         assert objectPath != null;

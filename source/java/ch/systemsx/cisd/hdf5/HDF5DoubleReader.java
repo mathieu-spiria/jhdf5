@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
@@ -45,6 +46,76 @@ class HDF5DoubleReader implements IHDF5DoubleReader
 
         this.baseReader = baseReader;
     }
+
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    public double getDoubleAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<Double> getAttributeRunnable = new ICallableWithCleanUp<Double>()
+            {
+                public Double call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int attributeId =
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
+                    final byte[] data =
+                            baseReader.h5
+                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_DOUBLE, 8);
+                    return HDFNativeData.byteToDouble(data, 0);
+                }
+            };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    public double[] getDoubleArrayAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<double[]> getAttributeRunnable =
+                new ICallableWithCleanUp<double[]>()
+                    {
+                        public double[] call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            final int attributeId =
+                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
+                            final int attributeTypeId =
+                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                            final int[] arrayDimensions =
+                                    baseReader.h5.getArrayDimensions(attributeTypeId);
+                            if (arrayDimensions.length != 1)
+                            {
+                                throw new HDF5JavaException(
+                                        "Array needs to be of rank 1, but is of rank "
+                                                + arrayDimensions.length);
+                            }
+                            final int len = arrayDimensions[0];
+                            final int memoryTypeId =
+                                    baseReader.h5.createArrayType(H5T_NATIVE_DOUBLE,
+                                            len, registry);
+                            final byte[] data =
+                                    baseReader.h5.readAttributeAsByteArray(attributeId,
+                                            memoryTypeId, 8 * len);
+                            return HDFNativeData.byteToDouble(data, 0, len);
+                        }
+                    };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
 
     public double readDouble(final String objectPath)
     {

@@ -384,9 +384,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
     /**
      * Creates a data set.
      */
-    /**
-     * Creates a data set.
-     */
     int createDataSet(final String objectPath, final int storageDataTypeId,
             final HDF5AbstractCompression compression, final long[] dimensions,
             final long[] chunkSizeOrNull, boolean enforceCompactLayout, ICleanUpRegistry registry)
@@ -501,6 +498,46 @@ final class HDF5BaseWriter extends HDF5BaseReader
                             false, registry);
         }
         return dataSetId;
+    }
+
+    void addAttribute(final String objectPath, final String name,
+            final int storageDataTypeId, final int nativeDataTypeId, final byte[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+        assert value != null;
+
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    h5.openObject(fileId, objectPath,
+                                            registry);
+                            addAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
+                                    value, registry);
+                            return null; // Nothing to return.
+                        }
+                    };
+        runner.call(addAttributeRunnable);
+    }
+
+    void addAttribute(final int objectId, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final byte[] value, ICleanUpRegistry registry)
+    {
+        final int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+        } else
+        {
+            attributeId =
+                    h5.createAttribute(objectId, name, storageDataTypeId, registry);
+        }
+        h5.writeAttribute(attributeId, nativeDataTypeId, value);
     }
 
 }

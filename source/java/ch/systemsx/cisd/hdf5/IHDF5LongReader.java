@@ -27,6 +27,34 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
  */
 interface IHDF5LongReader
 {
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    /**
+     * Reads a <code>long</code> attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute value read from the data set.
+     */
+    public long getLongAttribute(final String objectPath, final String attributeName);
+
+    /**
+     * Reads a <code>long[]</code> attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute value read from the data set.
+     */
+    public long[] getLongArrayAttribute(final String objectPath, final String attributeName);
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     /**
      * Reads a <code>long</code> value from the data set <var>objectPath</var>. This method 
      * doesn't check the data space but simply reads the first value.
