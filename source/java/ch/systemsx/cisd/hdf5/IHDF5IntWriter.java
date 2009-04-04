@@ -30,7 +30,7 @@ interface IHDF5IntWriter
     // /////////////////////
 
     /**
-     * Adds a <code>int</code> attribute to the referenced object.
+     * Set a <code>int</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -39,10 +39,10 @@ interface IHDF5IntWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addIntAttribute(final String objectPath, final String name, final int value);
+    public void setIntAttribute(final String objectPath, final String name, final int value);
 
     /**
-     * Adds a <code>int[]</code> attribute to the referenced object.
+     * Set a <code>int[]</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -51,7 +51,7 @@ interface IHDF5IntWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addIntArrayAttribute(final String objectPath, final String name,
+    public void setIntArrayAttribute(final String objectPath, final String name,
             final int[] value);
 
     // /////////////////////

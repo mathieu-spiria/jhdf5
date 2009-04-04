@@ -30,7 +30,7 @@ interface IHDF5__Name__Writer
     // /////////////////////
 
     /**
-     * Adds a <code>__name__</code> attribute to the referenced object.
+     * Set a <code>__name__</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -39,10 +39,10 @@ interface IHDF5__Name__Writer
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void add__Name__Attribute(final String objectPath, final String name, final __name__ value);
+    public void set__Name__Attribute(final String objectPath, final String name, final __name__ value);
 
     /**
-     * Adds a <code>__name__[]</code> attribute to the referenced object.
+     * Set a <code>__name__[]</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -51,7 +51,7 @@ interface IHDF5__Name__Writer
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void add__Name__ArrayAttribute(final String objectPath, final String name,
+    public void set__Name__ArrayAttribute(final String objectPath, final String name,
             final __name__[] value);
 
     // /////////////////////

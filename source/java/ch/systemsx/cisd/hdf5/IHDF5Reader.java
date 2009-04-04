@@ -717,7 +717,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, long, HDF5TimeUnit)} or can be done by calling
-     * {@link IHDF5Writer#addTypeVariant(String, HDF5DataTypeVariant)}, most conveniantly by code
+     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniantly by code
      * like
      * 
      * <pre>

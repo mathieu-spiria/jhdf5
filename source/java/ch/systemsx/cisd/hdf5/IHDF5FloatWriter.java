@@ -30,7 +30,7 @@ interface IHDF5FloatWriter
     // /////////////////////
 
     /**
-     * Adds a <code>float</code> attribute to the referenced object.
+     * Set a <code>float</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -39,10 +39,10 @@ interface IHDF5FloatWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addFloatAttribute(final String objectPath, final String name, final float value);
+    public void setFloatAttribute(final String objectPath, final String name, final float value);
 
     /**
-     * Adds a <code>float[]</code> attribute to the referenced object.
+     * Set a <code>float[]</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -51,7 +51,7 @@ interface IHDF5FloatWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addFloatArrayAttribute(final String objectPath, final String name,
+    public void setFloatArrayAttribute(final String objectPath, final String name,
             final float[] value);
 
     // /////////////////////

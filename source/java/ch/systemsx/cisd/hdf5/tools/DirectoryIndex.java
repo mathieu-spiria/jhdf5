@@ -371,7 +371,7 @@ public class DirectoryIndex implements Iterable<Link>
             final String indexNamesDataSetName = getIndexNamesDataSetName();
             final String concatenatedNamesStr = concatenatedNames.toString();
             hdf5WriterOrNull.writeStringVariableLength(indexNamesDataSetName, concatenatedNamesStr);
-            hdf5WriterOrNull.addIntAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME,
+            hdf5WriterOrNull.setIntAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME,
                     calcCrc32(concatenatedNamesStr));
             final String indexDataSetName = getIndexDataSetName();
             final CRC32 crc32 = new CRC32();
@@ -385,7 +385,7 @@ public class DirectoryIndex implements Iterable<Link>
                                 crc32.update(byteArray);
                             }
                         });
-            hdf5WriterOrNull.addIntAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME, (int) crc32
+            hdf5WriterOrNull.setIntAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME, (int) crc32
                     .getValue());
         } catch (HDF5Exception ex)
         {

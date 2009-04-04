@@ -54,10 +54,10 @@ public class HDF5WriteTest
             // writer.write("/Group1/MyDataSet", new int[] { 4, 3, 2, 1 });
             writer.createHardLink("/Group1/MyDataSet", "/Group1/SubGroup1/MyDataSet");
             writer.writeString("/Group1/MyString", "Und schon wieder die Geschichte vom Pferd!");
-            writer.addStringAttribute("/Group1/MyDataSet", "foo", "Die Geschichte vom Pferd");
+            writer.setStringAttribute("/Group1/MyDataSet", "foo", "Die Geschichte vom Pferd");
             // writer.addAttribute("/Group1/SubGroup1/MyDataSet", "foo", "No story");
-            writer.addDoubleAttribute("/", "version", 17.0);
-            writer.addBooleanAttribute("/Group1", "active", true);
+            writer.setDoubleAttribute("/", "version", 17.0);
+            writer.setBooleanAttribute("/Group1", "active", true);
             writer.writeByteArray("/empty", new byte[0]);
             writer.close();
         } catch (HDF5LibraryException ex)

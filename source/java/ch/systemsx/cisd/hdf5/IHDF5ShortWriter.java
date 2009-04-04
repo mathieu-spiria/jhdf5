@@ -30,7 +30,7 @@ interface IHDF5ShortWriter
     // /////////////////////
 
     /**
-     * Adds a <code>short</code> attribute to the referenced object.
+     * Set a <code>short</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -39,10 +39,10 @@ interface IHDF5ShortWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addShortAttribute(final String objectPath, final String name, final short value);
+    public void setShortAttribute(final String objectPath, final String name, final short value);
 
     /**
-     * Adds a <code>short[]</code> attribute to the referenced object.
+     * Set a <code>short[]</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -51,7 +51,7 @@ interface IHDF5ShortWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addShortArrayAttribute(final String objectPath, final String name,
+    public void setShortArrayAttribute(final String objectPath, final String name,
             final short[] value);
 
     // /////////////////////

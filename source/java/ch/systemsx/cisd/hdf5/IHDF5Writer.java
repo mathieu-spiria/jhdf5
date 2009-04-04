@@ -216,28 +216,25 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void deleteAttribute(final String objectPath, final String name);
 
     /**
-     * Adds an enum attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
-    public void addEnumAttribute(final String objectPath, final String name,
-            final HDF5EnumerationValue value);
-
-    /**
-     * Adds a <var>typeVariant</var> to <var>objectPath</var>.
+     * Sets a <var>typeVariant</var> to <var>objectPath</var>.
      * 
      * @param objectPath The name of the object to add the type variant to.
      * @param typeVariant The type variant to add.
      */
-    public void addTypeVariant(final String objectPath, final HDF5DataTypeVariant typeVariant);
+    public void setTypeVariant(final String objectPath, final HDF5DataTypeVariant typeVariant);
 
     /**
-     * Adds a string attribute to the referenced object.
+     * Deletes the <var>typeVariant</var> from <var>objectPath</var>.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to delete the type variant from.
+     */
+    public void deleteTypeVariant(final String objectPath);
+
+    /**
+     * Sets a string attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -246,10 +243,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addStringAttribute(final String objectPath, final String name, final String value);
+    public void setStringAttribute(final String objectPath, final String name, final String value);
 
     /**
-     * Adds a string attribute to the referenced object.
+     * Sets a string attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -259,11 +256,11 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param value The value of the attribute.
      * @param maxLength The maximal length of the value.
      */
-    public void addStringAttribute(final String objectPath, final String name, final String value,
+    public void setStringAttribute(final String objectPath, final String name, final String value,
             final int maxLength);
 
     /**
-     * Adds a <code>boolean</code> attribute to the referenced object.
+     * Sets a <code>boolean</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -272,10 +269,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addBooleanAttribute(final String objectPath, final String name, final boolean value);
+    public void setBooleanAttribute(final String objectPath, final String name, final boolean value);
 
     /**
-     * Adds an <code>int</code> attribute to the referenced object.
+     * Sets an enum attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -284,43 +281,8 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addIntAttribute(final String objectPath, final String name, final int value);
-
-    /**
-     * Adds a long attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
-    public void addLongAttribute(final String objectPath, final String name, final long value);
-
-    /**
-     * Adds a <code>float</code> attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
-    public void addFloatAttribute(final String objectPath, final String name, final float value);
-
-    /**
-     * Adds a <code>double</code> attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param value The value of the attribute.
-     */
-    public void addDoubleAttribute(final String objectPath, final String name, final double value);
+    public void setEnumAttribute(final String objectPath, final String name,
+            final HDF5EnumerationValue value);
 
     // /////////////////////
     // Data Sets

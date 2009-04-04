@@ -30,7 +30,7 @@ interface IHDF5LongWriter
     // /////////////////////
 
     /**
-     * Adds a <code>long</code> attribute to the referenced object.
+     * Set a <code>long</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -39,10 +39,10 @@ interface IHDF5LongWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addLongAttribute(final String objectPath, final String name, final long value);
+    public void setLongAttribute(final String objectPath, final String name, final long value);
 
     /**
-     * Adds a <code>long[]</code> attribute to the referenced object.
+     * Set a <code>long[]</code> attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -51,7 +51,7 @@ interface IHDF5LongWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void addLongArrayAttribute(final String objectPath, final String name,
+    public void setLongArrayAttribute(final String objectPath, final String name,
             final long[] value);
 
     // /////////////////////
