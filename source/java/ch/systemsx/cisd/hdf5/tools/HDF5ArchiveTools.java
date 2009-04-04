@@ -1214,13 +1214,14 @@ public class HDF5ArchiveTools
         final StringBuilder sb = new StringBuilder();
         if (link.hasLastModified())
         {
-            final long foundLastModified = file.lastModified();
-            if (link.getLastModified() != foundLastModified)
+            final long expectedLastModifiedMillis = link.getLastModified() * 1000L;
+            final long foundLastModifiedMillis = file.lastModified();
+            if (expectedLastModifiedMillis != foundLastModifiedMillis)
             {
                 sb.append(String.format("'last modified time': (expected: "
                         + "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS, found: "
                         + "%2$tY-%2$tm-%2$td %2$tH:%2$tM:%2$tS) ", link.getLastModified(),
-                        foundLastModified));
+                        foundLastModifiedMillis));
             }
         }
         if (link.hasUnixPermissions() && Unix.isOperational())
