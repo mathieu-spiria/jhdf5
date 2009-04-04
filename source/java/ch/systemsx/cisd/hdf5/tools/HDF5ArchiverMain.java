@@ -19,7 +19,6 @@ package ch.systemsx.cisd.hdf5.tools;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
@@ -31,6 +30,7 @@ import ch.systemsx.cisd.args4j.Option;
 import ch.systemsx.cisd.base.utilities.BuildAndEnvironmentInfo;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.tools.HDF5ArchiveTools.Check;
+import ch.systemsx.cisd.hdf5.tools.HDF5ArchiveTools.ListEntry;
 
 /**
  * The main class of the HDF5 based archiver.
@@ -283,6 +283,48 @@ public class HDF5ArchiverMain
         return (rootOrNull == null) ? new File(".") : rootOrNull;
     }
 
+    private static class ListingVisitor implements HDF5ArchiveTools.ListEntryVisitor
+    {
+        private final boolean verifying;
+
+        private int checkSumFailures;
+
+        ListingVisitor(boolean verifying)
+        {
+            this.verifying = verifying;
+        }
+
+        public void visit(ListEntry entry)
+        {
+            if (verifying)
+            {
+                final boolean ok = entry.checkOK();
+                final String statusStr = ok ? "\tOK" : "\tFAILED";
+                System.out.printf("%s%s\n", entry.outputLine, statusStr);
+                if (ok == false)
+                {
+                    System.err.println(entry.errorLineOrNull);
+                    ++checkSumFailures;
+                }
+            } else
+            {
+                System.out.println(entry.outputLine);
+            }
+        }
+
+        boolean isOK()
+        {
+            if (verifying && checkSumFailures > 0)
+            {
+                System.err.println(checkSumFailures + " file(s) failed the CRC checksum test.");
+                return false;
+            } else
+            {
+                return true;
+            }
+        }
+    }
+
     boolean run()
     {
         if (initializationOK == false)
@@ -354,28 +396,11 @@ public class HDF5ArchiverMain
                         break;
                     }
                     final String dir = (arguments.size() > 2) ? arguments.get(2) : "/";
-                    final List<HDF5ArchiveTools.ListEntry> list =
-                            archiver.list(dir, getFSRoot().getPath(), recursive, verbose, numeric,
-                                    verifyAttributes ? Check.VERIFY_CRC_ATTR_FS
-                                            : Check.VERIFY_CRC_FS);
-                    int checkSumFailures = 0;
-                    for (HDF5ArchiveTools.ListEntry s : list)
-                    {
-                        final boolean ok = s.checkOK();
-                        final String statusStr = ok ? "\tOK" : "\tFAILED";
-                        System.out.printf("%s%s\n", s.outputLine, statusStr);
-                        if (ok == false)
-                        {
-                            System.err.println(s.errorLineOrNull);
-                            ++checkSumFailures;
-                        }
-                    }
-                    if (checkSumFailures > 0)
-                    {
-                        System.err.println(checkSumFailures + " file(s) failed the verification.");
-                        return false;
-                    }
-                    break;
+                    final ListingVisitor visitor = new ListingVisitor(true);
+                    archiver.list(dir, getFSRoot().getPath(), recursive, verbose, numeric,
+                            verifyAttributes ? Check.VERIFY_CRC_ATTR_FS : Check.VERIFY_CRC_FS,
+                            visitor);
+                    return visitor.isOK();
                 }
                 case LIST:
                 {
@@ -384,39 +409,11 @@ public class HDF5ArchiverMain
                         break;
                     }
                     final String dir = (arguments.size() > 2) ? arguments.get(2) : "/";
-                    final List<HDF5ArchiveTools.ListEntry> list =
-                            archiver
-                                    .list(dir, getFSRoot().getPath(), recursive, verbose, numeric,
-                                            testAgainstChecksums ? Check.CHECK_CRC_ARCHIVE
-                                                    : Check.NO_CHECK);
-                    if (testAgainstChecksums)
-                    {
-                        int checkSumFailures = 0;
-                        for (HDF5ArchiveTools.ListEntry s : list)
-                        {
-                            final boolean ok = s.checkOK();
-                            final String statusStr = ok ? "\tOK" : "\tFAILED";
-                            System.out.printf("%s%s\n", s.outputLine, statusStr);
-                            if (ok == false)
-                            {
-                                System.err.println(s.errorLineOrNull);
-                                ++checkSumFailures;
-                            }
-                        }
-                        if (checkSumFailures > 0)
-                        {
-                            System.err.println(checkSumFailures
-                                    + " file(s) failed the CRC checksum test.");
-                            return false;
-                        }
-                    } else
-                    {
-                        for (HDF5ArchiveTools.ListEntry s : list)
-                        {
-                            System.out.println(s.outputLine);
-                        }
-                    }
-                    break;
+                    final ListingVisitor visitor = new ListingVisitor(testAgainstChecksums);
+                    archiver.list(dir, getFSRoot().getPath(), recursive, verbose, numeric,
+                            testAgainstChecksums ? Check.CHECK_CRC_ARCHIVE : Check.NO_CHECK,
+                            visitor);
+                    return visitor.isOK();
                 }
                 case HELP: // Can't happen any more at this point
                     break;

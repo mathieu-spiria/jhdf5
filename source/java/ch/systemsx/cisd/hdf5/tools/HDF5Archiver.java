@@ -105,12 +105,12 @@ public class HDF5Archiver
         return this;
     }
 
-    public List<HDF5ArchiveTools.ListEntry> list(String dir, String rootOrNull, boolean recursive,
-            boolean verbose, boolean numeric, HDF5ArchiveTools.Check check)
+    public void list(String dir, String rootOrNull, boolean recursive, boolean verbose,
+            boolean numeric, HDF5ArchiveTools.Check check, HDF5ArchiveTools.ListEntryVisitor visitor)
     {
-        return HDF5ArchiveTools.list(hdf5Reader, new HDF5ArchiveTools.ListParameters()
-                .directoryInArchive(dir).directoryOnFileSystem(rootOrNull).recursive(recursive)
-                .numeric(numeric).verbose(verbose).check(check), continueOnError);
+        HDF5ArchiveTools.list(hdf5Reader, new HDF5ArchiveTools.ListParameters().directoryInArchive(
+                dir).directoryOnFileSystem(rootOrNull).recursive(recursive).numeric(numeric)
+                .verbose(verbose).check(check), visitor, continueOnError);
     }
 
     public void close()

@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -800,7 +799,7 @@ public class HDF5ArchiveTools
 
     /**
      * An enumeration for the checks to be performed while running
-     * {@link HDF5ArchiveTools#list(IHDF5Reader, ListParameters, boolean)}.
+     * {@link HDF5ArchiveTools#list(IHDF5Reader, ListParameters, ListEntryVisitor, boolean)}.
      */
     public enum Check
     {
@@ -920,22 +919,28 @@ public class HDF5ArchiveTools
     }
 
     /**
+     * An entry to visit {@Link ListEntry}s.
+     */
+    public interface ListEntryVisitor
+    {
+        public void visit(ListEntry entry);
+    }
+
+    /**
      * Returns a listing of entries in <var>dir</var> in the archive provided by <var>reader</var>.
      */
-    public static List<ListEntry> list(IHDF5Reader reader, ListParameters params,
+    public static void list(IHDF5Reader reader, ListParameters params, ListEntryVisitor visitor,
             boolean continueOnError)
     {
         params.check();
-        final List<ListEntry> result = new LinkedList<ListEntry>();
-        addEntries(reader, result, new IdCache(), params.getDirectoryInArchive(), params,
+        list(reader, visitor, new IdCache(), params.getDirectoryInArchive(), params,
                 continueOnError);
-        return result;
     }
 
     /**
      * Adds the entries of <var>dir</var> to <var>entries</var> recursively.
      */
-    private static void addEntries(IHDF5Reader reader, List<ListEntry> entries, IdCache idCache,
+    private static void list(IHDF5Reader reader, ListEntryVisitor visitor, IdCache idCache,
             String dir, ListParameters params, boolean continueOnError)
     {
         if (reader.exists(dir, false) == false)
@@ -952,11 +957,11 @@ public class HDF5ArchiveTools
             {
                 path = dirPrefix + link.getLinkName();
                 final String errorLineOrNull = doCheck(reader, path, idCache, params, link);
-                entries.add(new ListEntry(describeLink(path, link, idCache, params.isVerbose(),
+                visitor.visit(new ListEntry(describeLink(path, link, idCache, params.isVerbose(),
                         params.isNumeric()), errorLineOrNull));
                 if (params.isRecursive() && link.isDirectory() && "/.".equals(path) == false)
                 {
-                    addEntries(reader, entries, idCache, path, params, continueOnError);
+                    list(reader, visitor, idCache, path, params, continueOnError);
                 }
             } catch (IOException ex)
             {
