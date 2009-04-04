@@ -101,8 +101,13 @@ class HDF5BaseReader
     {
         if (hdf5File.exists() == false)
         {
-            throw new IllegalArgumentException("The file " + this.hdf5File.getPath()
+            throw new HDF5JavaException("File " + this.hdf5File.getPath()
                     + " does not exit.");
+        }
+        if (hdf5File.canRead() == false)
+        {
+            throw new HDF5JavaException("File " + this.hdf5File.getPath()
+                    + " is not readable for this application.");
         }
         return h5.openFileReadOnly(hdf5File.getPath(), fileRegistry);
     }

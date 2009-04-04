@@ -180,6 +180,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final boolean enforce_1_8 = (fileFormat == FileFormat.STRICTLY_1_8);
         if (hdf5File.exists() && overwriteInit == false)
         {
+            if (hdf5File.canWrite() == false)
+            {
+                throw new HDF5JavaException("File " + this.hdf5File.getPath()
+                        + " is not writable for this application.");
+            }
             return h5.openFileReadWrite(hdf5File.getPath(), enforce_1_8, fileRegistry);
         } else
         {
@@ -188,6 +193,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
             {
                 throw new HDF5JavaException("Directory '" + directory.getPath()
                         + "' does not exist.");
+            }
+            if (directory.canWrite() == false)
+            {
+                throw new HDF5JavaException("Directory " + directory.getPath()
+                        + " is not writable for this application.");
             }
             return h5.createFile(hdf5File.getPath(), enforce_1_8, fileRegistry);
         }
