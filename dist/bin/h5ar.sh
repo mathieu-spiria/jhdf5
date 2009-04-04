@@ -1,4 +1,14 @@
 #! /bin/bash
-# Example script, adapt to your system
 
-java -jar jhdf5-batteries_included_lin_win_mac_sun.jar "$@"
+# This script requires the the readlink binary. If your system lacks this binary, $JHDFDIR needs to be hard-coded
+
+SCRIPT="$0"
+LINK="`readlink $0`"
+while [ -n "$LINK" ]; do
+  SCRIPT="${LINK}"
+  LINK="`readlink ${SCRIPT}`"
+done
+BINDIR="${SCRIPT%/*}"
+JHDFDIR="${BINDIR%/*}"
+
+java -Dnative.libpath="${JHDFDIR}/lib/native" -jar "${JHDFDIR}/lib/jhdf5-tools.jar" "$@"
