@@ -442,9 +442,15 @@
 		<copy todir="${dist}/${distfolder}">
 			<fileset dir="${original.dist}" />
 		</copy>
-		<zip destfile="${dist.file}-${version.number}-r${revision.number}.zip"
-		     basedir="${dist}"
-		     includes="${distfolder}/**" />
+		<zip destfile="${dist.file}-${version.number}-r${revision.number}.zip">
+			<zipfileset dir="${dist}/${distfolder}"
+			            prefix="${mainfolder}"
+			            excludes="**/*.sh" />
+			<zipfileset dir="${dist}/${distfolder}"
+			            prefix="${mainfolder}"
+			            includes="**/*.sh"
+			            filemode="755" />
+		</zip>
 		<delete dir="${dist}/${distfolder}" />
 	</target>
 
