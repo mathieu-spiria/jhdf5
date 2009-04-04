@@ -260,9 +260,8 @@ public class DirectoryIndex implements Iterable<Link>
                 for (HDF5LinkInformation linfo : hdf5LinkInfos)
                 {
                     final long size =
-                            (readLinkTargets && linfo.isDataSet()) ? hdf5Reader
-                                    .getDataSetInformation(linfo.getPath()).getSize()
-                                    : Link.UNKNOWN;
+                            linfo.isDataSet() ? hdf5Reader.getDataSetInformation(linfo.getPath())
+                                    .getSize() : Link.UNKNOWN;
                     linksOrNull[idx++] = new Link(linfo, size);
                 }
             }
