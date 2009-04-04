@@ -209,7 +209,7 @@ public class DirectoryIndex implements Iterable<Link>
                                     });
                 int crc32 = (int) crc32Digester.getValue();
                 int crc32Stored =
-                        hdf5Reader.getIntegerAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME);
+                        hdf5Reader.getIntAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME);
                 if (crc32 != crc32Stored)
                 {
                     throw new ListArchiveException(groupPath,
@@ -221,7 +221,7 @@ public class DirectoryIndex implements Iterable<Link>
                 final String concatenatedNames = hdf5Reader.readString(indexNamesDataSetName);
                 crc32 = calcCrc32(concatenatedNames);
                 crc32Stored =
-                        hdf5Reader.getIntegerAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME);
+                        hdf5Reader.getIntAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME);
                 if (crc32 != crc32Stored)
                 {
                     throw new ListArchiveException(groupPath,

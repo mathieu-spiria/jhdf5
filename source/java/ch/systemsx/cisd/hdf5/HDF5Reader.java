@@ -778,7 +778,7 @@ class HDF5Reader implements IHDF5Reader
                 null, values);
     }
 
-    public int getIntegerAttribute(final String objectPath, final String attributeName)
+    public int getIntAttribute(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;

@@ -2404,7 +2404,7 @@ public class HDF5RoundtripTest
                 reader.getBooleanAttribute(datasetName, booleanAttributeName);
         assertEquals(booleanAttributeValueWritten, booleanAttributeValueRead);
         final int integerAttributeValueRead =
-                reader.getIntegerAttribute(datasetName, integerAttributeName);
+                reader.getIntAttribute(datasetName, integerAttributeName);
         assertEquals(integerAttributeValueWritten, integerAttributeValueRead);
         HDF5DataTypeInformation info =
                 reader.getAttributeInformation(datasetName, integerAttributeName);

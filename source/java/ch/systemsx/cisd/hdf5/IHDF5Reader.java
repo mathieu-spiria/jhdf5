@@ -463,7 +463,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public int getIntegerAttribute(final String objectPath, final String attributeName);
+    public int getIntAttribute(final String objectPath, final String attributeName);
 
     /**
      * Reads a <code>long</code> attribute named <var>attributeName</var> from the data set
