@@ -821,9 +821,9 @@ public class HDF5ArchiveTools
      */
     public static final class ListParameters
     {
-        private String directoryInArchive;
+        private String fileOrDirectoryInArchive;
 
-        private String directoryOnFileSystem;
+        private String fileOrDirectoryOnFileSystem;
 
         private boolean recursive;
 
@@ -833,15 +833,15 @@ public class HDF5ArchiveTools
 
         private Check check = Check.NO_CHECK;
 
-        public ListParameters directoryInArchive(String newDirectoryInArchive)
+        public ListParameters fileOrDirectoryInArchive(String newDirectoryInArchive)
         {
-            this.directoryInArchive = newDirectoryInArchive;
+            this.fileOrDirectoryInArchive = newDirectoryInArchive;
             return this;
         }
 
         public ListParameters directoryOnFileSystem(String newDirectoryOnFileSystem)
         {
-            this.directoryOnFileSystem = newDirectoryOnFileSystem;
+            this.fileOrDirectoryOnFileSystem = newDirectoryOnFileSystem;
             return this;
         }
 
@@ -871,15 +871,15 @@ public class HDF5ArchiveTools
 
         public void check()
         {
-            if (directoryInArchive == null)
+            if (fileOrDirectoryInArchive == null)
             {
-                throw new NullPointerException("directoryInArchive most not be null.");
+                throw new NullPointerException("fileOrDirectoryInArchive most not be null.");
             }
-            directoryInArchive = FilenameUtils.separatorsToUnix(directoryInArchive);
-            if (VERIFY_FS.contains(check) && directoryOnFileSystem == null)
+            fileOrDirectoryInArchive = FilenameUtils.separatorsToUnix(fileOrDirectoryInArchive);
+            if (VERIFY_FS.contains(check) && fileOrDirectoryOnFileSystem == null)
             {
                 throw new NullPointerException(
-                        "directoryOnFileSystem most not be null when verifying.");
+                        "fileOrDirectoryOnFileSystem most not be null when verifying.");
             }
             if (check == null)
             {
@@ -887,14 +887,14 @@ public class HDF5ArchiveTools
             }
         }
 
-        public String getDirectoryInArchive()
+        public String getFileOrDirectoryInArchive()
         {
-            return directoryInArchive;
+            return fileOrDirectoryInArchive;
         }
 
-        public String getDirectoryOnFileSystem()
+        public String getFileOrDirectoryOnFileSystem()
         {
-            return directoryOnFileSystem;
+            return fileOrDirectoryOnFileSystem;
         }
 
         public boolean isRecursive()
@@ -933,8 +933,34 @@ public class HDF5ArchiveTools
             boolean continueOnError)
     {
         params.check();
-        list(reader, visitor, new IdCache(), params.getDirectoryInArchive(), params,
-                continueOnError);
+        final String objectPath = params.getFileOrDirectoryInArchive();
+        if (reader.isGroup(objectPath, false))
+        {
+            list(reader, visitor, new IdCache(), objectPath, params, continueOnError);
+        } else
+        {
+            final String dir = FilenameUtils.getFullPathNoEndSeparator(objectPath);
+            final Link linkOrNull =
+                    new DirectoryIndex(reader, "".equals(dir) ? "/" : dir, continueOnError, params
+                            .isVerbose()).tryGetLink(FilenameUtils.getName(objectPath));
+            if (linkOrNull == null)
+            {
+                dealWithError(new ListArchiveException(objectPath, "Object not found in archive."),
+                        continueOnError);
+                return;
+            }
+            try
+            {
+                process(reader, visitor, new IdCache(), objectPath, params, linkOrNull);
+            } catch (IOException ex)
+            {
+                final File f = new File(objectPath);
+                dealWithError(new ListArchiveException(f, ex), continueOnError);
+            } catch (HDF5Exception ex)
+            {
+                dealWithError(new ListArchiveException(objectPath, ex), continueOnError);
+            }
+        }
     }
 
     /**
@@ -945,8 +971,8 @@ public class HDF5ArchiveTools
     {
         if (reader.exists(dir, false) == false)
         {
-            dealWithError(new ListArchiveException(dir, new HDF5JavaException(
-                    "Directory not found in archive.")), continueOnError);
+            dealWithError(new ListArchiveException(dir, "Directory not found in archive."),
+                    continueOnError);
             return;
         }
         final String dirPrefix = dir.endsWith("/") ? dir : (dir + "/");
@@ -956,9 +982,7 @@ public class HDF5ArchiveTools
             try
             {
                 path = dirPrefix + link.getLinkName();
-                final String errorLineOrNull = doCheck(reader, path, idCache, params, link);
-                visitor.visit(new ListEntry(describeLink(path, link, idCache, params.isVerbose(),
-                        params.isNumeric()), errorLineOrNull));
+                process(reader, visitor, idCache, path, params, link);
                 if (params.isRecursive() && link.isDirectory() && "/.".equals(path) == false)
                 {
                     list(reader, visitor, idCache, path, params, continueOnError);
@@ -972,6 +996,14 @@ public class HDF5ArchiveTools
                 dealWithError(new ListArchiveException(path, ex), continueOnError);
             }
         }
+    }
+
+    private static void process(IHDF5Reader reader, ListEntryVisitor visitor, IdCache idCache,
+            String path, ListParameters params, Link link) throws IOException
+    {
+        final String errorLineOrNull = doCheck(reader, path, idCache, params, link);
+        visitor.visit(new ListEntry(describeLink(path, link, idCache, params.isVerbose(), params
+                .isNumeric()), errorLineOrNull));
     }
 
     private static String doCheck(IHDF5Reader reader, String path, IdCache idCache,
@@ -1029,7 +1061,7 @@ public class HDF5ArchiveTools
     private static String doFileSystemCheck(String path, IdCache idCache, ListParameters params,
             Link link) throws IOException
     {
-        final File f = new File(params.getDirectoryOnFileSystem(), path);
+        final File f = new File(params.getFileOrDirectoryOnFileSystem(), path);
         if (f.exists() == false)
         {
             return "Object " + path + " does not exist on file system.";

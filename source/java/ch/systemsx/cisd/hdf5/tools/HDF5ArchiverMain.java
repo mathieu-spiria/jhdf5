@@ -395,9 +395,9 @@ public class HDF5ArchiverMain
                     {
                         break;
                     }
-                    final String dir = (arguments.size() > 2) ? arguments.get(2) : "/";
+                    final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final ListingVisitor visitor = new ListingVisitor(true);
-                    archiver.list(dir, getFSRoot().getPath(), recursive, verbose, numeric,
+                    archiver.list(fileOrDir, getFSRoot().getPath(), recursive, verbose, numeric,
                             verifyAttributes ? Check.VERIFY_CRC_ATTR_FS : Check.VERIFY_CRC_FS,
                             visitor);
                     return visitor.isOK();
@@ -408,9 +408,9 @@ public class HDF5ArchiverMain
                     {
                         break;
                     }
-                    final String dir = (arguments.size() > 2) ? arguments.get(2) : "/";
+                    final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final ListingVisitor visitor = new ListingVisitor(testAgainstChecksums);
-                    archiver.list(dir, getFSRoot().getPath(), recursive, verbose, numeric,
+                    archiver.list(fileOrDir, getFSRoot().getPath(), recursive, verbose, numeric,
                             testAgainstChecksums ? Check.CHECK_CRC_ARCHIVE : Check.NO_CHECK,
                             visitor);
                     return visitor.isOK();
