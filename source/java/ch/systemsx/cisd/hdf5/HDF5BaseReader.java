@@ -101,13 +101,11 @@ class HDF5BaseReader
     {
         if (hdf5File.exists() == false)
         {
-            throw new HDF5JavaException("File " + this.hdf5File.getPath()
-                    + " does not exit.");
+            throw new HDF5JavaException("File " + this.hdf5File.getPath() + " does not exit.");
         }
         if (hdf5File.canRead() == false)
         {
-            throw new HDF5JavaException("File " + this.hdf5File.getPath()
-                    + " is not readable for this application.");
+            throw new HDF5JavaException("File " + this.hdf5File.getPath() + " not readable.");
         }
         return h5.openFileReadOnly(hdf5File.getPath(), fileRegistry);
     }
@@ -479,11 +477,8 @@ class HDF5BaseReader
                     {
                         public HDF5DataSetInformation call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
-                                    h5.openDataSet(fileId, dataSetPath,
-                                            registry);
-                            final int dataTypeId =
-                                    h5.getDataTypeForDataSet(dataSetId, registry);
+                            final int dataSetId = h5.openDataSet(fileId, dataSetPath, registry);
+                            final int dataTypeId = h5.getDataTypeForDataSet(dataSetId, registry);
                             final HDF5DataTypeInformation dataTypeInfo =
                                     getDataTypeInformation(dataTypeId);
                             final HDF5DataSetInformation dataSetInfo =
@@ -532,8 +527,7 @@ class HDF5BaseReader
         {
             return -1;
         }
-        final int attributeId =
-                h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
+        final int attributeId = h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
         return getEnumOrdinal(attributeId, typeVariantDataType);
     }
 
@@ -545,24 +539,21 @@ class HDF5BaseReader
             case BYTE:
             {
                 final byte[] data =
-                        h5.readAttributeAsByteArray(attributeId, enumType
-                                .getNativeTypeId(), 1);
+                        h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), 1);
                 enumOrdinal = data[0];
                 break;
             }
             case SHORT:
             {
                 final byte[] data =
-                        h5.readAttributeAsByteArray(attributeId, enumType
-                                .getNativeTypeId(), 2);
+                        h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), 2);
                 enumOrdinal = HDFNativeData.byteToShort(data, 0);
                 break;
             }
             case INT:
             {
                 final byte[] data =
-                        h5.readAttributeAsByteArray(attributeId, enumType
-                                .getNativeTypeId(), 4);
+                        h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), 4);
                 enumOrdinal = HDFNativeData.byteToInt(data, 0);
                 break;
             }
@@ -588,8 +579,7 @@ class HDF5BaseReader
     {
         HDF5DataClass dataClass = HDF5DataClass.classIdToDataClass(classTypeId);
         // Is it a boolean?
-        if (dataClass == HDF5DataClass.ENUM
-                && h5.dataTypesAreEqual(dataTypeId, booleanDataTypeId))
+        if (dataClass == HDF5DataClass.ENUM && h5.dataTypesAreEqual(dataTypeId, booleanDataTypeId))
         {
             dataClass = HDF5DataClass.BOOLEAN;
         }

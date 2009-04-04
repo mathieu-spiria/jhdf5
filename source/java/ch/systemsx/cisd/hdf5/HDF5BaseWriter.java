@@ -182,8 +182,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             if (hdf5File.canWrite() == false)
             {
-                throw new HDF5JavaException("File " + this.hdf5File.getPath()
-                        + " is not writable for this application.");
+                throw new HDF5JavaException("File " + this.hdf5File.getPath() + " not writable.");
             }
             return h5.openFileReadWrite(hdf5File.getPath(), enforce_1_8, fileRegistry);
         } else
@@ -196,8 +195,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             }
             if (directory.canWrite() == false)
             {
-                throw new HDF5JavaException("Directory " + directory.getPath()
-                        + " is not writable for this application.");
+                throw new HDF5JavaException("Directory " + directory.getPath() + " not writable.");
             }
             return h5.createFile(hdf5File.getPath(), enforce_1_8, fileRegistry);
         }
@@ -510,8 +508,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
         return dataSetId;
     }
 
-    void addAttribute(final String objectPath, final String name,
-            final int storageDataTypeId, final int nativeDataTypeId, final byte[] value)
+    void addAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final byte[] value)
     {
         assert objectPath != null;
         assert name != null;
@@ -524,9 +522,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
                     {
                         public Object call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
-                                    h5.openObject(fileId, objectPath,
-                                            registry);
+                            final int objectId = h5.openObject(fileId, objectPath, registry);
                             addAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
                                     value, registry);
                             return null; // Nothing to return.
@@ -544,8 +540,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             attributeId = h5.openAttribute(objectId, name, registry);
         } else
         {
-            attributeId =
-                    h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
         h5.writeAttribute(attributeId, nativeDataTypeId, value);
     }
