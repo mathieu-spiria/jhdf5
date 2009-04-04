@@ -20,6 +20,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
 import ch.systemsx.cisd.args4j.Argument;
 import ch.systemsx.cisd.args4j.CmdLineException;
 import ch.systemsx.cisd.args4j.CmdLineParser;
@@ -226,13 +228,21 @@ public class HDF5ArchiverMain
         helpPrinted = true;
     }
 
-    private void createArchiver()
+    private boolean createArchiver()
     {
         final FileFormat fileFormatEnum =
                 (fileFormat == 1) ? FileFormat.STRICTLY_1_6 : FileFormat.STRICTLY_1_8;
-        archiver =
-                new HDF5Archiver(archiveFile, command.isReadOnly(), noSync, fileFormatEnum,
-                        (stopOnError == false));
+        try
+        {
+            archiver =
+                    new HDF5Archiver(archiveFile, command.isReadOnly(), noSync, fileFormatEnum,
+                            (stopOnError == false));
+        } catch (HDF5JavaException ex)
+        {
+            // Problem opening the archive file.
+            System.err.println("Error opening archive file: " + ex.getMessage());
+            return false;
+        }
         archiver.getStrategy().setCompressAll(compressAll);
         for (String pattern : fileWhiteList)
         {
@@ -258,6 +268,7 @@ public class HDF5ArchiverMain
         {
             archiver.getStrategy().addToCompressionWhiteList(pattern);
         }
+        return true;
     }
 
     private File getFSRoot()
@@ -281,7 +292,10 @@ public class HDF5ArchiverMain
                         System.err.println("Nothing to archive.");
                         printHelp(true);
                     }
-                    createArchiver();
+                    if (createArchiver() == false)
+                    {
+                        break;
+                    }
                     if (rootOrNull != null)
                     {
                         for (int i = 2; i < arguments.size(); ++i)
@@ -298,7 +312,10 @@ public class HDF5ArchiverMain
                     }
                     break;
                 case EXTRACT:
-                    createArchiver();
+                    if (createArchiver() == false)
+                    {
+                        break;
+                    }
                     if (arguments.size() == 2)
                     {
                         archiver.extract(getFSRoot(), "/", verbose);
@@ -315,13 +332,20 @@ public class HDF5ArchiverMain
                     {
                         System.err.println("Nothing to delete.");
                         printHelp(true);
+                        break;
                     }
-                    createArchiver();
+                    if (createArchiver() == false)
+                    {
+                        break;
+                    }
                     archiver.delete(arguments.subList(2, arguments.size()), verbose);
                     break;
                 case VERIFY:
                 {
-                    createArchiver();
+                    if (createArchiver() == false)
+                    {
+                        break;
+                    }
                     final String dir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final List<HDF5ArchiveTools.ListEntry> list =
                             archiver.list(dir, getFSRoot().getPath(), recursive, verbose, numeric,
@@ -348,7 +372,10 @@ public class HDF5ArchiverMain
                 }
                 case LIST:
                 {
-                    createArchiver();
+                    if (createArchiver() == false)
+                    {
+                        break;
+                    }
                     final String dir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final List<HDF5ArchiveTools.ListEntry> list =
                             archiver
