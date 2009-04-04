@@ -351,7 +351,7 @@ class HDF5Reader implements IHDF5Reader
         }
     }
 
-    public long getNumberOfElement(final String objectPath)
+    public long getNumberOfElements(final String objectPath)
     {
         assert objectPath != null;
 

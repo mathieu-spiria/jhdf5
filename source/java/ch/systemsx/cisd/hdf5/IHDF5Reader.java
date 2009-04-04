@@ -262,7 +262,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * Returns the total number of elements of <var>objectPath</var>, if it is a data set. If it
      * exists but is not data set, it return 0 and if it does not exist, -1 is returned.
      */
-    public long getNumberOfElement(final String objectPath);
+    public long getNumberOfElements(final String objectPath);
 
     // /////////////////////
     // Group
