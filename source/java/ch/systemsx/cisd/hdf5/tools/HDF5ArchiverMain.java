@@ -101,10 +101,10 @@ public class HDF5ArchiverMain
     @Option(name = "e", longName = "exclude", metaVar = "REGEX", usage = "Regex of files to exclude")
     private List<String> fileBlackList = new ArrayList<String>();
 
-    @Option(longName = "include-dirs", metaVar = "REGEX", skipForExample = true, usage = "Regex of directories to include")
+    @Option(name = "I", longName = "include-dirs", metaVar = "REGEX", skipForExample = true, usage = "Regex of directories to include")
     private List<String> dirWhiteList = new ArrayList<String>();
 
-    @Option(longName = "exclude-dirs", metaVar = "REGEX", skipForExample = true, usage = "Regex of directories to exclude")
+    @Option(name = "E", longName = "exclude-dirs", metaVar = "REGEX", skipForExample = true, usage = "Regex of directories to exclude")
     private List<String> dirBlackList = new ArrayList<String>();
 
     @Option(name = "c", longName = "compress", metaVar = "REGEX", skipForExample = true, usage = "Regex of files to compress")
@@ -116,19 +116,22 @@ public class HDF5ArchiverMain
     @Option(name = "r", longName = "root-dir", metaVar = "DIR", usage = "Root directory for archiving / extracting")
     private File rootOrNull;
 
-    @Option(name = "R", longName = "recursive", usage = "Recursive output")
+    @Option(name = "D", longName = "suppress-directories", usage = "Supress output for directories itself for LIST and VERIFY")
+    private boolean suppressDirectoryEntries = false;
+
+    @Option(name = "R", longName = "recursive", usage = "Recursive LIST and VERIFY")
     private boolean recursive = false;
 
-    @Option(name = "v", longName = "verbose", usage = "Verbose output")
+    @Option(name = "v", longName = "verbose", usage = "Verbose output (all operations)")
     private boolean verbose = false;
 
-    @Option(name = "n", longName = "numeric", usage = "Use numeric values for mode, uid and gid when listing")
+    @Option(name = "n", longName = "numeric", usage = "Use numeric values for mode, uid and gid for LIST and VERIFY")
     private boolean numeric = false;
 
-    @Option(name = "t", longName = "test-checksums", usage = "Test CRC32 checksums of files in archive when listing")
+    @Option(name = "t", longName = "test-checksums", usage = "Test CRC32 checksums of files in archive for LIST")
     private boolean testAgainstChecksums = false;
 
-    @Option(name = "a", longName = "verify-attribues", usage = "Verify also file attributes (not just CRC32 checksums) when verifying archive")
+    @Option(name = "a", longName = "verify-attributes", usage = "Consider file attributes for VERIFY")
     private boolean verifyAttributes = false;
 
     @Option(longName = "file-format", skipForExample = true, usage = "Specifies the file format version when creating an archive (N=1 -> HDF51.6 (default), N=2 -> HDF51.8)")
@@ -397,7 +400,8 @@ public class HDF5ArchiverMain
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final ListingVisitor visitor = new ListingVisitor(true);
-                    archiver.list(fileOrDir, getFSRoot().getPath(), recursive, verbose, numeric,
+                    archiver.list(fileOrDir, getFSRoot().getPath(), recursive,
+                            suppressDirectoryEntries, verbose, numeric,
                             verifyAttributes ? Check.VERIFY_CRC_ATTR_FS : Check.VERIFY_CRC_FS,
                             visitor);
                     return visitor.isOK();
@@ -410,7 +414,8 @@ public class HDF5ArchiverMain
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final ListingVisitor visitor = new ListingVisitor(testAgainstChecksums);
-                    archiver.list(fileOrDir, getFSRoot().getPath(), recursive, verbose, numeric,
+                    archiver.list(fileOrDir, getFSRoot().getPath(), recursive,
+                            suppressDirectoryEntries, verbose, numeric,
                             testAgainstChecksums ? Check.CHECK_CRC_ARCHIVE : Check.NO_CHECK,
                             visitor);
                     return visitor.isOK();

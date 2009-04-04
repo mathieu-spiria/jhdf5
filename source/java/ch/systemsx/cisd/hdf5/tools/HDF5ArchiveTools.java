@@ -823,13 +823,17 @@ public class HDF5ArchiveTools
     {
         private String fileOrDirectoryInArchive;
 
-        private String fileOrDirectoryOnFileSystem;
+        private String directoryOnFileSystem;
+        
+        private ArchivingStrategy strategy;
 
         private boolean recursive;
 
         private boolean verbose;
 
         private boolean numeric;
+        
+        private boolean suppressDirectoryEntries;
 
         private Check check = Check.NO_CHECK;
 
@@ -841,13 +845,25 @@ public class HDF5ArchiveTools
 
         public ListParameters directoryOnFileSystem(String newDirectoryOnFileSystem)
         {
-            this.fileOrDirectoryOnFileSystem = newDirectoryOnFileSystem;
+            this.directoryOnFileSystem = newDirectoryOnFileSystem;
             return this;
         }
 
+        public ListParameters strategy(ArchivingStrategy newStrategy)
+        {
+            this.strategy = newStrategy;
+            return this;
+        }
+        
         public ListParameters recursive(boolean newRecursive)
         {
             this.recursive = newRecursive;
+            return this;
+        }
+
+        public ListParameters suppressDirectoryEntries(boolean newSuppressDirectories)
+        {
+            this.suppressDirectoryEntries = newSuppressDirectories;
             return this;
         }
 
@@ -876,7 +892,7 @@ public class HDF5ArchiveTools
                 throw new NullPointerException("fileOrDirectoryInArchive most not be null.");
             }
             fileOrDirectoryInArchive = FilenameUtils.separatorsToUnix(fileOrDirectoryInArchive);
-            if (VERIFY_FS.contains(check) && fileOrDirectoryOnFileSystem == null)
+            if (VERIFY_FS.contains(check) && directoryOnFileSystem == null)
             {
                 throw new NullPointerException(
                         "fileOrDirectoryOnFileSystem most not be null when verifying.");
@@ -894,12 +910,22 @@ public class HDF5ArchiveTools
 
         public String getFileOrDirectoryOnFileSystem()
         {
-            return fileOrDirectoryOnFileSystem;
+            return directoryOnFileSystem;
+        }
+
+        public ArchivingStrategy getStrategy()
+        {
+            return strategy;
         }
 
         public boolean isRecursive()
         {
             return recursive;
+        }
+
+        public boolean isSuppressDirectoryEntries()
+        {
+            return suppressDirectoryEntries;
         }
 
         public boolean isVerbose()
@@ -934,7 +960,12 @@ public class HDF5ArchiveTools
     {
         params.check();
         final String objectPath = params.getFileOrDirectoryInArchive();
-        if (reader.isGroup(objectPath, false))
+        final boolean isDirectory = reader.isGroup(objectPath, false); 
+        if (params.getStrategy().doExclude(objectPath, isDirectory))
+        {
+            return;
+        }
+        if (isDirectory)
         {
             list(reader, visitor, new IdCache(), objectPath, params, continueOnError);
         } else
@@ -982,7 +1013,14 @@ public class HDF5ArchiveTools
             try
             {
                 path = dirPrefix + link.getLinkName();
-                process(reader, visitor, idCache, path, params, link);
+                if (params.getStrategy().doExclude(path, link.isDirectory()))
+                {
+                    continue;
+                }
+                if (link.isDirectory() == false || params.isSuppressDirectoryEntries() == false)
+                {
+                    process(reader, visitor, idCache, path, params, link);
+                }
                 if (params.isRecursive() && link.isDirectory() && "/.".equals(path) == false)
                 {
                     list(reader, visitor, idCache, path, params, continueOnError);
