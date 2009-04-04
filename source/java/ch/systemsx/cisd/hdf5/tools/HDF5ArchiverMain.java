@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 import ch.systemsx.cisd.args4j.Argument;
 import ch.systemsx.cisd.args4j.CmdLineException;
@@ -239,8 +240,14 @@ public class HDF5ArchiverMain
                             (stopOnError == false));
         } catch (HDF5JavaException ex)
         {
-            // Problem opening the archive file.
+            // Problem opening the archive file: non readable / writable
             System.err.println("Error opening archive file: " + ex.getMessage());
+            return false;
+        } catch (HDF5LibraryException ex)
+        {
+            // Problem opening the archive file: corrupt file
+            System.err.println("Error opening archive file: corrupt file ["
+                    + ex.getClass().getSimpleName() + ": " + ex.getMessage() + "]");
             return false;
         }
         archiver.getStrategy().setCompressAll(compressAll);
