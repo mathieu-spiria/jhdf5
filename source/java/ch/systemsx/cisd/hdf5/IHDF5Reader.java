@@ -253,14 +253,16 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     public HDF5DataSetInformation getDataSetInformation(final String dataSetPath);
 
     /**
-     * Returns the total size (in bytes) of <var>objectPath</var>, if it is a data set. If it exists
-     * but is not data set, it return 0 and if it does not exist, -1 is returned.
+     * Returns the total size (in bytes) of <var>objectPath</var>. It is a failure condition if the
+     * <var>dataSetPath</var> does not exist or does not identify a data set. This method
+     * follows symbolic links.
      */
     public long getSize(final String objectPath);
 
     /**
-     * Returns the total number of elements of <var>objectPath</var>, if it is a data set. If it
-     * exists but is not data set, it return 0 and if it does not exist, -1 is returned.
+     * Returns the total number of elements of <var>objectPath</var> It is a failure condition if
+     * the <var>dataSetPath</var> does not exist or does not identify a data set. This method
+     * follows symbolic links.
      */
     public long getNumberOfElements(final String objectPath);
 
