@@ -81,7 +81,7 @@ interface IHDF5DoubleReader
      * @param memoryOffset The offset in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public long[] readToDoubleMDArrayWithOffset(final String objectPath, 
+    public int[] readToDoubleMDArrayWithOffset(final String objectPath, 
     				final MDDoubleArray array, final int[] memoryOffset);
 
     /**
@@ -95,7 +95,7 @@ interface IHDF5DoubleReader
      * @param memoryOffset The offset of the block in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public long[] readToDoubleMDArrayBlockWithOffset(final String objectPath,
+    public int[] readToDoubleMDArrayBlockWithOffset(final String objectPath,
             final MDDoubleArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset);
 

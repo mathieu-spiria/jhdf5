@@ -81,7 +81,7 @@ interface IHDF5__Name__Reader
      * @param memoryOffset The offset in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public long[] readTo__Name__MDArrayWithOffset(final String objectPath, 
+    public int[] readTo__Name__MDArrayWithOffset(final String objectPath, 
     				final MD__Name__Array array, final int[] memoryOffset);
 
     /**
@@ -95,7 +95,7 @@ interface IHDF5__Name__Reader
      * @param memoryOffset The offset of the block in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public long[] readTo__Name__MDArrayBlockWithOffset(final String objectPath,
+    public int[] readTo__Name__MDArrayBlockWithOffset(final String objectPath,
             final MD__Name__Array array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset);
 

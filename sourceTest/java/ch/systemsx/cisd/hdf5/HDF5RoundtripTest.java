@@ -1417,7 +1417,7 @@ public class HDF5RoundtripTest
         final int diskOfsY = 0;
         final int blockSizeX = 3;
         final int blockSizeY = 2;
-        final long[] effectiveDimensions =
+        final int[] effectiveDimensions =
                 reader.readToFloatMDArrayBlockWithOffset(dsName, arrayRead, new int[]
                     { blockSizeX, blockSizeY }, new long[]
                     { diskOfsX, diskOfsY }, new int[]

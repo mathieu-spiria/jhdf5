@@ -2387,14 +2387,14 @@ class HDF5Reader implements IHDF5Reader
                 offsetX, offsetY);
     }
 
-    public long[] readToByteMDArrayBlockWithOffset(String objectPath, MDByteArray array,
+    public int[] readToByteMDArrayBlockWithOffset(String objectPath, MDByteArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
         return byteReader.readToByteMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
-    public long[] readToByteMDArrayWithOffset(String objectPath, MDByteArray array,
+    public int[] readToByteMDArrayWithOffset(String objectPath, MDByteArray array,
             int[] memoryOffset)
     {
         return byteReader.readToByteMDArrayWithOffset(objectPath, array, memoryOffset);
@@ -2477,14 +2477,14 @@ class HDF5Reader implements IHDF5Reader
                 offsetX, offsetY);
     }
 
-    public long[] readToDoubleMDArrayBlockWithOffset(String objectPath, MDDoubleArray array,
+    public int[] readToDoubleMDArrayBlockWithOffset(String objectPath, MDDoubleArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
         return doubleReader.readToDoubleMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
-    public long[] readToDoubleMDArrayWithOffset(String objectPath, MDDoubleArray array,
+    public int[] readToDoubleMDArrayWithOffset(String objectPath, MDDoubleArray array,
             int[] memoryOffset)
     {
         return doubleReader.readToDoubleMDArrayWithOffset(objectPath, array, memoryOffset);
@@ -2567,14 +2567,14 @@ class HDF5Reader implements IHDF5Reader
                 offsetX, offsetY);
     }
 
-    public long[] readToFloatMDArrayBlockWithOffset(String objectPath, MDFloatArray array,
+    public int[] readToFloatMDArrayBlockWithOffset(String objectPath, MDFloatArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
         return floatReader.readToFloatMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
-    public long[] readToFloatMDArrayWithOffset(String objectPath, MDFloatArray array,
+    public int[] readToFloatMDArrayWithOffset(String objectPath, MDFloatArray array,
             int[] memoryOffset)
     {
         return floatReader.readToFloatMDArrayWithOffset(objectPath, array, memoryOffset);
@@ -2657,14 +2657,14 @@ class HDF5Reader implements IHDF5Reader
                 offsetY);
     }
 
-    public long[] readToIntMDArrayBlockWithOffset(String objectPath, MDIntArray array,
+    public int[] readToIntMDArrayBlockWithOffset(String objectPath, MDIntArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
         return intReader.readToIntMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
-    public long[] readToIntMDArrayWithOffset(String objectPath, MDIntArray array, int[] memoryOffset)
+    public int[] readToIntMDArrayWithOffset(String objectPath, MDIntArray array, int[] memoryOffset)
     {
         return intReader.readToIntMDArrayWithOffset(objectPath, array, memoryOffset);
     }
@@ -2746,14 +2746,14 @@ class HDF5Reader implements IHDF5Reader
                 offsetX, offsetY);
     }
 
-    public long[] readToLongMDArrayBlockWithOffset(String objectPath, MDLongArray array,
+    public int[] readToLongMDArrayBlockWithOffset(String objectPath, MDLongArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
         return longReader.readToLongMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
-    public long[] readToLongMDArrayWithOffset(String objectPath, MDLongArray array,
+    public int[] readToLongMDArrayWithOffset(String objectPath, MDLongArray array,
             int[] memoryOffset)
     {
         return longReader.readToLongMDArrayWithOffset(objectPath, array, memoryOffset);
@@ -2836,14 +2836,14 @@ class HDF5Reader implements IHDF5Reader
                 offsetX, offsetY);
     }
 
-    public long[] readToShortMDArrayBlockWithOffset(String objectPath, MDShortArray array,
+    public int[] readToShortMDArrayBlockWithOffset(String objectPath, MDShortArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
         return shortReader.readToShortMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
-    public long[] readToShortMDArrayWithOffset(String objectPath, MDShortArray array,
+    public int[] readToShortMDArrayWithOffset(String objectPath, MDShortArray array,
             int[] memoryOffset)
     {
         return shortReader.readToShortMDArrayWithOffset(objectPath, array, memoryOffset);

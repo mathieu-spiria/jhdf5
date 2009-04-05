@@ -81,7 +81,7 @@ interface IHDF5FloatReader
      * @param memoryOffset The offset in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public long[] readToFloatMDArrayWithOffset(final String objectPath, 
+    public int[] readToFloatMDArrayWithOffset(final String objectPath, 
     				final MDFloatArray array, final int[] memoryOffset);
 
     /**
@@ -95,7 +95,7 @@ interface IHDF5FloatReader
      * @param memoryOffset The offset of the block in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public long[] readToFloatMDArrayBlockWithOffset(final String objectPath,
+    public int[] readToFloatMDArrayBlockWithOffset(final String objectPath,
             final MDFloatArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset);
 
