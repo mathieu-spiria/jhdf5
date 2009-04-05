@@ -158,15 +158,15 @@ class HDF5IntReader implements IHDF5IntReader
         return baseReader.runner.call(readCallable);
     }
 
-    public void readToIntMDArrayWithOffset(final String objectPath, final MDIntArray array,
+    public long[] readToIntMDArrayWithOffset(final String objectPath, final MDIntArray array,
             final int[] memoryOffset)
     {
         assert objectPath != null;
 
         baseReader.checkOpen();
-        final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
+        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
-                public Void call(ICleanUpRegistry registry)
+                public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
@@ -178,22 +178,22 @@ class HDF5IntReader implements IHDF5IntReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array.
                             getAsFlatArray());
-                    return null; // Nothing to return.
+                    return spaceParams.dimensions;
                 }
             };
-        baseReader.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
-    public void readToIntMDArrayBlockWithOffset(final String objectPath,
+    public long[] readToIntMDArrayBlockWithOffset(final String objectPath,
             final MDIntArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
     {
         assert objectPath != null;
 
         baseReader.checkOpen();
-        final ICallableWithCleanUp<Void> readCallable = new ICallableWithCleanUp<Void>()
+        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
-                public Void call(ICleanUpRegistry registry)
+                public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
@@ -205,10 +205,10 @@ class HDF5IntReader implements IHDF5IntReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
                             .getAsFlatArray());
-                    return null; // Nothing to return.
+                    return spaceParams.dimensions;
                 }
             };
-        baseReader.runner.call(readCallable);
+        return baseReader.runner.call(readCallable);
     }
 
     public int[] readIntArrayBlock(final String objectPath, final int blockSize,

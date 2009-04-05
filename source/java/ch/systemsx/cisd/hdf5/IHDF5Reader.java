@@ -541,6 +541,23 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
             final long offset) throws HDF5JavaException;
 
     /**
+     * Reads a block from data set <var>objectPath</var> as byte array (of rank 1) into
+     * <var>buffer</var>. <em>Must not be called for data sets of rank higher than 1!</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param buffer The buffer to read the values in.
+     * @param blockSize The block size to be read. The effective block size is actually {@code
+     *            min(blockSize, buffer.length - memoryOffset, filesize - offset)}.
+     * @param offset The offset of the block in the data set (zero-based).
+     * @param memoryOffset The offset of the block in <var>buffer</var> (zero-based).
+     * @return The effective block size.
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public int readAsByteArrayToBlockWithOffset(final String objectPath, final byte[] buffer,
+            final int blockSize, final long offset, final int memoryOffset)
+            throws HDF5JavaException;
+
+    /**
      * Provides all natural blocks of this one-dimensional data set to iterate over.
      * <em>Must not be called for data sets of rank higher than 1!</em>
      * <p>

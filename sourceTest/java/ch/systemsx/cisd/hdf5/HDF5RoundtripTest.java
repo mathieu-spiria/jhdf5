@@ -1415,17 +1415,20 @@ public class HDF5RoundtripTest
         final int memOfsY = 3;
         final int diskOfsX = 1;
         final int diskOfsY = 0;
-        final int blockSizeX = 2;
+        final int blockSizeX = 3;
         final int blockSizeY = 2;
-        reader.readToFloatMDArrayBlockWithOffset(dsName, arrayRead, new int[]
-            { blockSizeX, blockSizeY }, new long[]
-            { diskOfsX, diskOfsY }, new int[]
-            { memOfsX, memOfsY });
+        final long[] effectiveDimensions =
+                reader.readToFloatMDArrayBlockWithOffset(dsName, arrayRead, new int[]
+                    { blockSizeX, blockSizeY }, new long[]
+                    { diskOfsX, diskOfsY }, new int[]
+                    { memOfsX, memOfsY });
         reader.close();
+        assertEquals(blockSizeX - 1, effectiveDimensions[0]);
+        assertEquals(blockSizeY, effectiveDimensions[1]);
         final boolean[][] isSet = new boolean[10][10];
-        for (int i = 0; i < blockSizeX; ++i)
+        for (int i = 0; i < effectiveDimensions[0]; ++i)
         {
-            for (int j = 0; j < blockSizeY; ++j)
+            for (int j = 0; j < effectiveDimensions[1]; ++j)
             {
                 isSet[memOfsX + i][memOfsY + j] = true;
                 assertEquals("(" + i + "," + j + ")", arrayWritten.get(diskOfsX + i, diskOfsY + j),
@@ -2309,7 +2312,7 @@ public class HDF5RoundtripTest
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         writer.writeShort(timeDurationDS, timeDurationInSeconds);
-        writer.addTypeVariant(timeDurationDS, HDF5TimeUnit.SECONDS.getTypeVariant());
+        writer.setTypeVariant(timeDurationDS, HDF5TimeUnit.SECONDS.getTypeVariant());
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationDS);
@@ -2380,34 +2383,34 @@ public class HDF5RoundtripTest
         writer.writeIntArray(datasetName, new int[0]);
         final String booleanAttributeName = "Boolean Attribute";
         final boolean booleanAttributeValueWritten = true;
-        writer.addBooleanAttribute(datasetName, booleanAttributeName, booleanAttributeValueWritten);
+        writer.setBooleanAttribute(datasetName, booleanAttributeName, booleanAttributeValueWritten);
         assertTrue(writer.hasAttribute(datasetName, booleanAttributeName));
         final String integerAttributeName = "Integer Attribute";
         final int integerAttributeValueWritten = 17;
-        writer.addIntAttribute(datasetName, integerAttributeName, integerAttributeValueWritten);
+        writer.setIntAttribute(datasetName, integerAttributeName, integerAttributeValueWritten);
         final String byteAttributeName = "Byte Attribute";
         final byte byteAttributeValueWritten = 17;
-        writer.addByteAttribute(datasetName, byteAttributeName, byteAttributeValueWritten);
+        writer.setByteAttribute(datasetName, byteAttributeName, byteAttributeValueWritten);
         final String stringAttributeName = "String Attribute";
         final String stringAttributeValueWritten = "Some String Value";
-        writer.addStringAttribute(datasetName, stringAttributeName, stringAttributeValueWritten);
+        writer.setStringAttribute(datasetName, stringAttributeName, stringAttributeValueWritten);
         final String enumAttributeName = "Enum Attribute";
         final HDF5EnumerationType enumType = writer.getEnumType("MyEnum", new String[]
             { "ONE", "TWO", "THREE" }, false);
         final HDF5EnumerationValue enumAttributeValueWritten =
                 new HDF5EnumerationValue(enumType, "TWO");
-        writer.addEnumAttribute(datasetName, enumAttributeName, enumAttributeValueWritten);
+        writer.setEnumAttribute(datasetName, enumAttributeName, enumAttributeValueWritten);
         final String volatileAttributeName = "Some Volatile Attribute";
-        writer.addIntAttribute(datasetName, volatileAttributeName, 21);
+        writer.setIntAttribute(datasetName, volatileAttributeName, 21);
         writer.deleteAttribute(datasetName, volatileAttributeName);
         final String floatArrayAttributeName = "Float Array Attribute";
         final float[] floatArrayAttribute = new float[]
             { 3f, 3.1f, 3.14f, 3.142f, 3.1416f };
-        writer.addFloatArrayAttribute(datasetName, floatArrayAttributeName, floatArrayAttribute);
+        writer.setFloatArrayAttribute(datasetName, floatArrayAttributeName, floatArrayAttribute);
         final String byteArrayAttributeName = "Byte Array Attribute";
         final byte[] byteArrayAttribute = new byte[]
             { 1, 2, 3 };
-        writer.addByteArrayAttribute(datasetName, byteArrayAttributeName, byteArrayAttribute);
+        writer.setByteArrayAttribute(datasetName, byteArrayAttributeName, byteArrayAttribute);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertTrue(reader.hasAttribute(datasetName, booleanAttributeName));
@@ -2417,8 +2420,7 @@ public class HDF5RoundtripTest
         final int integerAttributeValueRead =
                 reader.getIntAttribute(datasetName, integerAttributeName);
         assertEquals(integerAttributeValueWritten, integerAttributeValueRead);
-        final byte byteAttributeValueRead =
-                reader.getByteAttribute(datasetName, byteAttributeName);
+        final byte byteAttributeValueRead = reader.getByteAttribute(datasetName, byteAttributeName);
         assertEquals(byteAttributeValueWritten, byteAttributeValueRead);
         HDF5DataTypeInformation info =
                 reader.getAttributeInformation(datasetName, integerAttributeName);
@@ -2507,7 +2509,7 @@ public class HDF5RoundtripTest
         writer.createSoftLink("/some", "/linkToSome");
         writer.createSoftLink("/some/flag", "/linkToFlag");
         writer.createHardLink("/some/flag", "/some/flag2");
-        writer.addBooleanAttribute("/some/flag2", "test", true);
+        writer.setBooleanAttribute("/some/flag2", "test", true);
         assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/some"));
         assertEquals(HDF5ObjectType.SOFT_LINK, writer.getObjectType("/linkToSome", false));
         assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/some"));
@@ -3798,7 +3800,7 @@ public class HDF5RoundtripTest
         writer.writeDouble("DINFINITY", Double.NEGATIVE_INFINITY);
         writer.writeDouble("verySmallFloat", 1e-100);
         writer.writeDouble("veryLargeFloat", 1e+100);
-        writer.addDoubleAttribute("pi", "eps", 1e-5);
+        writer.setDoubleAttribute("pi", "eps", 1e-5);
         writer.writeLong("smallInteger", 17L);
         writer.writeLong("largeInteger", Long.MAX_VALUE);
         writer.close();

@@ -79,8 +79,9 @@ interface IHDF5LongReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param array The array to read the data into.
      * @param memoryOffset The offset in the array to write the data to.
+     * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public void readToLongMDArrayWithOffset(final String objectPath, 
+    public long[] readToLongMDArrayWithOffset(final String objectPath, 
     				final MDLongArray array, final int[] memoryOffset);
 
     /**
@@ -92,8 +93,9 @@ interface IHDF5LongReader
      * @param blockDimensions The size of the block to read along each axis.
      * @param offset The offset of the block in the data set.
      * @param memoryOffset The offset of the block in the array to write the data to.
+     * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public void readToLongMDArrayBlockWithOffset(final String objectPath,
+    public long[] readToLongMDArrayBlockWithOffset(final String objectPath,
             final MDLongArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset);
 

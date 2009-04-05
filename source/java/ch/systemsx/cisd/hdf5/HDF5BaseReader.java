@@ -260,9 +260,18 @@ class HDF5BaseReader
     DataSpaceParameters getSpaceParameters(final int dataSetId, final long offset,
             final int blockSize, ICleanUpRegistry registry)
     {
+        return getSpaceParameters(dataSetId, 0, offset, blockSize, registry);
+    }
+
+    /**
+     * Returns the {@link DataSpaceParameters} for a 1d block of the given <var>dataSetId</var>.
+     */
+    DataSpaceParameters getSpaceParameters(final int dataSetId, final long memoryOffset,
+            final long offset, final int blockSize, ICleanUpRegistry registry)
+    {
         final int memorySpaceId;
         final int dataSpaceId;
-        final int actualBlockSize;
+        final int effectiveBlockSize;
         final long[] dimensions;
         if (blockSize > 0)
         {
@@ -274,26 +283,33 @@ class HDF5BaseReader
                         + dimensions.length + ")");
             }
             final long size = dimensions[0];
-            final long maxBlockSize = size - offset;
-            if (maxBlockSize <= 0)
+            final long maxFileBlockSize = size - offset;
+            if (maxFileBlockSize <= 0)
             {
                 throw new HDF5JavaException("Offset " + offset + " >= Size " + size);
             }
-            actualBlockSize = (int) Math.min(blockSize, maxBlockSize);
+            final long maxMemoryBlockSize = size - memoryOffset;
+            if (maxMemoryBlockSize <= 0)
+            {
+                throw new HDF5JavaException("Memory offset " + memoryOffset + " >= Size " + size);
+            }
+            effectiveBlockSize =
+                    (int) Math.min(blockSize, Math.min(maxMemoryBlockSize, maxFileBlockSize));
             final long[] blockShape = new long[]
-                { actualBlockSize };
+                { effectiveBlockSize };
             h5.setHyperslabBlock(dataSpaceId, new long[]
                 { offset }, blockShape);
             memorySpaceId = h5.createSimpleDataSpace(blockShape, registry);
-
+            h5.setHyperslabBlock(memorySpaceId, new long[]
+                { memoryOffset }, blockShape);
         } else
         {
             memorySpaceId = HDF5Constants.H5S_ALL;
             dataSpaceId = HDF5Constants.H5S_ALL;
             dimensions = h5.getDataDimensions(dataSetId);
-            actualBlockSize = getOneDimensionalArraySize(dimensions);
+            effectiveBlockSize = getOneDimensionalArraySize(dimensions);
         }
-        return new DataSpaceParameters(memorySpaceId, dataSpaceId, actualBlockSize, dimensions);
+        return new DataSpaceParameters(memorySpaceId, dataSpaceId, effectiveBlockSize, dimensions);
     }
 
     /**
@@ -347,9 +363,21 @@ class HDF5BaseReader
     DataSpaceParameters getBlockSpaceParameters(final int dataSetId, final int[] memoryOffset,
             final int[] memoryDimensions, ICleanUpRegistry registry)
     {
+        assert memoryOffset != null;
+        assert memoryDimensions != null;
+        assert memoryDimensions.length == memoryOffset.length;
+
         final long[] dimensions = h5.getDataDimensions(dataSetId);
         final int memorySpaceId =
                 h5.createSimpleDataSpace(MDArray.toLong(memoryDimensions), registry);
+        for (int i = 0; i < dimensions.length; ++i)
+        {
+            if (dimensions[i] + memoryOffset[i] > memoryDimensions[i])
+            {
+                throw new HDF5JavaException("Dimensions " + dimensions[i] + " + memory offset "
+                        + memoryOffset[i] + " >= memory buffer " + memoryDimensions[i]);
+            }
+        }
         h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset), dimensions);
         return new DataSpaceParameters(memorySpaceId, H5S_ALL, MDArray.getLength(dimensions),
                 dimensions);
@@ -385,12 +413,19 @@ class HDF5BaseReader
         effectiveBlockDimensions = new long[blockDimensions.length];
         for (int i = 0; i < offset.length; ++i)
         {
-            final long maxBlockSize = dimensions[i] - offset[i];
-            if (maxBlockSize <= 0)
+            final long maxFileBlockSize = dimensions[i] - offset[i];
+            if (maxFileBlockSize <= 0)
             {
                 throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
             }
-            effectiveBlockDimensions[i] = Math.min(blockDimensions[i], maxBlockSize);
+            final long maxMemoryBlockSize = memoryDimensions[i] - memoryOffset[i];
+            if (maxMemoryBlockSize <= 0)
+            {
+                throw new HDF5JavaException("Memory offset " + memoryOffset[i] + " >= Size "
+                        + memoryDimensions[i]);
+            }
+            effectiveBlockDimensions[i] =
+                    Math.min(blockDimensions[i], Math.min(maxMemoryBlockSize, maxFileBlockSize));
         }
         h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
         memorySpaceId = h5.createSimpleDataSpace(MDArray.toLong(memoryDimensions), registry);
