@@ -1,4 +1,4 @@
 @echo off
-rem Example script, adapt to your system
+rem Example script, put in the fully qualified path to the jar file.
 
-java -jar jhdf5-batteries_included_lin_win_mac_sun.jar %1 %2 %3 %4 %5 %6 %7 %8 %9
+java -jar cisd-jhdf5-batteries_included_lin_win_mac.jar %1 %2 %3 %4 %5 %6 %7 %8 %9
