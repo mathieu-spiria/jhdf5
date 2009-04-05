@@ -732,6 +732,13 @@ public class HDF5ArchiveTools
                                             numeric), idCache.getGroup(link, numeric), link
                                             .getLastModified()
                                             * MILLIS_PER_SECOND, path, link.tryGetLinkTarget());
+                } else if (link.isDirectory())
+                {
+                    return String.format(
+                            "%s\t%s\t%s\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t        \t%5$s",
+                            getPermissionString(link, numeric), idCache.getUser(link, numeric),
+                            idCache.getGroup(link, numeric), link.getLastModified()
+                                    * MILLIS_PER_SECOND, path);
                 } else
                 {
                     return String
@@ -824,7 +831,7 @@ public class HDF5ArchiveTools
         private String fileOrDirectoryInArchive;
 
         private String directoryOnFileSystem;
-        
+
         private ArchivingStrategy strategy;
 
         private boolean recursive;
@@ -832,7 +839,7 @@ public class HDF5ArchiveTools
         private boolean verbose;
 
         private boolean numeric;
-        
+
         private boolean suppressDirectoryEntries;
 
         private Check check = Check.NO_CHECK;
@@ -854,7 +861,7 @@ public class HDF5ArchiveTools
             this.strategy = newStrategy;
             return this;
         }
-        
+
         public ListParameters recursive(boolean newRecursive)
         {
             this.recursive = newRecursive;
@@ -960,7 +967,7 @@ public class HDF5ArchiveTools
     {
         params.check();
         final String objectPath = params.getFileOrDirectoryInArchive();
-        final boolean isDirectory = reader.isGroup(objectPath, false); 
+        final boolean isDirectory = reader.isGroup(objectPath, false);
         if (params.getStrategy().doExclude(objectPath, isDirectory))
         {
             return;
@@ -1334,10 +1341,6 @@ public class HDF5ArchiveTools
 
     static String hashToString(final int checksum)
     {
-        if (checksum == 0)
-        {
-            return "00000000";
-        }
         final char buf[] = new char[8];
         int w = checksum;
         for (int i = 0, x = 7; i < 4; i++)
