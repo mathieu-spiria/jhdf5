@@ -69,13 +69,6 @@ public class HDF5ArchiveTools
 
     private static final int MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT = 100;
 
-    private final static int MB = 1024 * 1024;
-
-    /**
-     * Threshold for switching to block-wise I/O.
-     */
-    private final static int FILE_SIZE_THRESHOLD = 10 * MB;
-
     /**
      * Cache for group affiliations of the current user.
      */
@@ -208,19 +201,20 @@ public class HDF5ArchiveTools
      * <var>root</var> which will be removed from the path before adding any file to the archive.
      */
     public static void archive(IHDF5Writer writer, ArchivingStrategy strategy, File root,
-            File path, boolean continueOnError, boolean verbose) throws IOExceptionUnchecked
+            File path, boolean continueOnError, boolean verbose, byte[] buffer)
+            throws IOExceptionUnchecked
     {
         final boolean ok;
         int crc32 = 0;
         if (path.isDirectory())
         {
-            ok = archiveDirectory(writer, strategy, root, path, continueOnError, verbose);
+            ok = archiveDirectory(writer, strategy, root, path, continueOnError, verbose, buffer);
         } else if (path.isFile())
         {
             final Link pseudoLinkForChecksum = new Link();
             ok =
                     archiveFile(writer, strategy, root, path, pseudoLinkForChecksum,
-                            continueOnError, verbose);
+                            continueOnError, verbose, buffer);
             crc32 = pseudoLinkForChecksum.getCrc32();
         } else
         {
@@ -270,7 +264,7 @@ public class HDF5ArchiveTools
     }
 
     private static boolean archiveDirectory(IHDF5Writer writer, ArchivingStrategy strategy,
-            File root, File dir, boolean continueOnError, boolean verbose)
+            File root, File dir, boolean continueOnError, boolean verbose, byte[] buffer)
             throws ArchivingException
     {
         final File[] fileEntries = dir.listFiles();
@@ -314,7 +308,8 @@ public class HDF5ArchiveTools
                     continue;
                 }
                 final boolean ok =
-                        archiveDirectory(writer, strategy, root, file, continueOnError, verbose);
+                        archiveDirectory(writer, strategy, root, file, continueOnError, verbose,
+                                buffer);
                 if (ok == false)
                 {
                     linkIt.remove();
@@ -348,7 +343,7 @@ public class HDF5ArchiveTools
                 {
                     final boolean ok =
                             archiveFile(writer, strategy, root, file, link, continueOnError,
-                                    verbose);
+                                    verbose, buffer);
                     if (ok == false)
                     {
                         linkIt.remove();
@@ -403,7 +398,7 @@ public class HDF5ArchiveTools
     }
 
     private static boolean archiveFile(IHDF5Writer writer, ArchivingStrategy strategy, File root,
-            File file, Link link, boolean continueOnError, boolean verbose)
+            File file, Link link, boolean continueOnError, boolean verbose, byte[] buffer)
             throws ArchivingException
     {
         boolean ok = true;
@@ -412,7 +407,7 @@ public class HDF5ArchiveTools
         try
         {
             final long size = file.length();
-            final int crc32 = copyToHDF5(file, writer, hdf5ObjectPath, size, compression);
+            final int crc32 = copyToHDF5(file, writer, hdf5ObjectPath, size, compression, buffer);
             link.setCrc32(crc32);
             writeToConsole(hdf5ObjectPath, verbose);
         } catch (IOException ex)
@@ -448,7 +443,8 @@ public class HDF5ArchiveTools
      * Extracts the <var>path</var> from the HDF5 archive and stores it relative to <var>root</var>.
      */
     public static void extract(IHDF5Reader reader, ArchivingStrategy strategy, File root,
-            String path, boolean continueOnError, boolean verbose) throws UnarchivingException
+            String path, boolean continueOnError, boolean verbose, byte[] buffer)
+            throws UnarchivingException
     {
         final String unixPath = FilenameUtils.separatorsToUnix(path);
         if (reader.exists(unixPath, false) == false)
@@ -462,11 +458,11 @@ public class HDF5ArchiveTools
         if (isDir)
         {
             extractDirectory(reader, strategy, new GroupCache(), root, unixPath, linkOrNull,
-                    continueOnError, verbose);
+                    continueOnError, verbose, buffer);
         } else
         {
             extractFile(reader, strategy, new GroupCache(), root, unixPath, linkOrNull,
-                    continueOnError, verbose);
+                    continueOnError, verbose, buffer);
         }
     }
 
@@ -532,7 +528,7 @@ public class HDF5ArchiveTools
 
     private static void extractDirectory(IHDF5Reader reader, ArchivingStrategy strategy,
             GroupCache groupCache, File root, String groupPath, Link dirLinkOrNull,
-            boolean continueOnError, boolean verbose) throws UnarchivingException
+            boolean continueOnError, boolean verbose, byte[] buffer) throws UnarchivingException
     {
         String objectPathOrNull = null;
         try
@@ -552,11 +548,11 @@ public class HDF5ArchiveTools
                     }
                     writeToConsole(objectPathOrNull, verbose);
                     extractDirectory(reader, strategy, groupCache, root, objectPathOrNull, link,
-                            continueOnError, verbose);
+                            continueOnError, verbose, buffer);
                 } else if (link.isRegularFile() || link.isSymLink())
                 {
                     extractFile(reader, strategy, groupCache, root, objectPathOrNull, link,
-                            continueOnError, verbose);
+                            continueOnError, verbose, buffer);
                 } else
                 {
                     dealWithError(new UnarchivingException(objectPathOrNull,
@@ -589,7 +585,7 @@ public class HDF5ArchiveTools
 
     private static void extractFile(IHDF5Reader reader, ArchivingStrategy strategy,
             GroupCache groupCache, File root, String hdf5ObjectPath, Link linkOrNull,
-            boolean continueOnError, boolean verbose) throws UnarchivingException
+            boolean continueOnError, boolean verbose, byte[] buffer) throws UnarchivingException
     {
         if (strategy.doExclude(hdf5ObjectPath, false))
         {
@@ -637,7 +633,7 @@ public class HDF5ArchiveTools
         try
         {
             final long size = reader.getDataSetInformation(hdf5ObjectPath).getSize();
-            final int crc32 = copyFromHDF5(reader, hdf5ObjectPath, size, file);
+            final int crc32 = copyFromHDF5(reader, hdf5ObjectPath, size, file, buffer);
             restoreAttributes(file, linkOrNull, groupCache);
             final boolean checksumOK = (crc32 == storedCrc32);
             writeToConsole(hdf5ObjectPath, checksumOK, crc32, verbose);
@@ -734,11 +730,13 @@ public class HDF5ArchiveTools
                                             * MILLIS_PER_SECOND, path, link.tryGetLinkTarget());
                 } else if (link.isDirectory())
                 {
-                    return String.format(
-                            "%s\t%s\t%s\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t        \t%5$s",
-                            getPermissionString(link, numeric), idCache.getUser(link, numeric),
-                            idCache.getGroup(link, numeric), link.getLastModified()
-                                    * MILLIS_PER_SECOND, path);
+                    return String
+                            .format(
+                                    "%s\t%s\t%s\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t        \t%5$s",
+                                    getPermissionString(link, numeric), idCache.getUser(link,
+                                            numeric), idCache.getGroup(link, numeric), link
+                                            .getLastModified()
+                                            * MILLIS_PER_SECOND, path);
                 } else
                 {
                     return String
@@ -806,7 +804,8 @@ public class HDF5ArchiveTools
 
     /**
      * An enumeration for the checks to be performed while running
-     * {@link HDF5ArchiveTools#list(IHDF5Reader, ListParameters, ListEntryVisitor, boolean)}.
+     * {@link HDF5ArchiveTools#list(IHDF5Reader, ListParameters, ListEntryVisitor, boolean, byte[])}
+     * .
      */
     public enum Check
     {
@@ -963,7 +962,7 @@ public class HDF5ArchiveTools
      * Returns a listing of entries in <var>dir</var> in the archive provided by <var>reader</var>.
      */
     public static void list(IHDF5Reader reader, ListParameters params, ListEntryVisitor visitor,
-            boolean continueOnError)
+            boolean continueOnError, byte[] buffer)
     {
         params.check();
         final String objectPath = params.getFileOrDirectoryInArchive();
@@ -974,7 +973,7 @@ public class HDF5ArchiveTools
         }
         if (isDirectory)
         {
-            list(reader, visitor, new IdCache(), objectPath, params, continueOnError);
+            list(reader, visitor, new IdCache(), objectPath, params, continueOnError, buffer);
         } else
         {
             final String dir = FilenameUtils.getFullPathNoEndSeparator(objectPath);
@@ -989,7 +988,7 @@ public class HDF5ArchiveTools
             }
             try
             {
-                process(reader, visitor, new IdCache(), objectPath, params, linkOrNull);
+                process(reader, visitor, new IdCache(), objectPath, params, linkOrNull, buffer);
             } catch (IOException ex)
             {
                 final File f = new File(objectPath);
@@ -1005,7 +1004,7 @@ public class HDF5ArchiveTools
      * Adds the entries of <var>dir</var> to <var>entries</var> recursively.
      */
     private static void list(IHDF5Reader reader, ListEntryVisitor visitor, IdCache idCache,
-            String dir, ListParameters params, boolean continueOnError)
+            String dir, ListParameters params, boolean continueOnError, byte[] buffer)
     {
         if (reader.exists(dir, false) == false)
         {
@@ -1026,11 +1025,11 @@ public class HDF5ArchiveTools
                 }
                 if (link.isDirectory() == false || params.isSuppressDirectoryEntries() == false)
                 {
-                    process(reader, visitor, idCache, path, params, link);
+                    process(reader, visitor, idCache, path, params, link, buffer);
                 }
                 if (params.isRecursive() && link.isDirectory() && "/.".equals(path) == false)
                 {
-                    list(reader, visitor, idCache, path, params, continueOnError);
+                    list(reader, visitor, idCache, path, params, continueOnError, buffer);
                 }
             } catch (IOException ex)
             {
@@ -1044,28 +1043,28 @@ public class HDF5ArchiveTools
     }
 
     private static void process(IHDF5Reader reader, ListEntryVisitor visitor, IdCache idCache,
-            String path, ListParameters params, Link link) throws IOException
+            String path, ListParameters params, Link link, byte[] buffer) throws IOException
     {
-        final String errorLineOrNull = doCheck(reader, path, idCache, params, link);
+        final String errorLineOrNull = doCheck(reader, path, idCache, params, link, buffer);
         visitor.visit(new ListEntry(describeLink(path, link, idCache, params.isVerbose(), params
                 .isNumeric()), errorLineOrNull));
     }
 
     private static String doCheck(IHDF5Reader reader, String path, IdCache idCache,
-            ListParameters params, Link link) throws IOException
+            ListParameters params, Link link, byte[] buffer) throws IOException
     {
         if (VERIFY_FS.contains(params.getCheck()))
         {
-            return doFileSystemCheck(path, idCache, params, link);
+            return doFileSystemCheck(path, idCache, params, link, buffer);
         } else if (Check.CHECK_CRC_ARCHIVE == params.getCheck())
         {
-            return doArchiveCheck(reader, path, params, link);
+            return doArchiveCheck(reader, path, params, link, buffer);
         }
         return null;
     }
 
     private static String doArchiveCheck(IHDF5Reader reader, String path, ListParameters params,
-            Link link)
+            Link link, byte[] buffer)
     {
         if (link.isRegularFile() == false)
         {
@@ -1081,7 +1080,7 @@ public class HDF5ArchiveTools
         {
             return "Archive file " + path + ": cannot verify (missing CRC checksum).";
         }
-        final int crc32 = calcCRC32Archive(reader, path, link.getSize());
+        final int crc32 = calcCRC32Archive(reader, path, link.getSize(), buffer);
         if (link.getCrc32() != crc32)
         {
             return "Archive file " + path + " failed CRC checksum test, expected: "
@@ -1090,21 +1089,24 @@ public class HDF5ArchiveTools
         return null;
     }
 
-    private static int calcCRC32Archive(IHDF5Reader reader, String objectPath, long size)
+    private static int calcCRC32Archive(IHDF5Reader reader, String objectPath, long size,
+            byte[] buffer)
     {
         final CRC32 crc32Digest = new CRC32();
-        final long blockCount =
-                (size / FILE_SIZE_THRESHOLD) + (size % FILE_SIZE_THRESHOLD != 0 ? 1 : 0);
-        for (int i = 0; i < blockCount; ++i)
+        int offset = 0;
+        while (offset < size)
         {
-            final byte[] buffer = reader.readAsByteArrayBlock(objectPath, FILE_SIZE_THRESHOLD, i);
-            crc32Digest.update(buffer);
+            final int n =
+                    reader.readAsByteArrayToBlockWithOffset(objectPath, buffer, buffer.length,
+                            offset, 0);
+            offset += n;
+            crc32Digest.update(buffer, 0, n);
         }
         return (int) crc32Digest.getValue();
     }
 
     private static String doFileSystemCheck(String path, IdCache idCache, ListParameters params,
-            Link link) throws IOException
+            Link link, byte[] buffer) throws IOException
     {
         final File f = new File(params.getFileOrDirectoryOnFileSystem(), path);
         if (f.exists() == false)
@@ -1171,7 +1173,7 @@ public class HDF5ArchiveTools
             {
                 return "File " + f.getAbsolutePath() + ": cannot verify (missing CRC checksum).";
             }
-            final int crc32 = calcCRC32FileSystem(f);
+            final int crc32 = calcCRC32FileSystem(f, buffer);
             if (link.getCrc32() != crc32)
             {
                 return "File " + f.getAbsolutePath() + " failed CRC checksum test, expected: "
@@ -1196,10 +1198,9 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static int calcCRC32FileSystem(File source) throws IOException
+    private static int calcCRC32FileSystem(File source, byte[] buffer) throws IOException
     {
         final InputStream input = FileUtils.openInputStream(source);
-        final byte[] buffer = new byte[FILE_SIZE_THRESHOLD];
         final CRC32 crc32 = new CRC32();
         try
         {
@@ -1273,11 +1274,11 @@ public class HDF5ArchiveTools
     }
 
     private static int copyToHDF5(File source, final IHDF5Writer writer, final String objectPath,
-            final long size, final HDF5GenericCompression compression) throws IOException
+            final long size, final HDF5GenericCompression compression, byte[] buffer)
+            throws IOException
     {
         final InputStream input = FileUtils.openInputStream(source);
-        final byte[] buffer = new byte[FILE_SIZE_THRESHOLD];
-        final int blockSize = (int) Math.min(size, FILE_SIZE_THRESHOLD);
+        final int blockSize = (int) Math.min(size, buffer.length);
         final HDF5OpaqueType type;
         if (writer.exists(objectPath, false))
         {
@@ -1313,20 +1314,21 @@ public class HDF5ArchiveTools
     }
 
     private static int copyFromHDF5(IHDF5Reader reader, final String objectPath, final long size,
-            File destination) throws IOException
+            File destination, byte[] buffer) throws IOException
     {
         final OutputStream output = FileUtils.openOutputStream(destination);
         final CRC32 crc32 = new CRC32();
         try
         {
-            final long blockCount =
-                    (size / FILE_SIZE_THRESHOLD) + (size % FILE_SIZE_THRESHOLD != 0 ? 1 : 0);
-            for (int i = 0; i < blockCount; ++i)
+            int offset = 0;
+            while (offset < size)
             {
-                final byte[] buffer =
-                        reader.readAsByteArrayBlock(objectPath, FILE_SIZE_THRESHOLD, i);
-                output.write(buffer);
-                crc32.update(buffer);
+                final int n =
+                        reader.readAsByteArrayToBlockWithOffset(objectPath, buffer, buffer.length,
+                                offset, 0);
+                offset += n;
+                output.write(buffer, 0, n);
+                crc32.update(buffer, 0, n);
             }
             output.close(); // Make sure we don't silence exceptions on closing.
         } finally

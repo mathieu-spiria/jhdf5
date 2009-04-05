@@ -35,6 +35,10 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 public class HDF5Archiver
 {
 
+    private final static int MB = 1024 * 1024;
+
+    private final static int BUFFER_SIZE = 10 * MB;
+
     private final IHDF5Writer hdf5WriterOrNull;
 
     private final IHDF5Reader hdf5Reader;
@@ -42,6 +46,8 @@ public class HDF5Archiver
     private final ArchivingStrategy strategy;
 
     private final boolean continueOnError;
+
+    private byte[] buffer;
 
     public HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat,
             boolean continueOnError)
@@ -63,6 +69,7 @@ public class HDF5Archiver
         }
         this.continueOnError = continueOnError;
         this.strategy = new ArchivingStrategy();
+        this.buffer = new byte[BUFFER_SIZE];
     }
 
     public ArchivingStrategy getStrategy()
@@ -83,14 +90,15 @@ public class HDF5Archiver
             throw new IllegalStateException("Cannot archive in read-only mode.");
         }
         HDF5ArchiveTools.archive(hdf5WriterOrNull, strategy, root.getAbsoluteFile(), path
-                .getAbsoluteFile(), continueOnError, verbose);
+                .getAbsoluteFile(), continueOnError, verbose, buffer);
         return this;
     }
 
     public HDF5Archiver extract(File root, String path, boolean verbose)
             throws IllegalStateException
     {
-        HDF5ArchiveTools.extract(hdf5Reader, strategy, root, path, continueOnError, verbose);
+        HDF5ArchiveTools
+                .extract(hdf5Reader, strategy, root, path, continueOnError, verbose, buffer);
         return this;
     }
 
@@ -109,11 +117,12 @@ public class HDF5Archiver
             boolean suppressDirectoryEntries, boolean verbose, boolean numeric,
             HDF5ArchiveTools.Check check, HDF5ArchiveTools.ListEntryVisitor visitor)
     {
-        HDF5ArchiveTools.list(hdf5Reader, new HDF5ArchiveTools.ListParameters()
-                .fileOrDirectoryInArchive(fileOrDir).directoryOnFileSystem(rootOrNull).strategy(
-                        strategy).recursive(recursive)
-                .suppressDirectoryEntries(suppressDirectoryEntries).numeric(numeric).verbose(verbose)
-                .check(check), visitor, continueOnError);
+        final HDF5ArchiveTools.ListParameters params =
+                new HDF5ArchiveTools.ListParameters().fileOrDirectoryInArchive(fileOrDir)
+                        .directoryOnFileSystem(rootOrNull).strategy(strategy).recursive(recursive)
+                        .suppressDirectoryEntries(suppressDirectoryEntries).numeric(numeric)
+                        .verbose(verbose).check(check);
+        HDF5ArchiveTools.list(hdf5Reader, params, visitor, continueOnError, buffer);
     }
 
     public void close()
