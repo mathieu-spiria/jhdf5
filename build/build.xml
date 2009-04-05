@@ -213,7 +213,7 @@
 				           value="${version.number} (r${revision.number},${clean.flag})" />
 				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
 				<attribute name="Class-Path"
-				           value="common-lang.jar commons-io.jar cisd-base.jar cisd-args4j.jar jhdf5-core.jar jhdf5-linux-intel.jar jhdf5-solaris-intel.jar jhdf5-solaris-sparc.jar jhdf5-macosx-intel.jar jhdf5-windows-intel.jar" />
+				           value="commons-lang.jar commons-io.jar cisd-base.jar cisd-args4j.jar jhdf5-core.jar jhdf5-linux-intel.jar jhdf5-solaris-intel.jar jhdf5-solaris-sparc.jar jhdf5-macosx-intel.jar jhdf5-windows-intel.jar" />
 			</manifest>
 		</jar>
 	</target>
