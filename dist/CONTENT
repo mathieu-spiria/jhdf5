@@ -47,4 +47,5 @@ Wrapper
     symlinked to e.g. /usr/local/bin
   bin/h5ar.bar:
     Example script on how to most easily invoke h5ar on Windows. Needs to be adapted to have the 
-    fully qualified path to the jar file.  
+    fully qualified path to the jar file.
+
