@@ -402,8 +402,10 @@ final class HDF5BaseWriter extends HDF5BaseReader
         if (empty)
         {
             definitiveChunkSizeOrNull =
-                    HDF5Utils.tryGetChunkSize(dimensions, compression.requiresChunking(), true);
-        } else if (enforceCompactLayout)
+                    (chunkSizeOrNull != null) ? chunkSizeOrNull : HDF5Utils.tryGetChunkSize(
+                            dimensions, compression.requiresChunking(), true);
+        } else if (enforceCompactLayout || (useExtentableDataTypes == false)
+                && compression.requiresChunking() == false)
         {
             definitiveChunkSizeOrNull = null;
         } else if (chunkSizeOrNull != null)
@@ -478,27 +480,15 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * Returns the data set id for the given <var>objectPath</var>.
      */
     int getDataSetId(final String objectPath, final int storageDataTypeId, final long[] dimensions,
-            final HDF5AbstractCompression compression, ICleanUpRegistry registry)
+            final HDF5AbstractCompression compression, final boolean cutDownExtendIfNecessary,
+            ICleanUpRegistry registry)
     {
         final int dataSetId;
         if (h5.exists(fileId, objectPath))
         {
-            dataSetId = h5.openDataSet(fileId, objectPath, registry);
-            // Implementation note: HDF5 1.8 seems to be able to change the size even if
-            // dimensions are not in bound of max dimensions, but the resulting file can
-            // no longer be read by HDF5 1.6, thus we may only do it if config.useLatestFileFormat
-            // == true.
-            if (areDimensionsInBounds(dataSetId, dimensions) || fileFormat.isHDF5_1_8_OK())
-            {
-                h5.setDataSetExtent(dataSetId, dimensions);
-                // FIXME 2008-09-15, Bernd Rinn: This is a work-around for an apparent bug in HDF5
-                // 1.8.1 and 1.8.2 with contiguous data sets! Without the flush, the next
-                // config.h5.writeDataSet() call will not overwrite the data.
-                if (h5.getLayout(dataSetId, registry) == StorageLayout.CONTIGUOUS)
-                {
-                    h5.flushFile(fileId);
-                }
-            }
+            dataSetId =
+                    h5.openAndExtendDataSet(fileId, objectPath, fileFormat, dimensions,
+                            cutDownExtendIfNecessary, registry);
         } else
         {
             dataSetId =

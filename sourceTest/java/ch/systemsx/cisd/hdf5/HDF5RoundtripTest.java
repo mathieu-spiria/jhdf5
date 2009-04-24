@@ -189,6 +189,7 @@ public class HDF5RoundtripTest
                 { 2, 2 },
                 { 1, 2 },
                 { 1, 2 } });
+        test.testSetExtentBug();
         test.testMDFloatArrayBlockWise();
         test.testMDFloatArrayBlockWiseWithMemoryOffset();
         test.testCompressedDataSet();
@@ -241,6 +242,7 @@ public class HDF5RoundtripTest
         test.testNullOnGetSymbolicLinkTargetForNoLink();
         test.testReadByteArrayDataSetBlockWise();
         test.testWriteByteArrayDataSetBlockWise();
+        test.testWriteByteArrayDataSetBlockWiseExtend();
         test.testWriteByteMatrixDataSetBlockWise();
         test.testWriteByteArrayDataSetBlockWiseMismatch();
         test.testWriteByteMatrixDataSetBlockWiseMismatch();
@@ -867,7 +869,7 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final String dsName = "ds";
-        long[] data = new long[]
+        long[] longArrayWritten = new long[]
             { 1, 2, 3 };
         IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes()
@@ -875,19 +877,21 @@ public class HDF5RoundtripTest
         // Set maxdims such that COMPACT_LAYOUT_THRESHOLD (int bytes!) is exceeded so that we get a
         // contiguous data set.
         writer.createLongArray(dsName, 128, 1);
-        writer.writeLongArray(dsName, data);
+        writer.writeLongArray(dsName, longArrayWritten);
         writer.close();
         IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
+        System.out.println(reader.getDataSetInformation(dsName).getStorageLayout());
+        final long[] longArrayRead = reader.readLongArray(dsName);
+        assertTrue(Arrays.equals(longArrayWritten, longArrayRead));
         reader.close();
         // Now write a larger data set and see whether the data set is correctly extended.
         writer = HDF5FactoryProvider.get().open(datasetFile);
-        data = new long[]
+        longArrayWritten = new long[]
             { 17, 42, 1, 2, 3 };
-        writer.writeLongArray(dsName, data);
+        writer.writeLongArray(dsName, longArrayWritten);
         writer.close();
         reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
+        assertTrue(Arrays.equals(longArrayWritten, reader.readLongArray(dsName)));
         reader.close();
     }
 
@@ -950,6 +954,33 @@ public class HDF5RoundtripTest
                 assertMatrixEquals(floatMatrixBlockExpected, floatMatrixBlockRead);
             }
         }
+        reader.close();
+    }
+
+    @Test
+    public void testSetExtentBug()
+    {
+        final File datasetFile = new File(workingDirectory, "setExtentBug.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "ds";
+        final float[][] floatMatrixBlockWritten = new float[][]
+            {
+                { 1, 2 },
+                { 3, 4 } };
+        final int blockSize = 2;
+        writer.createFloatMatrix(dsName, 0, 0, blockSize, blockSize);
+        writer.writeFloatMatrixBlock(dsName, floatMatrixBlockWritten, 0, 0);
+        writer.writeFloatMatrixBlock(dsName, floatMatrixBlockWritten, 0, 1);
+        // The next line will make the the block (0,1) disappear if the bug is present. 
+        writer.writeFloatMatrixBlock(dsName, floatMatrixBlockWritten, 1, 0);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final float[][] floatMatrixBlockRead =
+                reader.readFloatMatrixBlock(dsName, blockSize, blockSize, 0, 1);
+        assertMatrixEquals(floatMatrixBlockWritten, floatMatrixBlockRead);
         reader.close();
     }
 
@@ -1085,6 +1116,36 @@ public class HDF5RoundtripTest
         final int blockSize = 10;
         final int numberOfBlocks = 10;
         writer.createByteArray(dsName, size, blockSize, INT_DEFLATE);
+        final byte[] block = new byte[blockSize];
+        for (int i = 0; i < numberOfBlocks; ++i)
+        {
+            Arrays.fill(block, (byte) i);
+            writer.writeByteArrayBlock(dsName, block, i);
+        }
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final byte[] byteArrayRead = reader.readAsByteArray(dsName);
+        reader.close();
+        assertEquals(size, byteArrayRead.length);
+        for (int i = 0; i < byteArrayRead.length; ++i)
+        {
+            assertEquals("Byte " + i, (i / blockSize), byteArrayRead[i]);
+        }
+    }
+
+    @Test
+    public void testWriteByteArrayDataSetBlockWiseExtend()
+    {
+        final File datasetFile = new File(workingDirectory, "writeByteArrayBlockWiseExtend.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "ds";
+        final int size = 100;
+        final int blockSize = 10;
+        final int numberOfBlocks = 10;
+        writer.createByteArray(dsName, 0, blockSize, INT_DEFLATE);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {

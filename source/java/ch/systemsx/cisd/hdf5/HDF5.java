@@ -43,6 +43,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Dread_long;
 import static ncsa.hdf.hdf5lib.H5.H5Dread_short;
 import static ncsa.hdf.hdf5lib.H5.H5Dread_string;
 import static ncsa.hdf.hdf5lib.H5.H5Dset_extent;
+import static ncsa.hdf.hdf5lib.H5.H5Dextend;
 import static ncsa.hdf.hdf5lib.H5.H5Fclose;
 import static ncsa.hdf.hdf5lib.H5.H5Fcreate;
 import static ncsa.hdf.hdf5lib.H5.H5Fflush;
@@ -753,6 +754,74 @@ class HDF5
         return dataSetId;
     }
 
+    public int openAndExtendDataSet(int fileId, String path, FileFormat fileFormat,
+            long[] dimensions, boolean cutDownExtendIfNecessary, ICleanUpRegistry registry)
+    {
+        checkMaxLength(path);
+        final int dataSetId = H5Dopen(fileId, path, H5P_DEFAULT);
+        // Implementation note: HDF5 1.8 seems to be able to change the size even if
+        // dimensions are not in bound of max dimensions, but the resulting file can
+        // no longer be read by HDF5 1.6, thus we may only do it if config.useLatestFileFormat
+        // == true.
+        if (areDimensionsInBounds(dataSetId, dimensions, registry) || fileFormat.isHDF5_1_8_OK())
+        {
+            final StorageLayout layout = getLayout(dataSetId, registry);
+            if (cutDownExtendIfNecessary || layout != StorageLayout.CHUNKED)
+            {
+                setDataSetExtent(dataSetId, dimensions);
+            } else
+            {
+                extendChunkedDataSet(dataSetId, dimensions);
+            }
+            // FIXME 2008-09-15, Bernd Rinn: This is a work-around for an apparent bug in HDF5
+            // 1.8.1 and 1.8.2 with contiguous data sets! Without the flush, the next
+            // config.h5.writeDataSet() call will not overwrite the data.
+            if (layout == StorageLayout.CONTIGUOUS)
+            {
+                flushFile(fileId);
+            }
+        }
+        registry.registerCleanUp(new Runnable()
+            {
+                public void run()
+                {
+                    H5Dclose(dataSetId);
+                }
+            });
+        return dataSetId;
+    }
+
+    /**
+     * Checks whether the given <var>dimensions</var> are in bounds for <var>dataSetId</var>.
+     */
+    private boolean areDimensionsInBounds(final int dataSetId, final long[] dimensions,
+            ICleanUpRegistry registry)
+    {
+        final long[] maxDimensions = getDataMaxDimensions(dataSetId, registry);
+
+        if (dimensions.length != maxDimensions.length) // Actually an error condition
+        {
+            return false;
+        }
+
+        for (int i = 0; i < dimensions.length; ++i)
+        {
+            if (maxDimensions[i] != H5S_UNLIMITED && dimensions[i] > maxDimensions[i])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public void extendChunkedDataSet(int dataSetId, long[] dimensions)
+    {
+        assert dataSetId >= 0;
+        assert dimensions != null;
+
+        H5Dextend(dataSetId, dimensions);
+    }
+
     public void setDataSetExtent(int dataSetId, long[] dimensions)
     {
         assert dataSetId >= 0;
@@ -1460,19 +1529,25 @@ class HDF5
             {
                 public long[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSpaceId = H5Dget_space(dataSetId);
-                    registry.registerCleanUp(new Runnable()
-                        {
-                            public void run()
-                            {
-                                H5Sclose(dataSpaceId);
-                            }
-                        });
-                    final long[] dimensions = getDataSpaceMaxDimensions(dataSpaceId);
-                    return dimensions;
+                    return getDataMaxDimensions(dataSetId, registry);
                 }
+
             };
         return runner.call(dataDimensionRunnable);
+    }
+
+    private long[] getDataMaxDimensions(final int dataSetId, ICleanUpRegistry registry)
+    {
+        final int dataSpaceId = H5Dget_space(dataSetId);
+        registry.registerCleanUp(new Runnable()
+            {
+                public void run()
+                {
+                    H5Sclose(dataSpaceId);
+                }
+            });
+        final long[] dimensions = getDataSpaceMaxDimensions(dataSpaceId);
+        return dimensions;
     }
 
     public long[] getDataSpaceDimensions(int dataSpaceId)
