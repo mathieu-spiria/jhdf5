@@ -202,8 +202,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     /**
-     * Calls <code>fdatasync(2)</code> if available or else <code>fsync(2)</code> in the current
-     * thread.
+     * Calls <code>fsync(2)</code> in the current thread.
      */
     private void syncNow()
     {
