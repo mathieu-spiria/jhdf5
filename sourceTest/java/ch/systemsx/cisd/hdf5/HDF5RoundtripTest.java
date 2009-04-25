@@ -193,6 +193,7 @@ public class HDF5RoundtripTest
         test.testMDFloatArrayBlockWise();
         test.testMDFloatArrayBlockWiseWithMemoryOffset();
         test.testCompressedDataSet();
+        test.testCreateEmptyFloatMatrix();
         test.testFloatVectorLength1();
         test.testFloatMatrixLength1();
         test.testOneRowFloatMatrix();
@@ -974,7 +975,7 @@ public class HDF5RoundtripTest
         writer.createFloatMatrix(dsName, 0, 0, blockSize, blockSize);
         writer.writeFloatMatrixBlock(dsName, floatMatrixBlockWritten, 0, 0);
         writer.writeFloatMatrixBlock(dsName, floatMatrixBlockWritten, 0, 1);
-        // The next line will make the the block (0,1) disappear if the bug is present. 
+        // The next line will make the the block (0,1) disappear if the bug is present.
         writer.writeFloatMatrixBlock(dsName, floatMatrixBlockWritten, 1, 0);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
@@ -1702,6 +1703,35 @@ public class HDF5RoundtripTest
         }
         writer.writeByteArray(stringDatasetName, b.toString().getBytes(), INT_DEFLATE);
         writer.close();
+    }
+
+    @Test
+    public void testCreateEmptyFloatMatrix()
+    {
+        final File datasetFile = new File(workingDirectory, "initiallyEmptyFloatMatrix.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String floatDatasetName = "/emptyMatrix";
+        writer.createFloatMatrix(floatDatasetName, 2, 2);
+        writer.close();
+        writer = HDF5FactoryProvider.get().open(datasetFile);
+        float[][] floatMatrixRead = writer.readFloatMatrix(floatDatasetName);
+        assertEquals(0, floatMatrixRead.length);
+        
+        // No write a non-empty matrix
+        float[][] floatMatrixWritten = new float[][]
+            {
+                { 1f, 2f, 3f },
+                { 4f, 5f, 6f },
+                { 7f, 8f, 9f } };
+        writer.writeFloatMatrix(floatDatasetName, floatMatrixWritten);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        floatMatrixRead = reader.readFloatMatrix(floatDatasetName);
+        assertTrue(equals(floatMatrixWritten, floatMatrixRead));
+        reader.close();
     }
 
     @Test

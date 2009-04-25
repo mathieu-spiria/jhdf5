@@ -164,6 +164,11 @@ class HDF5ByteWriter implements IHDF5ByteWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    public void createByteArray(final String objectPath, final int blockSize)
+    {
+        createByteArray(objectPath, 0, blockSize, INT_NO_COMPRESSION);
+    }
+
     public void createByteArray(final String objectPath, final long size, final int blockSize)
     {
         createByteArray(objectPath, size, blockSize, INT_NO_COMPRESSION);
@@ -276,6 +281,12 @@ class HDF5ByteWriter implements IHDF5ByteWriter
         writeByteMDArray(objectPath, new MDByteArray(data), compression);
     }
 
+    public void createByteMatrix(final String objectPath, final int blockSizeX, 
+            final int blockSizeY)
+    {
+        createByteMatrix(objectPath, 0, 0, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
+    }
+
     public void createByteMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY)
     {
@@ -367,6 +378,11 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                 }
             };
         baseWriter.runner.call(writeRunnable);
+    }
+
+    public void createByteMDArray(final String objectPath, final int[] blockDimensions)
+    {
+        createByteMDArray(objectPath, new long[blockDimensions.length], blockDimensions, INT_NO_COMPRESSION);
     }
 
     public void createByteMDArray(final String objectPath, final long[] dimensions,

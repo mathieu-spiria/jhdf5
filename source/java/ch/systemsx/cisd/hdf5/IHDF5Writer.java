@@ -404,6 +404,20 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Creates an opaque data set that will be represented as a <code>byte</code> array (of rank 1).
+     * The initial size of the data set will be 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The size of on block (for block-wise IO)
+     * @return The {@link HDF5OpaqueType} that can be used in methods
+     *         {@link #writeOpaqueByteArrayBlock(String, HDF5OpaqueType, byte[], long)} and
+     *         {@link #writeOpaqueByteArrayBlockWithOffset(String, HDF5OpaqueType, byte[], int, long)}
+     *         to represent this opaque type.
+     */
+    public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
+            final int blockSize);
+
+    /**
+     * Creates an opaque data set that will be represented as a <code>byte</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the byte vector to create.
@@ -488,9 +502,9 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
+     * @param size The length of the data set to create.
      */
-    public void createTimeStampArrayCompact(final String objectPath, final long length);
+    public void createTimeStampArrayCompact(final String objectPath, final long size);
 
     /**
      * Writes out a time stamp array (of rank 1). Uses a compact storage layout. Should only be used
@@ -510,12 +524,24 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
+     * @param size The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      */
-    public void createTimeStampArray(final String objectPath, final long length, final int blockSize);
+    public void createTimeStampArray(final String objectPath, final long size, final int blockSize);
+
+    /**
+     * Creates a time stamp array (of rank 1). The initial size of the array is 0.
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>deflate == false</code>.
+     */
+    public void createTimeStampArray(final String objectPath, final int blockSize);
 
     /**
      * Creates a time stamp array (of rank 1).
@@ -523,13 +549,13 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
+     * @param size The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      * @param compression The compression parameters of the data set.
      */
-    public void createTimeStampArray(final String objectPath, final long length,
+    public void createTimeStampArray(final String objectPath, final long size,
             final int blockSize, final HDF5GenericCompression compression);
 
     /**
@@ -681,10 +707,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <em>Note: Time durations are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
+     * @param size The size of the data set to create.
      * @param timeUnit The unit of the time duration.
      */
-    public void createTimeDurationArrayCompact(final String objectPath, final long length,
+    public void createTimeDurationArrayCompact(final String objectPath, final long size,
             final HDF5TimeUnit timeUnit);
 
     /**
@@ -701,18 +727,32 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
             final HDF5TimeUnit timeUnit);
 
     /**
-     * Creates a time duration array (of rank 1).
+     * Creates a time duration array (of rank 1). The initial size of the array is 0.
      * <p>
      * <em>Note: Time durations are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      * @param timeUnit The unit of the time duration.
      */
-    public void createTimeDurationArray(final String objectPath, final long length,
+    public void createTimeDurationArray(final String objectPath, final int blockSize,
+            final HDF5TimeUnit timeUnit);
+
+    /**
+     * Creates a time duration array (of rank 1).
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the data set to create.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>deflate == false</code>.
+     * @param timeUnit The unit of the time duration.
+     */
+    public void createTimeDurationArray(final String objectPath, final long size,
             final int blockSize, final HDF5TimeUnit timeUnit);
 
     /**
@@ -721,14 +761,14 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <em>Note: Time durations are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
+     * @param size The size of the data set to create.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      * @param timeUnit The unit of the time duration.
      * @param compression The compression parameters of the data set.
      */
-    public void createTimeDurationArray(final String objectPath, final long length,
+    public void createTimeDurationArray(final String objectPath, final long size,
             final int blockSize, final HDF5TimeUnit timeUnit,
             final HDF5GenericCompression compression);
 
@@ -1111,6 +1151,18 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
             final IByteArrayInspector inspectorOrNull);
 
     /**
+     * Creates an array (of rank 1) of compound values. The initial size of the array is 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>deflate == false</code>.
+     */
+    public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
+            final int blockSize);
+
+    /**
      * Creates an array (of rank 1) of compound values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1251,6 +1303,20 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final int[] blockDimensions,
             final long[] offset, final int[] memoryOffset, final IByteArrayInspector inspectorOrNull);
+
+    /**
+     * Creates an array (of rank 1) of compound values. The initial size of the array is 0 (along
+     * each axis).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param blockDimensions The extent of one block along each of the axis. (for block-wise IO).
+     *            Ignored if no extendable data sets are used (see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
+     *            <code>deflate == false</code>.
+     */
+    public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
+            final int[] blockDimensions);
 
     /**
      * Creates an array (of rank 1) of compound values.

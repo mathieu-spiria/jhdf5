@@ -71,9 +71,9 @@ interface IHDF5DoubleWriter
      * be used for small data sets.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param length The length of the data set to create.
+     * @param size The size of the data set to create.
      */
-    public void createDoubleArrayCompact(final String objectPath, final long length);
+    public void createDoubleArrayCompact(final String objectPath, final long size);
 
     /**
      * Writes out a <code>double</code> array (of rank 1). Uses a compact storage layout. Should 
@@ -101,6 +101,15 @@ interface IHDF5DoubleWriter
      */
     public void writeDoubleArray(final String objectPath, final double[] data, 
             final HDF5FloatCompression compression);
+
+    /**
+     * Creates a <code>double</code> array (of rank 1). The initial size of the array is 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
+     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     */
+    public void createDoubleArray(final String objectPath, final int blockSize);
 
     /**
      * Creates a <code>double</code> array (of rank 1).
@@ -189,6 +198,16 @@ interface IHDF5DoubleWriter
      */
     public void writeDoubleMatrix(final String objectPath, final double[][] data, 
             final HDF5FloatCompression compression);
+
+    /**
+     * Creates a <code>double</code> matrix (array of rank 2). The initial size of the matrix is 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSizeX The size of one block in the x dimension.
+     * @param blockSizeY The size of one block in the y dimension.
+     */
+    public void createDoubleMatrix(final String objectPath, final int blockSizeX, 
+            final int blockSizeY);
 
     /**
      * Creates a <code>double</code> matrix (array of rank 2).
@@ -305,6 +324,14 @@ interface IHDF5DoubleWriter
      */
     public void writeDoubleMDArray(final String objectPath, final MDDoubleArray data,
             final HDF5FloatCompression compression);
+
+    /**
+     * Creates a multi-dimensional <code>double</code> array. The initial size of the array is 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     */
+    public void createDoubleMDArray(final String objectPath, final int[] blockDimensions);
 
     /**
      * Creates a multi-dimensional <code>double</code> array.

@@ -165,6 +165,11 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    public void createShortArray(final String objectPath, final int blockSize)
+    {
+        createShortArray(objectPath, 0, blockSize, INT_NO_COMPRESSION);
+    }
+
     public void createShortArray(final String objectPath, final long size, final int blockSize)
     {
         createShortArray(objectPath, size, blockSize, INT_NO_COMPRESSION);
@@ -277,6 +282,12 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         writeShortMDArray(objectPath, new MDShortArray(data), compression);
     }
 
+    public void createShortMatrix(final String objectPath, final int blockSizeX, 
+            final int blockSizeY)
+    {
+        createShortMatrix(objectPath, 0, 0, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
+    }
+
     public void createShortMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY)
     {
@@ -368,6 +379,11 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                 }
             };
         baseWriter.runner.call(writeRunnable);
+    }
+
+    public void createShortMDArray(final String objectPath, final int[] blockDimensions)
+    {
+        createShortMDArray(objectPath, new long[blockDimensions.length], blockDimensions, INT_NO_COMPRESSION);
     }
 
     public void createShortMDArray(final String objectPath, final long[] dimensions,
