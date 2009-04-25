@@ -97,23 +97,23 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
      * The file will be truncated to length 0 if it already exists, that is its content will be
      * deleted.
      */
-    public HDF5WriterConfigurator overwrite();
+    public IHDF5WriterConfigurator overwrite();
 
     /**
      * Use data types which can not be extended later on. This may reduce the initial size of the
      * HDF5 file.
      */
-    public HDF5WriterConfigurator dontUseExtendableDataTypes();
+    public IHDF5WriterConfigurator dontUseExtendableDataTypes();
 
     /**
      * Sets the file format compatibility for the writer.
      */
-    public HDF5WriterConfigurator fileFormat(FileFormat newFileFormat);
+    public IHDF5WriterConfigurator fileFormat(FileFormat newFileFormat);
 
     /**
      * Sets the {@link SyncMode}.
      */
-    public HDF5WriterConfigurator syncMode(SyncMode newSyncMode);
+    public IHDF5WriterConfigurator syncMode(SyncMode newSyncMode);
 
     /**
      * Will try to perform numeric conversions where appropriate if supported by the platform.
@@ -121,7 +121,7 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
      * <strong>Numeric conversions can be platform dependent and are not available on all platforms.
      * Be advised not to rely on numeric conversions if you can help it!</strong>
      */
-    public HDF5WriterConfigurator performNumericConversions();
+    public IHDF5WriterConfigurator performNumericConversions();
 
     /**
      * Returns an {@link IHDF5Writer} based on this configuration.

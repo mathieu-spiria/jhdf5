@@ -39,7 +39,7 @@ public interface IHDF5ReaderConfigurator
      * <strong>Numeric conversions can be platform dependent and are not available on all platforms.
      * Be advised not to rely on numeric conversions if you can help it!</strong>
      */
-    public HDF5ReaderConfigurator performNumericConversions();
+    public IHDF5ReaderConfigurator performNumericConversions();
 
     /**
      * Returns an {@link IHDF5Reader} based on this configuration.

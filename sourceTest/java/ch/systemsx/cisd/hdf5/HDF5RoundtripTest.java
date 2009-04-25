@@ -3895,7 +3895,7 @@ public class HDF5RoundtripTest
         writer.writeLong("smallInteger", 17L);
         writer.writeLong("largeInteger", Long.MAX_VALUE);
         writer.close();
-        final HDF5ReaderConfigurator config =
+        final IHDF5ReaderConfigurator config =
                 HDF5FactoryProvider.get().configureForReading(file).performNumericConversions();
         // If this platform doesn't support numeric conversions, the test would fail.
         if (config.platformSupportsNumericConversions() == false)
