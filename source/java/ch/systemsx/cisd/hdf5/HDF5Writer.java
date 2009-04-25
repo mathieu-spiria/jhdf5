@@ -499,7 +499,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         assert objectPath != null;
         assert tag != null;
         assert size >= 0;
-        assert blockSize >= 0 && blockSize <= size;
+        assert blockSize >= 0 && (blockSize <= size || size == 0);
 
         baseWriter.checkOpen();
         final int dataTypeId = getOrCreateOpaqueTypeId(tag);
@@ -676,7 +676,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             final int blockSize, final HDF5GenericCompression compression)
     {
         assert objectPath != null;
-        assert length > 0;
+        assert length >= 0;
 
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
@@ -909,7 +909,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             final HDF5GenericCompression compression)
     {
         assert objectPath != null;
-        assert length > 0;
+        assert length >= 0;
 
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
@@ -1629,7 +1629,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         assert objectPath != null;
         assert type != null;
-        assert blockSize >= 0;
+        assert size >= 0;
+        assert blockSize >= 0 && (blockSize <= size || size == 0);
 
         baseWriter.checkOpen();
         type.check(baseWriter.fileId);
