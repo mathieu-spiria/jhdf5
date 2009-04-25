@@ -97,6 +97,32 @@ class HDF5BaseReader
         typeVariantDataType = openOrCreateTypeVariantDataType();
     }
 
+    public void copyObject(String srcPath, int dstFileId, String dstPath)
+    {
+        final boolean dstIsDir = dstPath.endsWith("/");
+        if (dstIsDir && h5.exists(dstFileId, dstPath) == false)
+        {
+            h5.createGroup(dstFileId, dstPath);
+        }
+        if ("/".equals(srcPath))
+        {
+            final String dstDir = dstIsDir ? dstPath : dstPath + "/"; 
+            for (String object : getGroupMembers("/"))
+            {
+                h5.copyObject(fileId, object, dstFileId, dstDir + object);
+            }
+        } else if (dstIsDir)
+        {
+            final int idx = srcPath.lastIndexOf('/');
+            final String sourceObjectName = srcPath.substring(idx < 0 ? 0 : idx);
+            h5.copyObject(fileId, srcPath, dstFileId, dstPath
+                    + sourceObjectName);
+        } else
+        {
+            h5.copyObject(fileId, srcPath, dstFileId, dstPath);
+        }
+    }
+    
     int openFile(FileFormat fileFormat, boolean overwrite)
     {
         if (hdf5File.exists() == false)

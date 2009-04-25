@@ -103,6 +103,71 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Oclose
 
 /*
  * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    HOcopy
+ * Signature: (ILjava/lang/String;)ILjava/lang/String;)II
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Ocopy
+  (JNIEnv *env, jclass clss, jint src_loc_id, jstring src_name, jint dst_loc_id, jstring dst_name, 
+     jint object_copy_plist, jint link_creation_plist)
+{
+    herr_t status;
+    char *srcName, *dstName;
+    jboolean isCopy;
+
+    if (src_name == NULL) {
+        h5nullArgument( env, "H5Ocopy:  src_name is NULL");
+        return -1;
+    }
+
+    if (dst_name == NULL) {
+        h5nullArgument( env, "H5Ocopy:  dst_name is NULL");
+        return -1;
+    }
+
+#ifdef __cplusplus
+    srcName = (char *)env->GetStringUTFChars(src_name,&isCopy);
+#else
+    srcName = (char *)(*env)->GetStringUTFChars(env,src_name,&isCopy);
+#endif
+
+    if (srcName == NULL) {
+        h5JNIFatalError( env, "H5Ocopy:  source object name not pinned");
+        return -1;
+    }
+#ifdef __cplusplus
+    dstName = (char *)env->GetStringUTFChars(dst_name,&isCopy);
+#else
+    dstName = (char *)(*env)->GetStringUTFChars(env,dst_name,&isCopy);
+#endif
+
+    if (dstName == NULL) {
+#ifdef __cplusplus
+        env->ReleaseStringUTFChars(src_name,srcName);
+#else
+        (*env)->ReleaseStringUTFChars(env,src_name,srcName);
+#endif
+        h5JNIFatalError( env, "H5Ocopy:  destination object name not pinned");
+        return -1;
+    }
+
+    status = H5Ocopy((hid_t)src_loc_id, srcName, (hid_t)dst_loc_id, dstName, 
+                        (hid_t)object_copy_plist, (hid_t)link_creation_plist);
+
+#ifdef __cplusplus
+    env->ReleaseStringUTFChars(src_name,srcName);
+    env->ReleaseStringUTFChars(dst_name,dstName);
+#else
+    (*env)->ReleaseStringUTFChars(env,src_name,srcName);
+    (*env)->ReleaseStringUTFChars(env,dst_name,dstName);
+#endif
+    if (status < 0) {
+        h5libraryError(env);
+    }
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
  * Method:    H5Oget_info_by_name
  */
 JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Oget_1info_1by_1name

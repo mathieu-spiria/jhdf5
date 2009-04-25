@@ -109,6 +109,16 @@ class HDF5Reader implements IHDF5Reader
         this.doubleReader = new HDF5DoubleReader(baseReader);
     }
 
+    void checkOpen()
+    {
+        baseReader.checkOpen();
+    }
+
+    int getFileId()
+    {
+        return baseReader.fileId;
+    }
+
     // /////////////////////
     // Configuration
     // /////////////////////
@@ -338,6 +348,32 @@ class HDF5Reader implements IHDF5Reader
     public long getNumberOfElements(final String objectPath)
     {
         return getDataSetInformation(objectPath).getNumberOfElements();
+    }
+
+    // /////////////////////
+    // Copies
+    // /////////////////////
+
+    public void copy(final String sourceObject, final IHDF5Writer destinationWriter,
+            final String destinationObject)
+    {
+        baseReader.checkOpen();
+        final HDF5Writer dwriter = (HDF5Writer) destinationWriter;
+        if (dwriter != this)
+        {
+            dwriter.checkOpen();
+        }
+        baseReader.copyObject(sourceObject, dwriter.getFileId(), destinationObject);
+    }
+
+    public void copy(String sourceObject, IHDF5Writer destinationWriter)
+    {
+        copy(sourceObject, destinationWriter, "/");
+    }
+
+    public void copyAll(IHDF5Writer destinationWriter)
+    {
+        copy("/", destinationWriter, "/");
     }
 
     // /////////////////////

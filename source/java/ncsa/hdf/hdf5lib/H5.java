@@ -3762,6 +3762,26 @@ public class H5
     public synchronized static native int H5Oclose(int loc_id) throws HDF5LibraryException;
 
     /**
+     * H5Ocopy copies an existing object with the specified src_name at the specified location, 
+     * src_loc_id, to the specified dst_name at the specified destination location, dst_loc_id.
+     * 
+     * @param src_loc_id Source File or group identifier within which object is to be open.
+     * @param src_name Name of source object to open.
+     * @param dst_loc_id Destination File or group identifier within which object is to be open.
+     * @param dst_name Name of destination object to open.
+     * @param object_copy_plist Object copy property list identifier (H5P_DEFAULT for the default
+     *            property list).
+     * @param link_creation_plist Link creation property list identifier for the new hard link 
+     *            (H5P_DEFAULT for the default property list).
+     * @return a valid object identifier if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - name is null.
+     */
+    public synchronized static native int H5Ocopy(int src_loc_id, String src_name, int dst_loc_id, 
+            String dst_name, int object_copy_plist, int link_creation_plist)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
      * H5Oget_info_by_name returns information about the object. This method follows soft links and
      * returns information about the link target, rather than the link.
      * <p>

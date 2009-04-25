@@ -62,6 +62,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Lget_link_info;
 import static ncsa.hdf.hdf5lib.H5.H5Lget_link_info_all;
 import static ncsa.hdf.hdf5lib.H5.H5Lget_link_names_all;
 import static ncsa.hdf.hdf5lib.H5.H5Oclose;
+import static ncsa.hdf.hdf5lib.H5.H5Ocopy;
 import static ncsa.hdf.hdf5lib.H5.H5Oopen;
 import static ncsa.hdf.hdf5lib.H5.H5Oget_info_by_name;
 import static ncsa.hdf.hdf5lib.H5.H5Pclose;
@@ -304,6 +305,15 @@ class HDF5
     {
         checkMaxLength(path);
         final int success = H5Gunlink(fileId, path);
+        return success;
+    }
+
+    public int copyObject(int srcFileId, String srcPath, int dstFileId, String dstPath)
+    {
+        checkMaxLength(srcPath);
+        checkMaxLength(dstPath);
+        final int success =
+                H5Ocopy(srcFileId, srcPath, dstFileId, dstPath, H5P_DEFAULT, H5P_DEFAULT);
         return success;
     }
 

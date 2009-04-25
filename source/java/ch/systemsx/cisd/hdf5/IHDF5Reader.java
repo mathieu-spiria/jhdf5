@@ -254,8 +254,8 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
 
     /**
      * Returns the total size (in bytes) of <var>objectPath</var>. It is a failure condition if the
-     * <var>dataSetPath</var> does not exist or does not identify a data set. This method
-     * follows symbolic links.
+     * <var>dataSetPath</var> does not exist or does not identify a data set. This method follows
+     * symbolic links.
      */
     public long getSize(final String objectPath);
 
@@ -265,6 +265,25 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * follows symbolic links.
      */
     public long getNumberOfElements(final String objectPath);
+
+    /**
+     * Copies the <var>sourceObject</var> to the <var>destinationObject</var> of the HDF5 file
+     * represented by the <var>destinationWriter</var>. If <var>destiantionObject</var> ends with
+     * "/", it will be considered a group and the name of <var>sourceObject</var> will be appended.
+     */
+    public void copy(String sourceObject, IHDF5Writer destinationWriter, String destinationObject);
+
+    /**
+     * Copies the <var>sourceObject</var> to the root group of the HDF5 file represented by the
+     * <var>destinationWriter</var>.
+     */
+    public void copy(String sourceObject, IHDF5Writer destinationWriter);
+
+    /**
+     * Copies all objects of the file represented by this reader to the root group of the HDF5 file
+     * represented by the <var>destinationWriter</var>.
+     */
+    public void copyAll(IHDF5Writer destinationWriter);
 
     // /////////////////////
     // Group
