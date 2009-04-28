@@ -541,7 +541,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final long[] slabStartOrNull = new long[]
                         { data.length * blockNumber };
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                        baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                baseWriter.fileFormat, new long[]
+                                    { data.length * (blockNumber + 1) }, false, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
@@ -573,7 +575,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final long[] slabStartOrNull = new long[]
                         { offset };
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                        baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                baseWriter.fileFormat, new long[]
+                                    { offset + dataSize }, false, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
@@ -755,7 +759,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final long[] slabStartOrNull = new long[]
                         { data.length * blockNumber };
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                        baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                baseWriter.fileFormat, new long[]
+                                    { data.length * (blockNumber + 1) }, false, registry);
                     checkIsTimeStamp(objectPath, dataSetId, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
@@ -786,7 +792,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final long[] slabStartOrNull = new long[]
                         { offset };
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                        baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                baseWriter.fileFormat, new long[]
+                                    { offset + dataSize }, false, registry);
                     checkIsTimeStamp(objectPath, dataSetId, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
@@ -998,7 +1006,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final long[] slabStartOrNull = new long[]
                         { data.length * blockNumber };
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                        baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                baseWriter.fileFormat, new long[]
+                                    { data.length * (blockNumber + 1) }, false, registry);
                     final HDF5TimeUnit storedUnit =
                             checkIsTimeDuration(objectPath, dataSetId, registry);
                     final int dataSpaceId =
@@ -1031,7 +1041,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final long[] slabStartOrNull = new long[]
                         { offset };
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                        baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                baseWriter.fileFormat, new long[]
+                                    { offset + dataSize }, false, registry);
                     final HDF5TimeUnit storedUnit =
                             checkIsTimeDuration(objectPath, dataSetId, registry);
                     final int dataSpaceId =
@@ -1568,7 +1580,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final long[] offset = new long[]
                         { size * blockNumber };
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                    baseWriter.fileFormat, new long[]
+                                        { data.length * (blockNumber + 1) }, false, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
@@ -1615,7 +1629,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                        baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                baseWriter.fileFormat, new long[]
+                                    { offset + data.length }, false, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offsetArray, dimensions);
@@ -1735,16 +1751,19 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         type.check(baseWriter.fileId);
         final long[] dimensions = data.longDimensions();
         final long[] offset = new long[dimensions.length];
+        final long[] dataSetDimensions = new long[dimensions.length];
         for (int i = 0; i < offset.length; ++i)
         {
             offset[i] = blockDimensions[i] * dimensions[i];
+            dataSetDimensions[i] = offset[i] + dimensions[i];
         }
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                        baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                baseWriter.fileFormat, dataSetDimensions, false, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
@@ -1787,8 +1806,14 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final long[] dimensions = data.longDimensions();
+                    final long[] dataSetDimensions = new long[dimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        dataSetDimensions[i] = offset[i] + dimensions[i];
+                    }
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                    baseWriter.fileFormat, dataSetDimensions, false, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
@@ -1834,8 +1859,14 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 {
                     final long[] memoryDimensions = data.longDimensions();
                     final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    final long[] dataSetDimensions = new long[blockDimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        dataSetDimensions[i] = offset[i] + blockDimensions[i];
+                    }
                     final int dataSetId =
-                            baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                    baseWriter.fileFormat, dataSetDimensions, false, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);

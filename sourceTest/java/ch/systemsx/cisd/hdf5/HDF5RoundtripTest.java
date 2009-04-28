@@ -1214,7 +1214,8 @@ public class HDF5RoundtripTest
         final int blockSize = 10;
         final int numberOfBlocks = 10;
         final HDF5OpaqueType opaqueDataType =
-                writer.createOpaqueByteArray(dsName, "TAG", size, blockSize, GENERIC_DEFLATE_MAX);
+                writer.createOpaqueByteArray(dsName, "TAG", size / 2, blockSize,
+                        GENERIC_DEFLATE_MAX);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {
@@ -1719,7 +1720,7 @@ public class HDF5RoundtripTest
         writer = HDF5FactoryProvider.get().open(datasetFile);
         float[][] floatMatrixRead = writer.readFloatMatrix(floatDatasetName);
         assertEquals(0, floatMatrixRead.length);
-        
+
         // No write a non-empty matrix
         float[][] floatMatrixWritten = new float[][]
             {
@@ -2322,7 +2323,7 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        writer.createTimeStampArray(timeSeriesDS, 100, 10, GENERIC_DEFLATE);
+        writer.createTimeStampArray(timeSeriesDS, 0, 10, GENERIC_DEFLATE);
         for (int i = 0; i < 10; ++i)
         {
             writer.writeTimeStampArrayBlock(timeSeriesDS, timeSeries, i);
