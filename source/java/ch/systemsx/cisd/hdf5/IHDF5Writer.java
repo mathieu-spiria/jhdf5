@@ -555,8 +555,8 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      *            and <code>deflate == false</code>.
      * @param compression The compression parameters of the data set.
      */
-    public void createTimeStampArray(final String objectPath, final long size,
-            final int blockSize, final HDF5GenericCompression compression);
+    public void createTimeStampArray(final String objectPath, final long size, final int blockSize,
+            final HDF5GenericCompression compression);
 
     /**
      * Writes out a time stamp array (of rank 1). The data set will be tagged as type variant
@@ -937,6 +937,87 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      */
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength,
             final HDF5GenericCompression compression);
+
+    /**
+     * Creates a <code>String</code> array (of rank 1) for Strings of length <var>maxLength</var>.
+     * The initial size of the array is 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param maxLength The maximal length of one String in the array.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     */
+    public void createStringArray(final String objectPath, final int maxLength, final int blockSize);
+
+    /**
+     * Creates a <code>String</code> array (of rank 1) for Strings of length <var>maxLength</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param maxLength The maximal length of one String in the array.
+     * @param size The size of the String vector to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     */
+    public void createStringArray(final String objectPath, final int maxLength, final long size,
+            final int blockSize);
+
+    /**
+     * Creates a <code>String</code> array (of rank 1) for Strings of length <var>maxLength</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param maxLength The maximal length of one String in the array.
+     * @param size The size of the String vector to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @param compression The compression parameters of the data set.
+     */
+    public void createStringArray(final String objectPath, final int maxLength, final long size,
+            final int blockSize, final HDF5GenericCompression compression);
+
+    /**
+     * Writes out a block of a <code>String</code> array (of rank 1). The data set needs to have
+     * been created by {@link #createStringArray(String, int, long, int, HDF5GenericCompression)}
+     * beforehand.
+     * <p>
+     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
+     * to the <var>blockSize</var> argument of the
+     * {@link #createStringArray(String, int, long, int, HDF5GenericCompression)} call that was used
+     * to create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param blockNumber The number of the block to write.
+     */
+    public void writeStringArrayBlock(final String objectPath, final String[] data,
+            final long blockNumber);
+
+    /**
+     * Writes out a block of a <code>String</code> array (of rank 1). The data set needs to have
+     * been created by {@link #createStringArray(String, int, long, int, HDF5GenericCompression)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #writeStringArrayBlock(String, String[], long)} if the
+     * total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
+     * to the <var>blockSize</var> argument of the
+     * {@link #createStringArray(String, int, long, int, HDF5GenericCompression)} call that was used
+     * to create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
+     *            )
+     * @param offset The offset in the data set to start writing to.
+     */
+    public void writeStringArrayBlockWithOffset(final String objectPath, final String[] data,
+            final int dataSize, final long offset);
 
     /**
      * Writes out a <code>String</code> with variable maximal length.

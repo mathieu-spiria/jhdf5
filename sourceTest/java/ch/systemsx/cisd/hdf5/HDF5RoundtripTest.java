@@ -132,6 +132,7 @@ public class HDF5RoundtripTest
         test.testScaleOffsetFilterInt();
         test.testScaleOffsetFilterFloat();
         test.testStringArray();
+        test.testStringArrayBlock();
         test.testStringCompression();
         test.testStringArrayCompression();
         test.testReadMDFloatArray();
@@ -1625,6 +1626,29 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
         final String[] dataStored = reader.readStringArray(dataSetName);
         assertTrue(Arrays.equals(data, dataStored));
+        reader.close();
+    }
+
+    @Test
+    public void testStringArrayBlock()
+    {
+        final File stringArrayFile = new File(workingDirectory, "stringArrayBlock.h5");
+        stringArrayFile.delete();
+        assertFalse(stringArrayFile.exists());
+        stringArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
+        final String[] data = new String[]
+            { "abc", "ABCxxx", "xyz" };
+        final String dataSetName = "/aStringArray";
+        writer.createStringArray(dataSetName, 6, 0, 5, HDF5GenericCompression.GENERIC_NO_COMPRESSION);
+        writer.writeStringArrayBlock(dataSetName, data, 1);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
+        final String[] dataStored = reader.readStringArray(dataSetName);
+        assertEquals(2 * data.length, dataStored.length);
+        final String[] dataRead = new String[data.length];
+        System.arraycopy(dataStored, 3, dataRead, 0, dataRead.length);
+        assertTrue(Arrays.equals(data, dataRead));
         reader.close();
     }
 
