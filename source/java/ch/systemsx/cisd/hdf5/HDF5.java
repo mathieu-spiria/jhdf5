@@ -845,9 +845,15 @@ class HDF5
         H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
     }
 
-    public void readDataSetNonNumeric(int dataSetId, int nativeDataTypeId, String[] data)
+    public void readDataSetString(int dataSetId, int nativeDataTypeId, String[] data)
     {
         H5Dread_string(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+    }
+
+    public void readDataSetString(int dataSetId, int nativeDataTypeId, int memorySpaceId,
+            int fileSpaceId, String[] data)
+    {
+        H5Dread_string(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, byte[] data)

@@ -871,6 +871,33 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      */
     public String[] readStringArray(final String objectPath) throws HDF5JavaException;
 
+    /**
+     * Reads a block of a <code>String</code> array (of rank 1) from the data set
+     * <var>objectPath</var>. The elements of this data set need to be a string type.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize the size of the block to read from the data set.
+     * @param blockNumber the number of the block to read from the data set (the offset is
+     *            <code>blockSize * blockNumber</code>).
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
+     */
+    public String[] readStringArrayBlock(final String objectPath, final int blockSize,
+            final long blockNumber);
+
+    /**
+     * Reads a block of a <code>String</code> array (of rank 1) from the data set
+     * <var>objectPath</var>. The elements of this data set need to be a string type.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize the size of the block to read from the data set.
+     * @param offset the pffset of the block in the data set.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
+     */
+    public String[] readStringArrayBlockWithOffset(final String objectPath, final int blockSize,
+            final long offset);
+
     //
     // Enum
     //

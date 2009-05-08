@@ -1487,11 +1487,72 @@ class HDF5Reader implements IHDF5Reader
                     {
                         throw new HDF5JavaException(objectPath + " needs to be a String.");
                     }
-                    baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId, data);
+                    baseReader.h5.readDataSetString(dataSetId, dataTypeId, data);
                     return data;
                 }
             };
         return baseReader.runner.call(writeRunnable);
+    }
+
+    public String[] readStringArrayBlock(final String objectPath, final int blockSize,
+            final long blockNumber)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<String[]> readCallable = new ICallableWithCleanUp<String[]>()
+            {
+                public String[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
+                                    blockSize, registry);
+                    final String[] data = new String[spaceParams.blockSize];
+                    final int dataTypeId =
+                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
+                    if (isString == false)
+                    {
+                        throw new HDF5JavaException(objectPath + " needs to be a String.");
+                    }
+                    baseReader.h5.readDataSetString(dataSetId, dataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                    return data;
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+
+    public String[] readStringArrayBlockWithOffset(final String objectPath, final int blockSize,
+            final long offset)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<String[]> readCallable = new ICallableWithCleanUp<String[]>()
+            {
+                public String[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final String[] data = new String[spaceParams.blockSize];
+                    final int dataTypeId =
+                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
+                    if (isString == false)
+                    {
+                        throw new HDF5JavaException(objectPath + " needs to be a String.");
+                    }
+                    baseReader.h5.readDataSetString(dataSetId, dataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                    return data;
+                }
+            };
+        return baseReader.runner.call(readCallable);
     }
 
     //
