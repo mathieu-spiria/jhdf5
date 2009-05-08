@@ -26,8 +26,8 @@ extern "C" {
 #endif
 
 #include "hdf5.h"
-
-#include "jni.h"
+#include <jni.h>
+#include <stdlib.h>
 
 extern jboolean h5JNIFatalError( JNIEnv *env, char *functName);
 extern jboolean h5nullArgument( JNIEnv *env, char *functName);
