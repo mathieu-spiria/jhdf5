@@ -978,27 +978,23 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1string
     jstring jstr;
     char *c_buf;
     char *cstr;
-    size_t str_len, i, n, pos;
+    char cterm;
+    size_t str_len, i, n;
     
     c_buf = cstr = NULL;
     if ( j_buf == NULL) {
-        h5nullArgument( env, "H5Dread:  buf is NULL");
+        h5nullArgument( env, "H5Dread_string:  buf is NULL");
         return -1;
     }
 
     n = (*env)->GetArrayLength(env, j_buf);
     if ( n<=0) {
-        h5nullArgument( env, "H5Dread:  buf length <=0");
+        h5nullArgument( env, "H5Dread_string:  buf length <=0");
         return -1;
     }
 
     if ( (str_len = H5Tget_size((hid_t)mem_type_id)) <=0 ) {
         h5libraryError(env);
-    }
-
-    if ( (cstr = (char *)malloc(str_len+1)) == NULL) {
-        h5JNIFatalError(env,  "H5Dread_string: memory allocation failed.");
-        return -1;
     }
 
     if ( (c_buf = (char *)malloc(n*str_len)) == NULL) {
@@ -1011,27 +1007,25 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1string
         (hid_t)file_space_id, (hid_t)xfer_plist_id, c_buf);
 
     if (status < 0) {
-        if (cstr) free (cstr); cstr = NULL;
         if (c_buf) free (c_buf); c_buf = NULL;
         h5libraryError(env);
         return -1;
     }
 
-    pos = 0;
+    cstr = c_buf;
     for (i=0; i<n; i++) {
-        memcpy(cstr, c_buf+pos, str_len);
-        cstr[str_len] = '\0';
+        cterm = *(cstr + str_len);
+        *(cstr + str_len) = '\0'; 
         jstr = (*env)->NewStringUTF(env, cstr);
-        (*env)->SetObjectArrayElement(env, j_buf, i, jstr); 
-        pos += str_len;
+        (*env)->SetObjectArrayElement(env, j_buf, i, jstr);
+        *(cstr + str_len) = cterm; 
+        cstr += str_len; 
     }
 
     if (c_buf)
+    {
         free(c_buf);
-
-    if (cstr) 
-        free (cstr);
-
+    }
 
     return (jint)status;
 }
