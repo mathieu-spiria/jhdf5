@@ -237,8 +237,8 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sselect_1elements
   (JNIEnv *env, jclass clss, jint space_id, jint op, jint num_elemn, jbyteArray coord)
 {
     int ii;
-    hssize_t *lp;
-    hssize_t *llp;
+    hsize_t *lp;
+    hsize_t *llp;
     jlong *jlp;
     herr_t status;
     jbyte *P;
@@ -266,7 +266,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sselect_1elements
     size = (int) (*env)->GetArrayLength(env,coord);
 #endif
     nlongs = size / sizeof(jlong);
-    lp = (hssize_t *)malloc(nlongs * sizeof(hssize_t));
+    lp = (hsize_t *) malloc(nlongs * sizeof(hssize_t));
     jlp = (jlong *)P;
     llp = lp;
     for (ii = 0; ii < nlongs; ii++) {
@@ -275,7 +275,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sselect_1elements
         jlp++;
     }
 
-    status = H5Sselect_elements (space_id, (H5S_seloper_t)op, num_elemn, (const hssize_t **)llp);
+    status = H5Sselect_elements (space_id, (H5S_seloper_t)op, num_elemn, llp);
 
 #ifdef __cplusplus
     env->ReleaseByteArrayElements(coord, P, JNI_ABORT);
@@ -973,7 +973,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sselect_1hyperslab
         }
     }
 
-    status = H5Sselect_hyperslab (space_id, (H5S_seloper_t)op, (const hssize_t *)strt, (const hsize_t *)strd, (const hsize_t *)cnt, (const hsize_t *)blk);
+    status = H5Sselect_hyperslab (space_id, (H5S_seloper_t)op, (const hsize_t *)strt, (const hsize_t *)strd, (const hsize_t *)cnt, (const hsize_t *)blk);
 
 #ifdef __cplusplus
     env->ReleaseByteArrayElements(start, startP,JNI_ABORT);

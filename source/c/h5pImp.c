@@ -133,12 +133,14 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1version
 #ifdef __cplusplus
     if (env->GetArrayLength(version_info) < 4) {
         h5badArgument( env, "H5Pget_version:  version_info input array < 4");
+        return -1;
     }
 
     theArray = (jint *)env->GetIntArrayElements(version_info,&isCopy);
 #else
     if ((*env)->GetArrayLength(env, version_info) < 4) {
         h5badArgument( env, "H5Pget_version:  version_info input array < 4");
+        return -1;
     }
 
     theArray = (jint *)(*env)->GetIntArrayElements(env,version_info,&isCopy);
@@ -149,9 +151,9 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1version
         return -1;
     }
 
-    status = H5Pget_version((hid_t)plist, (int *)&(theArray[0]),
-        (int *)&(theArray[1]), (int *)&(theArray[2]),
-        (int *)&(theArray[3]));
+    status = H5Pget_version((hid_t)plist, (unsigned *) &(theArray[0]),
+        (unsigned *) &(theArray[1]), (unsigned *) &(theArray[2]),
+        (unsigned *) &(theArray[3]));
 
     if (status < 0) {
 #ifdef __cplusplus
@@ -161,6 +163,12 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1version
 #endif
         h5libraryError(env);
     } else {
+        if (theArray[0] < 0 || theArray[1] < 0 || theArray[2] < 0 || theArray[3] < 0)
+        {
+            h5raiseException( env, "java/lang/RuntimeException", 
+                              "H5Pget_version:  parameter overflow");
+            return -1;
+        }
 #ifdef __cplusplus
         env->ReleaseIntArrayElements(version_info,theArray,0);
 #else
@@ -359,7 +367,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1sym_1k
         return -1;
     }
 
-    status = H5Pget_sym_k((hid_t)plist, (int *)&(theArray[0]), (int *)&(theArray[1]));
+    status = H5Pget_sym_k((hid_t)plist, (unsigned *) &(theArray[0]), (unsigned *) &(theArray[1]));
 
     if (status < 0) {
 #ifdef __cplusplus
@@ -374,6 +382,12 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1sym_1k
 #else
         (*env)->ReleaseIntArrayElements(env,size,theArray,0);
 #endif
+    }
+    if (theArray[0] < 0 || theArray[1] < 0)
+    {
+        h5raiseException( env, "java/lang/RuntimeException", 
+                          "H5Pget_sym_k:  parameter overflow");
+        return -1;
     }
 
     return (jint)status;
@@ -421,7 +435,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1istore_1k
         return -1;
     }
 
-    status = H5Pget_istore_k((hid_t)plist, (int *)&(theArray[0]));
+    status = H5Pget_istore_k((hid_t)plist, (unsigned *) &(theArray[0]));
 
     if (status < 0) {
 #ifdef __cplusplus
@@ -436,6 +450,12 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1istore_1k
 #else
         (*env)->ReleaseIntArrayElements(env,ik,theArray,0);
 #endif
+    }
+    if (theArray[0] < 0)
+    {
+        h5raiseException( env, "java/lang/RuntimeException", 
+                          "H5Pget_istore_k:  parameter overflow");
+        return -1;
     }
 
     return (jint)status;
@@ -503,7 +523,7 @@ JNIEXPORT jintArray JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1libver_1bounds
     jintArray iarray;
     jint bounds[2];
 
-    retVal =  H5Pget_libver_bounds((hid_t)plist, bounds, bounds+1);
+    retVal =  H5Pget_libver_bounds((hid_t)plist, (H5F_libver_t*)bounds, (H5F_libver_t*)(bounds+1));
     if (retVal < 0) {
         h5libraryError(env);
 				return NULL;
@@ -1555,7 +1575,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1cache
         }
     }
 
-    status = H5Pget_cache((hid_t)plist, (int *)mdc_nelmtsArray, (int *)rdcc_nelmtsArray, (size_t *)nbytesArray,
+    status = H5Pget_cache((hid_t)plist, (int *)mdc_nelmtsArray, (size_t *)rdcc_nelmtsArray, (size_t *)nbytesArray,
         w0Array);
 
     if (status < 0) {
@@ -3386,11 +3406,18 @@ JNIEXPORT jintArray JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1link_1phase_1change
 {
     hid_t retVal = -1;
     jintArray iarray;
-    unsigned max_compact_min_dense[2];
+    jint max_compact_min_dense[2];
 
-    retVal = H5Pget_link_phase_change((hid_t) gcpl_id, max_compact_min_dense, max_compact_min_dense + 1);
+    retVal = H5Pget_link_phase_change((hid_t) gcpl_id, (unsigned*) max_compact_min_dense, 
+                                      (unsigned*) (max_compact_min_dense + 1));
     if (retVal < 0) {
         h5libraryError(env);
+    }
+    if (max_compact_min_dense[0] < 0 || max_compact_min_dense[1] < 0)
+    {
+        h5raiseException( env, "java/lang/RuntimeException", 
+                          "H5Pget_link_phase_change:  parameter overflow");
+        return NULL;
     }
 
 #ifdef __cplusplus

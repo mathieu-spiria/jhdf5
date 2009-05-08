@@ -56,7 +56,7 @@ int getMinorErrorNumber();
 
 /* get the major and minor error numbers on the top of the erroe stack */
 static
-herr_t walk_error_callback(int n, H5E_error_t *err_desc, void *_err_nums)
+herr_t walk_error_callback(unsigned n, const H5E_error_t *err_desc, void *_err_nums)
 {
     H5E_num_t *err_nums = (H5E_num_t *)_err_nums;
 
