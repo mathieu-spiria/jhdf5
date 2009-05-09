@@ -1157,7 +1157,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength,
-            final HDF5GenericCompression compression)
+            final HDF5GenericCompression compression) throws HDF5JavaException
     {
         assert objectPath != null;
         assert data != null;
@@ -1170,19 +1170,36 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 {
                     final int stringDataTypeId =
                             baseWriter.h5.createDataTypeString(maxLength + 1, registry);
-                    final int dataSetId;
+                    int dataSetId;
                     final long[] dimensions = new long[]
                         { data.length };
                     if (exists(objectPath, false))
                     {
                         dataSetId =
                                 baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                        // Implementation note: HDF5 1.8 seems to be able to change the size even if
-                        // dimensions are not in bound of max dimensions, but the resulting file can
-                        // no longer be read correctly by a HDF5 1.6.x library.
-                        if (baseWriter.areDimensionsInBounds(dataSetId, dimensions))
+                        final StorageLayout layout = baseWriter.h5.getLayout(dataSetId, registry);
+                        if (layout == StorageLayout.CHUNKED)
                         {
-                            baseWriter.h5.setDataSetExtent(dataSetId, dimensions);
+                            // Safety check. JHDF5 creates CHUNKED data sets always with unlimited
+                            // max dimensions but we may have to work on a file we haven't created.
+                            if (baseWriter.areDimensionsInBounds(dataSetId, dimensions))
+                            {
+                                baseWriter.h5.setDataSetExtentChunked(dataSetId, dimensions);
+                            } else
+                            {
+                                throw new HDF5JavaException(
+                                        "New data set dimension is out of bounds.");
+                            }
+                        } else
+                        {
+                            // CONTIGUOUS and COMPACT data sets are fixed size, thus we need to
+                            // delete and re-create it.
+                            baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
+                            dataSetId =
+                                    baseWriter.h5.createDataSet(baseWriter.fileId, dimensions,
+                                            null, stringDataTypeId,
+                                            HDF5GenericCompression.GENERIC_NO_COMPRESSION,
+                                            objectPath, layout, baseWriter.fileFormat, registry);
                         }
                     } else
                     {
@@ -1218,7 +1235,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void createStringArray(final String objectPath, final int maxLength, final long size,
-            final int blockSize, final HDF5GenericCompression compression)
+            final int blockSize, final HDF5GenericCompression compression) throws HDF5JavaException
     {
         assert objectPath != null;
         assert maxLength > 0;
@@ -1237,12 +1254,28 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     {
                         dataSetId =
                                 baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                        // Implementation note: HDF5 1.8 seems to be able to change the size even if
-                        // dimensions are not in bound of max dimensions, but the resulting file can
-                        // no longer be read correctly by a HDF5 1.6.x library.
-                        if (baseWriter.areDimensionsInBounds(dataSetId, dimensions))
+                        final StorageLayout layout = baseWriter.h5.getLayout(dataSetId, registry);
+                        if (layout == StorageLayout.CHUNKED)
                         {
-                            baseWriter.h5.setDataSetExtent(dataSetId, dimensions);
+                            // Safety check. JHDF5 creates CHUNKED data sets always with unlimited
+                            // max dimensions but we may have to work on a file we haven't created.
+                            if (baseWriter.areDimensionsInBounds(dataSetId, dimensions))
+                            {
+                                baseWriter.h5.setDataSetExtentChunked(dataSetId, dimensions);
+                            } else
+                            {
+                                throw new HDF5JavaException(
+                                        "New data set dimension is out of bounds.");
+                            }
+                        } else
+                        {
+                            // CONTIGUOUS and COMPACT data sets are effectively fixed size, thus we
+                            // need to delete and re-create it.
+                            baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
+                            baseWriter.h5.createDataSet(baseWriter.fileId, dimensions, null,
+                                    stringDataTypeId,
+                                    HDF5GenericCompression.GENERIC_NO_COMPRESSION, objectPath,
+                                    layout, baseWriter.fileFormat, registry);
                         }
                     } else
                     {

@@ -133,6 +133,7 @@ public class HDF5RoundtripTest
         test.testScaleOffsetFilterFloat();
         test.testStringArray();
         test.testStringArrayBlock();
+        test.testStringArrayCompact();
         test.testStringCompression();
         test.testStringArrayCompression();
         test.testReadMDFloatArray();
@@ -1639,17 +1640,47 @@ public class HDF5RoundtripTest
         final String[] data = new String[]
             { "abc", "ABCxxx", "xyz" };
         final String dataSetName = "/aStringArray";
-        writer.createStringArray(dataSetName, 6, 0, 5, HDF5GenericCompression.GENERIC_NO_COMPRESSION);
+        writer.createStringArray(dataSetName, 6, 0, 5,
+                HDF5GenericCompression.GENERIC_NO_COMPRESSION);
         writer.writeStringArrayBlock(dataSetName, data, 1);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
         String[] dataStored = reader.readStringArray(dataSetName);
+        assertTrue(Arrays.equals(new String[]
+            { "", "", "", data[0], data[1], data[2] }, dataStored));
         dataStored = reader.readStringArrayBlock(dataSetName, 3, 0);
-        assertTrue(Arrays.equals(new String[] { "", "", "" }, dataStored));
+        assertTrue(Arrays.equals(new String[]
+            { "", "", "" }, dataStored));
         dataStored = reader.readStringArrayBlock(dataSetName, 3, 1);
         assertTrue(Arrays.equals(data, dataStored));
         dataStored = reader.readStringArrayBlockWithOffset(dataSetName, 3, 2);
-        assertTrue(Arrays.equals(new String[] { "", data[0], data[1] }, dataStored));
+        assertTrue(Arrays.equals(new String[]
+            { "", data[0], data[1] }, dataStored));
+        reader.close();
+    }
+
+    @Test
+    public void testStringArrayCompact()
+    {
+        final File stringArrayFile = new File(workingDirectory, "stringArrayCompact.h5");
+        stringArrayFile.delete();
+        assertFalse(stringArrayFile.exists());
+        stringArrayFile.deleteOnExit();
+        IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(stringArrayFile).dontUseExtendableDataTypes()
+                        .writer();
+        final String[] data = new String[]
+            { "abc1234", "ABCxxxX", "xyzUVWX" };
+        final String dataSetName = "/aStringArray";
+        writer.writeStringArray(dataSetName, data);
+        writer.close();
+        writer = HDF5FactoryProvider.get().open(stringArrayFile);
+        writer.writeStringArray(dataSetName, new String[] { data[0], data[1] });
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
+        String[] dataStored = reader.readStringArray(dataSetName);
+        assertTrue(Arrays.equals(new String[]
+            { data[0], data[1] }, dataStored));
         reader.close();
     }
 
