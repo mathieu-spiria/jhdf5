@@ -1,6 +1,6 @@
 #! /bin/bash
 
-VERSION=1.8.2
+VERSION=1.8.3
 PLATFORM="$1"
 
 if [ "$PLATFORM" != "i386" -a "$PLATFORM" != "x86" -a "$PLATFORM" != "amd64" -a "$PLATFORM" != "x86_64" ]; then
@@ -20,3 +20,5 @@ CFLAGS=$CFLAGS ./configure --prefix=/opt/hdf5-$VERSION-$PLATFORM --enable-debug=
 make &> make_pass1.log
 
 sh compile_pass2.sh &> make_pass2.log
+
+make test &> test.log

@@ -1,0 +1,39 @@
+diff -ruN hdf5-1.8.3.orig/compile_pass2.sh hdf5-1.8.3/compile_pass2.sh
+--- hdf5-1.8.3.orig/compile_pass2.sh	1970-01-01 01:00:00.000000000 +0100
++++ hdf5-1.8.3/compile_pass2.sh	2009-05-09 16:51:56.000000000 +0200
+@@ -0,0 +1,23 @@
++#! /bin/bash
++
++#
++# Pass 2: fix mis-compiled classes.
++#
++
++cd src
++
++script=compile_pass2.sh
++
++test -e $script && rm $script
++
++for f in H5Tconv.c H5F.c; do
++  grep $f$ ../make_pass1.log | grep ^/bin/sh | sed -e 's/-O3/-O/g' >> $script
++done
++
++sh $script
++
++rm $script
++
++cd ..
++
++make
+diff -ruN hdf5-1.8.3.orig/config/gnu-flags hdf5-1.8.3/config/gnu-flags
+--- hdf5-1.8.3.orig/config/gnu-flags	2009-05-04 01:17:35.000000000 +0200
++++ hdf5-1.8.3/config/gnu-flags	2009-05-09 16:52:11.000000000 +0200
+@@ -161,7 +161,7 @@
+         # optimization levels (which shows up as failures for various integer
+         # types -> long long conversions in the test/dtypes test).  Perhaps
+         # later versions of gcc will fix this bug... - QAK - 2003/10/20
+-        PROD_CFLAGS="-O"
++        PROD_CFLAGS="-O3"
+         ;;
+       *)
+         PROD_CFLAGS="-O"
