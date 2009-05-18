@@ -20,6 +20,8 @@ import java.io.File;
 import java.util.BitSet;
 import java.util.List;
 
+import ch.systemsx.cisd.base.convert.NativeData;
+
 import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
@@ -38,7 +40,7 @@ public class HDF5ReadTest
             describe(reader, "/Group1/MyBitSet", null);
             describe(reader, "/Group1/MyDataSet", null);
             byte[] bsb = reader.readAsByteArray("/Group1/MyBitSet");
-            long[] bsl = HDFNativeData.byteToLong(bsb, 0, bsb.length / HDFNativeData.LONG_SIZE);
+            long[] bsl = HDFNativeData.byteToLong(bsb, 0, bsb.length / NativeData.LONG_SIZE);
             System.out.println("length of /Group1/MyBitSet=" + bsl.length);
             for (long l : bsl)
             {

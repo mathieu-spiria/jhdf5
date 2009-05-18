@@ -45,7 +45,6 @@ import java.util.Set;
 
 import ncsa.hdf.hdf5lib.H5;
 import ncsa.hdf.hdf5lib.HDF5Constants;
-import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
@@ -59,6 +58,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
@@ -213,6 +213,21 @@ public class HDF5RoundtripTest
         test.testSoftLink();
         test.testBrokenSoftLink();
         test.testDeleteSoftLink();
+        test.testRenameLink();
+        try
+        {
+            test.testRenameLinkOverwriteFails();
+        } catch (HDF5SymbolTableException ex)
+        {
+            // Expected.
+        }
+        try
+        {
+            test.testRenameLinkSrcNonExistentFails();
+        } catch (HDF5SymbolTableException ex)
+        {
+            // Expected.
+        }
         test.testNullOnGetSymbolicLinkTargetForNoLink();
         test.testUpdateSoftLink();
         test.testExternalLink();
@@ -1675,7 +1690,8 @@ public class HDF5RoundtripTest
         writer.writeStringArray(dataSetName, data);
         writer.close();
         writer = HDF5FactoryProvider.get().open(stringArrayFile);
-        writer.writeStringArray(dataSetName, new String[] { data[0], data[1] });
+        writer.writeStringArray(dataSetName, new String[]
+            { data[0], data[1] });
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
         String[] dataStored = reader.readStringArray(dataSetName);
@@ -2188,6 +2204,47 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testRenameLink()
+    {
+        final File file = new File(workingDirectory, "renameLink.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.writeBoolean("/some/boolean/value", true);
+        writer.move("/some/boolean/value", "/a/new/home");
+        assertFalse(writer.exists("/home/boolean/value"));
+        assertTrue(writer.exists("/a/new/home"));
+        writer.close();
+    }
+
+    @Test(expectedExceptions = HDF5SymbolTableException.class)
+    public void testRenameLinkOverwriteFails()
+    {
+        final File file = new File(workingDirectory, "renameLinkOverwriteFails.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.writeBoolean("/some/boolean/value", true);
+        writer.writeInt("/a/new/home", 4);
+        writer.move("/some/boolean/value", "/a/new/home");
+        writer.close();
+    }
+
+    @Test(expectedExceptions = HDF5SymbolTableException.class)
+    public void testRenameLinkSrcNonExistentFails()
+    {
+        final File file = new File(workingDirectory, "renameLinkSrcNonExistentFails.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.move("/some/boolean/value", "/a/new/home");
+        writer.close();
+    }
+
+    @Test
     public void testOverwriteWithEmptyString()
     {
         final File datasetFile = new File(workingDirectory, "overwriteString.h5");
@@ -2468,7 +2525,7 @@ public class HDF5RoundtripTest
         assertEquals(StorageLayout.COMPACT, info.getStorageLayout());
         assertNull(info.tryGetChunkSizes());
         assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
-        assertEquals(HDFNativeData.SHORT_SIZE, info.getTypeInformation().getElementSize());
+        assertEquals(NativeData.SHORT_SIZE, info.getTypeInformation().getElementSize());
         assertTrue(info.isTimeDuration());
         assertFalse(info.isTimeStamp());
         assertEquals(HDF5TimeUnit.SECONDS, reader.tryGetTimeUnit(timeDurationDS));
@@ -4007,7 +4064,6 @@ public class HDF5RoundtripTest
             assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
         }
         reader.close();
-
     }
 
 }
