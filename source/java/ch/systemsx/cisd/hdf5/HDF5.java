@@ -56,6 +56,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Iget_name;
 import static ncsa.hdf.hdf5lib.H5.H5Lcreate_external;
 import static ncsa.hdf.hdf5lib.H5.H5Lcreate_hard;
 import static ncsa.hdf.hdf5lib.H5.H5Lcreate_soft;
+import static ncsa.hdf.hdf5lib.H5.H5Lmove;
 import static ncsa.hdf.hdf5lib.H5.H5Lexists;
 import static ncsa.hdf.hdf5lib.H5.H5Lget_link_info;
 import static ncsa.hdf.hdf5lib.H5.H5Lget_link_info_all;
@@ -313,6 +314,16 @@ class HDF5
         checkMaxLength(dstPath);
         final int success =
                 H5Ocopy(srcFileId, srcPath, dstFileId, dstPath, H5P_DEFAULT, H5P_DEFAULT);
+        return success;
+    }
+
+    public int moveLink(int fileId, String srcLinkPath, String dstLinkPath)
+    {
+        checkMaxLength(srcLinkPath);
+        checkMaxLength(dstLinkPath);
+        final int success =
+                H5Lmove(fileId, srcLinkPath, fileId, dstLinkPath, lcplCreateIntermediateGroups,
+                        H5P_DEFAULT);
         return success;
     }
 

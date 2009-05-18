@@ -217,6 +217,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
     }
 
+    public void move(String oldLinkPath, String newLinkPath)
+    {
+        baseWriter.checkOpen();
+        baseWriter.h5.moveLink(baseWriter.fileId, oldLinkPath, newLinkPath);
+    }
+
     // /////////////////////
     // Group
     // /////////////////////

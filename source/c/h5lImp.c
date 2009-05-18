@@ -296,6 +296,67 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Lcreate_1external
 
 /*
  * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Lmove
+ * Signature: (ILjava/lang/String;ILjava/lang/String;II)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Lmove
+  (JNIEnv *env, jclass clss, jint src_loc_id, jstring
+    src_name, jint dest_loc_id, jstring dest_name, jint lcpl_id, jint lapl_id)
+{
+    herr_t status;
+    char *srcName, *dstName;
+    jboolean isCopy;
+
+    if (src_name == NULL) {
+        h5nullArgument( env, "H5Lmove:  src_name is NULL");
+        return -1;
+    }
+    if (dest_name == NULL) {
+        h5nullArgument( env, "H5Lmove:  dest_name is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    srcName = (char *)env->GetStringUTFChars(src_name,&isCopy);
+#else
+    srcName = (char *)(*env)->GetStringUTFChars(env,src_name,&isCopy);
+#endif
+    if (srcName == NULL) {
+        h5JNIFatalError( env, "H5Lmove:  src_name not pinned");
+        return -1;
+    }
+#ifdef __cplusplus
+    dstName = (char *)env->GetStringUTFChars(dest_name,&isCopy);
+#else
+    dstName = (char *)(*env)->GetStringUTFChars(env,dest_name,&isCopy);
+#endif
+    if (dstName == NULL) {
+#ifdef __cplusplus
+        env->ReleaseStringUTFChars(src_name,srcName);
+#else
+        (*env)->ReleaseStringUTFChars(env,src_name,srcName);
+#endif
+        h5JNIFatalError( env, "H5Lmove:  dest_name not pinned");
+        return -1;
+    }
+
+    status = H5Lmove((hid_t)src_loc_id, srcName, (hid_t)dest_loc_id, dstName, lcpl_id, lapl_id);
+
+#ifdef __cplusplus
+    env->ReleaseStringUTFChars(dest_name,dstName);
+    env->ReleaseStringUTFChars(src_name,srcName);
+#else
+    (*env)->ReleaseStringUTFChars(env,dest_name,dstName);
+    (*env)->ReleaseStringUTFChars(env,src_name,srcName);
+#endif
+
+    if (status < 0) {
+        h5libraryError(env);
+    }
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
  * Method:    H5Lget_link_info
  */
 JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Lget_1link_1info

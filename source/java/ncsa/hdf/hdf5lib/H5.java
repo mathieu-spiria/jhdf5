@@ -3853,6 +3853,21 @@ public class H5
             throws HDF5LibraryException, NullPointerException;
 
     /**
+     * H5Lmove moves a link atomically to a new group or renames it.
+     * 
+     * @param src_loc_id The old location identifier of the object to be renamed
+     * @param src_name The old name of the object to be renamed
+     * @param dst_loc_id The new location identifier of the link 
+     * @param dst_name The new name the object
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - current_name or name is null.
+     */
+    public synchronized static native int H5Lmove(int src_loc_id, String src_name,
+            int dst_loc_id, String dst_name, int lcpl_id, int lapl_id)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
      * H5Lexists returns <code>true</code> if a link with <var>name</var> exists and <code>false
      * </code>
      * otherwise.

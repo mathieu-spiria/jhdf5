@@ -19,7 +19,9 @@ package ch.systemsx.cisd.hdf5;
 import java.util.BitSet;
 import java.util.Date;
 
+import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
@@ -152,6 +154,15 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * specified link will be removed.
      */
     public void delete(String objectPath);
+
+    /**
+     * Moves or renames a link in the file atomically.
+     * 
+     * @throws HDF5SymbolTableException If <var>oldLinkPath</var> does not exist or if
+     *             <var>newLinkPath</var> already exists (minor in both (!) cases:
+     *             {@link HDF5Constants#H5E_NOTFOUND}).
+     */
+    public void move(String oldLinkPath, String newLinkPath) throws HDF5SymbolTableException;
 
     // /////////////////////
     // Group
