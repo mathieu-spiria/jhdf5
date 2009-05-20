@@ -230,12 +230,7 @@ LINK64_OBJS= \
 	"$(INTDIR)\h5sImp.obj" \
 	"$(INTDIR)\h5tImp.obj" \
 	"$(INTDIR)\h5util.obj" \
-	"$(INTDIR)\h5zImp.obj" \
-	"$(INTDIR)\copyByteDouble.obj" \
-	"$(INTDIR)\copyByteFloat.obj" \
-	"$(INTDIR)\copyByteInt.obj" \
-	"$(INTDIR)\copyByteLong.obj" \
-	"$(INTDIR)\copyByteShort.obj"
+	"$(INTDIR)\h5zImp.obj"
 
 
 "$(OUTDIR)\jhdf5.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK64_OBJS)
@@ -340,32 +335,6 @@ SOURCE=$(SRCDIR)\h5zImp.c
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\copyByteDouble.c
-
-"$(INTDIR)\copyByteDouble.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-SOURCE=$(SRCDIR)\copyByteFloat.c
-
-"$(INTDIR)\copyByteFloat.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-SOURCE=$(SRCDIR)\copyByteInt.c
-
-"$(INTDIR)\copyByteInt.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-SOURCE=$(SRCDIR)\copyByteLong.c
-
-"$(INTDIR)\copyByteLong.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-SOURCE=$(SRCDIR)\copyByteShort.c
-
-"$(INTDIR)\copyByteShort.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
-	$(CPP) $(CPP_PROJ) $(SOURCE)
-
-
 
 CLEAN :
 	-@erase "$(INTDIR)\exceptionImp.obj"
@@ -383,11 +352,6 @@ CLEAN :
 	-@erase "$(INTDIR)\h5tImp.obj"
 	-@erase "$(INTDIR)\h5zImp.obj"
 	-@erase "$(INTDIR)\h5util.obj"
-	-@erase "$(INTDIR)\copyByteDouble.obj"
-	-@erase "$(INTDIR)\copyByteFloat.obj"
-	-@erase "$(INTDIR)\copyByteInt.obj"
-	-@erase "$(INTDIR)\copyByteLong.obj"
-	-@erase "$(INTDIR)\copyByteShort.obj"
 	-@erase "$(INTDIR)\vc80.idb"
 	-@erase "$(INTDIR)\jhdf5.exp"
 	-@erase "$(INTDIR)\jhdf5.lib"
