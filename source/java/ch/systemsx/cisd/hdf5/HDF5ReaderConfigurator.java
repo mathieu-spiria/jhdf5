@@ -44,8 +44,8 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
 
     public boolean platformSupportsNumericConversions()
     {
-        // On HDF5 1.8.2, numeric conversions on sparcv9 can get us SEGFAULTS for converting between
-        // integers and floats.
+        // On HDF5 1.8.3, numeric conversions on sparcv9 don't detect overflows 
+        // for INFINITY and DINFINITY values.
         if (OSUtilities.getCPUArchitecture().startsWith("sparc"))
         {
             return false;
