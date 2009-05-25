@@ -214,25 +214,7 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
     public __name__[] read__Name__ArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<__name__[]> readCallable = new ICallableWithCleanUp<__name__[]>()
-            {
-                public __name__[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId = 
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
-                                    blockSize, registry);
-                    final __name__[] data = new __name__[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return read__Name__ArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
     public __name__[] read__Name__ArrayBlockWithOffset(final String objectPath, final int blockSize,
@@ -325,32 +307,12 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
     public MD__Name__Array read__Name__MDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
-        assert objectPath != null;
-        assert blockDimensions != null;
-        assert blockNumber != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<MD__Name__Array> readCallable = new ICallableWithCleanUp<MD__Name__Array>()
-            {
-                public MD__Name__Array call(ICleanUpRegistry registry)
-                {
-                    final long[] offset = new long[blockDimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * blockDimensions[i];
-                    }
-                    final int dataSetId = 
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockDimensions, 
-                                    registry);
-                    final __name__[] dataBlock = new __name__[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, dataBlock);
-                    return new MD__Name__Array(dataBlock, blockDimensions);
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return read__Name__MDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     public MD__Name__Array read__Name__MDArrayBlockWithOffset(final String objectPath,

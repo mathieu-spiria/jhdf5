@@ -214,25 +214,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     public double[] readDoubleArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<double[]> readCallable = new ICallableWithCleanUp<double[]>()
-            {
-                public double[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId = 
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
-                                    blockSize, registry);
-                    final double[] data = new double[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return readDoubleArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
     public double[] readDoubleArrayBlockWithOffset(final String objectPath, final int blockSize,
@@ -325,32 +307,12 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     public MDDoubleArray readDoubleMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
-        assert objectPath != null;
-        assert blockDimensions != null;
-        assert blockNumber != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<MDDoubleArray> readCallable = new ICallableWithCleanUp<MDDoubleArray>()
-            {
-                public MDDoubleArray call(ICleanUpRegistry registry)
-                {
-                    final long[] offset = new long[blockDimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * blockDimensions[i];
-                    }
-                    final int dataSetId = 
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockDimensions, 
-                                    registry);
-                    final double[] dataBlock = new double[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_DOUBLE, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, dataBlock);
-                    return new MDDoubleArray(dataBlock, blockDimensions);
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readDoubleMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     public MDDoubleArray readDoubleMDArrayBlockWithOffset(final String objectPath,

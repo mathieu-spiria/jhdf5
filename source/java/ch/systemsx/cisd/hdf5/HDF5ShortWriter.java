@@ -199,33 +199,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
     public void writeShortArrayBlock(final String objectPath, final short[] data,
             final long blockNumber)
     {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final long[] slabStartOrNull = new long[]
-                        { data.length * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { data.length * (blockNumber + 1) }, false, registry);
-                    final int dataSpaceId = 
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
-                    final int memorySpaceId = 
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId, 
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        writeShortArrayBlockWithOffset(objectPath, data, data.length, data.length * blockNumber);
     }
 
     public void writeShortArrayBlockWithOffset(final String objectPath, final short[] data,
@@ -415,38 +389,15 @@ class HDF5ShortWriter implements IHDF5ShortWriter
     public void writeShortMDArrayBlock(final String objectPath, final MDShortArray data,
             final long[] blockNumber)
     {
-        assert objectPath != null;
-        assert data != null;
         assert blockNumber != null;
 
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    assert dimensions.length == blockNumber.length;
-                    final long[] offset = new long[dimensions.length];
-                    final long[] dataSetDimensions = new long[dimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * dimensions[i];
-                        dataSetDimensions[i] = offset[i] + dimensions[i];
-                    }
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, dataSetDimensions, false, registry);
-                    final int dataSpaceId = 
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId = 
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId, 
-                            H5P_DEFAULT, data.getAsFlatArray());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        final long[] dimensions = data.longDimensions();
+        final long[] offset = new long[dimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * dimensions[i];
+        }
+        writeShortMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
     public void writeShortMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,

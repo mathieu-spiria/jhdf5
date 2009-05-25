@@ -214,25 +214,7 @@ class HDF5LongReader implements IHDF5LongReader
     public long[] readLongArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId = 
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
-                                    blockSize, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return readLongArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
     public long[] readLongArrayBlockWithOffset(final String objectPath, final int blockSize,
@@ -325,32 +307,12 @@ class HDF5LongReader implements IHDF5LongReader
     public MDLongArray readLongMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
-        assert objectPath != null;
-        assert blockDimensions != null;
-        assert blockNumber != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<MDLongArray> readCallable = new ICallableWithCleanUp<MDLongArray>()
-            {
-                public MDLongArray call(ICleanUpRegistry registry)
-                {
-                    final long[] offset = new long[blockDimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * blockDimensions[i];
-                    }
-                    final int dataSetId = 
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockDimensions, 
-                                    registry);
-                    final long[] dataBlock = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, dataBlock);
-                    return new MDLongArray(dataBlock, blockDimensions);
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readLongMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     public MDLongArray readLongMDArrayBlockWithOffset(final String objectPath,

@@ -50,6 +50,7 @@ public abstract class HDF5DataType
     {
         return storageTypeId;
     }
+    
     /**
      * Returns the native data type id of this type.
      */

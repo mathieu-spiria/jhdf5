@@ -22,7 +22,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
-
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -213,25 +212,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     public byte[] readByteArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
-            {
-                public byte[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId = 
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
-                                    blockSize, registry);
-                    final byte[] data = new byte[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return readByteArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
     public byte[] readByteArrayBlockWithOffset(final String objectPath, final int blockSize,
@@ -324,32 +305,12 @@ class HDF5ByteReader implements IHDF5ByteReader
     public MDByteArray readByteMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
-        assert objectPath != null;
-        assert blockDimensions != null;
-        assert blockNumber != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<MDByteArray> readCallable = new ICallableWithCleanUp<MDByteArray>()
-            {
-                public MDByteArray call(ICleanUpRegistry registry)
-                {
-                    final long[] offset = new long[blockDimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        offset[i] = blockNumber[i] * blockDimensions[i];
-                    }
-                    final int dataSetId = 
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockDimensions, 
-                                    registry);
-                    final byte[] dataBlock = new byte[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, dataBlock);
-                    return new MDByteArray(dataBlock, blockDimensions);
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readByteMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     public MDByteArray readByteMDArrayBlockWithOffset(final String objectPath,

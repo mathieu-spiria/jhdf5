@@ -588,7 +588,7 @@ class HDF5Reader implements IHDF5Reader
         }
     }
 
-    private boolean isScaledEnum(final int objectId, final ICleanUpRegistry registry)
+    protected boolean isScaledEnum(final int objectId, final ICleanUpRegistry registry)
     {
         final HDF5DataTypeVariant typeVariantOrNull =
                 baseReader.tryGetTypeVariant(objectId, registry);
@@ -1694,7 +1694,7 @@ class HDF5Reader implements IHDF5Reader
     }
 
     public HDF5EnumerationValueArray readEnumArray(final String objectPath,
-            final HDF5EnumerationType enumType) throws HDF5JavaException
+            final HDF5EnumerationType enumTypeOrNull) throws HDF5JavaException
     {
         assert objectPath != null;
 
@@ -1710,8 +1710,8 @@ class HDF5Reader implements IHDF5Reader
                             final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId);
                             final boolean scaledEnum = isScaledEnum(dataSetId, registry);
                             final HDF5EnumerationType actualEnumType =
-                                    (enumType == null) ? getEnumTypeForDataSetId(dataSetId,
-                                            objectPath, scaledEnum, registry) : enumType;
+                                    (enumTypeOrNull == null) ? getEnumTypeForDataSetId(dataSetId,
+                                            objectPath, scaledEnum, registry) : enumTypeOrNull;
                             final int arraySize = HDF5Utils.getOneDimensionalArraySize(dimensions);
                             switch (actualEnumType.getStorageForm())
                             {
@@ -1884,6 +1884,176 @@ class HDF5Reader implements IHDF5Reader
             return getEnumTypeForDataSetId(dataSetId, objectPath, scaledEnum, registry);
         }
         return null;
+    }
+
+    public HDF5EnumerationValueArray readEnumArrayBlockWithOffset(final String objectPath,
+            final HDF5EnumerationType enumTypeOrNull, final int blockSize, final long offset)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5EnumerationValueArray> readRunnable =
+                new ICallableWithCleanUp<HDF5EnumerationValueArray>()
+                    {
+                        public HDF5EnumerationValueArray call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockSize,
+                                            registry);
+                            final boolean scaledEnum = isScaledEnum(dataSetId, registry);
+                            final HDF5EnumerationType actualEnumType =
+                                    (enumTypeOrNull == null) ? getEnumTypeForDataSetId(dataSetId,
+                                            objectPath, scaledEnum, registry) : enumTypeOrNull;
+                            switch (actualEnumType.getStorageForm())
+                            {
+                                case BYTE:
+                                {
+                                    final byte[] data = new byte[spaceParams.blockSize];
+                                    if (scaledEnum)
+                                    {
+                                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
+                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                                data);
+                                    } else
+                                    {
+                                        baseReader.h5.readDataSet(dataSetId, actualEnumType
+                                                .getNativeTypeId(), spaceParams.memorySpaceId,
+                                                spaceParams.dataSpaceId, data);
+                                    }
+                                    return new HDF5EnumerationValueArray(actualEnumType, data);
+                                }
+                                case SHORT:
+                                {
+                                    final short[] data = new short[spaceParams.blockSize];
+                                    if (scaledEnum)
+                                    {
+                                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
+                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                                data);
+                                    } else
+                                    {
+                                        baseReader.h5.readDataSet(dataSetId, actualEnumType
+                                                .getNativeTypeId(), spaceParams.memorySpaceId,
+                                                spaceParams.dataSpaceId, data);
+                                    }
+                                    return new HDF5EnumerationValueArray(actualEnumType, data);
+                                }
+                                case INT:
+                                {
+                                    final int[] data = new int[spaceParams.blockSize];
+                                    if (scaledEnum)
+                                    {
+                                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
+                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                                data);
+                                    } else
+                                    {
+                                        baseReader.h5.readDataSet(dataSetId, actualEnumType
+                                                .getNativeTypeId(), spaceParams.memorySpaceId,
+                                                spaceParams.dataSpaceId, data);
+                                    }
+                                    return new HDF5EnumerationValueArray(actualEnumType, data);
+                                }
+                            }
+                            throw new Error("Illegal storage form ("
+                                    + actualEnumType.getStorageForm() + ".)");
+                        }
+                    };
+
+        return baseReader.runner.call(readRunnable);
+    }
+
+    public HDF5EnumerationValueArray readEnumArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset)
+    {
+        return readEnumArrayBlockWithOffset(objectPath, null, blockSize, offset);
+    }
+
+    public HDF5EnumerationValueArray readEnumArrayBlock(final String objectPath,
+            final int blockSize, final long blockNumber)
+    {
+        return readEnumArrayBlockWithOffset(objectPath, null, blockSize, blockNumber * blockSize);
+    }
+
+    public HDF5EnumerationValueArray readEnumArrayBlock(final String objectPath,
+            final HDF5EnumerationType enumType, final int blockSize, final long blockNumber)
+    {
+        return readEnumArrayBlockWithOffset(objectPath, enumType, blockSize, blockNumber
+                * blockSize);
+    }
+
+    public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getEnumArrayNaturalBlocks(
+            final String objectPath, final HDF5EnumerationType enumTypeOrNull)
+            throws HDF5JavaException
+    {
+        baseReader.checkOpen();
+        final HDF5DataSetInformation info = baseReader.getDataSetInformation(objectPath);
+        if (info.getRank() > 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + info.getRank() + ")");
+        }
+        final long longSize = info.getDimensions()[0];
+        final int size = (int) longSize;
+        if (size != longSize)
+        {
+            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
+        }
+        final int naturalBlockSize =
+                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                        : size;
+        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+        final long numberOfBlocks =
+                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+        final int lastBlockSize =
+                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+
+        return new Iterable<HDF5DataBlock<HDF5EnumerationValueArray>>()
+            {
+                public Iterator<HDF5DataBlock<HDF5EnumerationValueArray>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<HDF5EnumerationValueArray>>()
+                        {
+                            long index = 0;
+
+                            public boolean hasNext()
+                            {
+                                return index < numberOfBlocks;
+                            }
+
+                            public HDF5DataBlock<HDF5EnumerationValueArray> next()
+                            {
+                                if (hasNext() == false)
+                                {
+                                    throw new NoSuchElementException();
+                                }
+                                final long offset = naturalBlockSize * index;
+                                final int blockSize =
+                                        (index == numberOfBlocks - 1) ? lastBlockSize
+                                                : naturalBlockSize;
+                                final HDF5EnumerationValueArray block =
+                                        readEnumArrayBlockWithOffset(objectPath, enumTypeOrNull,
+                                                blockSize, offset);
+                                return new HDF5DataBlock<HDF5EnumerationValueArray>(block, index++,
+                                        offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getEnumArrayNaturalBlocks(
+            final String objectPath) throws HDF5JavaException
+    {
+        return getEnumArrayNaturalBlocks(objectPath, null);
     }
 
     //

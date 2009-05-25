@@ -1091,6 +1091,86 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void writeEnumArray(final String objectPath, final HDF5EnumerationValueArray data,
             final HDF5IntCompression compression) throws HDF5JavaException;
 
+    /**
+     * Creates am enum array (of rank 1). The initial size of the array is 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumType The enumeration type of this array.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     */
+    public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
+            final int blockSize);
+
+    /**
+     * Creates am enum array (of rank 1). The initial size of the array is 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumType The enumeration type of this array.
+     * @param size The size of the enum vector to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     */
+    public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
+            final long size, final int blockSize);
+
+    /**
+     * Creates am enum array (of rank 1). The initial size of the array is 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumType The enumeration type of this array.
+     * @param size The size of the enum vector to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @param compression The compression parameters of the data set.
+     */
+    public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
+            final long size, final int blockSize, final HDF5IntCompression compression);
+
+    /**
+     * Writes out a block of an enum array (of rank 1). The data set needs to have been created by
+     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntCompression)}
+     * beforehand. Obviously the {@link HDF5EnumerationType} of the create call and this call needs
+     * to match.
+     * <p>
+     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
+     * to the <var>blockSize</var> argument of the
+     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntCompression)} call
+     * that was used to create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The value of {@link HDF5EnumerationValueArray#getLength()}
+     *            defines the block size. Must not be <code>null</code> or of length 0.
+     * @param blockNumber The number of the block to write.
+     */
+    public void writeEnumArrayBlock(final String objectPath, final HDF5EnumerationValueArray data,
+            final long blockNumber);
+
+    /**
+     * Writes out a block of an enum array (of rank 1). The data set needs to have been created by
+     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntCompression)}
+     * beforehand. Obviously the {@link HDF5EnumerationType} of the create call and this call needs
+     * to match.
+     * <p>
+     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
+     * to the <var>blockSize</var> argument of the
+     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntCompression)} call
+     * that was used to create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The value of {@link HDF5EnumerationValueArray#getLength()}
+     *            defines the block size. Must not be <code>null</code> or of length 0.
+     * @param dataSize The (real) size of <code>data</code> (needs to be
+     *            <code><= data.getLength()</code> )
+     * @param offset The offset in the data set to start writing to.
+     */
+    public void writeEnumArrayBlockWithOffset(final String objectPath,
+            final HDF5EnumerationValueArray data, final int dataSize, final long offset);
+
     //
     // Compound
     //
