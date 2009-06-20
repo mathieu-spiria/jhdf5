@@ -668,13 +668,22 @@ class HDF5Reader implements IHDF5Reader
                     + objectPath + " needs to be a String.");
         }
         final int size = baseReader.h5.getDataTypeSize(dataTypeId);
-        final int stringDataTypeId = baseReader.h5.createDataTypeString(size, registry);
-        byte[] data = baseReader.h5.readAttributeAsByteArray(attributeId, stringDataTypeId, size);
-        int termIdx;
-        for (termIdx = 0; termIdx < size && data[termIdx] != 0; ++termIdx)
+        final int stringDataTypeId = baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+        if (baseReader.h5.isVariableLengthString(stringDataTypeId))
         {
+            String[] data = new String[1];
+            baseReader.h5.readAttributeVL(attributeId, stringDataTypeId, data);
+            return data[0];
+        } else
+        {
+            byte[] data =
+                    baseReader.h5.readAttributeAsByteArray(attributeId, stringDataTypeId, size);
+            int termIdx;
+            for (termIdx = 0; termIdx < size && data[termIdx] != 0; ++termIdx)
+            {
+            }
+            return new String(data, 0, termIdx);
         }
-        return new String(data, 0, termIdx);
     }
 
     public boolean getBooleanAttribute(final String objectPath, final String attributeName)
@@ -2565,9 +2574,20 @@ class HDF5Reader implements IHDF5Reader
         return byteReader.getByteAttribute(objectPath, attributeName);
     }
 
+    public MDByteArray getByteMDArrayAttribute(String objectPath, String attributeName)
+    {
+        return byteReader.getByteMDArrayAttribute(objectPath, attributeName);
+    }
+
     public Iterable<HDF5MDDataBlock<MDByteArray>> getByteMDArrayNaturalBlocks(String dataSetPath)
     {
         return byteReader.getByteMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public byte[][] getByteMatrixAttribute(String objectPath, String attributeName)
+            throws HDF5JavaException
+    {
+        return byteReader.getByteMatrixAttribute(objectPath, attributeName);
     }
 
     public byte readByte(String objectPath)
@@ -2655,9 +2675,20 @@ class HDF5Reader implements IHDF5Reader
         return doubleReader.getDoubleAttribute(objectPath, attributeName);
     }
 
+    public MDDoubleArray getDoubleMDArrayAttribute(String objectPath, String attributeName)
+    {
+        return doubleReader.getDoubleMDArrayAttribute(objectPath, attributeName);
+    }
+
     public Iterable<HDF5MDDataBlock<MDDoubleArray>> getDoubleMDArrayNaturalBlocks(String dataSetPath)
     {
         return doubleReader.getDoubleMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public double[][] getDoubleMatrixAttribute(String objectPath, String attributeName)
+            throws HDF5JavaException
+    {
+        return doubleReader.getDoubleMatrixAttribute(objectPath, attributeName);
     }
 
     public double readDouble(String objectPath)
@@ -2745,9 +2776,20 @@ class HDF5Reader implements IHDF5Reader
         return floatReader.getFloatAttribute(objectPath, attributeName);
     }
 
+    public MDFloatArray getFloatMDArrayAttribute(String objectPath, String attributeName)
+    {
+        return floatReader.getFloatMDArrayAttribute(objectPath, attributeName);
+    }
+
     public Iterable<HDF5MDDataBlock<MDFloatArray>> getFloatMDArrayNaturalBlocks(String dataSetPath)
     {
         return floatReader.getFloatMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public float[][] getFloatMatrixAttribute(String objectPath, String attributeName)
+            throws HDF5JavaException
+    {
+        return floatReader.getFloatMatrixAttribute(objectPath, attributeName);
     }
 
     public float readFloat(String objectPath)
@@ -2835,9 +2877,20 @@ class HDF5Reader implements IHDF5Reader
         return intReader.getIntAttribute(objectPath, attributeName);
     }
 
+    public MDIntArray getIntMDArrayAttribute(String objectPath, String attributeName)
+    {
+        return intReader.getIntMDArrayAttribute(objectPath, attributeName);
+    }
+
     public Iterable<HDF5MDDataBlock<MDIntArray>> getIntMDArrayNaturalBlocks(String dataSetPath)
     {
         return intReader.getIntMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public int[][] getIntMatrixAttribute(String objectPath, String attributeName)
+            throws HDF5JavaException
+    {
+        return intReader.getIntMatrixAttribute(objectPath, attributeName);
     }
 
     public int readInt(String objectPath)
@@ -2924,9 +2977,20 @@ class HDF5Reader implements IHDF5Reader
         return longReader.getLongAttribute(objectPath, attributeName);
     }
 
+    public MDLongArray getLongMDArrayAttribute(String objectPath, String attributeName)
+    {
+        return longReader.getLongMDArrayAttribute(objectPath, attributeName);
+    }
+
     public Iterable<HDF5MDDataBlock<MDLongArray>> getLongMDArrayNaturalBlocks(String dataSetPath)
     {
         return longReader.getLongMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public long[][] getLongMatrixAttribute(String objectPath, String attributeName)
+            throws HDF5JavaException
+    {
+        return longReader.getLongMatrixAttribute(objectPath, attributeName);
     }
 
     public long readLong(String objectPath)
@@ -3014,9 +3078,20 @@ class HDF5Reader implements IHDF5Reader
         return shortReader.getShortAttribute(objectPath, attributeName);
     }
 
+    public MDShortArray getShortMDArrayAttribute(String objectPath, String attributeName)
+    {
+        return shortReader.getShortMDArrayAttribute(objectPath, attributeName);
+    }
+
     public Iterable<HDF5MDDataBlock<MDShortArray>> getShortMDArrayNaturalBlocks(String dataSetPath)
     {
         return shortReader.getShortMDArrayNaturalBlocks(dataSetPath);
+    }
+
+    public short[][] getShortMatrixAttribute(String objectPath, String attributeName)
+            throws HDF5JavaException
+    {
+        return shortReader.getShortMatrixAttribute(objectPath, attributeName);
     }
 
     public short readShort(String objectPath)

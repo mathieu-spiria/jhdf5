@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_BITFIELD;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_COMPOUND;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
@@ -23,6 +24,7 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_OPAQUE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_VLEN;
 
 /**
  * Identifies the class of a data type. Note that for array types the class of the elements is
@@ -32,8 +34,8 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
  */
 public enum HDF5DataClass
 {
-    BITFIELD(H5T_BITFIELD), INTEGER(H5T_INTEGER), FLOAT(H5T_FLOAT), STRING(H5T_STRING), OPAQUE(
-            H5T_OPAQUE), BOOLEAN(-1), ENUM(H5T_ENUM), COMPOUND(H5T_COMPOUND),
+    ARRAY(H5T_ARRAY), BITFIELD(H5T_BITFIELD), BOOLEAN(-1), COMPOUND(H5T_COMPOUND), ENUM(H5T_ENUM),
+    FLOAT(H5T_FLOAT), INTEGER(H5T_INTEGER), OPAQUE(H5T_OPAQUE), STRING(H5T_STRING), VLEN(H5T_VLEN),
     OTHER(-1);
 
     private int id;

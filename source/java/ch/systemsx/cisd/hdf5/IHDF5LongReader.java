@@ -51,6 +51,28 @@ interface IHDF5LongReader
      */
     public long[] getLongArrayAttribute(final String objectPath, final String attributeName);
 
+    /**
+     * Reads a multi-dimensional array <code>long</code> attribute named <var>attributeName</var>
+     * from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute array value read from the data set.
+     */
+    public MDLongArray getLongMDArrayAttribute(final String objectPath,
+            final String attributeName);
+
+    /**
+     * Reads a <code>long</code> matrix attribute named <var>attributeName</var>
+     * from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute matrix value read from the data set.
+     */
+    public long[][] getLongMatrixAttribute(final String objectPath, final String attributeName)
+            throws HDF5JavaException;
+
     // /////////////////////
     // Data Sets
     // /////////////////////

@@ -51,6 +51,28 @@ interface IHDF5DoubleReader
      */
     public double[] getDoubleArrayAttribute(final String objectPath, final String attributeName);
 
+    /**
+     * Reads a multi-dimensional array <code>double</code> attribute named <var>attributeName</var>
+     * from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute array value read from the data set.
+     */
+    public MDDoubleArray getDoubleMDArrayAttribute(final String objectPath,
+            final String attributeName);
+
+    /**
+     * Reads a <code>double</code> matrix attribute named <var>attributeName</var>
+     * from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute matrix value read from the data set.
+     */
+    public double[][] getDoubleMatrixAttribute(final String objectPath, final String attributeName)
+            throws HDF5JavaException;
+
     // /////////////////////
     // Data Sets
     // /////////////////////
