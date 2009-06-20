@@ -1512,6 +1512,11 @@ class HDF5
     {
         return H5Tget_class(dataTypeId);
     }
+    
+    public boolean hasClassType(int dataTypeId, int classTypeId)
+    {
+        return H5Tdetect_class(dataTypeId, classTypeId);
+    }
 
     public String tryGetDataTypePath(int dataTypeId)
     {

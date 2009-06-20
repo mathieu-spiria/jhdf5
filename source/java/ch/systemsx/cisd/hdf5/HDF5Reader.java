@@ -20,19 +20,13 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.ENUM_PREFIX;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
-import static ncsa.hdf.hdf5lib.H5.H5Tdetect_class;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_BITFIELD;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_COMPOUND;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_OPAQUE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
 
 import java.io.File;
@@ -2131,67 +2125,12 @@ class HDF5Reader implements IHDF5Reader
         {
             final int dataTypeId =
                     baseReader.h5.getDataTypeForIndex(compoundDataTypeId, i, registry);
-            final int sizeInBytes = baseReader.h5.getDataTypeSize(dataTypeId);
-            final int dataClassTypeId = baseReader.h5.getClassType(dataTypeId);
-            if (dataClassTypeId == H5T_ARRAY)
-            {
-                final int numberOfElements = getNumberOfArrayElements(dataTypeId);
-                final int elementSize = sizeInBytes / numberOfElements;
-                memberInfo[i] =
-                        new HDF5CompoundMemberInformation(memberNames[i],
-                                new HDF5DataTypeInformation(findDataClassForArray(dataTypeId),
-                                        elementSize, numberOfElements));
-            } else
-            {
-                memberInfo[i] =
-                        new HDF5CompoundMemberInformation(memberNames[i],
-                                new HDF5DataTypeInformation(baseReader.getDataClassForClassType(
-                                        dataClassTypeId, dataTypeId), sizeInBytes));
-            }
+            final HDF5DataTypeInformation dataTypeInformation =
+                    baseReader.getDataTypeInformation(dataTypeId);
+            memberInfo[i] = new HDF5CompoundMemberInformation(memberNames[i], dataTypeInformation);
         }
         Arrays.sort(memberInfo);
         return memberInfo;
-    }
-
-    private int getNumberOfArrayElements(int arrayDataTypeId)
-    {
-        final int[] dims = baseReader.h5.getArrayDimensions(arrayDataTypeId);
-        int numberOfElements = 1;
-        for (int d : dims)
-        {
-            numberOfElements *= d;
-        }
-        return numberOfElements;
-    }
-
-    private HDF5DataClass findDataClassForArray(int arrayDataTypeId)
-    {
-        if (H5Tdetect_class(arrayDataTypeId, H5T_FLOAT))
-        {
-            return HDF5DataClass.FLOAT;
-        } else if (H5Tdetect_class(arrayDataTypeId, H5T_INTEGER))
-        {
-            return HDF5DataClass.INTEGER;
-        } else if (H5Tdetect_class(arrayDataTypeId, H5T_STRING))
-        {
-            return HDF5DataClass.STRING;
-        } else if (H5Tdetect_class(arrayDataTypeId, H5T_BITFIELD))
-        {
-            return HDF5DataClass.BITFIELD;
-        } else if (H5Tdetect_class(arrayDataTypeId, H5T_COMPOUND))
-        {
-            return HDF5DataClass.COMPOUND;
-        } else if (H5Tdetect_class(arrayDataTypeId, H5T_ENUM))
-        {
-            return HDF5DataClass.ENUM;
-        } else if (H5Tdetect_class(arrayDataTypeId, H5T_OPAQUE))
-        {
-            return HDF5DataClass.OPAQUE;
-        } else
-        {
-            return HDF5DataClass.OTHER;
-        }
-
     }
 
     public <T> HDF5CompoundType<T> getCompoundType(final String name, final Class<T> compoundType,

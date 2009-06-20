@@ -23,6 +23,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_VARIABLE;
 
 import java.io.File;
@@ -626,16 +627,27 @@ class HDF5BaseReader
 
     HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId)
     {
-        return new HDF5DataTypeInformation(getDataClassForDataType(dataTypeId), h5
-                .getDataTypeSize(dataTypeId));
+        final int classTypeId = h5.getClassType(dataTypeId);
+        final HDF5DataClass dataClass;
+        final int totalSize = h5.getDataTypeSize(dataTypeId);
+        final int size;
+        final int numberOfElements;
+        if (classTypeId == H5T_ARRAY)
+        {
+            dataClass = getElementClassForArrayDataType(dataTypeId);
+            final int[] arrayDimensions = h5.getArrayDimensions(dataTypeId);
+            numberOfElements = MDArray.getLength(arrayDimensions); 
+            size = totalSize / numberOfElements;
+        } else
+        {
+            dataClass = getDataClassForClassType(classTypeId, dataTypeId);
+            numberOfElements = 1;
+            size = totalSize;
+        }
+        return new HDF5DataTypeInformation(dataClass, size, numberOfElements);
     }
 
-    private HDF5DataClass getDataClassForDataType(final int dataTypeId)
-    {
-        return getDataClassForClassType(h5.getClassType(dataTypeId), dataTypeId);
-    }
-
-    HDF5DataClass getDataClassForClassType(final int classTypeId, final int dataTypeId)
+    private HDF5DataClass getDataClassForClassType(final int classTypeId, final int dataTypeId)
     {
         HDF5DataClass dataClass = HDF5DataClass.classIdToDataClass(classTypeId);
         // Is it a boolean?
@@ -644,6 +656,18 @@ class HDF5BaseReader
             dataClass = HDF5DataClass.BOOLEAN;
         }
         return dataClass;
+    }
+
+    private HDF5DataClass getElementClassForArrayDataType(final int ArrayDataTypeId)
+    {
+        for (HDF5DataClass eClass : HDF5DataClass.values())
+        {
+            if (h5.hasClassType(ArrayDataTypeId, eClass.getId()))
+            {
+                return eClass;
+            }
+        }
+        return HDF5DataClass.OTHER;
     }
 
 }

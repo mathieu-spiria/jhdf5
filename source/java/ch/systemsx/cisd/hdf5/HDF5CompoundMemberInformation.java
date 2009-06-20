@@ -126,7 +126,7 @@ public final class HDF5CompoundMemberInformation implements
         }
         if (fieldType.isArray())
         {
-            typeInfo.setNumberOfElements(member.getMemberTypeLength());
+            typeInfo.setDimensions(new int[] { member.getMemberTypeLength() });
         }
         return typeInfo;
     }

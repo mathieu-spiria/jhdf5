@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
+
 /**
  * A class that holds relevant information about a data type.
  * 
@@ -29,17 +31,25 @@ public final class HDF5DataTypeInformation
     private int elementSize;
 
     private int numberOfElements;
+    
+    private int[] dimensions;
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize)
     {
-        this(dataClass, elementSize, 1);
+        this(dataClass, elementSize, new int[] { 1 });
     }
     
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int numberOfElements)
     {
+        this(dataClass, elementSize, new int[] { numberOfElements });
+    }
+    
+    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int[] dimensions)
+    {
         this.dataClass = dataClass;
         this.elementSize = elementSize;
-        this.numberOfElements = numberOfElements;
+        this.dimensions = dimensions;
+        this.numberOfElements = MDArray.getLength(dimensions);
     }
 
     /**
@@ -73,9 +83,18 @@ public final class HDF5DataTypeInformation
         return numberOfElements;
     }
 
-    void setNumberOfElements(int numberOfElements)
+    /**
+     * Returns the dimensions along each axis of this type.
+     */
+    public int[] getDimensions()
     {
-        this.numberOfElements = numberOfElements;
+        return dimensions;
+    }
+
+    void setDimensions(int[] dimensions)
+    {
+        this.dimensions = dimensions;
+        this.numberOfElements = MDArray.getLength(dimensions);
     }
 
     //
@@ -106,10 +125,25 @@ public final class HDF5DataTypeInformation
         if (numberOfElements == 1)
         {
             return dataClass + "(" + elementSize + ")";
-        } else
+        } else if (dimensions.length == 1)
         {
             
             return dataClass + "(" + elementSize + ", #" + numberOfElements + ")";
+        } else
+        {
+            final StringBuilder builder = new StringBuilder();
+            builder.append(dataClass.toString());
+            builder.append('(');
+            builder.append(elementSize);
+            builder.append(", [");
+            for (int d : dimensions)
+            {
+                builder.append(d);
+                builder.append(',');
+            }
+            builder.setLength(builder.length() - 1);
+            builder.append(']');
+            return builder.toString();
         }
     }
 
