@@ -106,7 +106,7 @@ class HDF5BaseReader
         }
         if ("/".equals(srcPath))
         {
-            final String dstDir = dstIsDir ? dstPath : dstPath + "/"; 
+            final String dstDir = dstIsDir ? dstPath : dstPath + "/";
             for (String object : getGroupMembers("/"))
             {
                 h5.copyObject(fileId, object, dstFileId, dstDir + object);
@@ -115,14 +115,13 @@ class HDF5BaseReader
         {
             final int idx = srcPath.lastIndexOf('/');
             final String sourceObjectName = srcPath.substring(idx < 0 ? 0 : idx);
-            h5.copyObject(fileId, srcPath, dstFileId, dstPath
-                    + sourceObjectName);
+            h5.copyObject(fileId, srcPath, dstFileId, dstPath + sourceObjectName);
         } else
         {
             h5.copyObject(fileId, srcPath, dstFileId, dstPath);
         }
     }
-    
+
     int openFile(FileFormat fileFormat, boolean overwrite)
     {
         if (hdf5File.exists() == false)
@@ -270,7 +269,7 @@ class HDF5BaseReader
      */
     DataSpaceParameters getSpaceParameters(final int dataSetId, ICleanUpRegistry registry)
     {
-        long[] dimensions = h5.getDataDimensions(dataSetId);
+        long[] dimensions = h5.getDataDimensions(dataSetId, registry);
         // Ensure backward compatibility with 8.10
         if (HDF5Utils.mightBeEmptyInStorage(dimensions)
                 && h5.existsAttribute(dataSetId, HDF5Utils.DATASET_IS_EMPTY_LEGACY_ATTRIBUTE))
