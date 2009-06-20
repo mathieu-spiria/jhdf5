@@ -68,8 +68,8 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dcreate
     }
 
     status = H5Dcreate((hid_t)loc_id, file, (hid_t)type_id, 
-    	(hid_t)space_id, (hid_t)link_create_plist_id, 
-	(hid_t) dset_create_plist_id, (hid_t)dset_access_plist_id);
+        (hid_t)space_id, (hid_t)link_create_plist_id, 
+    (hid_t) dset_create_plist_id, (hid_t)dset_access_plist_id);
 
 #ifdef __cplusplus
     env->ReleaseStringUTFChars(name,file);
@@ -146,7 +146,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dgetdir_1ext
 
     if (str == NULL) {
         free(aName);
-        h5JNIFatalError( env,"H5Dgetcwd:  return string failed");
+        h5outOfMemory( env,"H5Dgetcwd:  return string failed");
         return -1;
     }
     free(aName);
@@ -382,7 +382,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dextend
 #else
         (*env)->ReleaseByteArrayElements(env,size,P,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Dextend:  size not converted to hsize_t");
+        h5outOfMemory(env,  "H5Dextend:  size not converted to hsize_t");
         return -1;
     }
     jlp = (jlong *)P;
@@ -454,7 +454,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dset_1extent
 #else
         (*env)->ReleaseByteArrayElements(env,size,P,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Dextend:  size not converted to hsize_t");
+        h5outOfMemory(env,  "H5Dextend:  size not converted to hsize_t");
         return -1;
     }
     jlp = (jlong *)P;
@@ -489,8 +489,8 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dclose
 {
     hid_t retVal = 0;
 
-	if (dataset_id > 0)
-	    retVal =  H5Dclose((hid_t)dataset_id );
+    if (dataset_id > 0)
+        retVal =  H5Dclose((hid_t)dataset_id );
 
     if (retVal < 0) {
         h5libraryError(env);
@@ -761,7 +761,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1short
     jshort *buffP;
     jboolean isCopy;
 
-	if ( buf == NULL ) {
+    if ( buf == NULL ) {
         h5nullArgument( env, "H5Dread:  buf is NULL");
         return -1;
     }
@@ -999,7 +999,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1string
 
     if ( (c_buf = (char *)malloc(n*str_len)) == NULL) {
         if (cstr) free (cstr); cstr = NULL;
-        h5JNIFatalError(env,  "H5Dread_string: memory allocation failed.");
+        h5outOfMemory(env,  "H5Dread_string: memory allocation failed.");
         return -1;
     }
 
@@ -1036,195 +1036,195 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1string
  *  Object[] buf contains VL arrays of data points
  *  Currently only deal with variable length of atomic data types
  */
-/* old versin */
+/* old version */
 JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5DreadVL
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jobjectArray buf)
 {
-	htri_t isStr=0;
+    htri_t isStr=0;
 
-  if ( buf == NULL ) {
-      h5nullArgument( env, "H5DreadVL:  buf is NULL");
-      return -1;
-  }
+    if ( buf == NULL ) {
+        h5nullArgument( env, "H5DreadVL:  buf is NULL");
+        return -1;
+    }
 
-	if (H5Tget_class((hid_t)mem_type_id) == H5T_COMPOUND) {
-      hid_t nested_tid = H5Tget_member_type((hid_t)mem_type_id, 0);
-      while (H5Tget_class(nested_tid) == H5T_COMPOUND)
-      {
-          nested_tid = H5Tget_member_type(nested_tid, 0);
-      }
-		  isStr = H5Tis_variable_str(nested_tid);
-  }
-  else {
-      isStr = H5Tis_variable_str((hid_t)mem_type_id);
-  }
+    if (H5Tget_class((hid_t)mem_type_id) == H5T_COMPOUND) {
+        hid_t nested_tid = H5Tget_member_type((hid_t)mem_type_id, 0);
+        while (H5Tget_class(nested_tid) == H5T_COMPOUND)
+        {
+            nested_tid = H5Tget_member_type(nested_tid, 0);
+        }
+        isStr = H5Tis_variable_str(nested_tid);
+    }
+    else {
+        isStr = H5Tis_variable_str((hid_t)mem_type_id);
+    }
 
 
-	if (isStr > 0)
-	{
-		  return (jint) H5DreadVL_str (env, (hid_t)dataset_id, (hid_t)mem_type_id, 
-			  (hid_t) mem_space_id,(hid_t) file_space_id, (hid_t)xfer_plist_id, buf);
-	}
-	else if (isStr == 0)
-	{
-		  return (jint) H5DreadVL_num (env, (hid_t)dataset_id, (hid_t)mem_type_id, 
-			  (hid_t) mem_space_id,(hid_t) file_space_id, (hid_t)xfer_plist_id, buf);
-	}
-	else
-	{
-		  return -1;
-  }
+    if (isStr > 0)
+    {
+        return (jint) H5DreadVL_str (env, (hid_t)dataset_id, (hid_t)mem_type_id, 
+            (hid_t) mem_space_id,(hid_t) file_space_id, (hid_t)xfer_plist_id, buf);
+    }
+    else if (isStr == 0)
+    {
+        return (jint) H5DreadVL_num (env, (hid_t)dataset_id, (hid_t)mem_type_id, 
+            (hid_t) mem_space_id,(hid_t) file_space_id, (hid_t)xfer_plist_id, buf);
+    }
+    else
+    {
+        return -1;
+    }
 }
 
 herr_t H5DreadVL_num (JNIEnv *env, hid_t did, hid_t tid, hid_t mem_sid, hid_t file_sid, hid_t xfer_plist_id, jobjectArray buf)
 {
     herr_t status;
-	int i, n;
-	size_t max_len=0;
-	h5str_t h5str;
-	jstring jstr;
-	hvl_t *rdata;
-	size_t size;
+    int i, n;
+    size_t max_len=0;
+    h5str_t h5str;
+    jstring jstr;
+    hvl_t *rdata;
+    size_t size;
 
-	n = (*env)->GetArrayLength(env, buf);
+    n = (*env)->GetArrayLength(env, buf);
 
-	rdata = (hvl_t *)calloc(n, sizeof(hvl_t));
-	if (rdata == NULL) {
-        h5JNIFatalError( env, "H5DreadVL:  failed to allocate buff for read");
+    rdata = (hvl_t *)calloc(n, sizeof(hvl_t));
+    if (rdata == NULL) {
+        h5outOfMemory( env, "H5DreadVL:  failed to allocate buff for read");
         return -1;
     }
 
     status = H5Dread(did, tid, mem_sid, file_sid, xfer_plist_id, rdata);
 
     if (status < 0) {
-		H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, rdata);
-		free(rdata);
-        h5JNIFatalError(env, "H5DreadVL: failed to read data");
-		return -1;
-	}
+        H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, rdata);
+        free(rdata);
+        h5libraryError(env);
+        return -1;
+    }
 
-	max_len = 1;
-	for (i=0; i<n; i++)
-	{
-		if ((rdata+i)->len > max_len)
-			max_len = (rdata+i)->len;
-	}
+    max_len = 1;
+    for (i=0; i<n; i++)
+    {
+        if ((rdata+i)->len > max_len)
+            max_len = (rdata+i)->len;
+    }
 
-	size = H5Tget_size(tid)*max_len;
-	memset(&h5str, 0, sizeof(h5str_t));
-	h5str_new(&h5str, 4*size);
+    size = H5Tget_size(tid)*max_len;
+    memset(&h5str, 0, sizeof(h5str_t));
+    h5str_new(&h5str, 4*size);
 
-	if (h5str.s == NULL)
-	{
-		H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, rdata);
-		free(rdata);
-        h5JNIFatalError( env, "H5DreadVL:  failed to allocate strng buf");
-		return -1;
-	}
+    if (h5str.s == NULL)
+    {
+        H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, rdata);
+        free(rdata);
+        h5outOfMemory( env, "H5DreadVL:  failed to allocate string buf");
+        return -1;
+    }
 
-	for (i=0; i<n; i++)
-	{
-		h5str.s[0] = '\0';
-		h5str_sprintf(&h5str, did, tid, rdata+i);
-		jstr = (*env)->NewStringUTF(env, h5str.s);
-		(*env)->SetObjectArrayElement(env, buf, i, jstr);
-	}
+    for (i=0; i<n; i++)
+    {
+        h5str.s[0] = '\0';
+        h5str_sprintf(&h5str, did, tid, rdata+i);
+        jstr = (*env)->NewStringUTF(env, h5str.s);
+        (*env)->SetObjectArrayElement(env, buf, i, jstr);
+    }
 
-	h5str_free(&h5str); 
-	H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, rdata);
-	free(rdata);
+    h5str_free(&h5str); 
+    H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, rdata);
+    free(rdata);
 
-	return status;
+    return status;
 }
 
 herr_t H5DreadVL_str (JNIEnv *env, hid_t did, hid_t tid, hid_t mem_sid, hid_t file_sid, hid_t xfer_plist_id, jobjectArray buf)
 {
-  herr_t status=-1;
-	jstring jstr;
-	char **strs;
-	int i, n;
+    herr_t status=-1;
+    jstring jstr;
+    char **strs;
+    int i, n;
 
-	n = (*env)->GetArrayLength(env, buf);
-	strs = (char **) malloc(n*sizeof(char *));
+    n = (*env)->GetArrayLength(env, buf);
+    strs = (char **) malloc(n*sizeof(char *));
 
-	if (strs == NULL)
-	{
-        h5JNIFatalError( env, "H5DreadVL:  failed to allocate buff for read variable length strings");
-		return -1;
-	}
+    if (strs == NULL)
+    {
+        h5outOfMemory( env, "H5DreadVL:  failed to allocate buff for read variable length strings");
+        return -1;
+    }
 
-  status = H5Dread(did, tid, mem_sid, file_sid, xfer_plist_id, strs);
+    status = H5Dread(did, tid, mem_sid, file_sid, xfer_plist_id, strs);
 
-  if (status < 0) {
-      H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, strs);
-		  free(strs);
-      h5JNIFatalError(env, "H5DreadVL: failed to read variable length strings");
-		  return -1;
-	}
+    if (status < 0) {
+        H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, strs);
+        free(strs);
+        h5libraryError(env);
+        return -1;
+    }
 
-	for (i=0; i<n; i++)
-	{
-		jstr = (*env)->NewStringUTF(env, strs[i]);
-		(*env)->SetObjectArrayElement(env, buf, i, jstr);
-	}
-		
-	H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, strs);
-	free(strs);
+    for (i=0; i<n; i++)
+    {
+        jstr = (*env)->NewStringUTF(env, strs[i]);
+        (*env)->SetObjectArrayElement(env, buf, i, jstr);
+    }
+        
+    H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, strs);
+    free(strs);
 
-	return status;
+    return status;
 }
 
 JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1reg_1ref (JNIEnv *env, jclass clss, 
     jint dataset_id, jint mem_type_id, jint mem_space_id,
     jint file_space_id, jint xfer_plist_id, jobjectArray buf)
 {
-   herr_t status;
-  int i, n;
-  h5str_t h5str;
-  jstring jstr;
+    herr_t status;
+    int i, n;
+    h5str_t h5str;
+    jstring jstr;
 
-  hdset_reg_ref_t *ref_data;
-  size_t size;
+    hdset_reg_ref_t *ref_data;
+    size_t size;
 
-  hid_t region = -1;
-  hid_t did = (hid_t) dataset_id;
-  hid_t tid = (hid_t) mem_type_id;
-  hid_t mem_sid = (hid_t) mem_space_id;
-  hid_t file_sid = (hid_t) file_space_id;
+    hid_t region = -1;
+    hid_t did = (hid_t) dataset_id;
+    hid_t tid = (hid_t) mem_type_id;
+    hid_t mem_sid = (hid_t) mem_space_id;
+    hid_t file_sid = (hid_t) file_space_id;
 
-	n = (*env)->GetArrayLength(env, buf);
-	size = sizeof(hdset_reg_ref_t); /*H5Tget_size(tid);*/
-	ref_data = malloc(size*n);
+    n = (*env)->GetArrayLength(env, buf);
+    size = sizeof(hdset_reg_ref_t); /*H5Tget_size(tid);*/
+    ref_data = malloc(size*n);
 
-  if (ref_data == NULL) {
-       h5JNIFatalError( env, "H5Dread_reg_ref:  failed to allocate buff for read");
+    if (ref_data == NULL) {
+       h5outOfMemory( env, "H5Dread_reg_ref:  failed to allocate buff for read");
        return -1;
-  }
+    }
 
-  status = H5Dread(did, tid, mem_sid, file_sid, xfer_plist_id, ref_data);
+    status = H5Dread(did, tid, mem_sid, file_sid, xfer_plist_id, ref_data);
 
-  if (status < 0) {
-      free(ref_data);
-      h5JNIFatalError(env, "H5Dread_reg_ref: failed to read data");
-      return -1;
-	}
+    if (status < 0) {
+        free(ref_data);
+        h5libraryError(env);
+        return -1;
+    }
 
-	memset(&h5str, 0, sizeof(h5str_t));
-	h5str_new(&h5str, 1024);
-	for (i=0; i<n; i++)
-	{
-		h5str.s[0] = '\0';
-		h5str_sprintf(&h5str, did, tid, ref_data[i]);
-		jstr = (*env)->NewStringUTF(env, h5str.s);
+    memset(&h5str, 0, sizeof(h5str_t));
+    h5str_new(&h5str, 1024);
+    for (i=0; i<n; i++)
+    {
+        h5str.s[0] = '\0';
+        h5str_sprintf(&h5str, did, tid, ref_data[i]);
+        jstr = (*env)->NewStringUTF(env, h5str.s);
 
-		(*env)->SetObjectArrayElement(env, buf, i, jstr);
-	}
+        (*env)->SetObjectArrayElement(env, buf, i, jstr);
+    }
 
-	h5str_free(&h5str); 
-	free(ref_data);
+    h5str_free(&h5str); 
+    free(ref_data);
 
-	return status;
+    return status;
 }
 
 
@@ -1432,68 +1432,68 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5DwriteString
 { 
     herr_t status; 
     jboolean isCopy; 
-        char* * wdata; 
-        jsize size; 
-        jint i, j; 
+    char* * wdata; 
+    jsize size; 
+    jint i, j; 
 
     if ( buf == NULL ) { 
         h5nullArgument( env, "H5Dwrite:  buf is NULL"); 
         return -1; 
     } 
 
-        size = (*env)->GetArrayLength(env, (jarray) buf); 
-        wdata = malloc(size * sizeof (char *)); 
+    size = (*env)->GetArrayLength(env, (jarray) buf); 
+    wdata = malloc(size * sizeof (char *)); 
 
-        if (!wdata) { 
-        h5JNIFatalError( env, "H5DwriteString:  cannot allocate buffer"); 
+    if (!wdata) { 
+        h5outOfMemory( env, "H5DwriteString:  cannot allocate buffer"); 
         return -1; 
-        } 
+    } 
 
-        memset(wdata, 0, size * sizeof(char *)); 
+    memset(wdata, 0, size * sizeof(char *)); 
 
-        for (i = 0; i < size; ++i) { 
-                jstring obj = (jstring) (*env)->GetObjectArrayElement(env, (jobjectArray) buf, i); 
-                if (obj != 0) { 
-                        jsize length = (*env)->GetStringUTFLength(env, obj); 
-                        const char * utf8 = (*env)->GetStringUTFChars(env, obj, 0); 
+    for (i = 0; i < size; ++i) { 
+        jstring obj = (jstring) (*env)->GetObjectArrayElement(env, (jobjectArray) buf, i); 
+        if (obj != 0) { 
+            jsize length = (*env)->GetStringUTFLength(env, obj); 
+            const char * utf8 = (*env)->GetStringUTFChars(env, obj, 0); 
                         
-                        if (utf8) { 
-                                wdata[i] = malloc(strlen(utf8)+1); 
-                                if (!wdata[i]) { 
-                                        status = -1; 
-                                        // can't allocate memory, cleanup 
-                                        for (j = 0; j < i; ++i) { 
-                                                if(wdata[j]) { 
-                                                        free(wdata[j]); 
-                                                } 
-                                        } 
-                                        free(wdata); 
-
-                        (*env)->ReleaseStringUTFChars(env, obj, utf8); 
-                        (*env)->DeleteLocalRef(env, obj); 
-
-                                        h5JNIFatalError( env, "H5DwriteString:  cannot allocate buffer"); 
-                                        return -1; 
-                                } 
-
-                                strcpy(wdata[i], utf8); 
+            if (utf8) { 
+                wdata[i] = malloc(strlen(utf8)+1); 
+                if (!wdata[i]) { 
+                    status = -1; 
+                    // can't allocate memory, cleanup 
+                    for (j = 0; j < i; ++i) { 
+                        if(wdata[j]) { 
+                            free(wdata[j]); 
                         } 
+                    } 
+                    free(wdata); 
 
-                        (*env)->ReleaseStringUTFChars(env, obj, utf8); 
-                        (*env)->DeleteLocalRef(env, obj); 
+                    (*env)->ReleaseStringUTFChars(env, obj, utf8); 
+                    (*env)->DeleteLocalRef(env, obj); 
+
+                    h5outOfMemory( env, "H5DwriteString:  cannot allocate buffer"); 
+                    return -1; 
                 } 
+
+                strcpy(wdata[i], utf8); 
+            } 
+
+            (*env)->ReleaseStringUTFChars(env, obj, utf8); 
+            (*env)->DeleteLocalRef(env, obj); 
         } 
+    } 
 
     status = H5Dwrite((hid_t)dataset_id, (hid_t)mem_type_id, (hid_t)mem_space_id, 
         (hid_t)file_space_id, (hid_t)xfer_plist_id, wdata); 
 
-        // now free memory 
-        for (i = 0; i < size; ++i) { 
-                if(wdata[i]) { 
-                        free(wdata[i]); 
-                } 
+    // now free memory 
+    for (i = 0; i < size; ++i) { 
+        if(wdata[i]) { 
+            free(wdata[i]); 
         } 
-        free(wdata); 
+    } 
+    free(wdata); 
 
     if (status < 0) { 
         h5libraryError(env); 
