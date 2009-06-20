@@ -28,6 +28,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Aopen_idx;
 import static ncsa.hdf.hdf5lib.H5.H5Aopen_name;
 import static ncsa.hdf.hdf5lib.H5.H5Aread;
 import static ncsa.hdf.hdf5lib.H5.H5Awrite;
+import static ncsa.hdf.hdf5lib.H5.H5AreadVL;
 import static ncsa.hdf.hdf5lib.H5.H5Dclose;
 import static ncsa.hdf.hdf5lib.H5.H5Dcreate;
 import static ncsa.hdf.hdf5lib.H5.H5Dget_create_plist;
@@ -481,7 +482,7 @@ class HDF5
                             final int n = (int) nLong;
                             if (n != nLong)
                             {
-                                throw new RuntimeException(
+                                throw new HDF5JavaException(
                                         "Number of group members is too large (n=" + nLong + ")");
                             }
                             final String[] names = new String[n];
@@ -506,7 +507,7 @@ class HDF5
                             final int n = (int) nLong;
                             if (n != nLong)
                             {
-                                throw new RuntimeException(
+                                throw new HDF5JavaException(
                                         "Number of group members is too large (n=" + nLong + ")");
                             }
                             final String[] names = new String[n];
@@ -545,7 +546,7 @@ class HDF5
                             final int n = (int) nLong;
                             if (n != nLong)
                             {
-                                throw new RuntimeException(
+                                throw new HDF5JavaException(
                                         "Number of group members is too large (n=" + nLong + ")");
                             }
                             final String[] names = new String[n];
@@ -1053,6 +1054,11 @@ class HDF5
         final byte[] data = new byte[length];
         H5Aread(attributeId, dataTypeId, data);
         return data;
+    }
+
+    public void readAttributeVL(int attributeId, int dataTypeId, String[] data)
+    {
+        H5AreadVL(attributeId, dataTypeId, data);
     }
 
     public void writeAttribute(int attributeId, int dataTypeId, byte[] value)
@@ -1565,6 +1571,20 @@ class HDF5
                 }
             };
         return runner.call(dataDimensionRunnable);
+    }
+
+    public long[] getDataDimensionsForAttribute(final int atrributeId, ICleanUpRegistry registry)
+    {
+        final int dataSpaceId = H5Aget_space(atrributeId);
+        registry.registerCleanUp(new Runnable()
+            {
+                public void run()
+                {
+                    H5Sclose(dataSpaceId);
+                }
+            });
+        final long[] dimensions = getDataSpaceDimensions(dataSpaceId);
+        return dimensions;
     }
 
     public long[] getDataDimensions(final int dataSetId, ICleanUpRegistry registry)

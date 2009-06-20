@@ -192,7 +192,7 @@ final class HDF5Utils
     /**
      * Returns the length of a one-dimension array defined by <var>dimensions</var>.
      * 
-     * @throws IllegalArgumentException If <var>dimensions</var> do not define a one-dimensional
+     * @throws HDF5JavaException If <var>dimensions</var> do not define a one-dimensional
      *             array or if <code>dimensions[0]</code> overflows the <code>int</code> type.
      */
     static int getOneDimensionalArraySize(final long[] dimensions)
@@ -211,7 +211,7 @@ final class HDF5Utils
         final int length = (int) dimensions[0];
         if (length != dimensions[0])
         {
-            throw new IllegalArgumentException("Length is too large (" + dimensions[0] + ")");
+            throw new HDF5JavaException("Length is too large (" + dimensions[0] + ")");
         }
         return length;
     }
@@ -226,7 +226,7 @@ final class HDF5Utils
 
         if (dimensions.length != expectedRank)
         {
-            throw new IllegalArgumentException("Data Set is expected to be of rank " + expectedRank
+            throw new HDF5JavaException("Data Set is expected to be of rank " + expectedRank
                     + " (rank=" + dimensions.length + ")");
         }
         return MDArray.toInt(dimensions);
