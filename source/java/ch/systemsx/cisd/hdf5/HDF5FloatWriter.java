@@ -130,7 +130,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
                         { data.length };
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_IEEE_F32LE, dimensions, 
-                                    FLOAT_NO_COMPRESSION, true, registry);
+                                    FLOAT_NO_COMPRESSION, true, true, registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -156,7 +156,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_IEEE_F32LE, new long[]
-                                { data.length }, compression, true, registry);
+                                { data.length }, compression, true, false, registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -346,7 +346,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_IEEE_F32LE, 
                                     data.longDimensions(), compression, true,
-                                    registry);
+                                    false, registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
                     return null; // Nothing to return.

@@ -630,21 +630,18 @@ class HDF5BaseReader
         final int classTypeId = h5.getClassType(dataTypeId);
         final HDF5DataClass dataClass;
         final int totalSize = h5.getDataTypeSize(dataTypeId);
-        final int size;
-        final int numberOfElements;
         if (classTypeId == H5T_ARRAY)
         {
             dataClass = getElementClassForArrayDataType(dataTypeId);
             final int[] arrayDimensions = h5.getArrayDimensions(dataTypeId);
-            numberOfElements = MDArray.getLength(arrayDimensions); 
-            size = totalSize / numberOfElements;
+            final int numberOfElements = MDArray.getLength(arrayDimensions);
+            final int size = totalSize / numberOfElements;
+            return new HDF5DataTypeInformation(dataClass, size, arrayDimensions);
         } else
         {
             dataClass = getDataClassForClassType(classTypeId, dataTypeId);
-            numberOfElements = 1;
-            size = totalSize;
+            return new HDF5DataTypeInformation(dataClass, totalSize, 1);
         }
-        return new HDF5DataTypeInformation(dataClass, size, numberOfElements);
     }
 
     private HDF5DataClass getDataClassForClassType(final int classTypeId, final int dataTypeId)

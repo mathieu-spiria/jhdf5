@@ -193,6 +193,28 @@ final class HDF5Utils
      * Returns the length of a one-dimension array defined by <var>dimensions</var>.
      * 
      * @throws HDF5JavaException If <var>dimensions</var> do not define a one-dimensional
+     *             array.
+     */
+    static int getOneDimensionalArraySize(final int[] dimensions)
+    {
+        assert dimensions != null;
+
+        if (dimensions.length == 0) // Scalar data space needs to be treated differently
+        {
+            return 1;
+        }
+        if (dimensions.length != 1)
+        {
+            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                    + dimensions.length + ")");
+        }
+        return dimensions[0];
+    }
+
+    /**
+     * Returns the length of a one-dimension array defined by <var>dimensions</var>.
+     * 
+     * @throws HDF5JavaException If <var>dimensions</var> do not define a one-dimensional
      *             array or if <code>dimensions[0]</code> overflows the <code>int</code> type.
      */
     static int getOneDimensionalArraySize(final long[] dimensions)

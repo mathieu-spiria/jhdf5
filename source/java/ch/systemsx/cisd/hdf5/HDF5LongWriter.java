@@ -130,7 +130,7 @@ class HDF5LongWriter implements IHDF5LongWriter
                         { data.length };
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, dimensions, 
-                                    INT_NO_COMPRESSION, true, registry);
+                                    INT_NO_COMPRESSION, true, true, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -156,7 +156,7 @@ class HDF5LongWriter implements IHDF5LongWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
-                                { data.length }, compression, true, registry);
+                                { data.length }, compression, true, false, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -346,7 +346,7 @@ class HDF5LongWriter implements IHDF5LongWriter
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, 
                                     data.longDimensions(), compression, true,
-                                    registry);
+                                    false, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
                     return null; // Nothing to return.

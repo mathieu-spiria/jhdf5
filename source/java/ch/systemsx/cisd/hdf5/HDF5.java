@@ -28,6 +28,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Aopen_idx;
 import static ncsa.hdf.hdf5lib.H5.H5Aopen_name;
 import static ncsa.hdf.hdf5lib.H5.H5Aread;
 import static ncsa.hdf.hdf5lib.H5.H5Awrite;
+import static ncsa.hdf.hdf5lib.H5.H5AwriteString;
 import static ncsa.hdf.hdf5lib.H5.H5AreadVL;
 import static ncsa.hdf.hdf5lib.H5.H5Dclose;
 import static ncsa.hdf.hdf5lib.H5.H5Dcreate;
@@ -44,6 +45,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Dread_long;
 import static ncsa.hdf.hdf5lib.H5.H5Dread_short;
 import static ncsa.hdf.hdf5lib.H5.H5Dread_string;
 import static ncsa.hdf.hdf5lib.H5.H5Dset_extent;
+import static ncsa.hdf.hdf5lib.H5.H5DwriteString;
 import static ncsa.hdf.hdf5lib.H5.H5Fclose;
 import static ncsa.hdf.hdf5lib.H5.H5Fcreate;
 import static ncsa.hdf.hdf5lib.H5.H5Fflush;
@@ -963,7 +965,7 @@ class HDF5
                 numericConversionXferPropertyListID, data);
     }
 
-    public void readDataSetVL(int dataSetId, int dataTypeId, Object[] data)
+    public void readDataSetVL(int dataSetId, int dataTypeId, String[] data)
     {
         H5DreadVL(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
     }
@@ -1066,6 +1068,11 @@ class HDF5
         H5Awrite(attributeId, dataTypeId, value);
     }
 
+    public void writeAttributeStringVL(int attributeId, int dataTypeId, String[] value)
+    {
+        H5AwriteString(attributeId, dataTypeId, value);
+    }
+
     //
     // Data Type
     //
@@ -1081,6 +1088,11 @@ class HDF5
                 }
             });
         return copiedDataTypeId;
+    }
+
+    public void writeStringVL(int dataSetId, int dataTypeId, String[] value)
+    {
+        H5DwriteString(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, value);
     }
 
     public int createDataTypeVariableString(ICleanUpRegistry registry)
@@ -1129,6 +1141,19 @@ class HDF5
     {
         final int dataTypeId = H5Tarray_create(baseTypeId, 1, new int[]
             { length });
+        registry.registerCleanUp(new Runnable()
+            {
+                public void run()
+                {
+                    H5Tclose(dataTypeId);
+                }
+            });
+        return dataTypeId;
+    }
+
+    public int createArrayType(int baseTypeId, int[] dimensions, ICleanUpRegistry registry)
+    {
+        final int dataTypeId = H5Tarray_create(baseTypeId, dimensions.length, dimensions);
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -1512,7 +1537,7 @@ class HDF5
     {
         return H5Tget_class(dataTypeId);
     }
-    
+
     public boolean hasClassType(int dataTypeId, int classTypeId)
     {
         return H5Tdetect_class(dataTypeId, classTypeId);
@@ -1727,6 +1752,11 @@ class HDF5
         return dims;
     }
 
+    public int createScalarDataSpace()
+    {
+        return H5Screate(H5S_SCALAR);
+    }
+    
     public int createSimpleDataSpace(long[] dimensions, ICleanUpRegistry registry)
     {
         final int dataSpaceId = H5Screate_simple(dimensions.length, dimensions, null);

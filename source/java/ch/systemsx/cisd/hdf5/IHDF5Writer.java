@@ -270,6 +270,9 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void setStringAttribute(final String objectPath, final String name, final String value,
             final int maxLength);
 
+    public void setStringAttributeVariableLength(final String objectPath, final String name,
+            final String value);
+
     /**
      * Sets a <code>boolean</code> attribute to the referenced object.
      * <p>
@@ -870,6 +873,26 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     //
 
     /**
+     * Writes out a <code>String</code> with a fixed maximal length in a compact layout.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code> and not larger than 65530
+     *            characters.
+     * @param maxLength The maximal length of the <var>data</var>.
+     */
+    public void writeStringCompact(final String objectPath, final String data, final int maxLength);
+
+    /**
+     * Writes out a <code>String</code> with a fixed maximal length (which is the length of the
+     * string <var>data</var>) in a compact layout.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code> and not larger than 65530
+     *            characters.
+     */
+    public void writeStringCompact(final String objectPath, final String data);
+
+    /**
      * Writes out a <code>String</code> with a fixed maximal length.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1042,6 +1065,19 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param data The data to write. Must not be <code>null</code>.
      */
     public void writeStringVariableLength(final String objectPath, final String data);
+
+    /**
+     * Writes out a <code>String[]</code> where each String of the array has a variable maximal length.
+     * <p>
+     * The advantage of this method over {@link #writeStringArray(String, String[])} is that when
+     * writing a new string later it can have a different (also greater) length. The disadvantage is
+     * that it it is more time consuming to read and write this kind of string and that it can't be
+     * compressed.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     */
+    public void writeStringArrayVariableLength(final String objectPath, final String[] data);
 
     //
     // Enum

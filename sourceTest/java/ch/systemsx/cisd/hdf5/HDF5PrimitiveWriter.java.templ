@@ -130,7 +130,7 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                         { data.length };
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, __Storagetype__, dimensions, 
-                                    __CLASSNAME___NO_COMPRESSION, true, registry);
+                                    __CLASSNAME___NO_COMPRESSION, true, true, registry);
                     H5Dwrite__appendix__(dataSetId, __Memorytype__, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -156,7 +156,7 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, __Storagetype__, new long[]
-                                { data.length }, compression, true, registry);
+                                { data.length }, compression, true, false, registry);
                     H5Dwrite__appendix__(dataSetId, __Memorytype__, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -346,7 +346,7 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, __Storagetype__, 
                                     data.longDimensions(), compression, true,
-                                    registry);
+                                    false, registry);
                     H5Dwrite__appendix__(dataSetId, __Memorytype__, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
                     return null; // Nothing to return.

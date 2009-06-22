@@ -21,7 +21,9 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
+import static ncsa.hdf.hdf5lib.H5.H5DwriteString;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_UNLIMITED;
 
@@ -371,6 +373,73 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     /**
+     * Write a scalar String value provided as <code>byte[]</code>.
+     */
+    void writeScalarString(final String dataSetPath, final String value, final int maxLength)
+    {
+        assert dataSetPath != null;
+        assert value != null;
+
+        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    writeScalarString(dataSetPath, value, maxLength, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeScalarRunnable);
+    }
+
+    /**
+     * Internal method for writing a scalar value provided as <code>byte[]</code>.
+     */
+    private int writeScalarString(final String dataSetPath, final String value,
+            final int maxLength, ICleanUpRegistry registry)
+    {
+        final boolean variableLength = (maxLength < 0);
+        final int realMaxLength = maxLength + 1; // trailing '\0'
+        final int dataTypeId =
+                variableLength ? variableLengthStringDataTypeId : h5.createDataTypeString(
+                        realMaxLength, registry);
+        final int dataSetId;
+        if (h5.exists(fileId, dataSetPath))
+        {
+            dataSetId = h5.openObject(fileId, dataSetPath, registry);
+        } else
+        {
+            dataSetId = h5.createScalarDataSet(fileId, dataTypeId, dataSetPath, registry);
+        }
+        if (variableLength)
+        {
+            H5DwriteString(dataSetId, dataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT,
+                    new String[]
+                        { value });
+        } else
+        {
+            H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                    (value + '\0').getBytes());
+        }
+        return dataSetId;
+    }
+
+    /**
+     * Writes a variable-length string array data set.
+     */
+    void writeStringVL(int dataSetId, String[] value)
+    {
+        h5.writeStringVL(dataSetId, variableLengthStringDataTypeId, value);
+    }
+
+    /**
+     * Writes a variable-length string array attribute.
+     */
+    void writeAttributeStringVL(int attributeId, String[] value)
+    {
+        h5.writeAttributeStringVL(attributeId, variableLengthStringDataTypeId, value);
+    }
+
+    /**
      * Internal method for writing a scalar value provided as <code>byte[]</code>.
      */
     int writeScalar(final String dataSetPath, final int storageDataTypeId,
@@ -480,7 +549,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
      */
     int getDataSetId(final String objectPath, final int storageDataTypeId, final long[] dimensions,
             final HDF5AbstractCompression compression, final boolean cutDownExtendIfNecessary,
-            ICleanUpRegistry registry)
+            boolean enforceCompactLayoutOnCreate, ICleanUpRegistry registry)
     {
         final int dataSetId;
         if (h5.exists(fileId, objectPath))
@@ -492,7 +561,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             dataSetId =
                     createDataSet(objectPath, storageDataTypeId, compression, dimensions, null,
-                            false, registry);
+                            enforceCompactLayoutOnCreate, registry);
         }
         return dataSetId;
     }
