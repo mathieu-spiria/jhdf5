@@ -143,6 +143,7 @@ public final class HDF5DataTypeInformation
             }
             builder.setLength(builder.length() - 1);
             builder.append(']');
+            builder.append(')');
             return builder.toString();
         }
     }
