@@ -1490,7 +1490,12 @@ class HDF5Reader implements IHDF5Reader
                     {
                         throw new HDF5JavaException(objectPath + " needs to be a String.");
                     }
-                    baseReader.h5.readDataSetString(dataSetId, dataTypeId, data);
+                    if (baseReader.h5.isVariableLengthString(dataTypeId))
+                    {
+                        baseReader.h5.readDataSetVL(dataSetId, dataTypeId, data);
+                    } else {
+                        baseReader.h5.readDataSetString(dataSetId, dataTypeId, data);
+                    }
                     return data;
                 }
             };
