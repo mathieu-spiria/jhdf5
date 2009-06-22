@@ -437,6 +437,20 @@ public class H5
             throws HDF5LibraryException, NullPointerException;
 
     /**
+     * H5AwriteString writes a (partial) variable length String attribute, specified by its identifier
+     * attr_id, from the application memory buffer buf into the file.
+     * 
+     * @param attr_id Identifier of the dataset read from.
+     * @param mem_type_id Identifier of the memory datatype.
+     * @param buf Buffer with data to be written to the file.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - name is null.
+     */
+    public synchronized static native int H5AwriteString(int attr_id, int mem_type_id, String[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
      * H5Acopy copies the content of one attribute to another.
      * 
      * @param src_aid the identifier of the source attribute
@@ -640,7 +654,6 @@ public class H5
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - name is null.
      */
-
     public synchronized static native int H5DwriteString(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, String[] buf)
             throws HDF5LibraryException, NullPointerException;

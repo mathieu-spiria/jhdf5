@@ -419,7 +419,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Fget_1obj_1ids
 #else
         (*env)->ReleaseIntArrayElements(env,obj_id_list,obj_id_listP,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Fget_obj_ids:  obj_id_list not converted to hid_t");
+        h5outOfMemory(env,  "H5Fget_obj_ids:  obj_id_list not converted to hid_t");
         return -1;
     }
 
@@ -514,7 +514,7 @@ JNIEXPORT jlong JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Fget_1name
 #endif
     if (str == NULL) {
         free(aName);
-        h5JNIFatalError( env,"H5Fget_name:  return string failed");
+        h5outOfMemory( env,"H5Fget_name:  return string failed");
         return -1;
     }
     free(aName);

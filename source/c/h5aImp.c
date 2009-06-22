@@ -211,6 +211,84 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Awrite
     return (jint)status;
 }
 
+/* 
+ * Class:     ncsa_hdf_hdf5lib_H5 
+ * Method:    H5AwriteString 
+ * Signature: (II[B)I 
+ */ 
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5AwriteString 
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jobjectArray buf) 
+{ 
+    herr_t status; 
+    jboolean isCopy; 
+    char* * wdata; 
+    jsize size; 
+    jint i, j; 
+
+    if ( buf == NULL ) { 
+        h5nullArgument( env, "H5AwriteString:  buf is NULL"); 
+        return -1; 
+    } 
+
+    size = (*env)->GetArrayLength(env, (jarray) buf); 
+    wdata = malloc(size * sizeof (char *)); 
+
+    if (!wdata) { 
+        h5outOfMemory( env, "H5AwriteString:  cannot allocate buffer"); 
+        return -1; 
+    } 
+
+    memset(wdata, 0, size * sizeof(char *)); 
+
+    for (i = 0; i < size; ++i) { 
+        jstring obj = (jstring) (*env)->GetObjectArrayElement(env, (jobjectArray) buf, i); 
+        if (obj != 0) { 
+            jsize length = (*env)->GetStringUTFLength(env, obj); 
+            const char * utf8 = (*env)->GetStringUTFChars(env, obj, 0); 
+                        
+            if (utf8) { 
+                wdata[i] = malloc(strlen(utf8)+1); 
+                if (!wdata[i]) { 
+                    status = -1; 
+                    // can't allocate memory, cleanup 
+                    for (j = 0; j < i; ++i) { 
+                        if(wdata[j]) { 
+                            free(wdata[j]); 
+                        } 
+                    } 
+                    free(wdata); 
+
+                    (*env)->ReleaseStringUTFChars(env, obj, utf8); 
+                    (*env)->DeleteLocalRef(env, obj); 
+
+                    h5outOfMemory( env, "H5DwriteString:  cannot allocate buffer"); 
+                    return -1; 
+                } 
+
+                strcpy(wdata[i], utf8); 
+            } 
+
+            (*env)->ReleaseStringUTFChars(env, obj, utf8); 
+            (*env)->DeleteLocalRef(env, obj); 
+        } 
+    } 
+
+    status = H5Awrite((hid_t)attr_id, (hid_t)mem_type_id, wdata); 
+
+    // now free memory 
+    for (i = 0; i < size; ++i) { 
+        if(wdata[i]) { 
+            free(wdata[i]); 
+        } 
+    } 
+    free(wdata); 
+
+    if (status < 0) { 
+        h5libraryError(env); 
+    } 
+    return (jint)status; 
+} 
+
 /*
  * Class:     ncsa_hdf_hdf5lib_H5
  * Method:    H5Aread
@@ -586,7 +664,7 @@ herr_t H5AreadVL_str (JNIEnv *env, hid_t aid, hid_t tid, jobjectArray buf)
     hsize_t dims[H5S_MAX_RANK];
 
     n = (*env)->GetArrayLength(env, buf);
-    strs =(char **)malloc(n*sizeof(char *));
+    strs =(char **)calloc(n, sizeof(char *));
 
     if (strs == NULL)
     {
@@ -596,6 +674,13 @@ herr_t H5AreadVL_str (JNIEnv *env, hid_t aid, hid_t tid, jobjectArray buf)
 
     status = H5Aread(aid, tid, strs);
     if (status < 0) {
+        for (i=0; i<n; i++)
+        {
+            if (strs[i] != NULL)
+            {
+                free(strs[i]);
+            }
+        }
         free(strs);
         h5libraryError(env);
         return -1;
@@ -605,6 +690,7 @@ herr_t H5AreadVL_str (JNIEnv *env, hid_t aid, hid_t tid, jobjectArray buf)
     {
         jstr = (*env)->NewStringUTF(env, strs[i]);
         (*env)->SetObjectArrayElement(env, buf, i, jstr);
+        free(strs[i]);
     }
         
     free(strs);

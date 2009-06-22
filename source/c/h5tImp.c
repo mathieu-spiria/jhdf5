@@ -733,7 +733,7 @@ JNIEXPORT jstring JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tget_1member_1name
 #endif
         if (str == NULL)  {
             free(name);
-            h5JNIFatalError(env,  "H5Tget_member_name:  returned string not created");
+            h5outOfMemory(env,  "H5Tget_member_name:  returned string not created");
             return NULL;
         }
         free(name);
@@ -1172,7 +1172,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tenum_1nameof
 #endif
         if (str == NULL) {
             free(nameP);
-            h5JNIFatalError( env, "H5Tenum_nameof:  return array not created");
+            h5outOfMemory( env, "H5Tenum_nameof:  return array not created");
             return -1;
         }
         /*  SetObjectArrayElement may raise exceptions */
@@ -1349,7 +1349,7 @@ JNIEXPORT jstring JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tget_1tag
 #endif
     if (str == NULL)  {
         free(tag);
-        h5JNIFatalError(env,  "H5Tget_tag:  returned string not created");
+        h5outOfMemory(env,  "H5Tget_tag:  returned string not created");
         return NULL;
     }
 

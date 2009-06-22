@@ -90,7 +90,7 @@ JNIEXPORT jlong JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Iget_1name
 #endif
     if (str == NULL) {
         free(aName);
-        h5JNIFatalError( env,"H5Iget_name:  return string failed");
+        h5outOfMemory( env,"H5Iget_name:  return string failed");
         return -1;
     }
     free(aName);

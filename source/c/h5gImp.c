@@ -641,7 +641,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Gget_1linkval
         if (str == NULL) {
             /* exception -- fatal JNI error */
             free(lValue);
-            h5JNIFatalError( env, "H5Gget_linkval:  return string not created");
+            h5outOfMemory( env, "H5Gget_linkval:  return string not created");
             return -1;
         }
         /*  the SetObjectArrayElement may raise exceptions... */
@@ -779,7 +779,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Gget_1comment
 #endif
         if (str == NULL) {
             free(gComment);
-            h5JNIFatalError( env, "H5Gget_comment:  return string not allocated");
+            h5outOfMemory( env, "H5Gget_comment:  return string not allocated");
             return -1;
         }
         /*  The SetObjectArrayElement may raise exceptions */
@@ -843,7 +843,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Gget_1num_1objs
 #else
         (*env)->ReleaseLongArrayElements(env,num_obj,num_objP,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Gget_num_objs:  num_obj not converted to hsize_t");
+        h5outOfMemory(env,  "H5Gget_num_objs:  num_obj not converted to hsize_t");
         return -1;
     }
 
@@ -909,7 +909,7 @@ JNIEXPORT jlong JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Gget_1objname_1by_1idx
 #endif
     if (str == NULL) {
         free(aName);
-        h5JNIFatalError( env,"H5Gget_objname_by_idx:  return string failed");
+        h5outOfMemory( env,"H5Gget_objname_by_idx:  return string failed");
         return -1;
     }
     free(aName);

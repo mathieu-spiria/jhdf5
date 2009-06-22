@@ -89,7 +89,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Screate_1simple
         (*env)->ReleaseByteArrayElements(env,dims,dimsP,JNI_ABORT);
 #endif
 
-        h5JNIFatalError(env,  "H5Screate-simple:  dims not converted to hsize_t");
+        h5outOfMemory(env,  "H5Screate-simple:  dims not converted to hsize_t");
         return -1;
     }
     jlp = (jlong *)dimsP;
@@ -128,7 +128,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Screate_1simple
             (*env)->ReleaseByteArrayElements(env,maxdims,maxdimsP,JNI_ABORT);
 #endif
             free (sa);
-            h5JNIFatalError(env,  "H5Screate-simple:  dims not converted to hsize_t");
+            h5outOfMemory(env,  "H5Screate-simple:  dims not converted to hsize_t");
             return -1;
         }
     jlp = (jlong *)maxdimsP;
@@ -215,7 +215,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sselect_1elements
     sa = (hssize_t *)malloc( num_elems * 2 * sizeof(hssize_t));
     if (sa == NULL) {
         (*env)->ReleaseLongArrayElements(env,coord,P,JNI_ABORT);
-        h5JNIFatalError(env,  "H5Sselect_elements:  coord array not converted to hssize_t");
+        h5outOfMemory(env,  "H5Sselect_elements:  coord array not converted to hssize_t");
         return -1;
     }
     for (i= 0; i < (num_elsms * 2); i++) {
@@ -430,7 +430,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sget_1simple_1extent_1dims
 #else
             (*env)->ReleaseLongArrayElements(env,dims,dimsP,JNI_ABORT);
 #endif
-            h5JNIFatalError(env,  "H5Sget_simple_extent:  dims not converted to hsize_t");
+            h5outOfMemory(env,  "H5Sget_simple_extent:  dims not converted to hsize_t");
             return -1;
         }
     }
@@ -477,7 +477,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sget_1simple_1extent_1dims
             if (sa != NULL) {
                  free(sa);
             }
-            h5JNIFatalError(env,  "H5Sget_simple_extent:  maxdims not converted to hsize_t");
+            h5outOfMemory(env,  "H5Sget_simple_extent:  maxdims not converted to hsize_t");
             return -1;
         }
     }
@@ -583,7 +583,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sset_1extent_1simple
 #else
         (*env)->ReleaseByteArrayElements(env,dims,dimsP,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Sset_simple_extent:  dims not converted to hsize_t");
+        h5outOfMemory(env,  "H5Sset_simple_extent:  dims not converted to hsize_t");
         return -1;
     }
     jlp = (jlong *)dimsP;
@@ -620,7 +620,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sset_1extent_1simple
             (*env)->ReleaseByteArrayElements(env,maxdims,maxdimsP,JNI_ABORT);
 #endif
             free (sa);
-            h5JNIFatalError(env,  "H5Sset_simple_extent:  maxdims not converted to hsize_t");
+            h5outOfMemory(env,  "H5Sset_simple_extent:  maxdims not converted to hsize_t");
             return -1;
         }
         jlp = (jlong *)maxdimsP;
@@ -714,7 +714,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Soffset_1simple
 #else
             (*env)->ReleaseByteArrayElements(env,offset,P,JNI_ABORT);
 #endif
-            h5JNIFatalError(env,  "H5Soffset_simple:  offset not converted to hssize_t");
+            h5outOfMemory(env,  "H5Soffset_simple:  offset not converted to hssize_t");
             return -1;
         }
         jlp = (jlong *)P;
@@ -837,7 +837,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sselect_1hyperslab
 #else
         (*env)->ReleaseByteArrayElements(env,start,startP,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Sselect_hyperslab:  start not converted to hsize_t");
+        h5outOfMemory(env,  "H5Sselect_hyperslab:  start not converted to hsize_t");
         return -1;
     }
     jlp = (jlong *)startP;
@@ -871,7 +871,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sselect_1hyperslab
         (*env)->ReleaseByteArrayElements(env,count, countP,JNI_ABORT);
 #endif
         free(strt);
-        h5JNIFatalError(env,  "H5Sselect_hyperslab:  count not converted to hsize_t");
+        h5outOfMemory(env,  "H5Sselect_hyperslab:  count not converted to hsize_t");
         return -1;
     }
     jlp = (jlong *)countP;
@@ -913,7 +913,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sselect_1hyperslab
             (*env)->ReleaseByteArrayElements(env,stride, strideP,JNI_ABORT);
 #endif
             free(cnt); free(strt);
-            h5JNIFatalError(env,  "H5Sselect_hyperslab:  stride not converted to hsize_t");
+            h5outOfMemory(env,  "H5Sselect_hyperslab:  stride not converted to hsize_t");
             return -1;
         }
         jlp = (jlong *)strideP;
@@ -962,7 +962,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sselect_1hyperslab
 #endif
             free(cnt); free(strt);
             if (strd != NULL) { free(strd); }
-            h5JNIFatalError(env,  "H5Sget_simple_extent:  block not converted to hsize_t");
+            h5outOfMemory(env,  "H5Sget_simple_extent:  block not converted to hsize_t");
             return -1;
         }
         jlp = (jlong *)blockP;
@@ -1102,7 +1102,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sget_1select_1hyper_1blocklist
 #else
         (*env)->ReleaseLongArrayElements(env,buf,bufP,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Screate-simple:  buffer not converted to hsize_t");
+        h5outOfMemory(env,  "H5Screate-simple:  buffer not converted to hsize_t");
         return -1;
     }
 
@@ -1167,7 +1167,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sget_1select_1elem_1pointlist
 #else
         (*env)->ReleaseLongArrayElements(env,buf,bufP,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Sget_select_elem_pointlist:  buf not converted to hsize_t");
+        h5outOfMemory(env,  "H5Sget_select_elem_pointlist:  buf not converted to hsize_t");
         return -1;
     }
 
@@ -1245,7 +1245,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sget_1select_1bounds
 #else
         (*env)->ReleaseLongArrayElements(env,start,startP,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Sget_select_bounds:  start not converted to hsize_t");
+        h5outOfMemory(env,  "H5Sget_select_bounds:  start not converted to hsize_t");
         return -1;
     }
 
@@ -1274,7 +1274,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sget_1select_1bounds
         (*env)->ReleaseLongArrayElements(env,start,startP,JNI_ABORT);
 #endif
         free(strt);
-        h5JNIFatalError(env,  "H5Sget_simple_extent:  dims not converted to hsize_t");
+        h5outOfMemory(env,  "H5Sget_simple_extent:  dims not converted to hsize_t");
         return -1;
     }
 

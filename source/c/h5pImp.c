@@ -592,7 +592,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pset_1chunk
 #else
         (*env)->ReleaseByteArrayElements(env,dim,theArray,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Pset_chunk:  dims not converted to hsize_t");
+        h5outOfMemory(env,  "H5Pset_chunk:  dims not converted to hsize_t");
         return -1;
     }
     jlp = (jlong *)theArray;
@@ -657,7 +657,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1chunk
 #else
         (*env)->ReleaseLongArrayElements(env,dims, theArray,JNI_ABORT);
 #endif
-        h5JNIFatalError(env,  "H5Pget_chunk:  dims not converted to hsize_t");
+        h5outOfMemory(env,  "H5Pget_chunk:  dims not converted to hsize_t");
         return -1;
     }
 
@@ -906,7 +906,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1external
 #endif
         if (str == NULL) {
             free(file);
-            h5JNIFatalError( env, "H5Pget_external:  return array not created");
+            h5outOfMemory( env, "H5Pget_external:  return array not created");
             return -1;
         }
         /*  SetObjectArrayElement may raise exceptions */
@@ -2555,7 +2555,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1filter_1by_1id
         (*env)->ReleaseLongArrayElements(env,cd_nelmts,cd_nelmsP,JNI_ABORT);
 #endif
         free(aName);
-        h5JNIFatalError(env,  "H5Pget_filter_by_id:  cd_nelmts array not converted to unsigned int.");
+        h5outOfMemory(env,  "H5Pget_filter_by_id:  cd_nelmts array not converted to unsigned int.");
         return -1;
     }
 
@@ -2579,7 +2579,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1filter_1by_1id
 #endif
         free(aName);
         free(nelmsP);
-        h5JNIFatalError(env,  "H5Pget_filter_by_id:  cd_values array not converted to unsigned int.");
+        h5JNIFatalError(env,  "H5Pget_filter_by_id:  cd_values array not pinned.");
         return -1;
     }
 
@@ -2719,7 +2719,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1family
     sa = (hsize_t *)malloc( rank * sizeof(hsize_t));
     if (sa == NULL) {
         (*env)->ReleaseLongArrayElements(env,memb_size,sizeArray,JNI_ABORT);
-        h5JNIFatalError(env,  "H5Screate-simple:  dims not converted to hsize_t");
+        h5outOfMemory(env,  "H5Screate-simple:  dims not converted to hsize_t");
         return -1;
     }
     plistArray = (jint *)(*env)->GetIntArrayElements(env,memb_plist,&isCopy);
@@ -3086,7 +3086,7 @@ JNIEXPORT jstring JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1class_1name
 
     j_str = (*env)->NewStringUTF(env,c_str);
     if (j_str == NULL) {
-        h5JNIFatalError( env,"H5Pget_class_name: return string failed");
+        h5outOfMemory( env,"H5Pget_class_name: return string failed");
     }
 
     return j_str;
