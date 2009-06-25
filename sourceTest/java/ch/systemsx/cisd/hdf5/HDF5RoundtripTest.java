@@ -201,7 +201,6 @@ public class HDF5RoundtripTest
         test.testMDFloatArrayBlockWiseWithMemoryOffset();
         test.testCompressedDataSet();
         test.testCreateEmptyFloatMatrix();
-        test.testFloatArrayTypeDataSet();
         test.testFloatVectorLength1();
         test.testFloatMatrixLength1();
         test.testOneRowFloatMatrix();
@@ -1003,7 +1002,6 @@ public class HDF5RoundtripTest
         efWriter.writeFloatArrayArraryType("f", floatDataWritten);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        System.out.println("'" + reader.getDataSetInformation("f") + "'");
         assertEquals("FLOAT(4, [3,2]):{}", reader.getDataSetInformation("f").toString());
         final MDFloatArray floatDataRead = reader.readFloatMDArray("f");
         assertEquals(floatDataWritten, floatDataRead);
@@ -2700,14 +2698,13 @@ public class HDF5RoundtripTest
         final String stringAttributeName = "String Attribute";
         final String stringAttributeValueWritten = "Some String Value";
         writer.setStringAttribute(datasetName, stringAttributeName, stringAttributeValueWritten);
-        // TODO: uncomment when native libraries are updated 
-//        final String stringAttributeNameVL = "String Attribute VL";
-//        final String stringAttributeValueVLWritten1 = "Some String Value";
-//        writer.setStringAttributeVariableLength(datasetName, stringAttributeNameVL,
-//                stringAttributeValueVLWritten1);
-//        final String stringAttributeValueVLWritten2 = "Some Other String Value";
-//        writer.setStringAttributeVariableLength(datasetName, stringAttributeNameVL,
-//                stringAttributeValueVLWritten2);
+        final String stringAttributeNameVL = "String Attribute VL";
+        final String stringAttributeValueVLWritten1 = "Some String Value";
+        writer.setStringAttributeVariableLength(datasetName, stringAttributeNameVL,
+                stringAttributeValueVLWritten1);
+        final String stringAttributeValueVLWritten2 = "Some Other String Value";
+        writer.setStringAttributeVariableLength(datasetName, stringAttributeNameVL,
+                stringAttributeValueVLWritten2);
         final String enumAttributeName = "Enum Attribute";
         final HDF5EnumerationType enumType = writer.getEnumType("MyEnum", new String[]
             { "ONE", "TWO", "THREE" }, false);
@@ -2743,10 +2740,9 @@ public class HDF5RoundtripTest
         final String stringAttributeValueRead =
                 reader.getStringAttribute(datasetName, stringAttributeName);
         assertEquals(stringAttributeValueWritten, stringAttributeValueRead);
-        // TODO: uncomment when native libraries are updated 
-//        final String stringAttributeValueVLRead =
-//                reader.getStringAttribute(datasetName, stringAttributeNameVL);
-//        assertEquals(stringAttributeValueVLWritten2, stringAttributeValueVLRead);
+        final String stringAttributeValueVLRead =
+                reader.getStringAttribute(datasetName, stringAttributeNameVL);
+        assertEquals(stringAttributeValueVLWritten2, stringAttributeValueVLRead);
         final HDF5EnumerationValue enumAttributeValueRead =
                 reader.getEnumAttribute(datasetName, enumAttributeName);
         assertEquals(enumAttributeValueWritten.getValue(), enumAttributeValueRead.getValue());
