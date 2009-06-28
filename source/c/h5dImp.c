@@ -1158,13 +1158,6 @@ herr_t H5DreadVL_str (JNIEnv *env, hid_t did, hid_t tid, hid_t mem_sid, hid_t fi
 
     if (status < 0) {
         H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, strs);
-        for (i=0; i<n; i++)
-        {
-            if (strs[i] != NULL)
-            {
-                free(strs[i]);
-            }
-        }
         free(strs);
         h5libraryError(env);
         return -1;
@@ -1174,7 +1167,6 @@ herr_t H5DreadVL_str (JNIEnv *env, hid_t did, hid_t tid, hid_t mem_sid, hid_t fi
     {
         jstr = (*env)->NewStringUTF(env, strs[i]);
         (*env)->SetObjectArrayElement(env, buf, i, jstr);
-        free(strs[i]);
     }
         
     H5Dvlen_reclaim(tid, mem_sid, H5P_DEFAULT, strs);
