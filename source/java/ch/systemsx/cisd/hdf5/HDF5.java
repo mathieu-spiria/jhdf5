@@ -131,6 +131,7 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_MAX_RANK;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SELECT_SET;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_UNLIMITED;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_BITFIELD;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_COMPOUND;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_C_S1;
@@ -777,11 +778,14 @@ class HDF5
         return dataSetId;
     }
 
+    /**
+     * @param storageDataTypeId The storage type id, if in overwrite mode, or else -1.
+     */
     public int openAndExtendDataSet(int fileId, String path, FileFormat fileFormat,
-            long[] dimensions, boolean cutDownExtendIfNecessary, ICleanUpRegistry registry)
-            throws HDF5JavaException
+            long[] dimensions, int storageDataTypeId, ICleanUpRegistry registry) throws HDF5JavaException
     {
         checkMaxLength(path);
+        final boolean overwriteMode = (storageDataTypeId > -1);
         final int dataSetId = H5Dopen(fileId, path, H5P_DEFAULT);
         final long[] oldDimensions = getDataDimensions(dataSetId, registry);
         if (Arrays.equals(oldDimensions, dimensions) == false)
@@ -795,22 +799,38 @@ class HDF5
                 {
                     final long[] newDimensions =
                             computeNewDimensions(oldDimensions, dimensions,
-                                    cutDownExtendIfNecessary);
+                                    overwriteMode);
                     setDataSetExtentChunked(dataSetId, newDimensions);
                 } else
                 {
-                    throw new HDF5JavaException("New data set dimension is out of bounds.");
+                    throw new HDF5JavaException("New data set dimensions are out of bounds.");
                 }
-            } else
+            } else if (overwriteMode)
             {
-                // CONTIGUOUS and COMPACT data sets are fixed size, thus we need to delete and
-                // re-create it.
-                final int dataTypeId = getDataTypeForDataSet(dataSetId, registry);
+                // CONTIGUOUS, COMPACT and ARRAY data sets are fixed size, thus we need to delete
+                // and re-create it, if we are in overwrite mode. Keep the type, except if it is an
+                // ARRAY type.
+                int dataTypeId = getDataTypeForDataSet(dataSetId, registry);
+                if (getClassType(dataTypeId) == H5T_ARRAY)
+                {
+                    dataTypeId = storageDataTypeId;
+                }
                 H5Dclose(dataSetId);
                 deleteObject(fileId, path);
                 return createDataSet(fileId, dimensions, null, dataTypeId,
                         HDF5GenericCompression.GENERIC_NO_COMPRESSION, path, layout, fileFormat,
                         registry);
+            } else
+            {
+                int dataTypeId = getDataTypeForDataSet(dataSetId, registry);
+                if (getClassType(dataTypeId) == H5T_ARRAY)
+                {
+                    throw new HDF5JavaException("Cannot partially overwrite array type.");
+                }
+                if (HDF5Utils.isInBounds(oldDimensions, dimensions) == false)
+                {
+                    throw new HDF5JavaException("New data set dimensions are out of bounds.");
+                }
             }
         }
         registry.registerCleanUp(new Runnable()
@@ -1603,9 +1623,9 @@ class HDF5
         return runner.call(dataDimensionRunnable);
     }
 
-    public long[] getDataDimensionsForAttribute(final int atrributeId, ICleanUpRegistry registry)
+    public long[] getDataDimensionsForAttribute(final int attributeId, ICleanUpRegistry registry)
     {
-        final int dataSpaceId = H5Aget_space(atrributeId);
+        final int dataSpaceId = H5Aget_space(attributeId);
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -1756,7 +1776,7 @@ class HDF5
     {
         return H5Screate(H5S_SCALAR);
     }
-    
+
     public int createSimpleDataSpace(long[] dimensions, ICleanUpRegistry registry)
     {
         final int dataSpaceId = H5Screate_simple(dimensions.length, dimensions, null);

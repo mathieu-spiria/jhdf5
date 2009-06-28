@@ -30,7 +30,7 @@ interface IHDF5ShortWriter
     // /////////////////////
 
     /**
-     * Set a <code>short</code> attribute to the referenced object.
+     * Set a <code>short</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -42,7 +42,7 @@ interface IHDF5ShortWriter
     public void setShortAttribute(final String objectPath, final String name, final short value);
 
     /**
-     * Set a <code>short[]</code> attribute to the referenced object.
+     * Set a <code>short[]</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -54,6 +54,32 @@ interface IHDF5ShortWriter
     public void setShortArrayAttribute(final String objectPath, final String name,
             final short[] value);
 
+    /**
+     * Set a multi-dimensional code>short</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setShortMDArrayAttribute(final String objectPath, final String name,
+            final MDShortArray value);
+
+    /**
+     * Set a <code>short[][]</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setShortMatrixAttribute(final String objectPath, final String name,
+            final short[][] value);
+    
     // /////////////////////
     // Data Sets
     // /////////////////////

@@ -548,15 +548,15 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * Returns the data set id for the given <var>objectPath</var>.
      */
     int getDataSetId(final String objectPath, final int storageDataTypeId, final long[] dimensions,
-            final HDF5AbstractCompression compression, final boolean cutDownExtendIfNecessary,
-            boolean enforceCompactLayoutOnCreate, ICleanUpRegistry registry)
+            final HDF5AbstractCompression compression, boolean enforceCompactLayoutOnCreate,
+            ICleanUpRegistry registry)
     {
         final int dataSetId;
         if (h5.exists(fileId, objectPath))
         {
             dataSetId =
                     h5.openAndExtendDataSet(fileId, objectPath, fileFormat, dimensions,
-                            cutDownExtendIfNecessary, registry);
+                            storageDataTypeId, registry);
         } else
         {
             dataSetId =
@@ -566,7 +566,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         return dataSetId;
     }
 
-    void addAttribute(final String objectPath, final String name, final int storageDataTypeId,
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
             final int nativeDataTypeId, final byte[] value)
     {
         assert objectPath != null;
@@ -581,7 +581,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);
-                            addAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
+                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
                                     value, registry);
                             return null; // Nothing to return.
                         }
@@ -589,13 +589,19 @@ final class HDF5BaseWriter extends HDF5BaseReader
         runner.call(addAttributeRunnable);
     }
 
-    void addAttribute(final int objectId, final String name, final int storageDataTypeId,
+    void setAttribute(final int objectId, final String name, final int storageDataTypeId,
             final int nativeDataTypeId, final byte[] value, ICleanUpRegistry registry)
     {
-        final int attributeId;
+        int attributeId;
         if (h5.existsAttribute(objectId, name))
         {
             attributeId = h5.openAttribute(objectId, name, registry);
+            final int oldStorageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
+            {
+                h5.deleteAttribute(objectId, name);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            }
         } else
         {
             attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);

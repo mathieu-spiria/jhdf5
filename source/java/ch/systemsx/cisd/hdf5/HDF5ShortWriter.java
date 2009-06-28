@@ -57,7 +57,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         assert name != null;
 
         baseWriter.checkOpen();
-        baseWriter.addAttribute(objectPath, name, H5T_STD_I16LE, H5T_NATIVE_INT16, HDFNativeData
+        baseWriter.setAttribute(objectPath, name, H5T_STD_I16LE, H5T_NATIVE_INT16, HDFNativeData
                 .shortToByte(value));
     }
 
@@ -69,7 +69,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         assert value != null;
 
         baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+        final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
                 {
@@ -77,14 +77,46 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                             baseWriter.h5.createArrayType(H5T_NATIVE_INT16, value.length, registry);
                     final int storageTypeId =
                             baseWriter.h5.createArrayType(H5T_STD_I16LE, value.length, registry);
-                    baseWriter.addAttribute(objectPath, name, storageTypeId, memoryTypeId,
+                    baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId,
                             HDFNativeData.shortToByte(value));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(setAttributeRunnable);
+    }
+
+    public void setShortMDArrayAttribute(final String objectPath, final String name,
+            final MDShortArray value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(H5T_NATIVE_INT16, value.dimensions(),
+                                    registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(H5T_STD_I16LE, value.dimensions(),
+                                    registry);
+                    baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId,
+                            HDFNativeData.shortToByte(value.getAsFlatArray()));
                     return null; // Nothing to return.
                 }
             };
         baseWriter.runner.call(addAttributeRunnable);
     }
 
+    public void setShortMatrixAttribute(final String objectPath, final String name,
+            final short[][] value)
+    {
+        setShortMDArrayAttribute(objectPath, name, new MDShortArray(value));
+    }
+    
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -130,7 +162,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                         { data.length };
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I16LE, dimensions, 
-                                    INT_NO_COMPRESSION, true, true, registry);
+                                    INT_NO_COMPRESSION, true, registry);
                     H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -156,7 +188,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I16LE, new long[]
-                                { data.length }, compression, true, false, registry);
+                                { data.length }, compression, false, registry);
                     H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -220,7 +252,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                     final int dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
-                                        { offset + dataSize }, false, registry);
+                                        { offset + dataSize }, -1, registry);
                     final int dataSpaceId = 
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
@@ -345,8 +377,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I16LE, 
-                                    data.longDimensions(), compression, true,
-                                    false, registry);
+                                    data.longDimensions(), compression, false, registry);
                     H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -421,7 +452,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                     }
                     final int dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, dataSetDimensions, false, registry);
+                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
                     final int dataSpaceId = 
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
@@ -458,7 +489,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                     }
                     final int dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, dataSetDimensions, false, registry);
+                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
                     final int dataSpaceId = 
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);

@@ -145,9 +145,23 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
                                             registry);
                             final int attributeId =
                                     baseReader.h5.openAttribute(objectId, attributeName, registry);
-                            final long[] arrayDimensions =
-                                    baseReader.h5.getDataDimensionsForAttribute(attributeId,
-                                            registry);
+                            final int attributeTypeId =
+                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                            final int memoryTypeId;
+                            final int[] arrayDimensions;
+                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+                            {
+                                arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
+                                memoryTypeId =
+                                        baseReader.h5.createArrayType(__Memorytype__,
+                                                arrayDimensions, registry);
+                            } else
+                            {
+                                arrayDimensions =
+                                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                                                attributeId, registry));
+                                memoryTypeId = __Memorytype__;
+                            }
                             final int len;
                             try
                             {
@@ -158,7 +172,7 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
                             }
                             final byte[] data =
                                     baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            __Memorytype__, __elementsize__ * len);
+                                            memoryTypeId, 4 * len);
                             return new MD__Name__Array(HDFNativeData.byteTo__Name__(data, 0, len),
                                     arrayDimensions);
                         }

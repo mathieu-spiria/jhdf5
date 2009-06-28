@@ -142,6 +142,8 @@ public class HDF5RoundtripTest
         test.testReadMDFloatArray();
         test.testReadToFloatMDArray();
         test.testFloatArrayTypeDataSet();
+        test.testFloatArrayTypeDataSetOverwrite();
+        test.testFloatArrayCreateCompactOverwriteBlock();
         test.testFloatMDArrayTypeDataSet();
         test.testIterateOverFloatArrayInNaturalBlocks(10, 99);
         test.testIterateOverFloatArrayInNaturalBlocks(10, 100);
@@ -213,6 +215,8 @@ public class HDF5RoundtripTest
         test.testOverwriteMatrixIncreaseSize();
         test.testOverwriteStringVectorDecreaseSize();
         test.testAttributes();
+        test.testAttributeDimensionArray();
+        test.testAttributeDimensionArrayOverwrite();
         test.testCreateDataTypes();
         test.testGroups();
         test.testSoftLink();
@@ -980,12 +984,34 @@ public class HDF5RoundtripTest
         final HDF5ArrayTypeFloatWriter efWriter = new HDF5ArrayTypeFloatWriter((HDF5Writer) writer);
         final float[] floatDataWritten = new float[]
             { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f };
-        efWriter.writeFloatArrayArraryType("f", floatDataWritten);
+        efWriter.writeFloatArrayArrayType("f", floatDataWritten);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertEquals("FLOAT(4, #5):{}", reader.getDataSetInformation("f").toString());
         final float[] floatDataRead = reader.readFloatArray("f");
         assertTrue(Arrays.equals(floatDataWritten, floatDataRead));
+    }
+
+    @Test
+    public void testFloatArrayTypeDataSetOverwrite()
+    {
+        final File datasetFile = new File(workingDirectory, "floatArrayTypeDataSetOverwrite.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final HDF5ArrayTypeFloatWriter efWriter = new HDF5ArrayTypeFloatWriter((HDF5Writer) writer);
+        final float[] floatDataWritten = new float[]
+            { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f };
+        efWriter.writeFloatArrayArrayType("f", floatDataWritten);
+        final float[] floatDataWritten2 = new float[]
+            { 0.1f, 8.2f, -3.1f, 0.0f, 20000.0f };
+        writer.writeFloatArray("f", floatDataWritten2);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        assertEquals("FLOAT(4):{5}", reader.getDataSetInformation("f").toString());
+        final float[] floatDataRead = reader.readFloatArray("f");
+        assertTrue(Arrays.equals(floatDataWritten2, floatDataRead));
     }
 
     @Test
@@ -998,13 +1024,34 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         final HDF5ArrayTypeFloatWriter efWriter = new HDF5ArrayTypeFloatWriter((HDF5Writer) writer);
         final MDFloatArray floatDataWritten = new MDFloatArray(new float[]
-            { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f, 1.111f }, new int[] { 3, 2 });
-        efWriter.writeFloatArrayArraryType("f", floatDataWritten);
+            { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f, 1.111f }, new int[]
+            { 3, 2 });
+        efWriter.writeFloatArrayArrayType("f", floatDataWritten);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertEquals("FLOAT(4, [3,2]):{}", reader.getDataSetInformation("f").toString());
         final MDFloatArray floatDataRead = reader.readFloatMDArray("f");
         assertEquals(floatDataWritten, floatDataRead);
+    }
+
+    @Test
+    public void testFloatArrayCreateCompactOverwriteBlock()
+    {
+        final File datasetFile =
+                new File(workingDirectory, "testFloatArrayCreateCompactOverwroteBlock.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        writer.writeFloatArrayCompact("f", new float[]
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+        writer.writeFloatArrayBlockWithOffset("f", new float[]
+            { 400, 500, 600 }, 3, 3);
+        float[] arrayWritten = new float[]
+            { 1, 2, 3, 400, 500, 600, 7, 8, 9, 10 };
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        assertTrue(Arrays.equals(arrayWritten, reader.readFloatArray("f")));
     }
 
     @Test
@@ -2718,6 +2765,19 @@ public class HDF5RoundtripTest
         final float[] floatArrayAttribute = new float[]
             { 3f, 3.1f, 3.14f, 3.142f, 3.1416f };
         writer.setFloatArrayAttribute(datasetName, floatArrayAttributeName, floatArrayAttribute);
+        final String floatArrayMDAttributeName = "Float Array Multi-dimensional Attribute";
+        final MDFloatArray floatMatrixAttribute = new MDFloatArray(new float[][]
+            {
+                { 1, 2, 3 },
+                { 4, 5, 6 } });
+        writer.setFloatMDArrayAttribute(datasetName, floatArrayMDAttributeName,
+                floatMatrixAttribute);
+        final MDFloatArray floatMatrixAttribute2 = new MDFloatArray(new float[][]
+            {
+                { 2, 3, 4 },
+                { 7, 8, 9 } });
+        writer.setFloatMatrixAttribute(datasetName, floatArrayMDAttributeName,
+                floatMatrixAttribute2.toMatrix());
         final String byteArrayAttributeName = "Byte Array Attribute";
         final byte[] byteArrayAttribute = new byte[]
             { 1, 2, 3 };
@@ -2749,9 +2809,64 @@ public class HDF5RoundtripTest
         assertFalse(reader.hasAttribute(datasetName, volatileAttributeName));
         assertTrue(Arrays.equals(floatArrayAttribute, reader.getFloatArrayAttribute(datasetName,
                 floatArrayAttributeName)));
+        assertTrue(floatMatrixAttribute2.equals(reader.getFloatMDArrayAttribute(datasetName,
+                floatArrayMDAttributeName)));
+        assertTrue(floatMatrixAttribute2.equals(new MDFloatArray(reader.getFloatMatrixAttribute(
+                datasetName, floatArrayMDAttributeName))));
         assertTrue(Arrays.equals(byteArrayAttribute, reader.getByteArrayAttribute(datasetName,
                 byteArrayAttributeName)));
         reader.close();
+    }
+
+    @Test
+    public void testAttributeDimensionArray()
+    {
+        final File attributeFile = new File(workingDirectory, "attributeDimensionalArray.h5");
+        attributeFile.delete();
+        assertFalse(attributeFile.exists());
+        attributeFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(attributeFile);
+        final HDF5ArrayTypeFloatWriter efWriter = new HDF5ArrayTypeFloatWriter((HDF5Writer) writer);
+        final String datasetName = "SomeDataSet";
+        final String attributeName = "farray";
+        final float[] farray = new float[]
+            { 0, 10, 100 };
+
+        writer.writeIntArray(datasetName, new int[0]);
+        efWriter.setFloatArrayAttributeDimensional(datasetName, attributeName, farray);
+        final HDF5DataTypeInformation info = writer.getAttributeInformation(datasetName, attributeName);
+        assertEquals("FLOAT(4, #3)", info.toString());
+        assertFalse(info.isArrayType());
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(attributeFile);
+        assertTrue(Arrays.equals(farray, reader.getFloatArrayAttribute(datasetName, attributeName)));
+    }
+
+    @Test
+    public void testAttributeDimensionArrayOverwrite()
+    {
+        final File attributeFile = new File(workingDirectory, "attributeDimensionalArrayOverwrite.h5");
+        attributeFile.delete();
+        assertFalse(attributeFile.exists());
+        attributeFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(attributeFile);
+        final HDF5ArrayTypeFloatWriter efWriter = new HDF5ArrayTypeFloatWriter((HDF5Writer) writer);
+        final String datasetName = "SomeDataSet";
+        final String attributeName = "farray";
+        final float[] farray = new float[]
+            { 0, 10, 100 };
+
+        writer.writeIntArray(datasetName, new int[0]);
+        efWriter.setFloatArrayAttributeDimensional(datasetName, attributeName, farray);
+        writer.setFloatArrayAttribute(datasetName, attributeName, farray);
+        final HDF5DataTypeInformation info = writer.getAttributeInformation(datasetName, attributeName);
+        assertEquals("FLOAT(4, #3)", info.toString());
+        assertTrue(info.isArrayType());
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(attributeFile);
+        assertTrue(Arrays.equals(farray, reader.getFloatArrayAttribute(datasetName, attributeName)));
     }
 
     @Test

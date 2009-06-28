@@ -316,7 +316,20 @@ class HDF5Reader implements IHDF5Reader
                                 final int dataTypeId =
                                         baseReader.h5
                                                 .getDataTypeForAttribute(attributeId, registry);
-                                return baseReader.getDataTypeInformation(dataTypeId);
+                                final HDF5DataTypeInformation dataTypeInformation =
+                                        baseReader.getDataTypeInformation(dataTypeId);
+                                if (dataTypeInformation.isArrayType() == false)
+                                {
+                                    final int[] dimensions =
+                                            MDArray.toInt(baseReader.h5
+                                                    .getDataDimensionsForAttribute(attributeId,
+                                                            registry));
+                                    if (dimensions.length > 0)
+                                    {
+                                        dataTypeInformation.setDimensions(dimensions);
+                                    }
+                                }
+                                return dataTypeInformation;
                             } catch (RuntimeException ex)
                             {
                                 throw ex;
@@ -1493,7 +1506,8 @@ class HDF5Reader implements IHDF5Reader
                     if (baseReader.h5.isVariableLengthString(dataTypeId))
                     {
                         baseReader.h5.readDataSetVL(dataSetId, dataTypeId, data);
-                    } else {
+                    } else
+                    {
                         baseReader.h5.readDataSetString(dataSetId, dataTypeId, data);
                     }
                     return data;

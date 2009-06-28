@@ -23,7 +23,6 @@ import java.util.List;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.rinn.restrictions.Private;
-import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * Some utility methods used by {@link HDF5Reader} and {@link HDF5Writer}.
@@ -239,22 +238,6 @@ final class HDF5Utils
     }
 
     /**
-     * Checks that <var>dimensions</var> are of <var>expectedRank</var> and converts them from
-     * <code>long[]</code> to <code>int[]</code>.
-     */
-    static int[] toInt(final int expectedRank, final long[] dimensions)
-    {
-        assert dimensions != null;
-
-        if (dimensions.length != expectedRank)
-        {
-            throw new HDF5JavaException("Data Set is expected to be of rank " + expectedRank
-                    + " (rank=" + dimensions.length + ")");
-        }
-        return MDArray.toInt(dimensions);
-    }
-
-    /**
      * Returns <code>true</code>, if <var>name</var> denotes an internal name used by the library
      * for house-keeping.
      */
@@ -343,4 +326,21 @@ final class HDF5Utils
         return true;
     }
 
+    /**
+     * Checks if <var>subDimensions</var> are in bounds of <var>dimensions</var>.
+     */
+    static boolean isInBounds(long[] dimensions, long[] subDimensions)
+    {
+        assert dimensions.length == subDimensions.length;
+        
+        for (int i = 0; i < dimensions.length; ++i)
+        {
+            if (subDimensions[i] > dimensions[i])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    
 }

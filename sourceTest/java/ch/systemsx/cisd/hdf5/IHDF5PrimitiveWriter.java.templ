@@ -30,7 +30,7 @@ interface IHDF5__Name__Writer
     // /////////////////////
 
     /**
-     * Set a <code>__name__</code> attribute to the referenced object.
+     * Set a <code>__name__</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -42,7 +42,7 @@ interface IHDF5__Name__Writer
     public void set__Name__Attribute(final String objectPath, final String name, final __name__ value);
 
     /**
-     * Set a <code>__name__[]</code> attribute to the referenced object.
+     * Set a <code>__name__[]</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -54,6 +54,32 @@ interface IHDF5__Name__Writer
     public void set__Name__ArrayAttribute(final String objectPath, final String name,
             final __name__[] value);
 
+    /**
+     * Set a multi-dimensional code>__name__</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void set__Name__MDArrayAttribute(final String objectPath, final String name,
+            final MD__Name__Array value);
+
+    /**
+     * Set a <code>__name__[][]</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void set__Name__MatrixAttribute(final String objectPath, final String name,
+            final __name__[][] value);
+    
     // /////////////////////
     // Data Sets
     // /////////////////////

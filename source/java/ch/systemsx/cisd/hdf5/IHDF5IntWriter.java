@@ -30,7 +30,7 @@ interface IHDF5IntWriter
     // /////////////////////
 
     /**
-     * Set a <code>int</code> attribute to the referenced object.
+     * Set a <code>int</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -42,7 +42,7 @@ interface IHDF5IntWriter
     public void setIntAttribute(final String objectPath, final String name, final int value);
 
     /**
-     * Set a <code>int[]</code> attribute to the referenced object.
+     * Set a <code>int[]</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -54,6 +54,32 @@ interface IHDF5IntWriter
     public void setIntArrayAttribute(final String objectPath, final String name,
             final int[] value);
 
+    /**
+     * Set a multi-dimensional code>int</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setIntMDArrayAttribute(final String objectPath, final String name,
+            final MDIntArray value);
+
+    /**
+     * Set a <code>int[][]</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setIntMatrixAttribute(final String objectPath, final String name,
+            final int[][] value);
+    
     // /////////////////////
     // Data Sets
     // /////////////////////

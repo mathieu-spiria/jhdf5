@@ -30,7 +30,7 @@ interface IHDF5LongWriter
     // /////////////////////
 
     /**
-     * Set a <code>long</code> attribute to the referenced object.
+     * Set a <code>long</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -42,7 +42,7 @@ interface IHDF5LongWriter
     public void setLongAttribute(final String objectPath, final String name, final long value);
 
     /**
-     * Set a <code>long[]</code> attribute to the referenced object.
+     * Set a <code>long[]</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -54,6 +54,32 @@ interface IHDF5LongWriter
     public void setLongArrayAttribute(final String objectPath, final String name,
             final long[] value);
 
+    /**
+     * Set a multi-dimensional code>long</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setLongMDArrayAttribute(final String objectPath, final String name,
+            final MDLongArray value);
+
+    /**
+     * Set a <code>long[][]</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setLongMatrixAttribute(final String objectPath, final String name,
+            final long[][] value);
+    
     // /////////////////////
     // Data Sets
     // /////////////////////

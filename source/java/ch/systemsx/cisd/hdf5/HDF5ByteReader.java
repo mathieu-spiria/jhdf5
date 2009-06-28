@@ -144,9 +144,23 @@ class HDF5ByteReader implements IHDF5ByteReader
                                             registry);
                             final int attributeId =
                                     baseReader.h5.openAttribute(objectId, attributeName, registry);
-                            final long[] arrayDimensions =
-                                    baseReader.h5.getDataDimensionsForAttribute(attributeId,
-                                            registry);
+                            final int attributeTypeId =
+                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                            final int memoryTypeId;
+                            final int[] arrayDimensions;
+                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+                            {
+                                arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
+                                memoryTypeId =
+                                        baseReader.h5.createArrayType(H5T_NATIVE_INT8,
+                                                arrayDimensions, registry);
+                            } else
+                            {
+                                arrayDimensions =
+                                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                                                attributeId, registry));
+                                memoryTypeId = H5T_NATIVE_INT8;
+                            }
                             final int len;
                             try
                             {
@@ -157,7 +171,7 @@ class HDF5ByteReader implements IHDF5ByteReader
                             }
                             final byte[] data =
                                     baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            H5T_NATIVE_INT8, 1 * len);
+                                            memoryTypeId, 4 * len);
                             return new MDByteArray(data, arrayDimensions);
                         }
                     };

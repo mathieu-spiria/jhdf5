@@ -30,7 +30,7 @@ interface IHDF5DoubleWriter
     // /////////////////////
 
     /**
-     * Set a <code>double</code> attribute to the referenced object.
+     * Set a <code>double</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -42,7 +42,7 @@ interface IHDF5DoubleWriter
     public void setDoubleAttribute(final String objectPath, final String name, final double value);
 
     /**
-     * Set a <code>double[]</code> attribute to the referenced object.
+     * Set a <code>double[]</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -54,6 +54,32 @@ interface IHDF5DoubleWriter
     public void setDoubleArrayAttribute(final String objectPath, final String name,
             final double[] value);
 
+    /**
+     * Set a multi-dimensional code>double</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setDoubleMDArrayAttribute(final String objectPath, final String name,
+            final MDDoubleArray value);
+
+    /**
+     * Set a <code>double[][]</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setDoubleMatrixAttribute(final String objectPath, final String name,
+            final double[][] value);
+    
     // /////////////////////
     // Data Sets
     // /////////////////////

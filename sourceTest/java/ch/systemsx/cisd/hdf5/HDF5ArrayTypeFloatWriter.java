@@ -16,11 +16,16 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ncsa.hdf.hdf5lib.H5.H5Aclose;
+import static ncsa.hdf.hdf5lib.H5.H5Acreate;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_float;
+import static ncsa.hdf.hdf5lib.H5.H5Sclose;
+import static ncsa.hdf.hdf5lib.H5.H5Screate_simple;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
+import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -41,7 +46,7 @@ public class HDF5ArrayTypeFloatWriter
         baseWriter = writer.getBaseWriter();
     }
 
-    public void writeFloatArrayArraryType(final String objectPath, final float[] data)
+    public void writeFloatArrayArrayType(final String objectPath, final float[] data)
     {
         assert objectPath != null;
         assert data != null;
@@ -65,7 +70,7 @@ public class HDF5ArrayTypeFloatWriter
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void writeFloatArrayArraryType(final String objectPath, final MDFloatArray data)
+    public void writeFloatArrayArrayType(final String objectPath, final MDFloatArray data)
     {
         assert objectPath != null;
         assert data != null;
@@ -90,6 +95,57 @@ public class HDF5ArrayTypeFloatWriter
                 }
             };
         baseWriter.runner.call(writeRunnable);
+    }
+
+    public void setFloatArrayAttributeDimensional(final String objectPath, final String name,
+            final float[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = new long[]
+                        { value.length };
+                    final int dataSpaceId =
+                            H5Screate_simple(dimensions.length, dimensions, dimensions);
+                    registry.registerCleanUp(new Runnable()
+                        {
+                            public void run()
+                            {
+                                H5Sclose(dataSpaceId);
+                            }
+                        });
+                    final int objectId =
+                            baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
+                    final int attributeId =
+                            createAttribute(objectId, name, H5T_IEEE_F32LE, dataSpaceId, registry);
+                    baseWriter.h5.writeAttribute(attributeId, H5T_NATIVE_FLOAT, HDFNativeData
+                            .floatToByte(value));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(addAttributeRunnable);
+    }
+
+    private int createAttribute(int locationId, String attributeName, int dataTypeId,
+            int dataSpaceId, ICleanUpRegistry registry)
+    {
+        final int attributeId =
+                H5Acreate(locationId, attributeName, dataTypeId, dataSpaceId, H5P_DEFAULT,
+                        H5P_DEFAULT);
+        registry.registerCleanUp(new Runnable()
+            {
+                public void run()
+                {
+                    H5Aclose(attributeId);
+                }
+            });
+        return attributeId;
     }
 
 }

@@ -30,7 +30,7 @@ interface IHDF5FloatWriter
     // /////////////////////
 
     /**
-     * Set a <code>float</code> attribute to the referenced object.
+     * Set a <code>float</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -42,7 +42,7 @@ interface IHDF5FloatWriter
     public void setFloatAttribute(final String objectPath, final String name, final float value);
 
     /**
-     * Set a <code>float[]</code> attribute to the referenced object.
+     * Set a <code>float[]</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -54,6 +54,32 @@ interface IHDF5FloatWriter
     public void setFloatArrayAttribute(final String objectPath, final String name,
             final float[] value);
 
+    /**
+     * Set a multi-dimensional code>float</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setFloatMDArrayAttribute(final String objectPath, final String name,
+            final MDFloatArray value);
+
+    /**
+     * Set a <code>float[][]</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setFloatMatrixAttribute(final String objectPath, final String name,
+            final float[][] value);
+    
     // /////////////////////
     // Data Sets
     // /////////////////////

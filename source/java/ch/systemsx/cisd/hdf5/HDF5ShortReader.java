@@ -145,9 +145,23 @@ class HDF5ShortReader implements IHDF5ShortReader
                                             registry);
                             final int attributeId =
                                     baseReader.h5.openAttribute(objectId, attributeName, registry);
-                            final long[] arrayDimensions =
-                                    baseReader.h5.getDataDimensionsForAttribute(attributeId,
-                                            registry);
+                            final int attributeTypeId =
+                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                            final int memoryTypeId;
+                            final int[] arrayDimensions;
+                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+                            {
+                                arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
+                                memoryTypeId =
+                                        baseReader.h5.createArrayType(H5T_NATIVE_INT16,
+                                                arrayDimensions, registry);
+                            } else
+                            {
+                                arrayDimensions =
+                                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                                                attributeId, registry));
+                                memoryTypeId = H5T_NATIVE_INT16;
+                            }
                             final int len;
                             try
                             {
@@ -158,7 +172,7 @@ class HDF5ShortReader implements IHDF5ShortReader
                             }
                             final byte[] data =
                                     baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            H5T_NATIVE_INT16, 2 * len);
+                                            memoryTypeId, 4 * len);
                             return new MDShortArray(HDFNativeData.byteToShort(data, 0, len),
                                     arrayDimensions);
                         }

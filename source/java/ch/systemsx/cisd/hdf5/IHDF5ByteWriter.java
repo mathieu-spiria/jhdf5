@@ -30,7 +30,7 @@ interface IHDF5ByteWriter
     // /////////////////////
 
     /**
-     * Set a <code>byte</code> attribute to the referenced object.
+     * Set a <code>byte</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -42,7 +42,7 @@ interface IHDF5ByteWriter
     public void setByteAttribute(final String objectPath, final String name, final byte value);
 
     /**
-     * Set a <code>byte[]</code> attribute to the referenced object.
+     * Set a <code>byte[]</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -54,6 +54,32 @@ interface IHDF5ByteWriter
     public void setByteArrayAttribute(final String objectPath, final String name,
             final byte[] value);
 
+    /**
+     * Set a multi-dimensional code>byte</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setByteMDArrayAttribute(final String objectPath, final String name,
+            final MDByteArray value);
+
+    /**
+     * Set a <code>byte[][]</code> attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setByteMatrixAttribute(final String objectPath, final String name,
+            final byte[][] value);
+    
     // /////////////////////
     // Data Sets
     // /////////////////////

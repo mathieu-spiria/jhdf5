@@ -28,24 +28,30 @@ public final class HDF5DataTypeInformation
 
     private final HDF5DataClass dataClass;
 
+    private final boolean arrayType;
+
     private int elementSize;
 
     private int numberOfElements;
-    
+
     private int[] dimensions;
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize)
     {
-        this(dataClass, elementSize, new int[] { 1 });
+        this(dataClass, elementSize, new int[]
+            { 1 }, false);
     }
-    
+
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int numberOfElements)
     {
-        this(dataClass, elementSize, new int[] { numberOfElements });
+        this(dataClass, elementSize, new int[]
+            { numberOfElements }, false);
     }
-    
-    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int[] dimensions)
+
+    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int[] dimensions,
+            boolean arrayType)
     {
+        this.arrayType = arrayType;
         this.dataClass = dataClass;
         this.elementSize = elementSize;
         this.dimensions = dimensions;
@@ -97,6 +103,11 @@ public final class HDF5DataTypeInformation
         this.numberOfElements = MDArray.getLength(dimensions);
     }
 
+    public boolean isArrayType()
+    {
+        return arrayType;
+    }
+
     //
     // Object
     //
@@ -127,7 +138,7 @@ public final class HDF5DataTypeInformation
             return dataClass + "(" + elementSize + ")";
         } else if (dimensions.length == 1)
         {
-            
+
             return dataClass + "(" + elementSize + ", #" + numberOfElements + ")";
         } else
         {
@@ -141,7 +152,10 @@ public final class HDF5DataTypeInformation
                 builder.append(d);
                 builder.append(',');
             }
-            builder.setLength(builder.length() - 1);
+            if (dimensions.length > 0)
+            {
+                builder.setLength(builder.length() - 1);
+            }
             builder.append(']');
             builder.append(')');
             return builder.toString();
