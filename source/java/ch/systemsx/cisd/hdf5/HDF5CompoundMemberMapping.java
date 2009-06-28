@@ -18,6 +18,9 @@ package ch.systemsx.cisd.hdf5;
 
 import java.lang.reflect.Field;
 
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.base.mdarray.MDArray;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
@@ -82,6 +85,8 @@ public final class HDF5CompoundMemberMapping
 
     private final int memberTypeLength;
 
+    private final int[] memberTypeDimensions;
+
     private final HDF5EnumerationType enumTypeOrNull;
 
     /**
@@ -93,7 +98,7 @@ public final class HDF5CompoundMemberMapping
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName)
     {
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, 0);
+        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, new int[0]);
     }
 
     /**
@@ -105,7 +110,7 @@ public final class HDF5CompoundMemberMapping
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName)
     {
-        return new HDF5CompoundMemberMapping(fieldName, memberName, null, 0);
+        return new HDF5CompoundMemberMapping(fieldName, memberName, null, new int[0]);
     }
 
     /**
@@ -118,7 +123,8 @@ public final class HDF5CompoundMemberMapping
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName, int memberTypeLength)
     {
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, memberTypeLength);
+        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, new int[]
+            { memberTypeLength });
     }
 
     /**
@@ -132,7 +138,40 @@ public final class HDF5CompoundMemberMapping
     public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName,
             int memberTypeLength)
     {
-        return new HDF5CompoundMemberMapping(fieldName, memberName, null, memberTypeLength);
+        return new HDF5CompoundMemberMapping(fieldName, memberName, null, new int[]
+            { memberTypeLength });
+    }
+
+    /**
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings, primitive arrays.
+     * and {@link java.util.BitSet}s.
+     * 
+     * @param fieldName The name of the field in the Java class. Will also be used as name of
+     *            member.
+     * @param memberTypeDimX The x dimension of the primitive array in the compound type.
+     * @param memberTypeDimY The y dimension of the primitive array in the compound type.
+     */
+    public static HDF5CompoundMemberMapping mapping(String fieldName, int memberTypeDimX,
+            int memberTypeDimY)
+    {
+        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, new int[]
+            { memberTypeDimX, memberTypeDimY });
+    }
+
+    /**
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings, primitive arrays.
+     * and {@link java.util.BitSet}s.
+     * 
+     * @param fieldName The name of the field in the Java class.
+     * @param memberName The name of the member in the compound type.
+     * @param memberTypeDimX The x dimension of the primitive array in the compound type.
+     * @param memberTypeDimY The y dimension of the primitive array in the compound type.
+     */
+    public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName,
+            int memberTypeDimX, int memberTypeDimY)
+    {
+        return new HDF5CompoundMemberMapping(fieldName, memberName, null, new int[]
+            { memberTypeDimX, memberTypeDimY });
     }
 
     /**
@@ -144,7 +183,7 @@ public final class HDF5CompoundMemberMapping
     public static HDF5CompoundMemberMapping mapping(String fieldName, HDF5EnumerationType enumType)
     {
         assert enumType != null;
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, enumType, 0);
+        return new HDF5CompoundMemberMapping(fieldName, fieldName, enumType, new int[0]);
     }
 
     /**
@@ -158,7 +197,7 @@ public final class HDF5CompoundMemberMapping
             HDF5EnumerationType enumType)
     {
         assert enumType != null;
-        return new HDF5CompoundMemberMapping(fieldName, memberName, enumType, 0);
+        return new HDF5CompoundMemberMapping(fieldName, memberName, enumType, new int[0]);
     }
 
     /**
@@ -167,15 +206,16 @@ public final class HDF5CompoundMemberMapping
      * 
      * @param fieldName The name of the field in the <var>clazz</var>
      * @param memberName The name of the member in the HDF5 compound data type.
-     * @param memberTypeLength The length of the String member field (or 0, if no String member).
+     * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
      */
     private HDF5CompoundMemberMapping(String fieldName, String memberName,
-            HDF5EnumerationType enumTypeOrNull, int memberTypeLength)
+            HDF5EnumerationType enumTypeOrNull, int[] memberTypeDimensions)
     {
         this.fieldName = fieldName;
         this.memberName = memberName;
         this.enumTypeOrNull = enumTypeOrNull;
-        this.memberTypeLength = memberTypeLength;
+        this.memberTypeDimensions = memberTypeDimensions;
+        this.memberTypeLength = MDArray.getLength(memberTypeDimensions);
     }
 
     Field getField(Class<?> clazz) throws HDF5JavaException
@@ -183,15 +223,22 @@ public final class HDF5CompoundMemberMapping
         try
         {
             final Field field = clazz.getDeclaredField(fieldName);
-            if (memberTypeLength > 0 && field.getType() != String.class
-                    && field.getType().isArray() == false
-                    && field.getType() != java.util.BitSet.class)
+            final Class<?> fieldType = field.getType();
+            final boolean isArray = fieldType.isArray();
+            final boolean isMDArray = MDAbstractArray.class.isAssignableFrom(fieldType); 
+            if (memberTypeLength > 0)
             {
-                throw new HDF5JavaException("Field '" + fieldName + "' of class '"
-                        + clazz.getCanonicalName()
-                        + "' is no String or primitive array, but a length > 0 is given.");
+                
+                if (field.getType() != String.class && isArray == false
+                        && field.getType() != java.util.BitSet.class && isMDArray == false)
+                {
+                    throw new HDF5JavaException("Field '" + fieldName + "' of class '"
+                            + clazz.getCanonicalName()
+                            + "' is no String or primitive array, but a length > 0 is given.");
+                }
+                
             } else if (memberTypeLength == 0
-                    && (field.getType() == String.class || field.getType().isArray() || field
+                    && (field.getType() == String.class || isArray || isMDArray || field
                             .getType() == java.util.BitSet.class))
             {
                 throw new HDF5JavaException("Field '" + fieldName + "' of class '"
@@ -214,6 +261,11 @@ public final class HDF5CompoundMemberMapping
     int getMemberTypeLength()
     {
         return memberTypeLength;
+    }
+
+    int[] getMemberTypeDimensions()
+    {
+        return memberTypeDimensions;
     }
 
     HDF5EnumerationType tryGetEnumerationType()

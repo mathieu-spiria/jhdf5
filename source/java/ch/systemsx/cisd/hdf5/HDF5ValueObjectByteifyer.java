@@ -18,6 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
@@ -41,6 +42,8 @@ class HDF5ValueObjectByteifyer<T>
         public int getStringDataTypeId(int maxLength);
 
         public int getArrayTypeId(int baseTypeId, int length);
+
+        public int getArrayTypeId(int baseTypeId, int[] dimensions);
     }
 
     public HDF5ValueObjectByteifyer(Class<T> clazz, FileInfoProvider fileInfoProvider,
@@ -96,6 +99,12 @@ class HDF5ValueObjectByteifyer<T>
                         HDF5MemberByteifyer.createArrayMemberByteifyer(members[i].getField(clazz),
                                 members[i].getMemberName(), offset, fileInfoProvider, members[i]
                                         .getMemberTypeLength());
+            } else if (MDAbstractArray.class.isAssignableFrom(memberClazz))
+            {
+                result[i] =
+                        HDF5MemberByteifyer.createArrayMemberByteifyer(members[i].getField(clazz),
+                                members[i].getMemberName(), offset, fileInfoProvider, members[i]
+                                        .getMemberTypeDimensions());
             } else
             {
                 result[i] =

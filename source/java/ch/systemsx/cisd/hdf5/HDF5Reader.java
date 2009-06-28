@@ -2420,6 +2420,14 @@ class HDF5Reader implements IHDF5Reader
                                                     baseReader.fileRegistry);
                                     return typeId;
                                 }
+
+                                public int getArrayTypeId(int baseTypeId, int[] dimensions)
+                                {
+                                    final int typeId =
+                                        baseReader.h5.createArrayType(baseTypeId, dimensions,
+                                                baseReader.fileRegistry);
+                                return typeId;
+                                }
                             }, compoundMembers);
         return objectByteifyer;
     }

@@ -257,6 +257,8 @@ public class HDF5RoundtripTest
         test.testCompoundMDArray();
         test.testCompoundMDArrayBlockWise();
         test.testConfusedCompound();
+        test.testMDArrayCompound();
+        test.testMDArrayCompoundArray();
         test.testGetGroupMemberInformation();
         try
         {
@@ -2834,7 +2836,8 @@ public class HDF5RoundtripTest
 
         writer.writeIntArray(datasetName, new int[0]);
         efWriter.setFloatArrayAttributeDimensional(datasetName, attributeName, farray);
-        final HDF5DataTypeInformation info = writer.getAttributeInformation(datasetName, attributeName);
+        final HDF5DataTypeInformation info =
+                writer.getAttributeInformation(datasetName, attributeName);
         assertEquals("FLOAT(4, #3)", info.toString());
         assertFalse(info.isArrayType());
         writer.close();
@@ -2846,7 +2849,8 @@ public class HDF5RoundtripTest
     @Test
     public void testAttributeDimensionArrayOverwrite()
     {
-        final File attributeFile = new File(workingDirectory, "attributeDimensionalArrayOverwrite.h5");
+        final File attributeFile =
+                new File(workingDirectory, "attributeDimensionalArrayOverwrite.h5");
         attributeFile.delete();
         assertFalse(attributeFile.exists());
         attributeFile.deleteOnExit();
@@ -2860,7 +2864,8 @@ public class HDF5RoundtripTest
         writer.writeIntArray(datasetName, new int[0]);
         efWriter.setFloatArrayAttributeDimensional(datasetName, attributeName, farray);
         writer.setFloatArrayAttribute(datasetName, attributeName, farray);
-        final HDF5DataTypeInformation info = writer.getAttributeInformation(datasetName, attributeName);
+        final HDF5DataTypeInformation info =
+                writer.getAttributeInformation(datasetName, attributeName);
         assertEquals("FLOAT(4, #3)", info.toString());
         assertTrue(info.isArrayType());
         writer.close();
@@ -4300,11 +4305,6 @@ public class HDF5RoundtripTest
     @Test
     public void testConfusedCompound()
     {
-        // Sparc tries conversion which doesn't work reliably on this platform and may even SEGFAULT
-        if (OSUtilities.getComputerPlatform().startsWith("sparc"))
-        {
-            return;
-        }
         final File file = new File(workingDirectory, "confusedCompound.h5");
         file.delete();
         assertFalse(file.exists());
@@ -4322,6 +4322,97 @@ public class HDF5RoundtripTest
         assertTrue("written: " + recordWritten.b + ", read: " + recordRead.b,
                 recordWritten.b == recordRead.b);
         reader.close();
+    }
+
+    static class RecordWithMatrix
+    {
+        String s;
+
+        MDFloatArray fm;
+
+        public RecordWithMatrix()
+        {
+        }
+
+        RecordWithMatrix(String s, MDFloatArray fm)
+        {
+            this.s = s;
+            this.fm = fm;
+        }
+
+        static HDF5CompoundType<RecordWithMatrix> getHDF5Type(IHDF5Reader reader)
+        {
+            return reader.getCompoundType(null, RecordWithMatrix.class, getMapping());
+        }
+
+        private static HDF5CompoundMemberMapping[] getMapping()
+        {
+            return new HDF5CompoundMemberMapping[]
+                { mapping("s", 5), mapping("fm", 2, 2) };
+        }
+
+    }
+
+    @Test
+    public void testMDArrayCompound()
+    {
+        final File file = new File(workingDirectory, "mdArrayCompound.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        HDF5CompoundType<RecordWithMatrix> compoundTypeMatrix =
+                RecordWithMatrix.getHDF5Type(writer);
+        final RecordWithMatrix recordWritten =
+                new RecordWithMatrix("tag", new MDFloatArray(new float[][]
+                    {
+                        { 1, 2 },
+                        { 3, 4 } }));
+        writer.writeCompound("/testCompound", compoundTypeMatrix, recordWritten);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        HDF5CompoundType<RecordWithMatrix> compoundTypeMatrixRead =
+                RecordWithMatrix.getHDF5Type(reader);
+        final RecordWithMatrix recordRead =
+                reader.readCompound("/testCompound", compoundTypeMatrixRead);
+        assertEquals(recordWritten.s, recordRead.s);
+        assertEquals(recordWritten.fm, recordRead.fm);
+    }
+
+    @Test
+    public void testMDArrayCompoundArray()
+    {
+        final File file = new File(workingDirectory, "mdArrayCompoundArray.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        HDF5CompoundType<RecordWithMatrix> compoundTypeMatrix =
+                RecordWithMatrix.getHDF5Type(writer);
+        final RecordWithMatrix[] recordArrayWritten = new RecordWithMatrix[]
+            { new RecordWithMatrix("tag1", new MDFloatArray(new float[][]
+                {
+                    { 1, 2 },
+                    { 3, 4 } })), new RecordWithMatrix("tag2", new MDFloatArray(new float[][]
+                {
+                    { 10, 20 },
+                    { 30, 40 } })), new RecordWithMatrix("tag3", new MDFloatArray(new float[][]
+                {
+                    { 100, 200 },
+                    { 300, 400 } })), };
+        writer.writeCompoundArray("/testCompoundArray", compoundTypeMatrix, recordArrayWritten);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        HDF5CompoundType<RecordWithMatrix> compoundTypeMatrixRead =
+                RecordWithMatrix.getHDF5Type(reader);
+        final RecordWithMatrix[] recordReadArray =
+                reader.readCompoundArray("/testCompoundArray", compoundTypeMatrixRead);
+        assertEquals(3, recordReadArray.length);
+        for (int i = 0; i < recordArrayWritten.length; ++i)
+        {
+            assertEquals("" + i, recordArrayWritten[i].s, recordReadArray[i].s);
+            assertEquals("" + i, recordArrayWritten[i].fm, recordReadArray[i].fm);
+        }
     }
 
     @Test
