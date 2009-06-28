@@ -1498,16 +1498,16 @@ class HDF5Reader implements IHDF5Reader
                     final String[] data = new String[getOneDimensionalArraySize(dimensions)];
                     final int dataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
-                    if (isString == false)
-                    {
-                        throw new HDF5JavaException(objectPath + " needs to be a String.");
-                    }
                     if (baseReader.h5.isVariableLengthString(dataTypeId))
                     {
                         baseReader.h5.readDataSetVL(dataSetId, dataTypeId, data);
                     } else
                     {
+                        final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
+                        if (isString == false)
+                        {
+                            throw new HDF5JavaException(objectPath + " needs to be a String.");
+                        }
                         baseReader.h5.readDataSetString(dataSetId, dataTypeId, data);
                     }
                     return data;
@@ -1519,32 +1519,7 @@ class HDF5Reader implements IHDF5Reader
     public String[] readStringArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<String[]> readCallable = new ICallableWithCleanUp<String[]>()
-            {
-                public String[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
-                                    blockSize, registry);
-                    final String[] data = new String[spaceParams.blockSize];
-                    final int dataTypeId =
-                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
-                    if (isString == false)
-                    {
-                        throw new HDF5JavaException(objectPath + " needs to be a String.");
-                    }
-                    baseReader.h5.readDataSetString(dataSetId, dataTypeId,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return readStringArrayBlockWithOffset(objectPath, blockSize, blockSize * blockNumber);
     }
 
     public String[] readStringArrayBlockWithOffset(final String objectPath, final int blockSize,
@@ -1564,13 +1539,21 @@ class HDF5Reader implements IHDF5Reader
                     final String[] data = new String[spaceParams.blockSize];
                     final int dataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
-                    if (isString == false)
+                    if (baseReader.h5.isVariableLengthString(dataTypeId))
                     {
-                        throw new HDF5JavaException(objectPath + " needs to be a String.");
+                        baseReader.h5.readDataSetVL(dataSetId, dataTypeId,
+                                spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                    } else
+                    {
+                        final boolean isString =
+                                (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
+                        if (isString == false)
+                        {
+                            throw new HDF5JavaException(objectPath + " needs to be a String.");
+                        }
+                        baseReader.h5.readDataSetString(dataSetId, dataTypeId,
+                                spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     }
-                    baseReader.h5.readDataSetString(dataSetId, dataTypeId,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -2424,9 +2407,9 @@ class HDF5Reader implements IHDF5Reader
                                 public int getArrayTypeId(int baseTypeId, int[] dimensions)
                                 {
                                     final int typeId =
-                                        baseReader.h5.createArrayType(baseTypeId, dimensions,
-                                                baseReader.fileRegistry);
-                                return typeId;
+                                            baseReader.h5.createArrayType(baseTypeId, dimensions,
+                                                    baseReader.fileRegistry);
+                                    return typeId;
                                 }
                             }, compoundMembers);
         return objectByteifyer;

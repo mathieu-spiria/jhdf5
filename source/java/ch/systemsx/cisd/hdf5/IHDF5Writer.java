@@ -1077,8 +1077,13 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
-    public void writeStringArrayVariableLength(final String objectPath, final String[] data);
+    public void writeStringVariableLengthArray(final String objectPath, final String[] data);
 
+    public void createStringVariableLengthArray(final String objectPath, final int blockSize);
+    
+    public void createStringVariableLengthArray(final String objectPath, final long size,
+            final int blockSize);
+    
     //
     // Enum
     //

@@ -138,6 +138,7 @@ public class HDF5RoundtripTest
         test.testStringArrayCompact();
         test.testStringCompression();
         test.testStringArrayCompression();
+        test.testStringArrayBlockVL();
         test.testStringCompact();
         test.testReadMDFloatArray();
         test.testReadToFloatMDArray();
@@ -583,7 +584,7 @@ public class HDF5RoundtripTest
         writer.writeStringVariableLength(stringDatasetName2, stringDataWritten1);
         writer.writeStringVariableLength(stringDatasetName2, stringDataWritten2);
         final String stringDatasetName3 = "/Group4/stringArray";
-        writer.writeStringArrayVariableLength(stringDatasetName3, new String[]
+        writer.writeStringVariableLengthArray(stringDatasetName3, new String[]
             { stringDataWritten1, stringDataWritten2 });
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
@@ -1796,6 +1797,38 @@ public class HDF5RoundtripTest
         dataStored = reader.readStringArrayBlockWithOffset(dataSetName, 3, 2);
         assertTrue(Arrays.equals(new String[]
             { "", data[0], data[1] }, dataStored));
+        reader.close();
+    }
+
+    @Test
+    public void testStringArrayBlockVL()
+    {
+        final File stringArrayFile = new File(workingDirectory, "stringArrayBlockVL.h5");
+        stringArrayFile.delete();
+        assertFalse(stringArrayFile.exists());
+        stringArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
+        final String[] data1 = new String[]
+            { "abc", "ABCxxx", "xyz" };
+        final String[] data2 = new String[]
+            { "abd", "ABDxxx", "xyw" };
+        final String[] data = new String[]
+            { "abc", "ABCxxx", "xyz", "abd", "ABDxxx", "xyw" };
+        final String dataSetName = "/aStringArray";
+        writer.createStringVariableLengthArray(dataSetName, 0, 5);
+        writer.writeStringArrayBlock(dataSetName, data1, 0);
+        writer.writeStringArrayBlock(dataSetName, data2, 1);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
+        String[] dataStored = reader.readStringArray(dataSetName);
+        assertTrue(Arrays.equals(data, dataStored));
+        dataStored = reader.readStringArrayBlock(dataSetName, 3, 0);
+        assertTrue(Arrays.equals(data1, dataStored));
+        dataStored = reader.readStringArrayBlock(dataSetName, 3, 1);
+        assertTrue(Arrays.equals(data2, dataStored));
+        dataStored = reader.readStringArrayBlockWithOffset(dataSetName, 3, 2);
+        assertTrue(Arrays.equals(new String[]
+            { "xyz", "abd", "ABDxxx" }, dataStored));
         reader.close();
     }
 
@@ -4314,7 +4347,9 @@ public class HDF5RoundtripTest
         final RecordA recordWritten = new RecordA(17, 42.0f);
         writer.writeCompound("/testCompound", compoundTypeInt, recordWritten);
         writer.close();
-        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final IHDF5Reader reader =
+                HDF5FactoryProvider.get().configureForReading(file).performNumericConversions()
+                        .reader();
         HDF5CompoundType<RecordB> compoundTypeFloat = RecordB.getHDF5Type(reader);
         final RecordB recordRead = reader.readCompound("/testCompound", compoundTypeFloat);
         assertTrue("written: " + recordWritten.a + ", read: " + recordRead.a,
@@ -4469,6 +4504,12 @@ public class HDF5RoundtripTest
         } catch (HDF5DatatypeInterfaceException ex)
         {
             assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
+        }
+        // On HDF5 1.8.3, numeric conversions on sparc don't detect overflows
+        // for INFINITY and DINFINITY values.
+        if (OSUtilities.getCPUArchitecture().startsWith("sparc"))
+        {
+            return;
         }
         try
         {

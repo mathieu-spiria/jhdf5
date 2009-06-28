@@ -18,8 +18,6 @@ package ch.systemsx.cisd.hdf5;
 
 import java.io.File;
 
-import ch.systemsx.cisd.base.utilities.OSUtilities;
-
 /**
  * If you want the reader to perform numeric conversions, call {@link #performNumericConversions()}
  * before calling {@link #reader()}.
@@ -44,12 +42,7 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
 
     public boolean platformSupportsNumericConversions()
     {
-        // On HDF5 1.8.3, numeric conversions on sparcv9 don't detect overflows 
-        // for INFINITY and DINFINITY values.
-        if (OSUtilities.getCPUArchitecture().startsWith("sparc"))
-        {
-            return false;
-        }
+        // Note: code in here any known exceptions of platforms not supporting numeric conversions.
         return true;
     }
 

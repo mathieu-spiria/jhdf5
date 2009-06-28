@@ -606,6 +606,17 @@ class HDF5
     // Data Set
     //
 
+    public void writeStringVL(int dataSetId, int dataTypeId, String[] value)
+    {
+        H5DwriteString(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, value);
+    }
+
+    public void writeStringVL(int dataSetId, int dataTypeId, int memorySpaceId, int fileSpaceId,
+            String[] value)
+    {
+        H5DwriteString(dataSetId, dataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, value);
+    }
+
     public int createDataSet(int fileId, long[] dimensions, long[] chunkSizeOrNull, int dataTypeId,
             HDF5AbstractCompression compression, String dataSetName, StorageLayout layout,
             FileFormat fileFormat, ICleanUpRegistry registry)
@@ -782,7 +793,8 @@ class HDF5
      * @param storageDataTypeId The storage type id, if in overwrite mode, or else -1.
      */
     public int openAndExtendDataSet(int fileId, String path, FileFormat fileFormat,
-            long[] dimensions, int storageDataTypeId, ICleanUpRegistry registry) throws HDF5JavaException
+            long[] dimensions, int storageDataTypeId, ICleanUpRegistry registry)
+            throws HDF5JavaException
     {
         checkMaxLength(path);
         final boolean overwriteMode = (storageDataTypeId > -1);
@@ -798,8 +810,7 @@ class HDF5
                 if (areDimensionsInBounds(dataSetId, dimensions, registry))
                 {
                     final long[] newDimensions =
-                            computeNewDimensions(oldDimensions, dimensions,
-                                    overwriteMode);
+                            computeNewDimensions(oldDimensions, dimensions, overwriteMode);
                     setDataSetExtentChunked(dataSetId, newDimensions);
                 } else
                 {
@@ -990,6 +1001,12 @@ class HDF5
         H5DreadVL(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
     }
 
+    public void readDataSetVL(int dataSetId, int dataTypeId, int memorySpaceId, int fileSpaceId,
+            String[] data)
+    {
+        H5DreadVL(dataSetId, dataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, data);
+    }
+
     //
     // Attribute
     //
@@ -1108,11 +1125,6 @@ class HDF5
                 }
             });
         return copiedDataTypeId;
-    }
-
-    public void writeStringVL(int dataSetId, int dataTypeId, String[] value)
-    {
-        H5DwriteString(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, value);
     }
 
     public int createDataTypeVariableString(ICleanUpRegistry registry)

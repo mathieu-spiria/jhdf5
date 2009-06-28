@@ -412,15 +412,23 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
         if (variableLength)
         {
-            H5DwriteString(dataSetId, dataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT,
-                    new String[]
-                        { value });
+            H5DwriteString(dataSetId, dataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, new String[]
+                { value });
         } else
         {
-            H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                    (value + '\0').getBytes());
+            H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, (value + '\0')
+                    .getBytes());
         }
         return dataSetId;
+    }
+
+    /**
+     * Writes a variable-length string array data set.
+     */
+    void writeStringVL(int dataSetId, int memorySpaceId, int fileSpaceId, String[] value)
+    {
+        h5.writeStringVL(dataSetId, variableLengthStringDataTypeId, memorySpaceId, fileSpaceId,
+                value);
     }
 
     /**
