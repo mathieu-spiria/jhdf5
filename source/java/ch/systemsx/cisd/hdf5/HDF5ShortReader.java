@@ -172,7 +172,7 @@ class HDF5ShortReader implements IHDF5ShortReader
                             }
                             final byte[] data =
                                     baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            memoryTypeId, 4 * len);
+                                            memoryTypeId, 2 * len);
                             return new MDShortArray(HDFNativeData.byteToShort(data, 0, len),
                                     arrayDimensions);
                         }

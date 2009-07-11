@@ -172,7 +172,7 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
                             }
                             final byte[] data =
                                     baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            memoryTypeId, 4 * len);
+                                            memoryTypeId, __elementsize__ * len);
                             return new MD__Name__Array(HDFNativeData.byteTo__Name__(data, 0, len),
                                     arrayDimensions);
                         }

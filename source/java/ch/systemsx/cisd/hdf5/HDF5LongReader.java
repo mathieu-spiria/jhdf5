@@ -172,7 +172,7 @@ class HDF5LongReader implements IHDF5LongReader
                             }
                             final byte[] data =
                                     baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            memoryTypeId, 4 * len);
+                                            memoryTypeId, 8 * len);
                             return new MDLongArray(HDFNativeData.byteToLong(data, 0, len),
                                     arrayDimensions);
                         }

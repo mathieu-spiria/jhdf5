@@ -172,7 +172,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
                             }
                             final byte[] data =
                                     baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            memoryTypeId, 4 * len);
+                                            memoryTypeId, 8 * len);
                             return new MDDoubleArray(HDFNativeData.byteToDouble(data, 0, len),
                                     arrayDimensions);
                         }

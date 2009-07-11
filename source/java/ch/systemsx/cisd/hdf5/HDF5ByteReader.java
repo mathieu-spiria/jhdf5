@@ -171,7 +171,7 @@ class HDF5ByteReader implements IHDF5ByteReader
                             }
                             final byte[] data =
                                     baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            memoryTypeId, 4 * len);
+                                            memoryTypeId, 1 * len);
                             return new MDByteArray(data, arrayDimensions);
                         }
                     };
