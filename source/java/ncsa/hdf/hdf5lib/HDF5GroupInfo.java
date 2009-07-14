@@ -11,6 +11,8 @@
 
 package ncsa.hdf.hdf5lib;
 
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 /**
  * <p>
  * This class is a container for the information reported about an HDF5 Object from the H5Gget_obj_info() method.
@@ -123,7 +125,7 @@ public class HDF5GroupInfo
     @Override
     public boolean equals(final Object obj)
     {
-        if (!(obj instanceof HDF5GroupInfo))
+        if ((obj instanceof HDF5GroupInfo) == false)
         {
             return false;
         }
@@ -137,6 +139,15 @@ public class HDF5GroupInfo
         {
             return false;
         }
+    }
+
+    @Override
+    public int hashCode()
+    {
+        final HashCodeBuilder builder = new HashCodeBuilder();
+        builder.append(fileno);
+        builder.append(objno);
+        return builder.toHashCode();
     }
 
     /**
