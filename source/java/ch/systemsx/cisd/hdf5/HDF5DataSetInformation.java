@@ -22,8 +22,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
-
 /**
  * A class that holds relevant information about a data set.
  * 
@@ -191,11 +189,31 @@ public final class HDF5DataSetInformation
     }
 
     /**
+     * Returns the one-dimensional length of the multi-dimensional array defined by
+     * <var>dimensions</var>.
+     */
+    private static long getLength(final long[] dimensions)
+    {
+        assert dimensions != null;
+
+        if (dimensions.length == 0) // NULL data space needs to be treated differently
+        {
+            return 0;
+        }
+        long length = dimensions[0];
+        for (int i = 1; i < dimensions.length; ++i)
+        {
+            length *= dimensions[i];
+        }
+        return length;
+    }
+
+    /**
      * Returns the total number of elements of this data set.
      */
     public long getNumberOfElements()
     {
-        return MDArray.getLength(dimensions);
+        return getLength(dimensions);
     }
 
     /**
@@ -203,7 +221,7 @@ public final class HDF5DataSetInformation
      */
     public long getSize()
     {
-        return MDArray.getLength(dimensions) * typeInformation.getElementSize();
+        return getLength(dimensions) * typeInformation.getElementSize();
     }
 
     //
