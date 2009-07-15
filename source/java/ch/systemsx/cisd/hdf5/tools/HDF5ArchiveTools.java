@@ -298,9 +298,14 @@ public class HDF5ArchiveTools
         for (int i = 0; i < fileEntries.length; ++i)
         {
             final File file = fileEntries[i];
-            final Link link = linkIt.next();
+            final Link linkOrNull = linkIt.next();
+            if (linkOrNull == null)
+            {
+                linkIt.remove();
+                continue;
+            }
             final String absoluteEntry = file.getAbsolutePath();
-            if (link.isDirectory())
+            if (linkOrNull.isDirectory())
             {
                 if (strategy.doExclude(absoluteEntry, true))
                 {
@@ -321,7 +326,7 @@ public class HDF5ArchiveTools
                     linkIt.remove();
                     continue;
                 }
-                if (link.isSymLink())
+                if (linkOrNull.isSymLink())
                 {
                     final String linkTargetOrNull = Link.tryReadLinkTarget(file);
                     if (linkTargetOrNull == null)
@@ -332,17 +337,17 @@ public class HDF5ArchiveTools
                     try
                     {
                         writer.createSoftLink(linkTargetOrNull, hdf5GroupPath + "/"
-                                + link.getLinkName());
+                                + linkOrNull.getLinkName());
                     } catch (HDF5Exception ex)
                     {
                         linkIt.remove();
                         dealWithError(new ArchivingException(hdf5GroupPath + "/"
-                                + link.getLinkName(), ex), continueOnError);
+                                + linkOrNull.getLinkName(), ex), continueOnError);
                     }
-                } else if (link.isRegularFile())
+                } else if (linkOrNull.isRegularFile())
                 {
                     final boolean ok =
-                            archiveFile(writer, strategy, root, file, link, continueOnError,
+                            archiveFile(writer, strategy, root, file, linkOrNull, continueOnError,
                                     verbose, buffer);
                     if (ok == false)
                     {

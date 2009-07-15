@@ -78,6 +78,11 @@ public class DirectoryIndex implements Iterable<Link>
     /**
      * Converts an array of {@link File}s into a list of {@link Link}s. The list is optimized for
      * iterating through it and removing single entries during the iteration.
+     * <p>
+     * Note that the length of the list will always be the same as the length of <var>entries</var>.
+     * If some <code>stat</code> call failed on an entry, this entry will be <code>null</code>, so
+     * code using the returned list of this method needs to be prepared that this list may contain
+     * <code>null</code> values!
      * 
      * @return A list of {@link Link}s in the same order as <var>entries</var>.
      */
@@ -87,12 +92,7 @@ public class DirectoryIndex implements Iterable<Link>
         final List<Link> list = new LinkedList<Link>();
         for (File entry : entries)
         {
-            final Link linkOrNull =
-                    Link.tryCreate(entry, storeOwnerAndPermissions, continueOnError);
-            if (linkOrNull != null)
-            {
-                list.add(linkOrNull);
-            }
+            list.add(Link.tryCreate(entry, storeOwnerAndPermissions, continueOnError));
         }
         return list;
     }
