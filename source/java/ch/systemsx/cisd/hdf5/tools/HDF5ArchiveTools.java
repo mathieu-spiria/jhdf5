@@ -1098,7 +1098,7 @@ public class HDF5ArchiveTools
             byte[] buffer)
     {
         final CRC32 crc32Digest = new CRC32();
-        int offset = 0;
+        long offset = 0;
         while (offset < size)
         {
             final int n =
@@ -1325,7 +1325,7 @@ public class HDF5ArchiveTools
         final CRC32 crc32 = new CRC32();
         try
         {
-            int offset = 0;
+            long offset = 0;
             while (offset < size)
             {
                 final int n =
