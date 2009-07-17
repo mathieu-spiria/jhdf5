@@ -110,6 +110,18 @@ final class HDF5Utils
         return false;
     }
 
+    static boolean isNonPositive(long[] dimensions)
+    {
+        for (long d : dimensions)
+        {
+            if (d <= 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Returns the dimensions for a scalar, or <code>null</code>, if this data set is too small for
      * chunking.

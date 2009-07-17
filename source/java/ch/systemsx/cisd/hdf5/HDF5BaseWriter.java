@@ -20,6 +20,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.DATATYPE_GROUP;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.isNonPositive;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.H5.H5DwriteString;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
@@ -474,17 +475,19 @@ final class HDF5BaseWriter extends HDF5BaseReader
     {
         final int dataSetId;
         final boolean empty = isEmpty(dimensions);
+        final boolean chunkSizeProvided =
+                (chunkSizeOrNull != null && isNonPositive(chunkSizeOrNull) == false);
         final long[] definitiveChunkSizeOrNull;
         if (empty)
         {
             definitiveChunkSizeOrNull =
-                    (chunkSizeOrNull != null) ? chunkSizeOrNull : HDF5Utils.tryGetChunkSize(
-                            dimensions, compression.requiresChunking(), true);
+                    chunkSizeProvided ? chunkSizeOrNull : HDF5Utils.tryGetChunkSize(dimensions,
+                            compression.requiresChunking(), true);
         } else if (enforceCompactLayout || (useExtentableDataTypes == false)
                 && compression.requiresChunking() == false)
         {
             definitiveChunkSizeOrNull = null;
-        } else if (chunkSizeOrNull != null)
+        } else if (chunkSizeProvided)
         {
             definitiveChunkSizeOrNull = chunkSizeOrNull;
         } else

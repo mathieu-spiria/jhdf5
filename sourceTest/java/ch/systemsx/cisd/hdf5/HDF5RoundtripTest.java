@@ -274,6 +274,7 @@ public class HDF5RoundtripTest
         test.testNullOnGetSymbolicLinkTargetForNoLink();
         test.testReadByteArrayDataSetBlockWise();
         test.testWriteByteArrayDataSetBlockWise();
+        test.testCreateByteArrayDataSetBlockSize0();
         test.testWriteByteArrayDataSetBlockWiseExtend();
         test.testWriteByteMatrixDataSetBlockWise();
         test.testWriteByteArrayDataSetBlockWiseMismatch();
@@ -1259,6 +1260,37 @@ public class HDF5RoundtripTest
         final int blockSize = 10;
         final int numberOfBlocks = 10;
         writer.createByteArray(dsName, size, blockSize, INT_DEFLATE);
+        final byte[] block = new byte[blockSize];
+        for (int i = 0; i < numberOfBlocks; ++i)
+        {
+            Arrays.fill(block, (byte) i);
+            writer.writeByteArrayBlock(dsName, block, i);
+        }
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final byte[] byteArrayRead = reader.readAsByteArray(dsName);
+        reader.close();
+        assertEquals(size, byteArrayRead.length);
+        for (int i = 0; i < byteArrayRead.length; ++i)
+        {
+            assertEquals("Byte " + i, (i / blockSize), byteArrayRead[i]);
+        }
+    }
+
+    @Test
+    public void testCreateByteArrayDataSetBlockSize0()
+    {
+        final File datasetFile = new File(workingDirectory, "testCreateByteArrayDataSetBlockSize0");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "ds";
+        final int size = 100;
+        final int blockSize = 10;
+        final int numberOfBlocks = 10;
+        final int nominalBlockSize = 0;
+        writer.createByteArray(dsName, size, nominalBlockSize, INT_DEFLATE);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {
