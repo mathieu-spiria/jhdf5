@@ -305,6 +305,10 @@ public class DirectoryIndex implements Iterable<Link>
         ensureIndexIsRead(false);
         // Try directory
         int index = binarySearch(linksOrNull, name, 0, firstFileIndex);
+        if (linksOrNull == null)
+        {
+            return null;
+        }
         if (index >= 0)
         {
             return linksOrNull[index];
