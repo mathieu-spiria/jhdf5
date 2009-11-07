@@ -305,8 +305,6 @@ public class HDF5Constants
 
     final private static int JH5F_OBJ_GROUP = 2450;
 
-    final private static int JH5F_SCOPE_DOWN = 2460;
-
     final private static int JH5F_SCOPE_GLOBAL = 2470;
 
     final private static int JH5F_SCOPE_LOCAL = 2480;
@@ -1258,8 +1256,6 @@ public class HDF5Constants
     final public static int H5F_OBJ_FILE = H5.J2C(JH5F_OBJ_FILE);
 
     final public static int H5F_OBJ_GROUP = H5.J2C(JH5F_OBJ_GROUP);
-
-    final public static int H5F_SCOPE_DOWN = H5.J2C(JH5F_SCOPE_DOWN);
 
     final public static int H5F_SCOPE_GLOBAL = H5.J2C(JH5F_SCOPE_GLOBAL);
 
