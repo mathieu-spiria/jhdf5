@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5.tools;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
@@ -27,7 +28,7 @@ import ch.systemsx.cisd.args4j.CmdLineException;
 import ch.systemsx.cisd.args4j.CmdLineParser;
 import ch.systemsx.cisd.args4j.ExampleMode;
 import ch.systemsx.cisd.args4j.Option;
-import ch.systemsx.cisd.base.utilities.BuildAndEnvironmentInfo;
+import ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.tools.HDF5ArchiveTools.Check;
 import ch.systemsx.cisd.hdf5.tools.HDF5ArchiveTools.ListEntry;
