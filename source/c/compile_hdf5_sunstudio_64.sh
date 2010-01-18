@@ -9,8 +9,8 @@ tar xf hdf5-$VERSION.tar
 
 cd hdf5-$VERSION
 
-CFLAGS='-fast -m64 -KPIC' ./configure --prefix=/opt/hdf5-1.8.3-64 --enable-shared --enable-debug=none 
+CFLAGS='-fast -m64 -KPIC' ./configure --prefix=/opt/hdf5-$VERSION-64 --enable-shared --enable-debug=none 
 
-make &> make.log
+make > make.log 2>&1
 
-make test &> test.log
+make test > test.log 2>&1
