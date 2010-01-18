@@ -1,6 +1,6 @@
 #! /bin/bash
 
-VERSION=1.8.3
+VERSION=1.8.4
 PLATFORM="$1"
 
 if [ "$PLATFORM" != "i386" -a "$PLATFORM" != "x86" -a "$PLATFORM" != "amd64" -a "$PLATFORM" != "x86_64" ]; then
