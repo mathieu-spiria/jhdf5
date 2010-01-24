@@ -135,6 +135,18 @@ interface IHDF5ShortWriter
      * Creates a <code>short</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the short array to create. This will be the total size for 
+     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets. 
+     *          (see {@link HDF5IntStorageFeatures}).
+     * @param features The storage features of the data set.
+     */
+    public void createShortArray(final String objectPath, final int size,
+            final HDF5IntStorageFeatures features);
+    
+    /**
+     * Creates a <code>short</code> array (of rank 1).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the short array to create. When using extendable data sets 
      *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
      *          set smaller than this size can be created, however data sets may be larger.
@@ -350,6 +362,18 @@ interface IHDF5ShortWriter
      */
     public void createShortMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions);
+
+    /**
+     * Creates a multi-dimensional <code>short</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array. Will be the total dimensions for non-extendable 
+     *       data sets and the size of one chunk for extendable (chunked) data sets
+     *       (see {@link HDF5IntStorageFeatures}).
+     * @param features The storage features of the data set.
+     */
+    public void createShortMDArray(final String objectPath, final int[] dimensions,
+            final HDF5IntStorageFeatures features);
 
     /**
      * Creates a multi-dimensional <code>short</code> array.

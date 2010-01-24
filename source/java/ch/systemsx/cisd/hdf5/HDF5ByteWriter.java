@@ -162,6 +162,34 @@ class HDF5ByteWriter implements IHDF5ByteWriter
         createByteArray(objectPath, size, blockSize, INT_NO_COMPRESSION);
     }
 
+    public void createByteArray(final String objectPath, final int size,
+            final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_STD_I8LE, features, new long[]
+                            { 0 }, new long[]
+                            { size }, registry);
+
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_STD_I8LE, features, new long[]
+                            { size }, null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
     public void createByteArray(final String objectPath, final long size, final int blockSize,
             final HDF5IntStorageFeatures features)
     {
@@ -349,6 +377,33 @@ class HDF5ByteWriter implements IHDF5ByteWriter
             final int[] blockDimensions)
     {
         createByteMDArray(objectPath, dimensions, blockDimensions, INT_NO_COMPRESSION);
+    }
+
+    public void createByteMDArray(final String objectPath, final int[] dimensions,
+            final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert dimensions != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        final long[] nullDimensions = new long[dimensions.length];
+                        baseWriter.createDataSet(objectPath, H5T_STD_I8LE, features,
+                                nullDimensions, MDArray.toLong(dimensions), registry);
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_STD_I8LE, features, MDArray
+                                .toLong(dimensions), null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
     }
 
     public void createByteMDArray(final String objectPath, final long[] dimensions,

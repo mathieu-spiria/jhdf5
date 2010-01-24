@@ -166,6 +166,34 @@ class HDF5IntWriter implements IHDF5IntWriter
         createIntArray(objectPath, size, blockSize, INT_NO_COMPRESSION);
     }
 
+    public void createIntArray(final String objectPath, final int size,
+            final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features, new long[]
+                            { 0 }, new long[]
+                            { size }, registry);
+
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features, new long[]
+                            { size }, null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
     public void createIntArray(final String objectPath, final long size, final int blockSize,
             final HDF5IntStorageFeatures features)
     {
@@ -354,6 +382,33 @@ class HDF5IntWriter implements IHDF5IntWriter
             final int[] blockDimensions)
     {
         createIntMDArray(objectPath, dimensions, blockDimensions, INT_NO_COMPRESSION);
+    }
+
+    public void createIntMDArray(final String objectPath, final int[] dimensions,
+            final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert dimensions != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        final long[] nullDimensions = new long[dimensions.length];
+                        baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features,
+                                nullDimensions, MDArray.toLong(dimensions), registry);
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features, MDArray
+                                .toLong(dimensions), null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
     }
 
     public void createIntMDArray(final String objectPath, final long[] dimensions,

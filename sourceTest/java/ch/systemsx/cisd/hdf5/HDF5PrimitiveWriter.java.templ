@@ -166,6 +166,34 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
         create__Name__Array(objectPath, size, blockSize, __CLASSNAME___NO_COMPRESSION);
     }
 
+    public void create__Name__Array(final String objectPath, final int size,
+            final HDF5__Classname__StorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        baseWriter.createDataSet(objectPath, __Storagetype__, features, new long[]
+                            { 0 }, new long[]
+                            { size }, registry);
+
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, __Storagetype__, features, new long[]
+                            { size }, null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
     public void create__Name__Array(final String objectPath, final long size, final int blockSize,
             final HDF5__Classname__StorageFeatures features)
     {
@@ -354,6 +382,33 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
             final int[] blockDimensions)
     {
         create__Name__MDArray(objectPath, dimensions, blockDimensions, __CLASSNAME___NO_COMPRESSION);
+    }
+
+    public void create__Name__MDArray(final String objectPath, final int[] dimensions,
+            final HDF5__Classname__StorageFeatures features)
+    {
+        assert objectPath != null;
+        assert dimensions != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        final long[] nullDimensions = new long[dimensions.length];
+                        baseWriter.createDataSet(objectPath, __Storagetype__, features,
+                                nullDimensions, MDArray.toLong(dimensions), registry);
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, __Storagetype__, features, MDArray
+                                .toLong(dimensions), null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
     }
 
     public void create__Name__MDArray(final String objectPath, final long[] dimensions,

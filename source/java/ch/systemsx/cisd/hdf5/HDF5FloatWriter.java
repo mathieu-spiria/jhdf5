@@ -166,6 +166,34 @@ class HDF5FloatWriter implements IHDF5FloatWriter
         createFloatArray(objectPath, size, blockSize, FLOAT_NO_COMPRESSION);
     }
 
+    public void createFloatArray(final String objectPath, final int size,
+            final HDF5FloatStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, features, new long[]
+                            { 0 }, new long[]
+                            { size }, registry);
+
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, features, new long[]
+                            { size }, null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
     public void createFloatArray(final String objectPath, final long size, final int blockSize,
             final HDF5FloatStorageFeatures features)
     {
@@ -354,6 +382,33 @@ class HDF5FloatWriter implements IHDF5FloatWriter
             final int[] blockDimensions)
     {
         createFloatMDArray(objectPath, dimensions, blockDimensions, FLOAT_NO_COMPRESSION);
+    }
+
+    public void createFloatMDArray(final String objectPath, final int[] dimensions,
+            final HDF5FloatStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert dimensions != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        final long[] nullDimensions = new long[dimensions.length];
+                        baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, features,
+                                nullDimensions, MDArray.toLong(dimensions), registry);
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, features, MDArray
+                                .toLong(dimensions), null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
     }
 
     public void createFloatMDArray(final String objectPath, final long[] dimensions,

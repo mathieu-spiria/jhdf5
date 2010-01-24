@@ -274,6 +274,7 @@ public class HDF5RoundtripTest
         test.testReadByteArrayDataSetBlockWise();
         test.testWriteByteArrayDataSetBlockWise();
         test.testCreateByteArrayDataSetBlockSize0();
+        test.testCreateFloatArrayWithDifferentStorageLayouts();
         test.testWriteByteArrayDataSetBlockWiseExtend();
         test.testWriteByteMatrixDataSetBlockWise();
         test.testWriteByteArrayDataSetBlockWiseMismatch();
@@ -970,15 +971,12 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile)
-                        .deleteDataSetBeforeWrite().writer();
+                new HDF5WriterConfigurator(datasetFile).deleteDataSetBeforeWrite().writer();
         writer.createFloatArray("f", 12, 6, HDF5FloatStorageFeatures.FLOAT_COMPACT);
         writer.writeFloatArray("f", new float[]
             { 1f, 2f, 3f, 4f, 5f });
         writer.close();
-        final IHDF5Reader reader =
-                new HDF5ReaderConfigurator(datasetFile)
-                        .reader();
+        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
         HDF5DataSetInformation info = reader.getDataSetInformation("f");
         assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
         assertEquals(5, info.tryGetChunkSizes()[0]);
@@ -987,22 +985,20 @@ public class HDF5RoundtripTest
     @Test
     public void testAutomaticDeletionOfDataSetOnCreate()
     {
-        final File datasetFile = new File(workingDirectory, "automaticDeletionOfDataSetOnCreate.h5");
+        final File datasetFile =
+                new File(workingDirectory, "automaticDeletionOfDataSetOnCreate.h5");
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile)
-                        .deleteDataSetBeforeWrite().writer();
+                new HDF5WriterConfigurator(datasetFile).deleteDataSetBeforeWrite().writer();
         writer.createFloatArray("f", 12, 6, HDF5FloatStorageFeatures.FLOAT_COMPACT);
-        writer.createFloatArray("f", 10, 10, HDF5FloatStorageFeatures.FLOAT_CONTIGUOUS);
+        writer.createFloatArray("f", 10, HDF5FloatStorageFeatures.FLOAT_CONTIGUOUS);
         // This won't overwrite the data set as it is a block write command.
         writer.writeFloatArrayBlock("f", new float[]
             { 1f, 2f, 3f, 4f, 5f }, 0);
         writer.close();
-        final IHDF5Reader reader =
-                new HDF5ReaderConfigurator(datasetFile)
-                        .reader();
+        final IHDF5Reader reader = new HDF5ReaderConfigurator(datasetFile).reader();
         HDF5DataSetInformation info = reader.getDataSetInformation("f");
         assertEquals(HDF5StorageLayout.CONTIGUOUS, info.getStorageLayout());
         assertEquals(10, info.getDimensions()[0]);
@@ -1357,6 +1353,33 @@ public class HDF5RoundtripTest
         {
             assertEquals("Byte " + i, (i / blockSize), byteArrayRead[i]);
         }
+    }
+
+    @Test
+    public void testCreateFloatArrayWithDifferentStorageLayouts()
+    {
+        final File datasetFile =
+                new File(workingDirectory, "testCreateFloatArrayWithDifferentStorageLayouts");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName1 = "ds1";
+        final String dsName2 = "ds2";
+        final int size = 100;
+        writer.createFloatArray(dsName1, size, HDF5FloatStorageFeatures.FLOAT_CONTIGUOUS);
+        writer.createFloatArray(dsName2, size, HDF5FloatStorageFeatures.FLOAT_CHUNKED);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final HDF5DataSetInformation info1 = reader.getDataSetInformation(dsName1);
+        final HDF5DataSetInformation info2 = reader.getDataSetInformation(dsName2);
+        reader.close();
+        assertEquals(HDF5StorageLayout.CONTIGUOUS, info1.getStorageLayout());
+        assertEquals(size, info1.getDimensions()[0]);
+        assertNull(info1.tryGetChunkSizes());
+        assertEquals(HDF5StorageLayout.CHUNKED, info2.getStorageLayout());
+        assertEquals(0, info2.getDimensions()[0]);
+        assertEquals(size, info2.tryGetChunkSizes()[0]);
     }
 
     @Test

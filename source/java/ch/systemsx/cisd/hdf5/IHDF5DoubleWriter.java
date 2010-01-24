@@ -135,6 +135,18 @@ interface IHDF5DoubleWriter
      * Creates a <code>double</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the double array to create. This will be the total size for 
+     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets. 
+     *          (see {@link HDF5FloatStorageFeatures}).
+     * @param features The storage features of the data set.
+     */
+    public void createDoubleArray(final String objectPath, final int size,
+            final HDF5FloatStorageFeatures features);
+    
+    /**
+     * Creates a <code>double</code> array (of rank 1).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the double array to create. When using extendable data sets 
      *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
      *          set smaller than this size can be created, however data sets may be larger.
@@ -350,6 +362,18 @@ interface IHDF5DoubleWriter
      */
     public void createDoubleMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions);
+
+    /**
+     * Creates a multi-dimensional <code>double</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array. Will be the total dimensions for non-extendable 
+     *       data sets and the size of one chunk for extendable (chunked) data sets
+     *       (see {@link HDF5FloatStorageFeatures}).
+     * @param features The storage features of the data set.
+     */
+    public void createDoubleMDArray(final String objectPath, final int[] dimensions,
+            final HDF5FloatStorageFeatures features);
 
     /**
      * Creates a multi-dimensional <code>double</code> array.

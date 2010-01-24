@@ -2299,10 +2299,15 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         byteWriter.createByteArray(objectPath, size, blockSize);
     }
 
-    public void createByteArray(String objectPath, long size, int blockSize,
-            HDF5IntStorageFeatures compression)
+    public void createByteArray(String objectPath, int size, HDF5IntStorageFeatures features)
     {
-        byteWriter.createByteArray(objectPath, size, blockSize, compression);
+        byteWriter.createByteArray(objectPath, size, features);
+    }
+
+    public void createByteArray(String objectPath, long size, int blockSize,
+            HDF5IntStorageFeatures features)
+    {
+        byteWriter.createByteArray(objectPath, size, blockSize, features);
     }
 
     public void createByteMDArray(String objectPath, int[] blockDimensions)
@@ -2315,10 +2320,16 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         byteWriter.createByteMDArray(objectPath, dimensions, blockDimensions);
     }
 
-    public void createByteMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
-            HDF5IntStorageFeatures compression)
+    public void createByteMDArray(String objectPath, int[] dimensions,
+            HDF5IntStorageFeatures features)
     {
-        byteWriter.createByteMDArray(objectPath, dimensions, blockDimensions, compression);
+        byteWriter.createByteMDArray(objectPath, dimensions, features);
+    }
+
+    public void createByteMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            HDF5IntStorageFeatures features)
+    {
+        byteWriter.createByteMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     public void createByteMatrix(String objectPath, int blockSizeX, int blockSizeY)
@@ -2333,9 +2344,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void createByteMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
-            int blockSizeY, HDF5IntStorageFeatures compression)
+            int blockSizeY, HDF5IntStorageFeatures features)
     {
-        byteWriter.createByteMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, compression);
+        byteWriter.createByteMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     public void setByteArrayAttribute(String objectPath, String name, byte[] value)
@@ -2368,9 +2379,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         byteWriter.writeByteArray(objectPath, data);
     }
 
-    public void writeByteArray(String objectPath, byte[] data, HDF5IntStorageFeatures compression)
+    public void writeByteArray(String objectPath, byte[] data, HDF5IntStorageFeatures features)
     {
-        byteWriter.writeByteArray(objectPath, data, compression);
+        byteWriter.writeByteArray(objectPath, data, features);
     }
 
     public void writeByteArrayBlock(String objectPath, byte[] data, long blockNumber)
@@ -2389,9 +2400,10 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         byteWriter.writeByteMDArray(objectPath, data);
     }
 
-    public void writeByteMDArray(String objectPath, MDByteArray data, HDF5IntStorageFeatures compression)
+    public void writeByteMDArray(String objectPath, MDByteArray data,
+            HDF5IntStorageFeatures features)
     {
-        byteWriter.writeByteMDArray(objectPath, data, compression);
+        byteWriter.writeByteMDArray(objectPath, data, features);
     }
 
     public void writeByteMDArrayBlock(String objectPath, MDByteArray data, long[] blockNumber)
@@ -2416,9 +2428,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         byteWriter.writeByteMatrix(objectPath, data);
     }
 
-    public void writeByteMatrix(String objectPath, byte[][] data, HDF5IntStorageFeatures compression)
+    public void writeByteMatrix(String objectPath, byte[][] data, HDF5IntStorageFeatures features)
     {
-        byteWriter.writeByteMatrix(objectPath, data, compression);
+        byteWriter.writeByteMatrix(objectPath, data, features);
     }
 
     public void writeByteMatrixBlock(String objectPath, byte[][] data, long blockNumberX,
@@ -2450,10 +2462,15 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         doubleWriter.createDoubleArray(objectPath, size, blockSize);
     }
 
-    public void createDoubleArray(String objectPath, long size, int blockSize,
-            HDF5FloatStorageFeatures compression)
+    public void createDoubleArray(String objectPath, int size, HDF5FloatStorageFeatures features)
     {
-        doubleWriter.createDoubleArray(objectPath, size, blockSize, compression);
+        doubleWriter.createDoubleArray(objectPath, size, features);
+    }
+
+    public void createDoubleArray(String objectPath, long size, int blockSize,
+            HDF5FloatStorageFeatures features)
+    {
+        doubleWriter.createDoubleArray(objectPath, size, blockSize, features);
     }
 
     public void createDoubleMDArray(String objectPath, int[] blockDimensions)
@@ -2466,10 +2483,16 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         doubleWriter.createDoubleMDArray(objectPath, dimensions, blockDimensions);
     }
 
-    public void createDoubleMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
-            HDF5FloatStorageFeatures compression)
+    public void createDoubleMDArray(String objectPath, int[] dimensions,
+            HDF5FloatStorageFeatures features)
     {
-        doubleWriter.createDoubleMDArray(objectPath, dimensions, blockDimensions, compression);
+        doubleWriter.createDoubleMDArray(objectPath, dimensions, features);
+    }
+
+    public void createDoubleMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            HDF5FloatStorageFeatures features)
+    {
+        doubleWriter.createDoubleMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     public void createDoubleMatrix(String objectPath, int blockSizeX, int blockSizeY)
@@ -2484,10 +2507,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void createDoubleMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
-            int blockSizeY, HDF5FloatStorageFeatures compression)
+            int blockSizeY, HDF5FloatStorageFeatures features)
     {
-        doubleWriter.createDoubleMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY,
-                compression);
+        doubleWriter.createDoubleMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     public void setDoubleArrayAttribute(String objectPath, String name, double[] value)
@@ -2520,9 +2542,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         doubleWriter.writeDoubleArray(objectPath, data);
     }
 
-    public void writeDoubleArray(String objectPath, double[] data, HDF5FloatStorageFeatures compression)
+    public void writeDoubleArray(String objectPath, double[] data, HDF5FloatStorageFeatures features)
     {
-        doubleWriter.writeDoubleArray(objectPath, data, compression);
+        doubleWriter.writeDoubleArray(objectPath, data, features);
     }
 
     public void writeDoubleArrayBlock(String objectPath, double[] data, long blockNumber)
@@ -2542,9 +2564,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void writeDoubleMDArray(String objectPath, MDDoubleArray data,
-            HDF5FloatStorageFeatures compression)
+            HDF5FloatStorageFeatures features)
     {
-        doubleWriter.writeDoubleMDArray(objectPath, data, compression);
+        doubleWriter.writeDoubleMDArray(objectPath, data, features);
     }
 
     public void writeDoubleMDArrayBlock(String objectPath, MDDoubleArray data, long[] blockNumber)
@@ -2571,9 +2593,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void writeDoubleMatrix(String objectPath, double[][] data,
-            HDF5FloatStorageFeatures compression)
+            HDF5FloatStorageFeatures features)
     {
-        doubleWriter.writeDoubleMatrix(objectPath, data, compression);
+        doubleWriter.writeDoubleMatrix(objectPath, data, features);
     }
 
     public void writeDoubleMatrixBlock(String objectPath, double[][] data, long blockNumberX,
@@ -2605,10 +2627,15 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         floatWriter.createFloatArray(objectPath, size, blockSize);
     }
 
-    public void createFloatArray(String objectPath, long size, int blockSize,
-            HDF5FloatStorageFeatures compression)
+    public void createFloatArray(String objectPath, int size, HDF5FloatStorageFeatures features)
     {
-        floatWriter.createFloatArray(objectPath, size, blockSize, compression);
+        floatWriter.createFloatArray(objectPath, size, features);
+    }
+
+    public void createFloatArray(String objectPath, long size, int blockSize,
+            HDF5FloatStorageFeatures features)
+    {
+        floatWriter.createFloatArray(objectPath, size, blockSize, features);
     }
 
     public void createFloatMDArray(String objectPath, int[] blockDimensions)
@@ -2621,10 +2648,16 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         floatWriter.createFloatMDArray(objectPath, dimensions, blockDimensions);
     }
 
-    public void createFloatMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
-            HDF5FloatStorageFeatures compression)
+    public void createFloatMDArray(String objectPath, int[] dimensions,
+            HDF5FloatStorageFeatures features)
     {
-        floatWriter.createFloatMDArray(objectPath, dimensions, blockDimensions, compression);
+        floatWriter.createFloatMDArray(objectPath, dimensions, features);
+    }
+
+    public void createFloatMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            HDF5FloatStorageFeatures features)
+    {
+        floatWriter.createFloatMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     public void createFloatMatrix(String objectPath, int blockSizeX, int blockSizeY)
@@ -2639,10 +2672,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void createFloatMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
-            int blockSizeY, HDF5FloatStorageFeatures compression)
+            int blockSizeY, HDF5FloatStorageFeatures features)
     {
-        floatWriter
-                .createFloatMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, compression);
+        floatWriter.createFloatMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     public void setFloatArrayAttribute(String objectPath, String name, float[] value)
@@ -2675,9 +2707,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         floatWriter.writeFloatArray(objectPath, data);
     }
 
-    public void writeFloatArray(String objectPath, float[] data, HDF5FloatStorageFeatures compression)
+    public void writeFloatArray(String objectPath, float[] data, HDF5FloatStorageFeatures features)
     {
-        floatWriter.writeFloatArray(objectPath, data, compression);
+        floatWriter.writeFloatArray(objectPath, data, features);
     }
 
     public void writeFloatArrayBlock(String objectPath, float[] data, long blockNumber)
@@ -2697,9 +2729,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void writeFloatMDArray(String objectPath, MDFloatArray data,
-            HDF5FloatStorageFeatures compression)
+            HDF5FloatStorageFeatures features)
     {
-        floatWriter.writeFloatMDArray(objectPath, data, compression);
+        floatWriter.writeFloatMDArray(objectPath, data, features);
     }
 
     public void writeFloatMDArrayBlock(String objectPath, MDFloatArray data, long[] blockNumber)
@@ -2724,9 +2756,10 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         floatWriter.writeFloatMatrix(objectPath, data);
     }
 
-    public void writeFloatMatrix(String objectPath, float[][] data, HDF5FloatStorageFeatures compression)
+    public void writeFloatMatrix(String objectPath, float[][] data,
+            HDF5FloatStorageFeatures features)
     {
-        floatWriter.writeFloatMatrix(objectPath, data, compression);
+        floatWriter.writeFloatMatrix(objectPath, data, features);
     }
 
     public void writeFloatMatrixBlock(String objectPath, float[][] data, long blockNumberX,
@@ -2758,10 +2791,15 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         intWriter.createIntArray(objectPath, size, blockSize);
     }
 
-    public void createIntArray(String objectPath, long size, int blockSize,
-            HDF5IntStorageFeatures compression)
+    public void createIntArray(String objectPath, int size, HDF5IntStorageFeatures features)
     {
-        intWriter.createIntArray(objectPath, size, blockSize, compression);
+        intWriter.createIntArray(objectPath, size, features);
+    }
+
+    public void createIntArray(String objectPath, long size, int blockSize,
+            HDF5IntStorageFeatures features)
+    {
+        intWriter.createIntArray(objectPath, size, blockSize, features);
     }
 
     public void createIntMDArray(String objectPath, int[] blockDimensions)
@@ -2774,10 +2812,16 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         intWriter.createIntMDArray(objectPath, dimensions, blockDimensions);
     }
 
-    public void createIntMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
-            HDF5IntStorageFeatures compression)
+    public void createIntMDArray(String objectPath, int[] dimensions,
+            HDF5IntStorageFeatures features)
     {
-        intWriter.createIntMDArray(objectPath, dimensions, blockDimensions, compression);
+        intWriter.createIntMDArray(objectPath, dimensions, features);
+    }
+
+    public void createIntMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            HDF5IntStorageFeatures features)
+    {
+        intWriter.createIntMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     public void createIntMatrix(String objectPath, int blockSizeX, int blockSizeY)
@@ -2792,9 +2836,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void createIntMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
-            int blockSizeY, HDF5IntStorageFeatures compression)
+            int blockSizeY, HDF5IntStorageFeatures features)
     {
-        intWriter.createIntMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, compression);
+        intWriter.createIntMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     public void setIntArrayAttribute(String objectPath, String name, int[] value)
@@ -2827,9 +2871,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         intWriter.writeIntArray(objectPath, data);
     }
 
-    public void writeIntArray(String objectPath, int[] data, HDF5IntStorageFeatures compression)
+    public void writeIntArray(String objectPath, int[] data, HDF5IntStorageFeatures features)
     {
-        intWriter.writeIntArray(objectPath, data, compression);
+        intWriter.writeIntArray(objectPath, data, features);
     }
 
     public void writeIntArrayBlock(String objectPath, int[] data, long blockNumber)
@@ -2848,9 +2892,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         intWriter.writeIntMDArray(objectPath, data);
     }
 
-    public void writeIntMDArray(String objectPath, MDIntArray data, HDF5IntStorageFeatures compression)
+    public void writeIntMDArray(String objectPath, MDIntArray data, HDF5IntStorageFeatures features)
     {
-        intWriter.writeIntMDArray(objectPath, data, compression);
+        intWriter.writeIntMDArray(objectPath, data, features);
     }
 
     public void writeIntMDArrayBlock(String objectPath, MDIntArray data, long[] blockNumber)
@@ -2875,9 +2919,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         intWriter.writeIntMatrix(objectPath, data);
     }
 
-    public void writeIntMatrix(String objectPath, int[][] data, HDF5IntStorageFeatures compression)
+    public void writeIntMatrix(String objectPath, int[][] data, HDF5IntStorageFeatures features)
     {
-        intWriter.writeIntMatrix(objectPath, data, compression);
+        intWriter.writeIntMatrix(objectPath, data, features);
     }
 
     public void writeIntMatrixBlock(String objectPath, int[][] data, long blockNumberX,
@@ -2909,10 +2953,15 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         longWriter.createLongArray(objectPath, size, blockSize);
     }
 
-    public void createLongArray(String objectPath, long size, int blockSize,
-            HDF5IntStorageFeatures compression)
+    public void createLongArray(String objectPath, int size, HDF5IntStorageFeatures features)
     {
-        longWriter.createLongArray(objectPath, size, blockSize, compression);
+        longWriter.createLongArray(objectPath, size, features);
+    }
+
+    public void createLongArray(String objectPath, long size, int blockSize,
+            HDF5IntStorageFeatures features)
+    {
+        longWriter.createLongArray(objectPath, size, blockSize, features);
     }
 
     public void createLongMDArray(String objectPath, int[] blockDimensions)
@@ -2925,10 +2974,16 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         longWriter.createLongMDArray(objectPath, dimensions, blockDimensions);
     }
 
-    public void createLongMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
-            HDF5IntStorageFeatures compression)
+    public void createLongMDArray(String objectPath, int[] dimensions,
+            HDF5IntStorageFeatures features)
     {
-        longWriter.createLongMDArray(objectPath, dimensions, blockDimensions, compression);
+        longWriter.createLongMDArray(objectPath, dimensions, features);
+    }
+
+    public void createLongMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            HDF5IntStorageFeatures features)
+    {
+        longWriter.createLongMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     public void createLongMatrix(String objectPath, int blockSizeX, int blockSizeY)
@@ -2943,9 +2998,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void createLongMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
-            int blockSizeY, HDF5IntStorageFeatures compression)
+            int blockSizeY, HDF5IntStorageFeatures features)
     {
-        longWriter.createLongMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, compression);
+        longWriter.createLongMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     public void setLongArrayAttribute(String objectPath, String name, long[] value)
@@ -2978,9 +3033,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         longWriter.writeLongArray(objectPath, data);
     }
 
-    public void writeLongArray(String objectPath, long[] data, HDF5IntStorageFeatures compression)
+    public void writeLongArray(String objectPath, long[] data, HDF5IntStorageFeatures features)
     {
-        longWriter.writeLongArray(objectPath, data, compression);
+        longWriter.writeLongArray(objectPath, data, features);
     }
 
     public void writeLongArrayBlock(String objectPath, long[] data, long blockNumber)
@@ -2999,9 +3054,10 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         longWriter.writeLongMDArray(objectPath, data);
     }
 
-    public void writeLongMDArray(String objectPath, MDLongArray data, HDF5IntStorageFeatures compression)
+    public void writeLongMDArray(String objectPath, MDLongArray data,
+            HDF5IntStorageFeatures features)
     {
-        longWriter.writeLongMDArray(objectPath, data, compression);
+        longWriter.writeLongMDArray(objectPath, data, features);
     }
 
     public void writeLongMDArrayBlock(String objectPath, MDLongArray data, long[] blockNumber)
@@ -3026,9 +3082,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         longWriter.writeLongMatrix(objectPath, data);
     }
 
-    public void writeLongMatrix(String objectPath, long[][] data, HDF5IntStorageFeatures compression)
+    public void writeLongMatrix(String objectPath, long[][] data, HDF5IntStorageFeatures features)
     {
-        longWriter.writeLongMatrix(objectPath, data, compression);
+        longWriter.writeLongMatrix(objectPath, data, features);
     }
 
     public void writeLongMatrixBlock(String objectPath, long[][] data, long blockNumberX,
@@ -3060,10 +3116,15 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         shortWriter.createShortArray(objectPath, size, blockSize);
     }
 
-    public void createShortArray(String objectPath, long size, int blockSize,
-            HDF5IntStorageFeatures compression)
+    public void createShortArray(String objectPath, int size, HDF5IntStorageFeatures features)
     {
-        shortWriter.createShortArray(objectPath, size, blockSize, compression);
+        shortWriter.createShortArray(objectPath, size, features);
+    }
+
+    public void createShortArray(String objectPath, long size, int blockSize,
+            HDF5IntStorageFeatures features)
+    {
+        shortWriter.createShortArray(objectPath, size, blockSize, features);
     }
 
     public void createShortMDArray(String objectPath, int[] blockDimensions)
@@ -3076,10 +3137,16 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         shortWriter.createShortMDArray(objectPath, dimensions, blockDimensions);
     }
 
-    public void createShortMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
-            HDF5IntStorageFeatures compression)
+    public void createShortMDArray(String objectPath, int[] dimensions,
+            HDF5IntStorageFeatures features)
     {
-        shortWriter.createShortMDArray(objectPath, dimensions, blockDimensions, compression);
+        shortWriter.createShortMDArray(objectPath, dimensions, features);
+    }
+
+    public void createShortMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
+            HDF5IntStorageFeatures features)
+    {
+        shortWriter.createShortMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     public void createShortMatrix(String objectPath, int blockSizeX, int blockSizeY)
@@ -3094,10 +3161,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void createShortMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
-            int blockSizeY, HDF5IntStorageFeatures compression)
+            int blockSizeY, HDF5IntStorageFeatures features)
     {
-        shortWriter
-                .createShortMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, compression);
+        shortWriter.createShortMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     public void setShortArrayAttribute(String objectPath, String name, short[] value)
@@ -3130,9 +3196,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         shortWriter.writeShortArray(objectPath, data);
     }
 
-    public void writeShortArray(String objectPath, short[] data, HDF5IntStorageFeatures compression)
+    public void writeShortArray(String objectPath, short[] data, HDF5IntStorageFeatures features)
     {
-        shortWriter.writeShortArray(objectPath, data, compression);
+        shortWriter.writeShortArray(objectPath, data, features);
     }
 
     public void writeShortArrayBlock(String objectPath, short[] data, long blockNumber)
@@ -3152,9 +3218,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void writeShortMDArray(String objectPath, MDShortArray data,
-            HDF5IntStorageFeatures compression)
+            HDF5IntStorageFeatures features)
     {
-        shortWriter.writeShortMDArray(objectPath, data, compression);
+        shortWriter.writeShortMDArray(objectPath, data, features);
     }
 
     public void writeShortMDArrayBlock(String objectPath, MDShortArray data, long[] blockNumber)
@@ -3179,9 +3245,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         shortWriter.writeShortMatrix(objectPath, data);
     }
 
-    public void writeShortMatrix(String objectPath, short[][] data, HDF5IntStorageFeatures compression)
+    public void writeShortMatrix(String objectPath, short[][] data, HDF5IntStorageFeatures features)
     {
-        shortWriter.writeShortMatrix(objectPath, data, compression);
+        shortWriter.writeShortMatrix(objectPath, data, features);
     }
 
     public void writeShortMatrixBlock(String objectPath, short[][] data, long blockNumberX,
