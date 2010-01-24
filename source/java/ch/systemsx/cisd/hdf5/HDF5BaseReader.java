@@ -97,7 +97,7 @@ class HDF5BaseReader
         typeVariantDataType = openOrCreateTypeVariantDataType();
     }
 
-    public void copyObject(String srcPath, int dstFileId, String dstPath)
+    void copyObject(String srcPath, int dstFileId, String dstPath)
     {
         final boolean dstIsDir = dstPath.endsWith("/");
         if (dstIsDir && h5.exists(dstFileId, dstPath) == false)
