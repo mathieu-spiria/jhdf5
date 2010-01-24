@@ -938,8 +938,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
         writer.createFloatArray("f", 12, HDF5FloatStorageFeatures.FLOAT_COMPACT);
         writer.writeFloatArray("f", new float[]
             { 1f, 2f, 3f, 4f, 5f });
@@ -958,8 +957,7 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
-        final IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile).writer();
+        final IHDF5Writer writer = new HDF5WriterConfigurator(datasetFile).writer();
         writer.createFloatArray("f", 12, 6, HDF5FloatStorageFeatures.FLOAT_COMPACT);
         writer.createFloatArray("f", 10, HDF5FloatStorageFeatures.FLOAT_CONTIGUOUS);
         // This won't overwrite the data set as it is a block write command.
@@ -1918,10 +1916,10 @@ public class HDF5RoundtripTest
                         .writer();
         final String smallData = "abc1234";
         final String dataSetName1 = "/aString";
-        writer.writeStringCompact(dataSetName1, smallData);
+        writer.writeString(dataSetName1, smallData, HDF5GenericStorageFeatures.GENERIC_COMPACT);
         final String dataSetName2 = "/anotherString";
         final String largeData = StringUtils.repeat("a", 64 * 1024 - 6);
-        writer.writeStringCompact(dataSetName2, largeData);
+        writer.writeString(dataSetName2, largeData, HDF5GenericStorageFeatures.GENERIC_COMPACT);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
         final String dataRead = reader.readString(dataSetName1);
@@ -4134,7 +4132,8 @@ public class HDF5RoundtripTest
                                         { 3.14159 }, new short[]
                                         { 1000, 2000 }, new byte[]
                                         { 11, 12, 13, 14 }), };
-        writer.writeCompoundArrayCompact("/testCompound", compoundType, arrayWritten);
+        writer.writeCompoundArray("/testCompound", compoundType, arrayWritten,
+                HDF5GenericStorageFeatures.GENERIC_COMPACT);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         compoundType = Record.getHDF5Type(reader);

@@ -305,6 +305,17 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
     /**
      * Creates a {@link HDF5IntStorageFeatures} object that represents deflation with the given
      * <var>deflateLevel</var> and integer scaling with the given <var>scalingFactor</var>.
+     */
+    public static HDF5IntStorageFeatures createDeflateAndIntegerScaling(int deflateLevel,
+            byte scalingFactor, boolean keepDataSetIfExists)
+    {
+        return new HDF5IntStorageFeatures(null, keepDataSetIfExists, toByte(deflateLevel),
+                scalingFactor);
+    }
+
+    /**
+     * Creates a {@link HDF5IntStorageFeatures} object that represents deflation with the given
+     * <var>deflateLevel</var> and integer scaling with the given <var>scalingFactor</var>.
      * <p>
      * Keep existing data set and apply only if a new data set has to be created.
      */

@@ -336,21 +336,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Writes out a bit field ((which can be considered the equivalent to a boolean array of rank
-     * 1), provided as a Java {@link BitSet}. Uses a compact storage layout. Must only be used for
-     * small data sets.
-     * <p>
-     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
-     * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
-     * back by {@link #readLongArray(String)} but will throw a
-     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeBitFieldCompact(final String objectPath, final BitSet data);
-
-    /**
-     * Writes out a bit field ((which can be considered the equivalent to a boolean array of rank
      * 1), provided as a Java {@link BitSet}.
      * <p>
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
@@ -374,25 +359,14 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeBitField(final String objectPath, final BitSet data,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
     //
     // Opaque
     //
-
-    /**
-     * Writes out an opaque data type described by <var>tag</var> and defined by a <code>byte</code>
-     * array (of rank 1). Uses a compact storage layout. Must only be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param tag The tag of the data set.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeOpaqueByteArrayCompact(final String objectPath, final String tag,
-            final byte[] data);
 
     /**
      * Writes out an opaque data type described by <var>tag</var> and defined by a <code>byte</code>
@@ -417,10 +391,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param tag The tag of the data set.
      * @param data The data to write. Must not be <code>null</code>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
     /**
      * Creates an opaque data set that will be represented as a <code>byte</code> array (of rank 1).
@@ -456,14 +430,14 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the byte vector to create.
      * @param blockSize The size of on block (for block-wise IO)
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      * @return The {@link HDF5OpaqueType} that can be used in methods
      *         {@link #writeOpaqueByteArrayBlock(String, HDF5OpaqueType, byte[], long)} and
      *         {@link #writeOpaqueByteArrayBlockWithOffset(String, HDF5OpaqueType, byte[], int, long)}
      *         to represent this opaque type.
      */
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
-            final long size, final int blockSize, final HDF5GenericStorageFeatures compression);
+            final long size, final int blockSize, final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a block of an opaque data type represented by a <code>byte</code> array (of rank
@@ -532,29 +506,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void writeTimeStamp(final String objectPath, final long timeStamp);
 
     /**
-     * Creates a time stamp array (of rank 1). Uses a compact storage layout. Should only be used
-     * for small data sets.
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The length of the data set to create.
-     */
-    public void createTimeStampArrayCompact(final String objectPath, final long size);
-
-    /**
-     * Writes out a time stamp array (of rank 1). Uses a compact storage layout. Should only be used
-     * for small data sets.
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
-     *            00:00:00 GMT.
-     */
-    public void writeTimeStampArrayCompact(final String objectPath, final long[] timeStamps);
-
-    /**
      * Creates a time stamp array (of rank 1).
      * <p>
      * <em>Note: Time stamps are stored as <code>long</code> values.</em>
@@ -589,10 +540,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void createTimeStampArray(final String objectPath, final long size, final int blockSize,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a time stamp array (of rank 1). The data set will be tagged as type variant
@@ -615,10 +566,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
      *            00:00:00 GMT.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeTimeStampArray(final String objectPath, final long[] timeStamps,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a block of a time stamp array (which is stored as a <code>long</code> array of
@@ -674,18 +625,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void writeDate(final String objectPath, final Date date);
 
     /**
-     * Writes out a {@link Date} array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets.
-     * <p>
-     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dates The dates to write.
-     * @see #writeTimeStampArrayCompact(String, long[])
-     */
-    public void writeDateArrayCompact(final String objectPath, final Date[] dates);
-
-    /**
      * Writes out a {@link Date} array (of rank 1).
      * <p>
      * <em>Note: Time stamps are stored as <code>long</code> values.</em>
@@ -703,11 +642,11 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dates The dates to write.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      * @see #writeTimeStampArray(String, long[], HDF5GenericStorageFeatures)
      */
     public void writeDateArray(final String objectPath, final Date[] dates,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
     //
     // Duration
@@ -734,32 +673,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param timeUnit The unit of the time duration.
      */
     public void writeTimeDuration(final String objectPath, final long timeDuration,
-            final HDF5TimeUnit timeUnit);
-
-    /**
-     * Creates a time duration array (of rank 1). Uses a compact storage layout. Should only be used
-     * for small data sets. The data set will be tagged as the according type variant.
-     * <p>
-     * <em>Note: Time durations are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the data set to create.
-     * @param timeUnit The unit of the time duration.
-     */
-    public void createTimeDurationArrayCompact(final String objectPath, final long size,
-            final HDF5TimeUnit timeUnit);
-
-    /**
-     * Writes out a time duration array (of rank 1). Uses a compact storage layout. Should only be
-     * used for small data sets. The data set will be tagged as the according type variant.
-     * <p>
-     * <em>Note: Time durations are stored as <code>long</code> values.</em>
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeDurations The time durations to write in the given <var>timeUnit</var>.
-     * @param timeUnit The unit of the time duration.
-     */
-    public void writeTimeDurationArrayCompact(final String objectPath, final long[] timeDurations,
             final HDF5TimeUnit timeUnit);
 
     /**
@@ -802,11 +715,11 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      * @param timeUnit The unit of the time duration.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void createTimeDurationArray(final String objectPath, final long size,
             final int blockSize, final HDF5TimeUnit timeUnit,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a time duration array in seconds (of rank 1). The data set will be tagged as type
@@ -841,10 +754,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeDurations The time durations to write in the given <var>timeUnit</var>.
      * @param timeUnit The unit of the time duration.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
-            final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures compression);
+            final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a time duration array (which is stored as a <code>long</code> array of
@@ -895,26 +808,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     //
 
     /**
-     * Writes out a <code>String</code> with a fixed maximal length in a compact layout.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code> and not larger than 65530
-     *            characters.
-     * @param maxLength The maximal length of the <var>data</var>.
-     */
-    public void writeStringCompact(final String objectPath, final String data, final int maxLength);
-
-    /**
-     * Writes out a <code>String</code> with a fixed maximal length (which is the length of the
-     * string <var>data</var>) in a compact layout.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code> and not larger than 65530
-     *            characters.
-     */
-    public void writeStringCompact(final String objectPath, final String data);
-
-    /**
      * Writes out a <code>String</code> with a fixed maximal length.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -937,10 +830,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeString(final String objectPath, final String data,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a <code>String</code> with a fixed maximal length.
@@ -948,20 +841,20 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param maxLength The maximal length of the <var>data</var>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeString(final String objectPath, final String data, final int maxLength,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a <code>String</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeStringArray(final String objectPath, final String[] data,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a <code>String</code> array (of rank 1). Each element of the array will have a
@@ -989,10 +882,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param maxLength The maximal length of any of the strings in <var>data</var>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
     /**
      * Creates a <code>String</code> array (of rank 1) for Strings of length <var>maxLength</var>.
@@ -1029,10 +922,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      *            smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void createStringArray(final String objectPath, final int maxLength, final long size,
-            final int blockSize, final HDF5GenericStorageFeatures compression);
+            final int blockSize, final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a block of a <code>String</code> array (of rank 1). The data set needs to have
@@ -1122,17 +1015,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
             throws HDF5JavaException;
 
     /**
-     * Writes out an array of enum values. Uses a compact storage layout. Must only be used for
-     * small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
-     */
-    public void writeEnumArrayCompact(final String objectPath, final HDF5EnumerationValueArray data)
-            throws HDF5JavaException;
-
-    /**
      * Writes out an array of enum values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1147,13 +1029,13 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
-     * @param compression The compression parameters of the data set. Note that for scaling
+     * @param features The storage features of the data set. Note that for scaling
      *            compression the compression factor is ignored. Instead, the scaling factor is
      *            computed from the number of entries in the enumeration.
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
     public void writeEnumArray(final String objectPath, final HDF5EnumerationValueArray data,
-            final HDF5IntStorageFeatures compression) throws HDF5JavaException;
+            final HDF5IntStorageFeatures features) throws HDF5JavaException;
 
     /**
      * Creates am enum array (of rank 1). The initial size of the array is 0.
@@ -1190,10 +1072,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      *            smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
-            final long size, final int blockSize, final HDF5IntStorageFeatures compression);
+            final long size, final int blockSize, final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of an enum array (of rank 1). The data set needs to have been created by
@@ -1264,17 +1146,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
             final T data, final IByteArrayInspector inspectorOrNull);
 
     /**
-     * Writes out an array (of rank 1) of compound values. Uses a compact storage layout. Must only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     */
-    public <T> void writeCompoundArrayCompact(final String objectPath,
-            final HDF5CompoundType<T> type, final T[] data);
-
-    /**
      * Writes out an array (of rank 1) of compound values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1290,10 +1161,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @param data The value of the data set.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final T[] data, final HDF5GenericStorageFeatures compression);
+            final T[] data, final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out an array (of rank 1) of compound values.
@@ -1301,12 +1172,12 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @param data The value of the data set.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5.
      */
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final T[] data, final HDF5GenericStorageFeatures compression,
+            final T[] data, final HDF5GenericStorageFeatures features,
             final IByteArrayInspector inspectorOrNull);
 
     /**
@@ -1393,10 +1264,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final long size, final int blockSize, final HDF5GenericStorageFeatures compression);
+            final long size, final int blockSize, final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out an array (of rank N) of compound values.
@@ -1414,10 +1285,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @param data The data to write.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final MDArray<T> data, final HDF5GenericStorageFeatures compression);
+            final MDArray<T> data, final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out an array (of rank N) of compound values.
@@ -1425,12 +1296,12 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @param data The data to write.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5.
      */
     public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final MDArray<T> data, final HDF5GenericStorageFeatures compression,
+            final MDArray<T> data, final HDF5GenericStorageFeatures features,
             final IByteArrayInspector inspectorOrNull);
 
     /**
@@ -1551,10 +1422,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      *            Ignored if no extendable data sets are used (see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final long[] dimensions, final int[] blockDimensions,
-            final HDF5GenericStorageFeatures compression);
+            final HDF5GenericStorageFeatures features);
 
 }
