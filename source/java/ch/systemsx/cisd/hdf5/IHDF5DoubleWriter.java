@@ -93,24 +93,6 @@ interface IHDF5DoubleWriter
     public void writeDouble(final String objectPath, final double value);
 
     /**
-     * Creates a <code>double</code> array (of rank 1). Uses a compact storage layout. Should only 
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the data set to create.
-     */
-    public void createDoubleArrayCompact(final String objectPath, final long size);
-
-    /**
-     * Writes out a <code>double</code> array (of rank 1). Uses a compact storage layout. Should 
-     * only be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeDoubleArrayCompact(final String objectPath, final double[] data);
-
-    /**
      * Writes out a <code>double</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -123,10 +105,10 @@ interface IHDF5DoubleWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeDoubleArray(final String objectPath, final double[] data, 
-            final HDF5FloatCompression compression);
+            final HDF5FloatStorageFeatures features);
 
     /**
      * Creates a <code>double</code> array (of rank 1). The initial size of the array is 0.
@@ -158,20 +140,20 @@ interface IHDF5DoubleWriter
      *          set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>compression</code> is <code>HDF5FloatCompression.NO_COMPRESSION</code>.
-     * @param compression The compression parameters of the data set.
+     *                <code>compression</code> is <code>HDF5FloatStorageFeature.NO_COMPRESSION</code>.
+     * @param features The storage features of the data set.
      */
     public void createDoubleArray(final String objectPath, final long size, final int blockSize,
-            final HDF5FloatCompression compression);
+            final HDF5FloatStorageFeatures features);
 
     /**
      * Writes out a block of a <code>double</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createDoubleArray(String, long, int, HDF5FloatCompression)}
+     * been created by {@link #createDoubleArray(String, long, int, HDF5FloatStorageFeatures)}
      * beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createDoubleArray(String, long, int, HDF5FloatCompression)} call that was used to
+     * {@link #createDoubleArray(String, long, int, HDF5FloatStorageFeatures)} call that was used to
      * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -184,7 +166,7 @@ interface IHDF5DoubleWriter
 
     /**
      * Writes out a block of a <code>double</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createDoubleArray(String, long, int, HDF5FloatCompression)}
+     * been created by {@link #createDoubleArray(String, long, int, HDF5FloatStorageFeatures)}
      * beforehand.
      * <p>
      * Use this method instead of {@link #writeDoubleArrayBlock(String, double[], long)} if the
@@ -192,7 +174,7 @@ interface IHDF5DoubleWriter
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createDoubleArray(String, long, int, HDF5FloatCompression)} call that was used to
+     * {@link #createDoubleArray(String, long, int, HDF5FloatStorageFeatures)} call that was used to
      * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -220,10 +202,10 @@ interface IHDF5DoubleWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeDoubleMatrix(final String objectPath, final double[][] data, 
-            final HDF5FloatCompression compression);
+            final HDF5FloatStorageFeatures features);
 
     /**
      * Creates a <code>double</code> matrix (array of rank 2). The initial size of the matrix is 0.
@@ -255,23 +237,23 @@ interface IHDF5DoubleWriter
      * @param sizeY The size of the y dimension of the double matrix to create.
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void createDoubleMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final HDF5FloatCompression compression);
+            final int blockSizeX, final int blockSizeY, final HDF5FloatStorageFeatures features);
 
     /**
      * Writes out a block of a <code>double</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatCompression)} beforehand.
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatCompression)} if the total
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} if the total
      * size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
      * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatCompression)} call that was
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -288,14 +270,14 @@ interface IHDF5DoubleWriter
     /**
      * Writes out a block of a <code>double</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatCompression)} beforehand.
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of {@link #writeDoubleMatrixBlock(String, double[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatCompression)} call that was
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -309,14 +291,14 @@ interface IHDF5DoubleWriter
     /**
      * Writes out a block of a <code>double</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatCompression)} beforehand.
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of {@link #writeDoubleMatrixBlock(String, double[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatCompression)} call that was
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -346,10 +328,10 @@ interface IHDF5DoubleWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeDoubleMDArray(final String objectPath, final MDDoubleArray data,
-            final HDF5FloatCompression compression);
+            final HDF5FloatStorageFeatures features);
 
     /**
      * Creates a multi-dimensional <code>double</code> array. The initial size of the array is 0.
@@ -375,10 +357,10 @@ interface IHDF5DoubleWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The dimensions of the array.
      * @param blockDimensions The dimensions of one block (chunk) of the array.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void createDoubleMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final HDF5FloatCompression compression);
+            final int[] blockDimensions, final HDF5FloatStorageFeatures features);
 
     /**
      * Writes out a block of a multi-dimensional <code>double</code> array.

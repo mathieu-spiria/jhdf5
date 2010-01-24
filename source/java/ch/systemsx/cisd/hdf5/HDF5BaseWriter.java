@@ -41,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.namedthread.NamingThreadPoolExecutor;
-import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -109,9 +108,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     private final BlockingQueue<Command> commandQueue;
 
+    private final boolean deleteDataSetBeforeWrite;
+
     final boolean useExtentableDataTypes;
 
-    final boolean overwrite;
+    final boolean overwriteFile;
 
     final SyncMode syncMode;
 
@@ -120,9 +121,10 @@ final class HDF5BaseWriter extends HDF5BaseReader
     final int variableLengthStringDataTypeId;
 
     HDF5BaseWriter(File hdf5File, boolean performNumericConversions, FileFormat fileFormat,
-            boolean useExtentableDataTypes, boolean overwrite, SyncMode syncMode)
+            boolean useExtentableDataTypes, boolean deleteDataSetBeforeWrite,
+            boolean overwriteFile, SyncMode syncMode)
     {
-        super(hdf5File, performNumericConversions, fileFormat, overwrite);
+        super(hdf5File, performNumericConversions, fileFormat, overwriteFile);
         try
         {
             this.fileForSyncing = new RandomAccessFile(hdf5File, "rw");
@@ -133,7 +135,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
         this.fileFormat = fileFormat;
         this.useExtentableDataTypes = useExtentableDataTypes;
-        this.overwrite = overwrite;
+        this.deleteDataSetBeforeWrite = deleteDataSetBeforeWrite;
+        this.overwriteFile = overwriteFile;
         this.syncMode = syncMode;
         readNamedDataTypes();
         variableLengthStringDataTypeId = openOrCreateVLStringType();
@@ -470,21 +473,26 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * Creates a data set.
      */
     int createDataSet(final String objectPath, final int storageDataTypeId,
-            final HDF5AbstractCompression compression, final long[] dimensions,
-            final long[] chunkSizeOrNull, boolean enforceCompactLayout, ICleanUpRegistry registry)
+            final HDF5AbstractStorageFeatures features, final long[] dimensions,
+            final long[] chunkSizeOrNull, final ICleanUpRegistry registry)
     {
         final int dataSetId;
         final boolean empty = isEmpty(dimensions);
         final boolean chunkSizeProvided =
                 (chunkSizeOrNull != null && isNonPositive(chunkSizeOrNull) == false);
         final long[] definitiveChunkSizeOrNull;
+        if (deleteDataSetBeforeWrite && h5.exists(fileId, objectPath))
+        {
+            h5.deleteObject(fileId, objectPath);
+        }
         if (empty)
         {
             definitiveChunkSizeOrNull =
                     chunkSizeProvided ? chunkSizeOrNull : HDF5Utils.tryGetChunkSize(dimensions,
-                            compression.requiresChunking(), true);
-        } else if (enforceCompactLayout || (useExtentableDataTypes == false)
-                && compression.requiresChunking() == false)
+                            features.requiresChunking(), true);
+        } else if (features.tryGetProposedLayout() == HDF5StorageLayout.COMPACT
+                || features.tryGetProposedLayout() == HDF5StorageLayout.CONTIGUOUS
+                || (useExtentableDataTypes == false) && features.requiresChunking() == false)
         {
             definitiveChunkSizeOrNull = null;
         } else if (chunkSizeProvided)
@@ -493,34 +501,41 @@ final class HDF5BaseWriter extends HDF5BaseReader
         } else
         {
             definitiveChunkSizeOrNull =
-                    HDF5Utils.tryGetChunkSize(dimensions, compression.requiresChunking(),
-                            useExtentableDataTypes);
+                    HDF5Utils
+                            .tryGetChunkSize(
+                                    dimensions,
+                                    features.requiresChunking(),
+                                    useExtentableDataTypes
+                                            || features.tryGetProposedLayout() == HDF5StorageLayout.CHUNKED);
         }
-        final StorageLayout layout =
-                determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull,
-                        enforceCompactLayout);
+        final HDF5StorageLayout layout =
+                determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull, features
+                        .tryGetProposedLayout());
         dataSetId =
                 h5.createDataSet(fileId, dimensions, definitiveChunkSizeOrNull, storageDataTypeId,
-                        compression, objectPath, layout, fileFormat, registry);
+                        features, objectPath, layout, fileFormat, registry);
         return dataSetId;
     }
 
     /**
-     * Determine which {@link StorageLayout} to use for the given <var>storageDataTypeId</var>.
+     * Determine which {@link HDF5StorageLayout} to use for the given <var>storageDataTypeId</var>.
      */
-    StorageLayout determineLayout(final int storageDataTypeId, final long[] dimensions,
-            final long[] chunkSizeOrNull, boolean enforceCompactLayout)
+    HDF5StorageLayout determineLayout(final int storageDataTypeId, final long[] dimensions,
+            final long[] chunkSizeOrNull, final HDF5StorageLayout proposedLayoutOrNull)
     {
         if (chunkSizeOrNull != null)
         {
-            return StorageLayout.CHUNKED;
+            return HDF5StorageLayout.CHUNKED;
         }
-        if (enforceCompactLayout
-                || computeSizeForDimensions(storageDataTypeId, dimensions) < HDF5BaseWriter.COMPACT_LAYOUT_THRESHOLD)
+        if (proposedLayoutOrNull != null)
         {
-            return StorageLayout.COMPACT;
+            return proposedLayoutOrNull;
         }
-        return StorageLayout.CONTIGUOUS;
+        if (computeSizeForDimensions(storageDataTypeId, dimensions) < HDF5BaseWriter.COMPACT_LAYOUT_THRESHOLD)
+        {
+            return HDF5StorageLayout.COMPACT;
+        }
+        return HDF5StorageLayout.CONTIGUOUS;
     }
 
     private int computeSizeForDimensions(int dataTypeId, long[] dimensions)
@@ -559,11 +574,16 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * Returns the data set id for the given <var>objectPath</var>.
      */
     int getDataSetId(final String objectPath, final int storageDataTypeId, final long[] dimensions,
-            final HDF5AbstractCompression compression, boolean enforceCompactLayoutOnCreate,
-            ICleanUpRegistry registry)
+            final HDF5AbstractStorageFeatures compression, ICleanUpRegistry registry)
     {
         final int dataSetId;
-        if (h5.exists(fileId, objectPath))
+        boolean exists = h5.exists(fileId, objectPath);
+        if (exists && deleteDataSetBeforeWrite)
+        {
+            h5.deleteObject(fileId, objectPath);
+            exists = false;
+        }
+        if (exists)
         {
             dataSetId =
                     h5.openAndExtendDataSet(fileId, objectPath, fileFormat, dimensions,
@@ -572,7 +592,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             dataSetId =
                     createDataSet(objectPath, storageDataTypeId, compression, dimensions, null,
-                            enforceCompactLayoutOnCreate, registry);
+                            registry);
         }
         return dataSetId;
     }

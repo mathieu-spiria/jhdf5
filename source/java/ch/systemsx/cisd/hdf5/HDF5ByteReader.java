@@ -31,7 +31,7 @@ import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
-import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
+import ch.systemsx.cisd.hdf5.HDF5StorageLayout;
 
 /**
  * The implementation of {@link IHDF5ByteReader}.
@@ -499,7 +499,7 @@ class HDF5ByteReader implements IHDF5ByteReader
             throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
         }
         final int naturalBlockSize =
-                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
+                (info.getStorageLayout() == HDF5StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
                         : size;
         final int sizeModNaturalBlockSize = size % naturalBlockSize;
         final long numberOfBlocks =
@@ -552,7 +552,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         final int rank = info.getRank();
         final int[] size = MDArray.toInt(info.getDimensions());
         final int[] naturalBlockSize =
-                (info.getStorageLayout() == StorageLayout.CHUNKED) ? info.tryGetChunkSizes() : size;
+                (info.getStorageLayout() == HDF5StorageLayout.CHUNKED) ? info.tryGetChunkSizes() : size;
         final long[] numberOfBlocks = new long[rank];
         final int[] lastBlockSize = new int[rank];
         for (int i = 0; i < size.length; ++i)

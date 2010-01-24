@@ -17,7 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 
-import static ch.systemsx.cisd.hdf5.HDF5FloatCompression.FLOAT_NO_COMPRESSION;
+import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_NO_COMPRESSION;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_float;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
@@ -130,54 +130,13 @@ class HDF5FloatWriter implements IHDF5FloatWriter
                 floatToByte(value));
     }
 
-    public void createFloatArrayCompact(final String objectPath, final long length)
-    {
-        assert objectPath != null;
-        assert length > 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, FLOAT_NO_COMPRESSION, new long[]
-                        { length }, null, true, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    public void writeFloatArrayCompact(final String objectPath, final float[] data)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F32LE, dimensions, 
-                                    FLOAT_NO_COMPRESSION, true, registry);
-                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
-                            data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
     public void writeFloatArray(final String objectPath, final float[] data)
     {
         writeFloatArray(objectPath, data, FLOAT_NO_COMPRESSION);
     }
 
     public void writeFloatArray(final String objectPath, final float[] data,
-            final HDF5FloatCompression compression)
+            final HDF5FloatStorageFeatures features)
     {
         assert data != null;
 
@@ -188,7 +147,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_IEEE_F32LE, new long[]
-                                { data.length }, compression, false, registry);
+                                { data.length }, features, registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -208,7 +167,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
     }
 
     public void createFloatArray(final String objectPath, final long size, final int blockSize,
-            final HDF5FloatCompression compression)
+            final HDF5FloatStorageFeatures features)
     {
         assert objectPath != null;
         assert size >= 0;
@@ -219,9 +178,9 @@ class HDF5FloatWriter implements IHDF5FloatWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, compression, new long[]
+                    baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, features, new long[]
                         { size }, new long[]
-                        { blockSize }, false, registry);
+                        { blockSize }, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -279,13 +238,13 @@ class HDF5FloatWriter implements IHDF5FloatWriter
     }
 
     public void writeFloatMatrix(final String objectPath, final float[][] data, 
-            final HDF5FloatCompression compression)
+            final HDF5FloatStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
         assert HDF5Utils.areMatrixDimensionsConsistent(data);
 
-        writeFloatMDArray(objectPath, new MDFloatArray(data), compression);
+        writeFloatMDArray(objectPath, new MDFloatArray(data), features);
     }
 
     public void createFloatMatrix(final String objectPath, final int blockSizeX, 
@@ -301,7 +260,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
     }
 
     public void createFloatMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final HDF5FloatCompression compression)
+            final int blockSizeX, final int blockSizeY, final HDF5FloatStorageFeatures features)
     {
         assert objectPath != null;
         assert sizeX >= 0;
@@ -319,8 +278,8 @@ class HDF5FloatWriter implements IHDF5FloatWriter
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
                     baseWriter
-                            .createDataSet(objectPath, H5T_IEEE_F32LE, compression, dimensions,
-                            blockDimensions, false, registry);
+                            .createDataSet(objectPath, H5T_IEEE_F32LE, features, dimensions,
+                            blockDimensions, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -365,7 +324,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
     }
 
     public void writeFloatMDArray(final String objectPath, final MDFloatArray data,
-            final HDF5FloatCompression compression)
+            final HDF5FloatStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
@@ -377,7 +336,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_IEEE_F32LE, 
-                                    data.longDimensions(), compression, false, registry);
+                                    data.longDimensions(), features, registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -398,7 +357,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
     }
 
     public void createFloatMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final HDF5FloatCompression compression)
+            final int[] blockDimensions, final HDF5FloatStorageFeatures features)
     {
         assert objectPath != null;
         assert dimensions != null;
@@ -409,8 +368,8 @@ class HDF5FloatWriter implements IHDF5FloatWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, compression, dimensions, 
-                            MDArray.toLong(blockDimensions), false, registry);
+                    baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, features, dimensions, 
+                            MDArray.toLong(blockDimensions), registry);
                     return null; // Nothing to return.
                 }
             };

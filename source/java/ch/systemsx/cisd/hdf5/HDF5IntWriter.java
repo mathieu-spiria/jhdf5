@@ -17,7 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 
-import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_NO_COMPRESSION;
+import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_int;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
@@ -130,54 +130,13 @@ class HDF5IntWriter implements IHDF5IntWriter
                 intToByte(value));
     }
 
-    public void createIntArrayCompact(final String objectPath, final long length)
-    {
-        assert objectPath != null;
-        assert length > 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I32LE, INT_NO_COMPRESSION, new long[]
-                        { length }, null, true, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    public void writeIntArrayCompact(final String objectPath, final int[] data)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I32LE, dimensions, 
-                                    INT_NO_COMPRESSION, true, registry);
-                    H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
-                            data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
     public void writeIntArray(final String objectPath, final int[] data)
     {
         writeIntArray(objectPath, data, INT_NO_COMPRESSION);
     }
 
     public void writeIntArray(final String objectPath, final int[] data,
-            final HDF5IntCompression compression)
+            final HDF5IntStorageFeatures features)
     {
         assert data != null;
 
@@ -188,7 +147,7 @@ class HDF5IntWriter implements IHDF5IntWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I32LE, new long[]
-                                { data.length }, compression, false, registry);
+                                { data.length }, features, registry);
                     H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -208,7 +167,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     public void createIntArray(final String objectPath, final long size, final int blockSize,
-            final HDF5IntCompression compression)
+            final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert size >= 0;
@@ -219,9 +178,9 @@ class HDF5IntWriter implements IHDF5IntWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I32LE, compression, new long[]
+                    baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features, new long[]
                         { size }, new long[]
-                        { blockSize }, false, registry);
+                        { blockSize }, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -279,13 +238,13 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     public void writeIntMatrix(final String objectPath, final int[][] data, 
-            final HDF5IntCompression compression)
+            final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
         assert HDF5Utils.areMatrixDimensionsConsistent(data);
 
-        writeIntMDArray(objectPath, new MDIntArray(data), compression);
+        writeIntMDArray(objectPath, new MDIntArray(data), features);
     }
 
     public void createIntMatrix(final String objectPath, final int blockSizeX, 
@@ -301,7 +260,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     public void createIntMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final HDF5IntCompression compression)
+            final int blockSizeX, final int blockSizeY, final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert sizeX >= 0;
@@ -319,8 +278,8 @@ class HDF5IntWriter implements IHDF5IntWriter
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
                     baseWriter
-                            .createDataSet(objectPath, H5T_STD_I32LE, compression, dimensions,
-                            blockDimensions, false, registry);
+                            .createDataSet(objectPath, H5T_STD_I32LE, features, dimensions,
+                            blockDimensions, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -365,7 +324,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     public void writeIntMDArray(final String objectPath, final MDIntArray data,
-            final HDF5IntCompression compression)
+            final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
@@ -377,7 +336,7 @@ class HDF5IntWriter implements IHDF5IntWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I32LE, 
-                                    data.longDimensions(), compression, false, registry);
+                                    data.longDimensions(), features, registry);
                     H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -398,7 +357,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     public void createIntMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final HDF5IntCompression compression)
+            final int[] blockDimensions, final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert dimensions != null;
@@ -409,8 +368,8 @@ class HDF5IntWriter implements IHDF5IntWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I32LE, compression, dimensions, 
-                            MDArray.toLong(blockDimensions), false, registry);
+                    baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features, dimensions, 
+                            MDArray.toLong(blockDimensions), registry);
                     return null; // Nothing to return.
                 }
             };

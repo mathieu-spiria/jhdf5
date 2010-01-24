@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
+import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 
 /**
  * A class that represents a strategy for excluding files from archiving / extracting and for
@@ -168,19 +168,19 @@ public class ArchivingStrategy
         }
     }
 
-    public HDF5GenericCompression doCompress(String path)
+    public HDF5GenericStorageFeatures doCompress(String path)
     {
         if (compressAll)
         {
-            return HDF5GenericCompression.GENERIC_DEFLATE;
+            return HDF5GenericStorageFeatures.GENERIC_DEFLATE;
         }
         if (compressionWhiteListOrNull == null)
         {
-            return HDF5GenericCompression.GENERIC_NO_COMPRESSION;
+            return HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
         } else
         {
-            return match(null, compressionWhiteListOrNull, path) ? HDF5GenericCompression.GENERIC_DEFLATE
-                    : HDF5GenericCompression.GENERIC_NO_COMPRESSION;
+            return match(null, compressionWhiteListOrNull, path) ? HDF5GenericStorageFeatures.GENERIC_DEFLATE
+                    : HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
         }
     }
 

@@ -157,7 +157,6 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
-import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
@@ -618,13 +617,13 @@ class HDF5
     }
 
     public int createDataSet(int fileId, long[] dimensions, long[] chunkSizeOrNull, int dataTypeId,
-            HDF5AbstractCompression compression, String dataSetName, StorageLayout layout,
+            HDF5AbstractStorageFeatures compression, String dataSetName, HDF5StorageLayout layout,
             FileFormat fileFormat, ICleanUpRegistry registry)
     {
         checkMaxLength(dataSetName);
         final int dataSpaceId =
                 H5Screate_simple(dimensions.length, dimensions, createMaxDimensions(dimensions,
-                        (layout == StorageLayout.CHUNKED)));
+                        (layout == HDF5StorageLayout.CHUNKED)));
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -633,7 +632,7 @@ class HDF5
                 }
             });
         final int dataSetCreationPropertyListId;
-        if (layout == StorageLayout.CHUNKED && chunkSizeOrNull != null)
+        if (layout == HDF5StorageLayout.CHUNKED && chunkSizeOrNull != null)
         {
             dataSetCreationPropertyListId = createDataSetCreationPropertyList(registry);
             setChunkedLayout(dataSetCreationPropertyListId, chunkSizeOrNull);
@@ -656,7 +655,7 @@ class HDF5
             {
                 setDeflate(dataSetCreationPropertyListId, compression.getDeflateLevel());
             }
-        } else if (layout == StorageLayout.COMPACT)
+        } else if (layout == HDF5StorageLayout.COMPACT)
         {
             dataSetCreationPropertyListId = dataSetCreationPropertyListCompactStorageLayout;
         } else
@@ -693,19 +692,19 @@ class HDF5
     /**
      * Returns one of: COMPACT, CHUNKED, CONTIGUOUS.
      */
-    public StorageLayout getLayout(int dataSetId, ICleanUpRegistry registry)
+    public HDF5StorageLayout getLayout(int dataSetId, ICleanUpRegistry registry)
     {
         final int dataSetCreationPropertyListId = getCreationPropertyList(dataSetId, registry);
         final int layoutId = H5Pget_layout(dataSetCreationPropertyListId);
         if (layoutId == H5D_COMPACT)
         {
-            return StorageLayout.COMPACT;
+            return HDF5StorageLayout.COMPACT;
         } else if (layoutId == H5D_CHUNKED)
         {
-            return StorageLayout.CHUNKED;
+            return HDF5StorageLayout.CHUNKED;
         } else
         {
-            return StorageLayout.CONTIGUOUS;
+            return HDF5StorageLayout.CONTIGUOUS;
         }
     }
 
@@ -802,8 +801,8 @@ class HDF5
         final long[] oldDimensions = getDataDimensions(dataSetId, registry);
         if (Arrays.equals(oldDimensions, dimensions) == false)
         {
-            final StorageLayout layout = getLayout(dataSetId, registry);
-            if (layout == StorageLayout.CHUNKED)
+            final HDF5StorageLayout layout = getLayout(dataSetId, registry);
+            if (layout == HDF5StorageLayout.CHUNKED)
             {
                 // Safety check. JHDF5 creates CHUNKED data sets always with unlimited max
                 // dimensions but we may have to work on a file we haven't created.
@@ -829,7 +828,7 @@ class HDF5
                 H5Dclose(dataSetId);
                 deleteObject(fileId, path);
                 return createDataSet(fileId, dimensions, null, dataTypeId,
-                        HDF5GenericCompression.GENERIC_NO_COMPRESSION, path, layout, fileFormat,
+                        HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, path, layout, fileFormat,
                         registry);
             } else
             {
@@ -1761,10 +1760,10 @@ class HDF5
                         final long[] chunkSizes = new long[rank];
                         final int creationPropertyList =
                                 getCreationPropertyList(dataSetOrAttributeId, registry);
-                        final StorageLayout layout =
-                                StorageLayout.fromId(H5Pget_layout(creationPropertyList));
+                        final HDF5StorageLayout layout =
+                                HDF5StorageLayout.fromId(H5Pget_layout(creationPropertyList));
                         dataSetInfo.setStorageLayout(layout);
-                        if (layout == StorageLayout.CHUNKED)
+                        if (layout == HDF5StorageLayout.CHUNKED)
                         {
                             H5Pget_chunk(creationPropertyList, rank, chunkSizes);
                             dataSetInfo.setChunkSizes(MDArray.toInt(chunkSizes));

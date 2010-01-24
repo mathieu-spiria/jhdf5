@@ -46,7 +46,7 @@ import ch.systemsx.cisd.base.unix.Unix.Group;
 import ch.systemsx.cisd.base.unix.Unix.Password;
 import ch.systemsx.cisd.base.unix.Unix.Stat;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
-import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
+import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
@@ -408,7 +408,7 @@ public class HDF5ArchiveTools
     {
         boolean ok = true;
         final String hdf5ObjectPath = getRelativePath(root, file);
-        final HDF5GenericCompression compression = strategy.doCompress(hdf5ObjectPath);
+        final HDF5GenericStorageFeatures compression = strategy.doCompress(hdf5ObjectPath);
         try
         {
             final long size = file.length();
@@ -1279,7 +1279,7 @@ public class HDF5ArchiveTools
     }
 
     private static int copyToHDF5(File source, final IHDF5Writer writer, final String objectPath,
-            final long size, final HDF5GenericCompression compression, byte[] buffer)
+            final long size, final HDF5GenericStorageFeatures compression, byte[] buffer)
             throws IOException
     {
         final InputStream input = FileUtils.openInputStream(source);

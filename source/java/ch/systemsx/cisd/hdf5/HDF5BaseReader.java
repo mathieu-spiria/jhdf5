@@ -38,7 +38,6 @@ import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
-import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
@@ -557,7 +556,7 @@ class HDF5BaseReader
                                     { H5T_VARIABLE });
                                 dataSetInfo.setMaxDimensions(new long[]
                                     { H5T_VARIABLE });
-                                dataSetInfo.setStorageLayout(StorageLayout.VARIABLE_LENGTH);
+                                dataSetInfo.setStorageLayout(HDF5StorageLayout.VARIABLE_LENGTH);
                             } else
                             {
                                 h5.fillDataDimensions(dataSetId, false, dataSetInfo);

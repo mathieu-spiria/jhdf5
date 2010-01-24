@@ -17,13 +17,13 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
-import static ch.systemsx.cisd.hdf5.HDF5FloatCompression.FLOAT_DEFLATE;
-import static ch.systemsx.cisd.hdf5.HDF5FloatCompression.FLOAT_SCALING1_DEFLATE;
-import static ch.systemsx.cisd.hdf5.HDF5GenericCompression.GENERIC_DEFLATE;
-import static ch.systemsx.cisd.hdf5.HDF5GenericCompression.GENERIC_DEFLATE_MAX;
-import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_AUTO_SCALING;
-import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_AUTO_SCALING_DEFLATE;
-import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_SCALING1_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE_MAX;
+import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING;
+import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_DEFLATE;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
@@ -62,7 +62,6 @@ import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
-import ch.systemsx.cisd.hdf5.HDF5DataSetInformation.StorageLayout;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 
@@ -283,6 +282,8 @@ public class HDF5RoundtripTest
         test.testWriteFloatMatrixDataSetBlockWise();
         test.testExtendCompactDataset();
         test.testExtendContiguousDataset();
+        test.testAutomaticDeletionOfDataSetOnWrite();
+        test.testAutomaticDeletionOfDataSetOnCreate();
         test.testTimestamps();
         test.testTimestampArray();
         test.testTimestampArrayChunked();
@@ -441,7 +442,7 @@ public class HDF5RoundtripTest
     private void assertChunkSizes(final HDF5DataSetInformation info,
             final long... expectedChunkSize)
     {
-        assertEquals(StorageLayout.CHUNKED, info.getStorageLayout());
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
         final int[] chunkSize = info.tryGetChunkSizes();
         assertNotNull(chunkSize);
         assertEquals(expectedChunkSize.length, chunkSize.length);
@@ -781,7 +782,7 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final float[] floatDataRead = reader.readFloatArray(floatDatasetName);
         HDF5DataSetInformation info = reader.getDataSetInformation(floatDatasetName);
-        assertEquals(StorageLayout.COMPACT, info.getStorageLayout());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
         assertNull(info.tryGetChunkSizes());
         assertTrue(Arrays.equals(floatDataWritten, floatDataRead));
         final long[] compressedLongDataRead =
@@ -791,13 +792,13 @@ public class HDF5RoundtripTest
         assertTrue(Arrays.equals(longDataWrittenAboveCompactThreshold, compressedLongDataRead));
         final long[] longDataRead = reader.readLongArray(longDatasetName);
         info = reader.getDataSetInformation(longDatasetName);
-        assertEquals(StorageLayout.COMPACT, info.getStorageLayout());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
         assertNull(info.tryGetChunkSizes());
         assertTrue(Arrays.equals(longDataWritten, longDataRead));
         final long[] longDataReadAboveCompactThreshold =
                 reader.readLongArray(longDatasetNameAboveCompactThreshold);
         info = reader.getDataSetInformation(longDatasetNameAboveCompactThreshold);
-        assertEquals(StorageLayout.CONTIGUOUS, info.getStorageLayout());
+        assertEquals(HDF5StorageLayout.CONTIGUOUS, info.getStorageLayout());
         assertNull(info.tryGetChunkSizes());
         assertTrue(Arrays.equals(longDataWrittenAboveCompactThreshold,
                 longDataReadAboveCompactThreshold));
@@ -858,8 +859,9 @@ public class HDF5RoundtripTest
         long[] data = new long[]
             { 1, 2, 3 };
         IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        writer.writeLongArrayCompact(dsName, data);
-        assertEquals(StorageLayout.COMPACT, writer.getDataSetInformation(dsName).getStorageLayout());
+        writer.writeLongArray(dsName, data, HDF5IntStorageFeatures.INT_COMPACT);
+        assertEquals(HDF5StorageLayout.COMPACT, writer.getDataSetInformation(dsName)
+                .getStorageLayout());
         writer.close();
         IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
@@ -878,9 +880,10 @@ public class HDF5RoundtripTest
             { 1, 2, 3 };
         IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         // Set maxdims of 5 so that we can overwrite the data set with a larger one later on.
-        writer.createLongArrayCompact(dsName, 5);
+        writer.createLongArray(dsName, 5, 0, HDF5IntStorageFeatures.INT_COMPACT);
         writer.writeLongArray(dsName, data);
-        assertEquals(StorageLayout.COMPACT, writer.getDataSetInformation(dsName).getStorageLayout());
+        assertEquals(HDF5StorageLayout.COMPACT, writer.getDataSetInformation(dsName)
+                .getStorageLayout());
         writer.close();
         IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
@@ -890,7 +893,8 @@ public class HDF5RoundtripTest
         data = new long[]
             { 17, 42, 1, 2, 3 };
         writer.writeLongArray(dsName, data);
-        assertEquals(StorageLayout.COMPACT, writer.getDataSetInformation(dsName).getStorageLayout());
+        assertEquals(HDF5StorageLayout.COMPACT, writer.getDataSetInformation(dsName)
+                .getStorageLayout());
         writer.close();
         reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
@@ -956,6 +960,53 @@ public class HDF5RoundtripTest
         reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertTrue(Arrays.equals(longArrayWritten, reader.readLongArray(dsName)));
         reader.close();
+    }
+
+    @Test
+    public void testAutomaticDeletionOfDataSetOnWrite()
+    {
+        final File datasetFile = new File(workingDirectory, "automaticDeletionOfDataSetOnWrite.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer =
+                new HDF5WriterConfigurator(datasetFile)
+                        .deleteDataSetBeforeWrite().writer();
+        writer.createFloatArray("f", 12, 6, HDF5FloatStorageFeatures.FLOAT_COMPACT);
+        writer.writeFloatArray("f", new float[]
+            { 1f, 2f, 3f, 4f, 5f });
+        writer.close();
+        final IHDF5Reader reader =
+                new HDF5ReaderConfigurator(datasetFile)
+                        .reader();
+        HDF5DataSetInformation info = reader.getDataSetInformation("f");
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        assertEquals(5, info.tryGetChunkSizes()[0]);
+    }
+
+    @Test
+    public void testAutomaticDeletionOfDataSetOnCreate()
+    {
+        final File datasetFile = new File(workingDirectory, "automaticDeletionOfDataSetOnCreate.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer =
+                new HDF5WriterConfigurator(datasetFile)
+                        .deleteDataSetBeforeWrite().writer();
+        writer.createFloatArray("f", 12, 6, HDF5FloatStorageFeatures.FLOAT_COMPACT);
+        writer.createFloatArray("f", 10, 10, HDF5FloatStorageFeatures.FLOAT_CONTIGUOUS);
+        // This won't overwrite the data set as it is a block write command.
+        writer.writeFloatArrayBlock("f", new float[]
+            { 1f, 2f, 3f, 4f, 5f }, 0);
+        writer.close();
+        final IHDF5Reader reader =
+                new HDF5ReaderConfigurator(datasetFile)
+                        .reader();
+        HDF5DataSetInformation info = reader.getDataSetInformation("f");
+        assertEquals(HDF5StorageLayout.CONTIGUOUS, info.getStorageLayout());
+        assertEquals(10, info.getDimensions()[0]);
+        assertNull(info.tryGetChunkSizes());
     }
 
     @Test
@@ -1047,8 +1098,8 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        writer.writeFloatArrayCompact("f", new float[]
-            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 });
+        writer.writeFloatArray("f", new float[]
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 }, HDF5FloatStorageFeatures.FLOAT_COMPACT);
         writer.writeFloatArrayBlockWithOffset("f", new float[]
             { 400, 500, 600 }, 3, 3);
         float[] arrayWritten = new float[]
@@ -1814,7 +1865,7 @@ public class HDF5RoundtripTest
             { "abc", "ABCxxx", "xyz" };
         final String dataSetName = "/aStringArray";
         writer.createStringArray(dataSetName, 6, 0, 5,
-                HDF5GenericCompression.GENERIC_NO_COMPRESSION);
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
         writer.writeStringArrayBlock(dataSetName, data, 1);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
@@ -2191,17 +2242,19 @@ public class HDF5RoundtripTest
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         final String floatDatasetName = "/float";
-        writer.writeFloatArrayCompact(floatDatasetName, new float[0]);
+        writer.writeFloatArray(floatDatasetName, new float[0],
+                HDF5FloatStorageFeatures.FLOAT_COMPACT);
         final String doubleDatasetName = "/double";
-        writer.writeDoubleArrayCompact(doubleDatasetName, new double[0]);
+        writer.writeDoubleArray(doubleDatasetName, new double[0],
+                HDF5FloatStorageFeatures.FLOAT_COMPACT);
         final String byteDatasetName = "byte";
-        writer.writeByteArrayCompact(byteDatasetName, new byte[0]);
+        writer.writeByteArray(byteDatasetName, new byte[0], HDF5IntStorageFeatures.INT_COMPACT);
         final String shortDatasetName = "/short";
-        writer.writeShortArrayCompact(shortDatasetName, new short[0]);
+        writer.writeShortArray(shortDatasetName, new short[0], HDF5IntStorageFeatures.INT_COMPACT);
         final String intDatasetName = "/int";
-        writer.writeIntArrayCompact(intDatasetName, new int[0]);
+        writer.writeIntArray(intDatasetName, new int[0], HDF5IntStorageFeatures.INT_COMPACT);
         final String longDatasetName = "/long";
-        writer.writeLongArrayCompact(longDatasetName, new long[0]);
+        writer.writeLongArray(longDatasetName, new long[0], HDF5IntStorageFeatures.INT_COMPACT);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertEquals(HDF5ObjectType.DATASET, reader.getObjectType(floatDatasetName));
@@ -2564,7 +2617,7 @@ public class HDF5RoundtripTest
                 .tryGetTypeVariant(timeStampDS));
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeStampDS);
         assertTrue(info.isScalar());
-        assertEquals(StorageLayout.COMPACT, info.getStorageLayout());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
         assertNull(info.tryGetChunkSizes());
         assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
         assertTrue(info.isTimeStamp());
@@ -2688,7 +2741,7 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationDS);
         assertTrue(info.isScalar());
-        assertEquals(StorageLayout.COMPACT, info.getStorageLayout());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
         assertNull(info.tryGetChunkSizes());
         assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
         assertTrue(info.isTimeDuration());
@@ -2735,7 +2788,7 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationDS);
         assertTrue(info.isScalar());
-        assertEquals(StorageLayout.COMPACT, info.getStorageLayout());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
         assertNull(info.tryGetChunkSizes());
         assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
         assertEquals(NativeData.SHORT_SIZE, info.getTypeInformation().getElementSize());
@@ -3072,13 +3125,13 @@ public class HDF5RoundtripTest
         assertEquals(1, stringInfo.getDimensions()[0]);
         assertEquals(1, stringInfo.getMaxDimensions().length);
         assertEquals(1, stringInfo.getMaxDimensions()[0]);
-        assertEquals(StorageLayout.COMPACT, stringInfo.getStorageLayout());
+        assertEquals(HDF5StorageLayout.COMPACT, stringInfo.getStorageLayout());
         assertNull(stringInfo.tryGetChunkSizes());
         final HDF5DataSetInformation stringInfoVL = reader.getDataSetInformation("stringDSVL");
         assertEquals(HDF5DataClass.STRING, stringInfoVL.getTypeInformation().getDataClass());
         assertEquals(1, stringInfoVL.getTypeInformation().getElementSize());
         assertEquals(1, stringInfoVL.getDimensions().length);
-        assertEquals(StorageLayout.VARIABLE_LENGTH, stringInfoVL.getStorageLayout());
+        assertEquals(HDF5StorageLayout.VARIABLE_LENGTH, stringInfoVL.getStorageLayout());
         assertNull(stringInfoVL.tryGetChunkSizes());
         assertEquals(HDF5Constants.H5T_VARIABLE, stringInfoVL.getDimensions()[0]);
         assertEquals(1, stringInfoVL.getMaxDimensions().length);
@@ -3532,7 +3585,9 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
             { "ONE", "TWO", "THREE" }, false);
-        writer.createEnumArray("/testEnum", enumType, 0, 3, HDF5IntCompression.INT_AUTO_SCALING);
+        writer
+                .createEnumArray("/testEnum", enumType, 0, 3,
+                        HDF5IntStorageFeatures.INT_AUTO_SCALING);
         HDF5EnumerationValueArray arrayWritten =
                 new HDF5EnumerationValueArray(enumType, new String[]
                     { "TWO", "ONE", "THREE" });

@@ -26,12 +26,15 @@ import ch.systemsx.cisd.base.utilities.OSUtilities;
  * 
  * @author Bernd Rinn
  */
-final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements IHDF5WriterConfigurator
+final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
+        IHDF5WriterConfigurator
 {
 
     private boolean useExtentableDataTypes = true;
 
-    private boolean overwrite = false;
+    private boolean overwriteFile = false;
+
+    private boolean deleteDataSetBeforeWrite;
 
     private FileFormat fileFormat = FileFormat.ALLOW_1_8;
 
@@ -47,7 +50,13 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements IHD
 
     public HDF5WriterConfigurator overwrite()
     {
-        this.overwrite = true;
+        this.overwriteFile = true;
+        return this;
+    }
+
+    public HDF5WriterConfigurator deleteDataSetBeforeWrite()
+    {
+        this.deleteDataSetBeforeWrite = true;
         return this;
     }
 
@@ -81,7 +90,8 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements IHD
         {
             readerWriterOrNull =
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
-                            fileFormat, useExtentableDataTypes, overwrite, syncMode));
+                            fileFormat, useExtentableDataTypes, deleteDataSetBeforeWrite,
+                            overwriteFile, syncMode));
         }
         return (HDF5Writer) readerWriterOrNull;
     }

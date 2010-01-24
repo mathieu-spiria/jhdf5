@@ -21,14 +21,18 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 
 /**
- * An object representing the compression settings that are to be used for a data set.
+ * An object representing the storage features that are to be used for a data set.
  * <p>
- * Currently two types of compressions are supported: <i>deflation</i> (the method used by
- * <code>gzip</code>) and <i>scaling</i>, which can be used if the accuracy of the values are
- * smaller than what the atomic data type can store. Note that <i>scaling</i> in general can be a
- * lossy compression while <i>deflation</i> is always lossless. <i>Scaling</i> compression is only
- * available with HDF5 1.8 and newer. Trying to use <i>scaling</i> in strict HDF5 1.6 compatibility
- * mode will throw an {@link IllegalStateException}.
+ * The available storage layouts are {@link HDF5StorageLayout#COMPACT},
+ * {@link HDF5StorageLayout#CONTIGUOUS} or {@link HDF5StorageLayout#CHUNKED} can be chosen. Only
+ * {@link HDF5StorageLayout#CHUNKED} is extendable and can be compressed.
+ * <p>
+ * Two types of compressions are supported: <i>deflation</i> (the method used by <code>gzip</code>)
+ * and <i>scaling</i>, which can be used if the accuracy of the values are smaller than what the
+ * atomic data type can store. Note that <i>scaling</i> in general can be a lossy compression while
+ * <i>deflation</i> is always lossless. <i>Scaling</i> compression is only available with HDF5 1.8
+ * and newer. Trying to use <i>scaling</i> in strict HDF5 1.6 compatibility mode will throw an
+ * {@link IllegalStateException}.
  * <p>
  * For <i>deflation</i> the deflation level can be chosen to get the right balance between speed of
  * compression and compression ratio. Often the {@link #DEFAULT_DEFLATION_LEVEL} will be the right
@@ -39,7 +43,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  * 
  * @author Bernd Rinn
  */
-abstract class HDF5AbstractCompression
+abstract class HDF5AbstractStorageFeatures
 {
     /**
      * A constant that specifies that no deflation should be used.
@@ -75,10 +79,14 @@ abstract class HDF5AbstractCompression
 
     private final byte scalingFactor;
 
-    HDF5AbstractCompression(final byte deflateLevel, final byte scalingFactor)
+    private final HDF5StorageLayout proposedLayoutOrNull;
+
+    HDF5AbstractStorageFeatures(final HDF5StorageLayout proposedLayoutOrNull,
+            final byte deflateLevel, final byte scalingFactor)
     {
         assert deflateLevel >= 0;
 
+        this.proposedLayoutOrNull = proposedLayoutOrNull;
         this.deflateLevel = deflateLevel;
         this.scalingFactor = scalingFactor;
     }
@@ -88,9 +96,18 @@ abstract class HDF5AbstractCompression
      */
     abstract boolean isCompatibleWithDataClass(int dataClassId);
 
+    /**
+     * Returns the proposed storage layout, or <code>null</code>, if no particular storage layout
+     * should be proposed.
+     */
+    public HDF5StorageLayout tryGetProposedLayout()
+    {
+        return proposedLayoutOrNull;
+    }
+
     boolean requiresChunking()
     {
-        return isDeflating() || isScaling();
+        return isDeflating() || isScaling() || proposedLayoutOrNull == HDF5StorageLayout.CHUNKED;
     }
 
     public boolean isDeflating()

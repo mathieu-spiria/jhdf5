@@ -16,8 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-
-import static ch.systemsx.cisd.hdf5.HDF5IntCompression.INT_NO_COMPRESSION;
+import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
@@ -61,8 +60,7 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                 .byteToByte(value));
     }
 
-    public void setByteArrayAttribute(final String objectPath, final String name,
-            final byte[] value)
+    public void setByteArrayAttribute(final String objectPath, final String name, final byte[] value)
     {
         assert objectPath != null;
         assert name != null;
@@ -102,8 +100,8 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                     final int storageTypeId =
                             baseWriter.h5.createArrayType(H5T_STD_I8LE, value.dimensions(),
                                     registry);
-                    baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId,
-                            value.getAsFlatArray());
+                    baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId, value
+                            .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -115,7 +113,7 @@ class HDF5ByteWriter implements IHDF5ByteWriter
     {
         setByteMDArrayAttribute(objectPath, name, new MDByteArray(value));
     }
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -125,49 +123,8 @@ class HDF5ByteWriter implements IHDF5ByteWriter
         assert objectPath != null;
 
         baseWriter.checkOpen();
-        baseWriter.writeScalar(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDFNativeData.
-                byteToByte(value));
-    }
-
-    public void createByteArrayCompact(final String objectPath, final long length)
-    {
-        assert objectPath != null;
-        assert length > 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I8LE, INT_NO_COMPRESSION, new long[]
-                        { length }, null, true, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    public void writeByteArrayCompact(final String objectPath, final byte[] data)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I8LE, dimensions, 
-                                    INT_NO_COMPRESSION, true, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
-                            data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        baseWriter.writeScalar(objectPath, H5T_STD_I8LE, H5T_NATIVE_INT8, HDFNativeData
+                .byteToByte(value));
     }
 
     public void writeByteArray(final String objectPath, final byte[] data)
@@ -176,7 +133,7 @@ class HDF5ByteWriter implements IHDF5ByteWriter
     }
 
     public void writeByteArray(final String objectPath, final byte[] data,
-            final HDF5IntCompression compression)
+            final HDF5IntStorageFeatures features)
     {
         assert data != null;
 
@@ -187,9 +144,8 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I8LE, new long[]
-                                { data.length }, compression, false, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
-                            data);
+                                { data.length }, features, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
             };
@@ -207,7 +163,7 @@ class HDF5ByteWriter implements IHDF5ByteWriter
     }
 
     public void createByteArray(final String objectPath, final long size, final int blockSize,
-            final HDF5IntCompression compression)
+            final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert size >= 0;
@@ -218,9 +174,9 @@ class HDF5ByteWriter implements IHDF5ByteWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I8LE, compression, new long[]
+                    baseWriter.createDataSet(objectPath, H5T_STD_I8LE, features, new long[]
                         { size }, new long[]
-                        { blockSize }, false, registry);
+                        { blockSize }, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -252,13 +208,13 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
-                    final int dataSpaceId = 
+                    final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId = 
+                    final int memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, 
-                            H5P_DEFAULT, data);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data);
                     return null; // Nothing to return.
                 }
             };
@@ -277,18 +233,17 @@ class HDF5ByteWriter implements IHDF5ByteWriter
         writeByteMatrix(objectPath, data, INT_NO_COMPRESSION);
     }
 
-    public void writeByteMatrix(final String objectPath, final byte[][] data, 
-            final HDF5IntCompression compression)
+    public void writeByteMatrix(final String objectPath, final byte[][] data,
+            final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
         assert HDF5Utils.areMatrixDimensionsConsistent(data);
 
-        writeByteMDArray(objectPath, new MDByteArray(data), compression);
+        writeByteMDArray(objectPath, new MDByteArray(data), features);
     }
 
-    public void createByteMatrix(final String objectPath, final int blockSizeX, 
-            final int blockSizeY)
+    public void createByteMatrix(final String objectPath, final int blockSizeX, final int blockSizeY)
     {
         createByteMatrix(objectPath, 0, 0, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
     }
@@ -300,7 +255,7 @@ class HDF5ByteWriter implements IHDF5ByteWriter
     }
 
     public void createByteMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final HDF5IntCompression compression)
+            final int blockSizeX, final int blockSizeY, final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert sizeX >= 0;
@@ -317,9 +272,8 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                         { sizeX, sizeY };
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
-                    baseWriter
-                            .createDataSet(objectPath, H5T_STD_I8LE, compression, dimensions,
-                            blockDimensions, false, registry);
+                    baseWriter.createDataSet(objectPath, H5T_STD_I8LE, features, dimensions,
+                            blockDimensions, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -364,7 +318,7 @@ class HDF5ByteWriter implements IHDF5ByteWriter
     }
 
     public void writeByteMDArray(final String objectPath, final MDByteArray data,
-            final HDF5IntCompression compression)
+            final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
@@ -375,10 +329,10 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I8LE, 
-                                    data.longDimensions(), compression, false, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
-                            data.getAsFlatArray());
+                            baseWriter.getDataSetId(objectPath, H5T_STD_I8LE,
+                                    data.longDimensions(), features, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
+                            .getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -387,7 +341,8 @@ class HDF5ByteWriter implements IHDF5ByteWriter
 
     public void createByteMDArray(final String objectPath, final int[] blockDimensions)
     {
-        createByteMDArray(objectPath, new long[blockDimensions.length], blockDimensions, INT_NO_COMPRESSION);
+        createByteMDArray(objectPath, new long[blockDimensions.length], blockDimensions,
+                INT_NO_COMPRESSION);
     }
 
     public void createByteMDArray(final String objectPath, final long[] dimensions,
@@ -397,7 +352,7 @@ class HDF5ByteWriter implements IHDF5ByteWriter
     }
 
     public void createByteMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final HDF5IntCompression compression)
+            final int[] blockDimensions, final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert dimensions != null;
@@ -408,8 +363,8 @@ class HDF5ByteWriter implements IHDF5ByteWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I8LE, compression, dimensions, 
-                            MDArray.toLong(blockDimensions), false, registry);
+                    baseWriter.createDataSet(objectPath, H5T_STD_I8LE, features, dimensions,
+                            MDArray.toLong(blockDimensions), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -452,13 +407,13 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                     final int dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId = 
+                    final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId = 
+                    final int memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, 
-                            H5P_DEFAULT, data.getAsFlatArray());
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -489,15 +444,15 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                     final int dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId = 
+                    final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId = 
+                    final int memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
                     baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
                             longBlockDimensions);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data.getAsFlatArray());
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };

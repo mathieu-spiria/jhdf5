@@ -357,7 +357,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void writeBitField(final String objectPath, final BitSet data,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
     //
     // Opaque
@@ -400,7 +400,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
     /**
      * Creates an opaque data set that will be represented as a <code>byte</code> array (of rank 1).
@@ -443,16 +443,16 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      *         to represent this opaque type.
      */
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
-            final long size, final int blockSize, final HDF5GenericCompression compression);
+            final long size, final int blockSize, final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out a block of an opaque data type represented by a <code>byte</code> array (of rank
      * 1). The data set needs to have been created by
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericCompression)} beforehand.
+     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericCompression)} call that
+     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)} call that
      * was used to created the data set.
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
@@ -469,7 +469,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     /**
      * Writes out a block of an opaque data type represented by a <code>byte</code> array (of rank
      * 1). The data set needs to have been created by
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericCompression)} beforehand.
+     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of
      * {@link #writeOpaqueByteArrayBlock(String, HDF5OpaqueType, byte[], long)} if the total size of
@@ -477,7 +477,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericCompression)} call that
+     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)} call that
      * was used to created the data set.
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
@@ -570,7 +570,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void createTimeStampArray(final String objectPath, final long size, final int blockSize,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out a time stamp array (of rank 1). The data set will be tagged as type variant
@@ -596,16 +596,16 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void writeTimeStampArray(final String objectPath, final long[] timeStamps,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out a block of a time stamp array (which is stored as a <code>long</code> array of
      * rank 1). The data set needs to have been created by
-     * {@link #createTimeStampArray(String, long, int, HDF5GenericCompression)} beforehand.
+     * {@link #createTimeStampArray(String, long, int, HDF5GenericStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createLongArray(String, long, int, HDF5IntCompression)} call that was used to create
+     * {@link #createLongArray(String, long, int, HDF5IntStorageFeatures)} call that was used to create
      * the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -619,14 +619,14 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     /**
      * Writes out a block of a time stamp array (which is stored as a <code>long</code> array of
      * rank 1). The data set needs to have been created by
-     * {@link #createTimeStampArray(String, long, int, HDF5GenericCompression)} beforehand.
+     * {@link #createTimeStampArray(String, long, int, HDF5GenericStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of {@link #writeTimeStampArrayBlock(String, long[], long)} if the
      * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createLongArray(String, long, int, HDF5IntCompression)} call that was used to create
+     * {@link #createLongArray(String, long, int, HDF5IntStorageFeatures)} call that was used to create
      * the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -682,10 +682,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dates The dates to write.
      * @param compression The compression parameters of the data set.
-     * @see #writeTimeStampArray(String, long[], HDF5GenericCompression)
+     * @see #writeTimeStampArray(String, long[], HDF5GenericStorageFeatures)
      */
     public void writeDateArray(final String objectPath, final Date[] dates,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
     //
     // Duration
@@ -784,7 +784,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      */
     public void createTimeDurationArray(final String objectPath, final long size,
             final int blockSize, final HDF5TimeUnit timeUnit,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out a time duration array in seconds (of rank 1). The data set will be tagged as type
@@ -822,17 +822,17 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
-            final HDF5TimeUnit timeUnit, final HDF5IntCompression compression);
+            final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures compression);
 
     /**
      * Writes out a block of a time duration array (which is stored as a <code>long</code> array of
      * rank 1). The data set needs to have been created by
-     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericCompression)}
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericStorageFeatures)}
      * beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericCompression)}
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericStorageFeatures)}
      * call that was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -846,7 +846,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     /**
      * Writes out a block of a time duration array (which is stored as a <code>long</code> array of
      * rank 1). The data set needs to have been created by
-     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericCompression)}
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericStorageFeatures)}
      * beforehand.
      * <p>
      * Use this method instead of
@@ -855,7 +855,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericCompression)}
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericStorageFeatures)}
      * call that was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -918,7 +918,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void writeString(final String objectPath, final String data,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out a <code>String</code> with a fixed maximal length.
@@ -929,7 +929,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void writeString(final String objectPath, final String data, final int maxLength,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out a <code>String</code> array (of rank 1).
@@ -939,7 +939,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void writeStringArray(final String objectPath, final String[] data,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out a <code>String</code> array (of rank 1). Each element of the array will have a
@@ -970,7 +970,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
     /**
      * Creates a <code>String</code> array (of rank 1) for Strings of length <var>maxLength</var>.
@@ -1010,16 +1010,16 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void createStringArray(final String objectPath, final int maxLength, final long size,
-            final int blockSize, final HDF5GenericCompression compression);
+            final int blockSize, final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out a block of a <code>String</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createStringArray(String, int, long, int, HDF5GenericCompression)}
+     * been created by {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)}
      * beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createStringArray(String, int, long, int, HDF5GenericCompression)} call that was used
+     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} call that was used
      * to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1032,7 +1032,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Writes out a block of a <code>String</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createStringArray(String, int, long, int, HDF5GenericCompression)}
+     * been created by {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)}
      * beforehand.
      * <p>
      * Use this method instead of {@link #writeStringArrayBlock(String, String[], long)} if the
@@ -1040,7 +1040,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createStringArray(String, int, long, int, HDF5GenericCompression)} call that was used
+     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} call that was used
      * to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1130,7 +1130,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
     public void writeEnumArray(final String objectPath, final HDF5EnumerationValueArray data,
-            final HDF5IntCompression compression) throws HDF5JavaException;
+            final HDF5IntStorageFeatures compression) throws HDF5JavaException;
 
     /**
      * Creates am enum array (of rank 1). The initial size of the array is 0.
@@ -1170,17 +1170,17 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
-            final long size, final int blockSize, final HDF5IntCompression compression);
+            final long size, final int blockSize, final HDF5IntStorageFeatures compression);
 
     /**
      * Writes out a block of an enum array (of rank 1). The data set needs to have been created by
-     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntCompression)}
+     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntStorageFeatures)}
      * beforehand. Obviously the {@link HDF5EnumerationType} of the create call and this call needs
      * to match.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntCompression)} call
+     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntStorageFeatures)} call
      * that was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1193,13 +1193,13 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Writes out a block of an enum array (of rank 1). The data set needs to have been created by
-     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntCompression)}
+     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntStorageFeatures)}
      * beforehand. Obviously the {@link HDF5EnumerationType} of the create call and this call needs
      * to match.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntCompression)} call
+     * {@link #createEnumArray(String, HDF5EnumerationType, long, int, HDF5IntStorageFeatures)} call
      * that was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1252,33 +1252,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
             final HDF5CompoundType<T> type, final T[] data);
 
     /**
-     * Writes out an array (of rank 1) of compound values. Uses a compact storage layout. Must only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     * @param compression The compression parameters of the data set.
-     */
-    public <T> void writeCompoundArrayCompact(final String objectPath,
-            final HDF5CompoundType<T> type, final T[] data, final HDF5GenericCompression compression);
-
-    /**
-     * Writes out an array (of rank 1) of compound values. Uses a compact storage layout. Must only
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param data The value of the data set.
-     * @param compression The compression parameters of the data set.
-     * @param inspectorOrNull The inspector to be called after translating the Java objects to a
-     *            byte array and before writing the byte array to the HDF5.
-     */
-    public <T> void writeCompoundArrayCompact(final String objectPath,
-            final HDF5CompoundType<T> type, final T[] data,
-            final HDF5GenericCompression compression, final IByteArrayInspector inspectorOrNull);
-
-    /**
      * Writes out an array (of rank 1) of compound values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1297,7 +1270,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final T[] data, final HDF5GenericCompression compression);
+            final T[] data, final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out an array (of rank 1) of compound values.
@@ -1310,7 +1283,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      *            byte array and before writing the byte array to the HDF5.
      */
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final T[] data, final HDF5GenericCompression compression,
+            final T[] data, final HDF5GenericStorageFeatures compression,
             final IByteArrayInspector inspectorOrNull);
 
     /**
@@ -1400,7 +1373,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final long size, final int blockSize, final HDF5GenericCompression compression);
+            final long size, final int blockSize, final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out an array (of rank N) of compound values.
@@ -1421,7 +1394,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param compression The compression parameters of the data set.
      */
     public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final MDArray<T> data, final HDF5GenericCompression compression);
+            final MDArray<T> data, final HDF5GenericStorageFeatures compression);
 
     /**
      * Writes out an array (of rank N) of compound values.
@@ -1434,7 +1407,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      *            byte array and before writing the byte array to the HDF5.
      */
     public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final MDArray<T> data, final HDF5GenericCompression compression,
+            final MDArray<T> data, final HDF5GenericStorageFeatures compression,
             final IByteArrayInspector inspectorOrNull);
 
     /**
@@ -1559,6 +1532,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      */
     public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final long[] dimensions, final int[] blockDimensions,
-            final HDF5GenericCompression compression);
+            final HDF5GenericStorageFeatures compression);
 
 }

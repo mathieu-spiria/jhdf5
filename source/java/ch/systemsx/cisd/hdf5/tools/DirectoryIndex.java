@@ -33,7 +33,7 @@ import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping;
 import ch.systemsx.cisd.hdf5.HDF5CompoundType;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType;
-import ch.systemsx.cisd.hdf5.HDF5GenericCompression;
+import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
@@ -381,7 +381,7 @@ public class DirectoryIndex implements Iterable<Link>
             final CRC32 crc32 = new CRC32();
             hdf5WriterOrNull.writeCompoundArray(indexDataSetName, getHDF5LinkCompoundType(
                     hdf5WriterOrNull, linkTypeEnumeration), linksOrNull,
-                    HDF5GenericCompression.GENERIC_NO_COMPRESSION,
+                    HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                     new IHDF5Reader.IByteArrayInspector()
                         {
                             public void inspect(byte[] byteArray)

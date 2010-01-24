@@ -19,7 +19,7 @@ package ch.systemsx.cisd.hdf5;
 /**
  * The configuration of the writer is done by chaining calls to configuration methods before calling
  * {@link #writer()}.
- *
+ * 
  * @author Bernd Rinn
  */
 public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
@@ -43,12 +43,13 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
          */
         NO_SYNC,
         /**
-         * Synchronize whenever {@link IHDF5Writer#flush()} or {@link IHDF5Writer#close()} are called.
+         * Synchronize whenever {@link IHDF5Writer#flush()} or {@link IHDF5Writer#close()} are
+         * called.
          */
         SYNC,
         /**
-         * Synchronize whenever {@link IHDF5Writer#flush()} or {@link IHDF5Writer#close()} are called.
-         * Block until synchronize is finished.
+         * Synchronize whenever {@link IHDF5Writer#flush()} or {@link IHDF5Writer#close()} are
+         * called. Block until synchronize is finished.
          */
         SYNC_BLOCK,
         /**
@@ -82,7 +83,7 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
          * Enforce compatibility with HDF5 1.8 format.
          */
         STRICTLY_1_8;
-        
+
         /**
          * Returns <code>true</code> if using HDF5 1.8 features is OK.
          */
@@ -90,7 +91,7 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
         {
             return ordinal() > STRICTLY_1_6.ordinal();
         }
-        
+
     }
 
     /**
@@ -98,6 +99,15 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
      * deleted.
      */
     public IHDF5WriterConfigurator overwrite();
+
+    /**
+     * Delete a data set before writing to it, if it exists. This way, the storage features will not
+     * be re-used from an old data set, but new storage features will be set instead.
+     * <p>
+     * Note also that a call to one of the <code>create...</code> methods for an existing data set
+     * will fail with <em>"object already exists</em> if this option is not enabled.
+     */
+    public HDF5WriterConfigurator deleteDataSetBeforeWrite();
 
     /**
      * Use data types which can not be extended later on. This may reduce the initial size of the

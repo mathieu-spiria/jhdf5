@@ -93,24 +93,6 @@ interface IHDF5ByteWriter
     public void writeByte(final String objectPath, final byte value);
 
     /**
-     * Creates a <code>byte</code> array (of rank 1). Uses a compact storage layout. Should only 
-     * be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the data set to create.
-     */
-    public void createByteArrayCompact(final String objectPath, final long size);
-
-    /**
-     * Writes out a <code>byte</code> array (of rank 1). Uses a compact storage layout. Should 
-     * only be used for small data sets.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>.
-     */
-    public void writeByteArrayCompact(final String objectPath, final byte[] data);
-
-    /**
      * Writes out a <code>byte</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -123,10 +105,10 @@ interface IHDF5ByteWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeByteArray(final String objectPath, final byte[] data, 
-            final HDF5IntCompression compression);
+            final HDF5IntStorageFeatures features);
 
     /**
      * Creates a <code>byte</code> array (of rank 1). The initial size of the array is 0.
@@ -158,20 +140,20 @@ interface IHDF5ByteWriter
      *          set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>compression</code> is <code>HDF5IntCompression.NO_COMPRESSION</code>.
-     * @param compression The compression parameters of the data set.
+     *                <code>compression</code> is <code>HDF5IntStorageFeature.NO_COMPRESSION</code>.
+     * @param features The storage features of the data set.
      */
     public void createByteArray(final String objectPath, final long size, final int blockSize,
-            final HDF5IntCompression compression);
+            final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a <code>byte</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createByteArray(String, long, int, HDF5IntCompression)}
+     * been created by {@link #createByteArray(String, long, int, HDF5IntStorageFeatures)}
      * beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createByteArray(String, long, int, HDF5IntCompression)} call that was used to
+     * {@link #createByteArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
      * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -184,7 +166,7 @@ interface IHDF5ByteWriter
 
     /**
      * Writes out a block of a <code>byte</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createByteArray(String, long, int, HDF5IntCompression)}
+     * been created by {@link #createByteArray(String, long, int, HDF5IntStorageFeatures)}
      * beforehand.
      * <p>
      * Use this method instead of {@link #writeByteArrayBlock(String, byte[], long)} if the
@@ -192,7 +174,7 @@ interface IHDF5ByteWriter
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createByteArray(String, long, int, HDF5IntCompression)} call that was used to
+     * {@link #createByteArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
      * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -220,10 +202,10 @@ interface IHDF5ByteWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeByteMatrix(final String objectPath, final byte[][] data, 
-            final HDF5IntCompression compression);
+            final HDF5IntStorageFeatures features);
 
     /**
      * Creates a <code>byte</code> matrix (array of rank 2). The initial size of the matrix is 0.
@@ -255,23 +237,23 @@ interface IHDF5ByteWriter
      * @param sizeY The size of the y dimension of the byte matrix to create.
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void createByteMatrix(final String objectPath, final long sizeX, final long sizeY,
-            final int blockSizeX, final int blockSizeY, final HDF5IntCompression compression);
+            final int blockSizeX, final int blockSizeY, final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a <code>byte</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntCompression)} beforehand.
+     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of
-     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntCompression)} if the total
+     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} if the total
      * size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
      * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntCompression)} call that was
+     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -288,14 +270,14 @@ interface IHDF5ByteWriter
     /**
      * Writes out a block of a <code>byte</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntCompression)} beforehand.
+     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of {@link #writeByteMatrixBlock(String, byte[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntCompression)} call that was
+     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -309,14 +291,14 @@ interface IHDF5ByteWriter
     /**
      * Writes out a block of a <code>byte</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntCompression)} beforehand.
+     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of {@link #writeByteMatrixBlock(String, byte[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntCompression)} call that was
+     * {@link #createByteMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -346,10 +328,10 @@ interface IHDF5ByteWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void writeByteMDArray(final String objectPath, final MDByteArray data,
-            final HDF5IntCompression compression);
+            final HDF5IntStorageFeatures features);
 
     /**
      * Creates a multi-dimensional <code>byte</code> array. The initial size of the array is 0.
@@ -375,10 +357,10 @@ interface IHDF5ByteWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The dimensions of the array.
      * @param blockDimensions The dimensions of one block (chunk) of the array.
-     * @param compression The compression parameters of the data set.
+     * @param features The storage features of the data set.
      */
     public void createByteMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final HDF5IntCompression compression);
+            final int[] blockDimensions, final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a multi-dimensional <code>byte</code> array.
