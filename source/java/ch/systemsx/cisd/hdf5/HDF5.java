@@ -835,10 +835,12 @@ class HDF5
                 int dataTypeId = getDataTypeForDataSet(dataSetId, registry);
                 if (getClassType(dataTypeId) == H5T_ARRAY)
                 {
+                    H5Dclose(dataSetId);
                     throw new HDF5JavaException("Cannot partially overwrite array type.");
                 }
                 if (HDF5Utils.isInBounds(oldDimensions, dimensions) == false)
                 {
+                    H5Dclose(dataSetId);
                     throw new HDF5JavaException("New data set dimensions are out of bounds.");
                 }
             }
