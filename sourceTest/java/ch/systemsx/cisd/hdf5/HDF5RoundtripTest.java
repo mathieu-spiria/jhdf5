@@ -281,7 +281,6 @@ public class HDF5RoundtripTest
         test.testWriteByteMatrixDataSetBlockWiseMismatch();
         test.testReadFloatMatrixDataSetBlockWise();
         test.testWriteFloatMatrixDataSetBlockWise();
-        test.testExtendCompactDataset();
         test.testExtendContiguousDataset();
         test.testAutomaticDeletionOfDataSetOnWrite();
         test.testAutomaticDeletionOfDataSetOnCreate();
@@ -870,39 +869,6 @@ public class HDF5RoundtripTest
     }
 
     @Test
-    public void testExtendCompactDataset()
-    {
-        final File datasetFile = new File(workingDirectory, "extendCompact.h5");
-        datasetFile.delete();
-        assertFalse(datasetFile.exists());
-        datasetFile.deleteOnExit();
-        final String dsName = "ds";
-        long[] data = new long[]
-            { 1, 2, 3 };
-        IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        // Set maxdims of 5 so that we can overwrite the data set with a larger one later on.
-        writer.createLongArray(dsName, 5, 0, HDF5IntStorageFeatures.INT_COMPACT);
-        writer.writeLongArray(dsName, data);
-        assertEquals(HDF5StorageLayout.COMPACT, writer.getDataSetInformation(dsName)
-                .getStorageLayout());
-        writer.close();
-        IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
-        reader.close();
-        // Now write a larger data set and see whether it is correctly extended.
-        writer = HDF5FactoryProvider.get().open(datasetFile);
-        data = new long[]
-            { 17, 42, 1, 2, 3 };
-        writer.writeLongArray(dsName, data);
-        assertEquals(HDF5StorageLayout.COMPACT, writer.getDataSetInformation(dsName)
-                .getStorageLayout());
-        writer.close();
-        reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
-        reader.close();
-    }
-
-    @Test
     public void testExtendChunkedDataset()
     {
         final File datasetFile = new File(workingDirectory, "extendChunked.h5");
@@ -911,13 +877,14 @@ public class HDF5RoundtripTest
         datasetFile.deleteOnExit();
         final String dsName = "ds";
         long[] data = new long[]
-            { 1, 2, 3, 4, 5 };
+            { 1, 2, 3, 4 };
         IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         writer.createLongArray(dsName, 5, 3);
-        writer.writeLongArray(dsName, data);
+        writer.writeLongArray(dsName, data, HDF5IntStorageFeatures.INT_NO_COMPRESSION_KEEP);
         writer.close();
         IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
+        long[] dataRead = reader.readLongArray(dsName);
+        assertTrue(Arrays.equals(data, dataRead));
         reader.close();
         // Now write a larger data set and see whether the data set is correctly extended.
         writer = HDF5FactoryProvider.get().open(datasetFile);
@@ -926,7 +893,8 @@ public class HDF5RoundtripTest
         writer.writeLongArray(dsName, data);
         writer.close();
         reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        assertTrue(Arrays.equals(data, reader.readLongArray(dsName)));
+        dataRead = reader.readLongArray(dsName);
+        assertTrue(Arrays.equals(data, dataRead));
         reader.close();
     }
 
@@ -971,8 +939,8 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile).deleteDataSetBeforeWrite().writer();
-        writer.createFloatArray("f", 12, 6, HDF5FloatStorageFeatures.FLOAT_COMPACT);
+                new HDF5WriterConfigurator(datasetFile).writer();
+        writer.createFloatArray("f", 12, HDF5FloatStorageFeatures.FLOAT_COMPACT);
         writer.writeFloatArray("f", new float[]
             { 1f, 2f, 3f, 4f, 5f });
         writer.close();
@@ -991,7 +959,7 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer =
-                new HDF5WriterConfigurator(datasetFile).deleteDataSetBeforeWrite().writer();
+                new HDF5WriterConfigurator(datasetFile).writer();
         writer.createFloatArray("f", 12, 6, HDF5FloatStorageFeatures.FLOAT_COMPACT);
         writer.createFloatArray("f", 10, HDF5FloatStorageFeatures.FLOAT_CONTIGUOUS);
         // This won't overwrite the data set as it is a block write command.
@@ -1679,7 +1647,7 @@ public class HDF5RoundtripTest
             arrayWritten[i] = i;
         }
         writer.createFloatArray(dsName, dataSetSize, blockSize);
-        writer.writeFloatArray(dsName, arrayWritten);
+        writer.writeFloatArrayBlock(dsName, arrayWritten, 0);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         int i = 0;
@@ -1833,7 +1801,7 @@ public class HDF5RoundtripTest
         }
         final MDFloatArray arrayWritten = new MDFloatArray(flattenedArray, dataSetSize);
         writer.createFloatMDArray(dsName, dataSetSize, blockSize);
-        writer.writeFloatMDArray(dsName, arrayWritten);
+        writer.writeFloatMDArrayBlock(dsName, arrayWritten, new long[blockSize.length]);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         int i = 0;

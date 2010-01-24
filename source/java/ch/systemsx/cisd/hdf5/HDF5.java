@@ -798,6 +798,13 @@ class HDF5
         checkMaxLength(path);
         final boolean overwriteMode = (storageDataTypeId > -1);
         final int dataSetId = H5Dopen(fileId, path, H5P_DEFAULT);
+        registry.registerCleanUp(new Runnable()
+        {
+            public void run()
+            {
+                H5Dclose(dataSetId);
+            }
+        });
         final long[] oldDimensions = getDataDimensions(dataSetId, registry);
         if (Arrays.equals(oldDimensions, dimensions) == false)
         {
@@ -817,41 +824,20 @@ class HDF5
                 }
             } else if (overwriteMode)
             {
-                // CONTIGUOUS, COMPACT and ARRAY data sets are fixed size, thus we need to delete
-                // and re-create it, if we are in overwrite mode. Keep the type, except if it is an
-                // ARRAY type.
-                int dataTypeId = getDataTypeForDataSet(dataSetId, registry);
-                if (getClassType(dataTypeId) == H5T_ARRAY)
-                {
-                    dataTypeId = storageDataTypeId;
-                }
-                H5Dclose(dataSetId);
-                deleteObject(fileId, path);
-                return createDataSet(fileId, dimensions, null, dataTypeId,
-                        HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, path, layout, fileFormat,
-                        registry);
+                throw new HDF5JavaException("Cannot change dimensions on non-extendable data set.");
             } else
             {
                 int dataTypeId = getDataTypeForDataSet(dataSetId, registry);
                 if (getClassType(dataTypeId) == H5T_ARRAY)
                 {
-                    H5Dclose(dataSetId);
                     throw new HDF5JavaException("Cannot partially overwrite array type.");
                 }
                 if (HDF5Utils.isInBounds(oldDimensions, dimensions) == false)
                 {
-                    H5Dclose(dataSetId);
                     throw new HDF5JavaException("New data set dimensions are out of bounds.");
                 }
             }
         }
-        registry.registerCleanUp(new Runnable()
-            {
-                public void run()
-                {
-                    H5Dclose(dataSetId);
-                }
-            });
         return dataSetId;
     }
 

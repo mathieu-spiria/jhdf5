@@ -80,13 +80,16 @@ abstract class HDF5AbstractStorageFeatures
     private final byte scalingFactor;
 
     private final HDF5StorageLayout proposedLayoutOrNull;
+    
+    private final boolean keepDataSetIfExists;
 
     HDF5AbstractStorageFeatures(final HDF5StorageLayout proposedLayoutOrNull,
-            final byte deflateLevel, final byte scalingFactor)
+            final boolean keepDataSetIfExists, final byte deflateLevel, final byte scalingFactor)
     {
         assert deflateLevel >= 0;
 
         this.proposedLayoutOrNull = proposedLayoutOrNull;
+        this.keepDataSetIfExists = keepDataSetIfExists;
         this.deflateLevel = deflateLevel;
         this.scalingFactor = scalingFactor;
     }
@@ -118,6 +121,11 @@ abstract class HDF5AbstractStorageFeatures
     public boolean isScaling()
     {
         return scalingFactor >= 0;
+    }
+
+    boolean isKeepDataSetIfExists()
+    {
+        return keepDataSetIfExists;
     }
 
     void checkScalingOK(FileFormat fileFormat) throws IllegalStateException

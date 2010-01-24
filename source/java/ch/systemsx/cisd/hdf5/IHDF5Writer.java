@@ -303,6 +303,26 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     // /////////////////////
 
     //
+    // Generic
+    //
+
+    /**
+     * Sets the data set size of a one-dimensional data set to <var>newSize</var>. Note that this
+     * method can only be applied to extendable data sets.
+     * 
+     * @throw HDF5JavaException If the data set <var>objectPath</var> is not extendable.
+     */
+    public void setDataSetSize(final String objectPath, final long newSize);
+
+    /**
+     * Sets the data set size of a multi-dimensional data set to <var>newDimensions</var>. Note that
+     * this method can only be applied to extendable data sets.
+     * 
+     * @throw HDF5JavaException If the data set <var>objectPath</var> is not extendable.
+     */
+    public void setDataSetDimensions(final String objectPath, final long[] newDimensions);
+
+    //
     // Boolean
     //
 
@@ -448,12 +468,13 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     /**
      * Writes out a block of an opaque data type represented by a <code>byte</code> array (of rank
      * 1). The data set needs to have been created by
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)} beforehand.
+     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)}
+     * beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)} call that
-     * was used to created the data set.
+     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)} call
+     * that was used to created the data set.
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
      * {@link #readAsByteArrayBlock(String, int, long)} instead.
@@ -469,7 +490,8 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     /**
      * Writes out a block of an opaque data type represented by a <code>byte</code> array (of rank
      * 1). The data set needs to have been created by
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)} beforehand.
+     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)}
+     * beforehand.
      * <p>
      * Use this method instead of
      * {@link #writeOpaqueByteArrayBlock(String, HDF5OpaqueType, byte[], long)} if the total size of
@@ -477,8 +499,8 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)} call that
-     * was used to created the data set.
+     * {@link #createOpaqueByteArray(String, String, long, int, HDF5GenericStorageFeatures)} call
+     * that was used to created the data set.
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
      * {@link #readAsByteArrayBlockWithOffset(String, int, long)} instead.
@@ -605,8 +627,8 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createLongArray(String, long, int, HDF5IntStorageFeatures)} call that was used to create
-     * the data set.
+     * {@link #createLongArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
+     * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -626,8 +648,8 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createLongArray(String, long, int, HDF5IntStorageFeatures)} call that was used to create
-     * the data set.
+     * {@link #createLongArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
+     * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -1014,13 +1036,13 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Writes out a block of a <code>String</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)}
-     * beforehand.
+     * been created by
+     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} call that was used
-     * to create the data set.
+     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} call that was
+     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -1032,16 +1054,16 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Writes out a block of a <code>String</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)}
-     * beforehand.
+     * been created by
+     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of {@link #writeStringArrayBlock(String, String[], long)} if the
      * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} call that was used
-     * to create the data set.
+     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} call that was
+     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -1067,7 +1089,8 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void writeStringVariableLength(final String objectPath, final String data);
 
     /**
-     * Writes out a <code>String[]</code> where each String of the array has a variable maximal length.
+     * Writes out a <code>String[]</code> where each String of the array has a variable maximal
+     * length.
      * <p>
      * The advantage of this method over {@link #writeStringArray(String, String[])} is that when
      * writing a new string later it can have a different (also greater) length. The disadvantage is
@@ -1080,10 +1103,10 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void writeStringVariableLengthArray(final String objectPath, final String[] data);
 
     public void createStringVariableLengthArray(final String objectPath, final int blockSize);
-    
+
     public void createStringVariableLengthArray(final String objectPath, final long size,
             final int blockSize);
-    
+
     //
     // Enum
     //

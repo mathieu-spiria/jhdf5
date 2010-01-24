@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5DatasetInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.namedthread.NamingThreadPoolExecutor;
@@ -108,8 +109,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     private final BlockingQueue<Command> commandQueue;
 
-    private final boolean deleteDataSetBeforeWrite;
-
     final boolean useExtentableDataTypes;
 
     final boolean overwriteFile;
@@ -121,8 +120,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
     final int variableLengthStringDataTypeId;
 
     HDF5BaseWriter(File hdf5File, boolean performNumericConversions, FileFormat fileFormat,
-            boolean useExtentableDataTypes, boolean deleteDataSetBeforeWrite,
-            boolean overwriteFile, SyncMode syncMode)
+            boolean useExtentableDataTypes, boolean overwriteFile, SyncMode syncMode)
     {
         super(hdf5File, performNumericConversions, fileFormat, overwriteFile);
         try
@@ -135,7 +133,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
         this.fileFormat = fileFormat;
         this.useExtentableDataTypes = useExtentableDataTypes;
-        this.deleteDataSetBeforeWrite = deleteDataSetBeforeWrite;
         this.overwriteFile = overwriteFile;
         this.syncMode = syncMode;
         readNamedDataTypes();
@@ -481,8 +478,12 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final boolean chunkSizeProvided =
                 (chunkSizeOrNull != null && isNonPositive(chunkSizeOrNull) == false);
         final long[] definitiveChunkSizeOrNull;
-        if (deleteDataSetBeforeWrite && h5.exists(fileId, objectPath))
+        if (h5.exists(fileId, objectPath))
         {
+            if (features.isKeepDataSetIfExists())
+            {
+                return h5.openDataSet(fileId, objectPath, registry);
+            }
             h5.deleteObject(fileId, objectPath);
         }
         if (empty)
@@ -574,11 +575,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * Returns the data set id for the given <var>objectPath</var>.
      */
     int getDataSetId(final String objectPath, final int storageDataTypeId, final long[] dimensions,
-            final HDF5AbstractStorageFeatures compression, ICleanUpRegistry registry)
+            final HDF5AbstractStorageFeatures features, ICleanUpRegistry registry)
     {
         final int dataSetId;
         boolean exists = h5.exists(fileId, objectPath);
-        if (exists && deleteDataSetBeforeWrite)
+        if (exists && features.isKeepDataSetIfExists() == false)
         {
             h5.deleteObject(fileId, objectPath);
             exists = false;
@@ -591,10 +592,31 @@ final class HDF5BaseWriter extends HDF5BaseReader
         } else
         {
             dataSetId =
-                    createDataSet(objectPath, storageDataTypeId, compression, dimensions, null,
+                    createDataSet(objectPath, storageDataTypeId, features, dimensions, null,
                             registry);
         }
         return dataSetId;
+    }
+
+    void setDataSetDimensions(final String objectPath, final long[] newDimensions,
+            ICleanUpRegistry registry)
+    {
+        assert newDimensions != null;
+
+        final int dataSetId = h5.openDataSet(fileId, objectPath, registry);
+        try
+        {
+            h5.setDataSetExtentChunked(dataSetId, newDimensions);
+        } catch (HDF5DatasetInterfaceException ex)
+        {
+            if (HDF5StorageLayout.CHUNKED != h5.getLayout(dataSetId, registry))
+            {
+                throw new HDF5JavaException("Cannot change dimensions of non-extendable data set.");
+            } else
+            {
+                throw ex;
+            }
+        }
     }
 
     void setAttribute(final String objectPath, final String name, final int storageDataTypeId,

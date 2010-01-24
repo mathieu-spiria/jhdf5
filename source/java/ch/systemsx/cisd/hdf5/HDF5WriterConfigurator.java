@@ -34,8 +34,6 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
 
     private boolean overwriteFile = false;
 
-    private boolean deleteDataSetBeforeWrite;
-
     private FileFormat fileFormat = FileFormat.ALLOW_1_8;
 
     // For Windows, use a blocking sync mode by default as otherwise the mandatory locks are up for
@@ -51,12 +49,6 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     public HDF5WriterConfigurator overwrite()
     {
         this.overwriteFile = true;
-        return this;
-    }
-
-    public HDF5WriterConfigurator deleteDataSetBeforeWrite()
-    {
-        this.deleteDataSetBeforeWrite = true;
         return this;
     }
 
@@ -90,8 +82,7 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
         {
             readerWriterOrNull =
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
-                            fileFormat, useExtentableDataTypes, deleteDataSetBeforeWrite,
-                            overwriteFile, syncMode));
+                            fileFormat, useExtentableDataTypes, overwriteFile, syncMode));
         }
         return (HDF5Writer) readerWriterOrNull;
     }

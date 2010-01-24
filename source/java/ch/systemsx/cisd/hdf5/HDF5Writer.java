@@ -413,6 +413,29 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     // /////////////////////
 
     //
+    // Generic
+    //
+    
+    public void setDataSetSize(final String objectPath, final long newSize)
+    {
+        setDataSetDimensions(objectPath, new long[] { newSize });
+    }
+    
+    public void setDataSetDimensions(final String objectPath, final long[] newDimensions)
+    {
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    baseWriter.setDataSetDimensions(objectPath, newDimensions, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+    
+    //
     // Boolean
     //
 

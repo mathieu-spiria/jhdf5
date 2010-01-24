@@ -101,15 +101,6 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
     public IHDF5WriterConfigurator overwrite();
 
     /**
-     * Delete a data set before writing to it, if it exists. This way, the storage features will not
-     * be re-used from an old data set, but new storage features will be set instead.
-     * <p>
-     * Note also that a call to one of the <code>create...</code> methods for an existing data set
-     * will fail with <em>"object already exists</em> if this option is not enabled.
-     */
-    public HDF5WriterConfigurator deleteDataSetBeforeWrite();
-
-    /**
      * Use data types which can not be extended later on. This may reduce the initial size of the
      * HDF5 file.
      */
