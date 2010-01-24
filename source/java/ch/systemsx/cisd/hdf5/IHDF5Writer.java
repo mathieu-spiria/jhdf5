@@ -995,8 +995,23 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      */
     public void writeStringVariableLengthArray(final String objectPath, final String[] data);
 
+    /**
+     * Creates a <code>String[]</code> where each String of the array has a variable maximal
+     * length. The array will start with a size of 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The size of block in the array.
+     */
     public void createStringVariableLengthArray(final String objectPath, final int blockSize);
 
+    /**
+     * Creates a <code>String[]</code> where each String of the array has a variable maximal
+     * length.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The intial size of the array.
+     * @param blockSize The size of block in the array.
+     */
     public void createStringVariableLengthArray(final String objectPath, final long size,
             final int blockSize);
 
