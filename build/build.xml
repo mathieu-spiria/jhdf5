@@ -92,9 +92,16 @@
 			</zipfileset>
 			<zipfileset src="${lib}/cisd-args4j/cisd-args4j.jar">
 				<exclude name="${build.info.filename}" />
+				<exclude name="**/AbstractBuildAndEnvironmentInfo.class" />
 			</zipfileset>
-			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
-			<zipfileset src="${lib}/commons-io/commons-io.jar" />
+			<zipfileset src="${lib}/commons-lang/commons-lang.jar">
+				<exclude name="META-INF/LICENSE.txt" />
+				<exclude name="META-INF/NOTICE.txt" />
+			</zipfileset>
+			<zipfileset src="${lib}/commons-io/commons-io.jar">
+				<exclude name="META-INF/LICENSE.txt" />
+				<exclude name="META-INF/NOTICE.txt" />
+			</zipfileset>
 			<manifest>
 				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
 				<attribute name="Version" value="${version.number}" />
@@ -119,9 +126,16 @@
 			</zipfileset>
 			<zipfileset src="${lib}/cisd-args4j/cisd-args4j.jar">
 				<exclude name="${build.info.filename}" />
+				<exclude name="**/AbstractBuildAndEnvironmentInfo.class" />
 			</zipfileset>
-			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
-			<zipfileset src="${lib}/commons-io/commons-io.jar" />
+			<zipfileset src="${lib}/commons-lang/commons-lang.jar">
+				<exclude name="META-INF/LICENSE.txt" />
+				<exclude name="META-INF/NOTICE.txt" />
+			</zipfileset>
+			<zipfileset src="${lib}/commons-io/commons-io.jar">
+				<exclude name="META-INF/LICENSE.txt" />
+				<exclude name="META-INF/NOTICE.txt" />
+			</zipfileset>
 			<manifest>
 				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
 				<attribute name="Version" value="${version.number}" />
