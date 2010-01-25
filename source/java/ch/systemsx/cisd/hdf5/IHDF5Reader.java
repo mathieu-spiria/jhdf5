@@ -898,6 +898,16 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     public String[] readStringArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset);
 
+    /**
+     * Provides all natural blocks of this one-dimensional data set to iterate over.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<String[]>> getStringArrayNaturalBlocks(
+            final String objectPath) throws HDF5JavaException;
+
     //
     // Enum
     //

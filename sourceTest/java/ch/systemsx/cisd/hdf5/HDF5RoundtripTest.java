@@ -148,6 +148,9 @@ public class HDF5RoundtripTest
         test.testIterateOverFloatArrayInNaturalBlocks(10, 99);
         test.testIterateOverFloatArrayInNaturalBlocks(10, 100);
         test.testIterateOverFloatArrayInNaturalBlocks(10, 101);
+        test.testIterateOverStringArrayInNaturalBlocks(10, 99);
+        test.testIterateOverStringArrayInNaturalBlocks(10, 100);
+        test.testIterateOverStringArrayInNaturalBlocks(10, 101);
         test.testReadToFloatMDArrayBlockWithOffset();
         test.testIterateOverMDFloatArrayInNaturalBlocks(new int[]
             { 2, 2 }, new long[]
@@ -1722,6 +1725,48 @@ public class HDF5RoundtripTest
                 }
             }
         }
+    }
+
+    @Test(dataProvider = "provideSizes")
+    public void testIterateOverStringArrayInNaturalBlocks(int blockSize, int dataSetSize)
+    {
+        final File datasetFile =
+                new File(workingDirectory, "testIterateOverStringArrayInNaturalBlocks.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "ds";
+        final String[] arrayWritten = new String[dataSetSize];
+        for (int i = 0; i < dataSetSize; ++i)
+        {
+            arrayWritten[i] = "" + i;
+        }
+        writer.createStringArray(dsName, dataSetSize, blockSize);
+        writer.writeStringArrayBlock(dsName, arrayWritten, 0);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        int i = 0;
+        for (HDF5DataBlock<String[]> block : reader.getStringArrayNaturalBlocks(dsName))
+        {
+            assertEquals(i, block.getIndex());
+            assertEquals(blockSize * i, block.getOffset());
+            final String[] arrayReadBlock = block.getData();
+            if (blockSize * (i + 1) > dataSetSize)
+            {
+                assertEquals(dataSetSize - i * blockSize, arrayReadBlock.length);
+            } else
+            {
+                assertEquals(blockSize, arrayReadBlock.length);
+            }
+            final String[] arrayWrittenBlock = new String[arrayReadBlock.length];
+            System.arraycopy(arrayWritten, (int) block.getOffset(), arrayWrittenBlock, 0,
+                    arrayWrittenBlock.length);
+            assertTrue(Arrays.equals(arrayWrittenBlock, arrayReadBlock));
+            ++i;
+        }
+        assertEquals(dataSetSize / blockSize + (dataSetSize % blockSize != 0 ? 1 : 0), i);
+        reader.close();
     }
 
     @SuppressWarnings("unused")
