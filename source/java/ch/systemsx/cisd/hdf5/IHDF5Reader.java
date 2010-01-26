@@ -38,7 +38,7 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
  * <pre>
  * IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(new File(&quot;test.h5&quot;));
  * float[] f = reader.readFloatArray(&quot;/some/path/dataset&quot;);
- * String s = reader.getAttributeString(&quot;/some/path/dataset&quot;, &quot;some key&quot;);
+ * String s = reader.getStringAttribute(&quot;/some/path/dataset&quot;, &quot;some key&quot;);
  * reader.close();
  * </pre>
  * 
