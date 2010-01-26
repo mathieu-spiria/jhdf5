@@ -156,9 +156,9 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void createDoubleArray(final String objectPath, final int blockSize)
+    public void createDoubleArray(final String objectPath, final int size)
     {
-        createDoubleArray(objectPath, 0, blockSize, FLOAT_NO_COMPRESSION);
+        createDoubleArray(objectPath, size, FLOAT_NO_COMPRESSION);
     }
 
     public void createDoubleArray(final String objectPath, final long size, final int blockSize)
@@ -373,9 +373,9 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void createDoubleMDArray(final String objectPath, final int[] blockDimensions)
+    public void createDoubleMDArray(final String objectPath, final int[] dimensions)
     {
-        createDoubleMDArray(objectPath, new long[blockDimensions.length], blockDimensions, FLOAT_NO_COMPRESSION);
+        createDoubleMDArray(objectPath, dimensions, FLOAT_NO_COMPRESSION);
     }
 
     public void createDoubleMDArray(final String objectPath, final long[] dimensions,

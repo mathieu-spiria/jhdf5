@@ -156,9 +156,9 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void create__Name__Array(final String objectPath, final int blockSize)
+    public void create__Name__Array(final String objectPath, final int size)
     {
-        create__Name__Array(objectPath, 0, blockSize, __CLASSNAME___NO_COMPRESSION);
+        create__Name__Array(objectPath, size, __CLASSNAME___NO_COMPRESSION);
     }
 
     public void create__Name__Array(final String objectPath, final long size, final int blockSize)
@@ -373,9 +373,9 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void create__Name__MDArray(final String objectPath, final int[] blockDimensions)
+    public void create__Name__MDArray(final String objectPath, final int[] dimensions)
     {
-        create__Name__MDArray(objectPath, new long[blockDimensions.length], blockDimensions, __CLASSNAME___NO_COMPRESSION);
+        create__Name__MDArray(objectPath, dimensions, __CLASSNAME___NO_COMPRESSION);
     }
 
     public void create__Name__MDArray(final String objectPath, final long[] dimensions,

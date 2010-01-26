@@ -156,9 +156,9 @@ class HDF5IntWriter implements IHDF5IntWriter
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void createIntArray(final String objectPath, final int blockSize)
+    public void createIntArray(final String objectPath, final int size)
     {
-        createIntArray(objectPath, 0, blockSize, INT_NO_COMPRESSION);
+        createIntArray(objectPath, size, INT_NO_COMPRESSION);
     }
 
     public void createIntArray(final String objectPath, final long size, final int blockSize)
@@ -373,9 +373,9 @@ class HDF5IntWriter implements IHDF5IntWriter
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void createIntMDArray(final String objectPath, final int[] blockDimensions)
+    public void createIntMDArray(final String objectPath, final int[] dimensions)
     {
-        createIntMDArray(objectPath, new long[blockDimensions.length], blockDimensions, INT_NO_COMPRESSION);
+        createIntMDArray(objectPath, dimensions, INT_NO_COMPRESSION);
     }
 
     public void createIntMDArray(final String objectPath, final long[] dimensions,

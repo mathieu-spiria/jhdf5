@@ -156,9 +156,9 @@ class HDF5LongWriter implements IHDF5LongWriter
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void createLongArray(final String objectPath, final int blockSize)
+    public void createLongArray(final String objectPath, final int size)
     {
-        createLongArray(objectPath, 0, blockSize, INT_NO_COMPRESSION);
+        createLongArray(objectPath, size, INT_NO_COMPRESSION);
     }
 
     public void createLongArray(final String objectPath, final long size, final int blockSize)
@@ -373,9 +373,9 @@ class HDF5LongWriter implements IHDF5LongWriter
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void createLongMDArray(final String objectPath, final int[] blockDimensions)
+    public void createLongMDArray(final String objectPath, final int[] dimensions)
     {
-        createLongMDArray(objectPath, new long[blockDimensions.length], blockDimensions, INT_NO_COMPRESSION);
+        createLongMDArray(objectPath, dimensions, INT_NO_COMPRESSION);
     }
 
     public void createLongMDArray(final String objectPath, final long[] dimensions,

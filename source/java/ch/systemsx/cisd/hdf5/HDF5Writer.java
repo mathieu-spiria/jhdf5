@@ -509,9 +509,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         baseWriter.runner.call(writeRunnable);
     }
 
-    public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, int blockSize)
+    public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, int size)
     {
-        return createOpaqueByteArray(objectPath, tag, 0, blockSize,
+        return createOpaqueByteArray(objectPath, tag, size,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
@@ -520,6 +520,36 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         return createOpaqueByteArray(objectPath, tag, size, blockSize,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+    }
+
+    public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
+            final int size, final HDF5GenericStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert tag != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        final int dataTypeId = getOrCreateOpaqueTypeId(tag);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        baseWriter.createDataSet(objectPath, dataTypeId, features, new long[]
+                            { 0 }, new long[]
+                            { size }, registry);
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, dataTypeId, features, new long[]
+                            { size }, null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+        return new HDF5OpaqueType(baseWriter.fileId, dataTypeId, tag);
     }
 
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
@@ -651,16 +681,50 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         baseWriter.runner.call(writeScalarRunnable);
     }
 
-    public void createTimeStampArray(String objectPath, int blockSize)
+    public void createTimeStampArray(String objectPath, int size)
     {
-        createTimeStampArray(objectPath, 0, blockSize,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        createTimeStampArray(objectPath, size, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     public void createTimeStampArray(final String objectPath, final long size, final int blockSize)
     {
         createTimeStampArray(objectPath, size, blockSize,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+    }
+
+    public void createTimeStampArray(final String objectPath, final int size,
+            final HDF5GenericStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId;
+                    if (features.requiresChunking())
+                    {
+                        dataSetId =
+                                baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
+                                        new long[]
+                                            { 0 }, new long[]
+                                            { size }, registry);
+                    } else
+                    {
+                        dataSetId =
+                                baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
+                                        new long[]
+                                            { size }, null, registry);
+                    }
+                    setTypeVariant(dataSetId,
+                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                            registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
     }
 
     public void createTimeStampArray(final String objectPath, final long length,
@@ -842,9 +906,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         baseWriter.runner.call(writeScalarRunnable);
     }
 
-    public void createTimeDurationArray(String objectPath, int blockSize, HDF5TimeUnit timeUnit)
+    public void createTimeDurationArray(String objectPath, int size, HDF5TimeUnit timeUnit)
     {
-        createTimeDurationArray(objectPath, 0, blockSize, timeUnit,
+        createTimeDurationArray(objectPath, size, timeUnit,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
@@ -853,6 +917,39 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         createTimeDurationArray(objectPath, size, blockSize, timeUnit,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+    }
+
+    public void createTimeDurationArray(final String objectPath, final int size,
+            final HDF5TimeUnit timeUnit, final HDF5GenericStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId;
+                    if (features.requiresChunking())
+                    {
+                        dataSetId =
+                                baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
+                                        new long[]
+                                            { 0 }, new long[]
+                                            { size }, registry);
+                    } else
+                    {
+                        dataSetId =
+                                baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
+                                        new long[]
+                                            { size }, null, registry);
+                    }
+                    setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
     }
 
     public void createTimeDurationArray(final String objectPath, final long size,
@@ -1164,9 +1261,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         return dataSetId;
     }
 
-    public void createStringArray(final String objectPath, final int maxLength, final int blockSize)
+    public void createStringArray(final String objectPath, final int maxLength, final int size)
     {
-        createStringArray(objectPath, maxLength, 0, blockSize, GENERIC_NO_COMPRESSION);
+        createStringArray(objectPath, maxLength, size, GENERIC_NO_COMPRESSION);
     }
 
     public void createStringArray(final String objectPath, final int maxLength, final long size,
@@ -1175,9 +1272,38 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         createStringArray(objectPath, maxLength, size, blockSize, GENERIC_NO_COMPRESSION);
     }
 
+    public void createStringArray(final String objectPath, final int maxLength, final int size,
+            final HDF5GenericStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert maxLength > 0;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    final int stringDataTypeId =
+                            baseWriter.h5.createDataTypeString(maxLength + 1, registry);
+                    if (features.requiresChunking())
+                    {
+                        baseWriter.createDataSet(objectPath, stringDataTypeId, features, new long[]
+                            { 0 }, new long[]
+                            { size }, registry);
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, stringDataTypeId, features, new long[]
+                            { size }, null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
     public void createStringArray(final String objectPath, final int maxLength, final long size,
             final int blockSize, final HDF5GenericStorageFeatures features)
-            throws HDF5JavaException
     {
         assert objectPath != null;
         assert maxLength > 0;
@@ -1189,46 +1315,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 {
                     final int stringDataTypeId =
                             baseWriter.h5.createDataTypeString(maxLength + 1, registry);
-                    final int dataSetId;
-                    final long[] dimensions = new long[]
-                        { size };
-                    if (exists(objectPath, false))
-                    {
-                        dataSetId =
-                                baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                        final HDF5StorageLayout layout =
-                                baseWriter.h5.getLayout(dataSetId, registry);
-                        if (layout == HDF5StorageLayout.CHUNKED)
-                        {
-                            // Safety check. JHDF5 creates CHUNKED data sets always with unlimited
-                            // max dimensions but we may have to work on a file we haven't created.
-                            if (baseWriter.areDimensionsInBounds(dataSetId, dimensions))
-                            {
-                                baseWriter.h5.setDataSetExtentChunked(dataSetId, dimensions);
-                            } else
-                            {
-                                throw new HDF5JavaException(
-                                        "New data set dimension is out of bounds.");
-                            }
-                        } else
-                        {
-                            // CONTIGUOUS and COMPACT data sets are effectively fixed size, thus we
-                            // need to delete and re-create it.
-                            baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
-                            baseWriter.h5.createDataSet(baseWriter.fileId, dimensions, null,
-                                    stringDataTypeId,
-                                    HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, objectPath,
-                                    layout, baseWriter.fileFormat, registry);
-                        }
-                    } else
-                    {
-                        dataSetId =
-                                baseWriter.h5.createDataSet(baseWriter.fileId, dimensions,
-                                        new long[]
-                                            { blockSize }, stringDataTypeId, features,
-                                        objectPath, HDF5StorageLayout.CHUNKED,
-                                        baseWriter.fileFormat, registry);
-                    }
+                    baseWriter.createDataSet(objectPath, stringDataTypeId, features, new long[]
+                        { size }, new long[]
+                        { blockSize }, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -1322,15 +1411,25 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void createStringVariableLengthArray(final String objectPath, final int blockSize)
+    public void createStringVariableLengthArray(final String objectPath, final int size)
     {
-        createStringVariableLengthArray(objectPath, 0, blockSize);
+        createStringVariableLengthArray(objectPath, size,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     public void createStringVariableLengthArray(final String objectPath, final long size,
             final int blockSize) throws HDF5JavaException
     {
+        createStringVariableLengthArray(objectPath, size, blockSize,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+    }
+
+    public void createStringVariableLengthArray(final String objectPath, final long size,
+            final int blockSize, final HDF5GenericStorageFeatures features)
+    {
         assert objectPath != null;
+        assert size >= 0;
+        assert blockSize > 0;
 
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
@@ -1338,44 +1437,36 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
-                    final int dataSetId;
-                    final long[] dimensions = new long[]
-                        { size };
-                    if (exists(objectPath, false))
+                    baseWriter.createDataSet(objectPath, stringDataTypeId, features, new long[]
+                        { size }, new long[]
+                        { blockSize }, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    public void createStringVariableLengthArray(final String objectPath, final int size,
+            final HDF5GenericStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
+                    if (features.requiresChunking())
                     {
-                        dataSetId =
-                                baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
-                        final HDF5StorageLayout layout =
-                                baseWriter.h5.getLayout(dataSetId, registry);
-                        if (layout == HDF5StorageLayout.CHUNKED)
-                        {
-                            // Safety check. JHDF5 creates CHUNKED data sets always with unlimited
-                            // max dimensions but we may have to work on a file we haven't created.
-                            if (baseWriter.areDimensionsInBounds(dataSetId, dimensions))
-                            {
-                                baseWriter.h5.setDataSetExtentChunked(dataSetId, dimensions);
-                            } else
-                            {
-                                throw new HDF5JavaException(
-                                        "New data set dimension is out of bounds.");
-                            }
-                        } else
-                        {
-                            // CONTIGUOUS and COMPACT data sets are effectively fixed size, thus we
-                            // need to delete and re-create it.
-                            baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
-                            baseWriter.h5.createDataSet(baseWriter.fileId, dimensions, null,
-                                    stringDataTypeId, GENERIC_NO_COMPRESSION, objectPath, layout,
-                                    baseWriter.fileFormat, registry);
-                        }
+                        baseWriter.createDataSet(objectPath, stringDataTypeId, features, new long[]
+                            { 0 }, new long[]
+                            { size }, registry);
                     } else
                     {
-                        dataSetId =
-                                baseWriter.h5.createDataSet(baseWriter.fileId, dimensions,
-                                        new long[]
-                                            { blockSize }, stringDataTypeId,
-                                        GENERIC_NO_COMPRESSION, objectPath,
-                                        HDF5StorageLayout.CHUNKED, baseWriter.fileFormat, registry);
+                        baseWriter.createDataSet(objectPath, stringDataTypeId, features, new long[]
+                            { size }, null, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -1504,10 +1595,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
-            final int blockSize)
+            final int size)
     {
-        createEnumArray(objectPath, enumType, 0, blockSize,
-                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+        createEnumArray(objectPath, enumType, size, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
     public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
@@ -1543,12 +1633,60 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                                 .getName(), enumType.getName().length(), registry);
                     } else
                     {
-                        baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(),
-                                features, new long[]
+                        baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
+                                new long[]
                                     { size }, new long[]
                                     { blockSize }, registry);
                     }
                     return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
+    public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
+            final long size, final HDF5IntStorageFeatures features)
+    {
+        baseWriter.checkOpen();
+        enumType.check(baseWriter.fileId);
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        create(new long[]
+                            { 0 }, new long[]
+                            { size }, registry);
+                    } else
+                    {
+                        create(new long[]
+                            { size }, null, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+
+                private void create(final long[] dimensions, final long[] blockDimensionsOrNull,
+                        final ICleanUpRegistry registry)
+                {
+                    if (features.isScaling())
+                    {
+                        features.checkScalingOK(baseWriter.fileFormat);
+                        final HDF5IntStorageFeatures actualCompression =
+                                HDF5IntStorageFeatures.createDeflateAndIntegerScaling(features
+                                        .getDeflateLevel(), enumType.getNumberOfBits());
+                        final int dataSetId =
+                                baseWriter.createDataSet(objectPath,
+                                        enumType.getIntStorageTypeId(), actualCompression,
+                                        dimensions, blockDimensionsOrNull, registry);
+                        setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
+                        setStringAttribute(dataSetId, HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, enumType
+                                .getName(), enumType.getName().length(), registry);
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
+                                dimensions, blockDimensionsOrNull, registry);
+                    }
                 }
             };
         baseWriter.runner.call(createRunnable);
@@ -1835,9 +1973,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         baseWriter.runner.call(writeRunnable);
     }
 
-    public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, int blockSize)
+    public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, int size)
     {
-        createCompoundArray(objectPath, type, 0, blockSize,
+        createCompoundArray(objectPath, type, size,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
@@ -1866,6 +2004,37 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                             new long[]
                                 { size }, new long[]
                                 { blockSize }, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
+            final long size, final HDF5GenericStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert type != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        type.check(baseWriter.fileId);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
+                                new long[]
+                                    { 0 }, new long[]
+                                    { size }, registry);
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
+                                new long[]
+                                    { size }, null, registry);
+                    }
                     return null; // Nothing to return.
                 }
             };
@@ -2075,9 +2244,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
-            int[] blockDimensions)
+            int[] dimensions)
     {
-        createCompoundMDArray(objectPath, type, new long[blockDimensions.length], blockDimensions,
+        createCompoundMDArray(objectPath, type, dimensions,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
@@ -2105,6 +2274,35 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 {
                     baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                             dimensions, MDArray.toLong(blockDimensions), registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
+            final int[] dimensions, final HDF5GenericStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert type != null;
+        assert dimensions != null;
+
+        baseWriter.checkOpen();
+        type.check(baseWriter.fileId);
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(final ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        final long[] nullDimensions = new long[dimensions.length];
+                        baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
+                                nullDimensions, MDArray.toLong(dimensions), registry);
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
+                                MDArray.toLong(dimensions), null, registry);
+                    }
                     return null; // Nothing to return.
                 }
             };

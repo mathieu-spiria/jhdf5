@@ -156,9 +156,9 @@ class HDF5FloatWriter implements IHDF5FloatWriter
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void createFloatArray(final String objectPath, final int blockSize)
+    public void createFloatArray(final String objectPath, final int size)
     {
-        createFloatArray(objectPath, 0, blockSize, FLOAT_NO_COMPRESSION);
+        createFloatArray(objectPath, size, FLOAT_NO_COMPRESSION);
     }
 
     public void createFloatArray(final String objectPath, final long size, final int blockSize)
@@ -373,9 +373,9 @@ class HDF5FloatWriter implements IHDF5FloatWriter
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void createFloatMDArray(final String objectPath, final int[] blockDimensions)
+    public void createFloatMDArray(final String objectPath, final int[] dimensions)
     {
-        createFloatMDArray(objectPath, new long[blockDimensions.length], blockDimensions, FLOAT_NO_COMPRESSION);
+        createFloatMDArray(objectPath, dimensions, FLOAT_NO_COMPRESSION);
     }
 
     public void createFloatMDArray(final String objectPath, final long[] dimensions,

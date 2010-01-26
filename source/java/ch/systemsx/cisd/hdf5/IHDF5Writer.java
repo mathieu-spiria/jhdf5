@@ -400,7 +400,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * Creates an opaque data set that will be represented as a <code>byte</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the byte vector to create.
+     * @param size The size of the byte array to create.
      * @param blockSize The size of on block (for block-wise IO)
      * @return The {@link HDF5OpaqueType} that can be used in methods
      *         {@link #writeOpaqueByteArrayBlock(String, HDF5OpaqueType, byte[], long)} and
@@ -412,23 +412,25 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Creates an opaque data set that will be represented as a <code>byte</code> array (of rank 1).
-     * The initial size of the data set will be 0.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize The size of on block (for block-wise IO)
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @return The {@link HDF5OpaqueType} that can be used in methods
      *         {@link #writeOpaqueByteArrayBlock(String, HDF5OpaqueType, byte[], long)} and
      *         {@link #writeOpaqueByteArrayBlockWithOffset(String, HDF5OpaqueType, byte[], int, long)}
      *         to represent this opaque type.
      */
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
-            final int blockSize);
+            final int size);
 
     /**
      * Creates an opaque data set that will be represented as a <code>byte</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the byte vector to create.
+     * @param size The size of the byte array to create.
      * @param blockSize The size of on block (for block-wise IO)
      * @param features The storage features of the data set.
      * @return The {@link HDF5OpaqueType} that can be used in methods
@@ -438,6 +440,23 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      */
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
             final long size, final int blockSize, final HDF5GenericStorageFeatures features);
+
+    /**
+     * Creates an opaque data set that will be represented as a <code>byte</code> array (of rank 1).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5GenericStorageFeatures}.
+     * @param features The storage features of the data set.
+     * @return The {@link HDF5OpaqueType} that can be used in methods
+     *         {@link #writeOpaqueByteArrayBlock(String, HDF5OpaqueType, byte[], long)} and
+     *         {@link #writeOpaqueByteArrayBlockWithOffset(String, HDF5OpaqueType, byte[], int, long)}
+     *         to represent this opaque type.
+     */
+    public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
+            final int size, final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a block of an opaque data type represented by a <code>byte</code> array (of rank
@@ -519,16 +538,17 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void createTimeStampArray(final String objectPath, final long size, final int blockSize);
 
     /**
-     * Creates a time stamp array (of rank 1). The initial size of the array is 0.
+     * Creates a time stamp array (of rank 1).
      * <p>
      * <em>Note: Time stamps are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
-    public void createTimeStampArray(final String objectPath, final int blockSize);
+    public void createTimeStampArray(final String objectPath, final int size);
 
     /**
      * Creates a time stamp array (of rank 1).
@@ -543,6 +563,21 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param features The storage features of the data set.
      */
     public void createTimeStampArray(final String objectPath, final long size, final int blockSize,
+            final HDF5GenericStorageFeatures features);
+
+    /**
+     * Creates a time stamp array (of rank 1).
+     * <p>
+     * <em>Note: Time stamps are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the array to create. This will be the total size for non-extendable
+     *            data sets and the size of one chunk for extendable (chunked) data sets. For
+     *            extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5GenericStorageFeatures}.
+     * @param features The storage features of the data set.
+     */
+    public void createTimeStampArray(final String objectPath, final int size,
             final HDF5GenericStorageFeatures features);
 
     /**
@@ -676,17 +711,18 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
             final HDF5TimeUnit timeUnit);
 
     /**
-     * Creates a time duration array (of rank 1). The initial size of the array is 0.
+     * Creates a time duration array (of rank 1).
      * <p>
      * <em>Note: Time durations are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @param timeUnit The unit of the time duration.
      */
-    public void createTimeDurationArray(final String objectPath, final int blockSize,
+    public void createTimeDurationArray(final String objectPath, final int size,
             final HDF5TimeUnit timeUnit);
 
     /**
@@ -720,6 +756,22 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void createTimeDurationArray(final String objectPath, final long size,
             final int blockSize, final HDF5TimeUnit timeUnit,
             final HDF5GenericStorageFeatures features);
+
+    /**
+     * Creates a time duration array (of rank 1).
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the array to create. This will be the total size for non-extendable
+     *            data sets and the size of one chunk for extendable (chunked) data sets. For
+     *            extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5GenericStorageFeatures}.
+     * @param timeUnit The unit of the time duration.
+     * @param features The storage features of the data set.
+     */
+    public void createTimeDurationArray(final String objectPath, final int size,
+            final HDF5TimeUnit timeUnit, final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a time duration array in seconds (of rank 1). The data set will be tagged as type
@@ -889,21 +941,22 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Creates a <code>String</code> array (of rank 1) for Strings of length <var>maxLength</var>.
-     * The initial size of the array is 0.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param maxLength The maximal length of one String in the array.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
-    public void createStringArray(final String objectPath, final int maxLength, final int blockSize);
+    public void createStringArray(final String objectPath, final int maxLength, final int size);
 
     /**
      * Creates a <code>String</code> array (of rank 1) for Strings of length <var>maxLength</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param maxLength The maximal length of one String in the array.
-     * @param size The size of the String vector to create. When using extendable data sets ((see
+     * @param size The size of the String array to create. When using extendable data sets ((see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
      *            smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
@@ -917,7 +970,20 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param maxLength The maximal length of one String in the array.
-     * @param size The size of the String vector to create. When using extendable data sets ((see
+     * @param size The size of the array to create. This will be the total size for non-extendable
+     *            data sets and the size of one chunk for extendable (chunked) data sets. For
+     *            extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5GenericStorageFeatures}.
+     */
+    public void createStringArray(final String objectPath, final int maxLength, final int size,
+            final HDF5GenericStorageFeatures features);
+
+    /**
+     * Creates a <code>String</code> array (of rank 1) for Strings of length <var>maxLength</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param maxLength The maximal length of one String in the array.
+     * @param size The size of the String array to create. When using extendable data sets ((see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
      *            smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
@@ -996,17 +1062,18 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void writeStringVariableLengthArray(final String objectPath, final String[] data);
 
     /**
-     * Creates a <code>String[]</code> where each String of the array has a variable maximal
-     * length. The array will start with a size of 0.
+     * Creates a <code>String[]</code> where each String of the array has a variable maximal length.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize The size of block in the array.
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
-    public void createStringVariableLengthArray(final String objectPath, final int blockSize);
+    public void createStringVariableLengthArray(final String objectPath, final int size);
 
     /**
-     * Creates a <code>String[]</code> where each String of the array has a variable maximal
-     * length.
+     * Creates a <code>String[]</code> where each String of the array has a variable maximal length.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The intial size of the array.
@@ -1014,6 +1081,30 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      */
     public void createStringVariableLengthArray(final String objectPath, final long size,
             final int blockSize);
+
+    /**
+     * Creates a <code>String[]</code> where each String of the array has a variable maximal length.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The intial size of the array.
+     * @param blockSize The size of block in the array.
+     * @param features The storage features of the data set.
+     */
+    public void createStringVariableLengthArray(final String objectPath, final long size,
+            final int blockSize, final HDF5GenericStorageFeatures features);
+
+    /**
+     * Creates a <code>String[]</code> where each String of the array has a variable maximal length.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5GenericStorageFeatures}.
+     * @param features The storage features of the data set.
+     */
+    public void createStringVariableLengthArray(final String objectPath, final int size,
+            final HDF5GenericStorageFeatures features);
 
     //
     // Enum
@@ -1044,31 +1135,33 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
-     * @param features The storage features of the data set. Note that for scaling
-     *            compression the compression factor is ignored. Instead, the scaling factor is
-     *            computed from the number of entries in the enumeration.
+     * @param features The storage features of the data set. Note that for scaling compression the
+     *            compression factor is ignored. Instead, the scaling factor is computed from the
+     *            number of entries in the enumeration.
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
     public void writeEnumArray(final String objectPath, final HDF5EnumerationValueArray data,
             final HDF5IntStorageFeatures features) throws HDF5JavaException;
 
     /**
-     * Creates am enum array (of rank 1). The initial size of the array is 0.
+     * Creates am enum array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param enumType The enumeration type of this array.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
     public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
-            final int blockSize);
+            final int size);
 
     /**
      * Creates am enum array (of rank 1). The initial size of the array is 0.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param enumType The enumeration type of this array.
-     * @param size The size of the enum vector to create. When using extendable data sets ((see
+     * @param size The size of the enum array to create. When using extendable data sets ((see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
      *            smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
@@ -1082,7 +1175,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param enumType The enumeration type of this array.
-     * @param size The size of the enum vector to create. When using extendable data sets ((see
+     * @param size The size of the enum array to create. When using extendable data sets ((see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
      *            smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
@@ -1091,6 +1184,20 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      */
     public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
             final long size, final int blockSize, final HDF5IntStorageFeatures features);
+
+    /**
+     * Creates am enum array (of rank 1). The initial size of the array is 0.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumType The enumeration type of this array.
+     * @param size The size of the enum array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5IntStorageFeatures}.
+     * @param features The storage features of the data set.
+     */
+    public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
+            final long size, final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of an enum array (of rank 1). The data set needs to have been created by
@@ -1246,16 +1353,17 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
             final IByteArrayInspector inspectorOrNull);
 
     /**
-     * Creates an array (of rank 1) of compound values. The initial size of the array is 0.
+     * Creates an array (of rank 1) of compound values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
-     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>deflate == false</code>.
+     * @param size The size of the array to create. This will be the total size for non-extendable
+     *            data sets and the size of one chunk for extendable (chunked) data sets. For
+     *            extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
     public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final int blockSize);
+            final int size);
 
     /**
      * Creates an array (of rank 1) of compound values.
@@ -1283,6 +1391,20 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      */
     public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final long size, final int blockSize, final HDF5GenericStorageFeatures features);
+
+    /**
+     * Creates an array (of rank 1) of compound values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5GenericStorageFeatures}.
+     * @param features The storage features of the data set.
+     */
+    public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
+            final long size, final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out an array (of rank N) of compound values.
@@ -1400,21 +1522,21 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
             final long[] offset, final int[] memoryOffset, final IByteArrayInspector inspectorOrNull);
 
     /**
-     * Creates an array (of rank 1) of compound values. The initial size of the array is 0 (along
-     * each axis).
+     * Creates an array (of rank N) of compound values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
-     * @param blockDimensions The extent of one block along each of the axis. (for block-wise IO).
-     *            Ignored if no extendable data sets are used (see
-     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
-     *            <code>deflate == false</code>.
+     * @param dimensions The dimensions of the byte array to create. This will be the total
+     *            dimensions for non-extendable data sets and the dimensions of one chunk (along
+     *            each axis) for extendable (chunked) data sets. For extendable data sets the
+     *            initial size of the array (along each axis) will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
     public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final int[] blockDimensions);
+            final int[] dimensions);
 
     /**
-     * Creates an array (of rank 1) of compound values.
+     * Creates an array (of rank N) of compound values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
@@ -1428,7 +1550,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
             final long[] dimensions, final int[] blockDimensions);
 
     /**
-     * Creates an array (of rank 1) of compound values.
+     * Creates an array (of rank N) of compound values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
@@ -1443,4 +1565,18 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
             final long[] dimensions, final int[] blockDimensions,
             final HDF5GenericStorageFeatures features);
 
+    /**
+     * Creates an array (of rank N) of compound values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param dimensions The dimensions of the byte array to create. This will be the total
+     *            dimensions for non-extendable data sets and the dimensions of one chunk (along
+     *            each axis) for extendable (chunked) data sets. For extendable data sets the
+     *            initial size of the array (along each axis) will be 0, see
+     *            {@link HDF5GenericStorageFeatures}.
+     * @param features The storage features of the data set.
+     */
+    public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
+            final int[] dimensions, final HDF5GenericStorageFeatures features);
 }
