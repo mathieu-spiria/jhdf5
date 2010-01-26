@@ -251,6 +251,11 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void createGroup(final String groupPath, final int maxCompact, final int minDense)
     {
         baseWriter.checkOpen();
+        if (baseWriter.fileFormat.isHDF5_1_8_OK() == false)
+        {
+            throw new IllegalStateException(
+                    "New style groups are not allowed in strict HDF5 1.6.x compatibility mode.");
+        }
         final ICallableWithCleanUp<Void> createGroupRunnable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(ICleanUpRegistry registry)
