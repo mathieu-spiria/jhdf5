@@ -65,8 +65,8 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     // /////////////////////
 
     /**
-     * Returns <code>true</code>, if the latest file format will be used and <code>false</code>, if
-     * a file format with maximum compatibility will be used.
+     * Returns <code>true</code>, if numeric conversions should be performed automatically, e.g.
+     * between <code>float</code> and <code>int</code>.
      */
     public boolean isPerformNumericConversions();
 
@@ -905,8 +905,8 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
-    public Iterable<HDF5DataBlock<String[]>> getStringArrayNaturalBlocks(
-            final String objectPath) throws HDF5JavaException;
+    public Iterable<HDF5DataBlock<String[]>> getStringArrayNaturalBlocks(final String objectPath)
+            throws HDF5JavaException;
 
     //
     // Enum
