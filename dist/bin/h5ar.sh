@@ -1,6 +1,6 @@
 #! /bin/bash
 
-# This script requires the the readlink binary. If your system lacks this binary, $JHDFDIR needs to be hard-coded
+# This script requires the readlink binary. If your system lacks this binary, $JHDFDIR needs to be hard-coded
 
 SCRIPT="$0"
 BINDIR="${SCRIPT%/*}"
