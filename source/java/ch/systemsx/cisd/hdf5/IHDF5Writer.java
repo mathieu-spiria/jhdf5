@@ -270,6 +270,16 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void setStringAttribute(final String objectPath, final String name, final String value,
             final int maxLength);
 
+    /**
+     * Sets a string attribute with variable length to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
     public void setStringAttributeVariableLength(final String objectPath, final String name,
             final String value);
 
