@@ -35,8 +35,6 @@ public abstract class HDF5DataType
     HDF5DataType(int fileId, int storageTypeId, int nativeTypeId)
     {
         assert fileId >= 0;
-        assert storageTypeId >= 0;
-        assert nativeTypeId >= 0;
 
         this.fileId = fileId;
         this.storageTypeId = storageTypeId;
