@@ -1786,11 +1786,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             HDF5CompoundMemberMapping... members)
     {
         baseWriter.checkOpen();
-        final HDF5ValueObjectByteifyer<T> objectByteifyer = createByteifyers(compoundType, members);
+        final HDF5ValueObjectByteifyer<T> objectByteifyer =
+                baseWriter.createCompoundByteifyers(compoundType, members);
         final String dataTypeName = (name != null) ? name : compoundType.getSimpleName();
         final int storageDataTypeId =
                 getOrCreateCompoundDataType(dataTypeName, compoundType, objectByteifyer);
-        final int nativeDataTypeId = createNativeCompoundDataType(objectByteifyer);
+        final int nativeDataTypeId = baseWriter.createNativeCompoundDataType(objectByteifyer);
         return new HDF5CompoundType<T>(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
                 dataTypeName, compoundType, objectByteifyer);
     }
@@ -1810,7 +1811,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         int storageDataTypeId = baseWriter.getDataTypeId(dataTypePath);
         if (storageDataTypeId < 0)
         {
-            storageDataTypeId = createStorageCompoundDataType(objectByteifyer);
+            storageDataTypeId = baseWriter.createStorageCompoundDataType(objectByteifyer);
             baseWriter.commitDataType(dataTypePath, storageDataTypeId);
         }
         return storageDataTypeId;

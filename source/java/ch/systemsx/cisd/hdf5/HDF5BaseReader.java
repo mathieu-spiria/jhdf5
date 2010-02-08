@@ -191,6 +191,14 @@ class HDF5BaseReader
         }
     }
 
+    HDF5EnumerationType getEnumTypeForStorageDataType(final int storageDataTypeId,
+            final ICleanUpRegistry registry)
+    {
+        final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
+        final String[] values = h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
+        return new HDF5EnumerationType(fileId, storageDataTypeId, nativeDataTypeId, null, values);
+    }
+
     int createBooleanDataType()
     {
         return h5.createDataTypeEnum(new String[]
@@ -664,6 +672,60 @@ class HDF5BaseReader
             }
         }
         return HDF5DataClass.OTHER;
+    }
+
+    <T> HDF5ValueObjectByteifyer<T> createCompoundByteifyers(
+            final Class<T> compoundClazz, final HDF5CompoundMemberMapping[] compoundMembers)
+    {
+        final HDF5ValueObjectByteifyer<T> objectByteifyer =
+                new HDF5ValueObjectByteifyer<T>(compoundClazz,
+                        new HDF5ValueObjectByteifyer.FileInfoProvider()
+                            {
+                                public int getBooleanDataTypeId()
+                                {
+                                    return booleanDataTypeId;
+                                }
+
+                                public int getStringDataTypeId(int maxLength)
+                                {
+                                    final int typeId =
+                                            h5.createDataTypeString(maxLength, fileRegistry);
+                                    return typeId;
+                                }
+
+                                public int getArrayTypeId(int baseTypeId, int length)
+                                {
+                                    final int typeId =
+                                            h5.createArrayType(baseTypeId, length, fileRegistry);
+                                    return typeId;
+                                }
+
+                                public int getArrayTypeId(int baseTypeId, int[] dimensions)
+                                {
+                                    final int typeId =
+                                            h5
+                                                    .createArrayType(baseTypeId, dimensions,
+                                                            fileRegistry);
+                                    return typeId;
+                                }
+                            }, compoundMembers);
+        return objectByteifyer;
+    }
+
+    int createStorageCompoundDataType(HDF5ValueObjectByteifyer<?> objectArrayifyer)
+    {
+        final int storageDataTypeId =
+                h5.createDataTypeCompound(objectArrayifyer.getRecordSize(), fileRegistry);
+        objectArrayifyer.insertMemberTypes(storageDataTypeId);
+        return storageDataTypeId;
+    }
+
+    int createNativeCompoundDataType(HDF5ValueObjectByteifyer<?> objectArrayifyer)
+    {
+        final int nativeDataTypeId =
+                h5.createDataTypeCompound(objectArrayifyer.getRecordSize(), fileRegistry);
+        objectArrayifyer.insertNativeMemberTypes(nativeDataTypeId, h5, fileRegistry);
+        return nativeDataTypeId;
     }
 
 }
