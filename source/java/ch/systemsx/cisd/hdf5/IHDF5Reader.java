@@ -369,35 +369,39 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
 
     /**
      * Returns the enumeration type <var>name</var> for this HDF5 file. Use this method only when
-     * you know that the type exists.
+     * you know that the type exists. If the <var>dataTypeName</var> starts with '/', it will be
+     * considered a data type path instead of a data type name.
      * 
-     * @param name The name of the enumeration in the HDF5 file.
+     * @param dataTypeName The name of the enumeration in the HDF5 file.
      */
-    public HDF5EnumerationType getEnumType(final String name);
+    public HDF5EnumerationType getEnumType(final String dataTypeName);
 
     /**
      * Returns the enumeration type <var>name</var> for this HDF5 file. Will check the type in the
-     * file with the <var>values</var>.
+     * file with the <var>values</var>. If the <var>dataTypeName</var> starts with '/', it will be
+     * considered a data type path instead of a data type name.
      * 
-     * @param name The name of the enumeration in the HDF5 file.
+     * @param dataTypeName The name of the enumeration in the HDF5 file.
      * @param values The values of the enumeration.
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>values</var> provided.
      */
-    public HDF5EnumerationType getEnumType(final String name, final String[] values)
+    public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values)
             throws HDF5JavaException;
 
     /**
-     * Returns the enumeration type <var>name</var> for this HDF5 file.
+     * Returns the enumeration type <var>name</var> for this HDF5 file. If the
+     * <var>dataTypeName</var> starts with '/', it will be considered a data type path instead of a
+     * data type name.
      * 
-     * @param name The name of the enumeration in the HDF5 file.
+     * @param dataTypeName The name of the enumeration in the HDF5 file.
      * @param values The values of the enumeration.
      * @param check If <code>true</code> and if the data type already exists, check whether it is
      *            compatible with the <var>values</var> provided.
      * @throws HDF5JavaException If <code>check = true</code>, the data type exists and is not
      *             compatible with the <var>values</var> provided.
      */
-    public HDF5EnumerationType getEnumType(final String name, final String[] values,
+    public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values,
             final boolean check) throws HDF5JavaException;
 
     /**
@@ -534,11 +538,11 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
 
     /**
      * Reads a block from data set <var>objectPath</var> as byte array (of rank 1).
-     * <em>Must not be called for data sets of rank higher than 1!</em>
+     * <em>Must not be called for data sets of rank other than 1!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize The block size (this will be the length of the <code>byte[]</code>
-     *            returned).
+     * @param blockSize The block size in numbers of elements (this will be the length of the
+     *            <code>byte[]</code> returned, divided by the size of one element).
      * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
      *            <var>blockSize</var>).
      * @return The data block read from the data set.
@@ -549,12 +553,12 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
 
     /**
      * Reads a block from data set <var>objectPath</var> as byte array (of rank 1).
-     * <em>Must not be called for data sets of rank higher than 1!</em>
+     * <em>Must not be called for data sets of rank other than 1!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize The block size (this will be the length of the <code>byte[]</code>
-     *            returned).
-     * @param offset The offset of the block to read (starting with 0).
+     * @param blockSize The block size in numbers of elements (this will be the length of the
+     *            <code>byte[]</code> returned, divided by the size of one element).
+     * @param offset The offset of the block to read as number of elements (starting with 0).
      * @return The data block read from the data set.
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
@@ -563,14 +567,15 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
 
     /**
      * Reads a block from data set <var>objectPath</var> as byte array (of rank 1) into
-     * <var>buffer</var>. <em>Must not be called for data sets of rank higher than 1!</em>
+     * <var>buffer</var>. <em>Must not be called for data sets of rank other than 1!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param buffer The buffer to read the values in.
-     * @param blockSize The block size to be read. The effective block size is actually {@code
-     *            min(blockSize, buffer.length - memoryOffset, filesize - offset)}.
-     * @param offset The offset of the block in the data set (zero-based).
-     * @param memoryOffset The offset of the block in <var>buffer</var> (zero-based).
+     * @param blockSize The block size in numbers of elements (this will be the length of the
+     *            <code>byte[]</code> returned, divided by the size of one element).
+     * @param offset The offset of the block in the data set as number of elements (zero-based).
+     * @param memoryOffset The offset of the block in <var>buffer</var> as number of elements
+     *            (zero-based).
      * @return The effective block size.
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
@@ -580,11 +585,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
 
     /**
      * Provides all natural blocks of this one-dimensional data set to iterate over.
-     * <em>Must not be called for data sets of rank higher than 1!</em>
-     * <p>
-     * <b>Note:</b> If the data set has a rank higher than 1, then the natural block size will be
-     * chosen to be the complete data set, even when the data set is chunked with a smaller chunk
-     * size!
+     * <em>Must not be called for data sets of rank other than 1!</em>
      * 
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
@@ -1072,7 +1073,8 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
     /**
      * Returns the member information for the committed compound data type <var>dataTypeName</var>.
      * The returned array will contain the members in alphabetical order. It is a failure condition
-     * if this compound data type does not exist.
+     * if this compound data type does not exist. If the <var>dataTypeName</var> starts with '/', it
+     * will be considered a data type path instead of a data type name.
      */
     public HDF5CompoundMemberInformation[] getCompoundMemberInformation(final String dataTypeName);
 
@@ -1085,6 +1087,42 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      */
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath)
             throws HDF5JavaException;
+
+    /**
+     * Returns the compound member information for the data set <var>dataSetPath</var>. The returned
+     * array will contain the members in alphabetical order, if <var>sortAlphabetically</var> is
+     * <code>true</code> or else in the order of definition of the compound type. It is a failure
+     * condition if this data set does not exist or is not of compound type.
+     * 
+     * @throws HDF5JavaException If the data set is not of type compound.
+     */
+    public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath,
+            final boolean sortAlphabetically) throws HDF5JavaException;
+
+    /**
+     * Returns the compound type for the given compound data set in <var>objectPath</var>, mapping
+     * it to <var>compoundClass</var>.
+     */
+    public <T> HDF5CompoundType<T> getCompoundTypeForDataSet(String objectPath,
+            Class<T> compoundClass);
+
+    /**
+     * Returns the named compound type with name <var>dataTypeName</var> from file, mapping it to
+     * <var>compoundClass</var>. If the <var>dataTypeName</var> starts with '/', it will be
+     * considered a data type path instead of a data type name.
+     * <p>
+     * <em>Note:</em> This method only works for compound data types 'committed' to the HDF5 file.
+     * For files written with JHDF5 this will always be true, however, files created with other
+     * libraries may not choose to commit compound data types.
+     */
+    public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> compoundClass);
+
+    /**
+     * Returns the named compound type with name <var>dataTypeName</var> from file, mapping it to
+     * <var>compoundClass</var>. This method will use the default name for the compound data type as
+     * chosen by JHDF5 and thus will likely only work on files written with JHDF5.
+     */
+    public <T> HDF5CompoundType<T> getNamedCompoundType(Class<T> compoundClass);
 
     /**
      * Returns the compound type <var>name></var> for this HDF5 file.
@@ -1135,7 +1173,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> T[] readCompoundArray(final String objectPath, final HDF5CompoundType<T> type)
             throws HDF5JavaException;
@@ -1148,7 +1186,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
      *            file is translated back into Java objects.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> T[] readCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
@@ -1163,7 +1201,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
      *            <var>blockSize</var>).
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> T[] readCompoundArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
             final int blockSize, final long blockNumber) throws HDF5JavaException;
@@ -1180,7 +1218,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
      *            file is translated back into Java objects.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> T[] readCompoundArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
             final int blockSize, final long blockNumber, final IByteArrayInspector inspectorOrNull)
@@ -1195,7 +1233,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      *            if the data set is long enough).
      * @param offset The offset of the block to read (starting with 0).
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> T[] readCompoundArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final int blockSize, final long offset)
@@ -1212,7 +1250,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
      *            file is translated back into Java objects.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> T[] readCompoundArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final int blockSize, final long offset,
@@ -1249,7 +1287,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> MDArray<T> readCompoundMDArray(final String objectPath,
             final HDF5CompoundType<T> type) throws HDF5JavaException;
@@ -1262,7 +1300,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
      *            file is translated back into Java objects.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> MDArray<T> readCompoundMDArray(final String objectPath,
             final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
@@ -1276,7 +1314,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param blockDimensions The extent of the block to write along each axis.
      * @param blockNumber The number of the block to write along each axis.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> MDArray<T> readCompoundMDArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] blockNumber)
@@ -1292,7 +1330,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
      *            file is translated back into Java objects.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> MDArray<T> readCompoundMDArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] blockNumber,
@@ -1306,7 +1344,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param blockDimensions The extent of the block to write along each axis.
      * @param offset The offset of the block to write in the data set along each axis.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] offset)
@@ -1322,7 +1360,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader
      * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
      *            file is translated back into Java objects.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
     public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] offset,

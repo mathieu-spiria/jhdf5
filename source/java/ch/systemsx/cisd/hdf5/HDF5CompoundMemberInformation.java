@@ -19,6 +19,14 @@ package ch.systemsx.cisd.hdf5;
 import java.util.Arrays;
 import java.util.BitSet;
 
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.base.mdarray.MDByteArray;
+import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
+import ch.systemsx.cisd.base.mdarray.MDFloatArray;
+import ch.systemsx.cisd.base.mdarray.MDIntArray;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
+import ch.systemsx.cisd.base.mdarray.MDShortArray;
+
 /**
  * Contains information about one member of an HDF5 compound data type.
  * 
@@ -31,13 +39,27 @@ public final class HDF5CompoundMemberInformation implements
 
     private final HDF5DataTypeInformation dataTypeInformation;
 
-    HDF5CompoundMemberInformation(String memberName, HDF5DataTypeInformation dataTypeInformation)
+    private final int offset;
+
+    private final String[] enumValuesOrNull;
+
+    HDF5CompoundMemberInformation(String memberName, HDF5DataTypeInformation dataTypeInformation,
+            int offset, String[] enumValuesOrNull)
     {
         assert memberName != null;
         assert dataTypeInformation != null;
+        assert offset >= 0;
 
         this.memberName = memberName;
         this.dataTypeInformation = dataTypeInformation;
+        this.enumValuesOrNull = enumValuesOrNull;
+        this.offset = offset;
+    }
+
+    HDF5CompoundMemberInformation(String memberName, HDF5DataTypeInformation dataTypeInformation,
+            int offset)
+    {
+        this(memberName, dataTypeInformation, offset, null);
     }
 
     /**
@@ -49,11 +71,29 @@ public final class HDF5CompoundMemberInformation implements
     }
 
     /**
-     * Returns the type information of the member with index <var>i</var>.
+     * Returns the type information of the member.
      */
     public HDF5DataTypeInformation getType()
     {
         return dataTypeInformation;
+    }
+
+    /**
+     * Returns the values of the enumeration type of this compound member, if it is of an
+     * enumeration type and <code>null</code> otherwise.
+     */
+    public String[] tryGetEnumValues()
+    {
+        return enumValuesOrNull;
+    }
+
+    /**
+     * Returns the byte offset of this member within the compound data type, 0 meaning that the
+     * member is the first one in the compound data type.
+     */
+    public int getOffset()
+    {
+        return offset;
     }
 
     /**
@@ -69,11 +109,13 @@ public final class HDF5CompoundMemberInformation implements
         assert compoundClass != null;
         final HDF5CompoundMemberInformation[] info =
                 new HDF5CompoundMemberInformation[members.length];
+        int offset = 0;
         for (int i = 0; i < info.length; ++i)
         {
             info[i] =
                     new HDF5CompoundMemberInformation(members[i].getMemberName(),
-                            getTypeInformation(compoundClass, members[i]));
+                            getTypeInformation(compoundClass, members[i]), offset);
+            offset += info[i].getType().getSize();
         }
         Arrays.sort(info);
         return info;
@@ -87,16 +129,20 @@ public final class HDF5CompoundMemberInformation implements
         if (fieldType == boolean.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.BOOLEAN, 1);
-        } else if (fieldType == byte.class || fieldType == byte[].class)
+        } else if (fieldType == byte.class || fieldType == byte[].class
+                || fieldType == byte[][].class || fieldType == MDByteArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 1);
-        } else if (fieldType == short.class || fieldType == short[].class)
+        } else if (fieldType == short.class || fieldType == short[].class
+                || fieldType == short[][].class || fieldType == MDShortArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 2);
-        } else if (fieldType == int.class || fieldType == int[].class)
+        } else if (fieldType == int.class || fieldType == int[].class || fieldType == int[][].class
+                || fieldType == MDIntArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 4);
-        } else if (fieldType == long.class || fieldType == long[].class)
+        } else if (fieldType == long.class || fieldType == long[].class
+                || fieldType == long[][].class || fieldType == MDLongArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 8);
         } else if (fieldType == BitSet.class)
@@ -105,10 +151,12 @@ public final class HDF5CompoundMemberInformation implements
                     new HDF5DataTypeInformation(HDF5DataClass.BITFIELD, 8, member
                             .getMemberTypeLength()
                             / 64 + (member.getMemberTypeLength() % 64 != 0 ? 1 : 0));
-        } else if (fieldType == float.class || fieldType == float[].class)
+        } else if (fieldType == float.class || fieldType == float[].class
+                || fieldType == float[][].class || fieldType == MDFloatArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, 4);
-        } else if (fieldType == double.class || fieldType == double[].class)
+        } else if (fieldType == double.class || fieldType == double[].class
+                || fieldType == double[][].class || fieldType == MDDoubleArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, 8);
         } else if (fieldType == String.class)
@@ -124,9 +172,9 @@ public final class HDF5CompoundMemberInformation implements
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.OTHER, -1);
         }
-        if (fieldType.isArray())
+        if (fieldType.isArray() || MDAbstractArray.class.isAssignableFrom(fieldType))
         {
-            typeInfo.setDimensions(new int[] { member.getMemberTypeLength() });
+            typeInfo.setDimensions(member.getMemberTypeDimensions());
         }
         return typeInfo;
     }

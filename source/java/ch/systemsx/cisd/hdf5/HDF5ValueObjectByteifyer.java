@@ -68,16 +68,20 @@ class HDF5ValueObjectByteifyer<T>
         for (int i = 0; i < result.length; ++i)
         {
             final Class<?> memberClazz = members[i].getField(clazz).getType();
+            // May be -1 if not known
+            final int typeId = members[i].getStorageDataTypeId();
             if (memberClazz == boolean.class)
             {
                 result[i] =
                         HDF5MemberByteifyer.createBooleanMemberByteifyer(
                                 members[i].getField(clazz), members[i].getMemberName(),
-                                fileInfoProvider.getBooleanDataTypeId(), offset);
+                                (typeId < 0) ? fileInfoProvider.getBooleanDataTypeId() : typeId,
+                                offset);
             } else if (memberClazz == String.class)
             {
                 final int stringDataTypeId =
-                        fileInfoProvider.getStringDataTypeId(members[i].getMemberTypeLength());
+                        (typeId < 0) ? fileInfoProvider.getStringDataTypeId(members[i]
+                                .getMemberTypeLength()) : typeId;
                 result[i] =
                         HDF5MemberByteifyer.createStringMemberByteifyer(members[i].getField(clazz),
                                 members[i].getMemberName(), offset, stringDataTypeId, members[i]
@@ -98,13 +102,14 @@ class HDF5ValueObjectByteifyer<T>
                 result[i] =
                         HDF5MemberByteifyer.createArrayMemberByteifyer(members[i].getField(clazz),
                                 members[i].getMemberName(), offset, fileInfoProvider, members[i]
-                                        .getMemberTypeLength());
+                                        .getMemberTypeLength(), members[i].getStorageDataTypeId());
             } else if (MDAbstractArray.class.isAssignableFrom(memberClazz))
             {
                 result[i] =
                         HDF5MemberByteifyer.createArrayMemberByteifyer(members[i].getField(clazz),
                                 members[i].getMemberName(), offset, fileInfoProvider, members[i]
-                                        .getMemberTypeDimensions());
+                                        .getMemberTypeDimensions(), members[i]
+                                        .getStorageDataTypeId());
             } else
             {
                 result[i] =
@@ -245,11 +250,12 @@ class HDF5ValueObjectByteifyer<T>
     {
         try
         {
-            return (T) recordClass.newInstance();
+            return (T) ReflectionUtils.newInstance(recordClass);
         } catch (Exception ex)
         {
             throw new HDF5JavaException("Creation of new object of class "
-                    + recordClass.getCanonicalName() + " by default constructor failed.");
+                    + recordClass.getCanonicalName() + " by default constructor failed: "
+                    + ex.toString());
         }
 
     }

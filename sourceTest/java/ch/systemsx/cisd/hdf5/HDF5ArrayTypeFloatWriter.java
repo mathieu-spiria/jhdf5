@@ -19,12 +19,16 @@ package ch.systemsx.cisd.hdf5;
 import static ncsa.hdf.hdf5lib.H5.H5Aclose;
 import static ncsa.hdf.hdf5lib.H5.H5Acreate;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_float;
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite_double;
 import static ncsa.hdf.hdf5lib.H5.H5Sclose;
 import static ncsa.hdf.hdf5lib.H5.H5Screate_simple;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32BE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F64BE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
 import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
@@ -44,6 +48,48 @@ public class HDF5ArrayTypeFloatWriter
     HDF5ArrayTypeFloatWriter(HDF5Writer writer)
     {
         baseWriter = writer.getBaseWriter();
+    }
+
+    public void writeFloatArrayBigEndian(final String objectPath, final float[] data,
+            final HDF5FloatStorageFeatures features)
+    {
+        assert data != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F32BE, new long[]
+                                { data.length }, features, registry);
+                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
+                            data);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    public void writeDoubleArrayBigEndian(final String objectPath, final double[] data,
+            final HDF5FloatStorageFeatures features)
+    {
+        assert data != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F64BE, new long[]
+                                { data.length }, features, registry);
+                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
+                            data);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
     }
 
     public void writeFloatArrayArrayType(final String objectPath, final float[] data)

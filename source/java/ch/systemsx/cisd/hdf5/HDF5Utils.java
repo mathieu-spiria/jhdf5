@@ -186,9 +186,17 @@ final class HDF5Utils
 
     /**
      * Returns a path for a data type with <var>name</var> and (optional) <var>appendices</var>.
+     * <p>
+     * <b>Special case:</b> If the <var>appendices</var> array contains exactly one element and if
+     * this element starts with '/', this element itself will be considered the (complete) data type
+     * path.
      */
     static String createDataTypePath(String name, String... appendices)
     {
+        if (appendices.length == 1 && appendices[0].startsWith("/"))
+        {
+            return appendices[0];
+        }
         final StringBuilder builder = new StringBuilder();
         builder.append(DATATYPE_GROUP);
         builder.append('/');
@@ -203,8 +211,7 @@ final class HDF5Utils
     /**
      * Returns the length of a one-dimension array defined by <var>dimensions</var>.
      * 
-     * @throws HDF5JavaException If <var>dimensions</var> do not define a one-dimensional
-     *             array.
+     * @throws HDF5JavaException If <var>dimensions</var> do not define a one-dimensional array.
      */
     static int getOneDimensionalArraySize(final int[] dimensions)
     {
@@ -225,8 +232,8 @@ final class HDF5Utils
     /**
      * Returns the length of a one-dimension array defined by <var>dimensions</var>.
      * 
-     * @throws HDF5JavaException If <var>dimensions</var> do not define a one-dimensional
-     *             array or if <code>dimensions[0]</code> overflows the <code>int</code> type.
+     * @throws HDF5JavaException If <var>dimensions</var> do not define a one-dimensional array or
+     *             if <code>dimensions[0]</code> overflows the <code>int</code> type.
      */
     static int getOneDimensionalArraySize(final long[] dimensions)
     {
@@ -301,7 +308,7 @@ final class HDF5Utils
 
     /**
      * Checks the consistency of the dimension of a given array.
-     * <p> 
+     * <p>
      * As Java doesn't have a matrix data type, but only arrays of arrays, there is no way to ensure
      * in the language itself whether all rows have the same length.
      * 
@@ -344,7 +351,7 @@ final class HDF5Utils
     static boolean isInBounds(long[] dimensions, long[] subDimensions)
     {
         assert dimensions.length == subDimensions.length;
-        
+
         for (int i = 0; i < dimensions.length; ++i)
         {
             if (subDimensions[i] > dimensions[i])
@@ -354,5 +361,5 @@ final class HDF5Utils
         }
         return true;
     }
-    
+
 }

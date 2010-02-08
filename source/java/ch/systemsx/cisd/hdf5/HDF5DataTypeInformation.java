@@ -90,6 +90,14 @@ public final class HDF5DataTypeInformation
     }
 
     /**
+     * Returns the total size (in bytes) of this data set.
+     */
+    public int getSize()
+    {
+        return elementSize * numberOfElements;
+    }
+    
+    /**
      * Returns the dimensions along each axis of this type.
      */
     public int[] getDimensions()

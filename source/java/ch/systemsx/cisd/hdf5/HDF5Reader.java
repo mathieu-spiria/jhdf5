@@ -30,11 +30,14 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
 
 import java.io.File;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import ncsa.hdf.hdf5lib.HDFNativeData;
@@ -72,7 +75,6 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  */
 class HDF5Reader implements IHDF5Reader
 {
-
     private static final int MIN_ENUM_SIZE_FOR_UPFRONT_LOADING = 10;
 
     private final HDF5BaseReader baseReader;
@@ -490,11 +492,7 @@ class HDF5Reader implements IHDF5Reader
         baseReader.checkOpen();
         final String dataTypePath = createDataTypePath(ENUM_PREFIX, name);
         final int storageDataTypeId = baseReader.getDataTypeId(dataTypePath);
-        final int nativeDataTypeId =
-                baseReader.h5.getNativeDataType(storageDataTypeId, baseReader.fileRegistry);
-        final String[] values = baseReader.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
-                name, values);
+        return getEnumTypeForStorageDataType(storageDataTypeId, baseReader.fileRegistry);
     }
 
     public HDF5EnumerationType getEnumType(final String name, final String[] values)
@@ -585,13 +583,17 @@ class HDF5Reader implements IHDF5Reader
         {
             final int storageDataTypeId =
                     baseReader.h5.getDataTypeForDataSet(objectId, baseReader.fileRegistry);
-            final int nativeDataTypeId =
-                    baseReader.h5.getNativeDataType(storageDataTypeId, baseReader.fileRegistry);
-            final String[] values =
-                    baseReader.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-            return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
-                    null, values);
+            return getEnumTypeForStorageDataType(storageDataTypeId, baseReader.fileRegistry);
         }
+    }
+
+    private HDF5EnumerationType getEnumTypeForStorageDataType(final int storageDataTypeId,
+            final ICleanUpRegistry registry)
+    {
+        final int nativeDataTypeId = baseReader.h5.getNativeDataType(storageDataTypeId, registry);
+        final String[] values = baseReader.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
+        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
+                null, values);
     }
 
     protected boolean isScaledEnum(final int objectId, final ICleanUpRegistry registry)
@@ -793,11 +795,7 @@ class HDF5Reader implements IHDF5Reader
     {
         final int storageDataTypeId =
                 baseReader.h5.getDataTypeForAttribute(objectId, baseReader.fileRegistry);
-        final int nativeDataTypeId =
-                baseReader.h5.getNativeDataType(storageDataTypeId, baseReader.fileRegistry);
-        final String[] values = baseReader.h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-        return new HDF5EnumerationType(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
-                null, values);
+        return getEnumTypeForStorageDataType(storageDataTypeId, baseReader.fileRegistry);
     }
 
     // /////////////////////
@@ -822,9 +820,10 @@ class HDF5Reader implements IHDF5Reader
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSetCheckBitFields(dataSetId,
                                     registry);
+                    final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
                     final byte[] data =
-                            new byte[(spaceParams.blockSize == 0 ? 1 : spaceParams.blockSize)
-                                    * baseReader.h5.getDataTypeSize(nativeDataTypeId)];
+                            new byte[((spaceParams.blockSize == 0) ? 1 : spaceParams.blockSize)
+                                    * elementSize];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
@@ -848,7 +847,8 @@ class HDF5Reader implements IHDF5Reader
                                     blockSize, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final byte[] data = new byte[spaceParams.blockSize];
+                    final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
+                    final byte[] data = new byte[elementSize * spaceParams.blockSize];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
@@ -871,7 +871,8 @@ class HDF5Reader implements IHDF5Reader
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final byte[] data = new byte[spaceParams.blockSize];
+                    final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
+                    final byte[] data = new byte[elementSize * spaceParams.blockSize];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
@@ -900,6 +901,11 @@ class HDF5Reader implements IHDF5Reader
                                     blockSize, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
+                    if ((blockSize + memoryOffset) * elementSize > buffer.length)
+                    {
+                        throw new HDF5JavaException("Buffer not large enough for blockSize and memoryOffset");
+                    }
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, buffer);
                     return spaceParams.blockSize;
@@ -2128,6 +2134,30 @@ class HDF5Reader implements IHDF5Reader
     // Compound
     //
 
+    public <T> HDF5CompoundType<T> getCompoundTypeForDataSet(String objectPath,
+            Class<T> compoundClass)
+    {
+        final HDF5CompoundType<T> typeForClass =
+                getCompoundType(null, compoundClass, createByteifyers(compoundClass,
+                        getFullCompoundDataSetInformation(objectPath, baseReader.fileRegistry)));
+        return typeForClass;
+    }
+
+    public <T> HDF5CompoundType<T> getNamedCompoundType(Class<T> compoundClass)
+    {
+        return getNamedCompoundType(compoundClass.getSimpleName(), compoundClass);
+    }
+
+    public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> compoundClass)
+    {
+        final String dataTypePath =
+                HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName);
+        final HDF5CompoundType<T> typeForClass =
+                getCompoundType(null, compoundClass, createByteifyers(compoundClass,
+                        getFullCompoundDataTypeInformation(dataTypePath, baseReader.fileRegistry)));
+        return typeForClass;
+    }
+
     public <T> HDF5CompoundMemberInformation[] getCompoundMemberInformation(
             final Class<T> compoundClass)
     {
@@ -2148,7 +2178,10 @@ class HDF5Reader implements IHDF5Reader
                             final int compoundDataTypeId =
                                     baseReader.h5.openDataType(baseReader.fileId, dataTypePath,
                                             registry);
-                            return getCompoundMemberInformation(compoundDataTypeId, registry);
+                            final HDF5CompoundTypeInformation compoundInformation =
+                                    getCompoundTypeInformation(compoundDataTypeId, registry);
+                            Arrays.sort(compoundInformation.members);
+                            return compoundInformation.members;
                         }
                     };
         return baseReader.runner.call(writeRunnable);
@@ -2157,45 +2190,103 @@ class HDF5Reader implements IHDF5Reader
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath)
             throws HDF5JavaException
     {
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<HDF5CompoundMemberInformation[]> writeRunnable =
+        return getCompoundDataSetInformation(dataSetPath, true);
+    }
+
+    public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath,
+            final boolean sortAlphabetically) throws HDF5JavaException
+    {
+        final ICallableWithCleanUp<HDF5CompoundMemberInformation[]> infoRunnable =
                 new ICallableWithCleanUp<HDF5CompoundMemberInformation[]>()
                     {
                         public HDF5CompoundMemberInformation[] call(final ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, dataSetPath,
-                                            registry);
-                            final int compoundDataTypeId =
-                                    baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                            if (baseReader.h5.getClassType(compoundDataTypeId) != H5T_COMPOUND)
-                            {
-                                throw new HDF5JavaException("Data set '" + dataSetPath
-                                        + "' is not of compound type.");
-                            }
-                            return getCompoundMemberInformation(compoundDataTypeId, registry);
+                            return getFullCompoundDataSetInformation(dataSetPath, registry).members;
                         }
                     };
-        return baseReader.runner.call(writeRunnable);
+        final HDF5CompoundMemberInformation[] compoundInformation =
+                baseReader.runner.call(infoRunnable);
+        if (sortAlphabetically)
+        {
+            Arrays.sort(compoundInformation);
+        }
+        return compoundInformation;
     }
 
-    private HDF5CompoundMemberInformation[] getCompoundMemberInformation(
-            final int compoundDataTypeId, final ICleanUpRegistry registry)
+    private HDF5CompoundTypeInformation getFullCompoundDataSetInformation(final String dataSetPath,
+            final ICleanUpRegistry registry) throws HDF5JavaException
+    {
+        final int dataSetId = baseReader.h5.openDataSet(baseReader.fileId, dataSetPath, registry);
+        final int compoundDataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
+        if (baseReader.h5.getClassType(compoundDataTypeId) != H5T_COMPOUND)
+        {
+            throw new HDF5JavaException("Data set '" + dataSetPath + "' is not of compound type.");
+        }
+        final HDF5CompoundTypeInformation compoundInformation =
+                getCompoundTypeInformation(compoundDataTypeId, registry);
+        return compoundInformation;
+    }
+
+    private HDF5CompoundTypeInformation getFullCompoundDataTypeInformation(
+            final String dataTypePath, final ICleanUpRegistry registry) throws HDF5JavaException
+    {
+        final int compoundDataTypeId =
+                baseReader.h5.openDataType(baseReader.fileId, dataTypePath, registry);
+        if (baseReader.h5.getClassType(compoundDataTypeId) != H5T_COMPOUND)
+        {
+            throw new HDF5JavaException("Data set '" + dataTypePath + "' is not of compound type.");
+        }
+        final HDF5CompoundTypeInformation compoundInformation =
+                getCompoundTypeInformation(compoundDataTypeId, registry);
+        return compoundInformation;
+    }
+
+    private static final class HDF5CompoundTypeInformation
+    {
+        final HDF5CompoundMemberInformation[] members;
+
+        final int[] dataTypeIds;
+
+        HDF5CompoundTypeInformation(int length)
+        {
+            members = new HDF5CompoundMemberInformation[length];
+            dataTypeIds = new int[length];
+        }
+    }
+
+    private HDF5CompoundTypeInformation getCompoundTypeInformation(final int compoundDataTypeId,
+            final ICleanUpRegistry registry)
     {
         final String[] memberNames =
                 baseReader.h5.getNamesForEnumOrCompoundMembers(compoundDataTypeId);
-        final HDF5CompoundMemberInformation[] memberInfo =
-                new HDF5CompoundMemberInformation[memberNames.length];
-        for (int i = 0; i < memberInfo.length; ++i)
+        final HDF5CompoundTypeInformation compoundInfo =
+                new HDF5CompoundTypeInformation(memberNames.length);
+        int offset = 0;
+        for (int i = 0; i < memberNames.length; ++i)
         {
             final int dataTypeId =
                     baseReader.h5.getDataTypeForIndex(compoundDataTypeId, i, registry);
+            compoundInfo.dataTypeIds[i] = dataTypeId;
             final HDF5DataTypeInformation dataTypeInformation =
                     baseReader.getDataTypeInformation(dataTypeId);
-            memberInfo[i] = new HDF5CompoundMemberInformation(memberNames[i], dataTypeInformation);
+            final HDF5EnumerationType enumTypeOrNull =
+                    (dataTypeInformation.getDataClass() == HDF5DataClass.ENUM) ? getEnumTypeForStorageDataType(
+                            dataTypeId, registry)
+                            : null;
+            if (enumTypeOrNull != null)
+            {
+                compoundInfo.members[i] =
+                        new HDF5CompoundMemberInformation(memberNames[i], dataTypeInformation,
+                                offset, enumTypeOrNull.getValueArray());
+            } else
+            {
+                compoundInfo.members[i] =
+                        new HDF5CompoundMemberInformation(memberNames[i], dataTypeInformation,
+                                offset);
+            }
+            offset += compoundInfo.members[i].getType().getSize();
         }
-        Arrays.sort(memberInfo);
-        return memberInfo;
+        return compoundInfo;
     }
 
     public <T> HDF5CompoundType<T> getCompoundType(final String name, final Class<T> compoundType,
@@ -2204,6 +2295,12 @@ class HDF5Reader implements IHDF5Reader
         baseReader.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectArrayifyer =
                 createByteifyers(compoundType, members);
+        return getCompoundType(name, compoundType, objectArrayifyer);
+    }
+
+    private <T> HDF5CompoundType<T> getCompoundType(final String name, final Class<T> compoundType,
+            final HDF5ValueObjectByteifyer<T> objectArrayifyer)
+    {
         final int storageDataTypeId = createStorageCompoundDataType(objectArrayifyer);
         final int nativeDataTypeId = createNativeCompoundDataType(objectArrayifyer);
         return new HDF5CompoundType<T>(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
@@ -2236,6 +2333,13 @@ class HDF5Reader implements IHDF5Reader
         return getCompoundType(null, compoundType, members);
     }
 
+    public <T> T readCompound(String objectPath, Class<T> compoundClass) throws HDF5JavaException
+    {
+        final HDF5CompoundType<T> typeForClass =
+                getCompoundTypeForDataSet(objectPath, compoundClass);
+        return readCompound(objectPath, typeForClass, null);
+    }
+
     public <T> T readCompound(final String objectPath, final HDF5CompoundType<T> type)
             throws HDF5JavaException
     {
@@ -2248,6 +2352,14 @@ class HDF5Reader implements IHDF5Reader
         baseReader.checkOpen();
         type.check(baseReader.fileId);
         return primReadCompound(objectPath, -1, -1, type, inspectorOrNull);
+    }
+
+    public <T> T[] readCompoundArray(String objectPath, Class<T> compoundClass)
+            throws HDF5JavaException
+    {
+        final HDF5CompoundType<T> typeForClass =
+                getCompoundTypeForDataSet(objectPath, compoundClass);
+        return readCompoundArray(objectPath, typeForClass, null);
     }
 
     public <T> T[] readCompoundArray(final String objectPath, final HDF5CompoundType<T> type)
@@ -2437,6 +2549,63 @@ class HDF5Reader implements IHDF5Reader
         {
             throw new HDF5JavaException(path + " needs to be a Compound.");
         }
+    }
+
+    private HDF5CompoundMemberMapping[] inferMemberMapping(final Class<?> compoundClazz,
+            final HDF5CompoundTypeInformation compoundTypeInfo)
+    {
+        final List<HDF5CompoundMemberMapping> mapping =
+                new ArrayList<HDF5CompoundMemberMapping>(compoundTypeInfo.members.length);
+        final Map<String, Field> fields = ReflectionUtils.getFieldMap(compoundClazz);
+        for (int i = 0; i < compoundTypeInfo.members.length; ++i)
+        {
+            final HDF5CompoundMemberInformation compoundMember = compoundTypeInfo.members[i];
+            final int compoundMemberTypeId = compoundTypeInfo.dataTypeIds[i];
+            final Field fieldOrNull = fields.get(compoundMember.getName());
+            if (fieldOrNull != null)
+            {
+                final HDF5DataTypeInformation typeInfo = compoundMember.getType();
+                final int[] dimensions = typeInfo.getDimensions();
+                if (typeInfo.getDataClass() == HDF5DataClass.ENUM)
+                {
+                    if (fieldOrNull.getType() != HDF5EnumerationValue.class)
+                    {
+                        throw new HDF5JavaException(
+                                "Field of enum type does not correspond to enumeration value");
+                    } else
+                    {
+                        mapping.add(HDF5CompoundMemberMapping.mapping(fieldOrNull.getName(),
+                                new HDF5EnumerationType(baseReader.fileId, compoundMemberTypeId,
+                                        baseReader.h5.getNativeDataTypeCheckForBitField(
+                                                compoundMemberTypeId, baseReader.fileRegistry),
+                                        null, compoundMember.tryGetEnumValues())));
+                    }
+                } else if (typeInfo.getDataClass() == HDF5DataClass.STRING)
+                {
+                    if (fieldOrNull.getType() != String.class)
+                    {
+                        throw new HDF5JavaException(
+                                "Field of string type does not correspond to string value");
+                    } else
+                    {
+                        mapping.add(HDF5CompoundMemberMapping.mappingArrayWithStorageId(fieldOrNull
+                                .getName(), new int[]
+                            { typeInfo.getElementSize() }, compoundMemberTypeId));
+                    }
+                } else
+                {
+                    mapping.add(HDF5CompoundMemberMapping.mappingArrayWithStorageId(fieldOrNull
+                            .getName(), dimensions, compoundMemberTypeId));
+                }
+            }
+        }
+        return mapping.toArray(new HDF5CompoundMemberMapping[mapping.size()]);
+    }
+
+    private <T> HDF5ValueObjectByteifyer<T> createByteifyers(final Class<T> compoundClazz,
+            final HDF5CompoundTypeInformation compoundMembers)
+    {
+        return createByteifyers(compoundClazz, inferMemberMapping(compoundClazz, compoundMembers));
     }
 
     protected <T> HDF5ValueObjectByteifyer<T> createByteifyers(final Class<T> compoundClazz,
