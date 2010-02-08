@@ -68,7 +68,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     private Map<String, Integer> nameToIndexMap;
     
     /**
-     * Returns tht storage data type id of the corresponding integer type of this type.
+     * Returns the storage data type id of the corresponding integer type of this type.
      */
     int getIntStorageTypeId()
     {
