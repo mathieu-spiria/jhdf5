@@ -41,6 +41,10 @@ public interface IHDF5CompoundReader
         void inspect(byte[] byteArray);
     }
 
+    // /////////////////////
+    // Information
+    // /////////////////////
+    
     /**
      * Returns the member information for the committed compound data type <var>compoundClass</var>
      * (using its "simple name"). The returned array will contain the members in alphabetical order.
@@ -78,6 +82,10 @@ public interface IHDF5CompoundReader
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath,
             final boolean sortAlphabetically) throws HDF5JavaException;
 
+    // /////////////////////
+    // Types
+    // /////////////////////
+
     /**
      * Returns the compound type for the given compound data set in <var>objectPath</var>, mapping
      * it to <var>compoundClass</var>.
@@ -99,7 +107,8 @@ public interface IHDF5CompoundReader
     /**
      * Returns the named compound type with name <var>dataTypeName</var> from file, mapping it to
      * <var>compoundClass</var>. This method will use the default name for the compound data type as
-     * chosen by JHDF5 and thus will likely only work on files written with JHDF5.
+     * chosen by JHDF5 and thus will likely only work on files written with JHDF5. The default name
+     * is based on the simple name of <var>compoundType</var>.
      */
     public <T> HDF5CompoundType<T> getNamedCompoundType(Class<T> compoundClass);
 
@@ -114,13 +123,18 @@ public interface IHDF5CompoundReader
             final HDF5CompoundMemberMapping... members);
 
     /**
-     * Returns the compound type <var>name></var> for this HDF5 file.
+     * Returns the compound type for this HDF5 file, using the default name chosen by JHDF5 which is
+     * based on the simple name of <var>compoundType</var>.
      * 
      * @param compoundType The Java type that corresponds to this HDF5 type.
      * @param members The mapping from the Java compound type to the HDF5 type.
      */
     public <T> HDF5CompoundType<T> getCompoundType(final Class<T> compoundType,
             final HDF5CompoundMemberMapping... members);
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
 
     /**
      * Reads a compound from the data set <var>objectPath</var>.

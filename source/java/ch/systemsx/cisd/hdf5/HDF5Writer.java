@@ -85,6 +85,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     private final IHDF5FloatWriter floatWriter;
 
     private final IHDF5DoubleWriter doubleWriter;
+    
+    private final IHDF5CompoundWriter compoundWriter;
 
     HDF5Writer(HDF5BaseWriter baseWriter)
     {
@@ -96,6 +98,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         this.longWriter = new HDF5LongWriter(baseWriter);
         this.floatWriter = new HDF5FloatWriter(baseWriter);
         this.doubleWriter = new HDF5DoubleWriter(baseWriter);
+        this.compoundWriter = new HDF5CompoundWriter(baseWriter);
     }
 
     HDF5BaseWriter getBaseWriter()
@@ -1785,534 +1788,178 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public <T> HDF5CompoundType<T> getCompoundType(final String name, Class<T> compoundType,
             HDF5CompoundMemberMapping... members)
     {
-        baseWriter.checkOpen();
-        final HDF5ValueObjectByteifyer<T> objectByteifyer =
-                baseWriter.createCompoundByteifyers(compoundType, members);
-        final String dataTypeName = (name != null) ? name : compoundType.getSimpleName();
-        final int storageDataTypeId =
-                getOrCreateCompoundDataType(dataTypeName, compoundType, objectByteifyer);
-        final int nativeDataTypeId = baseWriter.createNativeCompoundDataType(objectByteifyer);
-        return new HDF5CompoundType<T>(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
-                dataTypeName, compoundType, objectByteifyer);
+        return compoundWriter.getCompoundType(name, compoundType, members);
     }
 
     @Override
     public <T> HDF5CompoundType<T> getCompoundType(Class<T> compoundType,
             HDF5CompoundMemberMapping... members)
     {
-        return getCompoundType(null, compoundType, members);
-    }
-
-    private <T> int getOrCreateCompoundDataType(final String dataTypeName,
-            final Class<T> compoundClass, final HDF5ValueObjectByteifyer<T> objectByteifyer)
-    {
-        final String dataTypePath =
-                HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName);
-        int storageDataTypeId = baseWriter.getDataTypeId(dataTypePath);
-        if (storageDataTypeId < 0)
-        {
-            storageDataTypeId = baseWriter.createStorageCompoundDataType(objectByteifyer);
-            baseWriter.commitDataType(dataTypePath, storageDataTypeId);
-        }
-        return storageDataTypeId;
-    }
-
-    public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
-            final T data)
-    {
-        writeCompound(objectPath, type, data, null);
-    }
-
-    public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
-            final T data, final IByteArrayInspector inspectorOrNull)
-    {
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final byte[] byteArray = type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
-        if (inspectorOrNull != null)
-        {
-            inspectorOrNull.inspect(byteArray);
-        }
-        baseWriter.writeScalar(objectPath, type.getStorageTypeId(), type.getNativeTypeId(),
-                byteArray);
-    }
-
-    public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final T[] data)
-    {
-        writeCompoundArray(objectPath, type, data,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
-    }
-
-    public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final T[] data, final HDF5GenericStorageFeatures features)
-    {
-        writeCompoundArray(objectPath, type, data, features, null);
-    }
-
-    public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final T[] data, final HDF5GenericStorageFeatures features,
-            final IByteArrayInspector inspectorOrNull)
-    {
-        assert objectPath != null;
-        assert type != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, type.getStorageTypeId(), new long[]
-                                { data.length }, features, registry);
-                    final byte[] byteArray =
-                            type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
-                    if (inspectorOrNull != null)
-                    {
-                        inspectorOrNull.inspect(byteArray);
-                    }
-                    H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            byteArray);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    public <T> void writeCompoundArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final T[] data, final long blockNumber)
-    {
-        writeCompoundArrayBlock(objectPath, type, data, blockNumber, null);
-    }
-
-    public <T> void writeCompoundArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final T[] data, final long blockNumber,
-            final IByteArrayInspector inspectorOrNull)
-    {
-        assert objectPath != null;
-        assert type != null;
-        assert data != null;
-        assert blockNumber >= 0;
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    final long size = data.length;
-                    final long[] dimensions = new long[]
-                        { size };
-                    final long[] offset = new long[]
-                        { size * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { data.length * (blockNumber + 1) }, -1, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    final byte[] byteArray =
-                            type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
-                    if (inspectorOrNull != null)
-                    {
-                        inspectorOrNull.inspect(byteArray);
-                    }
-                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, byteArray);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    public <T> void writeCompoundArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final T[] data, final long offset)
-    {
-        writeCompoundArrayBlockWithOffset(objectPath, type, data, offset, null);
-    }
-
-    public <T> void writeCompoundArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final T[] data, final long offset,
-            final IByteArrayInspector inspectorOrNull)
-    {
-        assert objectPath != null;
-        assert type != null;
-        assert data != null;
-        assert offset >= 0;
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final long size = data.length;
-        final long[] dimensions = new long[]
-            { size };
-        final long[] offsetArray = new long[]
-            { offset };
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { offset + data.length }, -1, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offsetArray, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    final byte[] byteArray =
-                            type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
-                    if (inspectorOrNull != null)
-                    {
-                        inspectorOrNull.inspect(byteArray);
-                    }
-                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, byteArray);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        return compoundWriter.getCompoundType(compoundType, members);
     }
 
     public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, int size)
     {
-        createCompoundArray(objectPath, type, size,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        compoundWriter.createCompoundArray(objectPath, type, size);
     }
 
-    public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final long size, final int blockSize)
+    public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, long size,
+            HDF5GenericStorageFeatures features)
     {
-        createCompoundArray(objectPath, type, size, blockSize,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        compoundWriter.createCompoundArray(objectPath, type, size, features);
     }
 
-    public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final long size, final int blockSize, final HDF5GenericStorageFeatures features)
+    public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, long size,
+            int blockSize, HDF5GenericStorageFeatures features)
     {
-        assert objectPath != null;
-        assert type != null;
-        assert size >= 0;
-        assert blockSize >= 0 && (blockSize <= size || size == 0);
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
-                            new long[]
-                                { size }, new long[]
-                                { blockSize }, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        compoundWriter.createCompoundArray(objectPath, type, size, blockSize, features);
     }
 
-    public <T> void createCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final long size, final HDF5GenericStorageFeatures features)
+    public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, long size,
+            int blockSize)
     {
-        assert objectPath != null;
-        assert type != null;
-        assert size >= 0;
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    if (features.requiresChunking())
-                    {
-                        baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
-                                new long[]
-                                    { 0 }, new long[]
-                                    { size }, registry);
-                    } else
-                    {
-                        baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
-                                new long[]
-                                    { size }, null, registry);
-                    }
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        compoundWriter.createCompoundArray(objectPath, type, size, blockSize);
     }
 
-    public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final MDArray<T> data)
+    public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
+            int[] dimensions, HDF5GenericStorageFeatures features)
     {
-        writeCompoundMDArray(objectPath, type, data,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
-    }
-
-    public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final MDArray<T> data, final HDF5GenericStorageFeatures features)
-    {
-        writeCompoundMDArray(objectPath, type, data, features, null);
-    }
-
-    public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final MDArray<T> data, final HDF5GenericStorageFeatures features,
-            final IByteArrayInspector inspectorOrNull)
-    {
-        assert objectPath != null;
-        assert type != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, type.getStorageTypeId(), MDArray
-                                    .toLong(data.dimensions()), features, registry);
-                    final byte[] byteArray =
-                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
-                                    data.getAsFlatArray());
-                    if (inspectorOrNull != null)
-                    {
-                        inspectorOrNull.inspect(byteArray);
-                    }
-                    H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            byteArray);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    public <T> void writeCompoundMDArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockDimensions)
-    {
-        writeCompoundMDArrayBlock(objectPath, type, data, blockDimensions, null);
-    }
-
-    public <T> void writeCompoundMDArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockDimensions,
-            final IByteArrayInspector inspectorOrNull)
-    {
-        assert objectPath != null;
-        assert type != null;
-        assert data != null;
-        assert blockDimensions != null;
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final long[] dimensions = data.longDimensions();
-        final long[] offset = new long[dimensions.length];
-        final long[] dataSetDimensions = new long[dimensions.length];
-        for (int i = 0; i < offset.length; ++i)
-        {
-            offset[i] = blockDimensions[i] * dimensions[i];
-            dataSetDimensions[i] = offset[i] + dimensions[i];
-        }
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    final byte[] byteArray =
-                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
-                                    data.getAsFlatArray());
-                    if (inspectorOrNull != null)
-                    {
-                        inspectorOrNull.inspect(byteArray);
-                    }
-                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, byteArray);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] offset)
-    {
-        writeCompoundMDArrayBlockWithOffset(objectPath, type, data, offset, null);
-    }
-
-    public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] offset,
-            final IByteArrayInspector inspectorOrNull)
-    {
-        assert objectPath != null;
-        assert type != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = data.longDimensions();
-                    final long[] dataSetDimensions = new long[dimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        dataSetDimensions[i] = offset[i] + dimensions[i];
-                    }
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    final byte[] byteArray =
-                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
-                                    data.getAsFlatArray());
-                    if (inspectorOrNull != null)
-                    {
-                        inspectorOrNull.inspect(byteArray);
-                    }
-                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, byteArray);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final int[] blockDimensions,
-            final long[] offset, final int[] memoryOffset)
-    {
-        writeCompoundMDArrayBlockWithOffset(objectPath, type, data, blockDimensions, offset,
-                memoryOffset, null);
-    }
-
-    public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final int[] blockDimensions,
-            final long[] offset, final int[] memoryOffset, final IByteArrayInspector inspectorOrNull)
-    {
-        assert objectPath != null;
-        assert type != null;
-        assert data != null;
-        assert offset != null;
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    final long[] memoryDimensions = data.longDimensions();
-                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
-                    final long[] dataSetDimensions = new long[blockDimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        dataSetDimensions[i] = offset[i] + blockDimensions[i];
-                    }
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
-                            longBlockDimensions);
-                    final byte[] byteArray =
-                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
-                                    data.getAsFlatArray());
-                    if (inspectorOrNull != null)
-                    {
-                        inspectorOrNull.inspect(byteArray);
-                    }
-                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, byteArray);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        compoundWriter.createCompoundMDArray(objectPath, type, dimensions, features);
     }
 
     public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
             int[] dimensions)
     {
-        createCompoundMDArray(objectPath, type, dimensions,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        compoundWriter.createCompoundMDArray(objectPath, type, dimensions);
     }
 
-    public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final long[] dimensions, final int[] blockDimensions)
+    public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
+            long[] dimensions, int[] blockDimensions, HDF5GenericStorageFeatures features)
     {
-        createCompoundMDArray(objectPath, type, dimensions, blockDimensions,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        compoundWriter.createCompoundMDArray(objectPath, type, dimensions, blockDimensions,
+                features);
     }
 
-    public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final long[] dimensions, final int[] blockDimensions,
-            final HDF5GenericStorageFeatures features)
+    public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
+            long[] dimensions, int[] blockDimensions)
     {
-        assert objectPath != null;
-        assert type != null;
-        assert dimensions != null;
-        assert blockDimensions != null;
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
-                            dimensions, MDArray.toLong(blockDimensions), registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        compoundWriter.createCompoundMDArray(objectPath, type, dimensions, blockDimensions);
     }
 
-    public <T> void createCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
-            final int[] dimensions, final HDF5GenericStorageFeatures features)
+    public <T> void writeCompound(String objectPath, HDF5CompoundType<T> type, T data,
+            IByteArrayInspector inspectorOrNull)
     {
-        assert objectPath != null;
-        assert type != null;
-        assert dimensions != null;
+        compoundWriter.writeCompound(objectPath, type, data, inspectorOrNull);
+    }
 
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    if (features.requiresChunking())
-                    {
-                        final long[] nullDimensions = new long[dimensions.length];
-                        baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
-                                nullDimensions, MDArray.toLong(dimensions), registry);
-                    } else
-                    {
-                        baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
-                                MDArray.toLong(dimensions), null, registry);
-                    }
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+    public <T> void writeCompound(String objectPath, HDF5CompoundType<T> type, T data)
+    {
+        compoundWriter.writeCompound(objectPath, type, data);
+    }
+
+    public <T> void writeCompoundArray(String objectPath, HDF5CompoundType<T> type, T[] data,
+            HDF5GenericStorageFeatures features, IByteArrayInspector inspectorOrNull)
+    {
+        compoundWriter.writeCompoundArray(objectPath, type, data, features, inspectorOrNull);
+    }
+
+    public <T> void writeCompoundArray(String objectPath, HDF5CompoundType<T> type, T[] data,
+            HDF5GenericStorageFeatures features)
+    {
+        compoundWriter.writeCompoundArray(objectPath, type, data, features);
+    }
+
+    public <T> void writeCompoundArray(String objectPath, HDF5CompoundType<T> type, T[] data)
+    {
+        compoundWriter.writeCompoundArray(objectPath, type, data);
+    }
+
+    public <T> void writeCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type, T[] data,
+            long blockNumber, IByteArrayInspector inspectorOrNull)
+    {
+        compoundWriter
+                .writeCompoundArrayBlock(objectPath, type, data, blockNumber, inspectorOrNull);
+    }
+
+    public <T> void writeCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type, T[] data,
+            long blockNumber)
+    {
+        compoundWriter.writeCompoundArrayBlock(objectPath, type, data, blockNumber);
+    }
+
+    public <T> void writeCompoundArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
+            T[] data, long offset, IByteArrayInspector inspectorOrNull)
+    {
+        compoundWriter.writeCompoundArrayBlockWithOffset(objectPath, type, data, offset,
+                inspectorOrNull);
+    }
+
+    public <T> void writeCompoundArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
+            T[] data, long offset)
+    {
+        compoundWriter.writeCompoundArrayBlockWithOffset(objectPath, type, data, offset);
+    }
+
+    public <T> void writeCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
+            MDArray<T> data, HDF5GenericStorageFeatures features,
+            IByteArrayInspector inspectorOrNull)
+    {
+        compoundWriter.writeCompoundMDArray(objectPath, type, data, features, inspectorOrNull);
+    }
+
+    public <T> void writeCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
+            MDArray<T> data, HDF5GenericStorageFeatures features)
+    {
+        compoundWriter.writeCompoundMDArray(objectPath, type, data, features);
+    }
+
+    public <T> void writeCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
+            MDArray<T> data)
+    {
+        compoundWriter.writeCompoundMDArray(objectPath, type, data);
+    }
+
+    public <T> void writeCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
+            MDArray<T> data, long[] blockDimensions, IByteArrayInspector inspectorOrNull)
+    {
+        compoundWriter.writeCompoundMDArrayBlock(objectPath, type, data, blockDimensions,
+                inspectorOrNull);
+    }
+
+    public <T> void writeCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
+            MDArray<T> data, long[] blockDimensions)
+    {
+        compoundWriter.writeCompoundMDArrayBlock(objectPath, type, data, blockDimensions);
+    }
+
+    public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,
+            HDF5CompoundType<T> type, MDArray<T> data, int[] blockDimensions, long[] offset,
+            int[] memoryOffset, IByteArrayInspector inspectorOrNull)
+    {
+        compoundWriter.writeCompoundMDArrayBlockWithOffset(objectPath, type, data, blockDimensions,
+                offset, memoryOffset, inspectorOrNull);
+    }
+
+    public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,
+            HDF5CompoundType<T> type, MDArray<T> data, int[] blockDimensions, long[] offset,
+            int[] memoryOffset)
+    {
+        compoundWriter.writeCompoundMDArrayBlockWithOffset(objectPath, type, data, blockDimensions,
+                offset, memoryOffset);
+    }
+
+    public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,
+            HDF5CompoundType<T> type, MDArray<T> data, long[] offset,
+            IByteArrayInspector inspectorOrNull)
+    {
+        compoundWriter.writeCompoundMDArrayBlockWithOffset(objectPath, type, data, offset,
+                inspectorOrNull);
+    }
+
+    public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,
+            HDF5CompoundType<T> type, MDArray<T> data, long[] offset)
+    {
+        compoundWriter.writeCompoundMDArrayBlockWithOffset(objectPath, type, data, offset);
     }
 
     // ------------------------------------------------------------------------------
