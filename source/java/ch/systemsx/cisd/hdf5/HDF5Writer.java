@@ -21,16 +21,11 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.OPAQUE_PREFIX;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_int;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite_long;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_short;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_B64LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 
@@ -85,7 +80,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     private final IHDF5FloatWriter floatWriter;
 
     private final IHDF5DoubleWriter doubleWriter;
-    
+
+    private final IHDF5EnumWriter enumWriter;
+
     private final IHDF5CompoundWriter compoundWriter;
 
     HDF5Writer(HDF5BaseWriter baseWriter)
@@ -98,6 +95,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         this.longWriter = new HDF5LongWriter(baseWriter);
         this.floatWriter = new HDF5FloatWriter(baseWriter);
         this.doubleWriter = new HDF5DoubleWriter(baseWriter);
+        this.enumWriter = new HDF5EnumWriter(baseWriter);
         this.compoundWriter = new HDF5CompoundWriter(baseWriter);
     }
 
@@ -299,14 +297,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
     }
 
-    private void setTypeVariant(final int objectId, final HDF5DataTypeVariant typeVariant,
-            ICleanUpRegistry registry)
-    {
-        baseWriter.setAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, baseWriter.typeVariantDataType
-                .getStorageTypeId(), baseWriter.typeVariantDataType.getNativeTypeId(),
-                baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
-    }
-
     public void deleteTypeVariant(String objectPath)
     {
         deleteAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE);
@@ -371,26 +361,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                             final int objectId =
                                     baseWriter.h5.openObject(baseWriter.fileId, objectPath,
                                             registry);
-                            setStringAttribute(objectId, name, value, maxLength, registry);
+                            baseWriter.setStringAttribute(objectId, name, value, maxLength,
+                                    registry);
                             return null; // Nothing to return.
                         }
                     };
         baseWriter.runner.call(addAttributeRunnable);
-    }
-
-    private void setStringAttribute(final int objectId, final String name, final String value,
-            final int maxLength, ICleanUpRegistry registry)
-    {
-        final int stringDataTypeId = baseWriter.h5.createDataTypeString(maxLength + 1, registry);
-        final int attributeId;
-        if (baseWriter.h5.existsAttribute(objectId, name))
-        {
-            attributeId = baseWriter.h5.openAttribute(objectId, name, registry);
-        } else
-        {
-            attributeId = baseWriter.h5.createAttribute(objectId, name, stringDataTypeId, registry);
-        }
-        baseWriter.h5.writeAttribute(attributeId, stringDataTypeId, (value + '\0').getBytes());
     }
 
     public void setBooleanAttribute(final String objectPath, final String name, final boolean value)
@@ -399,21 +375,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         baseWriter.setAttribute(objectPath, name, baseWriter.booleanDataTypeId,
                 baseWriter.booleanDataTypeId, new byte[]
                     { (byte) (value ? 1 : 0) });
-    }
-
-    public void setEnumAttribute(final String objectPath, final String name,
-            final HDF5EnumerationValue value)
-    {
-        assert objectPath != null;
-        assert name != null;
-        assert value != null;
-
-        baseWriter.checkOpen();
-        value.getType().check(baseWriter.fileId);
-        final int storageDataTypeId = value.getType().getStorageTypeId();
-        final int nativeDataTypeId = value.getType().getNativeTypeId();
-        baseWriter.setAttribute(objectPath, name, storageDataTypeId, nativeDataTypeId, value
-                .toStorageForm());
     }
 
     // /////////////////////
@@ -680,7 +641,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final int dataSetId =
                             baseWriter.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64,
                                     HDFNativeData.longToByte(timeStamp), registry);
-                    setTypeVariant(dataSetId,
+                    baseWriter.setTypeVariant(dataSetId,
                             HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                             registry);
                     return null; // Nothing to return.
@@ -726,7 +687,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                                         new long[]
                                             { size }, null, registry);
                     }
-                    setTypeVariant(dataSetId,
+                    baseWriter.setTypeVariant(dataSetId,
                             HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                             registry);
                     return null; // Nothing to return.
@@ -751,7 +712,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                                     new long[]
                                         { length }, new long[]
                                         { blockSize }, registry);
-                    setTypeVariant(dataSetId,
+                    baseWriter.setTypeVariant(dataSetId,
                             HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                             registry);
                     return null; // Nothing to return.
@@ -782,7 +743,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                                 { timeStamps.length }, features, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeStamps);
-                    setTypeVariant(dataSetId,
+                    baseWriter.setTypeVariant(dataSetId,
                             HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                             registry);
                     return null; // Nothing to return.
@@ -907,7 +868,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                     final int dataSetId =
                             baseWriter.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64,
                                     HDFNativeData.longToByte(timeDuration), registry);
-                    setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -953,7 +914,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                                         new long[]
                                             { size }, null, registry);
                     }
-                    setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -977,7 +938,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                                     new long[]
                                         { size }, new long[]
                                         { blockSize }, registry);
-                    setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -1013,7 +974,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                                 { timeDurations.length }, features, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeDurations);
-                    setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -1490,294 +1451,71 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public HDF5EnumerationType getEnumType(final String name, final String[] values)
             throws HDF5JavaException
     {
-        return getEnumType(name, values, true);
+        return enumWriter.getEnumType(name, values);
     }
 
     @Override
     public HDF5EnumerationType getEnumType(final String name, final String[] values,
             final boolean check) throws HDF5JavaException
     {
-        baseWriter.checkOpen();
-        final String dataTypePath = HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, name);
-        int storageDataTypeId = baseWriter.getDataTypeId(dataTypePath);
-        if (storageDataTypeId < 0)
-        {
-            storageDataTypeId = baseWriter.h5.createDataTypeEnum(values, baseWriter.fileRegistry);
-            baseWriter.commitDataType(dataTypePath, storageDataTypeId);
-        } else if (check)
-        {
-            checkEnumValues(storageDataTypeId, values, name);
-        }
-        final int nativeDataTypeId =
-                baseWriter.h5.getNativeDataType(storageDataTypeId, baseWriter.fileRegistry);
-        return new HDF5EnumerationType(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
-                name, values);
+        return enumWriter.getEnumType(name, values, check);
     }
 
-    public void writeEnum(final String objectPath, final HDF5EnumerationValue value)
+    public void createEnumArray(String objectPath, HDF5EnumerationType enumType, int size)
+    {
+        enumWriter.createEnumArray(objectPath, enumType, size);
+    }
+
+    public void createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
+            HDF5IntStorageFeatures features)
+    {
+        enumWriter.createEnumArray(objectPath, enumType, size, features);
+    }
+
+    public void createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
+            int blockSize, HDF5IntStorageFeatures features)
+    {
+        enumWriter.createEnumArray(objectPath, enumType, size, blockSize, features);
+    }
+
+    public void createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
+            int blockSize)
+    {
+        enumWriter.createEnumArray(objectPath, enumType, size, blockSize);
+    }
+
+    public void setEnumAttribute(String objectPath, String name, HDF5EnumerationValue value)
+    {
+        enumWriter.setEnumAttribute(objectPath, name, value);
+    }
+
+    public void writeEnum(String objectPath, HDF5EnumerationValue value) throws HDF5JavaException
+    {
+        enumWriter.writeEnum(objectPath, value);
+    }
+
+    public void writeEnumArray(String objectPath, HDF5EnumerationValueArray data,
+            HDF5IntStorageFeatures features) throws HDF5JavaException
+    {
+        enumWriter.writeEnumArray(objectPath, data, features);
+    }
+
+    public void writeEnumArray(String objectPath, HDF5EnumerationValueArray data)
             throws HDF5JavaException
     {
-        assert objectPath != null;
-        assert value != null;
-
-        baseWriter.checkOpen();
-        value.getType().check(baseWriter.fileId);
-        final int storageDataTypeId = value.getType().getStorageTypeId();
-        final int nativeDataTypeId = value.getType().getNativeTypeId();
-        baseWriter.writeScalar(objectPath, storageDataTypeId, nativeDataTypeId, value
-                .toStorageForm());
+        enumWriter.writeEnumArray(objectPath, data);
     }
 
-    public void writeEnumArray(final String objectPath, final HDF5EnumerationValueArray data)
-            throws HDF5JavaException
+    public void writeEnumArrayBlock(String objectPath, HDF5EnumerationValueArray data,
+            long blockNumber)
     {
-        writeEnumArray(objectPath, data, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+        enumWriter.writeEnumArrayBlock(objectPath, data, blockNumber);
     }
 
-    public void writeEnumArray(final String objectPath, final HDF5EnumerationValueArray data,
-            final HDF5IntStorageFeatures features) throws HDF5JavaException
+    public void writeEnumArrayBlockWithOffset(String objectPath, HDF5EnumerationValueArray data,
+            int dataSize, long offset)
     {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        data.getType().check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    if (features.isScaling())
-                    {
-                        features.checkScalingOK(baseWriter.fileFormat);
-                        final HDF5IntStorageFeatures actualFeatures =
-                                HDF5IntStorageFeatures.createDeflateAndIntegerScaling(features
-                                        .getDeflateLevel(), data.getType().getNumberOfBits(),
-                                        features.isKeepDataSetIfExists());
-                        final int dataSetId =
-                                baseWriter.getDataSetId(objectPath, data.getType()
-                                        .getIntStorageTypeId(), new long[]
-                                    { data.getLength() }, actualFeatures, registry);
-                        switch (data.getStorageForm())
-                        {
-                            case BYTE:
-                                H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                                        data.getStorageFormBArray());
-                                break;
-                            case SHORT:
-                                H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL,
-                                        H5P_DEFAULT, data.getStorageFormSArray());
-                                break;
-                            case INT:
-                                H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL,
-                                        H5P_DEFAULT, data.getStorageFormIArray());
-                                break;
-                        }
-                        setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
-                        setStringAttribute(dataSetId, HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, data
-                                .getType().getName(), data.getType().getName().length(), registry);
-                    } else
-                    {
-                        final int dataSetId =
-                                baseWriter.getDataSetId(objectPath, data.getType()
-                                        .getStorageTypeId(), new long[]
-                                    { data.getLength() }, features, registry);
-                        switch (data.getStorageForm())
-                        {
-                            case BYTE:
-                                H5Dwrite(dataSetId, data.getType().getNativeTypeId(), H5S_ALL,
-                                        H5S_ALL, H5P_DEFAULT, data.getStorageFormBArray());
-                                break;
-                            case SHORT:
-                                H5Dwrite_short(dataSetId, data.getType().getNativeTypeId(),
-                                        H5S_ALL, H5S_ALL, H5P_DEFAULT, data.getStorageFormSArray());
-                                break;
-                            case INT:
-                                H5Dwrite_int(dataSetId, data.getType().getNativeTypeId(), H5S_ALL,
-                                        H5S_ALL, H5P_DEFAULT, data.getStorageFormIArray());
-                        }
-                    }
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
-            final int size)
-    {
-        createEnumArray(objectPath, enumType, size, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
-    }
-
-    public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
-            final long size, final int blockSize)
-    {
-        createEnumArray(objectPath, enumType, size, blockSize,
-                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
-    }
-
-    public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
-            final long size, final int blockSize, final HDF5IntStorageFeatures features)
-    {
-        baseWriter.checkOpen();
-        enumType.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    if (features.isScaling())
-                    {
-                        features.checkScalingOK(baseWriter.fileFormat);
-                        final HDF5IntStorageFeatures actualCompression =
-                                HDF5IntStorageFeatures.createDeflateAndIntegerScaling(features
-                                        .getDeflateLevel(), enumType.getNumberOfBits());
-                        final int dataSetId =
-                                baseWriter.createDataSet(objectPath,
-                                        enumType.getIntStorageTypeId(), actualCompression,
-                                        new long[]
-                                            { size }, new long[]
-                                            { blockSize }, registry);
-                        setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
-                        setStringAttribute(dataSetId, HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, enumType
-                                .getName(), enumType.getName().length(), registry);
-                    } else
-                    {
-                        baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
-                                new long[]
-                                    { size }, new long[]
-                                    { blockSize }, registry);
-                    }
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    public void createEnumArray(final String objectPath, final HDF5EnumerationType enumType,
-            final long size, final HDF5IntStorageFeatures features)
-    {
-        baseWriter.checkOpen();
-        enumType.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    if (features.requiresChunking())
-                    {
-                        create(new long[]
-                            { 0 }, new long[]
-                            { size }, registry);
-                    } else
-                    {
-                        create(new long[]
-                            { size }, null, registry);
-                    }
-                    return null; // Nothing to return.
-                }
-
-                private void create(final long[] dimensions, final long[] blockDimensionsOrNull,
-                        final ICleanUpRegistry registry)
-                {
-                    if (features.isScaling())
-                    {
-                        features.checkScalingOK(baseWriter.fileFormat);
-                        final HDF5IntStorageFeatures actualCompression =
-                                HDF5IntStorageFeatures.createDeflateAndIntegerScaling(features
-                                        .getDeflateLevel(), enumType.getNumberOfBits());
-                        final int dataSetId =
-                                baseWriter.createDataSet(objectPath,
-                                        enumType.getIntStorageTypeId(), actualCompression,
-                                        dimensions, blockDimensionsOrNull, registry);
-                        setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
-                        setStringAttribute(dataSetId, HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, enumType
-                                .getName(), enumType.getName().length(), registry);
-                    } else
-                    {
-                        baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
-                                dimensions, blockDimensionsOrNull, registry);
-                    }
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-    }
-
-    public void writeEnumArrayBlock(final String objectPath, final HDF5EnumerationValueArray data,
-            final long blockNumber)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        writeEnumArrayBlockWithOffset(objectPath, data, data.getLength(), data.getLength()
-                * blockNumber);
-    }
-
-    public void writeEnumArrayBlockWithOffset(final String objectPath,
-            final HDF5EnumerationValueArray data, final int dataSize, final long offset)
-    {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { offset + dataSize }, -1, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    if (isScaledEnum(dataSetId, registry))
-                    {
-                        switch (data.getStorageForm())
-                        {
-                            case BYTE:
-                                H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId,
-                                        H5P_DEFAULT, data.getStorageFormBArray());
-                                break;
-                            case SHORT:
-                                H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId,
-                                        dataSpaceId, H5P_DEFAULT, data.getStorageFormSArray());
-                                break;
-                            case INT:
-                                H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId,
-                                        dataSpaceId, H5P_DEFAULT, data.getStorageFormIArray());
-                                break;
-                        }
-                        setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
-                        setStringAttribute(dataSetId, HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, data
-                                .getType().getName(), data.getType().getName().length(), registry);
-                    } else
-                    {
-                        switch (data.getStorageForm())
-                        {
-                            case BYTE:
-                                H5Dwrite(dataSetId, data.getType().getNativeTypeId(),
-                                        memorySpaceId, dataSpaceId, H5P_DEFAULT, data
-                                                .getStorageFormBArray());
-                                break;
-                            case SHORT:
-                                H5Dwrite_short(dataSetId, data.getType().getNativeTypeId(),
-                                        memorySpaceId, dataSpaceId, H5P_DEFAULT, data
-                                                .getStorageFormSArray());
-                                break;
-                            case INT:
-                                H5Dwrite_int(dataSetId, data.getType().getNativeTypeId(),
-                                        memorySpaceId, dataSpaceId, H5P_DEFAULT, data
-                                                .getStorageFormIArray());
-                        }
-                    }
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        enumWriter.writeEnumArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     //

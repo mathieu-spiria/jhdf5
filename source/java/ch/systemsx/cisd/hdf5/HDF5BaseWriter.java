@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.DATATYPE_GROUP;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
@@ -619,6 +620,10 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
     }
 
+    //
+    // Attributes
+    //
+
     void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
             final int nativeDataTypeId, final byte[] value)
     {
@@ -660,6 +665,29 @@ final class HDF5BaseWriter extends HDF5BaseReader
             attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
         h5.writeAttribute(attributeId, nativeDataTypeId, value);
+    }
+
+    void setTypeVariant(final int objectId, final HDF5DataTypeVariant typeVariant,
+            ICleanUpRegistry registry)
+    {
+        setAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, typeVariantDataType.getStorageTypeId(),
+                typeVariantDataType.getNativeTypeId(), typeVariantDataType
+                        .toStorageForm(typeVariant.ordinal()), registry);
+    }
+
+    void setStringAttribute(final int objectId, final String name, final String value,
+            final int maxLength, ICleanUpRegistry registry)
+    {
+        final int stringDataTypeId = h5.createDataTypeString(maxLength + 1, registry);
+        final int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+        } else
+        {
+            attributeId = h5.createAttribute(objectId, name, stringDataTypeId, registry);
+        }
+        h5.writeAttribute(attributeId, stringDataTypeId, (value + '\0').getBytes());
     }
 
 }
