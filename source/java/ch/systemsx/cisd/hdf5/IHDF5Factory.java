@@ -19,9 +19,9 @@ package ch.systemsx.cisd.hdf5;
 import java.io.File;
 
 /**
- * A factory for creating simple writers and readers of HDF5 files. For simple access, see methods
- * {@link #open(File)} and {@link #openForReading(File)}. If you need full control over the creation
- * process, see the methods {@link #configure(File)} and {@link #configureForReading(File)}.
+ * A factory for creating writers and readers of HDF5 files. For straight-forward creation, see
+ * methods {@link #open(File)} and {@link #openForReading(File)}. If you need full control over the
+ * creation process, see the methods {@link #configure(File)} and {@link #configureForReading(File)}.
  * 
  * @author Bernd Rinn
  */
