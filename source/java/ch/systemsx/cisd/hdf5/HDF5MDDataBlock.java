@@ -28,8 +28,8 @@ import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
  * <pre>
  * for (HDF5DataBlock&lt;MDIntArray&gt; block : reader.getIntMDNaturalBlocks(dsNameMD))
  * {
- *     MDIntArray naturalBlock = reader.readIntMDArrayBlockWithOffset(dsNameMD, block.getMDSize(), block.getMDOffset());
- *     ... work on naturalBlock, use block.getMDIndex() if needed ...
+ *     MDIntArray naturalBlock = block.getData();
+ *     ... work on naturalBlock, use block.getIndex() or block.getOffset() where needed ...
  * }
  * </pre>
  * 
