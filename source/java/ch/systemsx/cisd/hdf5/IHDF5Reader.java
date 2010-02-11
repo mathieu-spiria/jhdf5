@@ -42,8 +42,8 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IHDF5EnumReader,
-        IHDF5CompoundReader
+public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IHDF5StringReader,
+        IHDF5EnumReader, IHDF5CompoundReader
 {
 
     // /////////////////////
@@ -377,16 +377,6 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
     public boolean hasAttribute(final String objectPath, final String attributeName);
 
     /**
-     * Reads a <code>String</code> attribute named <var>attributeName</var> from the data set
-     * <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param attributeName The name of the attribute to read.
-     * @return The attribute value read from the data set.
-     */
-    public String getStringAttribute(final String objectPath, final String attributeName);
-
-    /**
      * Reads a <code>boolean</code> attribute named <var>attributeName</var> from the data set
      * <var>objectPath</var>.
      * 
@@ -397,46 +387,6 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      */
     public boolean getBooleanAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException;
-
-    /**
-     * Reads an <code>int</code> attribute named <var>attributeName</var> from the data set
-     * <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param attributeName The name of the attribute to read.
-     * @return The attribute value read from the data set.
-     */
-    public int getIntAttribute(final String objectPath, final String attributeName);
-
-    /**
-     * Reads a <code>long</code> attribute named <var>attributeName</var> from the data set
-     * <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param attributeName The name of the attribute to read.
-     * @return The attribute value read from the data set.
-     */
-    public long getLongAttribute(final String objectPath, final String attributeName);
-
-    /**
-     * Reads a <code>float</code> attribute named <var>attributeName</var> from the data set
-     * <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param attributeName The name of the attribute to read.
-     * @return The attribute value read from the data set.
-     */
-    public float getFloatAttribute(final String objectPath, final String attributeName);
-
-    /**
-     * Reads a <code>double</code> attribute named <var>attributeName</var> from the data set
-     * <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param attributeName The name of the attribute to read.
-     * @return The attribute value read from the data set.
-     */
-    public double getDoubleAttribute(final String objectPath, final String attributeName);
 
     // /////////////////////
     // Data Sets
@@ -765,66 +715,5 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      */
     public Iterable<HDF5DataBlock<long[]>> getTimeDurationArrayNaturalBlocks(
             final String dataSetPath, final HDF5TimeUnit timeUnit) throws HDF5JavaException;
-
-    //
-    // String
-    //
-
-    /**
-     * Reads a <code>String</code> from the data set <var>objectPath</var>. This needs to be a
-     * string type.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
-     */
-    public String readString(final String objectPath) throws HDF5JavaException;
-
-    /**
-     * Reads a <code>String</code> array (of rank 1) from the data set <var>objectPath</var>. The
-     * elements of this data set need to be a string type.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
-     */
-    public String[] readStringArray(final String objectPath) throws HDF5JavaException;
-
-    /**
-     * Reads a block of a <code>String</code> array (of rank 1) from the data set
-     * <var>objectPath</var>. The elements of this data set need to be a string type.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize the size of the block to read from the data set.
-     * @param blockNumber the number of the block to read from the data set (the offset is
-     *            <code>blockSize * blockNumber</code>).
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
-     */
-    public String[] readStringArrayBlock(final String objectPath, final int blockSize,
-            final long blockNumber);
-
-    /**
-     * Reads a block of a <code>String</code> array (of rank 1) from the data set
-     * <var>objectPath</var>. The elements of this data set need to be a string type.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize the size of the block to read from the data set.
-     * @param offset the pffset of the block in the data set.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
-     */
-    public String[] readStringArrayBlockWithOffset(final String objectPath, final int blockSize,
-            final long offset);
-
-    /**
-     * Provides all natural blocks of this one-dimensional data set to iterate over.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @see HDF5DataBlock
-     * @throws HDF5JavaException If the data set is not of rank 1.
-     */
-    public Iterable<HDF5DataBlock<String[]>> getStringArrayNaturalBlocks(final String objectPath)
-            throws HDF5JavaException;
 
 }
