@@ -25,7 +25,7 @@ import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
  * 
  * @author Bernd Rinn
  */
-interface IHDF5DoubleReader
+public interface IHDF5DoubleReader
 {
     // /////////////////////
     // Attributes

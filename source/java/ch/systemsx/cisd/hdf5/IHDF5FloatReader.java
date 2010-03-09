@@ -25,7 +25,7 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
  * 
  * @author Bernd Rinn
  */
-interface IHDF5FloatReader
+public interface IHDF5FloatReader
 {
     // /////////////////////
     // Attributes

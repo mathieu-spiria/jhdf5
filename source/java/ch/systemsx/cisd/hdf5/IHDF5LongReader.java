@@ -25,7 +25,7 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
  * 
  * @author Bernd Rinn
  */
-interface IHDF5LongReader
+public interface IHDF5LongReader
 {
     // /////////////////////
     // Attributes

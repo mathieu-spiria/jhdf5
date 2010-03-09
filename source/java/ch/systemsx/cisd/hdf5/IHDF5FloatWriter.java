@@ -23,7 +23,7 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
  * 
  * @author Bernd Rinn
  */
-interface IHDF5FloatWriter
+public interface IHDF5FloatWriter
 {
     // /////////////////////
     // Attributes

@@ -23,7 +23,7 @@ import ch.systemsx.cisd.base.mdarray.MDByteArray;
  * 
  * @author Bernd Rinn
  */
-interface IHDF5ByteWriter
+public interface IHDF5ByteWriter
 {
     // /////////////////////
     // Attributes

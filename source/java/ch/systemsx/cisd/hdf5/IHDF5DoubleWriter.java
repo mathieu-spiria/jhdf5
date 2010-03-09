@@ -23,7 +23,7 @@ import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
  * 
  * @author Bernd Rinn
  */
-interface IHDF5DoubleWriter
+public interface IHDF5DoubleWriter
 {
     // /////////////////////
     // Attributes
