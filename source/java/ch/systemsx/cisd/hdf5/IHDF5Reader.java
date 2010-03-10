@@ -229,7 +229,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
             final String attributeName);
 
     /**
-     * Returns the information about a data set as a {@link HDF5DataTypeInformation} object. It is a
+     * Returns the information about a data set as a {@link HDF5DataSetInformation} object. It is a
      * failure condition if the <var>dataSetPath</var> does not exist or does not identify a data
      * set.
      * 
