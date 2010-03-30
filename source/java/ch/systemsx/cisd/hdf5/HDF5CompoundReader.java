@@ -479,10 +479,11 @@ class HDF5CompoundReader implements IHDF5CompoundReader
                     }
                 } else if (typeInfo.getDataClass() == HDF5DataClass.STRING)
                 {
-                    if (fieldOrNull.getType() != String.class)
+                    if (fieldOrNull.getType() != String.class
+                            && fieldOrNull.getType() != char[].class)
                     {
                         throw new HDF5JavaException(
-                                "Field of string type does not correspond to string value");
+                                "Field of string type does not correspond to string or char[] value");
                     } else
                     {
                         mapping.add(HDF5CompoundMemberMapping.mappingArrayWithStorageId(fieldOrNull

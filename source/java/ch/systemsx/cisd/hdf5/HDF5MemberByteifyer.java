@@ -186,6 +186,53 @@ abstract class HDF5MemberByteifyer
             };
     }
 
+    static HDF5MemberByteifyer createCharArrayMemberByteifyer(final Field field,
+            final String memberName, final int offset, final int stringDataTypeId,
+            final int maxLength)
+    {
+        ReflectionUtils.ensureAccessible(field);
+        return new HDF5MemberByteifyer(field, memberName, maxLength + 1, offset)
+            {
+                @Override
+                protected int getMemberStorageTypeId()
+                {
+                    return stringDataTypeId;
+                }
+
+                @Override
+                protected int getMemberNativeTypeId()
+                {
+                    return -1;
+                }
+
+                @Override
+                public byte[] byteify(int compoundDataTypeId, Object obj)
+                        throws IllegalAccessException
+                {
+                    String s = new String((char[]) field.get(obj));
+                    if (s.length() >= getSize())
+                    {
+                        s = s.substring(0, getSize() - 1);
+                    }
+                    return (s + '\0').getBytes();
+                }
+
+                @Override
+                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                        int arrayOffset) throws IllegalAccessException
+                {
+                    final int totalOffset = arrayOffset + offset;
+                    final int maxIdx = totalOffset + size;
+                    int termIdx;
+                    for (termIdx = totalOffset; termIdx < maxIdx && byteArr[termIdx] != 0; ++termIdx)
+                    {
+                    }
+                    field.set(obj, new String(byteArr, totalOffset, termIdx - totalOffset)
+                            .toCharArray());
+                }
+            };
+    }
+
     static HDF5MemberByteifyer createArrayMemberByteifyer(final Field field,
             final String memberName, final int offset, final FileInfoProvider fileInfoProvider,
             final int len, final int storageTypeId)

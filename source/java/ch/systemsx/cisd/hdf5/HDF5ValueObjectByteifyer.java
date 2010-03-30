@@ -86,6 +86,15 @@ class HDF5ValueObjectByteifyer<T>
                         HDF5MemberByteifyer.createStringMemberByteifyer(members[i].getField(clazz),
                                 members[i].getMemberName(), offset, stringDataTypeId, members[i]
                                         .getMemberTypeLength());
+            } else if (memberClazz == char[].class)
+            {
+                final int stringDataTypeId =
+                        (typeId < 0) ? fileInfoProvider.getStringDataTypeId(members[i]
+                                .getMemberTypeLength()) : typeId;
+                result[i] =
+                        HDF5MemberByteifyer.createCharArrayMemberByteifyer(members[i]
+                                .getField(clazz), members[i].getMemberName(), offset,
+                                stringDataTypeId, members[i].getMemberTypeLength());
             } else if (memberClazz == HDF5EnumerationValue.class)
             {
                 final HDF5EnumerationType enumType = members[i].tryGetEnumerationType();
