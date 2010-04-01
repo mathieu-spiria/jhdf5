@@ -883,6 +883,38 @@ abstract class HDF5MemberByteifyer
                         field.setLong(obj, HDFNativeData.byteToLong(byteArr, arrayOffset + offset));
                     }
                 };
+        } else if (memberClazz == java.util.Date.class)
+        {
+            return new HDF5MemberByteifyer(field, memberName, LONG_SIZE, offset)
+                {
+                    @Override
+                    protected int getMemberStorageTypeId()
+                    {
+                        return H5T_STD_I64LE;
+                    }
+
+                    @Override
+                    protected int getMemberNativeTypeId()
+                    {
+                        return -1;
+                    }
+
+                    @Override
+                    public byte[] byteify(int compoundDataTypeId, Object obj)
+                            throws IllegalAccessException
+                    {
+                        return HDFNativeData
+                                .longToByte(((java.util.Date) field.get(obj)).getTime());
+                    }
+
+                    @Override
+                    public void setFromByteArray(int compoundDataTypeId, Object obj,
+                            byte[] byteArr, int arrayOffset) throws IllegalAccessException
+                    {
+                        field.set(obj, new java.util.Date(HDFNativeData.byteToLong(byteArr,
+                                arrayOffset + offset)));
+                    }
+                };
         } else if (memberClazz == float.class)
         {
             return new HDF5MemberByteifyer(field, memberName, FLOAT_SIZE, offset)

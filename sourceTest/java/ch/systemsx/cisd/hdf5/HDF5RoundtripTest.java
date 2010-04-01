@@ -257,6 +257,7 @@ public class HDF5RoundtripTest
         test.testEnumArrayScaleCompression();
         test.testOpaqueType();
         test.testCompound();
+        test.testDateCompound();
         test.testCompoundOverflow();
         test.testBitFieldCompound();
         test.testCompoundArray();
@@ -4115,7 +4116,8 @@ public class HDF5RoundtripTest
                             { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                             {
                                 { 1, 2 },
-                                { 3, 4 } }), new char[] { 'A', 'b', 'C'});
+                                { 3, 4 } }), new char[]
+                            { 'A', 'b', 'C' });
         writer.writeCompound("/testCompound", compoundType, recordWritten);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
@@ -4130,6 +4132,84 @@ public class HDF5RoundtripTest
         }
         compoundType = Record.getHDF5Type(reader);
         final Record recordRead = reader.readCompound("/testCompound", Record.getHDF5Type(reader));
+        assertEquals(recordWritten, recordRead);
+        reader.close();
+    }
+
+    static class DateRecord
+    {
+        Date d;
+
+        DateRecord()
+        {
+        }
+
+        DateRecord(Date d)
+        {
+            this.d = d;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((d == null) ? 0 : d.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            DateRecord other = (DateRecord) obj;
+            if (d == null)
+            {
+                if (other.d != null)
+                    return false;
+            } else if (!d.equals(other.d))
+                return false;
+            return true;
+        }
+
+    }
+
+    @Test
+    public void testDateCompound()
+    {
+        final File file = new File(workingDirectory, "compoundWithDate.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        HDF5CompoundType<DateRecord> compoundType =
+                writer.getCompoundType(DateRecord.class, new HDF5CompoundMemberMapping[]
+                    { mapping("d") });
+        final DateRecord recordWritten = new DateRecord(new Date());
+        writer.writeCompound("/testDateCompound", compoundType, recordWritten);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final HDF5CompoundMemberInformation[] memMemberInfo =
+                HDF5CompoundMemberInformation.create(DateRecord.class, mapping("d"));
+        final HDF5CompoundMemberInformation[] diskMemberInfo =
+                HDF5CompoundMemberInformation.create(DateRecord.class,
+                        new HDF5CompoundMemberMapping[]
+                            { mapping("d") });
+        assertEquals(memMemberInfo.length, diskMemberInfo.length);
+        for (int i = 0; i < memMemberInfo.length; ++i)
+        {
+            assertEquals(memMemberInfo[i], diskMemberInfo[i]);
+        }
+        compoundType = reader.getCompoundType(DateRecord.class, new HDF5CompoundMemberMapping[]
+            { mapping("d") });
+        final DateRecord recordRead =
+                reader.readCompound("/testDateCompound", reader.getCompoundType(DateRecord.class,
+                        mapping("d")));
         assertEquals(recordWritten, recordRead);
         reader.close();
     }
@@ -4155,7 +4235,8 @@ public class HDF5RoundtripTest
                             { 11, 12, 13, 14, 0, 0, 0 }, new MDIntArray(new int[][]
                             {
                                 { 5, 6 },
-                                { 7, 8 } }), new char[] { 'A', 'b', 'C'});
+                                { 7, 8 } }), new char[]
+                            { 'A', 'b', 'C' });
         try
         {
             writer.writeCompound("/testCompound", compoundType, recordWritten);
@@ -4268,7 +4349,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 1, 2 },
-                                            { 3, 4 } }), new char[] { 'A', 'b', 'C'}),
+                                            { 3, 4 } }), new char[]
+                                        { 'A', 'b', 'C' }),
                             new Record(2, 3.0f, 100000000L, 4.0, (short) 5, false, "two",
                                     new HDF5EnumerationValue(enumType, "1"), new int[]
                                         { 4, 5, 6 }, new float[]
@@ -4279,7 +4361,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 5, 6 },
-                                            { 7, 8 } }), new char[] { 'A', 'b', 'C'}), };
+                                            { 7, 8 } }), new char[]
+                                        { 'A', 'b', 'C' }), };
         writer.writeCompoundArray("/testCompound", compoundType, arrayWritten,
                 HDF5GenericStorageFeatures.GENERIC_COMPACT);
         HDF5CompoundType<Record> inferredType = writer.getNamedCompoundType(Record.class);
@@ -4324,7 +4407,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 1, 2 },
-                                            { 3, 4 } }), new char[] { 'A', 'b', 'C'}),
+                                            { 3, 4 } }), new char[]
+                                        { 'A', 'b', 'C' }),
                             new Record(2, 3.0f, 100000000L, 4.0, (short) 5, false, "two",
                                     new HDF5EnumerationValue(enumType, "1"), new int[]
                                         { 4, 5, 6 }, new float[]
@@ -4335,7 +4419,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 1, 2 },
-                                            { 3, 4 } }), new char[] { 'A', 'b', 'C'}),
+                                            { 3, 4 } }), new char[]
+                                        { 'A', 'b', 'C' }),
                             new Record(3, 3.0f, 100000000L, 5.0, (short) 6, true, "two",
                                     new HDF5EnumerationValue(enumType, "Two"), new int[]
                                         { -1, -2, -3 }, new float[]
@@ -4346,7 +4431,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 1, 2 },
-                                            { 3, 4 } }), new char[] { 'A', 'b', 'C'}), };
+                                            { 3, 4 } }), new char[]
+                                        { 'A', 'b', 'C' }), };
         Record[] arrayWritten2 =
                 new Record[]
                     {
@@ -4360,7 +4446,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}),
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }),
                             new Record(5, 5.0f, 100000000L, 7.0, (short) 8, true, "two",
                                     new HDF5EnumerationValue(enumType, "THREE"), new int[]
                                         { 400, 500, 600 }, new float[]
@@ -4371,7 +4458,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}),
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }),
                             new Record(6, 6.0f, 100000000L, 8.0, (short) 9, false, "x",
                                     new HDF5EnumerationValue(enumType, "1"), new int[]
                                         { -100, -200, -300 }, new float[]
@@ -4382,7 +4470,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}), };
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }), };
         writer.writeCompoundArrayBlock("/testCompound", compoundType, arrayWritten1, 0);
         writer.writeCompoundArrayBlock("/testCompound", compoundType, arrayWritten2, 1);
         writer.close();
@@ -4430,7 +4519,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}),
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }),
                             new Record(2, 3.0f, 100000000L, 4.0, (short) 5, false, "two",
                                     new HDF5EnumerationValue(enumType, "1"), new int[]
                                         { 4, 5, 6 }, new float[]
@@ -4441,7 +4531,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}),
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }),
                             new Record(3, 3.0f, 100000000L, 5.0, (short) 6, true, "two",
                                     new HDF5EnumerationValue(enumType, "Two"), new int[]
                                         { 7, 8, 9 }, new float[]
@@ -4452,7 +4543,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}),
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }),
                             new Record(4, 4.0f, 100000000L, 6.0, (short) 7, false, "two",
                                     new HDF5EnumerationValue(enumType, "Two"), new int[]
                                         { 10, 11, 12 }, new float[]
@@ -4463,7 +4555,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}), };
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }), };
         final MDArray<Record> mdArrayWritten = new MDArray<Record>(arrayWritten, new int[]
             { 2, 2 });
         writer.writeCompoundMDArray("/testCompound", compoundType, mdArrayWritten);
@@ -4502,7 +4595,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}),
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }),
                             new Record(2, 3.0f, 100000000L, 4.0, (short) 5, false, "two",
                                     new HDF5EnumerationValue(enumType, "1"), new int[]
                                         { 2, 3, 4 }, new float[]
@@ -4513,7 +4607,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 17 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}), };
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }), };
         final Record[] arrayWritten2 =
                 new Record[]
                     {
@@ -4527,7 +4622,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}),
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }),
                             new Record(4, 4.0f, 100000000L, 6.0, (short) 7, false, "two",
                                     new HDF5EnumerationValue(enumType, "Two"), new int[]
                                         { 4, 5, 6 }, new float[]
@@ -4538,7 +4634,8 @@ public class HDF5RoundtripTest
                                         { 11, 12, 13, 14 }, new MDIntArray(new int[][]
                                         {
                                             { 6, 7 },
-                                            { 8, 9 } }), new char[] { 'A', 'b', 'C'}), };
+                                            { 8, 9 } }), new char[]
+                                        { 'A', 'b', 'C' }), };
         final MDArray<Record> mdArrayWritten1 = new MDArray<Record>(arrayWritten1, new int[]
             { 2, 1 });
         final MDArray<Record> mdArrayWritten2 = new MDArray<Record>(arrayWritten2, new int[]
