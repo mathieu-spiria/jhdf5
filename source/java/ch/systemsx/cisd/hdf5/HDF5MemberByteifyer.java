@@ -31,12 +31,10 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I8LE;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.BitSet;
 
 import ncsa.hdf.hdf5lib.HDFNativeData;
 
-import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
@@ -546,7 +544,7 @@ abstract class HDF5MemberByteifyer
                             throws IllegalAccessException
                     {
                         final MDByteArray array = (MDByteArray) field.get(obj);
-                        checkMDArrayDimensions(field, dimensions, array);
+                        MatrixUtils.checkMDArrayDimensions(field, dimensions, array);
                         return array.getAsFlatArray();
                     }
 
@@ -557,6 +555,42 @@ abstract class HDF5MemberByteifyer
                         final byte[] array = new byte[len];
                         System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
                         field.set(obj, new MDByteArray(array, dimensions));
+                    }
+                };
+        } else if (memberClazz == byte[][].class)
+        {
+            return new HDF5MemberByteifyer(field, memberName, len, offset)
+                {
+                    final int memberTypeId =
+                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I8LE,
+                                    dimensions) : storageTypeId;
+
+                    @Override
+                    protected int getMemberStorageTypeId()
+                    {
+                        return memberTypeId;
+                    }
+
+                    @Override
+                    protected int getMemberNativeTypeId()
+                    {
+                        return -1;
+                    }
+
+                    @Override
+                    public byte[] byteify(int compoundDataTypeId, Object obj)
+                            throws IllegalAccessException
+                    {
+                        final byte[][] array = (byte[][]) field.get(obj);
+                        MatrixUtils.checkMatrixDimensions(field, dimensions, array);
+                        return MatrixUtils.flatten(array);
+                    }
+
+                    @Override
+                    public void setFromByteArray(int compoundDataTypeId, Object obj,
+                            byte[] byteArr, int arrayOffset) throws IllegalAccessException
+                    {
+                        field.set(obj, MatrixUtils.shapen(byteArr, dimensions));
                     }
                 };
         } else if (memberClazz == MDShortArray.class)
@@ -584,7 +618,7 @@ abstract class HDF5MemberByteifyer
                             throws IllegalAccessException
                     {
                         final MDShortArray array = (MDShortArray) field.get(obj);
-                        checkMDArrayDimensions(field, dimensions, array);
+                        MatrixUtils.checkMDArrayDimensions(field, dimensions, array);
                         return HDFNativeData.shortToByte(array.getAsFlatArray());
                     }
 
@@ -595,6 +629,44 @@ abstract class HDF5MemberByteifyer
                         final short[] array =
                                 HDFNativeData.byteToShort(byteArr, arrayOffset + offset, len);
                         field.set(obj, new MDShortArray(array, dimensions));
+                    }
+                };
+        } else if (memberClazz == short[][].class)
+        {
+            return new HDF5MemberByteifyer(field, memberName, len * SHORT_SIZE, offset)
+                {
+                    final int memberTypeId =
+                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I16LE,
+                                    dimensions) : storageTypeId;
+
+                    @Override
+                    protected int getMemberStorageTypeId()
+                    {
+                        return memberTypeId;
+                    }
+
+                    @Override
+                    protected int getMemberNativeTypeId()
+                    {
+                        return -1;
+                    }
+
+                    @Override
+                    public byte[] byteify(int compoundDataTypeId, Object obj)
+                            throws IllegalAccessException
+                    {
+                        final short[][] array = (short[][]) field.get(obj);
+                        MatrixUtils.checkMatrixDimensions(field, dimensions, array);
+                        return HDFNativeData.shortToByte(MatrixUtils.flatten(array));
+                    }
+
+                    @Override
+                    public void setFromByteArray(int compoundDataTypeId, Object obj,
+                            byte[] byteArr, int arrayOffset) throws IllegalAccessException
+                    {
+                        final short[] array =
+                                HDFNativeData.byteToShort(byteArr, arrayOffset + offset, len);
+                        field.set(obj, MatrixUtils.shapen(array, dimensions));
                     }
                 };
         } else if (memberClazz == MDIntArray.class)
@@ -622,7 +694,7 @@ abstract class HDF5MemberByteifyer
                             throws IllegalAccessException
                     {
                         final MDIntArray array = (MDIntArray) field.get(obj);
-                        checkMDArrayDimensions(field, dimensions, array);
+                        MatrixUtils.checkMDArrayDimensions(field, dimensions, array);
                         return HDFNativeData.intToByte(array.getAsFlatArray());
                     }
 
@@ -633,6 +705,44 @@ abstract class HDF5MemberByteifyer
                         final int[] array =
                                 HDFNativeData.byteToInt(byteArr, arrayOffset + offset, len);
                         field.set(obj, new MDIntArray(array, dimensions));
+                    }
+                };
+        } else if (memberClazz == int[][].class)
+        {
+            return new HDF5MemberByteifyer(field, memberName, len * INT_SIZE, offset)
+                {
+                    final int memberTypeId =
+                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I32LE,
+                                    dimensions) : storageTypeId;
+
+                    @Override
+                    protected int getMemberStorageTypeId()
+                    {
+                        return memberTypeId;
+                    }
+
+                    @Override
+                    protected int getMemberNativeTypeId()
+                    {
+                        return -1;
+                    }
+
+                    @Override
+                    public byte[] byteify(int compoundDataTypeId, Object obj)
+                            throws IllegalAccessException
+                    {
+                        final int[][] array = (int[][]) field.get(obj);
+                        MatrixUtils.checkMatrixDimensions(field, dimensions, array);
+                        return HDFNativeData.intToByte(MatrixUtils.flatten(array));
+                    }
+
+                    @Override
+                    public void setFromByteArray(int compoundDataTypeId, Object obj,
+                            byte[] byteArr, int arrayOffset) throws IllegalAccessException
+                    {
+                        final int[] array =
+                                HDFNativeData.byteToInt(byteArr, arrayOffset + offset, len);
+                        field.set(obj, MatrixUtils.shapen(array, dimensions));
                     }
                 };
         } else if (memberClazz == MDLongArray.class)
@@ -660,7 +770,7 @@ abstract class HDF5MemberByteifyer
                             throws IllegalAccessException
                     {
                         final MDLongArray array = (MDLongArray) field.get(obj);
-                        checkMDArrayDimensions(field, dimensions, array);
+                        MatrixUtils.checkMDArrayDimensions(field, dimensions, array);
                         return HDFNativeData.longToByte(array.getAsFlatArray());
                     }
 
@@ -671,6 +781,44 @@ abstract class HDF5MemberByteifyer
                         final long[] array =
                                 HDFNativeData.byteToLong(byteArr, arrayOffset + offset, len);
                         field.set(obj, new MDLongArray(array, dimensions));
+                    }
+                };
+        } else if (memberClazz == long[][].class)
+        {
+            return new HDF5MemberByteifyer(field, memberName, len * LONG_SIZE, offset)
+                {
+                    final int memberTypeId =
+                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I64LE,
+                                    dimensions) : storageTypeId;
+
+                    @Override
+                    protected int getMemberStorageTypeId()
+                    {
+                        return memberTypeId;
+                    }
+
+                    @Override
+                    protected int getMemberNativeTypeId()
+                    {
+                        return -1;
+                    }
+
+                    @Override
+                    public byte[] byteify(int compoundDataTypeId, Object obj)
+                            throws IllegalAccessException
+                    {
+                        final long[][] array = (long[][]) field.get(obj);
+                        MatrixUtils.checkMatrixDimensions(field, dimensions, array);
+                        return HDFNativeData.longToByte(MatrixUtils.flatten(array));
+                    }
+
+                    @Override
+                    public void setFromByteArray(int compoundDataTypeId, Object obj,
+                            byte[] byteArr, int arrayOffset) throws IllegalAccessException
+                    {
+                        final long[] array =
+                                HDFNativeData.byteToLong(byteArr, arrayOffset + offset, len);
+                        field.set(obj, MatrixUtils.shapen(array, dimensions));
                     }
                 };
         } else if (memberClazz == MDFloatArray.class)
@@ -698,7 +846,7 @@ abstract class HDF5MemberByteifyer
                             throws IllegalAccessException
                     {
                         final MDFloatArray array = (MDFloatArray) field.get(obj);
-                        checkMDArrayDimensions(field, dimensions, array);
+                        MatrixUtils.checkMDArrayDimensions(field, dimensions, array);
                         return HDFNativeData.floatToByte(array.getAsFlatArray());
                     }
 
@@ -709,6 +857,44 @@ abstract class HDF5MemberByteifyer
                         final float[] array =
                                 HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len);
                         field.set(obj, new MDFloatArray(array, dimensions));
+                    }
+                };
+        } else if (memberClazz == float[][].class)
+        {
+            return new HDF5MemberByteifyer(field, memberName, len * FLOAT_SIZE, offset)
+                {
+                    final int memberTypeId =
+                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_IEEE_F32LE,
+                                    dimensions) : storageTypeId;
+
+                    @Override
+                    protected int getMemberStorageTypeId()
+                    {
+                        return memberTypeId;
+                    }
+
+                    @Override
+                    protected int getMemberNativeTypeId()
+                    {
+                        return -1;
+                    }
+
+                    @Override
+                    public byte[] byteify(int compoundDataTypeId, Object obj)
+                            throws IllegalAccessException
+                    {
+                        final float[][] array = (float[][]) field.get(obj);
+                        MatrixUtils.checkMatrixDimensions(field, dimensions, array);
+                        return HDFNativeData.floatToByte(MatrixUtils.flatten(array));
+                    }
+
+                    @Override
+                    public void setFromByteArray(int compoundDataTypeId, Object obj,
+                            byte[] byteArr, int arrayOffset) throws IllegalAccessException
+                    {
+                        final float[] array =
+                                HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len);
+                        field.set(obj, MatrixUtils.shapen(array, dimensions));
                     }
                 };
         } else if (memberClazz == MDDoubleArray.class)
@@ -736,7 +922,7 @@ abstract class HDF5MemberByteifyer
                             throws IllegalAccessException
                     {
                         final MDDoubleArray array = (MDDoubleArray) field.get(obj);
-                        checkMDArrayDimensions(field, dimensions, array);
+                        MatrixUtils.checkMDArrayDimensions(field, dimensions, array);
                         return HDFNativeData.doubleToByte(array.getAsFlatArray());
                     }
 
@@ -747,6 +933,44 @@ abstract class HDF5MemberByteifyer
                         final double[] array =
                                 HDFNativeData.byteToDouble(byteArr, arrayOffset + offset, len);
                         field.set(obj, new MDDoubleArray(array, dimensions));
+                    }
+                };
+        } else if (memberClazz == double[][].class)
+        {
+            return new HDF5MemberByteifyer(field, memberName, len * DOUBLE_SIZE, offset)
+                {
+                    final int memberTypeId =
+                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_IEEE_F64LE,
+                                    dimensions) : storageTypeId;
+
+                    @Override
+                    protected int getMemberStorageTypeId()
+                    {
+                        return memberTypeId;
+                    }
+
+                    @Override
+                    protected int getMemberNativeTypeId()
+                    {
+                        return -1;
+                    }
+
+                    @Override
+                    public byte[] byteify(int compoundDataTypeId, Object obj)
+                            throws IllegalAccessException
+                    {
+                        final double[][] array = (double[][]) field.get(obj);
+                        MatrixUtils.checkMatrixDimensions(field, dimensions, array);
+                        return HDFNativeData.doubleToByte(MatrixUtils.flatten(array));
+                    }
+
+                    @Override
+                    public void setFromByteArray(int compoundDataTypeId, Object obj,
+                            byte[] byteArr, int arrayOffset) throws IllegalAccessException
+                    {
+                        final double[] array =
+                                HDFNativeData.byteToDouble(byteArr, arrayOffset + offset, len);
+                        field.set(obj, MatrixUtils.shapen(array, dimensions));
                     }
                 };
         } else
@@ -1042,16 +1266,5 @@ abstract class HDF5MemberByteifyer
     {
         return "field '" + field.getName() + "' of class '"
                 + field.getDeclaringClass().getCanonicalName() + "'";
-    }
-
-    private static void checkMDArrayDimensions(final Field field, final int[] dimensions,
-            final MDAbstractArray<?> array)
-    {
-        if (Arrays.equals(dimensions, array.dimensions()) == false)
-        {
-            throw new IllegalArgumentException("The field '" + field.getName()
-                    + "' has dimensions " + Arrays.toString(array.dimensions())
-                    + " but is supposed to have dimensions " + Arrays.toString(dimensions) + ".");
-        }
     }
 }

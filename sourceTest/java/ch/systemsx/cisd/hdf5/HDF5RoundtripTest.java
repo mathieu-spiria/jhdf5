@@ -258,6 +258,7 @@ public class HDF5RoundtripTest
         test.testOpaqueType();
         test.testCompound();
         test.testDateCompound();
+        test.testMatrixCompound();
         test.testCompoundOverflow();
         test.testBitFieldCompound();
         test.testCompoundArray();
@@ -4212,6 +4213,298 @@ public class HDF5RoundtripTest
                         mapping("d")));
         assertEquals(recordWritten, recordRead);
         reader.close();
+    }
+
+    static class MatrixRecord
+    {
+        byte[][] b;
+
+        short[][] s;
+
+        int[][] i;
+
+        long[][] l;
+
+        float[][] f;
+
+        double[][] d;
+
+        MatrixRecord()
+        {
+        }
+
+        MatrixRecord(byte[][] b, short[][] s, int[][] i, long[][] l, float[][] f, double[][] d)
+        {
+            this.b = b;
+            this.s = s;
+            this.i = i;
+            this.l = l;
+            this.f = f;
+            this.d = d;
+        }
+
+        static HDF5CompoundMemberMapping[] getMapping()
+        {
+            return new HDF5CompoundMemberMapping[]
+                { mapping("b", 1, 2), mapping("s", 2, 1), mapping("i", 2, 2), mapping("l", 3, 2),
+                        mapping("f", 2, 2), mapping("d", 2, 3) };
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            MatrixRecord other = (MatrixRecord) obj;
+            if (!HDF5RoundtripTest.equals(b, other.b))
+                return false;
+            if (!HDF5RoundtripTest.equals(d, other.d))
+                return false;
+            if (!HDF5RoundtripTest.equals(f, other.f))
+                return false;
+            if (!HDF5RoundtripTest.equals(i, other.i))
+                return false;
+            if (!HDF5RoundtripTest.equals(l, other.l))
+                return false;
+            if (!HDF5RoundtripTest.equals(s, other.s))
+                return false;
+            return true;
+        }
+
+    }
+
+    @Test
+    public void testMatrixCompound()
+    {
+        final File file = new File(workingDirectory, "compoundWithMatrix.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        HDF5CompoundType<MatrixRecord> compoundType =
+                writer.getCompoundType(MatrixRecord.class, MatrixRecord.getMapping());
+        final MatrixRecord recordWritten = new MatrixRecord(new byte[][]
+            {
+                { 1, 2 } }, new short[][]
+            {
+                { 1 },
+                { 2 } }, new int[][]
+            {
+                { 1, 2 },
+                { 3, 4 } }, new long[][]
+            {
+                { 1, 2 },
+                { 3, 4 },
+                { 5, 6 } }, new float[][]
+            {
+                { 1, 2 },
+                { 3, 4 } }, new double[][]
+            {
+                { 1, 2, 3 },
+                { 4, 5, 6 } });
+        String name = "/testMatrixCompound";
+        writer.writeCompound(name, compoundType, recordWritten);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final HDF5CompoundMemberInformation[] memMemberInfo =
+                HDF5CompoundMemberInformation.create(MatrixRecord.class, MatrixRecord.getMapping());
+        final HDF5CompoundMemberInformation[] diskMemberInfo =
+                HDF5CompoundMemberInformation.create(MatrixRecord.class, MatrixRecord.getMapping());
+        assertEquals(memMemberInfo.length, diskMemberInfo.length);
+        for (int i = 0; i < memMemberInfo.length; ++i)
+        {
+            assertEquals(memMemberInfo[i], diskMemberInfo[i]);
+        }
+        compoundType = reader.getCompoundType(MatrixRecord.class, MatrixRecord.getMapping());
+        final MatrixRecord recordRead =
+                reader.readCompound(name, reader.getCompoundType(
+                        MatrixRecord.class, MatrixRecord.getMapping()));
+        assertEquals(recordWritten, recordRead);
+        reader.close();
+    }
+
+    private static boolean equals(double[][] a, double[][] a2)
+    {
+        if (a == a2)
+        {
+            return true;
+        }
+        if (a == null || a2 == null)
+        {
+            return false;
+        }
+
+        int rows = a.length;
+        if (a2.length != rows)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < rows; i++)
+        {
+            int columns = a[i].length;
+            if (a2[i].length != columns)
+            {
+                return false;
+            }
+            for (int j = 0; j < columns; j++)
+            {
+                if (Double.doubleToLongBits(a[i][j]) != Double.doubleToLongBits(a2[i][j]))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean equals(byte[][] a, byte[][] a2)
+    {
+        if (a == a2)
+        {
+            return true;
+        }
+        if (a == null || a2 == null)
+        {
+            return false;
+        }
+
+        int rows = a.length;
+        if (a2.length != rows)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < rows; i++)
+        {
+            int columns = a[i].length;
+            if (a2[i].length != columns)
+            {
+                return false;
+            }
+            for (int j = 0; j < columns; j++)
+            {
+                if (a[i][j] != a2[i][j])
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean equals(short[][] a, short[][] a2)
+    {
+        if (a == a2)
+        {
+            return true;
+        }
+        if (a == null || a2 == null)
+        {
+            return false;
+        }
+
+        int rows = a.length;
+        if (a2.length != rows)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < rows; i++)
+        {
+            int columns = a[i].length;
+            if (a2[i].length != columns)
+            {
+                return false;
+            }
+            for (int j = 0; j < columns; j++)
+            {
+                if (a[i][j] != a2[i][j])
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean equals(int[][] a, int[][] a2)
+    {
+        if (a == a2)
+        {
+            return true;
+        }
+        if (a == null || a2 == null)
+        {
+            return false;
+        }
+
+        int rows = a.length;
+        if (a2.length != rows)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < rows; i++)
+        {
+            int columns = a[i].length;
+            if (a2[i].length != columns)
+            {
+                return false;
+            }
+            for (int j = 0; j < columns; j++)
+            {
+                if (a[i][j] != a2[i][j])
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private static boolean equals(long[][] a, long[][] a2)
+    {
+        if (a == a2)
+        {
+            return true;
+        }
+        if (a == null || a2 == null)
+        {
+            return false;
+        }
+
+        int rows = a.length;
+        if (a2.length != rows)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < rows; i++)
+        {
+            int columns = a[i].length;
+            if (a2[i].length != columns)
+            {
+                return false;
+            }
+            for (int j = 0; j < columns; j++)
+            {
+                if (a[i][j] != a2[i][j])
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     @Test

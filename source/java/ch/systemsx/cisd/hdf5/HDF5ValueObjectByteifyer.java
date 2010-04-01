@@ -106,13 +106,14 @@ class HDF5ValueObjectByteifyer<T>
                         HDF5MemberByteifyer.createEnumMemberByteifyer(members[i].getField(clazz),
                                 members[i].getMemberName(), members[i].tryGetEnumerationType(),
                                 offset);
-            } else if (memberClazz.isArray() || memberClazz == java.util.BitSet.class)
+            } else if (isOneDimensionalArray(memberClazz) || memberClazz == java.util.BitSet.class)
             {
                 result[i] =
                         HDF5MemberByteifyer.createArrayMemberByteifyer(members[i].getField(clazz),
                                 members[i].getMemberName(), offset, fileInfoProvider, members[i]
                                         .getMemberTypeLength(), members[i].getStorageDataTypeId());
-            } else if (MDAbstractArray.class.isAssignableFrom(memberClazz))
+            } else if (MDAbstractArray.class.isAssignableFrom(memberClazz)
+                    || isTwoDimensionalArray(memberClazz))
             {
                 result[i] =
                         HDF5MemberByteifyer.createArrayMemberByteifyer(members[i].getField(clazz),
@@ -128,6 +129,17 @@ class HDF5ValueObjectByteifyer<T>
             offset += result[i].getSize();
         }
         return result;
+    }
+
+    private static boolean isOneDimensionalArray(final Class<?> memberClazz)
+    {
+        return memberClazz.isArray() && memberClazz.getComponentType().isPrimitive();
+    }
+
+    private static boolean isTwoDimensionalArray(final Class<?> memberClazz)
+    {
+        return memberClazz.isArray() && memberClazz.getComponentType().isArray()
+                && memberClazz.getComponentType().getComponentType().isPrimitive();
     }
 
     public int insertMemberTypes(int dataTypeId)
