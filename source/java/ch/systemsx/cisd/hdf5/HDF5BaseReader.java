@@ -655,11 +655,11 @@ class HDF5BaseReader
         return dataClass;
     }
 
-    private HDF5DataClass getElementClassForArrayDataType(final int ArrayDataTypeId)
+    private HDF5DataClass getElementClassForArrayDataType(final int arrayDataTypeId)
     {
         for (HDF5DataClass eClass : HDF5DataClass.values())
         {
-            if (h5.hasClassType(ArrayDataTypeId, eClass.getId()))
+            if (h5.hasClassType(arrayDataTypeId, eClass.getId()))
             {
                 return eClass;
             }
