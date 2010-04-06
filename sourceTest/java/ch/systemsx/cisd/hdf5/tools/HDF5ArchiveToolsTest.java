@@ -30,7 +30,7 @@ import ch.systemsx.cisd.base.utilities.OSUtilities;
  * 
  * @author Bernd Rinn
  */
-@Friend(toClasses = HDF5ArchiveTools.class)
+@Friend(toClasses = {HDF5ArchiveTools.class, HDF5ArchiveTools.IdCache.class, Link.class})
 public class HDF5ArchiveToolsTest
 {
 
