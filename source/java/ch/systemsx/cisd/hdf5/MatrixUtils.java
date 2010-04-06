@@ -58,7 +58,7 @@ public class MatrixUtils
     {
         if (matrix.length == 0)
         {
-            throw new IllegalStateException("Matrix must not have a length of 0.");
+            throw new IllegalArgumentException("Matrix must not have a length of 0.");
         }
         final int dimY = matrix.length;
         final int dimX = matrix[0].length;
@@ -66,7 +66,7 @@ public class MatrixUtils
         {
             if (matrix[i].length != dimX)
             {
-                throw new IllegalStateException(
+                throw new IllegalArgumentException(
                         "All rows in matrix need to have the same number of columns.");
             }
         }
@@ -94,7 +94,7 @@ public class MatrixUtils
     {
         if (matrix.length == 0)
         {
-            throw new IllegalStateException("Matrix must not have a length of 0.");
+            throw new IllegalArgumentException("Matrix must not have a length of 0.");
         }
         final int dimY = matrix.length;
         final int dimX = matrix[0].length;
@@ -102,7 +102,7 @@ public class MatrixUtils
         {
             if (matrix[i].length != dimX)
             {
-                throw new IllegalStateException(
+                throw new IllegalArgumentException(
                         "All rows in matrix need to have the same number of columns.");
             }
         }
@@ -130,7 +130,7 @@ public class MatrixUtils
     {
         if (matrix.length == 0)
         {
-            throw new IllegalStateException("Matrix must not have a length of 0.");
+            throw new IllegalArgumentException("Matrix must not have a length of 0.");
         }
         final int dimY = matrix.length;
         final int dimX = matrix[0].length;
@@ -138,7 +138,7 @@ public class MatrixUtils
         {
             if (matrix[i].length != dimX)
             {
-                throw new IllegalStateException(
+                throw new IllegalArgumentException(
                         "All rows in matrix need to have the same number of columns.");
             }
         }
@@ -166,7 +166,7 @@ public class MatrixUtils
     {
         if (matrix.length == 0)
         {
-            throw new IllegalStateException("Matrix must not have a length of 0.");
+            throw new IllegalArgumentException("Matrix must not have a length of 0.");
         }
         final int dimY = matrix.length;
         final int dimX = matrix[0].length;
@@ -174,7 +174,7 @@ public class MatrixUtils
         {
             if (matrix[i].length != dimX)
             {
-                throw new IllegalStateException(
+                throw new IllegalArgumentException(
                         "All rows in matrix need to have the same number of columns.");
             }
         }
@@ -202,7 +202,7 @@ public class MatrixUtils
     {
         if (matrix.length == 0)
         {
-            throw new IllegalStateException("Matrix must not have a length of 0.");
+            throw new IllegalArgumentException("Matrix must not have a length of 0.");
         }
         final int dimY = matrix.length;
         final int dimX = matrix[0].length;
@@ -210,7 +210,7 @@ public class MatrixUtils
         {
             if (matrix[i].length != dimX)
             {
-                throw new IllegalStateException(
+                throw new IllegalArgumentException(
                         "All rows in matrix need to have the same number of columns.");
             }
         }
@@ -238,7 +238,7 @@ public class MatrixUtils
     {
         if (matrix.length == 0)
         {
-            throw new IllegalStateException("Matrix must not have a length of 0.");
+            throw new IllegalArgumentException("Matrix must not have a length of 0.");
         }
         final int dimY = matrix.length;
         final int dimX = matrix[0].length;
@@ -246,7 +246,7 @@ public class MatrixUtils
         {
             if (matrix[i].length != dimX)
             {
-                throw new IllegalStateException(
+                throw new IllegalArgumentException(
                         "All rows in matrix need to have the same number of columns.");
             }
         }

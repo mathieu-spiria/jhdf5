@@ -259,6 +259,8 @@ public class HDF5RoundtripTest
         test.testCompound();
         test.testDateCompound();
         test.testMatrixCompound();
+        test.testMatrixCompoundSizeMismatch();
+        test.testMatrixCompoundDifferentNumberOfColumnsPerRow();
         test.testCompoundOverflow();
         test.testBitFieldCompound();
         test.testCompoundArray();
@@ -4321,10 +4323,78 @@ public class HDF5RoundtripTest
         }
         compoundType = reader.getCompoundType(MatrixRecord.class, MatrixRecord.getMapping());
         final MatrixRecord recordRead =
-                reader.readCompound(name, reader.getCompoundType(
-                        MatrixRecord.class, MatrixRecord.getMapping()));
+                reader.readCompound(name, reader.getCompoundType(MatrixRecord.class, MatrixRecord
+                        .getMapping()));
         assertEquals(recordWritten, recordRead);
         reader.close();
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testMatrixCompoundSizeMismatch()
+    {
+        final File file = new File(workingDirectory, "compoundWithSizeMismatchMatrix.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        HDF5CompoundType<MatrixRecord> compoundType =
+                writer.getCompoundType(MatrixRecord.class, MatrixRecord.getMapping());
+        final MatrixRecord recordWritten = new MatrixRecord(new byte[][]
+            {
+                { 1, 2 } }, new short[][]
+            {
+                { 1 },
+                { 2 } }, new int[][]
+            {
+                { 1, 2 },
+                { 3, 4 } }, new long[][]
+            {
+                { 1, 2 },
+                { 3, 4 },
+                { 5, 6 } }, new float[][]
+            {
+                { 1, 2 },
+                { 3, 4 } }, new double[][]
+            {
+                { 1, 2, 3, 4 },
+                { 5, 6, 7, 8 },
+                { 9, 10, 11, 12, 13 } });
+        String name = "/testMatrixCompound";
+        writer.writeCompound(name, compoundType, recordWritten);
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testMatrixCompoundDifferentNumberOfColumnsPerRow()
+    {
+        final File file =
+                new File(workingDirectory, "compoundWithMatrixDifferentNumberOfColumnsPerRow.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        HDF5CompoundType<MatrixRecord> compoundType =
+                writer.getCompoundType(MatrixRecord.class, MatrixRecord.getMapping());
+        final MatrixRecord recordWritten = new MatrixRecord(new byte[][]
+            {
+                { 1, 2 } }, new short[][]
+            {
+                { 1 },
+                { 2 } }, new int[][]
+            {
+                { 1, 2 },
+                { 3, 4 } }, new long[][]
+            {
+                { 1, 2 },
+                { 3, 4 },
+                { 5, 6 } }, new float[][]
+            {
+                { 1, 2 },
+                { 3, 4 } }, new double[][]
+            {
+                { 1, 2, 3 },
+                { 4, 5 } });
+        String name = "/testMatrixCompound";
+        writer.writeCompound(name, compoundType, recordWritten);
     }
 
     private static boolean equals(double[][] a, double[][] a2)
