@@ -108,6 +108,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Tget_native_type;
 import static ncsa.hdf.hdf5lib.H5.H5Tget_nmembers;
 import static ncsa.hdf.hdf5lib.H5.H5Tget_size;
 import static ncsa.hdf.hdf5lib.H5.H5Tget_size_long;
+import static ncsa.hdf.hdf5lib.H5.H5Tget_super;
 import static ncsa.hdf.hdf5lib.H5.H5Tget_tag;
 import static ncsa.hdf.hdf5lib.H5.H5Tis_variable_str;
 import static ncsa.hdf.hdf5lib.H5.H5Topen;
@@ -1264,7 +1265,7 @@ class HDF5
     private int[] getLittleEndianSuccessiveIntValues(String[] names)
     {
         final int[] values = new int[names.length];
-        for (short i = 0; i < names.length; ++i)
+        for (int i = 0; i < names.length; ++i)
         {
             values[i] = i;
         }
@@ -1560,6 +1561,19 @@ class HDF5
     public boolean hasClassType(int dataTypeId, int classTypeId)
     {
         return H5Tdetect_class(dataTypeId, classTypeId);
+    }
+    
+    public int getBaseDataType(int dataTypeId, ICleanUpRegistry registry)
+    {
+        final int baseDataTypeId = H5Tget_super(dataTypeId);
+        registry.registerCleanUp(new Runnable()
+        {
+            public void run()
+            {
+                H5Tclose(baseDataTypeId);
+            }
+        });
+        return baseDataTypeId;
     }
 
     public String tryGetDataTypePath(int dataTypeId)
