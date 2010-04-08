@@ -23,8 +23,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
- * Utility methods for reflection.
+ * Utility methods for reflection, used for inferring the mapping between a compound data type and
+ * the fields of a Java class.
  * 
  * @author Bernd Rinn
  */
@@ -35,7 +38,7 @@ final class ReflectionUtils
     {
         // Cannot be instantiated
     }
-    
+
     /**
      * Returns a map from field names to fields for all fields in the given <var>clazz</var>.
      */
@@ -50,7 +53,14 @@ final class ReflectionUtils
     {
         for (final Field field : clazz.getDeclaredFields())
         {
-            fields.put(field.getName(), field);
+            CompoundElement e = field.getAnnotation(CompoundElement.class);
+            if (e != null && StringUtils.isNotEmpty(e.memberName()))
+            {
+                fields.put(e.memberName(), field);
+            } else
+            {
+                fields.put(field.getName(), field);
+            }
         }
         final Class<?> superClass = clazz.getSuperclass();
         if (superClass != null)

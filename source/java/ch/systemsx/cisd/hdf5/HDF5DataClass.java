@@ -32,9 +32,10 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
  */
 public enum HDF5DataClass
 {
-    BITFIELD(H5T_BITFIELD), INTEGER(H5T_INTEGER), FLOAT(H5T_FLOAT), STRING(H5T_STRING), OPAQUE(
-            H5T_OPAQUE), BOOLEAN(-1), ENUM(H5T_ENUM), COMPOUND(H5T_COMPOUND),
-    OTHER(-1);
+    // Implementation note: The order matters! ENUM needs to be before INTEGER, as H5Tdetect_class
+    // will return TRUE for ENUM arrays when trying to detect an INTEGER class.
+    BITFIELD(H5T_BITFIELD), ENUM(H5T_ENUM), INTEGER(H5T_INTEGER), FLOAT(H5T_FLOAT), STRING(
+            H5T_STRING), OPAQUE(H5T_OPAQUE), BOOLEAN(-1), COMPOUND(H5T_COMPOUND), OTHER(-1);
 
     private int id;
 

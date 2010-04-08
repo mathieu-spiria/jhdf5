@@ -21,7 +21,6 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
-import ch.systemsx.cisd.hdf5.IHDF5CompoundReader.IByteArrayInspector;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
@@ -30,35 +29,29 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-class HDF5CompoundWriter implements IHDF5CompoundWriter
+class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHDF5CompoundWriter
 {
     private final HDF5BaseWriter baseWriter;
 
     HDF5CompoundWriter(HDF5BaseWriter baseWriter)
     {
-        assert baseWriter != null;
-
+        super(baseWriter);
         this.baseWriter = baseWriter;
     }
 
-    public <T> HDF5CompoundType<T> getCompoundType(final String name, Class<T> compoundType,
+    @Override
+    public <T> HDF5CompoundType<T> getCompoundType(final String name, Class<T> pojoClass,
             HDF5CompoundMemberMapping... members)
     {
         baseWriter.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectByteifyer =
-                baseWriter.createCompoundByteifyers(compoundType, members);
-        final String dataTypeName = (name != null) ? name : compoundType.getSimpleName();
+                baseWriter.createCompoundByteifyers(pojoClass, members);
+        final String dataTypeName = (name != null) ? name : pojoClass.getSimpleName();
         final int storageDataTypeId =
-                getOrCreateCompoundDataType(dataTypeName, compoundType, objectByteifyer);
+                getOrCreateCompoundDataType(dataTypeName, pojoClass, objectByteifyer);
         final int nativeDataTypeId = baseWriter.createNativeCompoundDataType(objectByteifyer);
         return new HDF5CompoundType<T>(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
-                dataTypeName, compoundType, objectByteifyer);
-    }
-
-    public <T> HDF5CompoundType<T> getCompoundType(Class<T> compoundType,
-            HDF5CompoundMemberMapping... members)
-    {
-        return getCompoundType(null, compoundType, members);
+                dataTypeName, pojoClass, objectByteifyer);
     }
 
     private <T> int getOrCreateCompoundDataType(final String dataTypeName,
@@ -351,19 +344,19 @@ class HDF5CompoundWriter implements IHDF5CompoundWriter
     }
 
     public <T> void writeCompoundMDArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockDimensions)
+            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockNumber)
     {
-        writeCompoundMDArrayBlock(objectPath, type, data, blockDimensions, null);
+        writeCompoundMDArrayBlock(objectPath, type, data, blockNumber, null);
     }
 
     public <T> void writeCompoundMDArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockDimensions,
+            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockNumber,
             final IByteArrayInspector inspectorOrNull)
     {
         assert objectPath != null;
         assert type != null;
         assert data != null;
-        assert blockDimensions != null;
+        assert blockNumber != null;
 
         baseWriter.checkOpen();
         type.check(baseWriter.fileId);
@@ -372,7 +365,7 @@ class HDF5CompoundWriter implements IHDF5CompoundWriter
         final long[] dataSetDimensions = new long[dimensions.length];
         for (int i = 0; i < offset.length; ++i)
         {
-            offset[i] = blockDimensions[i] * dimensions[i];
+            offset[i] = blockNumber[i] * dimensions[i];
             dataSetDimensions[i] = offset[i] + dimensions[i];
         }
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()

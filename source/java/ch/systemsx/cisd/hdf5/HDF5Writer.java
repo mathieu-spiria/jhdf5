@@ -1193,17 +1193,43 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     //
 
     @Override
-    public <T> HDF5CompoundType<T> getCompoundType(final String name, Class<T> compoundType,
+    public <T> HDF5CompoundType<T> getCompoundType(final String name, Class<T> pojoClass,
             HDF5CompoundMemberMapping... members)
     {
-        return compoundWriter.getCompoundType(name, compoundType, members);
+        return compoundWriter.getCompoundType(name, pojoClass, members);
     }
 
     @Override
-    public <T> HDF5CompoundType<T> getCompoundType(Class<T> compoundType,
+    public <T> HDF5CompoundType<T> getCompoundType(Class<T> pojoClass,
             HDF5CompoundMemberMapping... members)
     {
-        return compoundWriter.getCompoundType(compoundType, members);
+        return compoundWriter.getCompoundType(pojoClass, members);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getInferredCompoundType(final String name, Class<T> pojoClass)
+    {
+        return compoundWriter.getCompoundType(name, pojoClass, HDF5CompoundMemberMapping
+                .inferMapping(pojoClass));
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getInferredCompoundType(Class<T> pojoClass)
+    {
+        return compoundWriter.getCompoundType(pojoClass, HDF5CompoundMemberMapping
+                .inferMapping(pojoClass));
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getInferredCompoundType(final String name, T template)
+    {
+        return compoundWriter.getInferredCompoundType(name, template);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getInferredCompoundType(T template)
+    {
+        return compoundWriter.getInferredCompoundType(template);
     }
 
     public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, int size)

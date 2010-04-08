@@ -18,6 +18,10 @@ package ch.systemsx.cisd.hdf5;
 
 import java.util.Iterator;
 
+import ncsa.hdf.hdf5lib.HDFNativeData;
+
+import ch.systemsx.cisd.base.convert.NativeData;
+import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType.StorageFormEnum;
 
 /**
@@ -27,13 +31,13 @@ import ch.systemsx.cisd.hdf5.HDF5EnumerationType.StorageFormEnum;
  */
 public class HDF5EnumerationValueArray implements Iterable<String>
 {
-    
+
     private final HDF5EnumerationType type;
 
     private final int length;
 
     private StorageFormEnum storageForm;
-    
+
     private byte[] bArrayOrNull;
 
     private short[] sArrayOrNull;
@@ -380,7 +384,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         return storageForm;
     }
-    
+
     byte[] getStorageFormBArray()
     {
         return bArrayOrNull;
@@ -439,6 +443,39 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     public String getValue(int arrayIndex)
     {
         return type.getValues().get(getOrdinal(arrayIndex));
+    }
+
+    byte[] toStorageForm()
+    {
+        switch (getStorageForm())
+        {
+            case BYTE:
+                return getStorageFormBArray();
+            case SHORT:
+                return NativeData.shortToByte(getStorageFormSArray(), ByteOrder.NATIVE);
+            case INT:
+                return NativeData.intToByte(getStorageFormIArray(), ByteOrder.NATIVE);
+        }
+        throw new Error("Illegal storage form (" + getStorageForm() + ".)");
+    }
+
+    static HDF5EnumerationValueArray fromStorageForm(HDF5EnumerationType enumType, byte[] data,
+            int offset, int len)
+    {
+        switch (enumType.getStorageForm())
+        {
+            case BYTE:
+                final byte[] subArray = new byte[len];
+                System.arraycopy(data, offset, subArray, 0, len);
+                return new HDF5EnumerationValueArray(enumType, subArray);
+            case SHORT:
+                return new HDF5EnumerationValueArray(enumType, HDFNativeData.byteToShort(data,
+                        offset, len));
+            case INT:
+                return new HDF5EnumerationValueArray(enumType, HDFNativeData.byteToInt(data,
+                        offset, len));
+        }
+        throw new Error("Illegal storage form (" + enumType.getStorageForm() + ".)");
     }
 
     //

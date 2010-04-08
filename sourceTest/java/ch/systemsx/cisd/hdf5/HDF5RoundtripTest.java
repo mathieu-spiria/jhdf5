@@ -257,16 +257,36 @@ public class HDF5RoundtripTest
         test.testEnumArrayScaleCompression();
         test.testOpaqueType();
         test.testCompound();
+        test.testInferredCompoundType();
+        test.testNameChangeInCompoundMapping();
+        test.testInferredCompoundWithEnum();
+        test.testInferredCompoundWithEnumArray();
         test.testDateCompound();
         test.testMatrixCompound();
-        test.testMatrixCompoundSizeMismatch();
-        test.testMatrixCompoundDifferentNumberOfColumnsPerRow();
+        try
+        {
+            test.testMatrixCompoundSizeMismatch();
+            System.err.println("testMatrixCompoundSizeMismatch(): failure not detected.");
+        } catch (IllegalArgumentException ex)
+        {
+            // Expected
+        }
+        try
+        {
+            test.testMatrixCompoundDifferentNumberOfColumnsPerRow();
+            System.err
+                    .println("testMatrixCompoundDifferentNumberOfColumnsPerRow(): failure not detected.");
+        } catch (IllegalArgumentException ex)
+        {
+            // Expected
+        }
         test.testCompoundOverflow();
         test.testBitFieldCompound();
         test.testCompoundArray();
         test.testCompoundArrayBlockWise();
         test.testCompoundMDArray();
         test.testCompoundMDArrayBlockWise();
+        test.testIterateOverMDCompoundArrayInNaturalBlocks();
         test.testConfusedCompound();
         test.testMDArrayCompound();
         test.testMDArrayCompoundArray();
@@ -4735,7 +4755,7 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         compoundType = Record.getHDF5Type(reader);
-        inferredType = reader.getCompoundTypeForDataSet("/testCompound", Record.class);
+        inferredType = reader.getDataSetCompoundType("/testCompound", Record.class);
         Record[] arrayRead = reader.readCompoundArray("/testCompound", inferredType);
         Record firstElementRead = reader.readCompound("/testCompound", compoundType);
         assertEquals(arrayRead[0], firstElementRead);
@@ -5067,6 +5087,151 @@ public class HDF5RoundtripTest
         }
     }
 
+    static class RecordC
+    {
+        float a;
+
+        RecordC(float a)
+        {
+            this.a = a;
+        }
+
+        RecordC()
+        {
+        }
+
+    }
+
+    static class RecordD
+    {
+        @CompoundElement(memberName = "a")
+        float b;
+
+        RecordD(float b)
+        {
+            this.b = b;
+        }
+
+        RecordD()
+        {
+        }
+
+    }
+
+    static class MatrixElementRecord
+    {
+        int row;
+
+        int col;
+
+        MatrixElementRecord()
+        {
+        }
+
+        MatrixElementRecord(int row, int col)
+        {
+            this.row = row;
+            this.col = col;
+        }
+
+        boolean equals(@SuppressWarnings("hiding") int row, @SuppressWarnings("hiding") int col)
+        {
+            return this.row == row && this.col == col;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (o instanceof MatrixElementRecord == false)
+            {
+                return false;
+            }
+            final MatrixElementRecord m = (MatrixElementRecord) o;
+            return equals(m.row, m.col);
+        }
+
+        @Override
+        public String toString()
+        {
+            return "(" + row + "," + col + ")";
+        }
+    }
+
+    @Test
+    public void testIterateOverMDCompoundArrayInNaturalBlocks()
+    {
+        final File datasetFile =
+                new File(workingDirectory, "iterateOverMDCompoundArrayInNaturalBlocks.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "ds";
+        final HDF5CompoundType<MatrixElementRecord> typeW =
+                writer.getInferredCompoundType(MatrixElementRecord.class);
+        writer.createCompoundMDArray(dsName, typeW, new long[]
+            { 4, 4 }, new int[]
+            { 2, 2 });
+        writer.writeCompoundMDArrayBlock(dsName, typeW, new MDArray<MatrixElementRecord>(
+                new MatrixElementRecord[]
+                    { new MatrixElementRecord(1, 1), new MatrixElementRecord(1, 2),
+                            new MatrixElementRecord(2, 1), new MatrixElementRecord(2, 2) },
+                new int[]
+                    { 2, 2 }), new long[]
+            { 0, 0 });
+        writer.writeCompoundMDArrayBlock(dsName, typeW, new MDArray<MatrixElementRecord>(
+                new MatrixElementRecord[]
+                    { new MatrixElementRecord(3, 1), new MatrixElementRecord(3, 2),
+                            new MatrixElementRecord(4, 1), new MatrixElementRecord(4, 2) },
+                new int[]
+                    { 2, 2 }), new long[]
+            { 1, 0 });
+        writer.writeCompoundMDArrayBlock(dsName, typeW, new MDArray<MatrixElementRecord>(
+                new MatrixElementRecord[]
+                    { new MatrixElementRecord(1, 3), new MatrixElementRecord(1, 4),
+                            new MatrixElementRecord(2, 3), new MatrixElementRecord(2, 4) },
+                new int[]
+                    { 2, 2 }), new long[]
+            { 0, 1 });
+        writer.writeCompoundMDArrayBlock(dsName, typeW, new MDArray<MatrixElementRecord>(
+                new MatrixElementRecord[]
+                    { new MatrixElementRecord(3, 3), new MatrixElementRecord(3, 4),
+                            new MatrixElementRecord(4, 3), new MatrixElementRecord(4, 4) },
+                new int[]
+                    { 2, 2 }), new long[]
+            { 1, 1 });
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        int i = 0;
+        int j = 0;
+        final HDF5CompoundType<MatrixElementRecord> typeR =
+                reader.getInferredCompoundType(MatrixElementRecord.class);
+        for (HDF5MDDataBlock<MDArray<MatrixElementRecord>> block : reader
+                .getCompoundMDArrayNaturalBlocks(dsName, typeR))
+        {
+            final String ij = new MatrixElementRecord(i, j).toString() + ": ";
+            assertTrue(ij + Arrays.toString(block.getIndex()), Arrays.equals(new long[]
+                { i, j }, block.getIndex()));
+            assertTrue(ij + Arrays.toString(block.getData().dimensions()), Arrays.equals(new int[]
+                { 2, 2 }, block.getData().dimensions()));
+            assertTrue(ij + Arrays.toString(block.getData().getAsFlatArray()), Arrays.equals(
+                    new MatrixElementRecord[]
+                        { new MatrixElementRecord(1 + i * 2, 1 + j * 2),
+                                new MatrixElementRecord(1 + i * 2, 2 + j * 2),
+                                new MatrixElementRecord(2 + i * 2, 1 + j * 2),
+                                new MatrixElementRecord(2 + i * 2, 2 + j * 2) }, block.getData()
+                            .getAsFlatArray()));
+            if (++j > 1)
+            {
+                j = 0;
+                ++i;
+            }
+        }
+        assertEquals(2, i);
+        assertEquals(0, j);
+        reader.close();
+    }
+
     @Test
     public void testConfusedCompound()
     {
@@ -5089,6 +5254,216 @@ public class HDF5RoundtripTest
         assertTrue("written: " + recordWritten.b + ", read: " + recordRead.b,
                 recordWritten.b == recordRead.b);
         reader.close();
+    }
+
+    static class SimpleRecord
+    {
+        private float f;
+
+        private int i;
+
+        @CompoundElement(dimensions = 4)
+        private String s;
+
+        SimpleRecord()
+        {
+        }
+
+        SimpleRecord(float f, int i, String s)
+        {
+            this.f = f;
+            this.i = i;
+            this.s = s;
+        }
+
+        public float getF()
+        {
+            return f;
+        }
+
+        public int getI()
+        {
+            return i;
+        }
+
+        public String getS()
+        {
+            return s;
+        }
+    }
+
+    static class SimpleInheretingRecord extends SimpleRecord
+    {
+        SimpleInheretingRecord()
+        {
+        }
+
+        @CompoundElement(memberName = "ll", dimensions =
+            { 2, 3 })
+        private long[][] l;
+
+        public SimpleInheretingRecord(float f, int i, String s, long[][] l)
+        {
+            super(f, i, s);
+            this.l = l;
+        }
+
+        public long[][] getL()
+        {
+            return l;
+        }
+    }
+
+    @Test
+    public void testInferredCompoundType()
+    {
+        final File file = new File(workingDirectory, "inferredCompoundType.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        final HDF5CompoundType<SimpleRecord> typeW = writer.getInferredCompoundType(SimpleRecord.class);
+        writer.writeCompound("sc", typeW, new SimpleRecord(2.2f, 17, "test"));
+        long[][] arrayWritten = new long[][]
+            {
+                { 1, 2, 3 },
+                { 4, 5, 6 } };
+        final HDF5CompoundType<SimpleInheretingRecord> itype =
+                writer.getInferredCompoundType(SimpleInheretingRecord.class);
+        writer.writeCompound("sci", itype, new SimpleInheretingRecord(-3.1f, 42, "some",
+                arrayWritten));
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().configureForReading(file).reader();
+        final HDF5CompoundType<SimpleRecord> typeR = reader.getInferredCompoundType(SimpleRecord.class);
+        final SimpleRecord recordRead = reader.readCompound("sc", typeR);
+        final HDF5CompoundType<SimpleInheretingRecord> inheritedTypeR =
+                reader.getInferredCompoundType(SimpleInheretingRecord.class);
+        final SimpleInheretingRecord recordInheritedRead =
+                reader.readCompound("sci", inheritedTypeR);
+        reader.close();
+
+        assertEquals(2.2f, recordRead.getF());
+        assertEquals(17, recordRead.getI());
+        assertEquals("test", recordRead.getS());
+
+        assertEquals(-3.1f, recordInheritedRead.getF());
+        assertEquals(42, recordInheritedRead.getI());
+        assertEquals("some", recordInheritedRead.getS());
+        assertTrue(equals(arrayWritten, recordInheritedRead.getL()));
+    }
+
+    @Test
+    public void testNameChangeInCompoundMapping()
+    {
+        final File file = new File(workingDirectory, "nameChangeInCompoundMapping.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        final String typeName = "a_float";
+        HDF5CompoundType<RecordC> compoundTypeInt = writer.getInferredCompoundType(typeName, RecordC.class);
+        final RecordC recordWritten = new RecordC(33.33333f);
+        writer.writeCompound("/testCompound", compoundTypeInt, recordWritten);
+        writer.close();
+        final IHDF5Reader reader =
+                HDF5FactoryProvider.get().configureForReading(file).performNumericConversions()
+                        .reader();
+        HDF5CompoundType<RecordD> compoundTypeFloat =
+                reader.getNamedCompoundType(typeName, RecordD.class);
+        final RecordD recordRead = reader.readCompound("/testCompound", compoundTypeFloat);
+        assertEquals(recordWritten.a, recordRead.b);
+        reader.close();
+    }
+
+    static class SimpleRecordWithEnum
+    {
+        HDF5EnumerationValue e;
+
+        SimpleRecordWithEnum()
+        {
+        }
+
+        public SimpleRecordWithEnum(HDF5EnumerationValue e)
+        {
+            this.e = e;
+        }
+    }
+
+    @Test
+    public void testInferredCompoundWithEnum()
+    {
+        final File file = new File(workingDirectory, "inferredCompoundTypeWithEnum.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final String[] alternatives = new String[257];
+        for (int i = 0; i < alternatives.length; ++i)
+        {
+            alternatives[i] = Integer.toString(i);
+        }
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        final HDF5EnumerationType enumType = writer.getEnumType("type", alternatives);
+        final SimpleRecordWithEnum r =
+                new SimpleRecordWithEnum(new HDF5EnumerationValue(enumType, "3"));
+        final HDF5CompoundType<SimpleRecordWithEnum> typeW = writer.getInferredCompoundType(r);
+        writer.writeCompound("sce", typeW, r);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().configureForReading(file).reader();
+        final HDF5CompoundType<SimpleRecordWithEnum> typeR =
+                reader.getNamedCompoundType(SimpleRecordWithEnum.class);
+        final SimpleRecordWithEnum recordRead = reader.readCompound("sce", typeR);
+        assertEquals("3", recordRead.e.getValue());
+        reader.close();
+
+    }
+
+    static class SimpleRecordWithEnumArray
+    {
+        @CompoundElement(dimensions = 5)
+        HDF5EnumerationValueArray e;
+
+        SimpleRecordWithEnumArray()
+        {
+        }
+
+        public SimpleRecordWithEnumArray(HDF5EnumerationValueArray e)
+        {
+            this.e = e;
+        }
+    }
+
+    @Test
+    public void testInferredCompoundWithEnumArray()
+    {
+        final File file = new File(workingDirectory, "inferredCompoundTypeWithEnumArray.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        final String[] alternatives = new String[512];
+        for (int i = 0; i < alternatives.length; ++i)
+        {
+            alternatives[i] = Integer.toString(i);
+        }
+        final HDF5EnumerationType enumType = writer.getEnumType("type", alternatives);
+        final SimpleRecordWithEnumArray r =
+                new SimpleRecordWithEnumArray(new HDF5EnumerationValueArray(enumType, new String[]
+                    { "3", "2", "1", "511", "3" }));
+        final HDF5CompoundType<SimpleRecordWithEnumArray> cType = writer.getInferredCompoundType(r);
+        writer.writeCompound("sce", cType, r);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().configureForReading(file).reader();
+        final HDF5CompoundType<SimpleRecordWithEnumArray> typeR =
+                reader.getNamedCompoundType(SimpleRecordWithEnumArray.class);
+        final SimpleRecordWithEnumArray recordRead = reader.readCompound("sce", typeR);
+        reader.close();
+
+        assertEquals(5, recordRead.e.getLength());
+        assertEquals("3", recordRead.e.getValue(0));
+        assertEquals("2", recordRead.e.getValue(1));
+        assertEquals("1", recordRead.e.getValue(2));
+        assertEquals("511", recordRead.e.getValue(3));
+        assertEquals("3", recordRead.e.getValue(4));
     }
 
     static class RecordWithMatrix

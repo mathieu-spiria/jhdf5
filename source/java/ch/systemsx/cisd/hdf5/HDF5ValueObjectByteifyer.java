@@ -106,6 +106,18 @@ class HDF5ValueObjectByteifyer<T>
                         HDF5MemberByteifyer.createEnumMemberByteifyer(members[i].getField(clazz),
                                 members[i].getMemberName(), members[i].tryGetEnumerationType(),
                                 offset);
+            } else if (memberClazz == HDF5EnumerationValueArray.class)
+            {
+                final HDF5EnumerationType enumType = members[i].tryGetEnumerationType();
+                if (enumType == null)
+                {
+                    throw new NullPointerException("Enumeration type not set for member byteifyer.");
+                }
+                result[i] =
+                        HDF5MemberByteifyer.createEnumArrayMemberByteifyer(members[i]
+                                .getField(clazz), members[i].getMemberName(), members[i]
+                                .tryGetEnumerationType(), offset, fileInfoProvider, members[i]
+                                .getMemberTypeLength(), members[i].getStorageDataTypeId());
             } else if (isOneDimensionalArray(memberClazz) || memberClazz == java.util.BitSet.class)
             {
                 result[i] =

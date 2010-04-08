@@ -138,6 +138,57 @@ abstract class HDF5MemberByteifyer
             };
     }
 
+    static HDF5MemberByteifyer createEnumArrayMemberByteifyer(final Field field,
+            final String memberName, final HDF5EnumerationType enumType, final int offset,
+            final FileInfoProvider fileInfoProvider, final int len, final int storageTypeId)
+    {
+        ReflectionUtils.ensureAccessible(field);
+        return new HDF5MemberByteifyer(field, memberName, enumType.getStorageForm()
+                .getStorageSize()
+                * len, offset)
+            {
+                final int memberStorageTypeId =
+                        (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(enumType
+                                .getStorageTypeId(), len) : storageTypeId;
+
+                @Override
+                protected int getMemberStorageTypeId()
+                {
+                    return memberStorageTypeId;
+                }
+
+                @Override
+                protected int getMemberNativeTypeId()
+                {
+                    return -1;
+                }
+
+                @Override
+                public byte[] byteify(int compoundDataTypeId, Object obj)
+                        throws IllegalAccessException
+                {
+                    return getEnumArray(obj).toStorageForm();
+                }
+
+                @Override
+                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                        int arrayOffset) throws IllegalAccessException
+                {
+                    final HDF5EnumerationValueArray enumValueArray =
+                            HDF5EnumerationValueArray.fromStorageForm(enumType, byteArr,
+                                    arrayOffset + offset, len);
+                    field.set(obj, enumValueArray);
+                }
+
+                private HDF5EnumerationValueArray getEnumArray(Object obj)
+                        throws IllegalAccessException, IllegalArgumentException
+                {
+                    assert obj != null;
+                    return (HDF5EnumerationValueArray) field.get(obj);
+                }
+            };
+    }
+
     static HDF5MemberByteifyer createStringMemberByteifyer(final Field field,
             final String memberName, final int offset, final int stringDataTypeId,
             final int maxLength)
