@@ -1,9 +1,9 @@
-#! /bin/sh
+#! /bin/bash
 
 PATH=/opt/SUNWspro/bin:/usr/local/bin:/opt/csw/bin:/usr/sbin:/usr/bin:/usr/openwin/bin:/usr/ccs/bin:/usr/ucb
 export PATH
 
-VERSION=1.8.4
+source version.sh
 
 tar xf hdf5-$VERSION.tar
 
