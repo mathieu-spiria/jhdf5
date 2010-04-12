@@ -138,30 +138,10 @@ final class HDF5Utils
     }
 
     /**
-     * Returns the dimensions for a String vector, or <code>null</code>, if this data set is too
-     * small for chunking.
-     */
-    static long[] tryGetChunkSizeForStringVector(int dim, int maxLength, boolean tryChunkedDS,
-            boolean enforceChunkedDS)
-    {
-        if (enforceChunkedDS)
-        {
-            return new long[]
-                { dim };
-        }
-        if (dim * maxLength < MIN_TOTAL_SIZE_FOR_CHUNKING || tryChunkedDS == false)
-        {
-            return null;
-        }
-        return new long[]
-            { dim };
-    }
-
-    /**
      * Returns a chunk size suitable for a data set with <var>dimension</var>, or <code>null</code>,
      * if this data set can't be reasonably chunk-ed.
      */
-    static long[] tryGetChunkSize(final long[] dimensions, boolean tryChunkedDS,
+    static long[] tryGetChunkSize(final long[] dimensions, int elementLength, boolean tryChunkedDS,
             boolean enforceChunkedDS)
     {
         assert dimensions != null;
@@ -171,7 +151,7 @@ final class HDF5Utils
             return null;
         }
         final long[] chunkSize = new long[dimensions.length];
-        long totalSize = 1L;
+        long totalSize = elementLength;
         for (int i = 0; i < dimensions.length; ++i)
         {
             totalSize *= dimensions[i];

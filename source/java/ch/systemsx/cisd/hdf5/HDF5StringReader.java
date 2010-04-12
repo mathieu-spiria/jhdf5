@@ -20,17 +20,17 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
-
 /**
  * The implementation of {@link IHDF5StringReader}.
- *
+ * 
  * @author Bernd Rinn
  */
 public class HDF5StringReader implements IHDF5StringReader
@@ -62,6 +62,25 @@ public class HDF5StringReader implements IHDF5StringReader
                     final int objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     return baseReader.getStringAttribute(objectId, objectPath, attributeName,
+                            registry);
+                }
+            };
+        return baseReader.runner.call(readRunnable);
+    }
+
+    public String[] getStringArrayAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<String[]> readRunnable = new ICallableWithCleanUp<String[]>()
+            {
+                public String[] call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    return baseReader.getStringArrayAttribute(objectId, objectPath, attributeName,
                             registry);
                 }
             };
@@ -189,30 +208,109 @@ public class HDF5StringReader implements IHDF5StringReader
         return baseReader.runner.call(readCallable);
     }
 
+    public MDArray<String> readStringMDArray(final String objectPath)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDArray<String>> readCallable =
+                new ICallableWithCleanUp<MDArray<String>>()
+                    {
+                        public MDArray<String> call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, registry);
+                            final String[] dataBlock = new String[spaceParams.blockSize];
+                            final int dataTypeId =
+                                    baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                            if (baseReader.h5.isVariableLengthString(dataTypeId))
+                            {
+                                baseReader.h5.readDataSetVL(dataSetId, dataTypeId,
+                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                        dataBlock);
+                            } else
+                            {
+                                final boolean isString =
+                                        (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
+                                if (isString == false)
+                                {
+                                    throw new HDF5JavaException(objectPath
+                                            + " needs to be a String.");
+                                }
+                                baseReader.h5.readDataSetString(dataSetId, dataTypeId,
+                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                        dataBlock);
+                            }
+                            return new MDArray<String>(dataBlock, spaceParams.dimensions);
+                        }
+                    };
+        return baseReader.runner.call(readCallable);
+    }
+
+    public MDArray<String> readStringMDArrayBlockWithOffset(final String objectPath,
+            final int[] blockDimensions, final long[] offset)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDArray<String>> readCallable =
+                new ICallableWithCleanUp<MDArray<String>>()
+                    {
+                        public MDArray<String> call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
+                            final String[] dataBlock = new String[spaceParams.blockSize];
+                            final int dataTypeId =
+                                    baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                            if (baseReader.h5.isVariableLengthString(dataTypeId))
+                            {
+                                baseReader.h5.readDataSetVL(dataSetId, dataTypeId,
+                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                        dataBlock);
+                            } else
+                            {
+                                final boolean isString =
+                                        (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
+                                if (isString == false)
+                                {
+                                    throw new HDF5JavaException(objectPath
+                                            + " needs to be a String.");
+                                }
+                                baseReader.h5.readDataSetString(dataSetId, dataTypeId,
+                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                        dataBlock);
+                            }
+                            return new MDArray<String>(dataBlock, blockDimensions);
+                        }
+                    };
+        return baseReader.runner.call(readCallable);
+    }
+
+    public MDArray<String> readStringMDArrayBlock(final String objectPath,
+            final int[] blockDimensions, final long[] blockNumber)
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readStringMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
     public Iterable<HDF5DataBlock<String[]>> getStringArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
         baseReader.checkOpen();
-        final HDF5DataSetInformation info = baseReader.getDataSetInformation(dataSetPath);
-        if (info.getRank() > 1)
-        {
-            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
-                    + info.getRank() + ")");
-        }
-        final long longSize = info.getDimensions()[0];
-        final int size = (int) longSize;
-        if (size != longSize)
-        {
-            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
-        }
-        final int naturalBlockSize =
-                (info.getStorageLayout() == HDF5StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
-                        : size;
-        final int sizeModNaturalBlockSize = size % naturalBlockSize;
-        final long numberOfBlocks =
-                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
-        final int lastBlockSize =
-                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+        final HDF5NaturalBlock1DParameters params =
+                new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(dataSetPath));
 
         return new Iterable<HDF5DataBlock<String[]>>()
             {
@@ -220,27 +318,22 @@ public class HDF5StringReader implements IHDF5StringReader
                 {
                     return new Iterator<HDF5DataBlock<String[]>>()
                         {
-                            long index = 0;
+                            final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
+                                    params.getNaturalBlockIndex();
 
                             public boolean hasNext()
                             {
-                                return index < numberOfBlocks;
+                                return index.hasNext();
                             }
 
                             public HDF5DataBlock<String[]> next()
                             {
-                                if (hasNext() == false)
-                                {
-                                    throw new NoSuchElementException();
-                                }
-                                final long offset = naturalBlockSize * index;
-                                final int blockSize =
-                                        (index == numberOfBlocks - 1) ? lastBlockSize
-                                                : naturalBlockSize;
+                                final long offset = index.computeOffsetAndSizeGetOffset();
                                 final String[] block =
-                                        readStringArrayBlockWithOffset(dataSetPath, blockSize,
-                                                offset);
-                                return new HDF5DataBlock<String[]>(block, index++, offset);
+                                        readStringArrayBlockWithOffset(dataSetPath, index
+                                                .getBlockSize(), offset);
+                                return new HDF5DataBlock<String[]>(block, index.getAndIncIndex(),
+                                        offset);
                             }
 
                             public void remove()
@@ -252,4 +345,43 @@ public class HDF5StringReader implements IHDF5StringReader
             };
     }
 
+    public Iterable<HDF5MDDataBlock<MDArray<String>>> getStringMDArrayNaturalBlocks(
+            final String objectPath)
+    {
+        baseReader.checkOpen();
+        final HDF5NaturalBlockMDParameters params =
+                new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(objectPath));
+
+        return new Iterable<HDF5MDDataBlock<MDArray<String>>>()
+            {
+                public Iterator<HDF5MDDataBlock<MDArray<String>>> iterator()
+                {
+                    return new Iterator<HDF5MDDataBlock<MDArray<String>>>()
+                        {
+                            final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
+                                    params.getNaturalBlockIndex();
+
+                            public boolean hasNext()
+                            {
+                                return index.hasNext();
+                            }
+
+                            public HDF5MDDataBlock<MDArray<String>> next()
+                            {
+                                final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
+                                final MDArray<String> data =
+                                        readStringMDArrayBlockWithOffset(objectPath, index
+                                                .getBlockSize(), offset);
+                                return new HDF5MDDataBlock<MDArray<String>>(data, index
+                                        .getIndexClone(), offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
 }

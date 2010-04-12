@@ -147,7 +147,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_IEEE_F64LE, new long[]
-                                { data.length }, features, registry);
+                                { data.length }, 8, features, registry);
                     H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -181,12 +181,12 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                     {
                         baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features, new long[]
                             { 0 }, new long[]
-                            { size }, registry);
+                            { size }, 8, registry);
 
                     } else
                     {
                         baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features, new long[]
-                            { size }, null, registry);
+                            { size }, null, 8, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -208,7 +208,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 {
                     baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features, new long[]
                         { size }, new long[]
-                        { blockSize }, registry);
+                        { blockSize }, 8, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -307,7 +307,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                         { blockSizeX, blockSizeY };
                     baseWriter
                             .createDataSet(objectPath, H5T_IEEE_F64LE, features, dimensions,
-                            blockDimensions, registry);
+                            blockDimensions, 8, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -364,7 +364,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_IEEE_F64LE, 
-                                    data.longDimensions(), features, registry);
+                                    data.longDimensions(), 8, features, registry);
                     H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -399,11 +399,11 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                     {
                         final long[] nullDimensions = new long[dimensions.length];
                         baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features,
-                                nullDimensions, MDArray.toLong(dimensions), registry);
+                                nullDimensions, MDArray.toLong(dimensions), 8, registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features, MDArray
-                                .toLong(dimensions), null, registry);
+                                .toLong(dimensions), null, 8, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -424,7 +424,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features, dimensions, 
-                            MDArray.toLong(blockDimensions), registry);
+                            MDArray.toLong(blockDimensions), 8, registry);
                     return null; // Nothing to return.
                 }
             };

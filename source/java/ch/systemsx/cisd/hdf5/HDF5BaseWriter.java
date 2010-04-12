@@ -23,9 +23,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isNonPositive;
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
-import static ncsa.hdf.hdf5lib.H5.H5DwriteString;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_UNLIMITED;
 
@@ -375,56 +373,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     /**
-     * Write a scalar String value provided as <code>byte[]</code>.
-     */
-    void writeScalarString(final String dataSetPath, final String value, final int maxLength)
-    {
-        assert dataSetPath != null;
-        assert value != null;
-
-        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
-            {
-                public Object call(ICleanUpRegistry registry)
-                {
-                    writeScalarString(dataSetPath, value, maxLength, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        runner.call(writeScalarRunnable);
-    }
-
-    /**
-     * Internal method for writing a scalar value provided as <code>byte[]</code>.
-     */
-    private int writeScalarString(final String dataSetPath, final String value,
-            final int maxLength, ICleanUpRegistry registry)
-    {
-        final boolean variableLength = (maxLength < 0);
-        final int realMaxLength = maxLength + 1; // trailing '\0'
-        final int dataTypeId =
-                variableLength ? variableLengthStringDataTypeId : h5.createDataTypeString(
-                        realMaxLength, registry);
-        final int dataSetId;
-        if (h5.exists(fileId, dataSetPath))
-        {
-            dataSetId = h5.openObject(fileId, dataSetPath, registry);
-        } else
-        {
-            dataSetId = h5.createScalarDataSet(fileId, dataTypeId, dataSetPath, registry);
-        }
-        if (variableLength)
-        {
-            H5DwriteString(dataSetId, dataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, new String[]
-                { value });
-        } else
-        {
-            H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, (value + '\0')
-                    .getBytes());
-        }
-        return dataSetId;
-    }
-
-    /**
      * Writes a variable-length string array data set.
      */
     void writeStringVL(int dataSetId, int memorySpaceId, int fileSpaceId, String[] value)
@@ -472,7 +420,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
      */
     int createDataSet(final String objectPath, final int storageDataTypeId,
             final HDF5AbstractStorageFeatures features, final long[] dimensions,
-            final long[] chunkSizeOrNull, final ICleanUpRegistry registry)
+            final long[] chunkSizeOrNull, int elementLength, final ICleanUpRegistry registry)
     {
         final int dataSetId;
         final boolean empty = isEmpty(dimensions);
@@ -491,7 +439,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             definitiveChunkSizeOrNull =
                     chunkSizeProvided ? chunkSizeOrNull : HDF5Utils.tryGetChunkSize(dimensions,
-                            features.requiresChunking(), true);
+                            elementLength, features.requiresChunking(), true);
         } else if (features.tryGetProposedLayout() == HDF5StorageLayout.COMPACT
                 || features.tryGetProposedLayout() == HDF5StorageLayout.CONTIGUOUS
                 || (useExtentableDataTypes == false) && features.requiresChunking() == false)
@@ -503,12 +451,9 @@ final class HDF5BaseWriter extends HDF5BaseReader
         } else
         {
             definitiveChunkSizeOrNull =
-                    HDF5Utils
-                            .tryGetChunkSize(
-                                    dimensions,
-                                    features.requiresChunking(),
-                                    useExtentableDataTypes
-                                            || features.tryGetProposedLayout() == HDF5StorageLayout.CHUNKED);
+                    HDF5Utils.tryGetChunkSize(dimensions, elementLength, features
+                            .requiresChunking(), useExtentableDataTypes
+                            || features.tryGetProposedLayout() == HDF5StorageLayout.CHUNKED);
         }
         final HDF5StorageLayout layout =
                 determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull, features
@@ -576,7 +521,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * Returns the data set id for the given <var>objectPath</var>.
      */
     int getDataSetId(final String objectPath, final int storageDataTypeId, final long[] dimensions,
-            final HDF5AbstractStorageFeatures features, ICleanUpRegistry registry)
+            int elementLength, final HDF5AbstractStorageFeatures features, ICleanUpRegistry registry)
     {
         final int dataSetId;
         boolean exists = h5.exists(fileId, objectPath);
@@ -594,7 +539,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             dataSetId =
                     createDataSet(objectPath, storageDataTypeId, features, dimensions, null,
-                            registry);
+                            elementLength, registry);
         }
         return dataSetId;
     }
@@ -678,16 +623,117 @@ final class HDF5BaseWriter extends HDF5BaseReader
     void setStringAttribute(final int objectId, final String name, final String value,
             final int maxLength, ICleanUpRegistry registry)
     {
-        final int stringDataTypeId = h5.createDataTypeString(maxLength + 1, registry);
-        final int attributeId;
+        final int storageDataTypeId = h5.createDataTypeString(maxLength + 1, registry);
+        int attributeId;
         if (h5.existsAttribute(objectId, name))
         {
             attributeId = h5.openAttribute(objectId, name, registry);
+            final int oldStorageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
+            {
+                h5.deleteAttribute(objectId, name);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            }
         } else
         {
-            attributeId = h5.createAttribute(objectId, name, stringDataTypeId, registry);
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
-        h5.writeAttribute(attributeId, stringDataTypeId, (value + '\0').getBytes());
+        h5.writeAttribute(attributeId, storageDataTypeId, (value + '\0').getBytes());
+    }
+
+    static class StringArrayBuffer
+    {
+        private byte[] buf;
+        
+        private int len;
+        
+        private int maxLengthPerString;
+        
+        StringArrayBuffer(int maxLengthPerString, int initialCapacity)
+        {
+            this.maxLengthPerString = maxLengthPerString + 1;
+            buf = new byte[initialCapacity];
+        }
+        
+        void add(String s)
+        {
+            final byte[] data = (s + '\0').getBytes();
+            final int dataLen = Math.min(data.length, maxLengthPerString);
+            final int newLen = len + maxLengthPerString; 
+            if (newLen > buf.length)
+            {
+                final byte[] newBuf = new byte[Math.max(2 * buf.length, newLen)];
+                System.arraycopy(buf, 0, newBuf, 0, len);
+                buf = newBuf;
+            }
+            System.arraycopy(data, 0, buf, len, dataLen);
+            len = newLen;
+        }
+        
+        byte[] toArray()
+        {
+            if (len < buf.length)
+            {
+                final byte[] arr = new byte[len];
+                System.arraycopy(buf, 0, arr, 0, len);
+                return arr;
+            } else
+            {
+                return buf;
+            }
+        }
+    }
+    
+    void setStringArrayAttribute(final int objectId, final String name, final String[] value,
+            final int maxLength, ICleanUpRegistry registry)
+    {
+        final int stringDataTypeId = h5.createDataTypeString(maxLength + 1, registry);
+        final int storageDataTypeId = h5.createArrayType(stringDataTypeId, value.length, registry);
+        int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+            final int oldStorageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
+            {
+                h5.deleteAttribute(objectId, name);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            }
+        } else
+        {
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+        }
+        final StringArrayBuffer array = new StringArrayBuffer(maxLength, value.length * 10);
+        for (int i = 0; i < value.length; ++i)
+        {
+            array.add(value[i]);
+        }
+        h5.writeAttribute(attributeId, storageDataTypeId, array.toArray());
+    }
+
+    void setStringAttributeVariableLength(final int objectId, final String name,
+            final String value, ICleanUpRegistry registry)
+    {
+        int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+            final int oldStorageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            if (h5.dataTypesAreEqual(oldStorageDataTypeId, variableLengthStringDataTypeId) == false)
+            {
+                h5.deleteAttribute(objectId, name);
+                attributeId =
+                        h5
+                                .createAttribute(objectId, name, variableLengthStringDataTypeId,
+                                        registry);
+            }
+        } else
+        {
+            attributeId =
+                    h5.createAttribute(objectId, name, variableLengthStringDataTypeId, registry);
+        }
+        writeAttributeStringVL(attributeId, new String[]
+            { value });
     }
 
 }

@@ -117,7 +117,8 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, type.getStorageTypeId(), new long[]
-                                { data.length }, features, registry);
+                                { data.length }, type.getObjectByteifyer().getRecordSize(),
+                                    features, registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
                     if (inspectorOrNull != null)
@@ -260,7 +261,7 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                     baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                             new long[]
                                 { size }, new long[]
-                                { blockSize }, registry);
+                                { blockSize }, type.getObjectByteifyer().getRecordSize(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -285,12 +286,13 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                         baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                                 new long[]
                                     { 0 }, new long[]
-                                    { size }, registry);
+                                    { size }, type.getObjectByteifyer().getRecordSize(), registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                                 new long[]
-                                    { size }, null, registry);
+                                    { size }, null, type.getObjectByteifyer().getRecordSize(),
+                                registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -327,7 +329,8 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, type.getStorageTypeId(), MDArray
-                                    .toLong(data.dimensions()), features, registry);
+                                    .toLong(data.dimensions()), type.getObjectByteifyer()
+                                    .getRecordSize(), features, registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
                                     data.getAsFlatArray());
@@ -530,7 +533,8 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 public Void call(final ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
-                            dimensions, MDArray.toLong(blockDimensions), registry);
+                            dimensions, MDArray.toLong(blockDimensions), type.getObjectByteifyer()
+                                    .getRecordSize(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -554,11 +558,13 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                     {
                         final long[] nullDimensions = new long[dimensions.length];
                         baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
-                                nullDimensions, MDArray.toLong(dimensions), registry);
+                                nullDimensions, MDArray.toLong(dimensions), type
+                                        .getObjectByteifyer().getRecordSize(), registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
-                                MDArray.toLong(dimensions), null, registry);
+                                MDArray.toLong(dimensions), null, type.getObjectByteifyer()
+                                        .getRecordSize(), registry);
                     }
                     return null; // Nothing to return.
                 }

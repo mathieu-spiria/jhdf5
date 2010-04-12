@@ -147,7 +147,7 @@ class HDF5IntWriter implements IHDF5IntWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I32LE, new long[]
-                                { data.length }, features, registry);
+                                { data.length }, 4, features, registry);
                     H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -181,12 +181,12 @@ class HDF5IntWriter implements IHDF5IntWriter
                     {
                         baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features, new long[]
                             { 0 }, new long[]
-                            { size }, registry);
+                            { size }, 4, registry);
 
                     } else
                     {
                         baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features, new long[]
-                            { size }, null, registry);
+                            { size }, null, 4, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -208,7 +208,7 @@ class HDF5IntWriter implements IHDF5IntWriter
                 {
                     baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features, new long[]
                         { size }, new long[]
-                        { blockSize }, registry);
+                        { blockSize }, 4, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -307,7 +307,7 @@ class HDF5IntWriter implements IHDF5IntWriter
                         { blockSizeX, blockSizeY };
                     baseWriter
                             .createDataSet(objectPath, H5T_STD_I32LE, features, dimensions,
-                            blockDimensions, registry);
+                            blockDimensions, 4, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -364,7 +364,7 @@ class HDF5IntWriter implements IHDF5IntWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_STD_I32LE, 
-                                    data.longDimensions(), features, registry);
+                                    data.longDimensions(), 4, features, registry);
                     H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -399,11 +399,11 @@ class HDF5IntWriter implements IHDF5IntWriter
                     {
                         final long[] nullDimensions = new long[dimensions.length];
                         baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features,
-                                nullDimensions, MDArray.toLong(dimensions), registry);
+                                nullDimensions, MDArray.toLong(dimensions), 4, registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features, MDArray
-                                .toLong(dimensions), null, registry);
+                                .toLong(dimensions), null, 4, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -424,7 +424,7 @@ class HDF5IntWriter implements IHDF5IntWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, H5T_STD_I32LE, features, dimensions, 
-                            MDArray.toLong(blockDimensions), registry);
+                            MDArray.toLong(blockDimensions), 4, registry);
                     return null; // Nothing to return.
                 }
             };

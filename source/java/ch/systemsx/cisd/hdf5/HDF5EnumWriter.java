@@ -138,7 +138,8 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                         final int dataSetId =
                                 baseWriter.getDataSetId(objectPath, data.getType()
                                         .getIntStorageTypeId(), new long[]
-                                    { data.getLength() }, actualFeatures, registry);
+                                    { data.getLength() }, data.getStorageForm().getStorageSize(),
+                                        actualFeatures, registry);
                         switch (data.getStorageForm())
                         {
                             case BYTE:
@@ -163,7 +164,8 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                         final int dataSetId =
                                 baseWriter.getDataSetId(objectPath, data.getType()
                                         .getStorageTypeId(), new long[]
-                                    { data.getLength() }, features, registry);
+                                    { data.getLength() }, data.getStorageForm().getStorageSize(),
+                                        features, registry);
                         switch (data.getStorageForm())
                         {
                             case BYTE:
@@ -218,7 +220,8 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                                         enumType.getIntStorageTypeId(), actualCompression,
                                         new long[]
                                             { size }, new long[]
-                                            { blockSize }, registry);
+                                            { blockSize }, enumType.getStorageForm()
+                                                .getStorageSize(), registry);
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
                         baseWriter.setStringAttribute(dataSetId,
                                 HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, enumType.getName(), enumType
@@ -228,7 +231,8 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                         baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
                                 new long[]
                                     { size }, new long[]
-                                    { blockSize }, registry);
+                                    { blockSize }, enumType.getStorageForm().getStorageSize(),
+                                registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -270,7 +274,8 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                         final int dataSetId =
                                 baseWriter.createDataSet(objectPath,
                                         enumType.getIntStorageTypeId(), actualCompression,
-                                        dimensions, blockDimensionsOrNull, registry);
+                                        dimensions, blockDimensionsOrNull, enumType
+                                                .getStorageForm().getStorageSize(), registry);
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
                         baseWriter.setStringAttribute(dataSetId,
                                 HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, enumType.getName(), enumType
@@ -278,7 +283,8 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                     } else
                     {
                         baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
-                                dimensions, blockDimensionsOrNull, registry);
+                                dimensions, blockDimensionsOrNull, enumType.getStorageForm()
+                                        .getStorageSize(), registry);
                     }
                 }
             };

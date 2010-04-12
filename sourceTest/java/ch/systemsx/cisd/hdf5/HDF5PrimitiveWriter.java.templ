@@ -147,7 +147,7 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, __Storagetype__, new long[]
-                                { data.length }, features, registry);
+                                { data.length }, __elementsize__, features, registry);
                     H5Dwrite__appendix__(dataSetId, __Memorytype__, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -181,12 +181,12 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                     {
                         baseWriter.createDataSet(objectPath, __Storagetype__, features, new long[]
                             { 0 }, new long[]
-                            { size }, registry);
+                            { size }, __elementsize__, registry);
 
                     } else
                     {
                         baseWriter.createDataSet(objectPath, __Storagetype__, features, new long[]
-                            { size }, null, registry);
+                            { size }, null, __elementsize__, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -208,7 +208,7 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                 {
                     baseWriter.createDataSet(objectPath, __Storagetype__, features, new long[]
                         { size }, new long[]
-                        { blockSize }, registry);
+                        { blockSize }, __elementsize__, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -307,7 +307,7 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                         { blockSizeX, blockSizeY };
                     baseWriter
                             .createDataSet(objectPath, __Storagetype__, features, dimensions,
-                            blockDimensions, registry);
+                            blockDimensions, __elementsize__, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -364,7 +364,7 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, __Storagetype__, 
-                                    data.longDimensions(), features, registry);
+                                    data.longDimensions(), __elementsize__, features, registry);
                     H5Dwrite__appendix__(dataSetId, __Memorytype__, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -399,11 +399,11 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                     {
                         final long[] nullDimensions = new long[dimensions.length];
                         baseWriter.createDataSet(objectPath, __Storagetype__, features,
-                                nullDimensions, MDArray.toLong(dimensions), registry);
+                                nullDimensions, MDArray.toLong(dimensions), __elementsize__, registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, __Storagetype__, features, MDArray
-                                .toLong(dimensions), null, registry);
+                                .toLong(dimensions), null, __elementsize__, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -424,7 +424,7 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                 public Void call(ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, __Storagetype__, features, dimensions, 
-                            MDArray.toLong(blockDimensions), registry);
+                            MDArray.toLong(blockDimensions), __elementsize__, registry);
                     return null; // Nothing to return.
                 }
             };

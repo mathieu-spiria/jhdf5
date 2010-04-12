@@ -987,12 +987,28 @@ class HDF5
     public void readDataSetVL(int dataSetId, int dataTypeId, String[] data)
     {
         H5DreadVL(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+        replaceNullWithEmptyString(data);
     }
 
     public void readDataSetVL(int dataSetId, int dataTypeId, int memorySpaceId, int fileSpaceId,
             String[] data)
     {
         H5DreadVL(dataSetId, dataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, data);
+        replaceNullWithEmptyString(data);
+    }
+
+    // A fixed-length string array returns uninitialized strings as "", a variable-length string as 
+    // null. We don't want the application programmer to have to be aware of this difference, 
+    // thus we replace null with "" here. 
+    private void replaceNullWithEmptyString(String[] data)
+    {
+        for (int i = 0; i < data.length; ++i)
+        {
+            if (data[i] == null)
+            {
+                data[i] = "";
+            }
+        }
     }
 
     //

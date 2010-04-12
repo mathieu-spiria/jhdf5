@@ -116,6 +116,11 @@ public final class HDF5DataTypeInformation
         return arrayType;
     }
 
+    public boolean isVariableLengthType()
+    {
+        return elementSize < 0;
+    }
+
     //
     // Object
     //

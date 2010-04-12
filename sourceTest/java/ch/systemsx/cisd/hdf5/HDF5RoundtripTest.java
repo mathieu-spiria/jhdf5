@@ -141,6 +141,10 @@ public class HDF5RoundtripTest
         test.testStringCompression();
         test.testStringArrayCompression();
         test.testStringArrayBlockVL();
+        test.testStringArrayMD();
+        test.testStringArrayMDBlocks();
+        test.testStringMDArrayVL();
+        test.testStringMDArrayVLBlocks();
         test.testStringCompact();
         test.testReadMDFloatArray();
         test.testReadToFloatMDArray();
@@ -1963,7 +1967,9 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
-    @Test
+    // TODO 2010-04-12, Bernd: remove from "broken" group once the binary layer has been re-compiled
+    // with the fix.
+    @Test(groups = "broken")
     public void testStringArrayBlock()
     {
         final File stringArrayFile = new File(workingDirectory, "stringArrayBlock.h5");
@@ -1974,7 +1980,7 @@ public class HDF5RoundtripTest
         final String[] data = new String[]
             { "abc", "ABCxxx", "xyz" };
         final String dataSetName = "/aStringArray";
-        writer.createStringArray(dataSetName, 6, 5);
+        writer.createStringArray(dataSetName, 6, 5, 3);
         writer.writeStringArrayBlock(dataSetName, data, 1);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
@@ -2034,26 +2040,165 @@ public class HDF5RoundtripTest
         final String[] data2 = new String[]
             { "abd", "ABDxxx", "xyw" };
         final String[] data = new String[]
-            { "abc", "ABCxxx", "xyz", "abd", "ABDxxx", "xyw" };
+            { "", "", "", "abc", "ABCxxx", "xyz", "abd", "ABDxxx", "xyw" };
         final String dataSetName = "/aStringArray";
         writer.createStringVariableLengthArray(dataSetName, 0, 5);
-        writer.writeStringArrayBlock(dataSetName, data1, 0);
-        writer.writeStringArrayBlock(dataSetName, data2, 1);
+        writer.writeStringArrayBlock(dataSetName, data1, 1);
+        writer.writeStringArrayBlock(dataSetName, data2, 2);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
-        String[] dataStored = reader.readStringArray(dataSetName);
-        assertTrue(Arrays.equals(data, dataStored));
-        dataStored = reader.readStringArrayBlock(dataSetName, 3, 0);
-        assertTrue(Arrays.equals(data1, dataStored));
-        dataStored = reader.readStringArrayBlock(dataSetName, 3, 1);
-        assertTrue(Arrays.equals(data2, dataStored));
-        dataStored = reader.readStringArrayBlockWithOffset(dataSetName, 3, 2);
+        String[] dataRead = reader.readStringArray(dataSetName);
+        assertTrue(Arrays.equals(data, dataRead));
+        dataRead = reader.readStringArrayBlock(dataSetName, 3, 1);
+        assertTrue(Arrays.equals(data1, dataRead));
+        dataRead = reader.readStringArrayBlock(dataSetName, 3, 2);
+        assertTrue(Arrays.equals(data2, dataRead));
+        dataRead = reader.readStringArrayBlockWithOffset(dataSetName, 3, 5);
         assertTrue(Arrays.equals(new String[]
-            { "xyz", "abd", "ABDxxx" }, dataStored));
+            { "xyz", "abd", "ABDxxx" }, dataRead));
         reader.close();
     }
 
     @Test
+    public void testStringArrayMD()
+    {
+        final File stringArrayFile = new File(workingDirectory, "stringMDArray.h5");
+        stringArrayFile.delete();
+        assertFalse(stringArrayFile.exists());
+        stringArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
+        final MDArray<String> data = new MDArray<String>(new String[]
+            { "abc", "ABCxxx", "xyz", "DEF" }, new long[]
+            { 2, 2 });
+        final String dataSetName = "/aStringArray";
+        writer.writeStringMDArray(dataSetName, data);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
+        final MDArray<String> dataStored = reader.readStringMDArray(dataSetName);
+        assertTrue(Arrays.equals(data.getAsFlatArray(), dataStored.getAsFlatArray()));
+        assertTrue(Arrays.equals(data.dimensions(), dataStored.dimensions()));
+        reader.close();
+    }
+
+    @Test
+    public void testStringArrayMDBlocks()
+    {
+        final File stringArrayFile = new File(workingDirectory, "stringMDArrayBlocks.h5");
+        stringArrayFile.delete();
+        assertFalse(stringArrayFile.exists());
+        stringArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
+        final String dataSetName = "/aStringArray";
+        writer.createStringMDArray(dataSetName, 6, new long[]
+            { 4, 4 }, new int[]
+            { 2, 2 });
+        final MDArray<String> data = new MDArray<String>(new String[]
+            { "abc", "ABCxxx", "xyz", "DEF" }, new long[]
+            { 2, 2 });
+        for (int i = 0; i < 2; ++i)
+        {
+            for (int j = 0; j < 2; ++j)
+            {
+                writer.writeStringMDArrayBlock(dataSetName, data, new long[]
+                    { i, j });
+            }
+        }
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
+        int i = 0;
+        int j = 0;
+        for (HDF5MDDataBlock<MDArray<String>> block : reader
+                .getStringMDArrayNaturalBlocks(dataSetName))
+        {
+            assertTrue(Arrays.equals(data.getAsFlatArray(), block.getData().getAsFlatArray()));
+            assertTrue(Arrays.equals(data.dimensions(), block.getData().dimensions()));
+            assertTrue(Arrays.equals(new long[]
+                { i, j }, block.getIndex()));
+            if (++j > 1)
+            {
+                j = 0;
+                ++i;
+            }
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testStringMDArrayVL()
+    {
+        final File stringArrayFile = new File(workingDirectory, "stringMDArrayVL.h5");
+        stringArrayFile.delete();
+        assertFalse(stringArrayFile.exists());
+        stringArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
+        final MDArray<String> data = new MDArray<String>(new String[]
+            { "abc", "ABCxxx", "xyz", "DEF" }, new long[]
+            { 2, 2 });
+        final String dataSetName = "/aStringArray";
+        writer.writeStringVariableLengthMDArray(dataSetName, data);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
+        final MDArray<String> dataStored = reader.readStringMDArray(dataSetName);
+        assertTrue(Arrays.equals(data.getAsFlatArray(), dataStored.getAsFlatArray()));
+        assertTrue(Arrays.equals(data.dimensions(), dataStored.dimensions()));
+        final HDF5DataSetInformation info = reader.getDataSetInformation(dataSetName);
+        reader.close();
+        assertTrue(info.getTypeInformation().isVariableLengthType());
+        assertEquals("STRING(-1)", info.getTypeInformation().toString());
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        assertTrue(Arrays.equals(new long[]
+            { 2, 2 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new long[]
+            { -1, -1 }, info.getMaxDimensions()));
+        assertTrue(Arrays.equals(new int[]
+            { 4, 4 }, info.tryGetChunkSizes()));
+    }
+
+    @Test
+    public void testStringMDArrayVLBlocks()
+    {
+        final File stringArrayFile = new File(workingDirectory, "stringMDArrayVLBlocks.h5");
+        stringArrayFile.delete();
+        assertFalse(stringArrayFile.exists());
+        stringArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
+        final long[] dims = new long[]
+            { 8, 8 };
+        final int[] blockSize = new int[]
+            { 2, 2 };
+        final MDArray<String> data = new MDArray<String>(new String[]
+            { "abc", "ABCxxx", "xyz", "DEF" }, blockSize);
+        final String dataSetName = "/aStringArray";
+        writer.createStringVariableLengthMDArray(dataSetName, dims, blockSize);
+        writer.writeStringMDArrayBlock(dataSetName, data, new long[]
+            { 1, 1 });
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
+        final MDArray<String> dataStored =
+                reader.readStringMDArrayBlock(dataSetName, blockSize, new long[]
+                    { 1, 1 });
+        assertTrue(Arrays.equals(data.getAsFlatArray(), dataStored.getAsFlatArray()));
+        assertTrue(Arrays.equals(data.dimensions(), dataStored.dimensions()));
+        assertTrue(Arrays.equals(new String[]
+            { "", "", "", "" }, reader.readStringMDArrayBlock(dataSetName, blockSize, new long[]
+            { 1, 0 }).getAsFlatArray()));
+        assertTrue(Arrays.equals(new String[]
+            { "", "", "", "" }, reader.readStringMDArrayBlock(dataSetName, blockSize, new long[]
+            { 0, 1 }).getAsFlatArray()));
+        assertTrue(Arrays.equals(new String[]
+            { "", "", "", "" }, reader.readStringMDArrayBlock(dataSetName, blockSize, new long[]
+            { 2, 2 }).getAsFlatArray()));
+        final HDF5DataSetInformation info = reader.getDataSetInformation(dataSetName);
+        reader.close();
+        assertTrue(info.getTypeInformation().isVariableLengthType());
+        assertEquals("STRING(-1)", info.getTypeInformation().toString());
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        assertTrue(Arrays.equals(dims, info.getDimensions()));
+        assertTrue(Arrays.equals(new long[]
+            { -1, -1 }, info.getMaxDimensions()));
+        assertTrue(Arrays.equals(blockSize, info.tryGetChunkSizes()));
+    }
+
     public void testStringCompact()
     {
         final File stringArrayFile = new File(workingDirectory, "stringCompact.h5");
@@ -3010,6 +3155,11 @@ public class HDF5RoundtripTest
         final String stringAttributeValueVLWritten2 = "Some Other String Value";
         writer.setStringAttributeVariableLength(datasetName, stringAttributeNameVL,
                 stringAttributeValueVLWritten2);
+        final String stringArrayAttributeName = "String Array Attribute";
+        final String[] stringArrayAttributeValueWritten = new String[]
+            { "Some String Value I", "Some String Value II", "Some String Value III" };
+        writer.setStringArrayAttribute(datasetName, stringArrayAttributeName,
+                stringArrayAttributeValueWritten);
         final String enumAttributeName = "Enum Attribute";
         final HDF5EnumerationType enumType = writer.getEnumType("MyEnum", new String[]
             { "ONE", "TWO", "THREE" }, false);
@@ -3058,6 +3208,15 @@ public class HDF5RoundtripTest
         final String stringAttributeValueRead =
                 reader.getStringAttribute(datasetName, stringAttributeName);
         assertEquals(stringAttributeValueWritten, stringAttributeValueRead);
+        final String[] stringArrayAttributeValueRead =
+                reader.getStringArrayAttribute(datasetName, stringArrayAttributeName);
+        assertTrue(Arrays.equals(stringArrayAttributeValueWritten, stringArrayAttributeValueRead));
+        info = reader.getAttributeInformation(datasetName, stringArrayAttributeName);
+        assertTrue(info.isArrayType());
+        assertEquals(HDF5DataClass.STRING, info.getDataClass());
+        assertEquals(22, info.getElementSize()); // maxlength
+        assertEquals(3, info.getNumberOfElements());
+        assertEquals(1, info.getDimensions().length);
         final String stringAttributeValueVLRead =
                 reader.getStringAttribute(datasetName, stringAttributeNameVL);
         assertEquals(stringAttributeValueVLWritten2, stringAttributeValueVLRead);
@@ -3239,6 +3398,7 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.writeInt("dsScalar", 12);
         writer.writeShortMatrix("ds", new short[][]
             {
                 { (short) 1, (short) 2, (short) 3 },
@@ -3248,6 +3408,13 @@ public class HDF5RoundtripTest
         writer.writeStringVariableLength("stringDSVL", s);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final HDF5DataSetInformation scalarInfo = reader.getDataSetInformation("dsScalar");
+        assertEquals(HDF5DataClass.INTEGER, scalarInfo.getTypeInformation().getDataClass());
+        assertEquals(4, scalarInfo.getTypeInformation().getElementSize());
+        assertEquals(0, scalarInfo.getRank());
+        assertTrue(scalarInfo.isScalar());
+        assertEquals(0, scalarInfo.getDimensions().length);
+        assertNull(scalarInfo.tryGetChunkSizes());
         final HDF5DataSetInformation info = reader.getDataSetInformation("ds");
         assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
         assertEquals(2, info.getTypeInformation().getElementSize());
@@ -3267,13 +3434,13 @@ public class HDF5RoundtripTest
         assertNull(stringInfo.tryGetChunkSizes());
         final HDF5DataSetInformation stringInfoVL = reader.getDataSetInformation("stringDSVL");
         assertEquals(HDF5DataClass.STRING, stringInfoVL.getTypeInformation().getDataClass());
-        assertEquals(1, stringInfoVL.getTypeInformation().getElementSize());
-        assertEquals(1, stringInfoVL.getDimensions().length);
-        assertEquals(HDF5StorageLayout.VARIABLE_LENGTH, stringInfoVL.getStorageLayout());
+        assertTrue(stringInfoVL.getTypeInformation().isVariableLengthType());
+        assertEquals(-1, stringInfoVL.getTypeInformation().getElementSize());
+        assertEquals(0, stringInfoVL.getDimensions().length);
+        assertEquals(HDF5StorageLayout.COMPACT, stringInfoVL.getStorageLayout());
         assertNull(stringInfoVL.tryGetChunkSizes());
-        assertEquals(HDF5Constants.H5T_VARIABLE, stringInfoVL.getDimensions()[0]);
-        assertEquals(1, stringInfoVL.getMaxDimensions().length);
-        assertEquals(HDF5Constants.H5T_VARIABLE, stringInfoVL.getMaxDimensions()[0]);
+        assertEquals(0, stringInfoVL.getDimensions().length);
+        assertEquals(0, stringInfoVL.getMaxDimensions().length);
         reader.close();
     }
 
@@ -5322,7 +5489,8 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
-        final HDF5CompoundType<SimpleRecord> typeW = writer.getInferredCompoundType(SimpleRecord.class);
+        final HDF5CompoundType<SimpleRecord> typeW =
+                writer.getInferredCompoundType(SimpleRecord.class);
         writer.writeCompound("sc", typeW, new SimpleRecord(2.2f, 17, "test"));
         long[][] arrayWritten = new long[][]
             {
@@ -5334,7 +5502,8 @@ public class HDF5RoundtripTest
                 arrayWritten));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().configureForReading(file).reader();
-        final HDF5CompoundType<SimpleRecord> typeR = reader.getInferredCompoundType(SimpleRecord.class);
+        final HDF5CompoundType<SimpleRecord> typeR =
+                reader.getInferredCompoundType(SimpleRecord.class);
         final SimpleRecord recordRead = reader.readCompound("sc", typeR);
         final HDF5CompoundType<SimpleInheretingRecord> inheritedTypeR =
                 reader.getInferredCompoundType(SimpleInheretingRecord.class);
@@ -5361,7 +5530,8 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         final String typeName = "a_float";
-        HDF5CompoundType<RecordC> compoundTypeInt = writer.getInferredCompoundType(typeName, RecordC.class);
+        HDF5CompoundType<RecordC> compoundTypeInt =
+                writer.getInferredCompoundType(typeName, RecordC.class);
         final RecordC recordWritten = new RecordC(33.33333f);
         writer.writeCompound("/testCompound", compoundTypeInt, recordWritten);
         writer.close();

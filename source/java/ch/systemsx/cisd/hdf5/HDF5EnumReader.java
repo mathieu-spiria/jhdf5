@@ -25,7 +25,6 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
@@ -629,26 +628,8 @@ class HDF5EnumReader implements IHDF5EnumReader
             throws HDF5JavaException
     {
         baseReader.checkOpen();
-        final HDF5DataSetInformation info = baseReader.getDataSetInformation(objectPath);
-        if (info.getRank() > 1)
-        {
-            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
-                    + info.getRank() + ")");
-        }
-        final long longSize = info.getDimensions()[0];
-        final int size = (int) longSize;
-        if (size != longSize)
-        {
-            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
-        }
-        final int naturalBlockSize =
-                (info.getStorageLayout() == HDF5StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
-                        : size;
-        final int sizeModNaturalBlockSize = size % naturalBlockSize;
-        final long numberOfBlocks =
-                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
-        final int lastBlockSize =
-                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+        final HDF5NaturalBlock1DParameters params =
+                new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(objectPath));
 
         return new Iterable<HDF5DataBlock<HDF5EnumerationValueArray>>()
             {
@@ -656,28 +637,22 @@ class HDF5EnumReader implements IHDF5EnumReader
                 {
                     return new Iterator<HDF5DataBlock<HDF5EnumerationValueArray>>()
                         {
-                            long index = 0;
+                            final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
+                                    params.getNaturalBlockIndex();
 
                             public boolean hasNext()
                             {
-                                return index < numberOfBlocks;
+                                return index.hasNext();
                             }
 
                             public HDF5DataBlock<HDF5EnumerationValueArray> next()
                             {
-                                if (hasNext() == false)
-                                {
-                                    throw new NoSuchElementException();
-                                }
-                                final long offset = naturalBlockSize * index;
-                                final int blockSize =
-                                        (index == numberOfBlocks - 1) ? lastBlockSize
-                                                : naturalBlockSize;
+                                final long offset = index.computeOffsetAndSizeGetOffset();
                                 final HDF5EnumerationValueArray block =
                                         readEnumArrayBlockWithOffset(objectPath, enumTypeOrNull,
-                                                blockSize, offset);
-                                return new HDF5DataBlock<HDF5EnumerationValueArray>(block, index++,
-                                        offset);
+                                                index.getBlockSize(), offset);
+                                return new HDF5DataBlock<HDF5EnumerationValueArray>(block, index
+                                        .getAndIncIndex(), offset);
                             }
 
                             public void remove()

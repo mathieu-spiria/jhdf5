@@ -20,7 +20,6 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
@@ -32,7 +31,6 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
-import ch.systemsx.cisd.hdf5.HDF5StorageLayout;
 
 /**
  * The implementation of {@link IHDF5FloatReader}.
@@ -488,26 +486,8 @@ class HDF5FloatReader implements IHDF5FloatReader
             throws HDF5JavaException
     {
         baseReader.checkOpen();
-        final HDF5DataSetInformation info = baseReader.getDataSetInformation(dataSetPath);
-        if (info.getRank() > 1)
-        {
-            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
-                    + info.getRank() + ")");
-        }
-        final long longSize = info.getDimensions()[0];
-        final int size = (int) longSize;
-        if (size != longSize)
-        {
-            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
-        }
-        final int naturalBlockSize =
-                (info.getStorageLayout() == HDF5StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
-                        : size;
-        final int sizeModNaturalBlockSize = size % naturalBlockSize;
-        final long numberOfBlocks =
-                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
-        final int lastBlockSize =
-                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+        final HDF5NaturalBlock1DParameters params =
+                new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(dataSetPath));
 
         return new Iterable<HDF5DataBlock<float[]>>()
             {
@@ -515,27 +495,22 @@ class HDF5FloatReader implements IHDF5FloatReader
                 {
                     return new Iterator<HDF5DataBlock<float[]>>()
                         {
-                            long index = 0;
+                            final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
+                                    params.getNaturalBlockIndex();
 
                             public boolean hasNext()
                             {
-                                return index < numberOfBlocks;
+                                return index.hasNext();
                             }
 
                             public HDF5DataBlock<float[]> next()
                             {
-                                if (hasNext() == false)
-                                {
-                                    throw new NoSuchElementException();
-                                }
-                                final long offset = naturalBlockSize * index;
-                                final int blockSize =
-                                        (index == numberOfBlocks - 1) ? lastBlockSize
-                                                : naturalBlockSize;
+                                final long offset = index.computeOffsetAndSizeGetOffset();
                                 final float[] block =
-                                        readFloatArrayBlockWithOffset(dataSetPath, blockSize,
-                                                offset);
-                                return new HDF5DataBlock<float[]>(block, index++, offset);
+                                        readFloatArrayBlockWithOffset(dataSetPath, index
+                                                .getBlockSize(), offset);
+                                return new HDF5DataBlock<float[]>(block, index.getAndIncIndex(), 
+                                        offset);
                             }
 
                             public void remove()
@@ -550,21 +525,8 @@ class HDF5FloatReader implements IHDF5FloatReader
     public Iterable<HDF5MDDataBlock<MDFloatArray>> getFloatMDArrayNaturalBlocks(final String dataSetPath)
     {
         baseReader.checkOpen();
-        final HDF5DataSetInformation info = baseReader.getDataSetInformation(dataSetPath);
-        final int rank = info.getRank();
-        final int[] size = MDArray.toInt(info.getDimensions());
-        final int[] naturalBlockSize =
-                (info.getStorageLayout() == HDF5StorageLayout.CHUNKED) ? info.tryGetChunkSizes() : size;
-        final long[] numberOfBlocks = new long[rank];
-        final int[] lastBlockSize = new int[rank];
-        for (int i = 0; i < size.length; ++i)
-        {
-            final int sizeModNaturalBlockSize = size[i] % naturalBlockSize[i];
-            numberOfBlocks[i] =
-                    (size[i] / naturalBlockSize[i]) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
-            lastBlockSize[i] =
-                    (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize[i];
-        }
+        final HDF5NaturalBlockMDParameters params =
+                new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(dataSetPath));
 
         return new Iterable<HDF5MDDataBlock<MDFloatArray>>()
             {
@@ -572,64 +534,27 @@ class HDF5FloatReader implements IHDF5FloatReader
                 {
                     return new Iterator<HDF5MDDataBlock<MDFloatArray>>()
                         {
-                            long[] index = new long[rank];
-
-                            long[] offset = new long[rank];
-
-                            int[] blockSize = naturalBlockSize.clone();
-
-                            boolean indexCalculated = true;
+                            final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
+                                    params.getNaturalBlockIndex();
 
                             public boolean hasNext()
                             {
-                                if (indexCalculated)
-                                {
-                                    return true;
-                                }
-                                for (int i = index.length - 1; i >= 0; --i)
-                                {
-                                    ++index[i];
-                                    if (index[i] < numberOfBlocks[i])
-                                    {
-                                        offset[i] += naturalBlockSize[i];
-                                        if (index[i] == numberOfBlocks[i] - 1)
-                                        {
-                                            blockSize[i] = lastBlockSize[i];
-                                        }
-                                        indexCalculated = true;
-                                        break;
-                                    } else
-                                    {
-                                        index[i] = 0;
-                                        offset[i] = 0;
-                                        blockSize[i] = naturalBlockSize[i];
-                                    }
-                                }
-                                return indexCalculated;
+                                return index.hasNext();
                             }
 
                             public HDF5MDDataBlock<MDFloatArray> next()
                             {
-                                if (hasNext() == false)
-                                {
-                                    throw new NoSuchElementException();
-                                }
+                                final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
                                 final MDFloatArray data =
-                                        readFloatMDArrayBlockWithOffset(dataSetPath, blockSize,
-                                                offset);
-                                prepareNext();
-                                return new HDF5MDDataBlock<MDFloatArray>(data, index.clone(),
-                                        offset.clone());
+                                        readFloatMDArrayBlockWithOffset(dataSetPath, index
+                                                .getBlockSize(), offset);
+                                return new HDF5MDDataBlock<MDFloatArray>(data, index
+                                        .getIndexClone(), offset);
                             }
 
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
-                            }
-
-                            private void prepareNext()
-                            {
-                                indexCalculated = false;
                             }
                         };
                 }

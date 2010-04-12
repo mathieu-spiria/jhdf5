@@ -25,7 +25,6 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_VARIABLE;
 
 import java.io.File;
 import java.util.Arrays;
@@ -551,17 +550,9 @@ class HDF5BaseReader
                                             .isVariableLengthString(dataTypeId));
                             if (vlString)
                             {
-                                dataTypeInfo.setElementSize(1);
-
-                                dataSetInfo.setDimensions(new long[]
-                                    { H5T_VARIABLE });
-                                dataSetInfo.setMaxDimensions(new long[]
-                                    { H5T_VARIABLE });
-                                dataSetInfo.setStorageLayout(HDF5StorageLayout.VARIABLE_LENGTH);
-                            } else
-                            {
-                                h5.fillDataDimensions(dataSetId, false, dataSetInfo);
+                                dataTypeInfo.setElementSize(-1);
                             }
+                            h5.fillDataDimensions(dataSetId, false, dataSetInfo);
                             return dataSetInfo;
                         }
                     };
@@ -670,7 +661,7 @@ class HDF5BaseReader
     //
     // Compound
     //
-    
+
     <T> HDF5ValueObjectByteifyer<T> createCompoundByteifyers(final Class<T> compoundClazz,
             final HDF5CompoundMemberMapping[] compoundMembers)
     {
@@ -788,15 +779,14 @@ class HDF5BaseReader
             final String attributeName, final ICleanUpRegistry registry)
     {
         final int attributeId = h5.openAttribute(objectId, attributeName, registry);
-        final int dataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
-        final boolean isString = (h5.getClassType(dataTypeId) == H5T_STRING);
+        final int stringDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+        final boolean isString = (h5.getClassType(stringDataTypeId) == H5T_STRING);
         if (isString == false)
         {
             throw new IllegalArgumentException("Attribute " + attributeName + " of object "
                     + objectPath + " needs to be a String.");
         }
-        final int size = h5.getDataTypeSize(dataTypeId);
-        final int stringDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+        final int size = h5.getDataTypeSize(stringDataTypeId);
         if (h5.isVariableLengthString(stringDataTypeId))
         {
             String[] data = new String[1];
@@ -813,4 +803,53 @@ class HDF5BaseReader
         }
     }
 
+    String[] getStringArrayAttribute(final int objectId, final String objectPath,
+            final String attributeName, final ICleanUpRegistry registry)
+    {
+        final int attributeId = h5.openAttribute(objectId, attributeName, registry);
+        final int stringArrayDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+        final boolean isArray = (h5.getClassType(stringArrayDataTypeId) == H5T_ARRAY);
+        if (isArray == false)
+        {
+            throw new IllegalArgumentException("Attribute " + attributeName + " of object "
+                    + objectPath + " needs to be a String array of rank 1.");
+        }
+        final int stringDataTypeId = h5.getBaseDataType(stringArrayDataTypeId, registry);
+        final boolean isStringArray = (h5.getClassType(stringDataTypeId) == H5T_STRING);
+        if (isStringArray == false)
+        {
+            throw new IllegalArgumentException("Attribute " + attributeName + " of object "
+                    + objectPath + " needs to be a String array of rank 1.");
+        }
+        final int size = h5.getDataTypeSize(stringArrayDataTypeId);
+        if (h5.isVariableLengthString(stringDataTypeId))
+        {
+            String[] data = new String[1];
+            h5.readAttributeVL(attributeId, stringDataTypeId, data);
+            return data;
+        } else
+        {
+            byte[] data = h5.readAttributeAsByteArray(attributeId, stringArrayDataTypeId, size);
+            final int[] arrayDimensions = h5.getArrayDimensions(stringArrayDataTypeId);
+            if (arrayDimensions.length != 1)
+            {
+                throw new IllegalArgumentException("Attribute " + attributeName + " of object "
+                        + objectPath + " needs to be a String array of rank 1.");
+            }
+            final int lengthPerElement = h5.getDataTypeSize(stringDataTypeId);
+            final int numberOfElements = arrayDimensions[0];
+            final String[] result = new String[numberOfElements];
+            for (int i = 0; i < numberOfElements; ++i)
+            {
+                final int startIdx = i * lengthPerElement;
+                final int maxEndIdx = startIdx + lengthPerElement;
+                int termIdx;
+                for (termIdx = startIdx; termIdx < maxEndIdx && data[termIdx] != 0; ++termIdx)
+                {
+                }
+                result[i] = new String(data, startIdx, termIdx - startIdx);
+            }
+            return result;
+        }
+    }
 }

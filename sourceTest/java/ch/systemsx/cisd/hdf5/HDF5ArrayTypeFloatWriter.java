@@ -62,7 +62,7 @@ public class HDF5ArrayTypeFloatWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_IEEE_F32BE, new long[]
-                                { data.length }, features, registry);
+                                { data.length }, 4, features, registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.
@@ -83,7 +83,7 @@ public class HDF5ArrayTypeFloatWriter
                 {
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, H5T_IEEE_F64BE, new long[]
-                                { data.length }, features, registry);
+                                { data.length }, 4, features, registry);
                     H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
                     return null; // Nothing to return.

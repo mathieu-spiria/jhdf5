@@ -10,7 +10,7 @@ import ncsa.hdf.hdf5lib.HDF5Constants;
 public enum HDF5StorageLayout
 {
     COMPACT(HDF5Constants.H5D_COMPACT), CONTIGUOUS(HDF5Constants.H5D_CONTIGUOUS), CHUNKED(
-            HDF5Constants.H5D_CHUNKED), VARIABLE_LENGTH(-1), NOT_APPLICABLE(-1);
+            HDF5Constants.H5D_CHUNKED), NOT_APPLICABLE(-1);
 
     private int id;
 
