@@ -552,7 +552,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dcopy
 
     H5Sclose(sid);
 
-    buf = (jbyte *)malloc( (int) (total_size * sizeof(jbyte)));
+    buf = (jbyte *)calloc( (int) (total_size), sizeof(jbyte));
         if (buf == NULL) {
         H5Tclose(tid);
                 h5outOfMemory( env, "H5Dcopy:  malloc failed");
@@ -997,7 +997,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1string
         h5libraryError(env);
     }
 
-    if ( (c_buf = (char *)malloc(n*str_len)) == NULL) {
+    if ( (c_buf = (char *)calloc(n, str_len)) == NULL) {
         if (cstr) free (cstr); cstr = NULL;
         h5outOfMemory(env,  "H5Dread_string: memory allocation failed.");
         return -1;
@@ -1036,7 +1036,6 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1string
  *  Object[] buf contains VL arrays of data points
  *  Currently only deal with variable length of atomic data types
  */
-/* old version */
 JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5DreadVL
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jobjectArray buf)
@@ -1195,7 +1194,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1reg_1ref (JNIEnv *env, 
 
     n = (*env)->GetArrayLength(env, buf);
     size = sizeof(hdset_reg_ref_t); /*H5Tget_size(tid);*/
-    ref_data = malloc(size*n);
+    ref_data = calloc(size, n);
 
     if (ref_data == NULL) {
        h5outOfMemory( env, "H5Dread_reg_ref:  failed to allocate buff for read");
