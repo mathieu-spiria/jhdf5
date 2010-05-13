@@ -209,19 +209,28 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void createGroup(final String groupPath, final int maxCompact, final int minDense);
 
     // /////////////////////
-    // Attributes
+    // Data Sets
     // /////////////////////
 
     /**
-     * Deletes an attribute.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
+     * Sets the data set size of a one-dimensional data set to <var>newSize</var>. Note that this
+     * method can only be applied to extendable data sets.
      * 
-     * @param objectPath The name of the object to delete the attribute from.
-     * @param name The name of the attribute to delete.
+     * @throw HDF5JavaException If the data set <var>objectPath</var> is not extendable.
      */
-    public void deleteAttribute(final String objectPath, final String name);
+    public void setDataSetSize(final String objectPath, final long newSize);
+
+    /**
+     * Sets the data set size of a multi-dimensional data set to <var>newDimensions</var>. Note that
+     * this method can only be applied to extendable data sets.
+     * 
+     * @throw HDF5JavaException If the data set <var>objectPath</var> is not extendable.
+     */
+    public void setDataSetDimensions(final String objectPath, final long[] newDimensions);
+
+    // /////////////////////
+    // Types
+    // /////////////////////
 
     /**
      * Sets a <var>typeVariant</var> to <var>objectPath</var>.
@@ -241,20 +250,19 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      */
     public void deleteTypeVariant(final String objectPath);
 
-    /**
-     * Sets the data set size of a one-dimensional data set to <var>newSize</var>. Note that this
-     * method can only be applied to extendable data sets.
-     * 
-     * @throw HDF5JavaException If the data set <var>objectPath</var> is not extendable.
-     */
-    public void setDataSetSize(final String objectPath, final long newSize);
+    // /////////////////////
+    // Attributes
+    // /////////////////////
 
     /**
-     * Sets the data set size of a multi-dimensional data set to <var>newDimensions</var>. Note that
-     * this method can only be applied to extendable data sets.
+     * Deletes an attribute.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
      * 
-     * @throw HDF5JavaException If the data set <var>objectPath</var> is not extendable.
+     * @param objectPath The name of the object to delete the attribute from.
+     * @param name The name of the attribute to delete.
      */
-    public void setDataSetDimensions(final String objectPath, final long[] newDimensions);
+    public void deleteAttribute(final String objectPath, final String name);
 
 }
