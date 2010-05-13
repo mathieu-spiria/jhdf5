@@ -16,22 +16,11 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.OPAQUE_PREFIX;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_long;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_B64LE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 
 import java.util.BitSet;
 import java.util.Date;
 
-import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -80,11 +69,17 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     private final IHDF5DoubleWriter doubleWriter;
 
+    private final IHDF5BooleanWriter booleanWriter;
+    
     private final IHDF5StringWriter stringWriter;
 
     private final IHDF5EnumWriter enumWriter;
 
     private final IHDF5CompoundWriter compoundWriter;
+    
+    private final IHDF5DateTimeWriter dateTimeWriter;
+    
+    private final IHDF5OpaqueWriter opaqueWriter;
 
     HDF5Writer(HDF5BaseWriter baseWriter)
     {
@@ -96,9 +91,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         this.longWriter = new HDF5LongWriter(baseWriter);
         this.floatWriter = new HDF5FloatWriter(baseWriter);
         this.doubleWriter = new HDF5DoubleWriter(baseWriter);
+        this.booleanWriter = new HDF5BooleanWriter(baseWriter);
         this.stringWriter = new HDF5StringWriter(baseWriter);
         this.enumWriter = new HDF5EnumWriter(baseWriter);
         this.compoundWriter = new HDF5CompoundWriter(baseWriter);
+        this.dateTimeWriter = new HDF5DateTimeWriter(baseWriter);
+        this.opaqueWriter = new HDF5OpaqueWriter(baseWriter);
     }
 
     HDF5BaseWriter getBaseWriter()
@@ -304,12 +302,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         deleteAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE);
     }
 
-    public void setBooleanAttribute(final String objectPath, final String name, final boolean value)
+    public void setBooleanAttribute(String objectPath, String name, boolean value)
     {
-        baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath, name, baseWriter.booleanDataTypeId,
-                baseWriter.booleanDataTypeId, new byte[]
-                    { (byte) (value ? 1 : 0) });
+        booleanWriter.setBooleanAttribute(objectPath, name, value);
     }
 
     // /////////////////////
@@ -344,654 +339,205 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     // Boolean
     //
 
-    public void writeBoolean(final String objectPath, final boolean value)
+    public void writeBitField(String objectPath, BitSet data, HDF5GenericStorageFeatures features)
     {
-        baseWriter.checkOpen();
-        baseWriter.writeScalar(objectPath, baseWriter.booleanDataTypeId,
-                baseWriter.booleanDataTypeId, HDFNativeData.byteToByte((byte) (value ? 1 : 0)));
+        booleanWriter.writeBitField(objectPath, data, features);
     }
 
-    public void writeBitField(final String objectPath, final BitSet data)
+    public void writeBitField(String objectPath, BitSet data)
     {
-        writeBitField(objectPath, data, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        booleanWriter.writeBitField(objectPath, data);
     }
 
-    public void writeBitField(final String objectPath, final BitSet data,
-            final HDF5GenericStorageFeatures features)
+    public void writeBoolean(String objectPath, boolean value)
     {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int longBytes = 8;
-                    final int longBits = longBytes * 8;
-                    final int msb = data.length();
-                    final int realLength = msb / longBits + (msb % longBits != 0 ? 1 : 0);
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_B64LE, new long[]
-                                { realLength }, longBytes, features, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            BitSetConversionUtils.toStorageForm(data));
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        booleanWriter.writeBoolean(objectPath, value);
     }
 
     //
     // Opaque
     //
 
-    public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data)
+    public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, int size,
+            HDF5GenericStorageFeatures features)
     {
-        writeOpaqueByteArray(objectPath, tag, data,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
-    }
-
-    public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data,
-            final HDF5GenericStorageFeatures features)
-    {
-        assert objectPath != null;
-        assert tag != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int dataTypeId = getOrCreateOpaqueTypeId(tag);
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, dataTypeId, new long[]
-                                { data.length }, 1, features, registry);
-                    H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        return opaqueWriter.createOpaqueByteArray(objectPath, tag, size, features);
     }
 
     public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, int size)
     {
-        return createOpaqueByteArray(objectPath, tag, size,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        return opaqueWriter.createOpaqueByteArray(objectPath, tag, size);
     }
 
-    public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
-            final long size, final int blockSize)
+    public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, long size,
+            int blockSize, HDF5GenericStorageFeatures features)
     {
-        return createOpaqueByteArray(objectPath, tag, size, blockSize,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        return opaqueWriter.createOpaqueByteArray(objectPath, tag, size, blockSize, features);
     }
 
-    public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
-            final int size, final HDF5GenericStorageFeatures features)
+    public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, long size,
+            int blockSize)
     {
-        assert objectPath != null;
-        assert tag != null;
-        assert size >= 0;
-
-        baseWriter.checkOpen();
-        final int dataTypeId = getOrCreateOpaqueTypeId(tag);
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    if (features.requiresChunking())
-                    {
-                        baseWriter.createDataSet(objectPath, dataTypeId, features, new long[]
-                            { 0 }, new long[]
-                            { size }, 1, registry);
-                    } else
-                    {
-                        baseWriter.createDataSet(objectPath, dataTypeId, features, new long[]
-                            { size }, null, 1, registry);
-                    }
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-        return new HDF5OpaqueType(baseWriter.fileId, dataTypeId, tag);
+        return opaqueWriter.createOpaqueByteArray(objectPath, tag, size, blockSize);
     }
 
-    public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
-            final long size, final int blockSize, final HDF5GenericStorageFeatures features)
+    public void writeOpaqueByteArray(String objectPath, String tag, byte[] data,
+            HDF5GenericStorageFeatures features)
     {
-        assert objectPath != null;
-        assert tag != null;
-        assert size >= 0;
-        assert blockSize >= 0 && (blockSize <= size || size == 0);
-
-        baseWriter.checkOpen();
-        final int dataTypeId = getOrCreateOpaqueTypeId(tag);
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.createDataSet(objectPath, dataTypeId, features, new long[]
-                        { size }, new long[]
-                        { blockSize }, 1, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
-        return new HDF5OpaqueType(baseWriter.fileId, dataTypeId, tag);
+        opaqueWriter.writeOpaqueByteArray(objectPath, tag, data, features);
     }
 
-    public void writeOpaqueByteArrayBlock(final String objectPath, final HDF5OpaqueType dataType,
-            final byte[] data, final long blockNumber)
+    public void writeOpaqueByteArray(String objectPath, String tag, byte[] data)
     {
-        assert objectPath != null;
-        assert dataType != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        dataType.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { data.length };
-                    final long[] slabStartOrNull = new long[]
-                        { data.length * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { data.length * (blockNumber + 1) }, -1, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite(dataSetId, dataType.getNativeTypeId(), memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        opaqueWriter.writeOpaqueByteArray(objectPath, tag, data);
     }
 
-    public void writeOpaqueByteArrayBlockWithOffset(final String objectPath,
-            final HDF5OpaqueType dataType, final byte[] data, final int dataSize, final long offset)
+    public void writeOpaqueByteArrayBlock(String objectPath, HDF5OpaqueType dataType, byte[] data,
+            long blockNumber)
     {
-        assert objectPath != null;
-        assert dataType != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        dataType.check(baseWriter.fileId);
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { offset + dataSize }, -1, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite(dataSetId, dataType.getNativeTypeId(), memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        opaqueWriter.writeOpaqueByteArrayBlock(objectPath, dataType, data, blockNumber);
     }
 
-    private int getOrCreateOpaqueTypeId(final String tag)
+    public void writeOpaqueByteArrayBlockWithOffset(String objectPath, HDF5OpaqueType dataType,
+            byte[] data, int dataSize, long offset)
     {
-        final String dataTypePath = createDataTypePath(OPAQUE_PREFIX, tag);
-        int dataTypeId = baseWriter.getDataTypeId(dataTypePath);
-        if (dataTypeId < 0)
-        {
-            dataTypeId = baseWriter.h5.createDataTypeOpaque(1, tag, baseWriter.fileRegistry);
-            baseWriter.commitDataType(dataTypePath, dataTypeId);
-        }
-        return dataTypeId;
+        opaqueWriter.writeOpaqueByteArrayBlockWithOffset(objectPath, dataType, data, dataSize,
+                offset);
     }
 
     //
     // Date
     //
 
-    public void writeTimeStamp(final String objectPath, final long timeStamp)
+    public void createTimeStampArray(String objectPath, int size,
+            HDF5GenericStorageFeatures features)
     {
-        assert objectPath != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
-            {
-                public Object call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64,
-                                    HDFNativeData.longToByte(timeStamp), registry);
-                    baseWriter.setTypeVariant(dataSetId,
-                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
-                            registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeScalarRunnable);
+        dateTimeWriter.createTimeStampArray(objectPath, size, features);
     }
 
     public void createTimeStampArray(String objectPath, int size)
     {
-        createTimeStampArray(objectPath, size, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        dateTimeWriter.createTimeStampArray(objectPath, size);
     }
 
-    public void createTimeStampArray(final String objectPath, final long size, final int blockSize)
+    public void createTimeStampArray(String objectPath, long size, int blockSize,
+            HDF5GenericStorageFeatures features)
     {
-        createTimeStampArray(objectPath, size, blockSize,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        dateTimeWriter.createTimeStampArray(objectPath, size, blockSize, features);
     }
 
-    public void createTimeStampArray(final String objectPath, final int size,
-            final HDF5GenericStorageFeatures features)
+    public void createTimeStampArray(String objectPath, long size, int blockSize)
     {
-        assert objectPath != null;
-        assert size >= 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int longBytes = 8;
-                    final int dataSetId;
-                    if (features.requiresChunking())
-                    {
-                        dataSetId =
-                                baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
-                                        new long[]
-                                            { 0 }, new long[]
-                                            { size }, longBytes, registry);
-                    } else
-                    {
-                        dataSetId =
-                                baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
-                                        new long[]
-                                            { size }, null, longBytes, registry);
-                    }
-                    baseWriter.setTypeVariant(dataSetId,
-                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
-                            registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        dateTimeWriter.createTimeStampArray(objectPath, size, blockSize);
     }
 
-    public void createTimeStampArray(final String objectPath, final long length,
-            final int blockSize, final HDF5GenericStorageFeatures features)
+    public void writeDate(String objectPath, Date date)
     {
-        assert objectPath != null;
-        assert length >= 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int longBytes = 8;
-                    final int dataSetId =
-                            baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
-                                    new long[]
-                                        { length }, new long[]
-                                        { blockSize }, longBytes, registry);
-                    baseWriter.setTypeVariant(dataSetId,
-                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
-                            registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        dateTimeWriter.writeDate(objectPath, date);
     }
 
-    public void writeTimeStampArray(final String objectPath, final long[] timeStamps)
+    public void writeDateArray(String objectPath, Date[] dates, HDF5GenericStorageFeatures features)
     {
-        writeTimeStampArray(objectPath, timeStamps,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        dateTimeWriter.writeDateArray(objectPath, dates, features);
     }
 
-    public void writeTimeStampArray(final String objectPath, final long[] timeStamps,
-            final HDF5GenericStorageFeatures features)
+    public void writeDateArray(String objectPath, Date[] dates)
     {
-        assert objectPath != null;
-        assert timeStamps != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int longBytes = 8;
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
-                                { timeStamps.length }, longBytes, features, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            timeStamps);
-                    baseWriter.setTypeVariant(dataSetId,
-                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
-                            registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        dateTimeWriter.writeDateArray(objectPath, dates);
     }
 
-    public void writeTimeStampArrayBlock(final String objectPath, final long[] data,
-            final long blockNumber)
+    public void writeTimeStamp(String objectPath, long timeStamp)
     {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final long[] slabStartOrNull = new long[]
-                        { data.length * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { data.length * (blockNumber + 1) }, -1, registry);
-                    checkIsTimeStamp(objectPath, dataSetId, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        dateTimeWriter.writeTimeStamp(objectPath, timeStamp);
     }
 
-    public void writeTimeStampArrayBlockWithOffset(final String objectPath, final long[] data,
-            final int dataSize, final long offset)
+    public void writeTimeStampArray(String objectPath, long[] timeStamps,
+            HDF5GenericStorageFeatures features)
     {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { offset + dataSize }, -1, registry);
-                    checkIsTimeStamp(objectPath, dataSetId, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        dateTimeWriter.writeTimeStampArray(objectPath, timeStamps, features);
     }
 
-    public void writeDate(final String objectPath, final Date date)
+    public void writeTimeStampArray(String objectPath, long[] timeStamps)
     {
-        writeTimeStamp(objectPath, date.getTime());
+        dateTimeWriter.writeTimeStampArray(objectPath, timeStamps);
     }
 
-    public void writeDateArray(final String objectPath, final Date[] dates)
+    public void writeTimeStampArrayBlock(String objectPath, long[] data, long blockNumber)
     {
-        writeTimeStampArray(objectPath, datesToTimeStamps(dates));
+        dateTimeWriter.writeTimeStampArrayBlock(objectPath, data, blockNumber);
     }
 
-    public void writeDateArray(final String objectPath, final Date[] dates,
-            final HDF5GenericStorageFeatures features)
+    public void writeTimeStampArrayBlockWithOffset(String objectPath, long[] data, int dataSize,
+            long offset)
     {
-        writeTimeStampArray(objectPath, datesToTimeStamps(dates), features);
-    }
-
-    private static long[] datesToTimeStamps(Date[] dates)
-    {
-        assert dates != null;
-
-        final long[] timestamps = new long[dates.length];
-        for (int i = 0; i < timestamps.length; ++i)
-        {
-            timestamps[i] = dates[i].getTime();
-        }
-        return timestamps;
+        dateTimeWriter.writeTimeStampArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     //
     // Duration
     //
 
-    public void writeTimeDuration(final String objectPath, final long timeDuration)
+    public void createTimeDurationArray(String objectPath, int size, HDF5TimeUnit timeUnit,
+            HDF5GenericStorageFeatures features)
     {
-        writeTimeDuration(objectPath, timeDuration, HDF5TimeUnit.SECONDS);
-    }
-
-    public void writeTimeDuration(final String objectPath, final long timeDuration,
-            final HDF5TimeUnit timeUnit)
-    {
-        assert objectPath != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
-            {
-                public Object call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64,
-                                    HDFNativeData.longToByte(timeDuration), registry);
-                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeScalarRunnable);
+        dateTimeWriter.createTimeDurationArray(objectPath, size, timeUnit, features);
     }
 
     public void createTimeDurationArray(String objectPath, int size, HDF5TimeUnit timeUnit)
     {
-        createTimeDurationArray(objectPath, size, timeUnit,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        dateTimeWriter.createTimeDurationArray(objectPath, size, timeUnit);
     }
 
-    public void createTimeDurationArray(final String objectPath, final long size,
-            final int blockSize, final HDF5TimeUnit timeUnit)
+    public void createTimeDurationArray(String objectPath, long size, int blockSize,
+            HDF5TimeUnit timeUnit, HDF5GenericStorageFeatures features)
     {
-        createTimeDurationArray(objectPath, size, blockSize, timeUnit,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        dateTimeWriter.createTimeDurationArray(objectPath, size, blockSize, timeUnit, features);
     }
 
-    public void createTimeDurationArray(final String objectPath, final int size,
-            final HDF5TimeUnit timeUnit, final HDF5GenericStorageFeatures features)
+    public void createTimeDurationArray(String objectPath, long size, int blockSize,
+            HDF5TimeUnit timeUnit)
     {
-        assert objectPath != null;
-        assert size >= 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int longBytes = 8;
-                    final int dataSetId;
-                    if (features.requiresChunking())
-                    {
-                        dataSetId =
-                                baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
-                                        new long[]
-                                            { 0 }, new long[]
-                                            { size }, longBytes, registry);
-                    } else
-                    {
-                        dataSetId =
-                                baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
-                                        new long[]
-                                            { size }, null, longBytes, registry);
-                    }
-                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        dateTimeWriter.createTimeDurationArray(objectPath, size, blockSize, timeUnit);
     }
 
-    public void createTimeDurationArray(final String objectPath, final long size,
-            final int blockSize, final HDF5TimeUnit timeUnit,
-            final HDF5GenericStorageFeatures features)
+    public void writeTimeDuration(String objectPath, long timeDuration, HDF5TimeUnit timeUnit)
     {
-        assert objectPath != null;
-        assert size >= 0;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int longBytes = 8;
-                    final int dataSetId =
-                            baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
-                                    new long[]
-                                        { size }, new long[]
-                                        { blockSize }, longBytes, registry);
-                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        dateTimeWriter.writeTimeDuration(objectPath, timeDuration, timeUnit);
     }
 
-    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations)
+    public void writeTimeDuration(String objectPath, long timeDuration)
     {
-        writeTimeDurationArray(objectPath, timeDurations, HDF5TimeUnit.SECONDS,
-                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+        dateTimeWriter.writeTimeDuration(objectPath, timeDuration);
     }
 
-    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
-            final HDF5TimeUnit timeUnit)
+    public void writeTimeDurationArray(String objectPath, long[] timeDurations,
+            HDF5TimeUnit timeUnit, HDF5IntStorageFeatures features)
     {
-        writeTimeDurationArray(objectPath, timeDurations, timeUnit,
-                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, timeUnit, features);
     }
 
-    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
-            final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features)
+    public void writeTimeDurationArray(String objectPath, long[] timeDurations,
+            HDF5TimeUnit timeUnit)
     {
-        assert objectPath != null;
-        assert timeDurations != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int longBytes = 8;
-                    final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
-                                { timeDurations.length }, longBytes, features, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            timeDurations);
-                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, timeUnit);
     }
 
-    public void writeTimeDurationArrayBlock(final String objectPath, final long[] data,
-            final long blockNumber, final HDF5TimeUnit timeUnit)
+    public void writeTimeDurationArray(String objectPath, long[] timeDurations)
     {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { data.length };
-                    final long[] slabStartOrNull = new long[]
-                        { data.length * blockNumber };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { data.length * (blockNumber + 1) }, -1, registry);
-                    final HDF5TimeUnit storedUnit =
-                            checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    convertTimeDurations(timeUnit, storedUnit, data);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations);
     }
 
-    public void writeTimeDurationArrayBlockWithOffset(final String objectPath, final long[] data,
-            final int dataSize, final long offset, final HDF5TimeUnit timeUnit)
+    public void writeTimeDurationArrayBlock(String objectPath, long[] data, long blockNumber,
+            HDF5TimeUnit timeUnit)
     {
-        assert objectPath != null;
-        assert data != null;
+        dateTimeWriter.writeTimeDurationArrayBlock(objectPath, data, blockNumber, timeUnit);
+    }
 
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { offset + dataSize }, -1, registry);
-                    final HDF5TimeUnit storedUnit =
-                            checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    convertTimeDurations(timeUnit, storedUnit, data);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+    public void writeTimeDurationArrayBlockWithOffset(String objectPath, long[] data, int dataSize,
+            long offset, HDF5TimeUnit timeUnit)
+    {
+        dateTimeWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset,
+                timeUnit);
     }
 
     //

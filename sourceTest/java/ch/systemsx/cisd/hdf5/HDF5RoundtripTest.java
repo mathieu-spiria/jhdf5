@@ -3115,7 +3115,7 @@ public class HDF5RoundtripTest
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationSeriesDS);
         assertEquals(HDF5DataTypeVariant.TIME_DURATION_MILLISECONDS, info.tryGetTypeVariant());
         assertChunkSizes(info, 10);
-        HDF5Reader.convertTimeDurations(HDF5TimeUnit.MICROSECONDS, HDF5TimeUnit.MILLISECONDS,
+        HDF5DateTimeReader.convertTimeDurations(HDF5TimeUnit.MICROSECONDS, HDF5TimeUnit.MILLISECONDS,
                 timeDurationSeries);
         for (int i = 0; i < 10; ++i)
         {

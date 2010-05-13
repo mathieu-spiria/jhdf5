@@ -559,6 +559,25 @@ class HDF5BaseReader
         return runner.call(informationDeterminationRunnable);
     }
 
+    HDF5DataTypeVariant tryGetTypeVariant(final String objectPath)
+    {
+        assert objectPath != null;
+
+        final ICallableWithCleanUp<HDF5DataTypeVariant> readRunnable =
+                new ICallableWithCleanUp<HDF5DataTypeVariant>()
+                    {
+                        public HDF5DataTypeVariant call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    h5.openObject(fileId, objectPath,
+                                            registry);
+                            return tryGetTypeVariant(objectId, registry);
+                        }
+                    };
+
+        return runner.call(readRunnable);
+    }
+
     HDF5DataTypeVariant tryGetTypeVariant(final int dataSetId, ICleanUpRegistry registry)
     {
         final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
@@ -852,4 +871,30 @@ class HDF5BaseReader
             return result;
         }
     }
+    
+    // Date & Time
+    
+    void checkIsTimeStamp(final String objectPath, final int dataSetId,
+            ICleanUpRegistry registry) throws HDF5JavaException
+    {
+        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
+        if (typeVariantOrdinal != HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH
+                .ordinal())
+        {
+            throw new HDF5JavaException("Data set '" + objectPath + "' is not a time stamp.");
+        }
+    }
+
+    HDF5TimeUnit checkIsTimeDuration(final String objectPath, final int dataSetId,
+            ICleanUpRegistry registry) throws HDF5JavaException
+    {
+        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
+        if (HDF5DataTypeVariant.isTimeDuration(typeVariantOrdinal) == false)
+        {
+            throw new HDF5JavaException("Data set '" + objectPath + "' is not a time duration.");
+        }
+        return HDF5DataTypeVariant.getTimeUnit(typeVariantOrdinal);
+    }
+
+
 }

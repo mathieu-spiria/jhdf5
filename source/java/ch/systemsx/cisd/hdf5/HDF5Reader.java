@@ -17,15 +17,11 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 
 import java.io.File;
 import java.util.BitSet;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
@@ -37,7 +33,6 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
-import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
@@ -75,11 +70,17 @@ class HDF5Reader implements IHDF5Reader
 
     private final IHDF5DoubleReader doubleReader;
 
+    private final IHDF5BooleanReader booleanReader;
+    
     private final IHDF5StringReader stringReader;
 
     private final IHDF5EnumReader enumReader;
 
     private final IHDF5CompoundReader compoundReader;
+    
+    private final IHDF5DateTimeReader dateTimeReader;
+    
+    private final IHDF5GenericReader genericReader;
 
     HDF5Reader(HDF5BaseReader baseReader)
     {
@@ -92,9 +93,12 @@ class HDF5Reader implements IHDF5Reader
         this.longReader = new HDF5LongReader(baseReader);
         this.floatReader = new HDF5FloatReader(baseReader);
         this.doubleReader = new HDF5DoubleReader(baseReader);
+        this.booleanReader = new HDF5BooleanReader(baseReader);
         this.stringReader = new HDF5StringReader(baseReader);
         this.enumReader = new HDF5EnumReader(baseReader);
         this.compoundReader = new HDF5CompoundReader(baseReader);
+        this.dateTimeReader = new HDF5DateTimeReader(baseReader);
+        this.genericReader = new HDF5GenericReader(baseReader);
     }
 
     void checkOpen()
@@ -435,69 +439,20 @@ class HDF5Reader implements IHDF5Reader
     // Types
     // /////////////////////
 
-    public String tryGetOpaqueTag(final String objectPath)
+    public String tryGetOpaqueTag(String objectPath)
     {
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<String> readTagCallable = new ICallableWithCleanUp<String>()
-            {
-                public String call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final int dataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                    return baseReader.h5.tryGetOpaqueTag(dataTypeId);
-                }
-            };
-        return baseReader.runner.call(readTagCallable);
+        return genericReader.tryGetOpaqueTag(objectPath);
     }
 
-    public HDF5OpaqueType tryGetOpaqueType(final String objectPath)
+    public HDF5OpaqueType tryGetOpaqueType(String objectPath)
     {
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<HDF5OpaqueType> readTagCallable =
-                new ICallableWithCleanUp<HDF5OpaqueType>()
-                    {
-                        public HDF5OpaqueType call(ICleanUpRegistry registry)
-                        {
-                            final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
-                                            registry);
-                            final int dataTypeId =
-                                    baseReader.h5.getDataTypeForDataSet(dataSetId,
-                                            baseReader.fileRegistry);
-                            final String opaqueTagOrNull =
-                                    baseReader.h5.tryGetOpaqueTag(dataTypeId);
-                            if (opaqueTagOrNull == null)
-                            {
-                                return null;
-                            } else
-                            {
-                                return new HDF5OpaqueType(baseReader.fileId, dataTypeId,
-                                        opaqueTagOrNull);
-                            }
-                        }
-                    };
-        return baseReader.runner.call(readTagCallable);
+        return genericReader.tryGetOpaqueType(objectPath);
     }
 
     public HDF5DataTypeVariant tryGetTypeVariant(final String objectPath)
     {
-        assert objectPath != null;
-
         baseReader.checkOpen();
-        final ICallableWithCleanUp<HDF5DataTypeVariant> readRunnable =
-                new ICallableWithCleanUp<HDF5DataTypeVariant>()
-                    {
-                        public HDF5DataTypeVariant call(ICleanUpRegistry registry)
-                        {
-                            final int objectId =
-                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
-                                            registry);
-                            return baseReader.tryGetTypeVariant(objectId, registry);
-                        }
-                    };
-
-        return baseReader.runner.call(readRunnable);
+        return baseReader.tryGetTypeVariant(objectPath);
     }
 
     // /////////////////////
@@ -522,37 +477,10 @@ class HDF5Reader implements IHDF5Reader
         return baseReader.runner.call(writeRunnable);
     }
 
-    public boolean getBooleanAttribute(final String objectPath, final String attributeName)
+    public boolean getBooleanAttribute(String objectPath, String attributeName)
             throws HDF5JavaException
     {
-        assert objectPath != null;
-        assert attributeName != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Boolean> writeRunnable = new ICallableWithCleanUp<Boolean>()
-            {
-                public Boolean call(ICleanUpRegistry registry)
-                {
-                    final int objectId =
-                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
-                            baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final int nativeDataTypeId =
-                            baseReader.h5.getNativeDataTypeForAttribute(attributeId, registry);
-                    byte[] data =
-                            baseReader.h5
-                                    .readAttributeAsByteArray(attributeId, nativeDataTypeId, 1);
-                    final Boolean value =
-                            baseReader.h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
-                    if (value == null)
-                    {
-                        throw new HDF5JavaException("Attribute " + attributeName + " of path "
-                                + objectPath + " needs to be a Boolean.");
-                    }
-                    return value;
-                }
-            };
-        return baseReader.runner.call(writeRunnable);
+        return booleanReader.getBooleanAttribute(objectPath, attributeName);
     }
 
     public String getEnumAttributeAsString(final String objectPath, final String attributeName)
@@ -597,598 +525,144 @@ class HDF5Reader implements IHDF5Reader
     // Generic
     //
 
-    public byte[] readAsByteArray(final String objectPath)
-    {
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
-            {
-                public byte[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, registry);
-                    final int nativeDataTypeId =
-                            baseReader.h5.getNativeDataTypeForDataSetCheckBitFields(dataSetId,
-                                    registry);
-                    final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
-                    final byte[] data =
-                            new byte[((spaceParams.blockSize == 0) ? 1 : spaceParams.blockSize)
-                                    * elementSize];
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
-    }
-
-    public byte[] readAsByteArrayBlock(final String objectPath, final int blockSize,
-            final long blockNumber) throws HDF5JavaException
-    {
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
-            {
-                public byte[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
-                                    blockSize, registry);
-                    final int nativeDataTypeId =
-                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
-                    final byte[] data = new byte[elementSize * spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
-    }
-
-    public byte[] readAsByteArrayBlockWithOffset(final String objectPath, final int blockSize,
-            final long offset) throws HDF5JavaException
-    {
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
-            {
-                public byte[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
-                    final int nativeDataTypeId =
-                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
-                    final byte[] data = new byte[elementSize * spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
-    }
-
-    public int readAsByteArrayToBlockWithOffset(final String objectPath, final byte[] buffer,
-            final int blockSize, final long offset, final int memoryOffset)
+    public Iterable<HDF5DataBlock<byte[]>> getAsByteArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
-        if (blockSize + memoryOffset > buffer.length)
-        {
-            throw new HDF5JavaException("Buffer not large enough for blockSize and memoryOffset");
-        }
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Integer> readCallable = new ICallableWithCleanUp<Integer>()
-            {
-                public Integer call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, memoryOffset, offset,
-                                    blockSize, registry);
-                    final int nativeDataTypeId =
-                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
-                    if ((blockSize + memoryOffset) * elementSize > buffer.length)
-                    {
-                        throw new HDF5JavaException(
-                                "Buffer not large enough for blockSize and memoryOffset");
-                    }
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, buffer);
-                    return spaceParams.blockSize;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return genericReader.getAsByteArrayNaturalBlocks(dataSetPath);
     }
 
-    public Iterable<HDF5DataBlock<byte[]>> getAsByteArrayNaturalBlocks(final String dataSetPath)
+    public byte[] readAsByteArray(String objectPath)
+    {
+        return genericReader.readAsByteArray(objectPath);
+    }
+
+    public byte[] readAsByteArrayBlock(String objectPath, int blockSize, long blockNumber)
             throws HDF5JavaException
     {
-        final HDF5DataSetInformation info = getDataSetInformation(dataSetPath);
-        if (info.getRank() > 1)
-        {
-            throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
-                    + info.getRank() + ")");
-        }
-        final long longSize = info.getDimensions()[0];
-        final int size = (int) longSize;
-        if (size != longSize)
-        {
-            throw new HDF5JavaException("Data Set is too large (" + longSize + ")");
-        }
-        final int naturalBlockSize =
-                (info.getStorageLayout() == HDF5StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
-                        : size;
-        final int sizeModNaturalBlockSize = size % naturalBlockSize;
-        final long numberOfBlocks =
-                (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
-        final int lastBlockSize =
-                (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
+        return genericReader.readAsByteArrayBlock(objectPath, blockSize, blockNumber);
+    }
 
-        return new Iterable<HDF5DataBlock<byte[]>>()
-            {
-                public Iterator<HDF5DataBlock<byte[]>> iterator()
-                {
-                    return new Iterator<HDF5DataBlock<byte[]>>()
-                        {
-                            long index = 0;
+    public byte[] readAsByteArrayBlockWithOffset(String objectPath, int blockSize, long offset)
+            throws HDF5JavaException
+    {
+        return genericReader.readAsByteArrayBlockWithOffset(objectPath, blockSize, offset);
+    }
 
-                            public boolean hasNext()
-                            {
-                                return index < numberOfBlocks;
-                            }
-
-                            public HDF5DataBlock<byte[]> next()
-                            {
-                                if (hasNext() == false)
-                                {
-                                    throw new NoSuchElementException();
-                                }
-                                final long offset = naturalBlockSize * index;
-                                final int blockSize =
-                                        (index == numberOfBlocks - 1) ? lastBlockSize
-                                                : naturalBlockSize;
-                                final byte[] block =
-                                        readAsByteArrayBlockWithOffset(dataSetPath, blockSize,
-                                                offset);
-                                return new HDF5DataBlock<byte[]>(block, index++, offset);
-                            }
-
-                            public void remove()
-                            {
-                                throw new UnsupportedOperationException();
-                            }
-                        };
-                }
-            };
+    public int readAsByteArrayToBlockWithOffset(String objectPath, byte[] buffer, int blockSize,
+            long offset, int memoryOffset) throws HDF5JavaException
+    {
+        return genericReader.readAsByteArrayToBlockWithOffset(objectPath, buffer, blockSize,
+                offset, memoryOffset);
     }
 
     //
     // Boolean
     //
 
-    public boolean readBoolean(final String objectPath) throws HDF5JavaException
+    public BitSet readBitField(String objectPath) throws HDF5DatatypeInterfaceException
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Boolean> writeRunnable = new ICallableWithCleanUp<Boolean>()
-            {
-                public Boolean call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final int nativeDataTypeId =
-                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final byte[] data = new byte[1];
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
-                    final Boolean value =
-                            baseReader.h5.tryGetBooleanValue(nativeDataTypeId, data[0]);
-                    if (value == null)
-                    {
-                        throw new HDF5JavaException(objectPath + " needs to be a Boolean.");
-                    }
-                    return value;
-                }
-            };
-        return baseReader.runner.call(writeRunnable);
+        return booleanReader.readBitField(objectPath);
     }
 
-    public BitSet readBitField(final String objectPath) throws HDF5DatatypeInterfaceException
+    public boolean readBoolean(String objectPath) throws HDF5JavaException
     {
-        baseReader.checkOpen();
-        return BitSetConversionUtils.fromStorageForm(readBitFieldStorageForm(objectPath));
-    }
-
-    private long[] readBitFieldStorageForm(final String objectPath)
-    {
-        assert objectPath != null;
-
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_B64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return booleanReader.readBoolean(objectPath);
     }
 
     //
-    // Time stamp
+    // Time & date
     //
 
-    public boolean isTimeStamp(final String objectPath) throws HDF5JavaException
+    public boolean isTimeDuration(String objectPath) throws HDF5JavaException
     {
-        final HDF5DataTypeVariant typeVariantOrNull = tryGetTypeVariant(objectPath);
-        return typeVariantOrNull != null && typeVariantOrNull.isTimeStamp();
+        return dateTimeReader.isTimeDuration(objectPath);
     }
 
-    public long readTimeStamp(final String objectPath) throws HDF5JavaException
+    public boolean isTimeStamp(String objectPath) throws HDF5JavaException
     {
-        baseReader.checkOpen();
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Long> readCallable = new ICallableWithCleanUp<Long>()
-            {
-                public Long call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    checkIsTimeStamp(objectPath, dataSetId, registry);
-                    final long[] data = new long[1];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
-                    return data[0];
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return dateTimeReader.isTimeStamp(objectPath);
     }
 
-    public long[] readTimeStampArray(final String objectPath) throws HDF5JavaException
+    public HDF5TimeUnit tryGetTimeUnit(String objectPath) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    checkIsTimeStamp(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return dateTimeReader.tryGetTimeUnit(objectPath);
     }
 
-    public long[] readTimeStampArrayBlock(final String objectPath, final int blockSize,
-            final long blockNumber)
+    public Iterable<HDF5DataBlock<long[]>> getTimeDurationArrayNaturalBlocks(String dataSetPath,
+            HDF5TimeUnit timeUnit) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    checkIsTimeStamp(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
-                                    blockSize, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return dateTimeReader.getTimeDurationArrayNaturalBlocks(dataSetPath, timeUnit);
     }
 
-    public long[] readTimeStampArrayBlockWithOffset(final String objectPath, final int blockSize,
-            final long offset)
-    {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    checkIsTimeStamp(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
-    }
-
-    public Iterable<HDF5DataBlock<long[]>> getTimeStampArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5DataBlock<long[]>> getTimeStampArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
-        final HDF5NaturalBlock1DParameters params =
-                new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(dataSetPath));
-
-        return new Iterable<HDF5DataBlock<long[]>>()
-            {
-                public Iterator<HDF5DataBlock<long[]>> iterator()
-                {
-                    return new Iterator<HDF5DataBlock<long[]>>()
-                        {
-                            final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
-                                    params.getNaturalBlockIndex();
-
-                            public boolean hasNext()
-                            {
-                                return index.hasNext();
-                            }
-
-                            public HDF5DataBlock<long[]> next()
-                            {
-                                final long offset = index.computeOffsetAndSizeGetOffset();
-                                final long[] block =
-                                        readTimeStampArrayBlockWithOffset(dataSetPath, index
-                                                .getBlockSize(), offset);
-                                return new HDF5DataBlock<long[]>(block, index.getAndIncIndex(),
-                                        offset);
-                            }
-
-                            public void remove()
-                            {
-                                throw new UnsupportedOperationException();
-                            }
-                        };
-                }
-            };
+        return dateTimeReader.getTimeStampArrayNaturalBlocks(dataSetPath);
     }
 
-    public Date readDate(final String objectPath) throws HDF5JavaException
+    public Date readDate(String objectPath) throws HDF5JavaException
     {
-        return new Date(readTimeStamp(objectPath));
+        return dateTimeReader.readDate(objectPath);
     }
 
-    public Date[] readDateArray(final String objectPath) throws HDF5JavaException
+    public Date[] readDateArray(String objectPath) throws HDF5JavaException
     {
-        final long[] timeStampArray = readTimeStampArray(objectPath);
-        return timeStampsToDates(timeStampArray);
+        return dateTimeReader.readDateArray(objectPath);
     }
 
-    private static Date[] timeStampsToDates(final long[] timeStampArray)
+    public long readTimeDuration(String objectPath, HDF5TimeUnit timeUnit) throws HDF5JavaException
     {
-        assert timeStampArray != null;
-
-        final Date[] dateArray = new Date[timeStampArray.length];
-        for (int i = 0; i < dateArray.length; ++i)
-        {
-            dateArray[i] = new Date(timeStampArray[i]);
-        }
-        return dateArray;
+        return dateTimeReader.readTimeDuration(objectPath, timeUnit);
     }
 
-    protected void checkIsTimeStamp(final String objectPath, final int dataSetId,
-            ICleanUpRegistry registry) throws HDF5JavaException
+    public long readTimeDuration(String objectPath) throws HDF5JavaException
     {
-        final int typeVariantOrdinal = baseReader.getAttributeTypeVariant(dataSetId, registry);
-        if (typeVariantOrdinal != HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH
-                .ordinal())
-        {
-            throw new HDF5JavaException("Data set '" + objectPath + "' is not a time stamp.");
-        }
+        return dateTimeReader.readTimeDuration(objectPath);
     }
 
-    //
-    // Duration
-    //
-
-    public boolean isTimeDuration(final String objectPath) throws HDF5JavaException
-    {
-        final HDF5DataTypeVariant typeVariantOrNull = tryGetTypeVariant(objectPath);
-        return typeVariantOrNull != null && typeVariantOrNull.isTimeDuration();
-    }
-
-    public HDF5TimeUnit tryGetTimeUnit(final String objectPath) throws HDF5JavaException
-    {
-        final HDF5DataTypeVariant typeVariantOrNull = tryGetTypeVariant(objectPath);
-        return (typeVariantOrNull != null) ? typeVariantOrNull.tryGetTimeUnit() : null;
-    }
-
-    public long readTimeDuration(final String objectPath) throws HDF5JavaException
-    {
-        return readTimeDuration(objectPath, HDF5TimeUnit.SECONDS);
-    }
-
-    public long readTimeDuration(final String objectPath, final HDF5TimeUnit timeUnit)
+    public long[] readTimeDurationArray(String objectPath, HDF5TimeUnit timeUnit)
             throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Long> readCallable = new ICallableWithCleanUp<Long>()
-            {
-                public Long call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final HDF5TimeUnit storedUnit =
-                            checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final long[] data = new long[1];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
-                    return timeUnit.convert(data[0], storedUnit);
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return dateTimeReader.readTimeDurationArray(objectPath, timeUnit);
     }
 
-    public long[] readTimeDurationArray(final String objectPath) throws HDF5JavaException
+    public long[] readTimeDurationArray(String objectPath) throws HDF5JavaException
     {
-        return readTimeDurationArray(objectPath, HDF5TimeUnit.SECONDS);
+        return dateTimeReader.readTimeDurationArray(objectPath);
     }
 
-    public long[] readTimeDurationArray(final String objectPath, final HDF5TimeUnit timeUnit)
-            throws HDF5JavaException
+    public long[] readTimeDurationArrayBlock(String objectPath, int blockSize, long blockNumber,
+            HDF5TimeUnit timeUnit)
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final HDF5TimeUnit storedUnit =
-                            checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    convertTimeDurations(timeUnit, storedUnit, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return dateTimeReader.readTimeDurationArrayBlock(objectPath, blockSize, blockNumber,
+                timeUnit);
     }
 
-    public long[] readTimeDurationArrayBlock(final String objectPath, final int blockSize,
-            final long blockNumber, final HDF5TimeUnit timeUnit)
+    public long[] readTimeDurationArrayBlockWithOffset(String objectPath, int blockSize,
+            long offset, HDF5TimeUnit timeUnit)
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final HDF5TimeUnit storedUnit =
-                            checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
-                                    blockSize, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    convertTimeDurations(timeUnit, storedUnit, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return dateTimeReader.readTimeDurationArrayBlockWithOffset(objectPath, blockSize, offset,
+                timeUnit);
     }
 
-    public long[] readTimeDurationArrayBlockWithOffset(final String objectPath,
-            final int blockSize, final long offset, final HDF5TimeUnit timeUnit)
+    public long readTimeStamp(String objectPath) throws HDF5JavaException
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final HDF5TimeUnit storedUnit =
-                            checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    convertTimeDurations(timeUnit, storedUnit, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return dateTimeReader.readTimeStamp(objectPath);
     }
 
-    public Iterable<HDF5DataBlock<long[]>> getTimeDurationArrayNaturalBlocks(
-            final String dataSetPath, final HDF5TimeUnit timeUnit) throws HDF5JavaException
+    public long[] readTimeStampArray(String objectPath) throws HDF5JavaException
     {
-        final HDF5NaturalBlock1DParameters params =
-                new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(dataSetPath));
-
-        return new Iterable<HDF5DataBlock<long[]>>()
-            {
-                public Iterator<HDF5DataBlock<long[]>> iterator()
-                {
-                    return new Iterator<HDF5DataBlock<long[]>>()
-                        {
-                            final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
-                                    params.getNaturalBlockIndex();
-
-                            public boolean hasNext()
-                            {
-                                return index.hasNext();
-                            }
-
-                            public HDF5DataBlock<long[]> next()
-                            {
-                                final long offset = index.computeOffsetAndSizeGetOffset();
-                                final long[] block =
-                                        readTimeDurationArrayBlockWithOffset(dataSetPath, index
-                                                .getBlockSize(), offset, timeUnit);
-                                return new HDF5DataBlock<long[]>(block, index.getAndIncIndex(),
-                                        offset);
-                            }
-
-                            public void remove()
-                            {
-                                throw new UnsupportedOperationException();
-                            }
-                        };
-                }
-            };
+        return dateTimeReader.readTimeStampArray(objectPath);
     }
 
-    protected HDF5TimeUnit checkIsTimeDuration(final String objectPath, final int dataSetId,
-            ICleanUpRegistry registry) throws HDF5JavaException
+    public long[] readTimeStampArrayBlock(String objectPath, int blockSize, long blockNumber)
     {
-        final int typeVariantOrdinal = baseReader.getAttributeTypeVariant(dataSetId, registry);
-        if (HDF5DataTypeVariant.isTimeDuration(typeVariantOrdinal) == false)
-        {
-            throw new HDF5JavaException("Data set '" + objectPath + "' is not a time duration.");
-        }
-        return HDF5DataTypeVariant.getTimeUnit(typeVariantOrdinal);
+        return dateTimeReader.readTimeStampArrayBlock(objectPath, blockSize, blockNumber);
     }
 
-    static void convertTimeDurations(final HDF5TimeUnit timeUnit, final HDF5TimeUnit storedUnit,
-            final long[] data)
+    public long[] readTimeStampArrayBlockWithOffset(String objectPath, int blockSize, long offset)
     {
-        if (timeUnit != storedUnit)
-        {
-            for (int i = 0; i < data.length; ++i)
-            {
-                data[i] = timeUnit.convert(data[i], storedUnit);
-            }
-        }
+        return dateTimeReader.readTimeStampArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     //
