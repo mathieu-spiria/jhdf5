@@ -13,12 +13,8 @@ tar xvf hdf5-$VERSION.tar
 
 cd hdf5-$VERSION
 
-patch -p1 < ../hdf5-$VERSION-gcc.patch
-
 CFLAGS=$CFLAGS ./configure --prefix=/opt/hdf5-$VERSION-$PLATFORM --enable-debug=none $ADDITIONAL &> configure.log
 
-make &> make_pass1.log
-
-sh compile_pass2.sh &> make_pass2.log
+make &> make.log
 
 make test &> test.log
