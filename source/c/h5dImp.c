@@ -997,7 +997,8 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1string
         h5libraryError(env);
     }
 
-    if ( (c_buf = (char *)calloc(n, str_len)) == NULL) {
+    /* Note: we need one additional character at the end of the buffer for the final '\0'. */
+    if ( (c_buf = (char *)calloc(n + 1, str_len)) == NULL) {
         if (cstr) free (cstr); cstr = NULL;
         h5outOfMemory(env,  "H5Dread_string: memory allocation failed.");
         return -1;
