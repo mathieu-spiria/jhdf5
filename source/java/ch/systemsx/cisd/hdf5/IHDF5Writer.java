@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import ncsa.hdf.hdf5lib.HDF5Constants;
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
@@ -216,7 +217,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * Sets the data set size of a one-dimensional data set to <var>newSize</var>. Note that this
      * method can only be applied to extendable data sets.
      * 
-     * @throw HDF5JavaException If the data set <var>objectPath</var> is not extendable.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not extendable.
      */
     public void setDataSetSize(final String objectPath, final long newSize);
 
@@ -224,7 +225,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * Sets the data set size of a multi-dimensional data set to <var>newDimensions</var>. Note that
      * this method can only be applied to extendable data sets.
      * 
-     * @throw HDF5JavaException If the data set <var>objectPath</var> is not extendable.
+     * @throws HDF5JavaException If the data set <var>objectPath</var> is not extendable.
      */
     public void setDataSetDimensions(final String objectPath, final long[] newDimensions);
 
