@@ -6,7 +6,7 @@
 #============================================================================
 
 # Visual C++ directory, for example
-VCPPDIR=C:\Program Files (x86)\Microsoft Visual Studio 8\VC
+VCPPDIR=C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC
 
 # Directory where JDK is installed (We require JDK 1.5 or above), for example
 JAVADIR=C:\Program Files\Java\jdk1.5.0_22
@@ -18,7 +18,7 @@ HDFPARENTDIR=C:\JHDF5
 HDFJAVADIR=$(HDFPARENTDIR)\jhdf5_src\
 
 # The directory where HDF5 has been compiled
-HDFDIR=$(HDFPARENTDIR)\hdf5\hdf5-1.8.4
+HDFDIR=$(HDFPARENTDIR)\hdf5\hdf5-1.8.5
 
 # The directory where HDF library is located
 HDFLIBDIR=$(HDFDIR)\proj\hdf5\Release
@@ -350,9 +350,10 @@ CLEAN :
 	-@erase "$(INTDIR)\h5rImp.obj"
 	-@erase "$(INTDIR)\h5sImp.obj"
 	-@erase "$(INTDIR)\h5tImp.obj"
+	-@erase "$(INTDIR)\h5oImp.obj"
 	-@erase "$(INTDIR)\h5zImp.obj"
 	-@erase "$(INTDIR)\h5util.obj"
-	-@erase "$(INTDIR)\vc80.idb"
+	-@erase "$(INTDIR)\vc90.idb"
 	-@erase "$(INTDIR)\jhdf5.exp"
 	-@erase "$(INTDIR)\jhdf5.lib"
 	-@erase "$(OUTDIR)\jhdf5.dll"
