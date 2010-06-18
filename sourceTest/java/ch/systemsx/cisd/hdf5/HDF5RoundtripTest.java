@@ -1967,9 +1967,6 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
-    // TODO 2010-04-12, Bernd: remove from "broken" group once the binary layer has been re-compiled
-    // with the fix.
-    @Test(groups = "broken")
     public void testStringArrayBlock()
     {
         final File stringArrayFile = new File(workingDirectory, "stringArrayBlock.h5");
