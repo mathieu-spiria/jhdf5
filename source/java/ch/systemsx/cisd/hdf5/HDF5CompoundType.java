@@ -17,7 +17,14 @@
 package ch.systemsx.cisd.hdf5;
 
 /**
- * The definition of a HDF5 compound type.
+ * The definition of a HDF5 compound type. For information on how to create and work with compound
+ * types, have a look at {@link IHDF5CompoundInformationRetriever}. The simplest way of creating a
+ * compound type for a Java class, is
+ * {@link IHDF5CompoundInformationRetriever#getInferredCompoundType(Class)}.
+ * <p>
+ * Once you have a compound type, you may use methods like
+ * {@link IHDF5Reader#readCompound(String, HDF5CompoundType)} and
+ * {@link IHDF5Writer#writeCompound(String, HDF5CompoundType, Object)} and to read and write them.
  * 
  * @author Bernd Rinn
  */
