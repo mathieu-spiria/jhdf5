@@ -290,8 +290,8 @@ public class HDF5ArchiveTools
             }
         }
         final List<Link> linkEntries =
-                DirectoryIndex.convertFilesToLinks(fileEntries, strategy
-                        .doStoreOwnerAndPermissions(), continueOnError);
+                DirectoryIndex.convertFilesToLinks(fileEntries,
+                        strategy.doStoreOwnerAndPermissions(), continueOnError);
 
         writeToConsole(hdf5GroupPath, verbose);
         final Iterator<Link> linkIt = linkEntries.iterator();
@@ -336,13 +336,14 @@ public class HDF5ArchiveTools
                     }
                     try
                     {
-                        writer.createSoftLink(linkTargetOrNull, hdf5GroupPath + "/"
-                                + linkOrNull.getLinkName());
+                        writer.createSoftLink(linkTargetOrNull,
+                                hdf5GroupPath + "/" + linkOrNull.getLinkName());
                     } catch (HDF5Exception ex)
                     {
                         linkIt.remove();
-                        dealWithError(new ArchivingException(hdf5GroupPath + "/"
-                                + linkOrNull.getLinkName(), ex), continueOnError);
+                        dealWithError(
+                                new ArchivingException(hdf5GroupPath + "/"
+                                        + linkOrNull.getLinkName(), ex), continueOnError);
                     }
                 } else if (linkOrNull.isRegularFile())
                 {
@@ -560,8 +561,8 @@ public class HDF5ArchiveTools
                             continueOnError, verbose, buffer);
                 } else
                 {
-                    dealWithError(new UnarchivingException(objectPathOrNull,
-                            "Unexpected object type: "
+                    dealWithError(
+                            new UnarchivingException(objectPathOrNull, "Unexpected object type: "
                                     + tryGetObjectTypeDescriptionForErrorMessage(reader,
                                             objectPathOrNull) + "."), continueOnError);
                 }
@@ -703,53 +704,52 @@ public class HDF5ArchiveTools
                     return String.format("       DIR\t%s", path);
                 } else
                 {
-                    return String.format("%10d\t%s%s", link.getSize(), path,
-                            link.isRegularFile() ? "" : "\t*");
+                    return String.format("%10d\t%s\t%s%s", link.getSize(),
+                            hashToString(link.getCrc32()), path, link.isRegularFile() ? "" : "\t*");
                 }
             case LAST_MODIFIED:
                 if (link.isSymLink())
                 {
                     return String.format(
-                            "          \t%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS\t%2$s -> %3$s", link
-                                    .getLastModified()
-                                    * MILLIS_PER_SECOND, path, link.tryGetLinkTarget());
+                            "          \t%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS\t%2$s -> %3$s",
+                            link.getLastModified() * MILLIS_PER_SECOND, path,
+                            link.tryGetLinkTarget());
                 } else if (link.isDirectory())
                 {
                     return String.format("       DIR\t%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS\t%2$s",
                             link.getLastModified() * MILLIS_PER_SECOND, path);
                 } else
                 {
-                    return String.format("%10d\t%2$tY-%2$tm-%2$td %2$tH:%2$tM:%2$tS\t%3$s%4$s",
-                            link.getSize(), link.getLastModified() * MILLIS_PER_SECOND, path, link
-                                    .isRegularFile() ? "" : "\t*");
+                    return String.format(
+                            "%10d\t%2$tY-%2$tm-%2$td %2$tH:%2$tM:%2$tS\t%3$s\t%4$s%5$s",
+                            link.getSize(), link.getLastModified() * MILLIS_PER_SECOND,
+                            hashToString(link.getCrc32()), path, link.isRegularFile() ? "" : "\t*");
                 }
             case FULL:
                 if (link.isSymLink())
                 {
                     return String
-                            .format(
-                                    "%s\t%s\t%s\t          \t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t00000000\t%5$s -> %6$s",
-                                    getPermissionString(link, numeric), idCache.getUser(link,
-                                            numeric), idCache.getGroup(link, numeric), link
-                                            .getLastModified()
+                            .format("%s\t%s\t%s\t          \t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t00000000\t%5$s -> %6$s",
+                                    getPermissionString(link, numeric),
+                                    idCache.getUser(link, numeric),
+                                    idCache.getGroup(link, numeric), link.getLastModified()
                                             * MILLIS_PER_SECOND, path, link.tryGetLinkTarget());
                 } else if (link.isDirectory())
                 {
                     return String
-                            .format(
-                                    "%s\t%s\t%s\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t        \t%5$s",
-                                    getPermissionString(link, numeric), idCache.getUser(link,
-                                            numeric), idCache.getGroup(link, numeric), link
-                                            .getLastModified()
+                            .format("%s\t%s\t%s\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t        \t%5$s",
+                                    getPermissionString(link, numeric),
+                                    idCache.getUser(link, numeric),
+                                    idCache.getGroup(link, numeric), link.getLastModified()
                                             * MILLIS_PER_SECOND, path);
                 } else
                 {
                     return String
-                            .format(
-                                    "%s\t%s\t%s\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s\t%7$s%8$s",
-                                    getPermissionString(link, numeric), idCache.getUser(link,
-                                            numeric), idCache.getGroup(link, numeric), link
-                                            .getSize(), link.getLastModified() * MILLIS_PER_SECOND,
+                            .format("%s\t%s\t%s\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s\t%7$s%8$s",
+                                    getPermissionString(link, numeric),
+                                    idCache.getUser(link, numeric),
+                                    idCache.getGroup(link, numeric), link.getSize(),
+                                    link.getLastModified() * MILLIS_PER_SECOND,
                                     hashToString(link.getCrc32()), path,
                                     (link.isRegularFile() || link.isDirectory()) ? "" : "\t*");
                 }
@@ -824,8 +824,8 @@ public class HDF5ArchiveTools
         VERIFY_CRC_ATTR_FS;
     }
 
-    public static final Set<Check> VERIFY_FS =
-            EnumSet.of(Check.VERIFY_CRC_FS, Check.VERIFY_CRC_ATTR_FS);
+    public static final Set<Check> VERIFY_FS = EnumSet.of(Check.VERIFY_CRC_FS,
+            Check.VERIFY_CRC_ATTR_FS);
 
     /**
      * A class to hold all parameters for the listing operation.
@@ -983,8 +983,8 @@ public class HDF5ArchiveTools
         {
             final String dir = FilenameUtils.getFullPathNoEndSeparator(objectPath);
             final Link linkOrNull =
-                    new DirectoryIndex(reader, "".equals(dir) ? "/" : dir, continueOnError, params
-                            .isVerbose()).tryGetLink(FilenameUtils.getName(objectPath));
+                    new DirectoryIndex(reader, "".equals(dir) ? "/" : dir, continueOnError,
+                            params.isVerbose()).tryGetLink(FilenameUtils.getName(objectPath));
             if (linkOrNull == null)
             {
                 dealWithError(new ListArchiveException(objectPath, "Object not found in archive."),
@@ -1051,8 +1051,8 @@ public class HDF5ArchiveTools
             String path, ListParameters params, Link link, byte[] buffer) throws IOException
     {
         final String errorLineOrNull = doCheck(reader, path, idCache, params, link, buffer);
-        visitor.visit(new ListEntry(describeLink(path, link, idCache, params.isVerbose(), params
-                .isNumeric()), errorLineOrNull));
+        visitor.visit(new ListEntry(describeLink(path, link, idCache, params.isVerbose(),
+                params.isNumeric()), errorLineOrNull));
     }
 
     private static String doCheck(IHDF5Reader reader, String path, IdCache idCache,
@@ -1247,9 +1247,9 @@ public class HDF5ArchiveTools
             }
             if (link.getUid() != info.getUid() || link.getGid() != info.getGid())
             {
-                sb.append(String.format("'ownerwhip': (expected: %s:%s, found: %s:%s", idCache
-                        .getUser(link, numeric), idCache.getGroup(link, numeric), idCache.getUser(
-                        info, numeric), idCache.getGroup(info, numeric)));
+                sb.append(String.format("'ownerwhip': (expected: %s:%s, found: %s:%s",
+                        idCache.getUser(link, numeric), idCache.getGroup(link, numeric),
+                        idCache.getUser(info, numeric), idCache.getGroup(info, numeric)));
             }
         }
         if (sb.length() == 0)
