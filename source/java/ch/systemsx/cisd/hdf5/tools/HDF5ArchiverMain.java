@@ -31,7 +31,6 @@ import ch.systemsx.cisd.args4j.Option;
 import ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.tools.HDF5ArchiveTools.Check;
-import ch.systemsx.cisd.hdf5.tools.HDF5ArchiveTools.ListEntry;
 
 /**
  * The main class of the HDF5 based archiver.
@@ -304,15 +303,15 @@ public class HDF5ArchiverMain
             {
                 final boolean ok = entry.checkOK();
                 final String statusStr = ok ? "\tOK" : "\tFAILED";
-                System.out.printf("%s%s\n", entry.outputLine, statusStr);
+                System.out.printf("%s%s\n", entry.describeLink(), statusStr);
                 if (ok == false)
                 {
-                    System.err.println(entry.errorLineOrNull);
+                    System.err.println(entry.getErrorLineOrNull());
                     ++checkSumFailures;
                 }
             } else
             {
-                System.out.println(entry.outputLine);
+                System.out.println(entry.describeLink());
             }
         }
 

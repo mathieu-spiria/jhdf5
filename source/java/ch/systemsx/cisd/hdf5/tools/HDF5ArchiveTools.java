@@ -39,7 +39,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 
-import ch.rinn.restrictions.Private;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.base.unix.Unix.Group;
@@ -59,8 +58,6 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  */
 public class HDF5ArchiveTools
 {
-    private static final long MILLIS_PER_SECOND = 1000L;
-
     private static final int ROOT_UID = 0;
 
     private static final String OPAQUE_TAG_FILE = "FILE";
@@ -109,90 +106,6 @@ public class HDF5ArchiveTools
                 gidMap.put(gid, Boolean.FALSE);
                 return false;
             }
-        }
-    }
-
-    /**
-     * Cache for ID -> Name mapping.
-     * 
-     * @author Bernd Rinn
-     */
-    @Private
-    static class IdCache
-    {
-        /** Gid -> Group Name */
-        private final Map<Integer, String> gidMap = new HashMap<Integer, String>();
-
-        /** Uid -> User Name */
-        private final Map<Integer, String> uidMap = new HashMap<Integer, String>();
-
-        /**
-         * Returns the name for the given <var>uid</var>.
-         */
-        String getUser(Link link, boolean numeric)
-        {
-            return getUser(link.getUid(), numeric);
-        }
-
-        /**
-         * Returns the name for the given <var>uid</var>.
-         */
-        String getUser(Stat link, boolean numeric)
-        {
-            return getUser(link.getUid(), numeric);
-        }
-
-        private String getUser(int uid, boolean numeric)
-        {
-            String userNameOrNull = uidMap.get(uidMap);
-            if (userNameOrNull == null)
-            {
-                userNameOrNull =
-                        (numeric == false && Unix.isOperational()) ? Unix.tryGetUserNameForUid(uid)
-                                : null;
-                if (userNameOrNull == null)
-                {
-                    userNameOrNull = Integer.toString(uid);
-                }
-                uidMap.put(uid, userNameOrNull);
-            }
-            return userNameOrNull;
-        }
-
-        /**
-         * Returns the name for the given <var>gid</var>.
-         */
-        String getGroup(Link link, boolean numeric)
-        {
-            return getGroup(link.getGid(), numeric);
-        }
-
-        /**
-         * Returns the name for the given <var>gid</var>.
-         */
-        String getGroup(Stat link, boolean numeric)
-        {
-            return getGroup(link.getGid(), numeric);
-        }
-
-        /**
-         * Returns the name for the given <var>gid</var>.
-         */
-        private String getGroup(int gid, boolean numeric)
-        {
-            String groupNameOrNull = gidMap.get(uidMap);
-            if (groupNameOrNull == null)
-            {
-                groupNameOrNull =
-                        (numeric == false && Unix.isOperational()) ? Unix
-                                .tryGetGroupNameForGid(gid) : null;
-                if (groupNameOrNull == null)
-                {
-                    groupNameOrNull = Integer.toString(gid);
-                }
-                gidMap.put(gid, groupNameOrNull);
-            }
-            return groupNameOrNull;
         }
     }
 
@@ -395,10 +308,10 @@ public class HDF5ArchiveTools
         {
             if (checksumOK)
             {
-                System.out.println(hdf5ObjectPath + "\t" + hashToString(crc32) + "\tOK");
+                System.out.println(hdf5ObjectPath + "\t" + ListEntry.hashToString(crc32) + "\tOK");
             } else
             {
-                System.out.println(hdf5ObjectPath + "\t" + hashToString(crc32) + "\tFAILED");
+                System.out.println(hdf5ObjectPath + "\t" + ListEntry.hashToString(crc32) + "\tFAILED");
             }
         }
     }
@@ -646,8 +559,8 @@ public class HDF5ArchiveTools
             if (checksumOK == false)
             {
                 dealWithError(new UnarchivingException(hdf5ObjectPath,
-                        "CRC checksum mismatch. Expected: " + hashToString(storedCrc32)
-                                + ", found: " + hashToString(crc32)), continueOnError);
+                        "CRC checksum mismatch. Expected: " + ListEntry.hashToString(storedCrc32)
+                                + ", found: " + ListEntry.hashToString(crc32)), continueOnError);
             }
         } catch (IOException ex)
         {
@@ -666,7 +579,7 @@ public class HDF5ArchiveTools
         {
             if (linkInfoOrNull.hasLastModified())
             {
-                file.setLastModified(linkInfoOrNull.getLastModified() * MILLIS_PER_SECOND);
+                file.setLastModified(linkInfoOrNull.getLastModified() * ListEntry.MILLIS_PER_SECOND);
             }
             if (linkInfoOrNull.hasUnixPermissions() && Unix.isOperational())
             {
@@ -682,128 +595,6 @@ public class HDF5ArchiveTools
                     }
                 }
             }
-        }
-    }
-
-    @Private
-    static String describeLink(String path, Link link, IdCache idCache, boolean verbose,
-            boolean numeric)
-    {
-        if (verbose == false)
-        {
-            return path;
-        }
-        switch (link.getCompleteness())
-        {
-            case BASE:
-                if (link.isSymLink())
-                {
-                    return String.format("          \t%s -> %s", path, link.tryGetLinkTarget());
-                } else if (link.isDirectory())
-                {
-                    return String.format("       DIR\t%s", path);
-                } else
-                {
-                    return String.format("%10d\t%s\t%s%s", link.getSize(),
-                            hashToString(link.getCrc32()), path, link.isRegularFile() ? "" : "\t*");
-                }
-            case LAST_MODIFIED:
-                if (link.isSymLink())
-                {
-                    return String.format(
-                            "          \t%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS\t%2$s -> %3$s",
-                            link.getLastModified() * MILLIS_PER_SECOND, path,
-                            link.tryGetLinkTarget());
-                } else if (link.isDirectory())
-                {
-                    return String.format("       DIR\t%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS\t%2$s",
-                            link.getLastModified() * MILLIS_PER_SECOND, path);
-                } else
-                {
-                    return String.format(
-                            "%10d\t%2$tY-%2$tm-%2$td %2$tH:%2$tM:%2$tS\t%3$s\t%4$s%5$s",
-                            link.getSize(), link.getLastModified() * MILLIS_PER_SECOND,
-                            hashToString(link.getCrc32()), path, link.isRegularFile() ? "" : "\t*");
-                }
-            case FULL:
-                if (link.isSymLink())
-                {
-                    return String
-                            .format("%s\t%s\t%s\t          \t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t00000000\t%5$s -> %6$s",
-                                    getPermissionString(link, numeric),
-                                    idCache.getUser(link, numeric),
-                                    idCache.getGroup(link, numeric), link.getLastModified()
-                                            * MILLIS_PER_SECOND, path, link.tryGetLinkTarget());
-                } else if (link.isDirectory())
-                {
-                    return String
-                            .format("%s\t%s\t%s\t       DIR\t%4$tY-%4$tm-%4$td %4$tH:%4$tM:%4$tS\t        \t%5$s",
-                                    getPermissionString(link, numeric),
-                                    idCache.getUser(link, numeric),
-                                    idCache.getGroup(link, numeric), link.getLastModified()
-                                            * MILLIS_PER_SECOND, path);
-                } else
-                {
-                    return String
-                            .format("%s\t%s\t%s\t%10d\t%5$tY-%5$tm-%5$td %5$tH:%5$tM:%5$tS\t%6$s\t%7$s%8$s",
-                                    getPermissionString(link, numeric),
-                                    idCache.getUser(link, numeric),
-                                    idCache.getGroup(link, numeric), link.getSize(),
-                                    link.getLastModified() * MILLIS_PER_SECOND,
-                                    hashToString(link.getCrc32()), path,
-                                    (link.isRegularFile() || link.isDirectory()) ? "" : "\t*");
-                }
-            default:
-                throw new Error("Unknown level of link information completeness: "
-                        + link.getCompleteness());
-        }
-    }
-
-    @Private
-    static String getPermissionString(Link link, boolean numeric)
-    {
-        if (numeric)
-        {
-            return Integer.toString(link.getPermissions(), 8);
-        } else
-        {
-            final short perms = link.getPermissions();
-            final StringBuilder b = new StringBuilder();
-            b.append(link.isDirectory() ? 'd' : '-');
-            b.append((perms & Unix.S_IRUSR) != 0 ? 'r' : '-');
-            b.append((perms & Unix.S_IWUSR) != 0 ? 'w' : '-');
-            b.append((perms & Unix.S_IXUSR) != 0 ? ((perms & Unix.S_ISUID) != 0 ? 's' : 'x')
-                    : ((perms & Unix.S_ISUID) != 0 ? 'S' : '-'));
-            b.append((perms & Unix.S_IRGRP) != 0 ? 'r' : '-');
-            b.append((perms & Unix.S_IWGRP) != 0 ? 'w' : '-');
-            b.append((perms & Unix.S_IXGRP) != 0 ? ((perms & Unix.S_ISGID) != 0 ? 's' : 'x')
-                    : ((perms & Unix.S_ISGID) != 0 ? 'S' : '-'));
-            b.append((perms & Unix.S_IROTH) != 0 ? 'r' : '-');
-            b.append((perms & Unix.S_IWOTH) != 0 ? 'w' : '-');
-            b.append((perms & Unix.S_IXOTH) != 0 ? ((perms & Unix.S_ISVTX) != 0 ? 't' : 'x')
-                    : ((perms & Unix.S_ISVTX) != 0 ? 'T' : '-'));
-            return b.toString();
-        }
-    }
-
-    /**
-     * One entry of the listing. Contains a list for output and
-     */
-    static class ListEntry
-    {
-        final String outputLine;
-
-        final String errorLineOrNull;
-
-        ListEntry(String outputLine, String errorLineOrNull)
-        {
-            this.outputLine = outputLine;
-            this.errorLineOrNull = errorLineOrNull;
-        }
-
-        boolean checkOK()
-        {
-            return errorLineOrNull == null;
         }
     }
 
@@ -1051,8 +842,13 @@ public class HDF5ArchiveTools
             String path, ListParameters params, Link link, byte[] buffer) throws IOException
     {
         final String errorLineOrNull = doCheck(reader, path, idCache, params, link, buffer);
-        visitor.visit(new ListEntry(describeLink(path, link, idCache, params.isVerbose(),
-                params.isNumeric()), errorLineOrNull));
+        if (errorLineOrNull == null)
+        {
+            visitor.visit(new ListEntry(path, link, idCache, params.isVerbose(), params.isNumeric()));
+        } else
+        {
+            visitor.visit(new ListEntry(errorLineOrNull));
+        }
     }
 
     private static String doCheck(IHDF5Reader reader, String path, IdCache idCache,
@@ -1089,7 +885,7 @@ public class HDF5ArchiveTools
         if (link.getCrc32() != crc32)
         {
             return "Archive file " + path + " failed CRC checksum test, expected: "
-                    + hashToString(link.getCrc32()) + ", found: " + hashToString(crc32);
+                    + ListEntry.hashToString(link.getCrc32()) + ", found: " + ListEntry.hashToString(crc32);
         }
         return null;
     }
@@ -1182,7 +978,7 @@ public class HDF5ArchiveTools
             if (link.getCrc32() != crc32)
             {
                 return "File " + f.getAbsolutePath() + " failed CRC checksum test, expected: "
-                        + hashToString(link.getCrc32()) + ", found: " + hashToString(crc32) + ".";
+                        + ListEntry.hashToString(link.getCrc32()) + ", found: " + ListEntry.hashToString(crc32) + ".";
             }
         }
         if (Check.VERIFY_CRC_ATTR_FS == params.check)
@@ -1243,7 +1039,7 @@ public class HDF5ArchiveTools
             if (link.getPermissions() != info.getPermissions())
             {
                 sb.append(String.format("'access permissions': (expected: %s, found: %s) ",
-                        getPermissionString(link, numeric), getPermissionString(link, numeric)));
+                        ListEntry.getPermissionString(link, numeric), ListEntry.getPermissionString(link, numeric)));
             }
             if (link.getUid() != info.getUid() || link.getGid() != info.getGid())
             {
@@ -1341,22 +1137,6 @@ public class HDF5ArchiveTools
             IOUtils.closeQuietly(output);
         }
         return (int) crc32.getValue();
-    }
-
-    private static final char[] HEX_CHARACTERS =
-        { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', };
-
-    static String hashToString(final int checksum)
-    {
-        final char buf[] = new char[8];
-        int w = checksum;
-        for (int i = 0, x = 7; i < 4; i++)
-        {
-            buf[x--] = HEX_CHARACTERS[w & 0xf];
-            buf[x--] = HEX_CHARACTERS[(w >>> 4) & 0xf];
-            w >>= 8;
-        }
-        return new String(buf);
     }
 
 }

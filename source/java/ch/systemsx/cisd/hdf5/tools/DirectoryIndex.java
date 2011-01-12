@@ -214,8 +214,8 @@ public class DirectoryIndex implements Iterable<Link>
                 {
                     throw new ListArchiveException(groupPath,
                             "CRC checksum mismatch on index (links). Expected: "
-                                    + HDF5ArchiveTools.hashToString(crc32Stored) + ", found: "
-                                    + HDF5ArchiveTools.hashToString(crc32));
+                                    + ListEntry.hashToString(crc32Stored) + ", found: "
+                                    + ListEntry.hashToString(crc32));
                 }
                 final String indexNamesDataSetName = getIndexNamesDataSetName();
                 final String concatenatedNames = hdf5Reader.readString(indexNamesDataSetName);
@@ -226,8 +226,8 @@ public class DirectoryIndex implements Iterable<Link>
                 {
                     throw new ListArchiveException(groupPath,
                             "CRC checksum mismatch on index (names). Expected: "
-                                    + HDF5ArchiveTools.hashToString(crc32Stored) + ", found: "
-                                    + HDF5ArchiveTools.hashToString(crc32));
+                                    + ListEntry.hashToString(crc32Stored) + ", found: "
+                                    + ListEntry.hashToString(crc32));
                 }
                 int namePos = 0;
                 this.firstFileIndex = 0;
