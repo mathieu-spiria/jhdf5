@@ -119,7 +119,11 @@ public class HDF5ArchiveTools
     {
         final boolean ok;
         int crc32 = 0;
-        if (path.isDirectory())
+        final Link linkOrNull = Link.tryCreate(path, true, continueOnError);
+        if (linkOrNull != null && linkOrNull.isSymLink())
+        {
+            ok = archiveSymLink(writer, "", linkOrNull, path, continueOnError);
+        } else if (path.isDirectory())
         {
             ok = archiveDirectory(writer, strategy, root, path, continueOnError, verbose, buffer);
         } else if (path.isFile())
@@ -241,22 +245,11 @@ public class HDF5ArchiveTools
                 }
                 if (linkOrNull.isSymLink())
                 {
-                    final String linkTargetOrNull = Link.tryReadLinkTarget(file);
-                    if (linkTargetOrNull == null)
-                    {
-                        dealWithError(new ArchivingException(file, new IOException(
-                                "Cannot read link target of symbolic link.")), continueOnError);
-                    }
-                    try
-                    {
-                        writer.createSoftLink(linkTargetOrNull,
-                                hdf5GroupPath + "/" + linkOrNull.getLinkName());
-                    } catch (HDF5Exception ex)
+                    final boolean ok =
+                            archiveSymLink(writer, hdf5GroupPath, linkOrNull, file, continueOnError);
+                    if (ok == false)
                     {
                         linkIt.remove();
-                        dealWithError(
-                                new ArchivingException(hdf5GroupPath + "/"
-                                        + linkOrNull.getLinkName(), ex), continueOnError);
                     }
                 } else if (linkOrNull.isRegularFile())
                 {
@@ -281,6 +274,29 @@ public class HDF5ArchiveTools
         index.addToIndex(linkEntries);
         index.writeIndexToArchive();
         return true;
+    }
+
+    private static boolean archiveSymLink(IHDF5Writer writer, String hdf5GroupPath, Link link,
+            File file, boolean continueOnError)
+    {
+        final String linkTargetOrNull = Link.tryReadLinkTarget(file);
+        if (linkTargetOrNull == null)
+        {
+            dealWithError(new ArchivingException(file, new IOException(
+                    "Cannot read link target of symbolic link.")), continueOnError);
+            return false;
+        }
+        try
+        {
+            writer.createSoftLink(linkTargetOrNull, hdf5GroupPath + "/" + link.getLinkName());
+        } catch (HDF5Exception ex)
+        {
+            dealWithError(new ArchivingException(hdf5GroupPath + "/" + link.getLinkName(), ex),
+                    continueOnError);
+            return false;
+        }
+        return true;
+
     }
 
     private static int computeSizeHint(final File[] entries)
@@ -311,7 +327,8 @@ public class HDF5ArchiveTools
                 System.out.println(hdf5ObjectPath + "\t" + ListEntry.hashToString(crc32) + "\tOK");
             } else
             {
-                System.out.println(hdf5ObjectPath + "\t" + ListEntry.hashToString(crc32) + "\tFAILED");
+                System.out.println(hdf5ObjectPath + "\t" + ListEntry.hashToString(crc32)
+                        + "\tFAILED");
             }
         }
     }
@@ -370,10 +387,11 @@ public class HDF5ArchiveTools
         {
             throw new UnarchivingException(unixPath, "Object does not exist in archive.");
         }
-        final Link linkOrNull = tryGetLink(reader, unixPath, continueOnError);
+        final boolean isRoot = "/".equals(unixPath);
+        final Link linkOrNull = isRoot ? null : tryGetLink(reader, unixPath, continueOnError);
         final boolean isDir =
                 (linkOrNull != null && linkOrNull.isDirectory())
-                        || ((linkOrNull == null && reader.isGroup(unixPath, false)));
+                        || ((linkOrNull == null && (isRoot || reader.isGroup(unixPath, false))));
         if (isDir)
         {
             extractDirectory(reader, strategy, new GroupCache(), root, unixPath, linkOrNull,
@@ -396,7 +414,7 @@ public class HDF5ArchiveTools
     {
         final DirectoryIndex index =
                 new DirectoryIndex(reader, FilenameUtils.separatorsToUnix(FilenameUtils
-                        .getFullPathNoEndSeparator(path)), continueOnError, false);
+                        .getFullPathNoEndSeparator(path)), continueOnError, true);
         return index.tryGetLink(FilenameUtils.getName(path));
     }
 
@@ -454,7 +472,7 @@ public class HDF5ArchiveTools
         {
             final File groupFile = new File(root, groupPath);
             groupFile.mkdir();
-            for (Link link : new DirectoryIndex(reader, groupPath, continueOnError, false))
+            for (Link link : new DirectoryIndex(reader, groupPath, continueOnError, true))
             {
                 objectPathOrNull =
                         (groupPath.endsWith("/") ? groupPath : (groupPath + "/"))
@@ -885,7 +903,8 @@ public class HDF5ArchiveTools
         if (link.getCrc32() != crc32)
         {
             return "Archive file " + path + " failed CRC checksum test, expected: "
-                    + ListEntry.hashToString(link.getCrc32()) + ", found: " + ListEntry.hashToString(crc32);
+                    + ListEntry.hashToString(link.getCrc32()) + ", found: "
+                    + ListEntry.hashToString(crc32);
         }
         return null;
     }
@@ -978,7 +997,8 @@ public class HDF5ArchiveTools
             if (link.getCrc32() != crc32)
             {
                 return "File " + f.getAbsolutePath() + " failed CRC checksum test, expected: "
-                        + ListEntry.hashToString(link.getCrc32()) + ", found: " + ListEntry.hashToString(crc32) + ".";
+                        + ListEntry.hashToString(link.getCrc32()) + ", found: "
+                        + ListEntry.hashToString(crc32) + ".";
             }
         }
         if (Check.VERIFY_CRC_ATTR_FS == params.check)
@@ -1039,7 +1059,8 @@ public class HDF5ArchiveTools
             if (link.getPermissions() != info.getPermissions())
             {
                 sb.append(String.format("'access permissions': (expected: %s, found: %s) ",
-                        ListEntry.getPermissionString(link, numeric), ListEntry.getPermissionString(link, numeric)));
+                        ListEntry.getPermissionString(link, numeric),
+                        ListEntry.getPermissionString(link, numeric)));
             }
             if (link.getUid() != info.getUid() || link.getGid() != info.getGid())
             {
