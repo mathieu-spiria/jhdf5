@@ -125,6 +125,17 @@ class HDF5Reader implements IHDF5Reader
         return baseReader.hdf5File;
     }
 
+    // /////////////////////
+    // Closing
+    // /////////////////////
+
+    @Override
+    protected void finalize() throws Throwable
+    {
+        super.finalize();
+        close();
+    }
+
     public void close()
     {
         baseReader.close();
