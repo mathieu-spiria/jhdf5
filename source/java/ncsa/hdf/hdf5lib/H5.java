@@ -3752,6 +3752,25 @@ public class H5
     public synchronized static native int[] H5Pget_link_phase_change(int gcpl_id);
 
     /**
+     * Sets the character encoding for the given creation property list to the given encoding.
+     * 
+     * @param cpl_id The creation property list to set the character encoding for.
+     * @param encoding The encoding (one of {@link HDF5Constants#H5T_CSET_ASCII} or
+     *         {@link HDF5Constants#H5T_CSET_UTF8}) to use.
+     * @return a non-negative value if successful
+     */
+    public synchronized static native int H5Pset_char_encoding(int cpl_id, int encoding);
+
+    /**
+     * Returns the character encoding currently set for a creation property list.
+     * 
+     * @param cpl_id The creation property list to get the character encoding for.
+     * @return The encoding, one of {@link HDF5Constants#H5T_CSET_ASCII} or
+     *         {@link HDF5Constants#H5T_CSET_UTF8}.
+     */
+    public synchronized static native int H5Pget_char_encoding(int cpl_id);
+
+    /**
      * H5Oopen opens an existing object with the specified name at the specified location, loc_id.
      * 
      * @param loc_id File or group identifier within which object is to be open.
@@ -3775,7 +3794,7 @@ public class H5
     public synchronized static native int H5Oclose(int loc_id) throws HDF5LibraryException;
 
     /**
-     * H5Ocopy copies an existing object with the specified src_name at the specified location, 
+     * H5Ocopy copies an existing object with the specified src_name at the specified location,
      * src_loc_id, to the specified dst_name at the specified destination location, dst_loc_id.
      * 
      * @param src_loc_id Source File or group identifier within which object is to be open.
@@ -3784,13 +3803,13 @@ public class H5
      * @param dst_name Name of destination object to open.
      * @param object_copy_plist Object copy property list identifier (H5P_DEFAULT for the default
      *            property list).
-     * @param link_creation_plist Link creation property list identifier for the new hard link 
+     * @param link_creation_plist Link creation property list identifier for the new hard link
      *            (H5P_DEFAULT for the default property list).
      * @return a valid object identifier if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - name is null.
      */
-    public synchronized static native int H5Ocopy(int src_loc_id, String src_name, int dst_loc_id, 
+    public synchronized static native int H5Ocopy(int src_loc_id, String src_name, int dst_loc_id,
             String dst_name, int object_copy_plist, int link_creation_plist)
             throws HDF5LibraryException, NullPointerException;
 
@@ -3870,20 +3889,19 @@ public class H5
      * 
      * @param src_loc_id The old location identifier of the object to be renamed
      * @param src_name The old name of the object to be renamed
-     * @param dst_loc_id The new location identifier of the link 
+     * @param dst_loc_id The new location identifier of the link
      * @param dst_name The new name the object
      * @return a non-negative value if successful
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - current_name or name is null.
      */
-    public synchronized static native int H5Lmove(int src_loc_id, String src_name,
-            int dst_loc_id, String dst_name, int lcpl_id, int lapl_id)
-            throws HDF5LibraryException, NullPointerException;
+    public synchronized static native int H5Lmove(int src_loc_id, String src_name, int dst_loc_id,
+            String dst_name, int lcpl_id, int lapl_id) throws HDF5LibraryException,
+            NullPointerException;
 
     /**
      * H5Lexists returns <code>true</code> if a link with <var>name</var> exists and <code>false
-     * </code>
-     * otherwise.
+     * </code> otherwise.
      * <p>
      * <i>Note:</i> The Java wrapper differs from the low-level C routine in that it will return
      * <code>false</code> if <var>name</var> is a path that contains groups which don't exist (the C

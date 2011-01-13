@@ -3491,3 +3491,38 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pcreate_1xfer_1abort
     }
     return plist;
 }
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Pget_char_encoding(hid_t cpl_id)
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pget_1char_1encoding
+  (JNIEnv *env, jclass clss, jint cpl_id)
+{
+    H5T_cset_t encoding;
+    herr_t retVal;
+    retVal = H5Pget_char_encoding((hid_t)cpl_id, &encoding);
+    if (retVal >= 0) {
+        return (jint) encoding;
+    } else {
+        h5libraryError(env);
+        return retVal;
+    }
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Pset_char_encoding(hid_t cpl_id)
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Pset_1char_1encoding
+  (JNIEnv *env, jclass clss, jint cpl_id, jint encoding)
+{
+    herr_t retVal;
+    retVal = H5Pset_char_encoding((hid_t)cpl_id, (H5T_cset_t)encoding);
+    if (retVal < 0) {
+        h5libraryError(env);
+    }
+    return retVal;
+}

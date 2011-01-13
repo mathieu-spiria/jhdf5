@@ -558,6 +558,8 @@ public class HDF5Constants
     final private static int JH5T_CSET_ASCII = 3470;
 
     final private static int JH5T_CSET_ERROR = 3480;
+    
+    final private static int JH5T_CSET_UTF8 = 3490;
 
     final private static int JH5T_CSET_RESERVED_10 = 3500;
 
@@ -1508,6 +1510,8 @@ public class HDF5Constants
     final public static int H5T_CONV_INIT = H5.J2C(JH5T_CONV_INIT);
 
     final public static int H5T_CSET_ASCII = H5.J2C(JH5T_CSET_ASCII);
+    
+    final public static int H5T_CSET_UTF8 = H5.J2C(JH5T_CSET_UTF8);
 
     final public static int H5T_CSET_ERROR = H5.J2C(JH5T_CSET_ERROR);
 

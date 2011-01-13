@@ -318,7 +318,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_J2C
         case JH5T_CONV_INIT  : return  H5T_CONV_INIT;
         case JH5T_CSET_ASCII  : return  H5T_CSET_ASCII;
         case JH5T_CSET_ERROR  : return  H5T_CSET_ERROR;
-        /*case JH5T_CSET_RESERVED_1  : return  H5T_CSET_RESERVED_1; removed from 1.8*/
+        case JH5T_CSET_UTF8   : return  H5T_CSET_UTF8;
         case JH5T_CSET_RESERVED_10  : return  H5T_CSET_RESERVED_10;
         case JH5T_CSET_RESERVED_11  : return  H5T_CSET_RESERVED_11;
         case JH5T_CSET_RESERVED_12  : return  H5T_CSET_RESERVED_12;
