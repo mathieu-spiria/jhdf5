@@ -58,7 +58,11 @@ abstract class HDF5MemberByteifyer
 
     protected final int size;
 
+    protected final int sizeInBytes;
+
     protected final int offset;
+
+    protected final CharacterEncoding encoding;
 
     static HDF5MemberByteifyer createBooleanMemberByteifyer(final Field field,
             final String memberName, final int booleanDataTypeId, final int offset)
@@ -144,12 +148,10 @@ abstract class HDF5MemberByteifyer
     {
         ReflectionUtils.ensureAccessible(field);
         return new HDF5MemberByteifyer(field, memberName, enumType.getStorageForm()
-                .getStorageSize()
-                * len, offset)
+                .getStorageSize() * len, offset)
             {
-                final int memberStorageTypeId =
-                        (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(enumType
-                                .getStorageTypeId(), len) : storageTypeId;
+                final int memberStorageTypeId = (storageTypeId < 0) ? fileInfoProvider
+                        .getArrayTypeId(enumType.getStorageTypeId(), len) : storageTypeId;
 
                 @Override
                 protected int getMemberStorageTypeId()
@@ -191,10 +193,12 @@ abstract class HDF5MemberByteifyer
 
     static HDF5MemberByteifyer createStringMemberByteifyer(final Field field,
             final String memberName, final int offset, final int stringDataTypeId,
-            final int maxLength)
+            final int maxLength, final CharacterEncoding encoding)
     {
         ReflectionUtils.ensureAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, maxLength + 1, offset)
+        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength + 1;
+        return new HDF5MemberByteifyer(field, memberName, maxLength, realMaxLength, offset,
+                encoding)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -213,11 +217,7 @@ abstract class HDF5MemberByteifyer
                         throws IllegalAccessException
                 {
                     String s = field.get(obj).toString();
-                    if (s.length() >= getSize())
-                    {
-                        s = s.substring(0, getSize() - 1);
-                    }
-                    return (s + '\0').getBytes();
+                    return StringUtils.toBytes0Term(s, getSize(), encoding);
                 }
 
                 @Override
@@ -226,21 +226,20 @@ abstract class HDF5MemberByteifyer
                 {
                     final int totalOffset = arrayOffset + offset;
                     final int maxIdx = totalOffset + size;
-                    int termIdx;
-                    for (termIdx = totalOffset; termIdx < maxIdx && byteArr[termIdx] != 0; ++termIdx)
-                    {
-                    }
-                    field.set(obj, new String(byteArr, totalOffset, termIdx - totalOffset));
+                    field.set(obj,
+                            StringUtils.fromBytes0Term(byteArr, totalOffset, maxIdx, encoding));
                 }
             };
     }
 
     static HDF5MemberByteifyer createCharArrayMemberByteifyer(final Field field,
             final String memberName, final int offset, final int stringDataTypeId,
-            final int maxLength)
+            final int maxLength, CharacterEncoding encoding)
     {
         ReflectionUtils.ensureAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, maxLength + 1, offset)
+        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength + 1;
+        return new HDF5MemberByteifyer(field, memberName, maxLength, realMaxLength, offset,
+                encoding)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -259,11 +258,7 @@ abstract class HDF5MemberByteifyer
                         throws IllegalAccessException
                 {
                     String s = new String((char[]) field.get(obj));
-                    if (s.length() >= getSize())
-                    {
-                        s = s.substring(0, getSize() - 1);
-                    }
-                    return (s + '\0').getBytes();
+                    return StringUtils.toBytes0Term(s, getSize(), encoding);
                 }
 
                 @Override
@@ -272,12 +267,9 @@ abstract class HDF5MemberByteifyer
                 {
                     final int totalOffset = arrayOffset + offset;
                     final int maxIdx = totalOffset + size;
-                    int termIdx;
-                    for (termIdx = totalOffset; termIdx < maxIdx && byteArr[termIdx] != 0; ++termIdx)
-                    {
-                    }
-                    field.set(obj, new String(byteArr, totalOffset, termIdx - totalOffset)
-                            .toCharArray());
+                    field.set(obj,
+                            StringUtils.fromBytes0Term(byteArr, totalOffset, maxIdx, encoding)
+                                    .toCharArray());
                 }
             };
     }
@@ -292,9 +284,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider
-                                    .getArrayTypeId(H5T_STD_I8LE, len) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I8LE, len) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -328,9 +319,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * SHORT_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I16LE,
-                                    len) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I16LE, len) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -365,9 +355,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * INT_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I32LE,
-                                    len) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I32LE, len) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -402,9 +391,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * LONG_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I64LE,
-                                    len) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I64LE, len) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -439,9 +427,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * FLOAT_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_IEEE_F32LE,
-                                    len) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_IEEE_F32LE, len) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -476,9 +463,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * LONG_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_IEEE_F64LE,
-                                    len) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_IEEE_F64LE, len) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -520,9 +506,8 @@ abstract class HDF5MemberByteifyer
             }
             return new HDF5MemberByteifyer(field, memberName, lenInLongs * LONG_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_B64LE,
-                                    lenInLongs) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_B64LE, lenInLongs) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -574,9 +559,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I8LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I8LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -612,9 +596,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I8LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I8LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -648,9 +631,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * SHORT_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I16LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I16LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -686,9 +668,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * SHORT_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I16LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I16LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -724,9 +705,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * INT_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I32LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I32LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -762,9 +742,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * INT_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I32LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I32LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -800,9 +779,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * LONG_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I64LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I64LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -838,9 +816,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * LONG_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_I64LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_STD_I64LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -876,9 +853,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * FLOAT_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_IEEE_F32LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_IEEE_F32LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -914,9 +890,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * FLOAT_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_IEEE_F32LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_IEEE_F32LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -952,9 +927,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * DOUBLE_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_IEEE_F64LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_IEEE_F64LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -990,9 +964,8 @@ abstract class HDF5MemberByteifyer
         {
             return new HDF5MemberByteifyer(field, memberName, len * DOUBLE_SIZE, offset)
                 {
-                    final int memberTypeId =
-                            (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_IEEE_F64LE,
-                                    dimensions) : storageTypeId;
+                    final int memberTypeId = (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                            H5T_IEEE_F64LE, dimensions) : storageTypeId;
 
                     @Override
                     protected int getMemberStorageTypeId()
@@ -1094,8 +1067,8 @@ abstract class HDF5MemberByteifyer
                     public void setFromByteArray(int compoundDataTypeId, Object obj,
                             byte[] byteArr, int arrayOffset) throws IllegalAccessException
                     {
-                        field.setShort(obj, HDFNativeData
-                                .byteToShort(byteArr, arrayOffset + offset));
+                        field.setShort(obj,
+                                HDFNativeData.byteToShort(byteArr, arrayOffset + offset));
                     }
                 };
         } else if (memberClazz == int.class)
@@ -1186,8 +1159,10 @@ abstract class HDF5MemberByteifyer
                     public void setFromByteArray(int compoundDataTypeId, Object obj,
                             byte[] byteArr, int arrayOffset) throws IllegalAccessException
                     {
-                        field.set(obj, new java.util.Date(HDFNativeData.byteToLong(byteArr,
-                                arrayOffset + offset)));
+                        field.set(
+                                obj,
+                                new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
+                                        + offset)));
                     }
                 };
         } else if (memberClazz == float.class)
@@ -1217,8 +1192,8 @@ abstract class HDF5MemberByteifyer
                     public void setFromByteArray(int compoundDataTypeId, Object obj,
                             byte[] byteArr, int arrayOffset) throws IllegalAccessException
                     {
-                        field.setFloat(obj, HDFNativeData
-                                .byteToFloat(byteArr, arrayOffset + offset));
+                        field.setFloat(obj,
+                                HDFNativeData.byteToFloat(byteArr, arrayOffset + offset));
                     }
                 };
         } else if (memberClazz == double.class)
@@ -1248,8 +1223,8 @@ abstract class HDF5MemberByteifyer
                     public void setFromByteArray(int compoundDataTypeId, Object obj,
                             byte[] byteArr, int arrayOffset) throws IllegalAccessException
                     {
-                        field.setDouble(obj, HDFNativeData.byteToDouble(byteArr, arrayOffset
-                                + offset));
+                        field.setDouble(obj,
+                                HDFNativeData.byteToDouble(byteArr, arrayOffset + offset));
                     }
                 };
         } else
@@ -1262,10 +1237,18 @@ abstract class HDF5MemberByteifyer
 
     private HDF5MemberByteifyer(Field field, String memberName, int size, int offset)
     {
+        this(field, memberName, size, size, offset, CharacterEncoding.ASCII);
+    }
+
+    private HDF5MemberByteifyer(Field field, String memberName, int size, int sizeInBytes,
+            int offset, CharacterEncoding encoding)
+    {
         this.field = field;
         this.memberName = memberName;
         this.size = size;
+        this.sizeInBytes = sizeInBytes;
         this.offset = offset;
+        this.encoding = encoding;
     }
 
     public abstract byte[] byteify(int compoundDataTypeId, Object obj)
@@ -1290,8 +1273,8 @@ abstract class HDF5MemberByteifyer
     {
         if (getMemberNativeTypeId() < 0)
         {
-            H5Tinsert(dataTypeId, memberName, offset, h5.getNativeDataTypeCheckForBitField(
-                    getMemberStorageTypeId(), registry));
+            H5Tinsert(dataTypeId, memberName, offset,
+                    h5.getNativeDataTypeCheckForBitField(getMemberStorageTypeId(), registry));
         } else
         {
             H5Tinsert(dataTypeId, memberName, offset, getMemberNativeTypeId());
@@ -1303,6 +1286,11 @@ abstract class HDF5MemberByteifyer
         return size;
     }
 
+    public final int getSizeInBytes()
+    {
+        return sizeInBytes;
+    }
+
     public final int getOffset()
     {
         return offset;
@@ -1310,7 +1298,7 @@ abstract class HDF5MemberByteifyer
 
     public final int getTotalSize()
     {
-        return offset + size;
+        return offset + sizeInBytes;
     }
 
     public final String describe()

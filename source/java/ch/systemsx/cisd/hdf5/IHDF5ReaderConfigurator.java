@@ -42,6 +42,12 @@ public interface IHDF5ReaderConfigurator
     public IHDF5ReaderConfigurator performNumericConversions();
 
     /**
+     * Sets UTF8 character encoding for all paths and all strings in this file. (The default is
+     * ASCII.)
+     */
+    public IHDF5ReaderConfigurator useUTF8CharacterEncoding();
+
+    /**
      * Returns an {@link IHDF5Reader} based on this configuration.
      */
     public IHDF5Reader reader();

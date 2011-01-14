@@ -79,17 +79,20 @@ class HDF5BaseReader
 
     protected State state;
 
-    HDF5BaseReader(File hdf5File, boolean performNumericConversions, FileFormat fileFormat,
-            boolean overwrite)
+    final CharacterEncoding encoding;
+
+    HDF5BaseReader(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
+            FileFormat fileFormat, boolean overwrite)
     {
         assert hdf5File != null;
 
         this.performNumericConversions = performNumericConversions;
+        this.encoding = useUTF8CharEncoding ? CharacterEncoding.UTF8 : CharacterEncoding.ASCII;
         this.hdf5File = hdf5File.getAbsoluteFile();
         this.runner = new CleanUpCallable();
         this.fileRegistry = new CleanUpRegistry();
         this.namedDataTypeMap = new HashMap<String, Integer>();
-        h5 = new HDF5(fileRegistry, performNumericConversions);
+        h5 = new HDF5(fileRegistry, performNumericConversions, useUTF8CharEncoding);
         fileId = openFile(fileFormat, overwrite);
         state = State.OPEN;
         readNamedDataTypes();
@@ -377,8 +380,8 @@ class HDF5BaseReader
             dataSpaceId = H5S_ALL;
             effectiveBlockDimensions = h5.getDataDimensions(dataSetId);
         }
-        return new DataSpaceParameters(memorySpaceId, dataSpaceId, MDArray
-                .getLength(effectiveBlockDimensions), effectiveBlockDimensions);
+        return new DataSpaceParameters(memorySpaceId, dataSpaceId,
+                MDArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
     }
 
     /**
@@ -455,8 +458,8 @@ class HDF5BaseReader
         h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
         memorySpaceId = h5.createSimpleDataSpace(MDArray.toLong(memoryDimensions), registry);
         h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset), effectiveBlockDimensions);
-        return new DataSpaceParameters(memorySpaceId, dataSpaceId, MDArray
-                .getLength(effectiveBlockDimensions), effectiveBlockDimensions);
+        return new DataSpaceParameters(memorySpaceId, dataSpaceId,
+                MDArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
     }
 
     /**
@@ -568,9 +571,7 @@ class HDF5BaseReader
                     {
                         public HDF5DataTypeVariant call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
-                                    h5.openObject(fileId, objectPath,
-                                            registry);
+                            final int objectId = h5.openObject(fileId, objectPath, registry);
                             return tryGetTypeVariant(objectId, registry);
                         }
                     };
@@ -710,10 +711,13 @@ class HDF5BaseReader
                                 public int getArrayTypeId(int baseTypeId, int[] dimensions)
                                 {
                                     final int typeId =
-                                            h5
-                                                    .createArrayType(baseTypeId, dimensions,
-                                                            fileRegistry);
+                                            h5.createArrayType(baseTypeId, dimensions, fileRegistry);
                                     return typeId;
+                                }
+
+                                public CharacterEncoding getCharacterEncoding()
+                                {
+                                    return encoding;
                                 }
                             }, compoundMembers);
         return objectByteifyer;
@@ -814,11 +818,7 @@ class HDF5BaseReader
         } else
         {
             byte[] data = h5.readAttributeAsByteArray(attributeId, stringDataTypeId, size);
-            int termIdx;
-            for (termIdx = 0; termIdx < size && data[termIdx] != 0; ++termIdx)
-            {
-            }
-            return new String(data, 0, termIdx);
+            return StringUtils.fromBytes0Term(data, encoding);
         }
     }
 
@@ -862,20 +862,16 @@ class HDF5BaseReader
             {
                 final int startIdx = i * lengthPerElement;
                 final int maxEndIdx = startIdx + lengthPerElement;
-                int termIdx;
-                for (termIdx = startIdx; termIdx < maxEndIdx && data[termIdx] != 0; ++termIdx)
-                {
-                }
-                result[i] = new String(data, startIdx, termIdx - startIdx);
+                result[i] = StringUtils.fromBytes0Term(data, startIdx, maxEndIdx, encoding);
             }
             return result;
         }
     }
-    
+
     // Date & Time
-    
-    void checkIsTimeStamp(final String objectPath, final int dataSetId,
-            ICleanUpRegistry registry) throws HDF5JavaException
+
+    void checkIsTimeStamp(final String objectPath, final int dataSetId, ICleanUpRegistry registry)
+            throws HDF5JavaException
     {
         final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
         if (typeVariantOrdinal != HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH
@@ -895,6 +891,5 @@ class HDF5BaseReader
         }
         return HDF5DataTypeVariant.getTimeUnit(typeVariantOrdinal);
     }
-
 
 }

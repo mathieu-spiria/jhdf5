@@ -38,8 +38,8 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
 
     // For Windows, use a blocking sync mode by default as otherwise the mandatory locks are up for
     // some surprises after the file has been closed.
-    private SyncMode syncMode =
-            OSUtilities.isWindows() ? SyncMode.SYNC_ON_FLUSH_BLOCK : SyncMode.SYNC_ON_FLUSH;
+    private SyncMode syncMode = OSUtilities.isWindows() ? SyncMode.SYNC_ON_FLUSH_BLOCK
+            : SyncMode.SYNC_ON_FLUSH;
 
     public HDF5WriterConfigurator(File hdf5File)
     {
@@ -76,13 +76,20 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
         return (HDF5WriterConfigurator) super.performNumericConversions();
     }
 
+    @Override
+    public HDF5WriterConfigurator useUTF8CharacterEncoding()
+    {
+        return (HDF5WriterConfigurator) super.useUTF8CharacterEncoding();
+    }
+
     public IHDF5Writer writer()
     {
         if (readerWriterOrNull == null)
         {
             readerWriterOrNull =
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
-                            fileFormat, useExtentableDataTypes, overwriteFile, syncMode));
+                            useUTF8CharEncoding, fileFormat, useExtentableDataTypes, overwriteFile,
+                            syncMode));
         }
         return (HDF5Writer) readerWriterOrNull;
     }

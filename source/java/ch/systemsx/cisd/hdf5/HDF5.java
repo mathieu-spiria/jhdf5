@@ -74,6 +74,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Pcreate_xfer_abort;
 import static ncsa.hdf.hdf5lib.H5.H5Pcreate_xfer_abort_overflow;
 import static ncsa.hdf.hdf5lib.H5.H5Pget_chunk;
 import static ncsa.hdf.hdf5lib.H5.H5Pget_layout;
+import static ncsa.hdf.hdf5lib.H5.H5Pset_char_encoding;
 import static ncsa.hdf.hdf5lib.H5.H5Pset_chunk;
 import static ncsa.hdf.hdf5lib.H5.H5Pset_create_intermediate_group;
 import static ncsa.hdf.hdf5lib.H5.H5Pset_deflate;
@@ -112,6 +113,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Tget_super;
 import static ncsa.hdf.hdf5lib.H5.H5Tget_tag;
 import static ncsa.hdf.hdf5lib.H5.H5Tis_variable_str;
 import static ncsa.hdf.hdf5lib.H5.H5Topen;
+import static ncsa.hdf.hdf5lib.H5.H5Tset_cset;
 import static ncsa.hdf.hdf5lib.H5.H5Tset_size;
 import static ncsa.hdf.hdf5lib.H5.H5Tset_tag;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5D_CHUNKED;
@@ -122,6 +124,7 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_TRUNC;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_LIBVER_LATEST;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_SCOPE_GLOBAL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_ATTRIBUTE_CREATE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DATASET_CREATE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_FILE_ACCESS;
@@ -183,9 +186,13 @@ class HDF5
 
     private final int lcplCreateIntermediateGroups;
 
-    public HDF5(final CleanUpRegistry fileRegistry, final boolean performNumericConversions)
+    private final boolean useUTF8CharEncoding;
+
+    public HDF5(final CleanUpRegistry fileRegistry, final boolean performNumericConversions,
+            final boolean useUTF8CharEncoding)
     {
         this.runner = new CleanUpCallable();
+        this.useUTF8CharEncoding = useUTF8CharEncoding;
         this.dataSetCreationPropertyListCompactStorageLayout =
                 createDataSetCreationPropertyList(fileRegistry);
         H5Pset_layout(dataSetCreationPropertyListCompactStorageLayout, H5D_COMPACT);
@@ -450,8 +457,8 @@ class HDF5
         checkMaxLength(objectName);
         final long[] info = new long[5];
         final int typeId = H5Oget_info_by_name(fileId, objectName, info, exceptionWhenNonExistent);
-        return new HDF5ObjectInformation(objectName, HDF5LinkInformation
-                .objectTypeIdToObjectType(typeId), info);
+        return new HDF5ObjectInformation(objectName,
+                HDF5LinkInformation.objectTypeIdToObjectType(typeId), info);
     }
 
     public int getObjectTypeId(final int fileId, final String objectName,
@@ -623,8 +630,8 @@ class HDF5
     {
         checkMaxLength(dataSetName);
         final int dataSpaceId =
-                H5Screate_simple(dimensions.length, dimensions, createMaxDimensions(dimensions,
-                        (layout == HDF5StorageLayout.CHUNKED)));
+                H5Screate_simple(dimensions.length, dimensions,
+                        createMaxDimensions(dimensions, (layout == HDF5StorageLayout.CHUNKED)));
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -644,8 +651,8 @@ class HDF5
                 assert compression.isCompatibleWithDataClass(classTypeId);
                 if (classTypeId == H5T_INTEGER)
                 {
-                    H5Pset_scaleoffset(dataSetCreationPropertyListId, H5Z_SO_INT, compression
-                            .getScalingFactor());
+                    H5Pset_scaleoffset(dataSetCreationPropertyListId, H5Z_SO_INT,
+                            compression.getScalingFactor());
                 } else if (classTypeId == H5T_FLOAT)
                 {
                     H5Pset_scaleoffset(dataSetCreationPropertyListId, H5Z_SO_FLOAT_DSCALE,
@@ -800,12 +807,12 @@ class HDF5
         final boolean overwriteMode = (storageDataTypeId > -1);
         final int dataSetId = H5Dopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
-        {
-            public void run()
             {
-                H5Dclose(dataSetId);
-            }
-        });
+                public void run()
+                {
+                    H5Dclose(dataSetId);
+                }
+            });
         final long[] oldDimensions = getDataDimensions(dataSetId, registry);
         if (Arrays.equals(oldDimensions, dimensions) == false)
         {
@@ -997,9 +1004,9 @@ class HDF5
         replaceNullWithEmptyString(data);
     }
 
-    // A fixed-length string array returns uninitialized strings as "", a variable-length string as 
-    // null. We don't want the application programmer to have to be aware of this difference, 
-    // thus we replace null with "" here. 
+    // A fixed-length string array returns uninitialized strings as "", a variable-length string as
+    // null. We don't want the application programmer to have to be aware of this difference,
+    // thus we replace null with "" here.
     private void replaceNullWithEmptyString(String[] data)
     {
         for (int i = 0; i < data.length; ++i)
@@ -1027,8 +1034,17 @@ class HDF5
                     H5Sclose(dataSpaceId);
                 }
             });
+        final int attCreationPlistId;
+        if (useUTF8CharEncoding)
+        {
+            attCreationPlistId = H5Pcreate(H5P_ATTRIBUTE_CREATE);
+            setCharacterEncodingCreationPropertyList(attCreationPlistId, CharacterEncoding.UTF8);
+        } else
+        {
+            attCreationPlistId = H5P_DEFAULT;
+        }
         final int attributeId =
-                H5Acreate(locationId, attributeName, dataTypeId, dataSpaceId, H5P_DEFAULT,
+                H5Acreate(locationId, attributeName, dataTypeId, dataSpaceId, attCreationPlistId,
                         H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
@@ -1141,6 +1157,10 @@ class HDF5
                     H5Tclose(dataTypeId);
                 }
             });
+        if (useUTF8CharEncoding)
+        {
+            setCharacterEncodingDataType(dataTypeId, CharacterEncoding.UTF8);
+        }
         return dataTypeId;
     }
 
@@ -1161,6 +1181,10 @@ class HDF5
                     H5Tclose(dataTypeId);
                 }
             });
+        if (useUTF8CharEncoding)
+        {
+            setCharacterEncodingDataType(dataTypeId, CharacterEncoding.UTF8);
+        }
         return dataTypeId;
     }
 
@@ -1173,6 +1197,11 @@ class HDF5
         return dataTypeId;
     }
 
+    private void setCharacterEncodingDataType(int dataTypeId, CharacterEncoding encoding)
+    {
+        H5Tset_cset(dataTypeId, encoding.getCValue());
+    }
+    
     public int createArrayType(int baseTypeId, int length, ICleanUpRegistry registry)
     {
         final int dataTypeId = H5Tarray_create(baseTypeId, 1, new int[]
@@ -1425,8 +1454,8 @@ class HDF5
                     H5Tclose(dataTypeId);
                 }
             });
-        H5Tset_tag(dataTypeId, tag.length() > H5T_OPAQUE_TAG_MAX ? tag.substring(0,
-                H5T_OPAQUE_TAG_MAX) : tag);
+        H5Tset_tag(dataTypeId,
+                tag.length() > H5T_OPAQUE_TAG_MAX ? tag.substring(0, H5T_OPAQUE_TAG_MAX) : tag);
         return dataTypeId;
     }
 
@@ -1578,17 +1607,17 @@ class HDF5
     {
         return H5Tdetect_class(dataTypeId, classTypeId);
     }
-    
+
     public int getBaseDataType(int dataTypeId, ICleanUpRegistry registry)
     {
         final int baseDataTypeId = H5Tget_super(dataTypeId);
         registry.registerCleanUp(new Runnable()
-        {
-            public void run()
             {
-                H5Tclose(baseDataTypeId);
-            }
-        });
+                public void run()
+                {
+                    H5Tclose(baseDataTypeId);
+                }
+            });
         return baseDataTypeId;
     }
 
@@ -1847,7 +1876,17 @@ class HDF5
         {
             H5Pset_create_intermediate_group(linkCreationPropertyList, true);
         }
+        if (useUTF8CharEncoding)
+        {
+            setCharacterEncodingCreationPropertyList(linkCreationPropertyList, CharacterEncoding.UTF8);
+        }
         return linkCreationPropertyList;
+    }
+
+    // Only use with H5P_LINK_CREATE, H5P_ATTRIBUTE_CREATE and H5P_STRING_CREATE property list ids
+    private void setCharacterEncodingCreationPropertyList(int creationPropertyList, CharacterEncoding encoding)
+    {
+        H5Pset_char_encoding(creationPropertyList, encoding.getCValue());
     }
 
     private int createDataSetXferPropertyListAbortOverflow(ICleanUpRegistry registry)

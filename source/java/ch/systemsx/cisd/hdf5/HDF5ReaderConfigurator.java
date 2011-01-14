@@ -31,6 +31,8 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
 
     protected boolean performNumericConversions;
 
+    protected boolean useUTF8CharEncoding;
+
     protected HDF5Reader readerWriterOrNull;
 
     HDF5ReaderConfigurator(File hdf5File)
@@ -56,13 +58,20 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
         return this;
     }
 
+    public HDF5ReaderConfigurator useUTF8CharacterEncoding()
+    {
+        this.useUTF8CharEncoding = true;
+        return this;
+    }
+
     public IHDF5Reader reader()
     {
         if (readerWriterOrNull == null)
         {
             readerWriterOrNull =
                     new HDF5Reader(new HDF5BaseReader(hdf5File, performNumericConversions,
-                            IHDF5WriterConfigurator.FileFormat.ALLOW_1_8, false));
+                            useUTF8CharEncoding, IHDF5WriterConfigurator.FileFormat.ALLOW_1_8,
+                            false));
         }
         return readerWriterOrNull;
     }

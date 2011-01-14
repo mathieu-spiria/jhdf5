@@ -22,6 +22,7 @@ import static ncsa.hdf.hdf5lib.H5.H5DwriteString;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -113,8 +114,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int objectId =
-                        baseWriter.h5.openObject(baseWriter.fileId, objectPath,
-                                registry);
+                            baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
                     baseWriter.setStringArrayAttribute(objectId, name, value, maxLength, registry);
                     return null; // Nothing to return.
                 }
@@ -127,7 +127,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     {
         setStringArrayAttribute(objectPath, name, value, getMaxLength(value));
     }
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -162,12 +162,14 @@ public class HDF5StringWriter implements IHDF5StringWriter
             {
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int realMaxLength = maxLength + 1; // trailing '\0'
+                    final int realMaxLength =
+                            ((baseWriter.encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
+                                                                                                       // '\0'
                     final int stringDataTypeId =
                             baseWriter.h5.createDataTypeString(realMaxLength, registry);
                     final long[] chunkSizeOrNull =
-                            HDF5Utils.tryGetChunkSizeForString(realMaxLength, features
-                                    .requiresChunking());
+                            HDF5Utils.tryGetChunkSizeForString(realMaxLength,
+                                    features.requiresChunking());
                     final int dataSetId;
                     if (baseWriter.h5.exists(baseWriter.fileId, objectPath))
                     {
@@ -185,7 +187,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                         baseWriter.fileFormat, registry);
                     }
                     H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            (data + '\0').getBytes());
+                            StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding));
                     return null; // Nothing to return.
                 }
 
@@ -255,7 +257,9 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize = maxLength + 1; // Trailing '\0'
+                        elementSize =
+                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
+                                                                                                           // '\0'
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -314,7 +318,9 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize = maxLength + 1;
+                        elementSize =
+                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
+                                                                                                           // '\0'
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -362,7 +368,9 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize = maxLength + 1;
+                        elementSize =
+                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
+                                                                                                           // '\0'
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -454,10 +462,10 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     final int stringDataTypeId =
                             baseWriter.h5.createDataTypeString(realMaxLength, registry);
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, stringDataTypeId, data
-                                    .longDimensions(), realMaxLength, features, registry);
-                    H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
-                            .getAsFlatArray(), maxLength);
+                            baseWriter.getDataSetId(objectPath, stringDataTypeId,
+                                    data.longDimensions(), realMaxLength, features, registry);
+                    H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            data.getAsFlatArray(), maxLength);
                     return null; // Nothing to return.
                 }
             };
@@ -514,8 +522,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                             { 0 }, MDArray.toLong(dimensions), maxLength, registry);
                     } else
                     {
-                        baseWriter.createDataSet(objectPath, stringDataTypeId, features, MDArray
-                                .toLong(dimensions), null, maxLength, registry);
+                        baseWriter.createDataSet(objectPath, stringDataTypeId, features,
+                                MDArray.toLong(dimensions), null, maxLength, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -610,8 +618,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                             baseWriter.h5.getDataTypeForDataSet(dataSetId, registry);
                     if (baseWriter.h5.isVariableLengthString(stringDataTypeId))
                     {
-                        baseWriter.writeStringVL(dataSetId, memorySpaceId, dataSpaceId, data
-                                .getAsFlatArray());
+                        baseWriter.writeStringVL(dataSetId, memorySpaceId, dataSpaceId,
+                                data.getAsFlatArray());
                     } else
                     {
                         final int maxLength = baseWriter.h5.getDataTypeSize(stringDataTypeId) - 1;
@@ -728,8 +736,9 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     final int pointerSize = 8; // 64bit pointers
                     final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, stringDataTypeId, MDArray
-                                    .toLong(data.dimensions()), pointerSize, features, registry);
+                            baseWriter.getDataSetId(objectPath, stringDataTypeId,
+                                    MDArray.toLong(data.dimensions()), pointerSize, features,
+                                    registry);
                     baseWriter.writeStringVL(dataSetId, data.getAsFlatArray());
                     return null; // Nothing to return.
                 }

@@ -119,11 +119,7 @@ public class HDF5StringReader implements IHDF5StringReader
                         final int size = baseReader.h5.getDataTypeSize(dataTypeId);
                         byte[] data = new byte[size];
                         baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId, data);
-                        int termIdx;
-                        for (termIdx = 0; termIdx < size && data[termIdx] != 0; ++termIdx)
-                        {
-                        }
-                        return new String(data, 0, termIdx);
+                        return StringUtils.fromBytes0Term(data, baseReader.encoding);
                     }
                 }
             };

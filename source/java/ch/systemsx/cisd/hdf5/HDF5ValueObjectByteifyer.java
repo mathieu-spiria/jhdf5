@@ -44,6 +44,8 @@ class HDF5ValueObjectByteifyer<T>
         public int getArrayTypeId(int baseTypeId, int length);
 
         public int getArrayTypeId(int baseTypeId, int[] dimensions);
+
+        public CharacterEncoding getCharacterEncoding();
     }
 
     public HDF5ValueObjectByteifyer(Class<T> clazz, FileInfoProvider fileInfoProvider,
@@ -84,17 +86,19 @@ class HDF5ValueObjectByteifyer<T>
                                 .getMemberTypeLength()) : typeId;
                 result[i] =
                         HDF5MemberByteifyer.createStringMemberByteifyer(members[i].getField(clazz),
-                                members[i].getMemberName(), offset, stringDataTypeId, members[i]
-                                        .getMemberTypeLength());
+                                members[i].getMemberName(), offset, stringDataTypeId,
+                                members[i].getMemberTypeLength(),
+                                fileInfoProvider.getCharacterEncoding());
             } else if (memberClazz == char[].class)
             {
                 final int stringDataTypeId =
                         (typeId < 0) ? fileInfoProvider.getStringDataTypeId(members[i]
                                 .getMemberTypeLength()) : typeId;
                 result[i] =
-                        HDF5MemberByteifyer.createCharArrayMemberByteifyer(members[i]
-                                .getField(clazz), members[i].getMemberName(), offset,
-                                stringDataTypeId, members[i].getMemberTypeLength());
+                        HDF5MemberByteifyer.createCharArrayMemberByteifyer(
+                                members[i].getField(clazz), members[i].getMemberName(), offset,
+                                stringDataTypeId, members[i].getMemberTypeLength(),
+                                fileInfoProvider.getCharacterEncoding());
             } else if (memberClazz == HDF5EnumerationValue.class)
             {
                 final HDF5EnumerationType enumType = members[i].tryGetEnumerationType();
@@ -114,31 +118,35 @@ class HDF5ValueObjectByteifyer<T>
                     throw new NullPointerException("Enumeration type not set for member byteifyer.");
                 }
                 result[i] =
-                        HDF5MemberByteifyer.createEnumArrayMemberByteifyer(members[i]
-                                .getField(clazz), members[i].getMemberName(), members[i]
-                                .tryGetEnumerationType(), offset, fileInfoProvider, members[i]
-                                .getMemberTypeLength(), members[i].getStorageDataTypeId());
+                        HDF5MemberByteifyer
+                                .createEnumArrayMemberByteifyer(members[i].getField(clazz),
+                                        members[i].getMemberName(),
+                                        members[i].tryGetEnumerationType(), offset,
+                                        fileInfoProvider, members[i].getMemberTypeLength(),
+                                        members[i].getStorageDataTypeId());
             } else if (isOneDimensionalArray(memberClazz) || memberClazz == java.util.BitSet.class)
             {
                 result[i] =
-                        HDF5MemberByteifyer.createArrayMemberByteifyer(members[i].getField(clazz),
-                                members[i].getMemberName(), offset, fileInfoProvider, members[i]
-                                        .getMemberTypeLength(), members[i].getStorageDataTypeId());
+                        HDF5MemberByteifyer
+                                .createArrayMemberByteifyer(members[i].getField(clazz),
+                                        members[i].getMemberName(), offset, fileInfoProvider,
+                                        members[i].getMemberTypeLength(),
+                                        members[i].getStorageDataTypeId());
             } else if (MDAbstractArray.class.isAssignableFrom(memberClazz)
                     || isTwoDimensionalArray(memberClazz))
             {
                 result[i] =
                         HDF5MemberByteifyer.createArrayMemberByteifyer(members[i].getField(clazz),
-                                members[i].getMemberName(), offset, fileInfoProvider, members[i]
-                                        .getMemberTypeDimensions(), members[i]
-                                        .getStorageDataTypeId());
+                                members[i].getMemberName(), offset, fileInfoProvider,
+                                members[i].getMemberTypeDimensions(),
+                                members[i].getStorageDataTypeId());
             } else
             {
                 result[i] =
                         HDF5MemberByteifyer.createMemberByteifyer(members[i].getField(clazz),
                                 members[i].getMemberName(), offset);
             }
-            offset += result[i].getSize();
+            offset += result[i].getSizeInBytes();
         }
         return result;
     }
@@ -188,11 +196,11 @@ class HDF5ValueObjectByteifyer<T>
                 try
                 {
                     final byte[] b = byteifyer.byteify(compoundDataTypeId, obj);
-                    if (b.length > byteifyer.getSize())
+                    if (b.length > byteifyer.getSizeInBytes())
                     {
                         throw new HDF5JavaException("Compound " + byteifyer.describe()
                                 + " of array element " + counter + " must not exceed "
-                                + byteifyer.getSize() + " bytes, but is of size " + b.length
+                                + byteifyer.getSizeInBytes() + " bytes, but is of size " + b.length
                                 + " bytes.");
                     }
                     System.arraycopy(b, 0, barray, offset + byteifyer.getOffset(), b.length);
@@ -218,11 +226,11 @@ class HDF5ValueObjectByteifyer<T>
             try
             {
                 final byte[] b = byteifyer.byteify(compoundDataTypeId, obj);
-                if (b.length > byteifyer.getSize())
+                if (b.length > byteifyer.getSizeInBytes())
                 {
                     throw new HDF5JavaException("Compound " + byteifyer.describe()
-                            + " must not exceed " + byteifyer.getSize() + " bytes, but is of size "
-                            + b.length + " bytes.");
+                            + " must not exceed " + byteifyer.getSizeInBytes()
+                            + " bytes, but is of size " + b.length + " bytes.");
                 }
                 System.arraycopy(b, 0, barray, byteifyer.getOffset(), b.length);
             } catch (IllegalAccessException ex)

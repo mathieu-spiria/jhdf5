@@ -58,14 +58,14 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     private static final int MAX_TYPE_VARIANT_TYPES = 1024;
 
-    private final static EnumSet<SyncMode> BLOCKING_SYNC_MODES =
-            EnumSet.of(SyncMode.SYNC_BLOCK, SyncMode.SYNC_ON_FLUSH_BLOCK);
+    private final static EnumSet<SyncMode> BLOCKING_SYNC_MODES = EnumSet.of(SyncMode.SYNC_BLOCK,
+            SyncMode.SYNC_ON_FLUSH_BLOCK);
 
-    private final static EnumSet<SyncMode> NON_BLOCKING_SYNC_MODES =
-            EnumSet.of(SyncMode.SYNC, SyncMode.SYNC_ON_FLUSH);
+    private final static EnumSet<SyncMode> NON_BLOCKING_SYNC_MODES = EnumSet.of(SyncMode.SYNC,
+            SyncMode.SYNC_ON_FLUSH);
 
-    private final static EnumSet<SyncMode> SYNC_ON_CLOSE_MODES =
-            EnumSet.of(SyncMode.SYNC_BLOCK, SyncMode.SYNC);
+    private final static EnumSet<SyncMode> SYNC_ON_CLOSE_MODES = EnumSet.of(SyncMode.SYNC_BLOCK,
+            SyncMode.SYNC);
 
     /**
      * The size threshold for the COMPACT storage layout.
@@ -75,8 +75,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
     /**
      * ExecutorService for calling <code>fsync(2)</code> in a non-blocking way.
      */
-    private final static ExecutorService syncExecutor =
-            new NamingThreadPoolExecutor("HDF5 Sync").corePoolSize(3).daemonize();
+    private final static ExecutorService syncExecutor = new NamingThreadPoolExecutor("HDF5 Sync")
+            .corePoolSize(3).daemonize();
 
     static
     {
@@ -118,10 +118,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     final int variableLengthStringDataTypeId;
 
-    HDF5BaseWriter(File hdf5File, boolean performNumericConversions, FileFormat fileFormat,
-            boolean useExtentableDataTypes, boolean overwriteFile, SyncMode syncMode)
+    HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
+            FileFormat fileFormat, boolean useExtentableDataTypes, boolean overwriteFile,
+            SyncMode syncMode)
     {
-        super(hdf5File, performNumericConversions, fileFormat, overwriteFile);
+        super(hdf5File, performNumericConversions, useUTF8CharEncoding, fileFormat, overwriteFile);
         try
         {
             this.fileForSyncing = new RandomAccessFile(hdf5File, "rw");
@@ -451,13 +452,17 @@ final class HDF5BaseWriter extends HDF5BaseReader
         } else
         {
             definitiveChunkSizeOrNull =
-                    HDF5Utils.tryGetChunkSize(dimensions, elementLength, features
-                            .requiresChunking(), useExtentableDataTypes
-                            || features.tryGetProposedLayout() == HDF5StorageLayout.CHUNKED);
+                    HDF5Utils
+                            .tryGetChunkSize(
+                                    dimensions,
+                                    elementLength,
+                                    features.requiresChunking(),
+                                    useExtentableDataTypes
+                                            || features.tryGetProposedLayout() == HDF5StorageLayout.CHUNKED);
         }
         final HDF5StorageLayout layout =
-                determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull, features
-                        .tryGetProposedLayout());
+                determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull,
+                        features.tryGetProposedLayout());
         dataSetId =
                 h5.createDataSet(fileId, dimensions, definitiveChunkSizeOrNull, storageDataTypeId,
                         features, objectPath, layout, fileFormat, registry);
@@ -616,14 +621,16 @@ final class HDF5BaseWriter extends HDF5BaseReader
             ICleanUpRegistry registry)
     {
         setAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, typeVariantDataType.getStorageTypeId(),
-                typeVariantDataType.getNativeTypeId(), typeVariantDataType
-                        .toStorageForm(typeVariant.ordinal()), registry);
+                typeVariantDataType.getNativeTypeId(),
+                typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
     }
 
     void setStringAttribute(final int objectId, final String name, final String value,
             final int maxLength, ICleanUpRegistry registry)
     {
-        final int storageDataTypeId = h5.createDataTypeString(maxLength + 1, registry);
+        final int realMaxLength = ((encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
+                                                                                                  // '\0'
+        final int storageDataTypeId = h5.createDataTypeString(realMaxLength, registry);
         int attributeId;
         if (h5.existsAttribute(objectId, name))
         {
@@ -638,28 +645,33 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
-        h5.writeAttribute(attributeId, storageDataTypeId, (value + '\0').getBytes());
+        h5.writeAttribute(attributeId, storageDataTypeId,
+                StringUtils.toBytes0Term(value, maxLength, encoding));
     }
 
-    static class StringArrayBuffer
+    class StringArrayBuffer
     {
         private byte[] buf;
-        
+
         private int len;
-        
-        private int maxLengthPerString;
-        
+
+        private final int maxLengthPerString;
+
+        private final int realMaxLengthPerString;
+
         StringArrayBuffer(int maxLengthPerString, int initialCapacity)
         {
-            this.maxLengthPerString = maxLengthPerString + 1;
+            this.maxLengthPerString = maxLengthPerString;
+            this.realMaxLengthPerString =
+                    ((encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLengthPerString) + 1;
             buf = new byte[initialCapacity];
         }
-        
+
         void add(String s)
         {
-            final byte[] data = (s + '\0').getBytes();
-            final int dataLen = Math.min(data.length, maxLengthPerString);
-            final int newLen = len + maxLengthPerString; 
+            final byte[] data = StringUtils.toBytes0Term(s, maxLengthPerString, encoding);
+            final int dataLen = Math.min(data.length, realMaxLengthPerString);
+            final int newLen = len + realMaxLengthPerString;
             if (newLen > buf.length)
             {
                 final byte[] newBuf = new byte[Math.max(2 * buf.length, newLen)];
@@ -669,7 +681,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             System.arraycopy(data, 0, buf, len, dataLen);
             len = newLen;
         }
-        
+
         byte[] toArray()
         {
             if (len < buf.length)
@@ -682,12 +694,23 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 return buf;
             }
         }
+
+        int getMaxLengthInByte()
+        {
+            return realMaxLengthPerString;
+        }
     }
-    
+
     void setStringArrayAttribute(final int objectId, final String name, final String[] value,
             final int maxLength, ICleanUpRegistry registry)
     {
-        final int stringDataTypeId = h5.createDataTypeString(maxLength + 1, registry);
+        final StringArrayBuffer array = new StringArrayBuffer(maxLength, value.length * 10);
+        for (int i = 0; i < value.length; ++i)
+        {
+            array.add(value[i]);
+        }
+        final byte[] arrData = array.toArray();
+        final int stringDataTypeId = h5.createDataTypeString(array.getMaxLengthInByte(), registry);
         final int storageDataTypeId = h5.createArrayType(stringDataTypeId, value.length, registry);
         int attributeId;
         if (h5.existsAttribute(objectId, name))
@@ -703,12 +726,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
-        final StringArrayBuffer array = new StringArrayBuffer(maxLength, value.length * 10);
-        for (int i = 0; i < value.length; ++i)
-        {
-            array.add(value[i]);
-        }
-        h5.writeAttribute(attributeId, storageDataTypeId, array.toArray());
+        h5.writeAttribute(attributeId, storageDataTypeId, arrData);
     }
 
     void setStringAttributeVariableLength(final int objectId, final String name,
@@ -723,9 +741,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             {
                 h5.deleteAttribute(objectId, name);
                 attributeId =
-                        h5
-                                .createAttribute(objectId, name, variableLengthStringDataTypeId,
-                                        registry);
+                        h5.createAttribute(objectId, name, variableLengthStringDataTypeId, registry);
             }
         } else
         {
