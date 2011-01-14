@@ -19,8 +19,8 @@ package ch.systemsx.cisd.hdf5;
 import java.io.UnsupportedEncodingException;
 
 /**
- * Some auxiliary methods for String to Byte conversion. 
- *
+ * Some auxiliary methods for String to Byte conversion.
+ * 
  * @author Bernd Rinn
  */
 final class StringUtils
@@ -29,27 +29,11 @@ final class StringUtils
     {
         // Not to be instantiated.
     }
-    
-    static byte[] toBytes0TermASCII(String s)
-    {
-        return toBytes0TermASCII(s, s.length());
-    }
 
-    static byte[] toBytes0TermUTF8(String s)
-    {
-        return toBytes0TermUTF8(s, s.length());
-    }
-
-    static byte[] toBytes0TermUTF8(String s, int maxLength)
-    {
-        return toBytes0Term(s, maxLength, CharacterEncoding.UTF8);
-    }
-    
-    static byte[] toBytes0TermASCII(String s, int maxLength)
-    {
-        return toBytes0Term(s, maxLength, CharacterEncoding.ASCII);
-    }
-    
+    /**
+     * Converts string <var>s</var> to a byte array of a 0-terminated sstring, using
+     * <var>encoding</var> and cutting it to <var>maxLength</var< if necessary.
+     */
     static byte[] toBytes0Term(String s, int maxLength, CharacterEncoding encoding)
     {
         try
@@ -57,36 +41,25 @@ final class StringUtils
             return (cut(s, maxLength) + '\0').getBytes(encoding.getCharSetName());
         } catch (UnsupportedEncodingException ex)
         {
-            return (s + '\0').getBytes();
+            return (cut(s, maxLength) + '\0').getBytes();
         }
     }
-    
-    static String fromBytes0TermUTF8(byte[] data)
-    {
-        return fromBytes0Term(data, CharacterEncoding.UTF8);
-    }
 
-    static String fromBytes0TermASCII(byte[] data)
-    {
-        return fromBytes0Term(data, CharacterEncoding.ASCII);
-    }
-    
+    /**
+     * Converts byte array <var>data</var> containing a 0-terminated string using
+     * <var>encoding</var> to a string.
+     */
     static String fromBytes0Term(byte[] data, CharacterEncoding encoding)
     {
-        int termIdx;
-        for (termIdx = 0; termIdx < data.length && data[termIdx] != 0; ++termIdx)
-        {
-        }
-        try
-        {
-            return new String(data, 0, termIdx, encoding.getCharSetName());
-        } catch (UnsupportedEncodingException ex)
-        {
-            return new String(data, 0, termIdx);
-        }
+        return fromBytes0Term(data, 0, data.length, encoding);
     }
 
-    static String fromBytes0Term(byte[] data, int startIdx, int maxEndIdx, CharacterEncoding encoding)
+    /**
+     * Converts byte array <var>data</var> containing a 0-terminated string at <var>startIdx</var>
+     * using <var>encoding</var> to a string. Does search further than <var>maxEndIdx</var>
+     */
+    static String fromBytes0Term(byte[] data, int startIdx, int maxEndIdx,
+            CharacterEncoding encoding)
     {
         int termIdx;
         for (termIdx = startIdx; termIdx < maxEndIdx && data[termIdx] != 0; ++termIdx)
