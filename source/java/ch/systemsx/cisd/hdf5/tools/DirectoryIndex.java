@@ -30,6 +30,7 @@ import java.util.zip.CRC32;
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 
 import ch.systemsx.cisd.base.unix.FileLinkType;
+import ch.systemsx.cisd.hdf5.CharacterEncoding;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping;
 import ch.systemsx.cisd.hdf5.HDF5CompoundType;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType;
@@ -37,6 +38,7 @@ import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
+import ch.systemsx.cisd.hdf5.StringUtils;
 
 /**
  * Memory representation of the directory index stored in an HDF5 archive.
@@ -401,7 +403,7 @@ public class DirectoryIndex implements Iterable<Link>
     private int calcCrc32(String names)
     {
         final CRC32 crc32 = new CRC32();
-        crc32.update(names.getBytes());
+        crc32.update(StringUtils.toBytes0Term(names, names.length(), CharacterEncoding.UTF8));
         return (int) crc32.getValue();
     }
 

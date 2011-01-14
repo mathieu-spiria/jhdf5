@@ -55,11 +55,14 @@ public class HDF5Archiver
         if (readOnly)
         {
             this.hdf5WriterOrNull = null;
-            this.hdf5Reader = HDF5FactoryProvider.get().openForReading(archiveFile);
+            this.hdf5Reader =
+                    HDF5FactoryProvider.get().configureForReading(archiveFile)
+                            .useUTF8CharacterEncoding().reader();
         } else
         {
             final IHDF5WriterConfigurator config = HDF5FactoryProvider.get().configure(archiveFile);
             config.fileFormat(fileFormat);
+            config.useUTF8CharacterEncoding();
             if (noSync == false)
             {
                 config.syncMode(SyncMode.SYNC);
@@ -89,8 +92,8 @@ public class HDF5Archiver
         {
             throw new IllegalStateException("Cannot archive in read-only mode.");
         }
-        HDF5ArchiveTools.archive(hdf5WriterOrNull, strategy, root.getAbsoluteFile(), path
-                .getAbsoluteFile(), continueOnError, verbose, buffer);
+        HDF5ArchiveTools.archive(hdf5WriterOrNull, strategy, root.getAbsoluteFile(),
+                path.getAbsoluteFile(), continueOnError, verbose, buffer);
         return this;
     }
 
