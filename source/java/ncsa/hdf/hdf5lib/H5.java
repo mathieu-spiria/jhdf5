@@ -677,49 +677,6 @@ public class H5
             throws HDF5LibraryException, NullPointerException;
 
     /**
-     * H5Dwrite writes a (partial) dataset, specified by its identifier dataset_id, from the
-     * application memory data object into the file.
-     * 
-     * @param dataset_id Identifier of the dataset read from.
-     * @param mem_type_id Identifier of the memory datatype.
-     * @param mem_space_id Identifier of the memory dataspace.
-     * @param file_space_id Identifier of the dataset's dataspace in the file.
-     * @param xfer_plist_id Identifier of a transfer property list for this I/O operation.
-     * @param obj String array with data to be written to the file.
-     * @param maxLength The maximal length of one String in the array.
-     * @return a non-negative value if successful
-     * @exception HDF5Exception - Failure in the data conversion.
-     * @exception HDF5LibraryException - Error from the HDF-5 Library.
-     * @exception NullPointerException - data object is null.
-     */
-    public synchronized static int H5Dwrite(final int dataset_id, final int mem_type_id,
-            final int mem_space_id, final int file_space_id, final int xfer_plist_id,
-            final String[] obj, final int maxLength) throws HDF5Exception, HDF5LibraryException,
-            NullPointerException
-    {
-        final byte[] buf = stringArrayToByteArray(obj, maxLength + 1);
-
-        /* will raise exception on error */
-        final int status =
-                H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf);
-
-        return status;
-    }
-
-    private static byte[] stringArrayToByteArray(final String[] in, final int maxLength)
-    {
-        final int nelems = in.length;
-        final byte[] out = new byte[nelems * maxLength];
-
-        for (int i = 0; i < nelems; i++)
-        {
-            final byte[] bytes = (in[i] + '\0').getBytes();
-            System.arraycopy(bytes, 0, out, i * maxLength, bytes.length);
-        }
-        return out;
-    }
-
-    /**
      * H5Dextend verifies that the dataset is at least of size size.
      * 
      * @param dataset_id Identifier of the dataset.

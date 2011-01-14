@@ -17,13 +17,15 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.H5.H5DwriteString;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
 
+import ncsa.hdf.hdf5lib.H5;
+import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -186,7 +188,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                         stringDataTypeId, features, objectPath, layout,
                                         baseWriter.fileFormat, registry);
                     }
-                    H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                    H5.H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding));
                     return null; // Nothing to return.
                 }
@@ -271,7 +273,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         baseWriter.writeStringVL(dataSetId, data);
                     } else
                     {
-                        H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data,
+                        writeStringArray(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data,
                                 maxLength);
                     }
                     return null; // Nothing to return.
@@ -422,7 +424,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     } else
                     {
                         final int maxLength = baseWriter.h5.getDataTypeSize(stringDataTypeId) - 1;
-                        H5Dwrite(dataSetId, stringDataTypeId, memorySpaceId, dataSpaceId,
+                        writeStringArray(dataSetId, stringDataTypeId, memorySpaceId, dataSpaceId,
                                 H5P_DEFAULT, data, maxLength);
                     }
                     return null; // Nothing to return.
@@ -464,7 +466,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     final int dataSetId =
                             baseWriter.getDataSetId(objectPath, stringDataTypeId,
                                     data.longDimensions(), realMaxLength, features, registry);
-                    H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                    writeStringArray(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             data.getAsFlatArray(), maxLength);
                     return null; // Nothing to return.
                 }
@@ -623,7 +625,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     } else
                     {
                         final int maxLength = baseWriter.h5.getDataTypeSize(stringDataTypeId) - 1;
-                        H5Dwrite(dataSetId, stringDataTypeId, memorySpaceId, dataSpaceId,
+                        writeStringArray(dataSetId, stringDataTypeId, memorySpaceId, dataSpaceId,
                                 H5P_DEFAULT, data.getAsFlatArray(), maxLength);
                     }
                     return null; // Nothing to return.
@@ -749,5 +751,35 @@ public class HDF5StringWriter implements IHDF5StringWriter
     public void writeStringVariableLengthMDArray(final String objectPath, final MDArray<String> data)
     {
         writeStringVariableLengthMDArray(objectPath, data, GENERIC_NO_COMPRESSION);
+    }
+
+    /**
+     * H5Dwrite writes a (partial) dataset, specified by its identifier dataset_id, from the
+     * application memory data object into the file.
+     * 
+     * @param dataset_id Identifier of the dataset read from.
+     * @param mem_type_id Identifier of the memory datatype.
+     * @param mem_space_id Identifier of the memory dataspace.
+     * @param file_space_id Identifier of the dataset's dataspace in the file.
+     * @param xfer_plist_id Identifier of a transfer property list for this I/O operation.
+     * @param obj String array with data to be written to the file.
+     * @param maxLength The maximal length of one String in the array.
+     * @return a non-negative value if successful
+     * @exception HDF5Exception - Failure in the data conversion.
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data object is null.
+     */
+    private int writeStringArray(final int dataset_id, final int mem_type_id,
+            final int mem_space_id, final int file_space_id, final int xfer_plist_id,
+            final String[] obj, final int maxLength) throws HDF5Exception, HDF5LibraryException,
+            NullPointerException
+    {
+        final byte[] buf = StringUtils.toBytes0Term(obj, maxLength, baseWriter.encoding);
+    
+        /* will raise exception on error */
+        final int status =
+                H5.H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf);
+    
+        return status;
     }
 }

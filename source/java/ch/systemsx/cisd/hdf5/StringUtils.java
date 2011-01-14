@@ -23,7 +23,7 @@ import java.io.UnsupportedEncodingException;
  * 
  * @author Bernd Rinn
  */
-final class StringUtils
+public final class StringUtils
 {
     private StringUtils()
     {
@@ -31,10 +31,10 @@ final class StringUtils
     }
 
     /**
-     * Converts string <var>s</var> to a byte array of a 0-terminated sstring, using
+     * Converts string <var>s</var> to a byte array of a 0-terminated string, using
      * <var>encoding</var> and cutting it to <var>maxLength</var< if necessary.
      */
-    static byte[] toBytes0Term(String s, int maxLength, CharacterEncoding encoding)
+    public static byte[] toBytes0Term(String s, int maxLength, CharacterEncoding encoding)
     {
         try
         {
@@ -46,10 +46,29 @@ final class StringUtils
     }
 
     /**
+     * Converts string array <var>in</var> to a byte array of a 0-terminated string, using
+     * <var>encoding</var> and cutting it to <var>maxLength</var< if necessary.
+     */
+    public static byte[] toBytes0Term(final String[] in, final int maxLength,
+            final CharacterEncoding encoding)
+    {
+        final int nelems = in.length;
+        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength + 1;
+        final byte[] out = new byte[nelems * realMaxLength];
+
+        for (int i = 0; i < nelems; i++)
+        {
+            final byte[] bytes = toBytes0Term(in[i], maxLength, encoding);
+            System.arraycopy(bytes, 0, out, i * realMaxLength, bytes.length);
+        }
+        return out;
+    }
+
+    /**
      * Converts byte array <var>data</var> containing a 0-terminated string using
      * <var>encoding</var> to a string.
      */
-    static String fromBytes0Term(byte[] data, CharacterEncoding encoding)
+    public static String fromBytes0Term(byte[] data, CharacterEncoding encoding)
     {
         return fromBytes0Term(data, 0, data.length, encoding);
     }
@@ -58,7 +77,7 @@ final class StringUtils
      * Converts byte array <var>data</var> containing a 0-terminated string at <var>startIdx</var>
      * using <var>encoding</var> to a string. Does search further than <var>maxEndIdx</var>
      */
-    static String fromBytes0Term(byte[] data, int startIdx, int maxEndIdx,
+    public static String fromBytes0Term(byte[] data, int startIdx, int maxEndIdx,
             CharacterEncoding encoding)
     {
         int termIdx;
@@ -74,7 +93,7 @@ final class StringUtils
         }
     }
 
-    static String cut(String s, int maxLength)
+    private static String cut(String s, int maxLength)
     {
         if (s.length() > maxLength)
         {
