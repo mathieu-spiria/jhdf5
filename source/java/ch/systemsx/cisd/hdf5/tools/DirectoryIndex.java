@@ -19,12 +19,13 @@ package ch.systemsx.cisd.hdf5.tools;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.CRC32;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
@@ -47,11 +48,7 @@ import ch.systemsx.cisd.hdf5.StringUtils;
  * <var>hdf5Reader</var> provided the constructor: If this is an instance of {@link IHDF5Writer},
  * the directory index will be read-write, otherwise read-only.
  * <p>
- * Note that some methods are working exclusively on an internal list data structure, while other
- * methods work on a map data structure. While this is transparent to the caller in terms of
- * functionality, it is not transparent in terms of performance. When calling a method that works on
- * the map after calling a method that works on a list, the other data structure needs to be created
- * which may be CPU intensive.
+ * This class is thread-safe.
  * 
  * @author Bernd Rinn
  */
@@ -69,13 +66,13 @@ public class DirectoryIndex implements Iterable<Link>
 
     private final boolean readLinkTargets;
 
-    private Link[] linksOrNull;
-
     /**
-     * The index that points to the first file in {@link #linksOrNull} (all smaller indices point to
-     * directories).
+     * Atomic reference to a list of all links in this directory.
+     * <p>
+     * The order is to have all directories (in alphabetical order) before all files (in
+     * alphabetical order).
      */
-    private int firstFileIndex;
+    private final AtomicReference<LinkList> links = new AtomicReference<LinkList>();
 
     /**
      * Converts an array of {@link File}s into a list of {@link Link}s. The list is optimized for
@@ -152,6 +149,7 @@ public class DirectoryIndex implements Iterable<Link>
         this.groupPath = groupPath;
         this.continueOnError = continueOnError;
         this.readLinkTargets = readLinkTargets;
+        readIndex();
     }
 
     private String getIndexDataSetName()
@@ -164,51 +162,30 @@ public class DirectoryIndex implements Iterable<Link>
         return groupPath + "/__INDEXNAMES__";
     }
 
-    private Map<String, Link> indexMapOrNull = null;
-
-    private boolean isMapAvailable()
-    {
-        return indexMapOrNull != null;
-    }
-
     /**
-     * Reads the directory index from the archive represented by <var>hdf5Reader</var> if that
-     * hasn't yet happened.
-     * 
-     * @param buildMap If <code>true</code>, the map data structure is build, otherwise the list
-     *            data structure.
+     * (Re-)Reads the directory index from the archive represented by <var>hdf5Reader</var>.
      */
-    private void ensureIndexIsRead(boolean buildMap)
+    private void readIndex()
     {
-        if (this.linksOrNull != null)
-        {
-            if (buildMap && indexMapOrNull == null)
-            {
-                listToMap();
-            } else if (buildMap == false && indexMapOrNull != null)
-            {
-                mapToList();
-            }
-            return;
-        }
+        boolean listRead = false;
         try
         {
-            this.linksOrNull = null;
             if (hdf5Reader.exists(getIndexDataSetName())
                     && hdf5Reader.exists(getIndexNamesDataSetName()))
             {
                 final HDF5CompoundType<Link> linkCompoundType = getHDF5LinkCompoundType(hdf5Reader);
                 final CRC32 crc32Digester = new CRC32();
                 final String indexDataSetName = getIndexDataSetName();
-                final Link[] linksProcessing =
-                        hdf5Reader.readCompoundArray(indexDataSetName, linkCompoundType,
+                final ArrayList<Link> work =
+                        new ArrayList<Link>(Arrays.asList(hdf5Reader.readCompoundArray(
+                                indexDataSetName, linkCompoundType,
                                 new IHDF5Reader.IByteArrayInspector()
                                     {
                                         public void inspect(byte[] byteArray)
                                         {
                                             crc32Digester.update(byteArray);
                                         }
-                                    });
+                                    })));
                 int crc32 = (int) crc32Digester.getValue();
                 int crc32Stored =
                         hdf5Reader.getIntAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME);
@@ -231,64 +208,42 @@ public class DirectoryIndex implements Iterable<Link>
                                     + ListEntry.hashToString(crc32Stored) + ", found: "
                                     + ListEntry.hashToString(crc32));
                 }
-                int namePos = 0;
-                this.firstFileIndex = 0;
-                for (Link link : linksProcessing)
-                {
-                    namePos =
-                            link.initAfterReading(concatenatedNames, namePos, hdf5Reader,
-                                    groupPath, readLinkTargets);
-                    // Note: only works because link array is ordered by directory / non-directory
-                    if (link.isDirectory())
-                    {
-                        ++firstFileIndex;
-                    }
-                }
-                this.linksOrNull = linksProcessing;
+                initLinks(work, concatenatedNames);
+                setLinks(new LinkList(work));
+                listRead = true;
             }
         } catch (RuntimeException ex)
         {
             HDF5ArchiveTools
                     .dealWithError(new ListArchiveException(groupPath, ex), continueOnError);
         }
-        if (this.linksOrNull == null)
+        if (listRead == false)
         {
             if (hdf5Reader.isGroup(groupPath, false))
             {
                 final List<HDF5LinkInformation> hdf5LinkInfos =
                         hdf5Reader.getGroupMemberInformation(groupPath, readLinkTargets);
-                linksOrNull = new Link[hdf5LinkInfos.size()];
-                int idx = 0;
+                final ArrayList<Link> work = new ArrayList<Link>(hdf5LinkInfos.size());
                 for (HDF5LinkInformation linfo : hdf5LinkInfos)
                 {
                     final long size =
                             linfo.isDataSet() ? hdf5Reader.getDataSetInformation(linfo.getPath())
                                     .getSize() : Link.UNKNOWN;
-                    linksOrNull[idx++] = new Link(linfo, size);
+                    work.add(new Link(linfo, size));
                 }
+                setLinks(new LinkList(work, true));
             }
         }
-        if (buildMap)
-        {
-            listToMap();
-        }
     }
 
-    private void mapToList()
+    private void initLinks(final List<Link> work, final String concatenatedNames)
     {
-        linksOrNull = indexMapOrNull.values().toArray(new Link[indexMapOrNull.size()]);
-        Arrays.sort(linksOrNull);
-        indexMapOrNull = null;
-    }
-
-    private void listToMap()
-    {
-        assert linksOrNull != null;
-
-        indexMapOrNull = new HashMap<String, Link>(linksOrNull.length);
-        for (Link link : linksOrNull)
+        int namePos = 0;
+        for (Link link : work)
         {
-            indexMapOrNull.put(link.getLinkName(), link);
+            namePos =
+                    link.initAfterReading(concatenatedNames, namePos, hdf5Reader,
+                            groupPath, readLinkTargets);
         }
     }
 
@@ -300,56 +255,21 @@ public class DirectoryIndex implements Iterable<Link>
      */
     public Link tryGetLink(String name)
     {
-        if (isMapAvailable())
-        {
-            return indexMapOrNull.get(name);
-        }
-        ensureIndexIsRead(false);
-        // Try directory
-        int index = binarySearch(linksOrNull, name, 0, firstFileIndex);
-        if (linksOrNull == null)
-        {
-            return null;
-        }
-        if (index >= 0)
-        {
-            return linksOrNull[index];
-        }
-        // Try file / symlink
-        index = binarySearch(linksOrNull, name, firstFileIndex, linksOrNull.length);
-        if (index >= 0)
-        {
-            return linksOrNull[index];
-        } else
-        {
-            return null;
-        }
+        return getLinks().tryGetLink(name);
     }
 
-    private static int binarySearch(Link[] a, String key, int startIndex, int endIndex)
+    //
+    // Iterable
+    //
+
+    public Iterator<Link> iterator()
     {
-        int low = startIndex;
-        int high = endIndex - 1;
-
-        while (low <= high)
-        {
-            int mid = (low + high) >> 1;
-            final String midVal = a[mid].getLinkName();
-            int cmp = midVal.compareTo(key);
-
-            if (cmp < 0)
-            {
-                low = mid + 1;
-            } else if (cmp > 0)
-            {
-                high = mid - 1;
-            } else
-            {
-                return mid; // key found
-            }
-        }
-        return -(low + 1); // key not found.
+        return getLinks().iterator();
     }
+
+    //
+    // Writing methods
+    //
 
     /**
      * Writes the directory index to the archive represented by <var>hdf5Writer</var>.
@@ -360,17 +280,13 @@ public class DirectoryIndex implements Iterable<Link>
      */
     public void writeIndexToArchive() throws IllegalStateException
     {
-        if (hdf5WriterOrNull == null)
-        {
-            throw new IllegalStateException("Cannot write index in read-only mode.");
-        }
-        ensureIndexIsRead(false);
+        ensureWriteMode();
         try
         {
             final HDF5EnumerationType linkTypeEnumeration =
                     getHDF5LinkTypeEnumeration(hdf5WriterOrNull);
             final StringBuilder concatenatedNames = new StringBuilder();
-            for (Link link : linksOrNull)
+            for (Link link : getLinks())
             {
                 link.prepareForWriting(linkTypeEnumeration, concatenatedNames);
             }
@@ -381,8 +297,9 @@ public class DirectoryIndex implements Iterable<Link>
                     calcCrc32(concatenatedNamesStr));
             final String indexDataSetName = getIndexDataSetName();
             final CRC32 crc32 = new CRC32();
-            hdf5WriterOrNull.writeCompoundArray(indexDataSetName, getHDF5LinkCompoundType(
-                    hdf5WriterOrNull, linkTypeEnumeration), linksOrNull,
+            hdf5WriterOrNull.writeCompoundArray(indexDataSetName,
+                    getHDF5LinkCompoundType(hdf5WriterOrNull, linkTypeEnumeration),
+                    getLinks().toArray(),
                     HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                     new IHDF5Reader.IByteArrayInspector()
                         {
@@ -391,12 +308,57 @@ public class DirectoryIndex implements Iterable<Link>
                                 crc32.update(byteArray);
                             }
                         });
-            hdf5WriterOrNull.setIntAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME, (int) crc32
-                    .getValue());
+            hdf5WriterOrNull.setIntAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME,
+                    (int) crc32.getValue());
         } catch (HDF5Exception ex)
         {
             HDF5ArchiveTools
                     .dealWithError(new ListArchiveException(groupPath, ex), continueOnError);
+        }
+    }
+
+    /**
+     * Add <var>entries</var> to the index. Any link that already exists in the index will be
+     * replaced.
+     */
+    public void addToIndex(List<Link> entries)
+    {
+        ensureWriteMode();
+        setLinks(getLinks().add(entries));
+    }
+
+    /**
+     * Removes <var>name</var> from the index, if it exists.
+     * 
+     * @return <code>true</code>, if <var>name</var> was removed.
+     */
+    public boolean remove(String name)
+    {
+        ensureWriteMode();
+        final Link linkOrNull = getLinks().tryGetLink(name);
+        if (linkOrNull != null)
+        {
+            setLinks(getLinks().remove(Collections.singleton(linkOrNull)));
+            return true;
+        }
+        return false;
+    }
+
+    private LinkList getLinks()
+    {
+        return links.get();
+    }
+    
+    private void setLinks(LinkList newLinks)
+    {
+        links.set(newLinks);
+    }
+
+    private void ensureWriteMode()
+    {
+        if (hdf5WriterOrNull == null)
+        {
+            throw new IllegalStateException("Cannot write index in read-only mode.");
         }
     }
 
@@ -405,83 +367,6 @@ public class DirectoryIndex implements Iterable<Link>
         final CRC32 crc32 = new CRC32();
         crc32.update(StringUtils.toBytes0Term(names, names.length(), CharacterEncoding.UTF8));
         return (int) crc32.getValue();
-    }
-
-    /**
-     * Add <var>entries</var> to the index. Any link that already exists in the index will be
-     * replaced.
-     * <p>
-     * Can work on the list or the map data structure.
-     */
-    public void addToIndex(List<Link> entries)
-    {
-        if (isMapAvailable())
-        {
-            for (Link link : entries)
-            {
-                indexMapOrNull.put(link.getLinkName(), link);
-            }
-        } else
-        {
-            if (linksOrNull == null)
-            {
-                ensureIndexIsRead(false);
-            }
-            if (linksOrNull == null || this.linksOrNull.length == 0)
-            {
-                this.linksOrNull = entries.toArray(new Link[entries.size()]);
-                Arrays.sort(this.linksOrNull);
-            } else
-            {
-                ensureIndexIsRead(true);
-                for (Link link : entries)
-                {
-                    indexMapOrNull.put(link.getLinkName(), link);
-                }
-            }
-        }
-    }
-
-    /**
-     * Works on the list structure.
-     */
-    public Iterator<Link> iterator()
-    {
-        ensureIndexIsRead(false);
-        return new Iterator<Link>()
-            {
-                private Link[] iteratedLinks = linksOrNull;
-
-                private int idx = 0;
-
-                public boolean hasNext()
-                {
-                    return iteratedLinks != null && idx < iteratedLinks.length;
-                }
-
-                public Link next()
-                {
-                    return iteratedLinks[idx++];
-                }
-
-                public void remove() throws UnsupportedOperationException
-                {
-                    throw new UnsupportedOperationException();
-                }
-            };
-    }
-
-    /**
-     * Removes <var>name</var> from the index, if it existss.
-     * <p>
-     * Works on the map data structure.
-     * 
-     * @return <code>true</code>, if <var>name</var> was removed.
-     */
-    public boolean remove(String name)
-    {
-        ensureIndexIsRead(true);
-        return indexMapOrNull.remove(name) != null;
     }
 
 }
