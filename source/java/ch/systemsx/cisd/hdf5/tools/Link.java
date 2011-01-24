@@ -332,6 +332,7 @@ public final class Link implements Comparable<Link>
 
     public int compareTo(Link o)
     {
+        // We put all directories before all files.
         if (isDirectory() && o.isDirectory() == false)
         {
             return -1;
