@@ -18,7 +18,7 @@ HDFPARENTDIR=C:\JHDF5
 HDFJAVADIR=$(HDFPARENTDIR)\jhdf5_src\
 
 # The directory where HDF5 has been compiled
-HDFDIR=$(HDFPARENTDIR)\hdf5\hdf5-1.8.5
+HDFDIR=$(HDFPARENTDIR)\hdf5\hdf5-1.8.6-pre3
 
 # The directory where HDF library is located
 HDFLIBDIR=$(HDFDIR)\proj\hdf5\Release
