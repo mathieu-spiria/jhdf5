@@ -141,12 +141,11 @@ public class DirectoryIndex implements Iterable<Link>
     {
         assert hdf5Reader != null;
         assert groupPath != null;
-        assert hdf5Reader.isGroup(groupPath, false);
 
         this.hdf5Reader = hdf5Reader;
         this.hdf5WriterOrNull =
                 (hdf5Reader instanceof IHDF5Writer) ? (IHDF5Writer) hdf5Reader : null;
-        this.groupPath = groupPath;
+        this.groupPath = (groupPath.length() == 0) ? "/" : groupPath;
         this.continueOnError = continueOnError;
         this.readLinkTargets = readLinkTargets;
         readIndex();

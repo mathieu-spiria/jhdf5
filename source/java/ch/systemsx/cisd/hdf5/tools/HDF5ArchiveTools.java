@@ -317,18 +317,25 @@ public class HDF5ArchiveTools
         }
     }
 
-    private static void writeToConsole(String hdf5ObjectPath, boolean checksumOK, int crc32,
-            boolean verbose)
+    private static void writeToConsole(String hdf5ObjectPath, boolean checksumStored,
+            boolean checksumOK, int crc32, boolean verbose)
     {
         if (verbose)
         {
-            if (checksumOK)
+            if (checksumStored)
             {
-                System.out.println(hdf5ObjectPath + "\t" + ListEntry.hashToString(crc32) + "\tOK");
+                if (checksumOK)
+                {
+                    System.out.println(hdf5ObjectPath + "\t" + ListEntry.hashToString(crc32) + "\tOK");
+                } else
+                {
+                    System.out.println(hdf5ObjectPath + "\t" + ListEntry.hashToString(crc32)
+                            + "\tFAILED");
+                }
             } else
             {
                 System.out.println(hdf5ObjectPath + "\t" + ListEntry.hashToString(crc32)
-                        + "\tFAILED");
+                        + "\t(NO CHECKSUM)");
             }
         }
     }
@@ -572,9 +579,11 @@ public class HDF5ArchiveTools
             final long size = reader.getDataSetInformation(hdf5ObjectPath).getSize();
             final int crc32 = copyFromHDF5(reader, hdf5ObjectPath, size, file, buffer);
             restoreAttributes(file, linkOrNull, groupCache);
+            // storedCrc32 == 0 means: no checksum stored.
+            final boolean checksumStored = (storedCrc32 != 0);
             final boolean checksumOK = (crc32 == storedCrc32);
-            writeToConsole(hdf5ObjectPath, checksumOK, crc32, verbose);
-            if (checksumOK == false)
+            writeToConsole(hdf5ObjectPath, checksumStored, checksumOK, crc32, verbose);
+            if (checksumStored && checksumOK == false)
             {
                 dealWithError(new UnarchivingException(hdf5ObjectPath,
                         "CRC checksum mismatch. Expected: " + ListEntry.hashToString(storedCrc32)
