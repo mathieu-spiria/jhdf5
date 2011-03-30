@@ -283,3 +283,80 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Rget_1obj_1type
 #ifdef __cplusplus
 }
 #endif
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    String H5Rget_name(hid_t id, H5R_type_t ref_type, void *_ref)
+ * Signature: (I[B)I
+ */
+JNIEXPORT jstring JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Rget_1name
+  (JNIEnv *env, jclass clss, jint loc_id, jint ref_type, jbyteArray ref)
+{
+		ssize_t size;
+    H5O_type_t obj_type;
+    jboolean isCopy;
+    jbyte *refP;
+    char *rName;
+    int rname_buf_size = 128;
+    jstring str;
+
+    if (ref == NULL) {
+        h5nullArgument( env, "H5Rget_name:  ref is NULL");
+        return NULL;
+    }
+
+#ifdef __cplusplus
+    refP = (jbyte *)env->GetByteArrayElements(ref,&isCopy);
+#else
+    refP = (jbyte *)(*env)->GetByteArrayElements(env,ref,&isCopy);
+#endif
+    if (refP == NULL) {
+        h5JNIFatalError(env,  "H5Rget_name:  ref not pinned");
+        return NULL;
+    }
+
+    rName = (char*) malloc(sizeof(char) * rname_buf_size);
+
+    size = H5Rget_name((hid_t)loc_id, (H5R_type_t)ref_type, refP, rName, rname_buf_size);
+
+    if (size < 0) {
+        free(rName);
+#ifdef __cplusplus
+        env->ReleaseByteArrayElements(ref,refP,JNI_ABORT);
+#else
+        (*env)->ReleaseByteArrayElements(env,ref,refP,JNI_ABORT);
+#endif
+        h5libraryError(env);
+        return NULL;
+    }
+    if (size >= rname_buf_size) {
+    		free(rName);
+    		rname_buf_size = size + 1;
+		    rName = (char*) malloc(sizeof(char) * rname_buf_size);
+    		size = H5Rget_name((hid_t)loc_id, (H5R_type_t)ref_type, refP, rName, rname_buf_size);
+    }
+ 		rName[size] = '\0';
+
+#ifdef __cplusplus
+    env->ReleaseByteArrayElements(ref,refP,JNI_ABORT);
+#else
+    (*env)->ReleaseByteArrayElements(env,ref,refP,JNI_ABORT);
+#endif
+
+    /* successful return -- save the string; */
+#ifdef __cplusplus
+    str = env->NewStringUTF(rName);
+#else
+    str = (*env)->NewStringUTF(env,rName);
+#endif
+    free(rName);
+    if (str == NULL) {
+        h5JNIFatalError( env,"H5Rget_name:  return string failed");
+        return NULL;
+    }
+    return str;
+}
+
+#ifdef __cplusplus
+}
+#endif
