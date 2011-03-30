@@ -23,6 +23,7 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_OPAQUE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_REFERENCE;
 
 /**
  * Identifies the class of a data type. Note that for array types the class of the elements is
@@ -35,7 +36,8 @@ public enum HDF5DataClass
     // Implementation note: The order matters! ENUM needs to be before INTEGER, as H5Tdetect_class
     // will return TRUE for ENUM arrays when trying to detect an INTEGER class.
     BITFIELD(H5T_BITFIELD), ENUM(H5T_ENUM), INTEGER(H5T_INTEGER), FLOAT(H5T_FLOAT), STRING(
-            H5T_STRING), OPAQUE(H5T_OPAQUE), BOOLEAN(-1), COMPOUND(H5T_COMPOUND), OTHER(-1);
+            H5T_STRING), OPAQUE(H5T_OPAQUE), BOOLEAN(-1), COMPOUND(H5T_COMPOUND), REFERENCE(
+            H5T_REFERENCE), OTHER(-1);
 
     private int id;
 
