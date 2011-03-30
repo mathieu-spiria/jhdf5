@@ -437,8 +437,8 @@ public class H5
             throws HDF5LibraryException, NullPointerException;
 
     /**
-     * H5AwriteString writes a (partial) variable length String attribute, specified by its identifier
-     * attr_id, from the application memory buffer buf into the file.
+     * H5AwriteString writes a (partial) variable length String attribute, specified by its
+     * identifier attr_id, from the application memory buffer buf into the file.
      * 
      * @param attr_id Identifier of the dataset read from.
      * @param mem_type_id Identifier of the memory datatype.
@@ -2033,8 +2033,7 @@ public class H5
             throws HDF5LibraryException, NullPointerException, IllegalArgumentException;
 
     /**
-     * Given a reference to an object ref, H5Rget_obj_type returns the type of the object pointed
-     * to.
+     * Given a reference to an object, H5Rget_obj_type returns the type of the object pointed to.
      * 
      * @param loc_id Identifier of the reference object.
      * @param ref_type Type of reference to query.
@@ -2045,8 +2044,22 @@ public class H5
      * @exception NullPointerException - array is null.
      * @exception IllegalArgumentException - array is invalid.
      */
-    public synchronized static native int H5Rget_obj_type(int loc_id, int ref_type, byte ref[])
+    public synchronized static native int H5Rget_obj_type(int loc_id, int ref_type, byte[] ref)
             throws HDF5LibraryException, NullPointerException, IllegalArgumentException;
+
+    /**
+     * Given a reference to an object, H5Rget_name returns the name (path) of the object pointed to.
+     * 
+     * @param loc_id Identifier of the reference object.
+     * @param ref_type Type of reference to query.
+     * @param ref The reference.
+     * @return The path of the object being pointed to, or an empty string, if the object being
+     *         pointed to has no name.
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - array is null.
+     * @exception IllegalArgumentException - array is invalid.
+     */
+    public synchronized static native String H5Rget_name(int loc_id, int ref_type, byte[] ref);
 
     // ////////////////////////////////////////////////////////////
     // //
@@ -3645,16 +3658,14 @@ public class H5
      * Can be set on the file access property list.
      * <p>
      * As of 1.8.0, only the combinations <code>low=H5F_LIBVER_EARLIEST</code> / <code>
-     * high=H5F_LIBVER_LATEST</code>
-     * (which is the default and means that 1.6 compatible files are created if no features are used
-     * that require a 1.8 format) and <code>low=H5F_LIBVER_LATEST
-     * </code> / <code>high=H5F_LIBVER_LATEST</code> (which means
-     * that always 1.8 files are created which cannot be read by an earlier library) are allowed.
+     * high=H5F_LIBVER_LATEST</code> (which is the default and means that 1.6 compatible files are
+     * created if no features are used that require a 1.8 format) and <code>low=H5F_LIBVER_LATEST
+     * </code> / <code>high=H5F_LIBVER_LATEST</code> (which means that always 1.8 files are created
+     * which cannot be read by an earlier library) are allowed.
      * 
      * @param plist_id Property list identifier.
      * @param low The lower permissible bound. One of <code>H5F_LIBVER_LATEST</code> or <code>
-     *            H5F_LIBVER_LATEST</code>
-     *            .
+     *            H5F_LIBVER_LATEST</code> .
      * @param high The higher permissible bound. Must be <code>H5F_LIBVER_LATEST</code>.
      * @return a non-negative value if successful
      */
@@ -3713,7 +3724,7 @@ public class H5
      * 
      * @param cpl_id The creation property list to set the character encoding for.
      * @param encoding The encoding (one of {@link HDF5Constants#H5T_CSET_ASCII} or
-     *         {@link HDF5Constants#H5T_CSET_UTF8}) to use.
+     *            {@link HDF5Constants#H5T_CSET_UTF8}) to use.
      * @return a non-negative value if successful
      */
     public synchronized static native int H5Pset_char_encoding(int cpl_id, int encoding);
