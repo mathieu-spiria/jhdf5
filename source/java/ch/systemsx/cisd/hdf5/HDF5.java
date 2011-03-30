@@ -83,6 +83,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Pset_libver_bounds;
 import static ncsa.hdf.hdf5lib.H5.H5Pset_link_phase_change;
 import static ncsa.hdf.hdf5lib.H5.H5Pset_local_heap_size_hint;
 import static ncsa.hdf.hdf5lib.H5.H5Pset_scaleoffset;
+import static ncsa.hdf.hdf5lib.H5.H5Rget_name;
 import static ncsa.hdf.hdf5lib.H5.H5Sclose;
 import static ncsa.hdf.hdf5lib.H5.H5Screate;
 import static ncsa.hdf.hdf5lib.H5.H5Screate_simple;
@@ -130,6 +131,7 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_FILE_ACCESS;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_GROUP_CREATE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_LINK_CREATE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5R_OBJECT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_MAX_RANK;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
@@ -1914,5 +1916,13 @@ class HDF5
             });
         return datasetXferPropertyList;
     }
+    
+    //
+    // References
+    //
 
+    String getReferencedObjectName(int objectId, byte[] reference)
+    {
+        return H5Rget_name(objectId, H5R_OBJECT, reference);
+    }
 }

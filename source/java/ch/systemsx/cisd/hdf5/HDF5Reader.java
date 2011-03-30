@@ -71,15 +71,15 @@ class HDF5Reader implements IHDF5Reader
     private final IHDF5DoubleReader doubleReader;
 
     private final IHDF5BooleanReader booleanReader;
-    
+
     private final IHDF5StringReader stringReader;
 
     private final IHDF5EnumReader enumReader;
 
     private final IHDF5CompoundReader compoundReader;
-    
+
     private final IHDF5DateTimeReader dateTimeReader;
-    
+
     private final IHDF5GenericReader genericReader;
 
     HDF5Reader(HDF5BaseReader baseReader)
@@ -275,6 +275,25 @@ class HDF5Reader implements IHDF5Reader
         baseReader.checkOpen();
         type.check(baseReader.fileId);
         return baseReader.h5.tryGetDataTypePath(type.getStorageTypeId());
+    }
+
+    public String getObjectReferenceAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
+            {
+                public String call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    return baseReader.getObjectReferenceAttribute(objectId, objectPath,
+                            attributeName, registry);
+                }
+            };
+        return baseReader.runner.call(readRunnable);
     }
 
     public List<String> getAttributeNames(final String objectPath)

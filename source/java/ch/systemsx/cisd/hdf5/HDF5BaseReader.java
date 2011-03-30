@@ -25,6 +25,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_REFERENCE;
 
 import java.io.File;
 import java.util.Arrays;
@@ -57,6 +58,8 @@ class HDF5BaseReader
     {
         CONFIG, OPEN, CLOSED
     }
+
+    private static final int REFERENCE_SIZE_IN_BYTES = 8;
 
     protected final File hdf5File;
 
@@ -792,6 +795,28 @@ class HDF5BaseReader
     {
         final HDF5DataTypeVariant typeVariantOrNull = tryGetTypeVariant(objectId, registry);
         return (HDF5DataTypeVariant.ENUM == typeVariantOrNull);
+    }
+
+    //
+    // Reference
+    //
+
+    String getObjectReferenceAttribute(final int objectId, final String objectPath,
+            final String attributeName, final ICleanUpRegistry registry)
+    {
+        final int attributeId = h5.openAttribute(objectId, attributeName, registry);
+        final int objectReferenceDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+        final boolean isReference = (h5.getClassType(objectReferenceDataTypeId) == H5T_REFERENCE);
+        if (isReference == false)
+        {
+            throw new IllegalArgumentException("Attribute " + attributeName + " of object "
+                    + objectPath + " needs to be a Reference.");
+        }
+        final byte[] reference =
+                h5.readAttributeAsByteArray(attributeId, objectReferenceDataTypeId,
+                        REFERENCE_SIZE_IN_BYTES);
+        final String objectName = h5.getReferencedObjectName(attributeId, reference);
+        return objectName;
     }
 
     //
