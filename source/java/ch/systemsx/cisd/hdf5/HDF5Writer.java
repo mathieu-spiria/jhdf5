@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
 
 import java.util.BitSet;
 import java.util.Date;
@@ -70,15 +71,15 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     private final IHDF5DoubleWriter doubleWriter;
 
     private final IHDF5BooleanWriter booleanWriter;
-    
+
     private final IHDF5StringWriter stringWriter;
 
     private final IHDF5EnumWriter enumWriter;
 
     private final IHDF5CompoundWriter compoundWriter;
-    
+
     private final IHDF5DateTimeWriter dateTimeWriter;
-    
+
     private final IHDF5OpaqueWriter opaqueWriter;
 
     HDF5Writer(HDF5BaseWriter baseWriter)
@@ -225,6 +226,22 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     // /////////////////////
+    // Object References
+    // /////////////////////
+
+    public void setObjectReferenceAttribute(String objectPath, String name,
+            String referencedObjectPath)
+    {
+        assert objectPath != null;
+        assert name != null;
+
+        baseWriter.checkOpen();
+        final byte[] reference =
+                baseWriter.h5.createObjectReference(baseWriter.fileId, referencedObjectPath);
+        baseWriter.setAttribute(objectPath, name, H5T_STD_REF_OBJ, H5T_STD_REF_OBJ, reference);
+    }
+
+    // /////////////////////
     // Group
     // /////////////////////
 
@@ -292,8 +309,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void setTypeVariant(final String objectPath, final HDF5DataTypeVariant typeVariant)
     {
         baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE, baseWriter.typeVariantDataType
-                .getStorageTypeId(), baseWriter.typeVariantDataType.getNativeTypeId(),
+        baseWriter.setAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE,
+                baseWriter.typeVariantDataType.getStorageTypeId(),
+                baseWriter.typeVariantDataType.getNativeTypeId(),
                 baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
     }
 
@@ -866,15 +884,15 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     @Override
     public <T> HDF5CompoundType<T> getInferredCompoundType(final String name, Class<T> pojoClass)
     {
-        return compoundWriter.getCompoundType(name, pojoClass, HDF5CompoundMemberMapping
-                .inferMapping(pojoClass));
+        return compoundWriter.getCompoundType(name, pojoClass,
+                HDF5CompoundMemberMapping.inferMapping(pojoClass));
     }
 
     @Override
     public <T> HDF5CompoundType<T> getInferredCompoundType(Class<T> pojoClass)
     {
-        return compoundWriter.getCompoundType(pojoClass, HDF5CompoundMemberMapping
-                .inferMapping(pojoClass));
+        return compoundWriter.getCompoundType(pojoClass,
+                HDF5CompoundMemberMapping.inferMapping(pojoClass));
     }
 
     @Override

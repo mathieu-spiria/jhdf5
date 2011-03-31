@@ -163,6 +163,24 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void move(String oldLinkPath, String newLinkPath) throws HDF5SymbolTableException;
 
     // /////////////////////
+    // Object References
+    // /////////////////////
+
+    /**
+     * Sets an object reference attribute to the referenced object.
+     * <p>
+     * Both the object referenced with <var>objectPath</var> and <var>referencedObjectPath</var>
+     * must exist, that is it need to have been written before by one of the <code>write()</code> or
+     * <code>create()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param referencedObjectPath The path of the object to reference.
+     */
+    public void setObjectReferenceAttribute(final String objectPath, final String name,
+            final String referencedObjectPath);
+
+    // /////////////////////
     // Group
     // /////////////////////
 

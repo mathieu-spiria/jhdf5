@@ -83,6 +83,7 @@ import static ncsa.hdf.hdf5lib.H5.H5Pset_libver_bounds;
 import static ncsa.hdf.hdf5lib.H5.H5Pset_link_phase_change;
 import static ncsa.hdf.hdf5lib.H5.H5Pset_local_heap_size_hint;
 import static ncsa.hdf.hdf5lib.H5.H5Pset_scaleoffset;
+import static ncsa.hdf.hdf5lib.H5.H5Rcreate;
 import static ncsa.hdf.hdf5lib.H5.H5Rget_name;
 import static ncsa.hdf.hdf5lib.H5.H5Sclose;
 import static ncsa.hdf.hdf5lib.H5.H5Screate;
@@ -1924,5 +1925,10 @@ class HDF5
     String getReferencedObjectName(int objectId, byte[] reference)
     {
         return H5Rget_name(objectId, H5R_OBJECT, reference);
+    }
+    
+    byte[] createObjectReference(int fileId, String objectPath)
+    {
+        return H5Rcreate(fileId, objectPath, H5R_OBJECT, -1);
     }
 }
