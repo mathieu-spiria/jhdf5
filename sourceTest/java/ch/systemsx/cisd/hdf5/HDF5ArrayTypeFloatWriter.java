@@ -108,7 +108,7 @@ public class HDF5ArrayTypeFloatWriter
                             baseWriter.h5.createArrayType(H5T_IEEE_F32LE, data.length, registry);
                     final int dataSetId =
                             baseWriter.h5.createScalarDataSet(baseWriter.fileId, storageTypeId,
-                                    objectPath, registry);
+                                    objectPath, true, registry);
                     H5Dwrite_float(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
@@ -134,7 +134,7 @@ public class HDF5ArrayTypeFloatWriter
                                     registry);
                     final int dataSetId =
                             baseWriter.h5.createScalarDataSet(baseWriter.fileId, storageTypeId,
-                                    objectPath, registry);
+                                    objectPath, true, registry);
                     H5Dwrite_float(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
                             .getAsFlatArray());
                     return null; // Nothing to return.

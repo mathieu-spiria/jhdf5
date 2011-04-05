@@ -61,7 +61,7 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                 {
                     final int dataSetId =
                             baseWriter.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64,
-                                    HDFNativeData.longToByte(timeStamp), registry);
+                                    HDFNativeData.longToByte(timeStamp), true, true, registry);
                     baseWriter.setTypeVariant(dataSetId,
                             HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                             registry);
@@ -291,7 +291,7 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                 {
                     final int dataSetId =
                             baseWriter.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64,
-                                    HDFNativeData.longToByte(timeDuration), registry);
+                                    HDFNativeData.longToByte(timeDuration), true, true, registry);
                     baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
                 }

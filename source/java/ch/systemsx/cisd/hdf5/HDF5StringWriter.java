@@ -39,6 +39,8 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 public class HDF5StringWriter implements IHDF5StringWriter
 {
 
+    private static final int MAX_COMPACT_SIZE = 64 * 1024 - 12;
+
     private final HDF5BaseWriter baseWriter;
 
     HDF5StringWriter(HDF5BaseWriter baseWriter)
@@ -169,11 +171,12 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                                                                                        // '\0'
                     final int stringDataTypeId =
                             baseWriter.h5.createDataTypeString(realMaxLength, registry);
-                    if (HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION.equals(features))
+                    if (features.isDeflating() == false)
                     {
-                        // For generic storage, we can create a scalar data set
+                        // If we do not want to compress, we can create a scalar dataset.
                         baseWriter.writeScalar(objectPath, stringDataTypeId, stringDataTypeId,
                                 StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding),
+                                maxLength < MAX_COMPACT_SIZE, features.isKeepDataSetIfExists(),
                                 registry);
                     } else
                     {
@@ -181,10 +184,17 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                 HDF5Utils.tryGetChunkSizeForString(realMaxLength,
                                         features.requiresChunking());
                         final int dataSetId;
-                        if (baseWriter.h5.exists(baseWriter.fileId, objectPath))
+                        boolean exists = baseWriter.h5.exists(baseWriter.fileId, objectPath);
+                        if (exists && features.isKeepDataSetIfExists() == false)
+                        {
+                            baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
+                            exists = false;
+                        }
+                        if (exists)
                         {
                             dataSetId =
-                                    baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                                    baseWriter.h5.openDataSet(baseWriter.fileId, objectPath,
+                                            registry);
                         } else
                         {
                             final HDF5StorageLayout layout =
@@ -282,8 +292,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         baseWriter.writeStringVL(dataSetId, data);
                     } else
                     {
-                        writeStringArray(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data,
-                                maxLength);
+                        writeStringArray(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL,
+                                H5P_DEFAULT, data, maxLength);
                     }
                     return null; // Nothing to return.
                 }
@@ -663,7 +673,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         dataSetId =
                                 baseWriter.h5.createScalarDataSet(baseWriter.fileId,
                                         baseWriter.variableLengthStringDataTypeId, objectPath,
-                                        registry);
+                                        true, registry);
                     }
                     H5DwriteString(dataSetId, baseWriter.variableLengthStringDataTypeId,
                             H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, new String[]
@@ -784,11 +794,12 @@ public class HDF5StringWriter implements IHDF5StringWriter
             NullPointerException
     {
         final byte[] buf = StringUtils.toBytes0Term(obj, maxLength, baseWriter.encoding);
-    
+
         /* will raise exception on error */
         final int status =
-                H5.H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf);
-    
+                H5.H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id,
+                        buf);
+
         return status;
     }
 }

@@ -760,7 +760,7 @@ class HDF5
     }
 
     public int createScalarDataSet(int fileId, int dataTypeId, String dataSetName,
-            ICleanUpRegistry registry)
+            boolean compactLayout, ICleanUpRegistry registry)
     {
         checkMaxLength(dataSetName);
         final int dataSpaceId = H5Screate(H5S_SCALAR);
@@ -774,7 +774,8 @@ class HDF5
         final int dataSetId =
                 H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
                         lcplCreateIntermediateGroups,
-                        dataSetCreationPropertyListCompactStorageLayout, H5P_DEFAULT);
+                        compactLayout ? dataSetCreationPropertyListCompactStorageLayout
+                                : H5P_DEFAULT, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -1204,7 +1205,7 @@ class HDF5
     {
         H5Tset_cset(dataTypeId, encoding.getCValue());
     }
-    
+
     public int createArrayType(int baseTypeId, int length, ICleanUpRegistry registry)
     {
         final int dataTypeId = H5Tarray_create(baseTypeId, 1, new int[]
@@ -1881,13 +1882,15 @@ class HDF5
         }
         if (useUTF8CharEncoding)
         {
-            setCharacterEncodingCreationPropertyList(linkCreationPropertyList, CharacterEncoding.UTF8);
+            setCharacterEncodingCreationPropertyList(linkCreationPropertyList,
+                    CharacterEncoding.UTF8);
         }
         return linkCreationPropertyList;
     }
 
     // Only use with H5P_LINK_CREATE, H5P_ATTRIBUTE_CREATE and H5P_STRING_CREATE property list ids
-    private void setCharacterEncodingCreationPropertyList(int creationPropertyList, CharacterEncoding encoding)
+    private void setCharacterEncodingCreationPropertyList(int creationPropertyList,
+            CharacterEncoding encoding)
     {
         H5Pset_char_encoding(creationPropertyList, encoding.getCValue());
     }
@@ -1917,7 +1920,7 @@ class HDF5
             });
         return datasetXferPropertyList;
     }
-    
+
     //
     // References
     //
@@ -1926,7 +1929,7 @@ class HDF5
     {
         return H5Rget_name(objectId, H5R_OBJECT, reference);
     }
-    
+
     byte[] createObjectReference(int fileId, String objectPath)
     {
         return H5Rcreate(fileId, objectPath, H5R_OBJECT, -1);

@@ -366,7 +366,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
             {
                 public Object call(ICleanUpRegistry registry)
                 {
-                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, registry);
+                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true, true,
+                            registry);
                     return null; // Nothing to return.
                 }
             };
@@ -402,15 +403,24 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * Internal method for writing a scalar value provided as <code>byte[]</code>.
      */
     int writeScalar(final String dataSetPath, final int storageDataTypeId,
-            final int nativeDataTypeId, final byte[] value, ICleanUpRegistry registry)
+            final int nativeDataTypeId, final byte[] value, final boolean compactLayout,
+            final boolean keepDatasetIfExists, ICleanUpRegistry registry)
     {
         final int dataSetId;
-        if (h5.exists(fileId, dataSetPath))
+        boolean exists = h5.exists(fileId, dataSetPath);
+        if (exists && keepDatasetIfExists == false)
+        {
+            h5.deleteObject(fileId, dataSetPath);
+            exists = false;
+        }
+        if (exists)
         {
             dataSetId = h5.openObject(fileId, dataSetPath, registry);
         } else
         {
-            dataSetId = h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath, registry);
+            dataSetId =
+                    h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath, compactLayout,
+                            registry);
         }
         H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, value);
         return dataSetId;

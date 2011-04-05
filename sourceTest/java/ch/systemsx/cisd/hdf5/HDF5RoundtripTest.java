@@ -133,6 +133,8 @@ public class HDF5RoundtripTest
         test.testOverwriteContiguousDataSet();
         test.testScaleOffsetFilterInt();
         test.testScaleOffsetFilterFloat();
+        test.testSmallString();
+        test.testVeryLargeString();
         test.testOverwriteString();
         test.testStringCompact();
         test.testStringUnicode();
@@ -2210,17 +2212,56 @@ public class HDF5RoundtripTest
         assertFalse(stringOverwriteFile.exists());
         stringOverwriteFile.deleteOnExit();
         IHDF5Writer writer =
-                HDF5FactoryProvider.get().configure(stringOverwriteFile).dontUseExtendableDataTypes()
-                        .writer();
+                HDF5FactoryProvider.get().configure(stringOverwriteFile)
+                        .dontUseExtendableDataTypes().writer();
         final String largeData = StringUtils.repeat("a", 12);
         final String smallData = "abc1234";
         final String dataSetName = "/aString";
-        writer.writeString(dataSetName, largeData);
         writer.writeString(dataSetName, smallData);
+        writer.writeString(dataSetName, largeData);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringOverwriteFile);
         final String dataRead = reader.readString(dataSetName);
-        assertEquals(smallData, dataRead);
+        assertEquals(largeData, dataRead);
+        reader.close();
+    }
+
+    @Test
+    public void testSmallString()
+    {
+        final File smallStringFile = new File(workingDirectory, "smallString.h5");
+        smallStringFile.delete();
+        assertFalse(smallStringFile.exists());
+        smallStringFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().configure(smallStringFile).writer();
+        final String dataSetName = "/aString";
+        writer.writeString(dataSetName, "abc");
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(smallStringFile);
+        final String dataRead = reader.readString(dataSetName);
+        assertEquals("abc", dataRead);
+        assertEquals(HDF5StorageLayout.COMPACT, reader.getDataSetInformation(dataSetName)
+                .getStorageLayout());
+        reader.close();
+    }
+
+    @Test
+    public void testVeryLargeString()
+    {
+        final File veryLargeStringFile = new File(workingDirectory, "veryLargeString.h5");
+        veryLargeStringFile.delete();
+        assertFalse(veryLargeStringFile.exists());
+        veryLargeStringFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().configure(veryLargeStringFile).writer();
+        final String largeData = StringUtils.repeat("a", 64*1024);
+        final String dataSetName = "/aString";
+        writer.writeString(dataSetName, largeData);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(veryLargeStringFile);
+        final String dataRead = reader.readString(dataSetName);
+        assertEquals(largeData, dataRead);
+        assertEquals(HDF5StorageLayout.CONTIGUOUS, reader.getDataSetInformation(dataSetName)
+                .getStorageLayout());
         reader.close();
     }
 
