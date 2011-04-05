@@ -169,27 +169,36 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                                                                                        // '\0'
                     final int stringDataTypeId =
                             baseWriter.h5.createDataTypeString(realMaxLength, registry);
-                    final long[] chunkSizeOrNull =
-                            HDF5Utils.tryGetChunkSizeForString(realMaxLength,
-                                    features.requiresChunking());
-                    final int dataSetId;
-                    if (baseWriter.h5.exists(baseWriter.fileId, objectPath))
+                    if (HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION.equals(features))
                     {
-                        dataSetId =
-                                baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                        // For generic storage, we can create a scalar data set
+                        baseWriter.writeScalar(objectPath, stringDataTypeId, stringDataTypeId,
+                                StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding),
+                                registry);
                     } else
                     {
-                        final HDF5StorageLayout layout =
-                                baseWriter.determineLayout(stringDataTypeId,
-                                        HDF5Utils.SCALAR_DIMENSIONS, chunkSizeOrNull, null);
-                        dataSetId =
-                                baseWriter.h5.createDataSet(baseWriter.fileId,
-                                        HDF5Utils.SCALAR_DIMENSIONS, chunkSizeOrNull,
-                                        stringDataTypeId, features, objectPath, layout,
-                                        baseWriter.fileFormat, registry);
+                        final long[] chunkSizeOrNull =
+                                HDF5Utils.tryGetChunkSizeForString(realMaxLength,
+                                        features.requiresChunking());
+                        final int dataSetId;
+                        if (baseWriter.h5.exists(baseWriter.fileId, objectPath))
+                        {
+                            dataSetId =
+                                    baseWriter.h5.openDataSet(baseWriter.fileId, objectPath, registry);
+                        } else
+                        {
+                            final HDF5StorageLayout layout =
+                                    baseWriter.determineLayout(stringDataTypeId,
+                                            HDF5Utils.SCALAR_DIMENSIONS, chunkSizeOrNull, null);
+                            dataSetId =
+                                    baseWriter.h5.createDataSet(baseWriter.fileId,
+                                            HDF5Utils.SCALAR_DIMENSIONS, chunkSizeOrNull,
+                                            stringDataTypeId, features, objectPath, layout,
+                                            baseWriter.fileFormat, registry);
+                        }
+                        H5.H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                                StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding));
                     }
-                    H5.H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding));
                     return null; // Nothing to return.
                 }
 

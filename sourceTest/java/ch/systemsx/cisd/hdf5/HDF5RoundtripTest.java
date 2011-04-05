@@ -133,6 +133,7 @@ public class HDF5RoundtripTest
         test.testOverwriteContiguousDataSet();
         test.testScaleOffsetFilterInt();
         test.testScaleOffsetFilterFloat();
+        test.testOverwriteString();
         test.testStringCompact();
         test.testStringUnicode();
         test.testStringArray();
@@ -2202,6 +2203,28 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testOverwriteString()
+    {
+        final File stringOverwriteFile = new File(workingDirectory, "overwriteString.h5");
+        stringOverwriteFile.delete();
+        assertFalse(stringOverwriteFile.exists());
+        stringOverwriteFile.deleteOnExit();
+        IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(stringOverwriteFile).dontUseExtendableDataTypes()
+                        .writer();
+        final String largeData = StringUtils.repeat("a", 12);
+        final String smallData = "abc1234";
+        final String dataSetName = "/aString";
+        writer.writeString(dataSetName, largeData);
+        writer.writeString(dataSetName, smallData);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringOverwriteFile);
+        final String dataRead = reader.readString(dataSetName);
+        assertEquals(smallData, dataRead);
+        reader.close();
+    }
+
+    @Test
     public void testStringCompact()
     {
         final File stringCompactFile = new File(workingDirectory, "stringCompact.h5");
@@ -3456,10 +3479,8 @@ public class HDF5RoundtripTest
         final HDF5DataSetInformation stringInfo = reader.getDataSetInformation("stringDS");
         assertEquals(HDF5DataClass.STRING, stringInfo.getTypeInformation().getDataClass());
         assertEquals(s.length() + 1, stringInfo.getTypeInformation().getElementSize());
-        assertEquals(1, stringInfo.getDimensions().length);
-        assertEquals(1, stringInfo.getDimensions()[0]);
-        assertEquals(1, stringInfo.getMaxDimensions().length);
-        assertEquals(1, stringInfo.getMaxDimensions()[0]);
+        assertEquals(0, stringInfo.getDimensions().length);
+        assertEquals(0, stringInfo.getMaxDimensions().length);
         assertEquals(HDF5StorageLayout.COMPACT, stringInfo.getStorageLayout());
         assertNull(stringInfo.tryGetChunkSizes());
         final HDF5DataSetInformation stringInfoVL = reader.getDataSetInformation("stringDSVL");
