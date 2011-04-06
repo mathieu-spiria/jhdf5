@@ -171,13 +171,13 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                                                                                        // '\0'
                     final int stringDataTypeId =
                             baseWriter.h5.createDataTypeString(realMaxLength, registry);
-                    if (features.isDeflating() == false)
+                    if (features.requiresChunking() == false)
                     {
                         // If we do not want to compress, we can create a scalar dataset.
                         baseWriter.writeScalar(objectPath, stringDataTypeId, stringDataTypeId,
                                 StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding),
-                                maxLength < MAX_COMPACT_SIZE, features.isKeepDataSetIfExists(),
-                                registry);
+                                features.allowsCompact() && (maxLength < MAX_COMPACT_SIZE),
+                                features.isKeepDataSetIfExists(), registry);
                     } else
                     {
                         final long[] chunkSizeOrNull =

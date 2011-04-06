@@ -136,7 +136,10 @@ public class HDF5RoundtripTest
         test.testSmallString();
         test.testVeryLargeString();
         test.testOverwriteString();
+        test.testOverwriteStringWithLarge();
+        test.testOverwriteStringWithLargeKeepCompact();
         test.testStringCompact();
+        test.testStringContiguous();
         test.testStringUnicode();
         test.testStringArray();
         test.testStringArrayBlock();
@@ -2227,6 +2230,50 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testOverwriteStringWithLarge()
+    {
+        final File stringOverwriteFile = new File(workingDirectory, "overwriteStringWithLarge.h5");
+        stringOverwriteFile.delete();
+        assertFalse(stringOverwriteFile.exists());
+        stringOverwriteFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().configure(stringOverwriteFile).writer();
+        final String largeData = StringUtils.repeat("a", 64 * 1024);
+        final String smallData = "abc1234";
+        final String dataSetName = "/aString";
+        writer.writeString(dataSetName, smallData);
+        writer.writeString(dataSetName, largeData);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringOverwriteFile);
+        final String dataRead = reader.readString(dataSetName);
+        assertEquals(largeData, dataRead);
+        reader.close();
+    }
+
+    @Test
+    public void testOverwriteStringWithLargeKeepCompact()
+    {
+        final File stringOverwriteFile =
+                new File(workingDirectory, "overwriteStringWithLargeKeepCompact.h5");
+        stringOverwriteFile.delete();
+        assertFalse(stringOverwriteFile.exists());
+        stringOverwriteFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().configure(stringOverwriteFile).writer();
+        final String largeData = StringUtils.repeat("a", 64 * 1024);
+        final String smallData = "abc1234";
+        final String dataSetName = "/aString";
+        writer.writeString(dataSetName, smallData);
+        writer.writeString(dataSetName, largeData,
+                HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS_KEEP);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringOverwriteFile);
+        final String dataRead = reader.readString(dataSetName);
+        assertEquals(largeData.substring(0, smallData.length()), dataRead);
+        assertEquals(HDF5StorageLayout.COMPACT, reader.getDataSetInformation(dataSetName)
+                .getStorageLayout());
+        reader.close();
+    }
+
+    @Test
     public void testSmallString()
     {
         final File smallStringFile = new File(workingDirectory, "smallString.h5");
@@ -2253,7 +2300,7 @@ public class HDF5RoundtripTest
         assertFalse(veryLargeStringFile.exists());
         veryLargeStringFile.deleteOnExit();
         IHDF5Writer writer = HDF5FactoryProvider.get().configure(veryLargeStringFile).writer();
-        final String largeData = StringUtils.repeat("a", 64*1024);
+        final String largeData = StringUtils.repeat("a", 64 * 1024);
         final String dataSetName = "/aString";
         writer.writeString(dataSetName, largeData);
         writer.close();
@@ -2272,19 +2319,50 @@ public class HDF5RoundtripTest
         stringCompactFile.delete();
         assertFalse(stringCompactFile.exists());
         stringCompactFile.deleteOnExit();
-        IHDF5Writer writer =
-                HDF5FactoryProvider.get().configure(stringCompactFile).dontUseExtendableDataTypes()
-                        .writer();
+        IHDF5Writer writer = HDF5FactoryProvider.get().configure(stringCompactFile).writer();
         final String smallData = "abc1234";
         final String dataSetName1 = "/aString";
         writer.writeString(dataSetName1, smallData, HDF5GenericStorageFeatures.GENERIC_COMPACT);
         final String dataSetName2 = "/anotherString";
-        final String largeData = StringUtils.repeat("a", 64 * 1024 - 6);
+        final String largeData = StringUtils.repeat("a", 64 * 1024 - 13);
         writer.writeString(dataSetName2, largeData, HDF5GenericStorageFeatures.GENERIC_COMPACT);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringCompactFile);
-        final String dataRead = reader.readString(dataSetName1);
-        assertEquals(smallData, dataRead);
+        final String dataRead1 = reader.readString(dataSetName1);
+        assertEquals(HDF5StorageLayout.COMPACT, reader.getDataSetInformation(dataSetName1)
+                .getStorageLayout());
+        assertEquals(smallData, dataRead1);
+        final String dataRead2 = reader.readString(dataSetName2);
+        assertEquals(HDF5StorageLayout.COMPACT, reader.getDataSetInformation(dataSetName2)
+                .getStorageLayout());
+        assertEquals(largeData, dataRead2);
+        reader.close();
+    }
+
+    @Test
+    public void testStringContiguous()
+    {
+        final File stringCompactFile = new File(workingDirectory, "stringContiguous.h5");
+        stringCompactFile.delete();
+        assertFalse(stringCompactFile.exists());
+        stringCompactFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().configure(stringCompactFile).writer();
+        final String smallData = "abc1234";
+        final String dataSetName1 = "/aString";
+        writer.writeString(dataSetName1, smallData, HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS);
+        final String dataSetName2 = "/anotherString";
+        final String largeData = StringUtils.repeat("a", 64 * 1024 - 13);
+        writer.writeString(dataSetName2, largeData, HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringCompactFile);
+        final String dataRead1 = reader.readString(dataSetName1);
+        assertEquals(HDF5StorageLayout.CONTIGUOUS, reader.getDataSetInformation(dataSetName1)
+                .getStorageLayout());
+        assertEquals(smallData, dataRead1);
+        final String dataRead2 = reader.readString(dataSetName2);
+        assertEquals(HDF5StorageLayout.CONTIGUOUS, reader.getDataSetInformation(dataSetName2)
+                .getStorageLayout());
+        assertEquals(largeData, dataRead2);
         reader.close();
     }
 

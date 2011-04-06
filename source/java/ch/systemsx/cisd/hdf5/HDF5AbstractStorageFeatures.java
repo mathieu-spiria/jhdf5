@@ -112,6 +112,11 @@ abstract class HDF5AbstractStorageFeatures
     {
         return isDeflating() || isScaling() || proposedLayoutOrNull == HDF5StorageLayout.CHUNKED;
     }
+    
+    boolean allowsCompact()
+    {
+        return proposedLayoutOrNull == null || proposedLayoutOrNull == HDF5StorageLayout.COMPACT;
+    }
 
     public boolean isDeflating()
     {
