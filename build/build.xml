@@ -7,7 +7,7 @@
 	<property name="jar.file" value="${dist}/cisd-jhdf5.jar" />
 	<property name="dist.file" value="${dist}/cisd-jhdf5" />
 	<property name="jar.batteries-included.filename"
-	          value="cisd-jhdf5-batteries_included_lin_win_mac_sun.jar" />
+	          value="cisd-jhdf5-batteries_included_lin_win_mac_sol.jar" />
 	<property name="jar.batteries-included.file" value="${dist}/${jar.batteries-included.filename}" />
 	<property name="jar.batteries-included_lin_win_mac.file"
 	          value="${dist}/cisd-jhdf5-batteries_included_lin_win_mac.jar" />
