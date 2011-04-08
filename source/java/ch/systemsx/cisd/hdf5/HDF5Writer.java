@@ -229,11 +229,23 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     // Object References
     // /////////////////////
 
+    public void writeObjectReference(String objectPath, String referencedObjectPath)
+    {
+        assert objectPath != null;
+        assert referencedObjectPath != null;
+
+        baseWriter.checkOpen();
+        final byte[] reference =
+                baseWriter.h5.createObjectReference(baseWriter.fileId, referencedObjectPath);
+        baseWriter.writeScalar(objectPath, H5T_STD_REF_OBJ, H5T_STD_REF_OBJ, reference);
+    }
+
     public void setObjectReferenceAttribute(String objectPath, String name,
             String referencedObjectPath)
     {
         assert objectPath != null;
         assert name != null;
+        assert referencedObjectPath != null;
 
         baseWriter.checkOpen();
         final byte[] reference =

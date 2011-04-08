@@ -272,6 +272,15 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
     // /////////////////////
 
     /**
+     * Reads an object reference from the object <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The path of the object that the reference refers to, or an empty string, if the
+     *         object reference refers to an unnamed object.
+     */
+    public String readObjectReference(final String objectPath);
+
+    /**
      * Reads an object reference attribute named <var>attributeName</var> from the object
      * <var>objectPath</var>.
      * 

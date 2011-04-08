@@ -277,6 +277,23 @@ class HDF5Reader implements IHDF5Reader
         return baseReader.h5.tryGetDataTypePath(type.getStorageTypeId());
     }
 
+    public String readObjectReference(final String objectPath)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
+            {
+                public String call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    return baseReader.readObjectReference(dataSetId, objectPath, registry);
+                }
+            };
+        return baseReader.runner.call(readRunnable);
+    }
+
     public String getObjectReferenceAttribute(final String objectPath, final String attributeName)
     {
         assert objectPath != null;

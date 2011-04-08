@@ -801,6 +801,22 @@ class HDF5BaseReader
     // Reference
     //
 
+    String readObjectReference(final int dataSetId, final String dataSetPath,
+            final ICleanUpRegistry registry)
+    {
+        final int objectReferenceDataTypeId = h5.getDataTypeForDataSet(dataSetId, registry);
+        final boolean isReference = (h5.getClassType(objectReferenceDataTypeId) == H5T_REFERENCE);
+        if (isReference == false)
+        {
+            throw new IllegalArgumentException("Dataset " + dataSetPath
+                    + " needs to be a Reference.");
+        }
+        final byte[] reference = new byte[REFERENCE_SIZE_IN_BYTES];
+        h5.readDataSet(dataSetId, objectReferenceDataTypeId, reference);
+        final String objectName = h5.getReferencedObjectName(dataSetId, reference);
+        return objectName;
+    }
+
     String getObjectReferenceAttribute(final int objectId, final String objectPath,
             final String attributeName, final ICleanUpRegistry registry)
     {

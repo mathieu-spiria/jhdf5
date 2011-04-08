@@ -332,6 +332,7 @@ public class HDF5RoundtripTest
         test.testSmallTimeDurations();
         test.testTimeDurationArrayChunked();
         test.testNumericConversion();
+        test.testObjectReference();
         test.testObjectReferenceAttribute();
 
         test.finalize();
@@ -5978,9 +5979,25 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testObjectReference()
+    {
+        final File file = new File(workingDirectory, "testObjectReference.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.writeString("a", "TestA");
+        writer.writeObjectReference("b", "a");
+        assertEquals("/a", writer.readObjectReference("/b"));
+        writer.move("/a", "/C");
+        assertEquals("/C", writer.readObjectReference("/b"));
+        writer.close();
+    }
+
+    @Test
     public void testObjectReferenceAttribute()
     {
-        final File file = new File(workingDirectory, "testObjectReferenceAttribute");
+        final File file = new File(workingDirectory, "testObjectReferenceAttribute.h5");
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();

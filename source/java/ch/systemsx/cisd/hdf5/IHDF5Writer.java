@@ -167,6 +167,17 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     // /////////////////////
 
     /**
+     * Writes an object reference to the referenced object.
+     * <p>
+     * The object referenced with <var>referencedObjectPath</var> must exist, that is it need to
+     * have been written before by one of the <code>write()</code> or <code>create()</code> methods.
+     * 
+     * @param objectPath The name of the object to write.
+     * @param referencedObjectPath The path of the object to reference.
+     */
+    public void writeObjectReference(String objectPath, String referencedObjectPath);
+
+    /**
      * Sets an object reference attribute to the referenced object.
      * <p>
      * Both the object referenced with <var>objectPath</var> and <var>referencedObjectPath</var>
