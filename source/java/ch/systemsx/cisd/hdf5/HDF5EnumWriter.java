@@ -134,7 +134,7 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                         final HDF5IntStorageFeatures actualFeatures =
                                 HDF5IntStorageFeatures.createDeflateAndIntegerScaling(features
                                         .getDeflateLevel(), data.getType().getNumberOfBits(),
-                                        features.isKeepDataSetIfExists());
+                                        baseWriter.keepDataIfExists(features));
                         final int dataSetId =
                                 baseWriter.getDataSetId(objectPath, data.getType()
                                         .getIntStorageTypeId(), new long[]

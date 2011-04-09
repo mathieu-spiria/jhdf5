@@ -177,7 +177,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         baseWriter.writeScalar(objectPath, stringDataTypeId, stringDataTypeId,
                                 StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding),
                                 features.allowsCompact() && (maxLength < MAX_COMPACT_SIZE),
-                                features.isKeepDataSetIfExists(), registry);
+                                baseWriter.keepDataIfExists(features), registry);
                     } else
                     {
                         final long[] chunkSizeOrNull =
@@ -185,7 +185,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                         features.requiresChunking());
                         final int dataSetId;
                         boolean exists = baseWriter.h5.exists(baseWriter.fileId, objectPath);
-                        if (exists && features.isKeepDataSetIfExists() == false)
+                        if (exists && baseWriter.keepDataIfExists(features) == false)
                         {
                             baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
                             exists = false;

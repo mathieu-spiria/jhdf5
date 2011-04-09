@@ -107,6 +107,21 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
     public IHDF5WriterConfigurator dontUseExtendableDataTypes();
 
     /**
+     * On writing a data set, keep the data set if it exists and only write the new data. This is
+     * equivalent to the <code>_KEEP</code> variants of {@link HDF5GenericStorageFeatures} and makes
+     * this behavior the default.
+     * <p>
+     * If this setting is not given, an existing data set will be deleted before the data set is
+     * written.
+     * <p>
+     * <i>Note:</i> If this configuration option is chosen, data types and storage features may only
+     * apply if the written data set does not yet exist. For example, it may lead to a string value
+     * being truncated on write if a string dataset with the same name and shorter length already
+     * exists.
+     */
+    public HDF5WriterConfigurator keepDataSetsIfTheyExist();
+
+    /**
      * Sets the file format compatibility for the writer.
      */
     public IHDF5WriterConfigurator fileFormat(FileFormat newFileFormat);

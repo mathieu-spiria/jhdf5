@@ -27,6 +27,12 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
  * <em>Note that this may lead to an exception if the existing data set is non-extendable and the 
  * dimensions of the new data set differ from the dimensions of the existing data set.</em>
  * <p>
+ * The <code>..._DELETE</code> variants denote that the specified storage features should always be
+ * applied. If the data set already exists, it will be deleted before the new data set is written.
+ * This is the default behavior. However, if the
+ * {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()} setting is given, the
+ * <code>..._DELETE</code> variant can be used to override this setting on a case-by-case basis.
+ * <p>
  * The available storage layouts are {@link HDF5StorageLayout#COMPACT},
  * {@link HDF5StorageLayout#CONTIGUOUS} or {@link HDF5StorageLayout#CHUNKED} can be chosen. Only
  * {@link HDF5StorageLayout#CHUNKED} is extendable and can be compressed.
@@ -75,27 +81,45 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
             new HDF5FloatStorageFeatures(null, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
+     * Represents 'no compression', use default storage layout.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_NO_COMPRESSION_DELETE =
+            new HDF5FloatStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
      * Represents a compact storage layout.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_COMPACT =
-            new HDF5FloatStorageFeatures(HDF5StorageLayout.COMPACT, NO_DEFLATION_LEVEL,
-                    NO_SCALING_FACTOR);
+    public static final HDF5FloatStorageFeatures FLOAT_COMPACT = new HDF5FloatStorageFeatures(
+            HDF5StorageLayout.COMPACT, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents a compact storage layout.
      * <p>
      * Keep existing data set and apply only if a new data set has to be created.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_COMPACT_KEEP =
-            new HDF5FloatStorageFeatures(HDF5StorageLayout.COMPACT, true, NO_DEFLATION_LEVEL,
-                    NO_SCALING_FACTOR);
+    public static final HDF5FloatStorageFeatures FLOAT_COMPACT_KEEP = new HDF5FloatStorageFeatures(
+            HDF5StorageLayout.COMPACT, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
+     * Represents a compact storage layout.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_COMPACT_DELETE =
+            new HDF5FloatStorageFeatures(HDF5StorageLayout.COMPACT, false, true,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents a contiguous storage layout.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_CONTIGUOUS =
-            new HDF5FloatStorageFeatures(HDF5StorageLayout.CONTIGUOUS, NO_DEFLATION_LEVEL,
-                    NO_SCALING_FACTOR);
+    public static final HDF5FloatStorageFeatures FLOAT_CONTIGUOUS = new HDF5FloatStorageFeatures(
+            HDF5StorageLayout.CONTIGUOUS, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents a contiguous storage layout.
@@ -107,40 +131,71 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
                     NO_SCALING_FACTOR);
 
     /**
+     * Represents a contiguous storage layout.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_CONTIGUOUS_DELETE =
+            new HDF5FloatStorageFeatures(HDF5StorageLayout.CONTIGUOUS, false, true,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
      * Represents a chunked storage layout.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_CHUNKED =
-            new HDF5FloatStorageFeatures(HDF5StorageLayout.CHUNKED, NO_DEFLATION_LEVEL,
-                    NO_SCALING_FACTOR);
+    public static final HDF5FloatStorageFeatures FLOAT_CHUNKED = new HDF5FloatStorageFeatures(
+            HDF5StorageLayout.CHUNKED, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents a chunked storage layout.
      * <p>
      * Keep existing data set and apply only if a new data set has to be created.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_CHUNKED_KEEP =
-            new HDF5FloatStorageFeatures(HDF5StorageLayout.CHUNKED, true, NO_DEFLATION_LEVEL,
-                    NO_SCALING_FACTOR);
+    public static final HDF5FloatStorageFeatures FLOAT_CHUNKED_KEEP = new HDF5FloatStorageFeatures(
+            HDF5StorageLayout.CHUNKED, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
+     * Represents a chunked storage layout.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_CHUNKED_DELETE =
+            new HDF5FloatStorageFeatures(HDF5StorageLayout.CHUNKED, false, true,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents 'standard compression', that is deflation with the default deflation level.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_DEFLATE =
-            new HDF5FloatStorageFeatures(null, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+    public static final HDF5FloatStorageFeatures FLOAT_DEFLATE = new HDF5FloatStorageFeatures(null,
+            DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents 'standard compression', that is deflation with the default deflation level.
      * <p>
      * Keep existing data set and apply only if a new data set has to be created.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_DEFLATE_KEEP =
-            new HDF5FloatStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+    public static final HDF5FloatStorageFeatures FLOAT_DEFLATE_KEEP = new HDF5FloatStorageFeatures(
+            null, true, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
+     * Represents 'standard compression', that is deflation with the default deflation level.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_DEFLATE_DELETE =
+            new HDF5FloatStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL,
+                    NO_SCALING_FACTOR);
 
     /**
      * Represents 'maximal compression', that is deflation with the maximal deflation level.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_DEFLATE_MAX =
-            new HDF5FloatStorageFeatures(null, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+    public static final HDF5FloatStorageFeatures FLOAT_DEFLATE_MAX = new HDF5FloatStorageFeatures(
+            null, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents 'maximal compression', that is deflation with the maximal deflation level.
@@ -151,10 +206,20 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
             new HDF5FloatStorageFeatures(null, true, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
+     * Represents 'maximal compression', that is deflation with the maximal deflation level.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_DEFLATE_MAX_DELETE =
+            new HDF5FloatStorageFeatures(null, false, true, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
      * Represents scaling with scaling factor 1 for float values.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_SCALING1 =
-            new HDF5FloatStorageFeatures(null, NO_DEFLATION_LEVEL, (byte) 1);
+    public static final HDF5FloatStorageFeatures FLOAT_SCALING1 = new HDF5FloatStorageFeatures(
+            null, NO_DEFLATION_LEVEL, (byte) 1);
 
     /**
      * Represents scaling with scaling factor 1 for float values.
@@ -163,6 +228,16 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING1_KEEP =
             new HDF5FloatStorageFeatures(null, true, NO_DEFLATION_LEVEL, (byte) 1);
+
+    /**
+     * Represents scaling with scaling factor 1 for float values.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_SCALING1_DELETE =
+            new HDF5FloatStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, (byte) 1);
 
     /**
      * Represents scaling with scaling factor 1 for float values combined with deflation using the
@@ -181,10 +256,21 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
             new HDF5FloatStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL, (byte) 1);
 
     /**
+     * Represents scaling with scaling factor 1 for float values combined with deflation using the
+     * default deflation level.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_SCALING1_DEFLATE_DELETE =
+            new HDF5FloatStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL, (byte) 1);
+
+    /**
      * Represents scaling with scaling factor 2 for float values.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_SCALING2 =
-            new HDF5FloatStorageFeatures(null, NO_DEFLATION_LEVEL, (byte) 2);
+    public static final HDF5FloatStorageFeatures FLOAT_SCALING2 = new HDF5FloatStorageFeatures(
+            null, NO_DEFLATION_LEVEL, (byte) 2);
 
     /**
      * Represents scaling with scaling factor 2 for float values.
@@ -193,6 +279,16 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING2_KEEP =
             new HDF5FloatStorageFeatures(null, true, NO_DEFLATION_LEVEL, (byte) 2);
+
+    /**
+     * Represents scaling with scaling factor 2 for float values.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_SCALING2_DELETE =
+            new HDF5FloatStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, (byte) 2);
 
     /**
      * Represents scaling with scaling factor 2 for float values combined with deflation using the
@@ -211,10 +307,21 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
             new HDF5FloatStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL, (byte) 2);
 
     /**
+     * Represents scaling with scaling factor 2 for float values combined with deflation using the
+     * default deflation level.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_SCALING2_DEFLATE_DELETE =
+            new HDF5FloatStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL, (byte) 2);
+
+    /**
      * Represents scaling with scaling factor 3 for float values.
      */
-    public static final HDF5FloatStorageFeatures FLOAT_SCALING3 =
-            new HDF5FloatStorageFeatures(null, NO_DEFLATION_LEVEL, (byte) 3);
+    public static final HDF5FloatStorageFeatures FLOAT_SCALING3 = new HDF5FloatStorageFeatures(
+            null, NO_DEFLATION_LEVEL, (byte) 3);
 
     /**
      * Represents scaling with scaling factor 3 for float values.
@@ -223,6 +330,16 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING3_KEEP =
             new HDF5FloatStorageFeatures(null, true, NO_DEFLATION_LEVEL, (byte) 3);
+
+    /**
+     * Represents scaling with scaling factor 3 for float values.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_SCALING3_DELETE =
+            new HDF5FloatStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, (byte) 3);
 
     /**
      * Represents scaling with scaling factor 3 for float values combined with deflation using the
@@ -241,12 +358,23 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
             new HDF5FloatStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL, (byte) 3);
 
     /**
+     * Represents scaling with scaling factor 3 for float values combined with deflation using the
+     * default deflation level.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_SCALING3_DEFLATE_DELETE =
+            new HDF5FloatStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL, (byte) 3);
+
+    /**
      * Creates a {@link HDF5FloatStorageFeatures} object that represents deflation with the given
      * <var>deflationLevel</var>.
      */
     public static HDF5FloatStorageFeatures createDeflation(int deflationLevel)
     {
-        return createDeflation(deflationLevel, false);
+        return createDeflation(deflationLevel, false, false);
     }
 
     /**
@@ -257,7 +385,20 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      */
     public static HDF5FloatStorageFeatures createDeflationKeep(int deflationLevel)
     {
-        return createDeflation(deflationLevel, true);
+        return createDeflation(deflationLevel, true, false);
+    }
+
+    /**
+     * Creates a {@link HDF5FloatStorageFeatures} object that represents deflation with the given
+     * <var>deflationLevel</var>.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static HDF5FloatStorageFeatures createDeflationDelete(int deflationLevel)
+    {
+        return createDeflation(deflationLevel, false, true);
     }
 
     /**
@@ -265,7 +406,7 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * <var>deflationLevel</var>.
      */
     private static HDF5FloatStorageFeatures createDeflation(int deflationLevel,
-            boolean keepDataSetIfExists)
+            boolean keepDataSetIfExists, boolean deleteDataSetIfExists)
     {
         if (deflationLevel == NO_DEFLATION_LEVEL)
         {
@@ -278,8 +419,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
             return keepDataSetIfExists ? FLOAT_DEFLATE_MAX_KEEP : FLOAT_DEFLATE_MAX;
         } else
         {
-            return new HDF5FloatStorageFeatures(null, keepDataSetIfExists, toByte(deflationLevel),
-                    NO_SCALING_FACTOR);
+            return new HDF5FloatStorageFeatures(null, keepDataSetIfExists, deleteDataSetIfExists,
+                    toByte(deflationLevel), NO_SCALING_FACTOR);
         }
     }
 
@@ -355,7 +496,14 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
     HDF5FloatStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
             byte deflateLevel, byte scalingFactor)
     {
-        super(proposedLayoutOrNull, keepDataSetIfExists, deflateLevel, scalingFactor);
+        super(proposedLayoutOrNull, keepDataSetIfExists, false, deflateLevel, scalingFactor);
+    }
+
+    HDF5FloatStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
+            boolean deleteDataSetIfExists, byte deflateLevel, byte scalingFactor)
+    {
+        super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists, deflateLevel,
+                scalingFactor);
     }
 
     /**

@@ -25,6 +25,12 @@ package ch.systemsx.cisd.hdf5;
  * <em>Note that this may lead to an exception if the existing data set is non-extendable and the 
  * dimensions of the new data set differ from the dimensions of the existing data set.</em>
  * <p>
+ * The <code>..._DELETE</code> variants denote that the specified storage features should always be
+ * applied. If the data set already exists, it will be deleted before the new data set is written.
+ * This is the default behavior. However, if the
+ * {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()} setting is given, the
+ * <code>..._DELETE</code> variant can be used to override this setting on a case-by-case basis.
+ * <p>
  * The available storage layouts are {@link HDF5StorageLayout#COMPACT},
  * {@link HDF5StorageLayout#CONTIGUOUS} or {@link HDF5StorageLayout#CHUNKED} can be chosen. Only
  * {@link HDF5StorageLayout#CHUNKED} is extendable and can be compressed.
@@ -53,6 +59,16 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
             new HDF5GenericStorageFeatures(null, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
+     * Represents 'no compression'.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5GenericStorageFeatures GENERIC_NO_COMPRESSION_DELETE =
+            new HDF5GenericStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
      * Represents a compact storage layout.
      */
     public static final HDF5GenericStorageFeatures GENERIC_COMPACT =
@@ -67,6 +83,17 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
     public static final HDF5GenericStorageFeatures GENERIC_COMPACT_KEEP =
             new HDF5GenericStorageFeatures(HDF5StorageLayout.COMPACT, true, NO_DEFLATION_LEVEL,
                     NO_SCALING_FACTOR);
+
+    /**
+     * Represents a compact storage layout.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5GenericStorageFeatures GENERIC_COMPACT_DELETE =
+            new HDF5GenericStorageFeatures(HDF5StorageLayout.COMPACT, false, true,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents a contiguous storage layout.
@@ -85,6 +112,17 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
                     NO_SCALING_FACTOR);
 
     /**
+     * Represents a contiguous storage layout.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5GenericStorageFeatures GENERIC_CONTIGUOUS_DELETE =
+            new HDF5GenericStorageFeatures(HDF5StorageLayout.CONTIGUOUS, false, true,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
      * Represents a chunked storage layout.
      */
     public static final HDF5GenericStorageFeatures GENERIC_CHUNKED =
@@ -101,6 +139,17 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
                     NO_SCALING_FACTOR);
 
     /**
+     * Represents a chunked storage layout.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5GenericStorageFeatures GENERIC_CHUNKED_DELETE =
+            new HDF5GenericStorageFeatures(HDF5StorageLayout.CHUNKED, false, true,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
      * Represents 'standard compression', that is deflation with the default deflation level.
      */
     public static final HDF5GenericStorageFeatures GENERIC_DEFLATE =
@@ -115,6 +164,17 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
             new HDF5GenericStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
+     * Represents 'standard compression', that is deflation with the default deflation level.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5GenericStorageFeatures GENERIC_DEFLATE_DELETE =
+            new HDF5GenericStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL,
+                    NO_SCALING_FACTOR);
+
+    /**
      * Represents 'maximal compression', that is deflation with the maximal deflation level.
      */
     public static final HDF5GenericStorageFeatures GENERIC_DEFLATE_MAX =
@@ -127,6 +187,17 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
      */
     public static final HDF5GenericStorageFeatures GENERIC_DEFLATE_MAX_KEEP =
             new HDF5GenericStorageFeatures(null, true, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
+     * Represents 'maximal compression', that is deflation with the maximal deflation level.
+     * <p>
+     * Delete an existing data set before writing the new one. Always apply the chosen settings.
+     * This allows to overwrite the {@link IHDF5WriterConfigurator#keepDataSetsIfTheyExist()}
+     * setting.
+     */
+    public static final HDF5GenericStorageFeatures GENERIC_DEFLATE_MAX_DELETE =
+            new HDF5GenericStorageFeatures(null, false, true, MAX_DEFLATION_LEVEL,
+                    NO_SCALING_FACTOR);
 
     /**
      * Creates a {@link HDF5GenericStorageFeatures} object that represents deflation with the given
@@ -188,7 +259,14 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
     HDF5GenericStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
             byte deflateLevel, byte scalingFactor)
     {
-        super(proposedLayoutOrNull, keepDataSetIfExists, deflateLevel, scalingFactor);
+        super(proposedLayoutOrNull, keepDataSetIfExists, false, deflateLevel, scalingFactor);
+    }
+
+    HDF5GenericStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
+            boolean deleteDataSetIfExists, byte deflateLevel, byte scalingFactor)
+    {
+        super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists, deflateLevel,
+                scalingFactor);
     }
 
     /**

@@ -80,16 +80,21 @@ abstract class HDF5AbstractStorageFeatures
     private final byte scalingFactor;
 
     private final HDF5StorageLayout proposedLayoutOrNull;
-    
+
     private final boolean keepDataSetIfExists;
 
+    private final boolean deleteDataSetIfExists;
+
     HDF5AbstractStorageFeatures(final HDF5StorageLayout proposedLayoutOrNull,
-            final boolean keepDataSetIfExists, final byte deflateLevel, final byte scalingFactor)
+            final boolean keepDataSetIfExists, final boolean deleteDataSetIfExists,
+            final byte deflateLevel, final byte scalingFactor)
     {
         assert deflateLevel >= 0;
+        assert (keepDataSetIfExists && deleteDataSetIfExists) == false;
 
         this.proposedLayoutOrNull = proposedLayoutOrNull;
         this.keepDataSetIfExists = keepDataSetIfExists;
+        this.deleteDataSetIfExists = deleteDataSetIfExists;
         this.deflateLevel = deflateLevel;
         this.scalingFactor = scalingFactor;
     }
@@ -112,7 +117,7 @@ abstract class HDF5AbstractStorageFeatures
     {
         return isDeflating() || isScaling() || proposedLayoutOrNull == HDF5StorageLayout.CHUNKED;
     }
-    
+
     boolean allowsCompact()
     {
         return proposedLayoutOrNull == null || proposedLayoutOrNull == HDF5StorageLayout.COMPACT;
@@ -131,6 +136,11 @@ abstract class HDF5AbstractStorageFeatures
     boolean isKeepDataSetIfExists()
     {
         return keepDataSetIfExists;
+    }
+    
+    boolean isDeleteDataSetIfExists()
+    {
+        return deleteDataSetIfExists;
     }
 
     void checkScalingOK(FileFormat fileFormat) throws IllegalStateException

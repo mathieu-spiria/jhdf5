@@ -333,6 +333,8 @@ public class HDF5RoundtripTest
         test.testTimeDurationArrayChunked();
         test.testNumericConversion();
         test.testObjectReference();
+        test.testObjectReferenceOverwriteWithKeep();
+        test.testObjectReferenceOverwriteWithKeepOverridden();
         test.testObjectReferenceAttribute();
 
         test.finalize();
@@ -5976,6 +5978,54 @@ public class HDF5RoundtripTest
             assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
         }
         reader.close();
+    }
+
+    @Test
+    public void testObjectReferenceOverwriteWithKeep()
+    {
+        final File file = new File(workingDirectory, "testObjectReferenceOverwriteWithKeep.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(file).keepDataSetsIfTheyExist().writer();
+        writer.writeString("a", "TestA");
+        writer.writeString("aa", "TestAA");
+        writer.writeObjectReference("b", "aa");
+        writer.delete("a");
+        // If keepDataSetsIfTheyExist() was not given above, the dataset would be deleted, the
+        // header of the new dataset would be written at the old position of "a" and the object
+        // reference "b" would be dangling.
+        writer.writeString("aa", "TestX");
+        assertEquals("/aa", writer.readObjectReference("/b"));
+        writer.move("/aa", "/C");
+        assertEquals("/C", writer.readObjectReference("/b"));
+        writer.close();
+    }
+
+    @Test
+    public void testObjectReferenceOverwriteWithKeepOverridden()
+    {
+        final File file =
+                new File(workingDirectory, "testObjectReferenceOverwriteWithKeepOverridden.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(file).keepDataSetsIfTheyExist().writer();
+        writer.writeString("a", "TestA");
+        writer.writeString("aa", "TestAA");
+        writer.writeObjectReference("b", "aa");
+        writer.delete("a");
+        // As we override keepDataSetsIfTheyExist() by
+        // HDF5GenericStorageFeatures.GENERIC_COMPACT_DELETE,
+        // the dataset will be deleted and the header of the new dataset will be written at the old
+        // position of "a", thus the object
+        // reference "b" will be dangling.
+        writer.writeString("aa", "TestX", HDF5GenericStorageFeatures.GENERIC_COMPACT_DELETE);
+        // Check for dangling reference.
+        assertEquals("", writer.readObjectReference("/b"));
+        writer.close();
     }
 
     @Test

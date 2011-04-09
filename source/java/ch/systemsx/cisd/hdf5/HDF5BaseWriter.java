@@ -112,6 +112,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     final boolean overwriteFile;
 
+    final boolean keepDataSetIfExists;
+
     final SyncMode syncMode;
 
     final FileFormat fileFormat;
@@ -120,7 +122,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
             FileFormat fileFormat, boolean useExtentableDataTypes, boolean overwriteFile,
-            SyncMode syncMode)
+            boolean keepDataSetIfExists, SyncMode syncMode)
     {
         super(hdf5File, performNumericConversions, useUTF8CharEncoding, fileFormat, overwriteFile);
         try
@@ -134,6 +136,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         this.fileFormat = fileFormat;
         this.useExtentableDataTypes = useExtentableDataTypes;
         this.overwriteFile = overwriteFile;
+        this.keepDataSetIfExists = keepDataSetIfExists;
         this.syncMode = syncMode;
         readNamedDataTypes();
         variableLengthStringDataTypeId = openOrCreateVLStringType();
@@ -366,8 +369,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
             {
                 public Object call(ICleanUpRegistry registry)
                 {
-                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true, true,
-                            registry);
+                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
+                            true, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -440,7 +443,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final long[] definitiveChunkSizeOrNull;
         if (h5.exists(fileId, objectPath))
         {
-            if (features.isKeepDataSetIfExists())
+            if (keepDataIfExists(features))
             {
                 return h5.openDataSet(fileId, objectPath, registry);
             }
@@ -477,6 +480,12 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 h5.createDataSet(fileId, dimensions, definitiveChunkSizeOrNull, storageDataTypeId,
                         features, objectPath, layout, fileFormat, registry);
         return dataSetId;
+    }
+
+    boolean keepDataIfExists(final HDF5AbstractStorageFeatures features)
+    {
+        return (features.isKeepDataSetIfExists() || keepDataSetIfExists)
+                && (features.isDeleteDataSetIfExists() == false);
     }
 
     /**
@@ -540,7 +549,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
     {
         final int dataSetId;
         boolean exists = h5.exists(fileId, objectPath);
-        if (exists && features.isKeepDataSetIfExists() == false)
+        if (exists && keepDataIfExists(features) == false)
         {
             h5.deleteObject(fileId, objectPath);
             exists = false;
