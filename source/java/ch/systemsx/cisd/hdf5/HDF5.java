@@ -1930,6 +1930,13 @@ class HDF5
         return H5Rget_name(objectId, H5R_OBJECT, reference);
     }
 
+    String getReferencedObjectName(int objectId, byte[] references, int ofs)
+    {
+        final byte[] reference = new byte[HDF5BaseReader.REFERENCE_SIZE_IN_BYTES];
+        System.arraycopy(references, ofs, reference, 0, HDF5BaseReader.REFERENCE_SIZE_IN_BYTES);
+        return H5Rget_name(objectId, H5R_OBJECT, reference);
+    }
+
     byte[] createObjectReference(int fileId, String objectPath)
     {
         return H5Rcreate(fileId, objectPath, H5R_OBJECT, -1);

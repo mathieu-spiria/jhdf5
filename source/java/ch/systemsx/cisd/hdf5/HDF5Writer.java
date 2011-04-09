@@ -17,7 +17,6 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
 
 import java.util.BitSet;
 import java.util.Date;
@@ -79,6 +78,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     private final IHDF5CompoundWriter compoundWriter;
 
     private final IHDF5DateTimeWriter dateTimeWriter;
+    
+    private final IHDF5ReferenceWriter referenceWriter;
 
     private final IHDF5OpaqueWriter opaqueWriter;
 
@@ -97,6 +98,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         this.enumWriter = new HDF5EnumWriter(baseWriter);
         this.compoundWriter = new HDF5CompoundWriter(baseWriter);
         this.dateTimeWriter = new HDF5DateTimeWriter(baseWriter);
+        this.referenceWriter = new HDF5ReferenceWriter(baseWriter);
         this.opaqueWriter = new HDF5OpaqueWriter(baseWriter);
     }
 
@@ -223,34 +225,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         baseWriter.checkOpen();
         baseWriter.h5.moveLink(baseWriter.fileId, oldLinkPath, newLinkPath);
-    }
-
-    // /////////////////////
-    // Object References
-    // /////////////////////
-
-    public void writeObjectReference(String objectPath, String referencedObjectPath)
-    {
-        assert objectPath != null;
-        assert referencedObjectPath != null;
-
-        baseWriter.checkOpen();
-        final byte[] reference =
-                baseWriter.h5.createObjectReference(baseWriter.fileId, referencedObjectPath);
-        baseWriter.writeScalar(objectPath, H5T_STD_REF_OBJ, H5T_STD_REF_OBJ, reference);
-    }
-
-    public void setObjectReferenceAttribute(String objectPath, String name,
-            String referencedObjectPath)
-    {
-        assert objectPath != null;
-        assert name != null;
-        assert referencedObjectPath != null;
-
-        baseWriter.checkOpen();
-        final byte[] reference =
-                baseWriter.h5.createObjectReference(baseWriter.fileId, referencedObjectPath);
-        baseWriter.setAttribute(objectPath, name, H5T_STD_REF_OBJ, H5T_STD_REF_OBJ, reference);
     }
 
     // /////////////////////
@@ -568,6 +542,26 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         dateTimeWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset,
                 timeUnit);
+    }
+
+    //
+    // References
+    //
+    
+    public void writeObjectReference(String objectPath, String referencedObjectPath)
+    {
+        referenceWriter.writeObjectReference(objectPath, referencedObjectPath);
+    }
+
+    public void setObjectReferenceAttribute(String objectPath, String name,
+            String referencedObjectPath)
+    {
+        referenceWriter.setObjectReferenceAttribute(objectPath, name, referencedObjectPath);
+    }
+
+    public void setObjectReferenceArrayAttribute(String objectPath, String name, String[] value)
+    {
+        referenceWriter.setObjectReferenceArrayAttribute(objectPath, name, value);
     }
 
     //

@@ -79,6 +79,8 @@ class HDF5Reader implements IHDF5Reader
     private final IHDF5CompoundReader compoundReader;
 
     private final IHDF5DateTimeReader dateTimeReader;
+    
+    private final IHDF5ReferenceReader referenceReader;
 
     private final IHDF5GenericReader genericReader;
 
@@ -98,6 +100,7 @@ class HDF5Reader implements IHDF5Reader
         this.enumReader = new HDF5EnumReader(baseReader);
         this.compoundReader = new HDF5CompoundReader(baseReader);
         this.dateTimeReader = new HDF5DateTimeReader(baseReader);
+        this.referenceReader = new HDF5ReferenceReader(baseReader);
         this.genericReader = new HDF5GenericReader(baseReader);
     }
 
@@ -275,42 +278,6 @@ class HDF5Reader implements IHDF5Reader
         baseReader.checkOpen();
         type.check(baseReader.fileId);
         return baseReader.h5.tryGetDataTypePath(type.getStorageTypeId());
-    }
-
-    public String readObjectReference(final String objectPath)
-    {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
-            {
-                public String call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    return baseReader.readObjectReference(dataSetId, objectPath, registry);
-                }
-            };
-        return baseReader.runner.call(readRunnable);
-    }
-
-    public String getObjectReferenceAttribute(final String objectPath, final String attributeName)
-    {
-        assert objectPath != null;
-        assert attributeName != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
-            {
-                public String call(ICleanUpRegistry registry)
-                {
-                    final int objectId =
-                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    return baseReader.getObjectReferenceAttribute(objectId, objectPath,
-                            attributeName, registry);
-                }
-            };
-        return baseReader.runner.call(readRunnable);
     }
 
     public List<String> getAttributeNames(final String objectPath)
@@ -713,8 +680,27 @@ class HDF5Reader implements IHDF5Reader
     }
 
     //
+    // Reference
+    //
+    
+    public String readObjectReference(final String objectPath)
+    {
+        return referenceReader.readObjectReference(objectPath);
+    }
+
+    public String getObjectReferenceAttribute(final String objectPath, final String attributeName)
+    {
+        return referenceReader.getObjectReferenceAttribute(objectPath, attributeName);
+    }
+
+    //
     // Strings
     //
+
+    public String[] getObjectReferenceArrayAttribute(String objectPath, String attributeName)
+    {
+        return referenceReader.getObjectReferenceArrayAttribute(objectPath, attributeName);
+    }
 
     public String getStringAttribute(String objectPath, String attributeName)
     {

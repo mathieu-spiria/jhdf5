@@ -336,6 +336,7 @@ public class HDF5RoundtripTest
         test.testObjectReferenceOverwriteWithKeep();
         test.testObjectReferenceOverwriteWithKeepOverridden();
         test.testObjectReferenceAttribute();
+        test.testObjectReferenceArrayAttribute();
 
         test.finalize();
     }
@@ -6059,6 +6060,29 @@ public class HDF5RoundtripTest
         writer.move("/b", "/C");
         assertEquals("/C", writer.getObjectReferenceAttribute("/a", "partner"));
         writer.close();
+    }
+
+    @Test
+    public void testObjectReferenceArrayAttribute()
+    {
+        final File file = new File(workingDirectory, "testObjectReferenceArrayAttribute.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.writeString("a1", "TestA1");
+        writer.writeString("a2", "TestA2");
+        writer.writeString("a3", "TestA3");
+        writer.writeString("b", "TestB");
+        writer.setObjectReferenceArrayAttribute("b", "partner", new String[] { "a1", "a2", "a3" });
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final String[] referencesRead = reader.getObjectReferenceArrayAttribute("b", "partner");
+        assertEquals(3, referencesRead.length);
+        assertEquals("/a1", referencesRead[0]);
+        assertEquals("/a2", referencesRead[1]);
+        assertEquals("/a3", referencesRead[2]);
+        reader.close();
     }
 
 }

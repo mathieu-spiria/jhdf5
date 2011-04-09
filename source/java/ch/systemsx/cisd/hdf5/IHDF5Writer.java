@@ -43,7 +43,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  */
 public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5PrimitiveWriter,
         IHDF5StringWriter, IHDF5EnumWriter, IHDF5CompoundWriter, IHDF5BooleanWriter,
-        IHDF5OpaqueWriter, IHDF5DateTimeWriter
+        IHDF5OpaqueWriter, IHDF5DateTimeWriter, IHDF5ReferenceWriter
 {
 
     // /////////////////////
@@ -161,35 +161,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      *             {@link HDF5Constants#H5E_NOTFOUND}).
      */
     public void move(String oldLinkPath, String newLinkPath) throws HDF5SymbolTableException;
-
-    // /////////////////////
-    // Object References
-    // /////////////////////
-
-    /**
-     * Writes an object reference to the referenced object.
-     * <p>
-     * The object referenced with <var>referencedObjectPath</var> must exist, that is it need to
-     * have been written before by one of the <code>write()</code> or <code>create()</code> methods.
-     * 
-     * @param objectPath The name of the object to write.
-     * @param referencedObjectPath The path of the object to reference.
-     */
-    public void writeObjectReference(String objectPath, String referencedObjectPath);
-
-    /**
-     * Sets an object reference attribute to the referenced object.
-     * <p>
-     * Both the object referenced with <var>objectPath</var> and <var>referencedObjectPath</var>
-     * must exist, that is it need to have been written before by one of the <code>write()</code> or
-     * <code>create()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param referencedObjectPath The path of the object to reference.
-     */
-    public void setObjectReferenceAttribute(final String objectPath, final String name,
-            final String referencedObjectPath);
 
     // /////////////////////
     // Group
