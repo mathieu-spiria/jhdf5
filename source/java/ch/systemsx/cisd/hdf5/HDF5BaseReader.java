@@ -654,7 +654,15 @@ class HDF5BaseReader
         } else
         {
             dataClass = getDataClassForClassType(classTypeId, dataTypeId);
-            return new HDF5DataTypeInformation(dataClass, totalSize, 1);
+            final String opaqueTagOrNull;
+            if (dataClass == HDF5DataClass.OPAQUE)
+            {
+                opaqueTagOrNull = h5.tryGetOpaqueTag(dataTypeId);
+            } else
+            {
+                opaqueTagOrNull = null;
+            }
+            return new HDF5DataTypeInformation(dataClass, totalSize, 1, opaqueTagOrNull);
         }
     }
 

@@ -36,26 +36,44 @@ public final class HDF5DataTypeInformation
 
     private int[] dimensions;
 
+    private String opaqueTagOrNull;
+
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize)
     {
         this(dataClass, elementSize, new int[]
-            { 1 }, false);
+            { 1 }, false, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int numberOfElements)
     {
         this(dataClass, elementSize, new int[]
-            { numberOfElements }, false);
+            { numberOfElements }, false, null);
+
+    }
+
+    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int numberOfElements,
+            String opaqueTagOrNull)
+    {
+        this(dataClass, elementSize, new int[]
+            { numberOfElements }, false, opaqueTagOrNull);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int[] dimensions,
             boolean arrayType)
+    {
+        this(dataClass, elementSize, dimensions, arrayType, null);
+
+    }
+
+    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int[] dimensions,
+            boolean arrayType, String opaqueTagOrNull)
     {
         this.arrayType = arrayType;
         this.dataClass = dataClass;
         this.elementSize = elementSize;
         this.dimensions = dimensions;
         this.numberOfElements = MDArray.getLength(dimensions);
+        this.opaqueTagOrNull = opaqueTagOrNull;
     }
 
     /**
@@ -96,7 +114,7 @@ public final class HDF5DataTypeInformation
     {
         return elementSize * numberOfElements;
     }
-    
+
     /**
      * Returns the dimensions along each axis of this type.
      */
@@ -119,6 +137,11 @@ public final class HDF5DataTypeInformation
     public boolean isVariableLengthType()
     {
         return elementSize < 0;
+    }
+
+    public String tryGetOpaqueTag()
+    {
+        return opaqueTagOrNull;
     }
 
     //
