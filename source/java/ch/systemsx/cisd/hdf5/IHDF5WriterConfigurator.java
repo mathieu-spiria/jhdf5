@@ -119,7 +119,7 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
      * being truncated on write if a string dataset with the same name and shorter length already
      * exists.
      */
-    public HDF5WriterConfigurator keepDataSetsIfTheyExist();
+    public IHDF5WriterConfigurator keepDataSetsIfTheyExist();
 
     /**
      * Sets the file format compatibility for the writer.
