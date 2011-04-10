@@ -101,9 +101,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
                             baseReader.h5.getNativeDataTypeForDataSetCheckBitFields(dataSetId,
                                     registry);
                     final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
-                    final byte[] data =
-                            new byte[((spaceParams.blockSize == 0) ? 1 : spaceParams.blockSize)
-                                    * elementSize];
+                    final byte[] data = new byte[spaceParams.blockSize * elementSize];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
@@ -219,8 +217,8 @@ public class HDF5GenericReader implements IHDF5GenericReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final byte[] block =
-                                        readAsByteArrayBlockWithOffset(dataSetPath, index
-                                                .getBlockSize(), offset);
+                                        readAsByteArrayBlockWithOffset(dataSetPath,
+                                                index.getBlockSize(), offset);
                                 return new HDF5DataBlock<byte[]>(block, index.getAndIncIndex(),
                                         offset);
                             }
