@@ -16,110 +16,10 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.H5.H5Aclose;
-import static ncsa.hdf.hdf5lib.H5.H5Acreate;
-import static ncsa.hdf.hdf5lib.H5.H5Adelete;
-import static ncsa.hdf.hdf5lib.H5.H5Aexists;
-import static ncsa.hdf.hdf5lib.H5.H5Aget_name;
-import static ncsa.hdf.hdf5lib.H5.H5Aget_num_attrs;
-import static ncsa.hdf.hdf5lib.H5.H5Aget_space;
-import static ncsa.hdf.hdf5lib.H5.H5Aget_type;
-import static ncsa.hdf.hdf5lib.H5.H5Aopen_idx;
-import static ncsa.hdf.hdf5lib.H5.H5Aopen_name;
-import static ncsa.hdf.hdf5lib.H5.H5Aread;
-import static ncsa.hdf.hdf5lib.H5.H5Awrite;
-import static ncsa.hdf.hdf5lib.H5.H5AwriteString;
-import static ncsa.hdf.hdf5lib.H5.H5AreadVL;
-import static ncsa.hdf.hdf5lib.H5.H5Dclose;
-import static ncsa.hdf.hdf5lib.H5.H5Dcreate;
-import static ncsa.hdf.hdf5lib.H5.H5Dget_create_plist;
-import static ncsa.hdf.hdf5lib.H5.H5Dget_space;
-import static ncsa.hdf.hdf5lib.H5.H5Dget_type;
-import static ncsa.hdf.hdf5lib.H5.H5Dopen;
-import static ncsa.hdf.hdf5lib.H5.H5Dread;
-import static ncsa.hdf.hdf5lib.H5.H5DreadVL;
-import static ncsa.hdf.hdf5lib.H5.H5Dread_double;
-import static ncsa.hdf.hdf5lib.H5.H5Dread_float;
-import static ncsa.hdf.hdf5lib.H5.H5Dread_int;
-import static ncsa.hdf.hdf5lib.H5.H5Dread_long;
-import static ncsa.hdf.hdf5lib.H5.H5Dread_short;
-import static ncsa.hdf.hdf5lib.H5.H5Dread_string;
-import static ncsa.hdf.hdf5lib.H5.H5Dset_extent;
-import static ncsa.hdf.hdf5lib.H5.H5DwriteString;
-import static ncsa.hdf.hdf5lib.H5.H5Fclose;
-import static ncsa.hdf.hdf5lib.H5.H5Fcreate;
-import static ncsa.hdf.hdf5lib.H5.H5Fflush;
-import static ncsa.hdf.hdf5lib.H5.H5Fopen;
-import static ncsa.hdf.hdf5lib.H5.H5Gclose;
-import static ncsa.hdf.hdf5lib.H5.H5Gcreate;
-import static ncsa.hdf.hdf5lib.H5.H5Gget_nlinks;
-import static ncsa.hdf.hdf5lib.H5.H5Gopen;
-import static ncsa.hdf.hdf5lib.H5.H5Gunlink;
-import static ncsa.hdf.hdf5lib.H5.H5Iget_name;
-import static ncsa.hdf.hdf5lib.H5.H5Lcreate_external;
-import static ncsa.hdf.hdf5lib.H5.H5Lcreate_hard;
-import static ncsa.hdf.hdf5lib.H5.H5Lcreate_soft;
-import static ncsa.hdf.hdf5lib.H5.H5Lmove;
-import static ncsa.hdf.hdf5lib.H5.H5Lexists;
-import static ncsa.hdf.hdf5lib.H5.H5Lget_link_info;
-import static ncsa.hdf.hdf5lib.H5.H5Lget_link_info_all;
-import static ncsa.hdf.hdf5lib.H5.H5Lget_link_names_all;
-import static ncsa.hdf.hdf5lib.H5.H5Oclose;
-import static ncsa.hdf.hdf5lib.H5.H5Ocopy;
-import static ncsa.hdf.hdf5lib.H5.H5Oopen;
-import static ncsa.hdf.hdf5lib.H5.H5Oget_info_by_name;
-import static ncsa.hdf.hdf5lib.H5.H5Pclose;
-import static ncsa.hdf.hdf5lib.H5.H5Pcreate;
-import static ncsa.hdf.hdf5lib.H5.H5Pcreate_xfer_abort;
-import static ncsa.hdf.hdf5lib.H5.H5Pcreate_xfer_abort_overflow;
-import static ncsa.hdf.hdf5lib.H5.H5Pget_chunk;
-import static ncsa.hdf.hdf5lib.H5.H5Pget_layout;
-import static ncsa.hdf.hdf5lib.H5.H5Pset_char_encoding;
-import static ncsa.hdf.hdf5lib.H5.H5Pset_chunk;
-import static ncsa.hdf.hdf5lib.H5.H5Pset_create_intermediate_group;
-import static ncsa.hdf.hdf5lib.H5.H5Pset_deflate;
-import static ncsa.hdf.hdf5lib.H5.H5Pset_layout;
-import static ncsa.hdf.hdf5lib.H5.H5Pset_libver_bounds;
-import static ncsa.hdf.hdf5lib.H5.H5Pset_link_phase_change;
-import static ncsa.hdf.hdf5lib.H5.H5Pset_local_heap_size_hint;
-import static ncsa.hdf.hdf5lib.H5.H5Pset_scaleoffset;
-import static ncsa.hdf.hdf5lib.H5.H5Rcreate;
-import static ncsa.hdf.hdf5lib.H5.H5Rget_name;
-import static ncsa.hdf.hdf5lib.H5.H5Sclose;
-import static ncsa.hdf.hdf5lib.H5.H5Screate;
-import static ncsa.hdf.hdf5lib.H5.H5Screate_simple;
-import static ncsa.hdf.hdf5lib.H5.H5Sget_simple_extent_dims;
-import static ncsa.hdf.hdf5lib.H5.H5Sget_simple_extent_ndims;
-import static ncsa.hdf.hdf5lib.H5.H5Sselect_hyperslab;
-import static ncsa.hdf.hdf5lib.H5.H5Tarray_create;
-import static ncsa.hdf.hdf5lib.H5.H5Tclose;
-import static ncsa.hdf.hdf5lib.H5.H5Tcommit;
-import static ncsa.hdf.hdf5lib.H5.H5Tcommitted;
-import static ncsa.hdf.hdf5lib.H5.H5Tcopy;
-import static ncsa.hdf.hdf5lib.H5.H5Tcreate;
-import static ncsa.hdf.hdf5lib.H5.H5Tdetect_class;
-import static ncsa.hdf.hdf5lib.H5.H5Tenum_create;
-import static ncsa.hdf.hdf5lib.H5.H5Tenum_insert;
-import static ncsa.hdf.hdf5lib.H5.H5Tequal;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_array_dims;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_array_ndims;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_class;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_member_index;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_member_name;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_member_type;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_native_type;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_nmembers;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_size;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_size_long;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_super;
-import static ncsa.hdf.hdf5lib.H5.H5Tget_tag;
-import static ncsa.hdf.hdf5lib.H5.H5Tis_variable_str;
-import static ncsa.hdf.hdf5lib.H5.H5Topen;
-import static ncsa.hdf.hdf5lib.H5.H5Tset_cset;
-import static ncsa.hdf.hdf5lib.H5.H5Tset_size;
-import static ncsa.hdf.hdf5lib.H5.H5Tset_tag;
+import static ncsa.hdf.hdf5lib.H5.*;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5D_CHUNKED;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5D_COMPACT;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5D_FILL_TIME_ALLOC;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_RDONLY;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_RDWR;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_TRUNC;
@@ -183,7 +83,9 @@ class HDF5
 
     private final CleanUpCallable runner;
 
-    private final int dataSetCreationPropertyListCompactStorageLayout;
+    private final int dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc;
+
+    private final int dataSetCreationPropertyListFillTimeAlloc;
 
     private final int numericConversionXferPropertyListID;
 
@@ -196,9 +98,11 @@ class HDF5
     {
         this.runner = new CleanUpCallable();
         this.useUTF8CharEncoding = useUTF8CharEncoding;
-        this.dataSetCreationPropertyListCompactStorageLayout =
+        this.dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc =
                 createDataSetCreationPropertyList(fileRegistry);
-        H5Pset_layout(dataSetCreationPropertyListCompactStorageLayout, H5D_COMPACT);
+        H5Pset_layout(dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc, H5D_COMPACT);
+        this.dataSetCreationPropertyListFillTimeAlloc =
+                createDataSetCreationPropertyList(fileRegistry);
         if (performNumericConversions)
         {
             this.numericConversionXferPropertyListID =
@@ -668,10 +572,11 @@ class HDF5
             }
         } else if (layout == HDF5StorageLayout.COMPACT)
         {
-            dataSetCreationPropertyListId = dataSetCreationPropertyListCompactStorageLayout;
+            dataSetCreationPropertyListId =
+                    dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc;
         } else
         {
-            dataSetCreationPropertyListId = H5P_DEFAULT;
+            dataSetCreationPropertyListId = dataSetCreationPropertyListFillTimeAlloc;
         }
         final int dataSetId =
                 H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
@@ -697,6 +602,7 @@ class HDF5
                     H5Pclose(dataSetCreationPropertyListId);
                 }
             });
+        H5Pset_fill_time(dataSetCreationPropertyListId, H5D_FILL_TIME_ALLOC);
         return dataSetCreationPropertyListId;
     }
 
@@ -772,10 +678,14 @@ class HDF5
                 }
             });
         final int dataSetId =
-                H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
+                H5Dcreate(
+                        fileId,
+                        dataSetName,
+                        dataTypeId,
+                        dataSpaceId,
                         lcplCreateIntermediateGroups,
-                        compactLayout ? dataSetCreationPropertyListCompactStorageLayout
-                                : H5P_DEFAULT, H5P_DEFAULT);
+                        compactLayout ? dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc
+                                : dataSetCreationPropertyListFillTimeAlloc, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 public void run()

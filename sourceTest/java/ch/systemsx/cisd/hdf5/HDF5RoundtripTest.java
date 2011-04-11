@@ -332,6 +332,7 @@ public class HDF5RoundtripTest
         test.testSmallTimeDurations();
         test.testTimeDurationArrayChunked();
         test.testNumericConversion();
+        test.testSetDataSetSize();
         test.testObjectReference();
         test.testObjectReferenceOverwriteWithKeep();
         test.testObjectReferenceOverwriteWithKeepOverridden();
@@ -5900,6 +5901,27 @@ public class HDF5RoundtripTest
             assertEquals("" + i, recordArrayWritten[i].s, recordReadArray[i].s);
             assertEquals("" + i, recordArrayWritten[i].fm, recordReadArray[i].fm);
         }
+    }
+    
+    @Test
+    public void testSetDataSetSize()
+    {
+        final File file = new File(workingDirectory, "testSetDataSetSize.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.createByteArray("ds", 0, 10);
+        writer.setDataSetSize("ds", 20);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        assertEquals(20, reader.getDataSetInformation("ds").getSize());
+        int idx = 0;
+        for (byte b : reader.readByteArray("ds"))
+        {
+            assertEquals("Position " + (idx++), 0, b);
+        }
+        reader.close();
     }
 
     @Test
