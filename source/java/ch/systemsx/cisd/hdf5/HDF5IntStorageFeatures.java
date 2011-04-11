@@ -275,6 +275,76 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
                     INTEGER_AUTO_SCALING_FACTOR);
 
     /**
+     * Create a corresponding {@link HDF5IntStorageFeatures} for the given
+     * {@link HDF5GenericStorageFeatures}.
+     */
+    public static HDF5IntStorageFeatures createFromGeneric(
+            HDF5GenericStorageFeatures storageFeatures)
+    {
+        if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_CHUNKED)
+        {
+            return HDF5IntStorageFeatures.INT_CHUNKED;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_CHUNKED_DELETE)
+        {
+            return HDF5IntStorageFeatures.INT_CHUNKED_DELETE;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_CHUNKED_KEEP)
+        {
+            return HDF5IntStorageFeatures.INT_CHUNKED_KEEP;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_COMPACT)
+        {
+            return HDF5IntStorageFeatures.INT_COMPACT;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_COMPACT_DELETE)
+        {
+            return HDF5IntStorageFeatures.INT_COMPACT_DELETE;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_COMPACT_KEEP)
+        {
+            return HDF5IntStorageFeatures.INT_COMPACT_KEEP;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS)
+        {
+            return HDF5IntStorageFeatures.INT_CONTIGUOUS;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS_DELETE)
+        {
+            return HDF5IntStorageFeatures.INT_CONTIGUOUS_DELETE;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS_KEEP)
+        {
+            return HDF5IntStorageFeatures.INT_CONTIGUOUS_KEEP;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION)
+        {
+            return HDF5IntStorageFeatures.INT_NO_COMPRESSION;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION_DELETE)
+        {
+            return HDF5IntStorageFeatures.INT_NO_COMPRESSION_DELETE;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION_KEEP)
+        {
+            return HDF5IntStorageFeatures.INT_NO_COMPRESSION_KEEP;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_DEFLATE)
+        {
+            return HDF5IntStorageFeatures.INT_DEFLATE;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_DEFLATE_DELETE)
+        {
+            return HDF5IntStorageFeatures.INT_DEFLATE_DELETE;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_DEFLATE_KEEP)
+        {
+            return HDF5IntStorageFeatures.INT_DEFLATE_KEEP;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_DEFLATE_MAX)
+        {
+            return HDF5IntStorageFeatures.INT_DEFLATE_MAX;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_DEFLATE_MAX_DELETE)
+        {
+            return HDF5IntStorageFeatures.INT_DEFLATE_MAX_DELETE;
+        } else if (storageFeatures == HDF5GenericStorageFeatures.GENERIC_DEFLATE_MAX_KEEP)
+        {
+            return HDF5IntStorageFeatures.INT_DEFLATE_MAX_KEEP;
+        } else
+        {
+            return new HDF5IntStorageFeatures(storageFeatures.tryGetProposedLayout(),
+                    storageFeatures.isKeepDataSetIfExists(),
+                    storageFeatures.isDeleteDataSetIfExists(), storageFeatures.getDeflateLevel(),
+                    NO_SCALING_FACTOR);
+        }
+    }
+
+    /**
      * Creates a {@link HDF5IntStorageFeatures} object that represents deflation with the given
      * <var>deflationLevel</var>.
      */
