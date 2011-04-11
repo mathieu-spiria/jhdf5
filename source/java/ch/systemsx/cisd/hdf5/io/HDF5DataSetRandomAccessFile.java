@@ -32,6 +32,8 @@ import ch.systemsx.cisd.base.io.IRandomAccessFile;
 import ch.systemsx.cisd.hdf5.HDF5DataClass;
 import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
 import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
+import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
+import ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.HDF5StorageLayout;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
@@ -45,6 +47,9 @@ import ch.systemsx.cisd.hdf5.IHDF5Writer;
  */
 public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 {
+    private final static int MB = 1024 * 1024;
+
+    private final static int DEFAULT_CHUNK_SIZE = 10 * MB;
 
     private final File hdf5File;
 
@@ -83,7 +88,176 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
     private ch.systemsx.cisd.base.convert.NativeData.ByteOrder byteOrder =
             ch.systemsx.cisd.base.convert.NativeData.ByteOrder.BIG_ENDIAN;
 
-    public HDF5DataSetRandomAccessFile(File hdf5File, String dataSetPath, boolean readOnly)
+    /**
+     * Creates a {@link HDF5DataSetRandomAccessFile} in read-only mode.
+     * 
+     * @param hdf5File The file of the HDF5 container.
+     * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
+     * @return The {@link HDF5DataSetRandomAccessFile}.
+     */
+    public static HDF5DataSetRandomAccessFile createForReading(File hdf5File, String dataSetPath)
+    {
+        return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
+                HDF5GenericStorageFeatures.GENERIC_CHUNKED, DEFAULT_CHUNK_SIZE, null, true);
+    }
+
+    /**
+     * Creates a {@link HDF5DataSetRandomAccessFile} in read-write mode.
+     * 
+     * @param hdf5File The file of the HDF5 container.
+     * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
+     * @return The {@link HDF5DataSetRandomAccessFile}.
+     */
+    public static HDF5DataSetRandomAccessFile create(File hdf5File, String dataSetPath)
+    {
+        return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
+                HDF5GenericStorageFeatures.GENERIC_CHUNKED, DEFAULT_CHUNK_SIZE, null, false);
+    }
+
+    /**
+     * Creates a {@link HDF5DataSetRandomAccessFile} in read-write mode.
+     * 
+     * @param hdf5File The file of the HDF5 container.
+     * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
+     * @param chunkSize If the dataset does not yet exist, use this value as the chunk size.
+     * @return The {@link HDF5DataSetRandomAccessFile}.
+     */
+    public static HDF5DataSetRandomAccessFile create(File hdf5File, String dataSetPath,
+            int chunkSize)
+    {
+        return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
+                HDF5GenericStorageFeatures.GENERIC_CHUNKED, chunkSize, null, false);
+    }
+
+    /**
+     * Creates a {@link HDF5DataSetRandomAccessFile} in read-write mode with compression switched
+     * on.
+     * 
+     * @param hdf5File The file of the HDF5 container.
+     * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
+     * @return The {@link HDF5DataSetRandomAccessFile}.
+     */
+    public static HDF5DataSetRandomAccessFile createCompress(File hdf5File, String dataSetPath)
+    {
+        return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
+                HDF5GenericStorageFeatures.GENERIC_DEFLATE, DEFAULT_CHUNK_SIZE, null, false);
+    }
+
+    /**
+     * Creates a {@link HDF5DataSetRandomAccessFile} in read-write mode with compression switched
+     * on.
+     * 
+     * @param hdf5File The file of the HDF5 container.
+     * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
+     * @param chunkSize If the dataset does not yet exist, use this value as the chunk size.
+     * @return The {@link HDF5DataSetRandomAccessFile}.
+     */
+    public static HDF5DataSetRandomAccessFile createCompress(File hdf5File, String dataSetPath,
+            int chunkSize)
+    {
+        return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
+                HDF5GenericStorageFeatures.GENERIC_DEFLATE, chunkSize, null, false);
+    }
+
+    /**
+     * Creates a {@link HDF5DataSetRandomAccessFile} in read-write mode. If the dataset has to be
+     * created, create an opaque data type.
+     * 
+     * @param hdf5File The file of the HDF5 container.
+     * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
+     * @param opaqueTag If the data does not yet exist, use this value as the tag of the opaque data
+     *            type.
+     * @return The {@link HDF5DataSetRandomAccessFile}.
+     */
+    public static HDF5DataSetRandomAccessFile createOpaque(File hdf5File, String dataSetPath,
+            String opaqueTag)
+    {
+        return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
+                HDF5GenericStorageFeatures.GENERIC_CHUNKED, DEFAULT_CHUNK_SIZE, opaqueTag, false);
+    }
+
+    /**
+     * Creates a {@link HDF5DataSetRandomAccessFile} in read-write mode. If the dataset has to be
+     * created, create an opaque data type.
+     * 
+     * @param hdf5File The file of the HDF5 container.
+     * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
+     * @param opaqueTag If the data does not yet exist, use this value as the tag of the opaque data
+     *            type.
+     * @param chunkSize If the dataset does not yet exist, use this value as the chunk size.
+     * @return The {@link HDF5DataSetRandomAccessFile}.
+     */
+    public static HDF5DataSetRandomAccessFile createOpaque(File hdf5File, String dataSetPath,
+            String opaqueTag, int chunkSize)
+    {
+        return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
+                HDF5GenericStorageFeatures.GENERIC_CHUNKED, chunkSize, opaqueTag, false);
+    }
+
+    /**
+     * Creates a {@link HDF5DataSetRandomAccessFile} in read-write mode with compression switched
+     * on. If the dataset has to be created, create an opaque data type.
+     * 
+     * @param hdf5File The file of the HDF5 container.
+     * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
+     * @param opaqueTag If the data does not yet exist, use this value as the tag of the opaque data
+     *            type.
+     * @return The {@link HDF5DataSetRandomAccessFile}.
+     */
+    public static HDF5DataSetRandomAccessFile createOpaqueCompress(File hdf5File,
+            String dataSetPath, String opaqueTag)
+    {
+        return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
+                HDF5GenericStorageFeatures.GENERIC_DEFLATE, DEFAULT_CHUNK_SIZE, opaqueTag, false);
+    }
+
+    /**
+     * Creates a {@link HDF5DataSetRandomAccessFile} in read-write mode with compression switched
+     * on. If the dataset has to be created, create an opaque data type.
+     * 
+     * @param hdf5File The file of the HDF5 container.
+     * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
+     * @param opaqueTag If the data does not yet exist, use this value as the tag of the opaque data
+     *            type.
+     * @param chunkSize If the dataset does not yet exist, use this value as the chunk size.
+     * @return The {@link HDF5DataSetRandomAccessFile}.
+     */
+    public static HDF5DataSetRandomAccessFile createOpaqueCompress(File hdf5File,
+            String dataSetPath, String opaqueTag, int chunkSize)
+    {
+        return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
+                HDF5GenericStorageFeatures.GENERIC_DEFLATE, chunkSize, opaqueTag, false);
+    }
+
+    /**
+     * Creates a {@link HDF5DataSetRandomAccessFile} in read-write mode, giving full controll on the
+     * storage features.
+     * <p>
+     * <i>Note that a <code>CONTIGUOUS</code> or <code>COMPACT</code> dataset has a fixed size and
+     * cannot grow or shrink. Consequently, {@link #setLength(long)} or {@link #seek(long)} beyond
+     * the end of the dataset does not work with such datasets but throws an exception.</i>
+     * 
+     * @param hdf5File The file of the HDF5 container.
+     * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
+     * @param opaqueTagOrNull If the data does not yet exist and this value is not <code>null</code>
+     *            , then use this value as the tag of the opaque data type.
+     * @param size If the dataset does not yet exist, use this value as the chunk size, if the new
+     *            data set is chunked, and as size, if the new data set is not chunked (
+     *            <code>CONTIGUOUS</code> or <code>COMPACT</code>).
+     * @param creationStorageFeature If the dataset does not yet exist, use this value as the
+     *            storage features of the new dataset.
+     * @return The {@link HDF5DataSetRandomAccessFile}.
+     */
+    public static HDF5DataSetRandomAccessFile createFullControl(File hdf5File, String dataSetPath,
+            String opaqueTagOrNull, int size, HDF5GenericStorageFeatures creationStorageFeature)
+    {
+        return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath, creationStorageFeature, size,
+                opaqueTagOrNull, false);
+    }
+
+    private HDF5DataSetRandomAccessFile(File hdf5File, String dataSetPath,
+            HDF5GenericStorageFeatures creationStorageFeature, int size, String opaqueTagOrNull,
+            boolean readOnly)
     {
         this.hdf5File = hdf5File;
         try
@@ -96,6 +270,19 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
             {
                 this.writerOrNull = HDF5FactoryProvider.get().open(hdf5File);
                 this.reader = writerOrNull;
+                if (writerOrNull.exists(dataSetPath) == false)
+                {
+                    long maxSize = requiresFixedMaxSize(creationStorageFeature) ? size : 0;
+                    if (opaqueTagOrNull == null)
+                    {
+                        writerOrNull.createByteArray(dataSetPath, maxSize, size,
+                                HDF5IntStorageFeatures.createFromGeneric(creationStorageFeature));
+                    } else
+                    {
+                        writerOrNull.createOpaqueByteArray(dataSetPath, opaqueTagOrNull, maxSize,
+                                size, creationStorageFeature);
+                    }
+                }
             }
         } catch (HDF5JavaException ex)
         {
@@ -141,14 +328,14 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         this.extendable = (dataSetInfo.getStorageLayout() == HDF5StorageLayout.CHUNKED);
         this.blockOffset = 0;
         this.block = new byte[blockSize];
-        if (readOnly == false)
-        {
-            extend(blockSize);
-        }
-        this.realBlockSize =
-                reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, blockSize, blockOffset,
-                        0);
+        this.realBlockSize = -1;
         this.positionInBlock = 0;
+    }
+
+    private static boolean requiresFixedMaxSize(HDF5GenericStorageFeatures features)
+    {
+        return features.tryGetProposedLayout() != null
+                && features.tryGetProposedLayout() != HDF5StorageLayout.CHUNKED;
     }
 
     @Override
@@ -156,6 +343,22 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
     {
         super.finalize();
         close();
+    }
+
+    private void ensureInitalized(boolean forWriting)
+    {
+        if (realBlockSize < 0)
+        {
+            final long minLen = blockOffset + blockSize;
+            if (forWriting && minLen > length())
+            {
+                setLength(minLen);
+            }
+            this.realBlockSize =
+                    reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, blockSize,
+                            blockOffset, 0);
+
+        }
     }
 
     private void readBlock(long newBlockOffset)
@@ -219,6 +422,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     private void checkWrite()
     {
+        ensureInitalized(true);
         checkWriteDoNotExtend();
         if (extensionPending)
         {
@@ -241,6 +445,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     public int read() throws IOExceptionUnchecked
     {
+        ensureInitalized(false);
         if (positionInBlock == realBlockSize)
         {
             if (eof())
@@ -263,6 +468,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     public int read(byte[] b, int off, int len) throws IOExceptionUnchecked
     {
+        ensureInitalized(false);
         int realLen = getRealLen(len);
         if (realLen == 0)
         {
@@ -422,6 +628,11 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
     public void setLength(long newLength) throws IOExceptionUnchecked
     {
         checkWriteDoNotExtend();
+        if (extendable == false)
+        {
+            throw new IOExceptionUnchecked(new IOException(
+                    "setLength() called on non-extendable dataset."));
+        }
         writerOrNull.setDataSetSize(dataSetPath, newLength);
         length = newLength;
     }

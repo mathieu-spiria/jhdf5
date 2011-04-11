@@ -18,6 +18,8 @@ package ch.systemsx.cisd.hdf5.io;
 
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.File;
@@ -32,8 +34,11 @@ import org.testng.annotations.Test;
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 import ch.systemsx.cisd.base.io.AdapterIInputStreamToInputStream;
+import ch.systemsx.cisd.hdf5.HDF5DataSetInformation;
 import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
+import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5StorageLayout;
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 
 /**
@@ -98,7 +103,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final byte[] arrayRead = new byte[referenceArray.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         int b;
         int idx = 0;
         while ((b = raFile.read()) >= 0)
@@ -135,7 +140,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final byte[] arrayRead = new byte[referenceArray.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         int b;
         int idx = 0;
         while ((b = raFile.read()) >= 0)
@@ -171,7 +176,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final byte[] arrayRead = new byte[referenceArray.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         int idx = 0;
         int bsize = referenceArray.length / 10;
         int bytesRead;
@@ -209,7 +214,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final byte[] arrayRead = new byte[referenceArray.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         int idx = 0;
         int bsize = chunkSize;
         int bytesRead;
@@ -247,7 +252,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final byte[] arrayRead = new byte[referenceArray.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         int idx = 0;
         int bsize = chunkSize + 1;
         int bytesRead;
@@ -293,7 +298,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final byte[] arrayRead = new byte[referenceArray.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         int idx = 0;
         int bsize = chunkSize + 1;
         int bytesRead = raFile.read(arrayRead, idx, bsize);
@@ -332,7 +337,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final byte[] arrayRead = new byte[referenceArray.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         int idx = 0;
         int bsize = chunkSize + 1;
         int bytesRead = raFile.read(arrayRead, idx, bsize);
@@ -394,7 +399,7 @@ public class HDF5DataSetRandomAccessFileTest
                 .getStorageLayout());
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         final byte[] arrayRead = IOUtils.toByteArray(new AdapterIInputStreamToInputStream(raFile));
         assertTrue(ArrayUtils.isEquals(referenceArray, arrayRead));
         raFile.close();
@@ -423,7 +428,7 @@ public class HDF5DataSetRandomAccessFileTest
                 .getStorageLayout());
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         byte[] arrayRead = IOUtils.toByteArray(new AdapterIInputStreamToInputStream(raFile));
         assertTrue(ArrayUtils.isEquals(referenceArray, arrayRead));
         raFile.seek(0);
@@ -457,7 +462,7 @@ public class HDF5DataSetRandomAccessFileTest
                 .getStorageLayout());
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         assertEquals(referenceArray.length, raFile.length());
         raFile.close();
     }
@@ -488,7 +493,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final short[] arrayRead = new short[referenceArrayShort.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         int idx = 0;
         while (raFile.available() >= 2)
         {
@@ -527,7 +532,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final short[] arrayRead = new short[referenceArrayShort.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         raFile.setByteOrder(java.nio.ByteOrder.LITTLE_ENDIAN);
         int idx = 0;
         while (raFile.available() >= 2)
@@ -567,7 +572,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final double[] arrayRead = new double[referenceArrayDouble.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         int idx = 0;
         while (raFile.available() >= 2)
         {
@@ -606,7 +611,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final double[] arrayRead = new double[referenceArrayDouble.length];
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         raFile.setByteOrder(java.nio.ByteOrder.LITTLE_ENDIAN);
         int idx = 0;
         while (raFile.available() >= 2)
@@ -640,7 +645,7 @@ public class HDF5DataSetRandomAccessFileTest
                 .getStorageLayout());
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, true);
+                HDF5DataSetRandomAccessFile.createForReading(dataSetFile, dataSetName);
         assertEquals("One", raFile.readLine());
         assertEquals("Two", raFile.readLine());
         assertEquals("Three", raFile.readLine());
@@ -664,7 +669,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.createByteArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, false);
+                HDF5DataSetRandomAccessFile.create(dataSetFile, dataSetName);
         raFile.mark(0);
         for (int i = 0; i < 256; ++i)
         {
@@ -677,7 +682,7 @@ public class HDF5DataSetRandomAccessFileTest
         {
             assertEquals(Integer.toString(i), (byte) i, arrayRead[i]);
         }
-        
+
         raFile.close();
     }
 
@@ -696,7 +701,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.createByteArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, false);
+                HDF5DataSetRandomAccessFile.create(dataSetFile, dataSetName);
         raFile.mark(0);
         final byte[] arr = new byte[256];
         for (int i = 0; i < 256; ++i)
@@ -711,7 +716,7 @@ public class HDF5DataSetRandomAccessFileTest
         {
             assertEquals(Integer.toString(i), (byte) i, arrayRead[i]);
         }
-        
+
         raFile.close();
     }
 
@@ -730,7 +735,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.createByteArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, false);
+                HDF5DataSetRandomAccessFile.create(dataSetFile, dataSetName);
         raFile.mark(0);
         for (int i = 0; i < 256; ++i)
         {
@@ -760,7 +765,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.createByteArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, false);
+                HDF5DataSetRandomAccessFile.create(dataSetFile, dataSetName);
         raFile.mark(0);
         raFile.writeBytes("TestString\n");
         raFile.reset();
@@ -783,14 +788,14 @@ public class HDF5DataSetRandomAccessFileTest
         writer.createByteArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, false);
+                HDF5DataSetRandomAccessFile.create(dataSetFile, dataSetName);
         raFile.mark(0);
         raFile.writeUTF("TestString\u1873");
         raFile.reset();
         assertEquals("TestString\u1873", raFile.readUTF());
         raFile.close();
     }
-    
+
     @Test
     public void testPendingExtension() throws IOException
     {
@@ -806,7 +811,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.createByteArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
-                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, false);
+                HDF5DataSetRandomAccessFile.create(dataSetFile, dataSetName);
         raFile.seek(20);
         raFile.write(42);
         assertEquals(21, raFile.length());
@@ -819,6 +824,105 @@ public class HDF5DataSetRandomAccessFileTest
         }
         raFile.close();
     }
-    
 
+    @Test
+    public void testEmptyDatasetDefaultParameters() throws IOException
+    {
+        final File dataSetFile = new File(workingDirectory, "testEmptyDatasetDefaultParameters.h5");
+        final String dataSetName = "ds";
+        dataSetFile.delete();
+        assertFalse(dataSetFile.exists());
+        dataSetFile.deleteOnExit();
+        final HDF5DataSetRandomAccessFile raFile =
+                HDF5DataSetRandomAccessFile.create(dataSetFile, dataSetName);
+        raFile.seek(20);
+        raFile.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(dataSetFile);
+        assertTrue(reader.exists(dataSetName));
+        final HDF5DataSetInformation info = reader.getDataSetInformation(dataSetName);
+        assertEquals(0, info.getSize());
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        assertNull(info.getTypeInformation().tryGetOpaqueTag());
+        final int[] chunkSizesOrNull = info.tryGetChunkSizes();
+        assertNotNull(chunkSizesOrNull);
+        assertEquals(1, chunkSizesOrNull.length);
+        assertEquals(10 * 1024 * 1024, chunkSizesOrNull[0]);
+        reader.close();
+    }
+
+    @Test
+    public void testEmptyDatasetOpaqueSmallChunkSize() throws IOException
+    {
+        final File dataSetFile =
+                new File(workingDirectory, "testEmptyDatasetOpaqueSmallChunkSize.h5");
+        final String dataSetName = "ds";
+        dataSetFile.delete();
+        assertFalse(dataSetFile.exists());
+        dataSetFile.deleteOnExit();
+        final int chunkSize = 10 * 1024;
+        final HDF5DataSetRandomAccessFile raFile =
+                HDF5DataSetRandomAccessFile.createOpaque(dataSetFile, dataSetName, "FILE",
+                        chunkSize);
+        raFile.seek(20);
+        raFile.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(dataSetFile);
+        assertTrue(reader.exists(dataSetName));
+        final HDF5DataSetInformation info = reader.getDataSetInformation(dataSetName);
+        assertEquals(0, info.getSize());
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        assertEquals("FILE", info.getTypeInformation().tryGetOpaqueTag());
+        final int[] chunkSizesOrNull = info.tryGetChunkSizes();
+        assertNotNull(chunkSizesOrNull);
+        assertEquals(1, chunkSizesOrNull.length);
+        assertEquals(chunkSize, chunkSizesOrNull[0]);
+        reader.close();
+    }
+
+    @Test
+    public void testEmptyDatasetContiguous() throws IOException
+    {
+        final File dataSetFile = new File(workingDirectory, "testEmptyDatasetContiguous.h5");
+        final String dataSetName = "ds";
+        dataSetFile.delete();
+        assertFalse(dataSetFile.exists());
+        dataSetFile.deleteOnExit();
+        final HDF5DataSetRandomAccessFile raFile =
+                HDF5DataSetRandomAccessFile.createFullControl(dataSetFile, dataSetName, null, 1024,
+                        HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS);
+        raFile.seek(20);
+        raFile.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(dataSetFile);
+        assertTrue(reader.exists(dataSetName));
+        final HDF5DataSetInformation info = reader.getDataSetInformation(dataSetName);
+        assertEquals(1024, info.getSize());
+        assertEquals(HDF5StorageLayout.CONTIGUOUS, info.getStorageLayout());
+        assertNull(info.getTypeInformation().tryGetOpaqueTag());
+        final int[] chunkSizesOrNull = info.tryGetChunkSizes();
+        assertNull(chunkSizesOrNull);
+        reader.close();
+    }
+
+    @Test
+    public void testEmptyDatasetCompact() throws IOException
+    {
+        final File dataSetFile = new File(workingDirectory, "testEmptyDatasetCompact.h5");
+        final String dataSetName = "ds";
+        dataSetFile.delete();
+        assertFalse(dataSetFile.exists());
+        dataSetFile.deleteOnExit();
+        final HDF5DataSetRandomAccessFile raFile =
+                HDF5DataSetRandomAccessFile.createFullControl(dataSetFile, dataSetName, null, 1024,
+                        HDF5GenericStorageFeatures.GENERIC_COMPACT);
+        raFile.seek(20);
+        raFile.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(dataSetFile);
+        assertTrue(reader.exists(dataSetName));
+        final HDF5DataSetInformation info = reader.getDataSetInformation(dataSetName);
+        assertEquals(1024, info.getSize());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
+        assertNull(info.getTypeInformation().tryGetOpaqueTag());
+        final int[] chunkSizesOrNull = info.tryGetChunkSizes();
+        assertNull(chunkSizesOrNull);
+        reader.close();
+    }
 }
