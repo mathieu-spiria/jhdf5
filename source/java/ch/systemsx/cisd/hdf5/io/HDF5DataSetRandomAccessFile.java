@@ -78,7 +78,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     private int positionInBlockMark = -1;
 
-    private boolean pendingExtension;
+    private boolean extensionPending;
 
     private ch.systemsx.cisd.base.convert.NativeData.ByteOrder byteOrder =
             ch.systemsx.cisd.base.convert.NativeData.ByteOrder.BIG_ENDIAN;
@@ -220,7 +220,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
     private void checkWrite()
     {
         checkWriteDoNotExtend();
-        if (pendingExtension)
+        if (extensionPending)
         {
             setLength(blockOffset + positionInBlock);
         }
@@ -405,11 +405,12 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
             readBlock(newBlockOffset);
         } else
         {
-            this.realBlockSize = 0;
+            this.blockOffset = newBlockOffset;
+            this.realBlockSize = positionInBlock + 1;
         }
         if (pos >= length())
         {
-            this.pendingExtension = true;
+            this.extensionPending = true;
         }
     }
 

@@ -790,5 +790,35 @@ public class HDF5DataSetRandomAccessFileTest
         assertEquals("TestString\u1873", raFile.readUTF());
         raFile.close();
     }
+    
+    @Test
+    public void testPendingExtension() throws IOException
+    {
+        final File dataSetFile = new File(workingDirectory, "testPendingExtension.h5");
+        final String dataSetName = "ds";
+        dataSetFile.delete();
+        assertFalse(dataSetFile.exists());
+        dataSetFile.deleteOnExit();
+
+        final int chunkSize = 10;
+        final IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
+        writer.createByteArray(dataSetName, 0, chunkSize);
+        writer.close();
+        final HDF5DataSetRandomAccessFile raFile =
+                new HDF5DataSetRandomAccessFile(dataSetFile, dataSetName, false);
+        raFile.seek(20);
+        raFile.write(42);
+        assertEquals(21, raFile.length());
+        raFile.seek(0);
+        final byte[] arrayRead = IOUtils.toByteArray(new AdapterIInputStreamToInputStream(raFile));
+        assertEquals(42, arrayRead[20]);
+        for (int i = 0; i < 20; ++i)
+        {
+            assertEquals("Position " + i, 0, arrayRead[0]);
+        }
+        raFile.close();
+    }
+    
 
 }
