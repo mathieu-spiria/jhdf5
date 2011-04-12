@@ -144,6 +144,16 @@ public final class HDF5DataTypeInformation
         return opaqueTagOrNull;
     }
 
+    /**
+     * Returns an appropriate Java type, or <code>null</code>, if this HDF5 type has no appropriate
+     * Java type.
+     */
+    public Class<?> tryGetJavaType()
+    {
+        final int rank = (dimensions.length == 1 && dimensions[0] == 1) ? 0 : dimensions.length; 
+        return dataClass.getJavaTypeProvider().getJavaType(rank, elementSize);
+    }
+
     //
     // Object
     //

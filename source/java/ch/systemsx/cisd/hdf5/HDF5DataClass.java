@@ -22,8 +22,19 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_OPAQUE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_REFERENCE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
+
+import java.util.BitSet;
+import java.util.Map;
+
+import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDByteArray;
+import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
+import ch.systemsx.cisd.base.mdarray.MDFloatArray;
+import ch.systemsx.cisd.base.mdarray.MDIntArray;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
+import ch.systemsx.cisd.base.mdarray.MDShortArray;
 
 /**
  * Identifies the class of a data type. Note that for array types the class of the elements is
@@ -35,15 +46,35 @@ public enum HDF5DataClass
 {
     // Implementation note: The order matters! ENUM needs to be before INTEGER, as H5Tdetect_class
     // will return TRUE for ENUM arrays when trying to detect an INTEGER class.
-    BITFIELD(H5T_BITFIELD), ENUM(H5T_ENUM), INTEGER(H5T_INTEGER), FLOAT(H5T_FLOAT), STRING(
-            H5T_STRING), OPAQUE(H5T_OPAQUE), BOOLEAN(-1), COMPOUND(H5T_COMPOUND), REFERENCE(
-            H5T_REFERENCE), OTHER(-1);
+    BITFIELD(H5T_BITFIELD, new BasicJavaTypeProvider(BitSet.class, null, null, null)), ENUM(
+            H5T_ENUM, new BasicJavaTypeProvider(HDF5EnumerationValue.class,
+                    HDF5EnumerationValueArray.class, null, null)), INTEGER(H5T_INTEGER,
+            new IntJavaTypeProvider()), FLOAT(H5T_FLOAT, new FloatJavaTypeProvider()), STRING(
+            H5T_STRING, new BasicJavaTypeProvider(String.class, String[].class, String[][].class,
+                    MDArray.class)), OPAQUE(H5T_OPAQUE, new BasicJavaTypeProvider(byte.class,
+            byte[].class, byte[][].class, MDByteArray.class)), BOOLEAN(-1,
+            new BasicJavaTypeProvider(boolean.class, BitSet.class, null, null)), COMPOUND(
+            H5T_COMPOUND, new BasicJavaTypeProvider(Map.class, Map[].class, Map[][].class,
+                    MDArray.class)), REFERENCE(H5T_REFERENCE, new BasicJavaTypeProvider(
+            String.class, String[].class, String[][].class, MDArray.class)), OTHER(-1,
+            new BasicJavaTypeProvider(null, null, null, null));
 
-    private int id;
+    /**
+     * A role that can provide a java type for a data class, rank and element size.
+     */
+    interface IHDF5JavaTypeProvider
+    {
+        Class<?> getJavaType(int rank, int elementSize);
+    }
 
-    HDF5DataClass(int id)
+    private final int id;
+
+    private final IHDF5JavaTypeProvider typeProvider;
+
+    HDF5DataClass(int id, IHDF5JavaTypeProvider typeProvider)
     {
         this.id = id;
+        this.typeProvider = typeProvider;
     }
 
     int getId()
@@ -51,6 +82,14 @@ public enum HDF5DataClass
         return id;
     }
 
+    /**
+     * Returns a {@link IHDF5JavaTypeProvider} for an appropriate java type.
+     */
+    IHDF5JavaTypeProvider getJavaTypeProvider()
+    {
+        return typeProvider;
+    }
+    
     /**
      * Returns the {@link HDF5DataClass} for the given data <var>classId</var>.
      * <p>
@@ -67,6 +106,167 @@ public enum HDF5DataClass
             }
         }
         return OTHER;
+    }
+
+    //
+    // Auxiliary classes
+    //
+
+    private static class BasicJavaTypeProvider implements IHDF5JavaTypeProvider
+    {
+        private final Class<?> javaTypeScalarOrNull;
+
+        private final Class<?> javaType1DArrayOrNull;
+
+        private final Class<?> javaType2DArrayOrNull;
+
+        private final Class<?> javaTypeMDArrayOrNull;
+
+        BasicJavaTypeProvider(Class<?> javaTypeScalarOrNull, Class<?> javaType1DArrayOrNull,
+                Class<?> javaType2DArrayOrNull, Class<?> javaTypeMDArrayOrNull)
+        {
+            this.javaTypeScalarOrNull = javaTypeScalarOrNull;
+            this.javaType1DArrayOrNull = javaType1DArrayOrNull;
+            this.javaType2DArrayOrNull = javaType2DArrayOrNull;
+            this.javaTypeMDArrayOrNull = javaTypeMDArrayOrNull;
+        }
+
+        public Class<?> getJavaType(int rank, int elementSize)
+        {
+            if (rank == 0)
+            {
+                return javaTypeScalarOrNull;
+            } else if (rank == 1)
+            {
+                return javaType1DArrayOrNull;
+            } else if (rank == 2)
+            {
+                return javaType2DArrayOrNull;
+            } else
+            {
+                return javaTypeMDArrayOrNull;
+            }
+        }
+    }
+
+    private static class IntJavaTypeProvider implements IHDF5JavaTypeProvider
+    {
+        public Class<?> getJavaType(int rank, int elementSize)
+        {
+            if (rank == 0)
+            {
+                switch (elementSize)
+                {
+                    case 1:
+                        return byte.class;
+                    case 2:
+                        return short.class;
+                    case 4:
+                        return int.class;
+                    case 8:
+                        return long.class;
+                    default:
+                        return null;
+                }
+            } else if (rank == 1)
+            {
+                switch (elementSize)
+                {
+                    case 1:
+                        return byte[].class;
+                    case 2:
+                        return short[].class;
+                    case 4:
+                        return int[].class;
+                    case 8:
+                        return long[].class;
+                    default:
+                        return null;
+                }
+            } else if (rank == 2)
+            {
+                switch (elementSize)
+                {
+                    case 1:
+                        return byte[][].class;
+                    case 2:
+                        return short[][].class;
+                    case 4:
+                        return int[][].class;
+                    case 8:
+                        return long[][].class;
+                    default:
+                        return null;
+                }
+            } else
+            {
+                switch (elementSize)
+                {
+                    case 1:
+                        return MDByteArray.class;
+                    case 2:
+                        return MDShortArray.class;
+                    case 4:
+                        return MDIntArray.class;
+                    case 8:
+                        return MDLongArray.class;
+                    default:
+                        return null;
+                }
+            }
+        }
+    }
+
+    private static class FloatJavaTypeProvider implements IHDF5JavaTypeProvider
+    {
+        public Class<?> getJavaType(int rank, int elementSize)
+        {
+            if (rank == 0)
+            {
+                switch (elementSize)
+                {
+                    case 4:
+                        return float.class;
+                    case 8:
+                        return double.class;
+                    default:
+                        return null;
+                }
+            } else if (rank == 1)
+            {
+                switch (elementSize)
+                {
+                    case 4:
+                        return float[].class;
+                    case 8:
+                        return double[].class;
+                    default:
+                        return null;
+                }
+            } else if (rank == 2)
+            {
+                switch (elementSize)
+                {
+                    case 4:
+                        return float[][].class;
+                    case 8:
+                        return double[][].class;
+                    default:
+                        return null;
+                }
+            } else
+            {
+                switch (elementSize)
+                {
+                    case 4:
+                        return MDFloatArray.class;
+                    case 8:
+                        return MDDoubleArray.class;
+                    default:
+                        return null;
+                }
+            }
+        }
     }
 
 }
