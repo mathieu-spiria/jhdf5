@@ -130,18 +130,10 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     /**
      * Returns the name of this type, if it exists and <code>null</code> otherwise.
      */
+    @Override
     public String tryGetName()
     {
         return nameOrNull;
-    }
-
-    /**
-     * Returns a name for this type, if it is it known and <code>UNKNOWN</code> otherwise.
-     */
-    @Override
-    public String getName()
-    {
-        return (nameOrNull == null) ? "UNKNOWN" : nameOrNull;
     }
 
     /**

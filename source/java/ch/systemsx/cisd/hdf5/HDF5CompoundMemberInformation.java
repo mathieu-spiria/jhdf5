@@ -148,9 +148,9 @@ public final class HDF5CompoundMemberInformation implements
         } else if (fieldType == BitSet.class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.BITFIELD, 8, member
-                            .getMemberTypeLength()
-                            / 64 + (member.getMemberTypeLength() % 64 != 0 ? 1 : 0));
+                    new HDF5DataTypeInformation(HDF5DataClass.BITFIELD, 8,
+                            member.getMemberTypeLength() / 64
+                                    + (member.getMemberTypeLength() % 64 != 0 ? 1 : 0));
         } else if (fieldType == float.class || fieldType == float[].class
                 || fieldType == float[][].class || fieldType == MDFloatArray.class)
         {
@@ -166,8 +166,9 @@ public final class HDF5CompoundMemberInformation implements
         } else if (fieldType == HDF5EnumerationValue.class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.ENUM, member.tryGetEnumerationType()
-                            .getStorageForm().getStorageSize());
+                    new HDF5DataTypeInformation(HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX,
+                            member.tryGetEnumerationType().getName()), HDF5DataClass.ENUM, member
+                            .tryGetEnumerationType().getStorageForm().getStorageSize());
         } else
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.OTHER, -1);

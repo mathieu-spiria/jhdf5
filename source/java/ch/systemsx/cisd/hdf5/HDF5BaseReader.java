@@ -27,6 +27,7 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -70,7 +71,22 @@ class HDF5BaseReader
     protected final boolean performNumericConversions;
 
     /** Map from named data types to ids. */
-    final Map<String, Integer> namedDataTypeMap;
+    private final Map<String, Integer> namedDataTypeMap;
+
+    private class DataTypeContainer
+    {
+        final int typeId;
+
+        final String typePath;
+
+        DataTypeContainer(int typeId, String typePath)
+        {
+            this.typeId = typeId;
+            this.typePath = typePath;
+        }
+    }
+
+    private final List<DataTypeContainer> namedDataTypeList;
 
     protected final HDF5 h5;
 
@@ -95,6 +111,7 @@ class HDF5BaseReader
         this.runner = new CleanUpCallable();
         this.fileRegistry = new CleanUpRegistry();
         this.namedDataTypeMap = new HashMap<String, Integer>();
+        this.namedDataTypeList = new ArrayList<DataTypeContainer>();
         h5 = new HDF5(fileRegistry, performNumericConversions, useUTF8CharEncoding);
         fileId = openFile(fileFormat, overwrite);
         state = State.OPEN;
@@ -176,6 +193,24 @@ class HDF5BaseReader
         return dataTypeId;
     }
 
+    String tryGetDataTypePath(int dataTypeId)
+    {
+        for (DataTypeContainer namedDataType : namedDataTypeList)
+        {
+            if (h5.dataTypesAreEqual(dataTypeId, namedDataType.typeId))
+            {
+                return namedDataType.typePath;
+            }
+        }
+        return h5.tryGetDataTypePath(dataTypeId);
+    }
+
+    String tryGetDataTypeName(int dataTypeId, HDF5DataClass dataClass)
+    {
+        final String dataTypePathOrNull = tryGetDataTypePath(dataTypeId);
+        return HDF5Utils.tryGetDataTypeNameFromPath(dataTypePathOrNull, dataClass);
+    }
+
     int getDataTypeId(final String dataTypePath)
     {
         final Integer dataTypeIdOrNull = namedDataTypeMap.get(dataTypePath);
@@ -240,6 +275,7 @@ class HDF5BaseReader
         {
             final int dataTypeId = h5.openDataType(fileId, dataTypePath, fileRegistry);
             namedDataTypeMap.put(dataTypePath, dataTypeId);
+            namedDataTypeList.add(new DataTypeContainer(dataTypeId, dataTypePath));
         }
     }
 
@@ -546,7 +582,7 @@ class HDF5BaseReader
                             final int dataSetId = h5.openDataSet(fileId, dataSetPath, registry);
                             final int dataTypeId = h5.getDataTypeForDataSet(dataSetId, registry);
                             final HDF5DataTypeInformation dataTypeInfo =
-                                    getDataTypeInformation(dataTypeId);
+                                    getDataTypeInformation(dataTypeId, registry);
                             final HDF5DataSetInformation dataSetInfo =
                                     new HDF5DataSetInformation(dataTypeInfo, tryGetTypeVariant(
                                             dataSetId, registry));
@@ -639,7 +675,8 @@ class HDF5BaseReader
         return enumOrdinal;
     }
 
-    HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId)
+    HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId,
+            final ICleanUpRegistry registry)
     {
         final int classTypeId = h5.getClassType(dataTypeId);
         final HDF5DataClass dataClass;
@@ -650,7 +687,9 @@ class HDF5BaseReader
             final int[] arrayDimensions = h5.getArrayDimensions(dataTypeId);
             final int numberOfElements = MDArray.getLength(arrayDimensions);
             final int size = totalSize / numberOfElements;
-            return new HDF5DataTypeInformation(dataClass, size, arrayDimensions, true);
+            final int baseTypeId = h5.getBaseDataType(dataTypeId, registry);
+            return new HDF5DataTypeInformation(tryGetDataTypePath(baseTypeId), dataClass, size,
+                    arrayDimensions, true);
         } else
         {
             dataClass = getDataClassForClassType(classTypeId, dataTypeId);
@@ -662,7 +701,8 @@ class HDF5BaseReader
             {
                 opaqueTagOrNull = null;
             }
-            return new HDF5DataTypeInformation(dataClass, totalSize, 1, opaqueTagOrNull);
+            return new HDF5DataTypeInformation(tryGetDataTypePath(dataTypeId), dataClass,
+                    totalSize, 1, opaqueTagOrNull);
         }
     }
 
@@ -692,6 +732,11 @@ class HDF5BaseReader
     //
     // Compound
     //
+
+    String getCompoundDataTypeName(final String nameOrNull, final int dataTypeId)
+    {
+        return getDataTypeName(nameOrNull, HDF5DataClass.COMPOUND, dataTypeId);
+    }
 
     <T> HDF5ValueObjectByteifyer<T> createCompoundByteifyers(final Class<T> compoundClazz,
             final HDF5CompoundMemberMapping[] compoundMembers)
@@ -757,9 +802,16 @@ class HDF5BaseReader
     HDF5EnumerationType getEnumTypeForStorageDataType(final String nameOrNull,
             final int storageDataTypeId, final ICleanUpRegistry registry)
     {
+        return getEnumTypeForStorageDataType(nameOrNull, storageDataTypeId, true, registry);
+    }
+
+    HDF5EnumerationType getEnumTypeForStorageDataType(final String nameOrNull,
+            final int storageDataTypeId, final boolean resolveName, final ICleanUpRegistry registry)
+    {
         final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
         final String[] values = h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-        return new HDF5EnumerationType(fileId, storageDataTypeId, nativeDataTypeId, nameOrNull,
+        return new HDF5EnumerationType(fileId, storageDataTypeId, nativeDataTypeId,
+                resolveName ? getEnumDataTypeName(nameOrNull, storageDataTypeId) : nameOrNull,
                 values);
     }
 
@@ -782,21 +834,22 @@ class HDF5BaseReader
         }
     }
 
-    private String getEnumDataTypeName(final String nameOrNull, final int dataTypeId)
+    String getEnumDataTypeName(final String nameOrNull, final int dataTypeId)
+    {
+        return getDataTypeName(nameOrNull, HDF5DataClass.ENUM, dataTypeId);
+    }
+
+    private String getDataTypeName(final String nameOrNull, final HDF5DataClass dataClass,
+            final int dataTypeId)
     {
         if (nameOrNull != null)
         {
             return nameOrNull;
         } else
         {
-            final String path = h5.tryGetDataTypePath(dataTypeId);
-            if (path == null)
-            {
-                return "UNKNOWN";
-            } else
-            {
-                return path.substring(HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX).length());
-            }
+            final String nameFromPathOrNull =
+                    HDF5Utils.tryGetDataTypeNameFromPath(tryGetDataTypePath(dataTypeId), dataClass);
+            return (nameFromPathOrNull == null) ? "UNKNOWN" : nameFromPathOrNull;
         }
     }
 

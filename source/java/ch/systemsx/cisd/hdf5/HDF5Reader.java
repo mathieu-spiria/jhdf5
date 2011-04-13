@@ -265,7 +265,7 @@ class HDF5Reader implements IHDF5Reader
                                             registry);
                             final int dataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                            return baseReader.h5.tryGetDataTypePath(dataTypeId);
+                            return baseReader.tryGetDataTypePath(dataTypeId);
                         }
                     };
         return baseReader.runner.call(dataTypeNameCallable);
@@ -277,7 +277,7 @@ class HDF5Reader implements IHDF5Reader
 
         baseReader.checkOpen();
         type.check(baseReader.fileId);
-        return baseReader.h5.tryGetDataTypePath(type.getStorageTypeId());
+        return baseReader.tryGetDataTypePath(type.getStorageTypeId());
     }
 
     public List<String> getAttributeNames(final String objectPath)
@@ -329,7 +329,7 @@ class HDF5Reader implements IHDF5Reader
                                         baseReader.h5
                                                 .getDataTypeForAttribute(attributeId, registry);
                                 final HDF5DataTypeInformation dataTypeInformation =
-                                        baseReader.getDataTypeInformation(dataTypeId);
+                                        baseReader.getDataTypeInformation(dataTypeId, registry);
                                 if (dataTypeInformation.isArrayType() == false)
                                 {
                                     final int[] dimensions =

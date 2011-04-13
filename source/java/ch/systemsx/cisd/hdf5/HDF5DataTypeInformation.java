@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import org.apache.commons.lang.ObjectUtils;
+
 import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
@@ -30,6 +32,10 @@ public final class HDF5DataTypeInformation
 
     private final boolean arrayType;
 
+    private final String dataTypePathOrNull;
+
+    private final String nameOrNull;
+
     private int elementSize;
 
     private int numberOfElements;
@@ -38,36 +44,51 @@ public final class HDF5DataTypeInformation
 
     private String opaqueTagOrNull;
 
+    HDF5DataTypeInformation(String dataTypePathOrNull, HDF5DataClass dataClass, int elementSize)
+    {
+        this(dataTypePathOrNull, dataClass, elementSize, new int[]
+            { 1 }, false, null);
+    }
+
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize)
     {
-        this(dataClass, elementSize, new int[]
+        this(null, dataClass, elementSize, new int[]
             { 1 }, false, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int numberOfElements)
     {
-        this(dataClass, elementSize, new int[]
+        this(null, dataClass, elementSize, new int[]
             { numberOfElements }, false, null);
 
     }
 
-    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int numberOfElements,
-            String opaqueTagOrNull)
+    HDF5DataTypeInformation(String dataTypePathOrNull, HDF5DataClass dataClass, int elementSize,
+            int numberOfElements, String opaqueTagOrNull)
     {
-        this(dataClass, elementSize, new int[]
+        this(dataTypePathOrNull, dataClass, elementSize, new int[]
             { numberOfElements }, false, opaqueTagOrNull);
     }
 
-    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int[] dimensions,
-            boolean arrayType)
+    HDF5DataTypeInformation(String dataTypePathOrNull, HDF5DataClass dataClass, int elementSize,
+            int[] dimensions, boolean arrayType)
     {
-        this(dataClass, elementSize, dimensions, arrayType, null);
+        this(dataTypePathOrNull, dataClass, elementSize, dimensions, arrayType, null);
 
     }
 
-    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int[] dimensions,
-            boolean arrayType, String opaqueTagOrNull)
+    HDF5DataTypeInformation(String dataTypePathOrNull, HDF5DataClass dataClass, int elementSize,
+            int[] dimensions, boolean arrayType, String opaqueTagOrNull)
     {
+        if (dataClass == HDF5DataClass.BOOLEAN || dataClass == HDF5DataClass.STRING)
+        {
+            this.dataTypePathOrNull = null;
+            this.nameOrNull = null;
+        } else
+        {
+            this.dataTypePathOrNull = dataTypePathOrNull;
+            this.nameOrNull = HDF5Utils.tryGetDataTypeNameFromPath(dataTypePathOrNull, dataClass);
+        }
         this.arrayType = arrayType;
         this.dataClass = dataClass;
         this.elementSize = elementSize;
@@ -145,12 +166,29 @@ public final class HDF5DataTypeInformation
     }
 
     /**
+     * If this is a committed (named) data type, return the path of the data type. Otherwise
+     * <code>null</code> is returned.
+     */
+    public String tryGetDataTypePath()
+    {
+        return dataTypePathOrNull;
+    }
+
+    /**
+     * Returns the name of this datatype, if it is a committed data type.
+     */
+    public String tryGetName()
+    {
+        return nameOrNull;
+    }
+
+    /**
      * Returns an appropriate Java type, or <code>null</code>, if this HDF5 type has no appropriate
      * Java type.
      */
     public Class<?> tryGetJavaType()
     {
-        final int rank = (dimensions.length == 1 && dimensions[0] == 1) ? 0 : dimensions.length; 
+        final int rank = (dimensions.length == 1 && dimensions[0] == 1) ? 0 : dimensions.length;
         return dataClass.getJavaTypeProvider().getJavaType(rank, elementSize);
     }
 
@@ -167,28 +205,40 @@ public final class HDF5DataTypeInformation
         }
         final HDF5DataTypeInformation that = (HDF5DataTypeInformation) obj;
         return dataClass.equals(that.dataClass) && elementSize == that.elementSize
-                && numberOfElements == that.numberOfElements;
+                && numberOfElements == that.numberOfElements
+                && ObjectUtils.equals(nameOrNull, that.nameOrNull)
+                && ObjectUtils.equals(dataTypePathOrNull, that.dataTypePathOrNull);
     }
 
     @Override
     public int hashCode()
     {
-        return ((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + numberOfElements;
+        return ((((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + numberOfElements) * 59 + ObjectUtils
+                .hashCode(nameOrNull)) * 59 + ObjectUtils.hashCode(dataTypePathOrNull);
     }
 
     @Override
     public String toString()
     {
+        final String name;
+        if (nameOrNull != null)
+        {
+            name = "{" + nameOrNull + "}";
+        } else
+        {
+            name = "";
+        }
         if (numberOfElements == 1)
         {
-            return dataClass + "(" + elementSize + ")";
+            return name + dataClass + "(" + elementSize + ")";
         } else if (dimensions.length == 1)
         {
 
-            return dataClass + "(" + elementSize + ", #" + numberOfElements + ")";
+            return name + dataClass + "(" + elementSize + ", #" + numberOfElements + ")";
         } else
         {
             final StringBuilder builder = new StringBuilder();
+            builder.append(name);
             builder.append(dataClass.toString());
             builder.append('(');
             builder.append(elementSize);
@@ -207,5 +257,4 @@ public final class HDF5DataTypeInformation
             return builder.toString();
         }
     }
-
 }

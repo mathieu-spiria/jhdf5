@@ -44,7 +44,7 @@ public final class HDF5OpaqueType extends HDF5DataType
     }
 
     @Override
-    String getName()
+    public String tryGetName()
     {
         return tag;
     }

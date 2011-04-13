@@ -76,7 +76,7 @@ public class HDF5CompoundType<T> extends HDF5DataType
     }
 
     @Override
-    String getName()
+    public String tryGetName()
     {
         return nameOrNull;
     }

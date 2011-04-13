@@ -68,15 +68,15 @@ final class HDF5Utils
     static final String BOOLEAN_DATA_TYPE = DATATYPE_GROUP + "/" + ENUM_PREFIX + "Boolean";
 
     /** The timestamp data type for milli-seconds since start of the epoch. */
-    static final String TIMESTAMP_DATA_TYPE =
-            DATATYPE_GROUP + "/" + TIMESTAMP_PREFIX + "MilliSecondsSinceStartOfTheEpoch";
+    static final String TIMESTAMP_DATA_TYPE = DATATYPE_GROUP + "/" + TIMESTAMP_PREFIX
+            + "MilliSecondsSinceStartOfTheEpoch";
 
     /** The data type specifying a type variant. */
     static final String TYPE_VARIANT_DATA_TYPE = DATATYPE_GROUP + "/" + ENUM_PREFIX + "TypeVariant";
 
     /** The variable-length string data type. */
-    static final String VARIABLE_LENGTH_STRING_DATA_TYPE =
-            DATATYPE_GROUP + "/String_VariableLength";
+    static final String VARIABLE_LENGTH_STRING_DATA_TYPE = DATATYPE_GROUP
+            + "/String_VariableLength";
 
     /**
      * The legacy attribute to signal that a data set is empty (for backward compatibility with
@@ -186,6 +186,55 @@ final class HDF5Utils
             builder.append(app);
         }
         return builder.toString();
+    }
+
+    /**
+     * Returns the name for a committed data type with <var>pathOrNull</var>. If
+     * <code>pathOrNull == null</code>, the method will return <code>null</code>.
+     */
+    static String tryGetDataTypeNameFromPath(String pathOrNull, HDF5DataClass dataClass)
+    {
+        if (pathOrNull == null)
+        {
+            return null;
+        } else
+        {
+            final String prefix = getPrefixForDataClass(dataClass);
+            final String pathPrefix = createDataTypePath(prefix);
+            if (pathOrNull.startsWith(pathPrefix))
+            {
+                return pathOrNull.substring(pathPrefix.length());
+            } else
+            {
+                final int lastPathSepIdx = pathOrNull.lastIndexOf('/');
+                if (lastPathSepIdx >= 0)
+                {
+                    return pathOrNull.substring(lastPathSepIdx + 1);
+                } else
+                {
+                    return pathOrNull;
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns a prefix for a given data class, or <code>""</code>, if this data class does not
+     * have a prefix.
+     */
+    static String getPrefixForDataClass(HDF5DataClass dataClass)
+    {
+        switch (dataClass)
+        {
+            case COMPOUND:
+                return COMPOUND_PREFIX;
+            case ENUM:
+                return ENUM_PREFIX;
+            case OPAQUE:
+                return OPAQUE_PREFIX;
+            default:
+                return "";
+        }
     }
 
     /**

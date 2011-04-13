@@ -66,14 +66,24 @@ public abstract class HDF5DataType
     {
         if (fileId != expectedFileId)
         {
-            throw new HDF5JavaException("Type " + getName() + " is not of this file.");
+            throw new HDF5JavaException("Type " + getName() + " is not from this file.");
         }
     }
 
     /**
-     * Returns A name for this type.
+     * Returns a name for this type, or <code>null</code> if this type has no name.
      */
-    abstract String getName();
+    public abstract String tryGetName();
+
+    /**
+     * Returns a name for this type, or <code>UNKNOWN</code if this type has no name.
+     */
+    public String getName()
+    {
+        final String nameOrNull = tryGetName();
+        return (nameOrNull == null) ? "UNKNOWN" : nameOrNull;
+    }
+
 
     //
     // Object

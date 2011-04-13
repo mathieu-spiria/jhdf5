@@ -3895,6 +3895,12 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         type = reader.getEnumType(enumTypeName);
+        assertEquals(enumTypeName, type.tryGetName());
+        final HDF5DataTypeInformation typeInfo =
+                reader.getDataSetInformation(dsName).getTypeInformation();
+        assertEquals(enumTypeName, typeInfo.tryGetName());
+        assertEquals(HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, enumTypeName),
+                typeInfo.tryGetDataTypePath());
         final String valueStr = reader.readEnumAsString(dsName);
         assertEquals("THREE", valueStr);
         final HDF5EnumerationValue value = reader.readEnum(dsName);
@@ -5957,12 +5963,14 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final HDF5CompoundType<HDF5CompoundDataMap> typeRead =
                 reader.getDataSetCompoundType("cpd", HDF5CompoundDataMap.class);
+        assertEquals("MapCompoundA", typeRead.getName());
         final HDF5CompoundDataMap mapRead = reader.readCompound("cpd", typeRead);
         assertEquals(7, mapRead.size());
         assertEquals(a, mapRead.get("a"));
         assertTrue(ArrayUtils.toString(mapRead.get("b")), ArrayUtils.isEquals(b, mapRead.get("b")));
         assertEquals(c, mapRead.get("c"));
         final HDF5EnumerationValueArray dRead = (HDF5EnumerationValueArray) mapRead.get("d");
+        assertEquals("someEnumType", dRead.getType().getName());
         assertEquals(d.getLength(), dRead.getLength());
         for (int i = 0; i < d.getLength(); ++i)
         {
