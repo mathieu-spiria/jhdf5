@@ -16,9 +16,13 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
@@ -51,7 +55,7 @@ class HDF5ValueObjectByteifyer<T>
     public HDF5ValueObjectByteifyer(Class<T> clazz, FileInfoProvider fileInfoProvider,
             HDF5CompoundMemberMapping... members)
     {
-        byteifyers = createMemberByteifyers(clazz, fileInfoProvider, members);
+        byteifyers = HDF5CompoundByteifyerFactory.createMemberByteifyers(clazz, fileInfoProvider, members);
         if (byteifyers.length > 0)
         {
             recordSize = byteifyers[byteifyers.length - 1].getTotalSize();
@@ -60,106 +64,6 @@ class HDF5ValueObjectByteifyer<T>
             recordSize = 0;
         }
 
-    }
-
-    private static HDF5MemberByteifyer[] createMemberByteifyers(Class<?> clazz,
-            FileInfoProvider fileInfoProvider, HDF5CompoundMemberMapping... members)
-    {
-        final HDF5MemberByteifyer[] result = new HDF5MemberByteifyer[members.length];
-        int offset = 0;
-        for (int i = 0; i < result.length; ++i)
-        {
-            final Class<?> memberClazz = members[i].getField(clazz).getType();
-            // May be -1 if not known
-            final int typeId = members[i].getStorageDataTypeId();
-            if (memberClazz == boolean.class)
-            {
-                result[i] =
-                        HDF5MemberByteifyer.createBooleanMemberByteifyer(
-                                members[i].getField(clazz), members[i].getMemberName(),
-                                (typeId < 0) ? fileInfoProvider.getBooleanDataTypeId() : typeId,
-                                offset);
-            } else if (memberClazz == String.class)
-            {
-                final int stringDataTypeId =
-                        (typeId < 0) ? fileInfoProvider.getStringDataTypeId(members[i]
-                                .getMemberTypeLength()) : typeId;
-                result[i] =
-                        HDF5MemberByteifyer.createStringMemberByteifyer(members[i].getField(clazz),
-                                members[i].getMemberName(), offset, stringDataTypeId,
-                                members[i].getMemberTypeLength(),
-                                fileInfoProvider.getCharacterEncoding());
-            } else if (memberClazz == char[].class)
-            {
-                final int stringDataTypeId =
-                        (typeId < 0) ? fileInfoProvider.getStringDataTypeId(members[i]
-                                .getMemberTypeLength()) : typeId;
-                result[i] =
-                        HDF5MemberByteifyer.createCharArrayMemberByteifyer(
-                                members[i].getField(clazz), members[i].getMemberName(), offset,
-                                stringDataTypeId, members[i].getMemberTypeLength(),
-                                fileInfoProvider.getCharacterEncoding());
-            } else if (memberClazz == HDF5EnumerationValue.class)
-            {
-                final HDF5EnumerationType enumType = members[i].tryGetEnumerationType();
-                if (enumType == null)
-                {
-                    throw new NullPointerException("Enumeration type not set for member byteifyer.");
-                }
-                result[i] =
-                        HDF5MemberByteifyer.createEnumMemberByteifyer(members[i].getField(clazz),
-                                members[i].getMemberName(), members[i].tryGetEnumerationType(),
-                                offset);
-            } else if (memberClazz == HDF5EnumerationValueArray.class)
-            {
-                final HDF5EnumerationType enumType = members[i].tryGetEnumerationType();
-                if (enumType == null)
-                {
-                    throw new NullPointerException("Enumeration type not set for member byteifyer.");
-                }
-                result[i] =
-                        HDF5MemberByteifyer
-                                .createEnumArrayMemberByteifyer(members[i].getField(clazz),
-                                        members[i].getMemberName(),
-                                        members[i].tryGetEnumerationType(), offset,
-                                        fileInfoProvider, members[i].getMemberTypeLength(),
-                                        members[i].getStorageDataTypeId());
-            } else if (isOneDimensionalArray(memberClazz) || memberClazz == java.util.BitSet.class)
-            {
-                result[i] =
-                        HDF5MemberByteifyer
-                                .createArrayMemberByteifyer(members[i].getField(clazz),
-                                        members[i].getMemberName(), offset, fileInfoProvider,
-                                        members[i].getMemberTypeLength(),
-                                        members[i].getStorageDataTypeId());
-            } else if (MDAbstractArray.class.isAssignableFrom(memberClazz)
-                    || isTwoDimensionalArray(memberClazz))
-            {
-                result[i] =
-                        HDF5MemberByteifyer.createArrayMemberByteifyer(members[i].getField(clazz),
-                                members[i].getMemberName(), offset, fileInfoProvider,
-                                members[i].getMemberTypeDimensions(),
-                                members[i].getStorageDataTypeId());
-            } else
-            {
-                result[i] =
-                        HDF5MemberByteifyer.createMemberByteifyer(members[i].getField(clazz),
-                                members[i].getMemberName(), offset);
-            }
-            offset += result[i].getSizeInBytes();
-        }
-        return result;
-    }
-
-    private static boolean isOneDimensionalArray(final Class<?> memberClazz)
-    {
-        return memberClazz.isArray() && memberClazz.getComponentType().isPrimitive();
-    }
-
-    private static boolean isTwoDimensionalArray(final Class<?> memberClazz)
-    {
-        return memberClazz.isArray() && memberClazz.getComponentType().isArray()
-                && memberClazz.getComponentType().getComponentType().isPrimitive();
     }
 
     public int insertMemberTypes(int dataTypeId)
@@ -289,6 +193,18 @@ class HDF5ValueObjectByteifyer<T>
     @SuppressWarnings("unchecked")
     private T newInstance(Class<?> recordClass) throws HDF5JavaException
     {
+        if (Map.class.isAssignableFrom(recordClass))
+        {
+            return newMap(byteifyers.length);
+        }
+        if (List.class.isAssignableFrom(recordClass))
+        {
+            return newList(byteifyers.length);
+        }
+        if (recordClass == Object[].class)
+        {
+            return newArray(byteifyers.length);
+        }
         try
         {
             return (T) ReflectionUtils.newInstance(recordClass);
@@ -298,12 +214,35 @@ class HDF5ValueObjectByteifyer<T>
                     + recordClass.getCanonicalName() + " by default constructor failed: "
                     + ex.toString());
         }
-
     }
 
-    public final int getRecordSize()
+    @SuppressWarnings("unchecked")
+    private static <T> T newMap(int size)
+    {
+        return (T) new HDF5CompoundDataMap(size);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T newList(int size)
+    {
+        return (T) new HDF5CompoundDataList(Collections.nCopies(size, null));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T newArray(int size)
+    {
+        return (T) new Object[size];
+    }
+
+    public int getRecordSize()
     {
         return recordSize;
     }
 
+    @Override
+    public String toString()
+    {
+        return "HDF5ValueObjectByteifyer [byteifyers=" + Arrays.toString(byteifyers) + "]";
+    }
+    
 }

@@ -754,12 +754,13 @@ class HDF5BaseReader
     // Enum
     //
 
-    HDF5EnumerationType getEnumTypeForStorageDataType(final int storageDataTypeId,
-            final ICleanUpRegistry registry)
+    HDF5EnumerationType getEnumTypeForStorageDataType(final String nameOrNull,
+            final int storageDataTypeId, final ICleanUpRegistry registry)
     {
         final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
         final String[] values = h5.getNamesForEnumOrCompoundMembers(storageDataTypeId);
-        return new HDF5EnumerationType(fileId, storageDataTypeId, nativeDataTypeId, null, values);
+        return new HDF5EnumerationType(fileId, storageDataTypeId, nativeDataTypeId, nameOrNull,
+                values);
     }
 
     void checkEnumValues(int dataTypeId, final String[] values, final String nameOrNull)

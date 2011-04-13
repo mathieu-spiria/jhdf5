@@ -81,4 +81,18 @@ public class HDF5CompoundType<T> extends HDF5DataType
         return nameOrNull;
     }
 
+    @Override
+    public String toString()
+    {
+        if (nameOrNull != null)
+        {
+            return "HDF5CompoundType [nameOrNull=" + nameOrNull + ", compoundType="
+                    + compoundType.getSimpleName() + ", objectByteifyer=" + objectByteifyer + "]";
+        } else
+        {
+            return "HDF5CompoundType [compoundType=" + compoundType.getSimpleName()
+                    + ", objectByteifyer=" + objectByteifyer + "]";
+        }
+    }
+
 }

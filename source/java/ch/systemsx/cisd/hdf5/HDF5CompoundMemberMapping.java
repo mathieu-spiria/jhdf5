@@ -94,7 +94,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * <li>{@link HDF5EnumerationValue}</li>
  * <li>{@link HDF5EnumerationValueArray}</li>
  * <li>Sub-classes of {@link MDAbstractArray}</li>
- * </ul> 
+ * </ul>
  * 
  * @author Bernd Rinn
  */
@@ -104,6 +104,8 @@ public final class HDF5CompoundMemberMapping
     private final String fieldName;
 
     private final String memberName;
+
+    private final Class<?> memberClassOrNull;
 
     private final int memberTypeLength;
 
@@ -122,7 +124,19 @@ public final class HDF5CompoundMemberMapping
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName)
     {
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, new int[0]);
+        return new HDF5CompoundMemberMapping(fieldName, null, fieldName, null, new int[0]);
+    }
+
+    /**
+     * Adds a member mapping for <var>fieldName</var>. Can be used for all data types except Strings
+     * and Enumerations.
+     * 
+     * @param memberName The name of the compound member.
+     * @param memberClass The class of the member. Only used if the compound pojo class is a map.
+     */
+    public static HDF5CompoundMemberMapping mapping(String memberName, Class<?> memberClass)
+    {
+        return new HDF5CompoundMemberMapping(memberName, memberClass, memberName, null, new int[0]);
     }
 
     /**
@@ -134,7 +148,7 @@ public final class HDF5CompoundMemberMapping
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName)
     {
-        return new HDF5CompoundMemberMapping(fieldName, memberName, null, new int[0]);
+        return new HDF5CompoundMemberMapping(fieldName, null, memberName, null, new int[0]);
     }
 
     /**
@@ -147,7 +161,7 @@ public final class HDF5CompoundMemberMapping
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName, int memberTypeLength)
     {
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, new int[]
+        return new HDF5CompoundMemberMapping(fieldName, null, fieldName, null, new int[]
             { memberTypeLength });
     }
 
@@ -155,18 +169,35 @@ public final class HDF5CompoundMemberMapping
      * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings, primitive arrays
      * and {@link java.util.BitSet}s.
      * 
-     * @param fieldName The name of the field in the Java class. Will also be used as name of
-     *            member.
+     * @param memberName The name of the compound member.
+     * @param memberClass The class of the member. Only used if the compound pojo class is a map.
+     *            For restrictions on the type, see above.
+     * @param memberTypeLength The length of the String or the primitive array in the compound type.
+     */
+    public static HDF5CompoundMemberMapping mapping(String memberName, Class<?> memberClass,
+            int memberTypeLength)
+    {
+        return new HDF5CompoundMemberMapping(memberName, memberClass, memberName, null, new int[]
+            { memberTypeLength });
+    }
+
+    /**
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for Strings, primitive arrays
+     * and {@link java.util.BitSet}s.
+     * 
+     * @param fieldName The name of the field in the Java class.
      * @param memberName The name of the member in the compound type.
+     * @param memberClass The class of the member. Only used if the compound pojo class is a map.
+     *            For restrictions on the type, see above.
      * @param memberDimensions The dimensions of the compound type (i.e. length of the String or
      *            dimensions of the array).
      * @param storageDataTypeId The storage data type id of the member, if known, or -1 else
      */
     static HDF5CompoundMemberMapping mappingArrayWithStorageId(String fieldName, String memberName,
-            int[] memberDimensions, int storageDataTypeId)
+            Class<?> memberClass, int[] memberDimensions, int storageDataTypeId)
     {
-        return new HDF5CompoundMemberMapping(fieldName, memberName, null, memberDimensions,
-                storageDataTypeId);
+        return new HDF5CompoundMemberMapping(fieldName, memberClass, memberName, null,
+                memberDimensions, storageDataTypeId);
     }
 
     /**
@@ -180,7 +211,7 @@ public final class HDF5CompoundMemberMapping
     public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName,
             int memberTypeLength)
     {
-        return new HDF5CompoundMemberMapping(fieldName, memberName, null, new int[]
+        return new HDF5CompoundMemberMapping(fieldName, null, memberName, null, new int[]
             { memberTypeLength });
     }
 
@@ -196,7 +227,24 @@ public final class HDF5CompoundMemberMapping
     public static HDF5CompoundMemberMapping mapping(String fieldName, int memberTypeDimX,
             int memberTypeDimY)
     {
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, new int[]
+        return new HDF5CompoundMemberMapping(fieldName, null, fieldName, null, new int[]
+            { memberTypeDimX, memberTypeDimY });
+    }
+
+    /**
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for two-dimensional primitive
+     * arrays or {@link MDArray}s.
+     * 
+     * @param memberName The name of the compound member.
+     * @param memberClass The class of the member. Only used if the compound pojo class is a map.
+     *            For restrictions on the type, see above.
+     * @param memberTypeDimX The x dimension of the array in the compound type.
+     * @param memberTypeDimY The y dimension of the array in the compound type.
+     */
+    public static HDF5CompoundMemberMapping mapping(String memberName, Class<?> memberClass,
+            int memberTypeDimX, int memberTypeDimY)
+    {
+        return new HDF5CompoundMemberMapping(memberName, memberClass, memberName, null, new int[]
             { memberTypeDimX, memberTypeDimY });
     }
 
@@ -212,7 +260,7 @@ public final class HDF5CompoundMemberMapping
     public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName,
             int memberTypeDimX, int memberTypeDimY)
     {
-        return new HDF5CompoundMemberMapping(fieldName, memberName, null, new int[]
+        return new HDF5CompoundMemberMapping(fieldName, null, memberName, null, new int[]
             { memberTypeDimX, memberTypeDimY });
     }
 
@@ -226,7 +274,23 @@ public final class HDF5CompoundMemberMapping
      */
     public static HDF5CompoundMemberMapping mapping(String fieldName, int[] memberTypeDimensions)
     {
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, null, memberTypeDimensions);
+        return new HDF5CompoundMemberMapping(fieldName, null, fieldName, null, memberTypeDimensions);
+    }
+
+    /**
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for two-dimensional primitive
+     * arrays or {@link MDArray}s.
+     * 
+     * @param memberName The name of the compound member.
+     * @param memberClass The class of the member. Only used if the compound pojo class is a map.
+     *            For restrictions on the type, see above.
+     * @param memberTypeDimensions The dimensions of the array in the compound type.
+     */
+    public static HDF5CompoundMemberMapping mapping(String memberName, Class<?> memberClass,
+            int[] memberTypeDimensions)
+    {
+        return new HDF5CompoundMemberMapping(memberName, memberClass, memberName, null,
+                memberTypeDimensions);
     }
 
     /**
@@ -240,7 +304,8 @@ public final class HDF5CompoundMemberMapping
     public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName,
             int[] memberTypeDimensions)
     {
-        return new HDF5CompoundMemberMapping(fieldName, memberName, null, memberTypeDimensions);
+        return new HDF5CompoundMemberMapping(fieldName, null, memberName, null,
+                memberTypeDimensions);
     }
 
     /**
@@ -252,7 +317,8 @@ public final class HDF5CompoundMemberMapping
     public static HDF5CompoundMemberMapping mapping(String fieldName, HDF5EnumerationType enumType)
     {
         assert enumType != null;
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, enumType, new int[0]);
+        return new HDF5CompoundMemberMapping(fieldName, HDF5EnumerationValue.class, fieldName,
+                enumType, new int[0]);
     }
 
     /**
@@ -266,23 +332,58 @@ public final class HDF5CompoundMemberMapping
             int[] memberTypeDimensions)
     {
         assert enumType != null;
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, enumType, memberTypeDimensions);
+        return new HDF5CompoundMemberMapping(fieldName, HDF5EnumerationValueArray.class, fieldName,
+                enumType, memberTypeDimensions);
     }
 
     /**
      * Adds a member mapping for <var>fieldName</var>. Only suitable for Enumeration arrays.
      * 
      * @param fieldName The name of the field in the Java class.
+     * @param memberName The name of the member in the compound type.
+     * @param enumType The enumeration type in the HDF5 file.
+     * @param memberTypeDimensions The dimensions of the array in the compound type.
+     */
+    public static HDF5CompoundMemberMapping mapping(String fieldName, String memberName,
+            HDF5EnumerationType enumType, int[] memberTypeDimensions)
+    {
+        assert enumType != null;
+        return new HDF5CompoundMemberMapping(fieldName, HDF5EnumerationValueArray.class,
+                memberName, enumType, memberTypeDimensions);
+    }
+
+    /**
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for Enumeration arrays.
+     * 
+     * @param fieldName The name of the field in the Java class.
+     * @param memberName The name of the member in the compound type.
      * @param enumType The enumeration type in the HDF5 file.
      * @param memberTypeDimensions The dimensions of the array in the compound type.
      * @param storageTypeId the id of the storage type of this member.
      */
-    static HDF5CompoundMemberMapping mapping(String fieldName, HDF5EnumerationType enumType,
-            int[] memberTypeDimensions, int storageTypeId)
+    static HDF5CompoundMemberMapping mapping(String fieldName, String memberName,
+            HDF5EnumerationType enumType, int[] memberTypeDimensions, int storageTypeId)
     {
         assert enumType != null;
-        return new HDF5CompoundMemberMapping(fieldName, fieldName, enumType, memberTypeDimensions,
-                storageTypeId);
+        return new HDF5CompoundMemberMapping(fieldName, HDF5EnumerationValueArray.class,
+                memberName, enumType, memberTypeDimensions, storageTypeId);
+    }
+
+    /**
+     * Adds a member mapping for <var>fieldName</var>. Only suitable for Enumeration arrays.
+     * 
+     * @param fieldName The name of the field in the Java class.
+     * @param memberClass The class of the member. For restrictions on the type, see above.
+     * @param enumType The enumeration type in the HDF5 file.
+     * @param memberTypeDimensions The dimensions of the array in the compound type.
+     * @param storageTypeId the id of the storage type of this member.
+     */
+    static HDF5CompoundMemberMapping mapping(String fieldName, Class<?> memberClass,
+            HDF5EnumerationType enumType, int[] memberTypeDimensions, int storageTypeId)
+    {
+        assert enumType != null;
+        return new HDF5CompoundMemberMapping(fieldName, memberClass, fieldName, enumType,
+                memberTypeDimensions, storageTypeId);
     }
 
     /**
@@ -296,7 +397,8 @@ public final class HDF5CompoundMemberMapping
             HDF5EnumerationType enumType)
     {
         assert enumType != null;
-        return new HDF5CompoundMemberMapping(fieldName, memberName, enumType, new int[0]);
+        return new HDF5CompoundMemberMapping(fieldName, HDF5EnumerationValue.class, memberName,
+                enumType, new int[0]);
     }
 
     /**
@@ -421,12 +523,12 @@ public final class HDF5CompoundMemberMapping
                 final CompoundElement e = f.getAnnotation(CompoundElement.class);
                 if (e != null)
                 {
-                    result.add(new HDF5CompoundMemberMapping(f.getName(), StringUtils
+                    result.add(new HDF5CompoundMemberMapping(f.getName(), null, StringUtils
                             .defaultIfEmpty(e.memberName(), f.getName()), enumTypeOrNull, e
                             .dimensions()));
                 } else if (includeAllFields)
                 {
-                    result.add(new HDF5CompoundMemberMapping(f.getName(), f.getName(),
+                    result.add(new HDF5CompoundMemberMapping(f.getName(), null, f.getName(),
                             enumTypeOrNull, new int[0]));
                 }
             }
@@ -454,7 +556,8 @@ public final class HDF5CompoundMemberMapping
                         {
                             resultOrNull = new HashMap<String, HDF5EnumerationType>();
                         }
-                        resultOrNull.put(f.getName(), ((HDF5EnumerationValue) f.get(pojo)).getType());
+                        resultOrNull.put(f.getName(),
+                                ((HDF5EnumerationValue) f.get(pojo)).getType());
                     } catch (IllegalArgumentException ex)
                     {
                         throw new Error(ex);
@@ -472,9 +575,8 @@ public final class HDF5CompoundMemberMapping
                         {
                             resultOrNull = new HashMap<String, HDF5EnumerationType>();
                         }
-                        resultOrNull
-                                .put(f.getName(), ((HDF5EnumerationValueArray) f.get(pojo))
-                                        .getType());
+                        resultOrNull.put(f.getName(),
+                                ((HDF5EnumerationValueArray) f.get(pojo)).getType());
                     } catch (IllegalArgumentException ex)
                     {
                         throw new Error(ex);
@@ -493,13 +595,14 @@ public final class HDF5CompoundMemberMapping
      * that differs from the <var>fieldName</var> and the maximal length in case of a String member.
      * 
      * @param fieldName The name of the field in the <var>clazz</var>
+     * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
      * @param memberName The name of the member in the HDF5 compound data type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
      */
-    private HDF5CompoundMemberMapping(String fieldName, String memberName,
-            HDF5EnumerationType enumTypeOrNull, int[] memberTypeDimensions)
+    private HDF5CompoundMemberMapping(String fieldName, Class<?> memberClassOrNull,
+            String memberName, HDF5EnumerationType enumTypeOrNull, int[] memberTypeDimensions)
     {
-        this(fieldName, memberName, enumTypeOrNull, memberTypeDimensions, -1);
+        this(fieldName, memberClassOrNull, memberName, enumTypeOrNull, memberTypeDimensions, -1);
     }
 
     /**
@@ -507,14 +610,17 @@ public final class HDF5CompoundMemberMapping
      * that differs from the <var>fieldName</var> and the maximal length in case of a String member.
      * 
      * @param fieldName The name of the field in the <var>clazz</var>
+     * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
      * @param memberName The name of the member in the HDF5 compound data type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
      * @param storageMemberTypeId The storage data type id of member, or -1, if not available
      */
-    private HDF5CompoundMemberMapping(String fieldName, String memberName,
-            HDF5EnumerationType enumTypeOrNull, int[] memberTypeDimensions, int storageMemberTypeId)
+    private HDF5CompoundMemberMapping(String fieldName, Class<?> memberClassOrNull,
+            String memberName, HDF5EnumerationType enumTypeOrNull, int[] memberTypeDimensions,
+            int storageMemberTypeId)
     {
         this.fieldName = fieldName;
+        this.memberClassOrNull = memberClassOrNull;
         this.memberName = memberName;
         this.enumTypeOrNull = enumTypeOrNull;
         this.memberTypeDimensions = memberTypeDimensions;
@@ -572,6 +678,11 @@ public final class HDF5CompoundMemberMapping
     String getMemberName()
     {
         return memberName;
+    }
+
+    public Class<?> tryGetMemberClass()
+    {
+        return memberClassOrNull;
     }
 
     int getMemberTypeLength()

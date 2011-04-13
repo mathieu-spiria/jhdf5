@@ -506,4 +506,20 @@ public class HDF5EnumerationValueArray implements Iterable<String>
             };
     }
 
+    @Override
+    public String toString()
+    {
+        final StringBuilder b = new StringBuilder();
+        b.append(type.getName());
+        b.append(" [");
+        for (String value : this)
+        {
+            b.append(value);
+            b.append(",");
+        }
+        b.setLength(b.length() - 1);
+        b.append("]");
+        return b.toString();
+    }
+
 }

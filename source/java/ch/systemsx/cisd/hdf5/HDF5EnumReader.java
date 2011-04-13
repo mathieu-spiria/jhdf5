@@ -60,7 +60,8 @@ class HDF5EnumReader implements IHDF5EnumReader
         baseReader.checkOpen();
         final String dataTypePath = createDataTypePath(ENUM_PREFIX, name);
         final int storageDataTypeId = baseReader.getDataTypeId(dataTypePath);
-        return baseReader.getEnumTypeForStorageDataType(storageDataTypeId, baseReader.fileRegistry);
+        return baseReader.getEnumTypeForStorageDataType(name, storageDataTypeId,
+                baseReader.fileRegistry);
     }
 
     public HDF5EnumerationType getEnumType(final String name, final String[] values)
@@ -92,8 +93,8 @@ class HDF5EnumReader implements IHDF5EnumReader
                             final int dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, dataSetPath,
                                             registry);
-                            return getEnumTypeForDataSetId(dataSetId, dataSetPath, baseReader
-                                    .isScaledEnum(dataSetId, registry), registry);
+                            return getEnumTypeForDataSetId(dataSetId, dataSetPath,
+                                    baseReader.isScaledEnum(dataSetId, registry), registry);
                         }
                     };
         return baseReader.runner.call(readEnumTypeCallable);
@@ -112,7 +113,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         {
             final int storageDataTypeId =
                     baseReader.h5.getDataTypeForDataSet(objectId, baseReader.fileRegistry);
-            return baseReader.getEnumTypeForStorageDataType(storageDataTypeId,
+            return baseReader.getEnumTypeForStorageDataType(null, storageDataTypeId,
                     baseReader.fileRegistry);
         }
     }
@@ -189,7 +190,8 @@ class HDF5EnumReader implements IHDF5EnumReader
     {
         final int storageDataTypeId =
                 baseReader.h5.getDataTypeForAttribute(objectId, baseReader.fileRegistry);
-        return baseReader.getEnumTypeForStorageDataType(storageDataTypeId, baseReader.fileRegistry);
+        return baseReader.getEnumTypeForStorageDataType(null, storageDataTypeId,
+                baseReader.fileRegistry);
     }
 
     // /////////////////////
@@ -360,8 +362,8 @@ class HDF5EnumReader implements IHDF5EnumReader
                                         baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8, data);
                                     } else
                                     {
-                                        baseReader.h5.readDataSet(dataSetId, actualEnumType
-                                                .getNativeTypeId(), data);
+                                        baseReader.h5.readDataSet(dataSetId,
+                                                actualEnumType.getNativeTypeId(), data);
                                     }
                                     return new HDF5EnumerationValueArray(actualEnumType, data);
                                 }
@@ -374,8 +376,8 @@ class HDF5EnumReader implements IHDF5EnumReader
                                                 .readDataSet(dataSetId, H5T_NATIVE_INT16, data);
                                     } else
                                     {
-                                        baseReader.h5.readDataSet(dataSetId, actualEnumType
-                                                .getNativeTypeId(), data);
+                                        baseReader.h5.readDataSet(dataSetId,
+                                                actualEnumType.getNativeTypeId(), data);
                                     }
                                     return new HDF5EnumerationValueArray(actualEnumType, data);
                                 }
@@ -388,8 +390,8 @@ class HDF5EnumReader implements IHDF5EnumReader
                                                 .readDataSet(dataSetId, H5T_NATIVE_INT32, data);
                                     } else
                                     {
-                                        baseReader.h5.readDataSet(dataSetId, actualEnumType
-                                                .getNativeTypeId(), data);
+                                        baseReader.h5.readDataSet(dataSetId,
+                                                actualEnumType.getNativeTypeId(), data);
                                     }
                                     return new HDF5EnumerationValueArray(actualEnumType, data);
                                 }
@@ -557,9 +559,10 @@ class HDF5EnumReader implements IHDF5EnumReader
                                                 data);
                                     } else
                                     {
-                                        baseReader.h5.readDataSet(dataSetId, actualEnumType
-                                                .getNativeTypeId(), spaceParams.memorySpaceId,
-                                                spaceParams.dataSpaceId, data);
+                                        baseReader.h5.readDataSet(dataSetId,
+                                                actualEnumType.getNativeTypeId(),
+                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                                data);
                                     }
                                     return new HDF5EnumerationValueArray(actualEnumType, data);
                                 }
@@ -573,9 +576,10 @@ class HDF5EnumReader implements IHDF5EnumReader
                                                 data);
                                     } else
                                     {
-                                        baseReader.h5.readDataSet(dataSetId, actualEnumType
-                                                .getNativeTypeId(), spaceParams.memorySpaceId,
-                                                spaceParams.dataSpaceId, data);
+                                        baseReader.h5.readDataSet(dataSetId,
+                                                actualEnumType.getNativeTypeId(),
+                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                                data);
                                     }
                                     return new HDF5EnumerationValueArray(actualEnumType, data);
                                 }
@@ -589,9 +593,10 @@ class HDF5EnumReader implements IHDF5EnumReader
                                                 data);
                                     } else
                                     {
-                                        baseReader.h5.readDataSet(dataSetId, actualEnumType
-                                                .getNativeTypeId(), spaceParams.memorySpaceId,
-                                                spaceParams.dataSpaceId, data);
+                                        baseReader.h5.readDataSet(dataSetId,
+                                                actualEnumType.getNativeTypeId(),
+                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                                data);
                                     }
                                     return new HDF5EnumerationValueArray(actualEnumType, data);
                                 }
@@ -651,8 +656,8 @@ class HDF5EnumReader implements IHDF5EnumReader
                                 final HDF5EnumerationValueArray block =
                                         readEnumArrayBlockWithOffset(objectPath, enumTypeOrNull,
                                                 index.getBlockSize(), offset);
-                                return new HDF5DataBlock<HDF5EnumerationValueArray>(block, index
-                                        .getAndIncIndex(), offset);
+                                return new HDF5DataBlock<HDF5EnumerationValueArray>(block,
+                                        index.getAndIncIndex(), offset);
                             }
 
                             public void remove()

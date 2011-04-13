@@ -153,7 +153,7 @@ public final class HDF5EnumerationValue
     @Override
     public String toString()
     {
-        return type.getName() + " [" + ordinal + "]";
+        return type.getName() + " [" + type.getValueArray()[ordinal] + "]";
     }
 
 }

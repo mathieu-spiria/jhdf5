@@ -17,7 +17,6 @@
 package ch.systemsx.cisd.hdf5;
 
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.util.Arrays;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
@@ -30,25 +29,25 @@ import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 public class MatrixUtils
 {
 
-    static void checkMDArrayDimensions(final Field field, final int[] dimensions,
+    static void checkMDArrayDimensions(final String name, final int[] dimensions,
             final MDAbstractArray<?> array)
     {
         if (Arrays.equals(dimensions, array.dimensions()) == false)
         {
-            throw new IllegalArgumentException("The field '" + field.getName()
+            throw new IllegalArgumentException("The member '" + name
                     + "' has dimensions " + Arrays.toString(array.dimensions())
                     + " but is supposed to have dimensions " + Arrays.toString(dimensions) + ".");
         }
     }
 
-    static void checkMatrixDimensions(final Field field, final int[] dimensions,
+    static void checkMatrixDimensions(final String name, final int[] dimensions,
             final Object matrix)
     {
         final int dimX = Array.getLength(matrix);
         final int dimY = Array.getLength(Array.get(matrix, 0));
         if (dimensions.length != 2 || dimensions[0] != dimX || dimensions[1] != dimY)
         {
-            throw new IllegalArgumentException("The field '" + field.getName()
+            throw new IllegalArgumentException("The member '" + name
                     + "' has dimensions [" + dimX + "," + dimY + "]."
                     + " but is supposed to have dimensions " + Arrays.toString(dimensions) + ".");
         }
