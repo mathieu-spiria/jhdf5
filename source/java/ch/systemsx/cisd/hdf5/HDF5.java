@@ -1537,24 +1537,17 @@ class HDF5
 
     public String tryGetDataTypePath(int dataTypeId)
     {
-        boolean isCommitted = H5Tcommitted(dataTypeId);
-        if (isCommitted)
-        {
-            final String[] result = new String[1];
-            final long len = H5Iget_name(dataTypeId, result, 32);
-            if (len >= result[0].length())
-            {
-                final String[] finalResult = new String[1];
-                H5Iget_name(dataTypeId, finalResult, len + 1);
-                return finalResult[0];
-            } else
-            {
-                return result[0];
-            }
-        } else
+        if (dataTypeId < 0 || H5Tcommitted(dataTypeId) == false)
         {
             return null;
         }
+        final String[] result = new String[1];
+        final long len = H5Iget_name(dataTypeId, result, 64);
+        if (len >= result[0].length())
+        {
+            H5Iget_name(dataTypeId, result, len + 1);
+        }
+        return result[0];
     }
 
     //
