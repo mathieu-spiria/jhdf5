@@ -35,7 +35,6 @@ import java.util.List;
 import java.util.Map;
 
 import ncsa.hdf.hdf5lib.HDF5Constants;
-import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -644,35 +643,10 @@ class HDF5BaseReader
 
     int getEnumOrdinal(final int attributeId, final HDF5EnumerationType enumType)
     {
-        final int enumOrdinal;
-        switch (enumType.getStorageForm())
-        {
-            case BYTE:
-            {
-                final byte[] data =
-                        h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), 1);
-                enumOrdinal = data[0];
-                break;
-            }
-            case SHORT:
-            {
-                final byte[] data =
-                        h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), 2);
-                enumOrdinal = HDFNativeData.byteToShort(data, 0);
-                break;
-            }
-            case INT:
-            {
-                final byte[] data =
-                        h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), 4);
-                enumOrdinal = HDFNativeData.byteToInt(data, 0);
-                break;
-            }
-            default:
-                throw new HDF5JavaException("Illegal storage form for enum ("
-                        + enumType.getStorageForm() + ")");
-        }
-        return enumOrdinal;
+        final byte[] data =
+                h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), enumType
+                        .getStorageForm().getStorageSize());
+        return HDF5EnumerationType.fromStorageForm(data);
     }
 
     HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId,

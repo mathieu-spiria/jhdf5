@@ -79,7 +79,7 @@ class HDF5Reader implements IHDF5Reader
     private final IHDF5CompoundReader compoundReader;
 
     private final IHDF5DateTimeReader dateTimeReader;
-    
+
     private final IHDF5ReferenceReader referenceReader;
 
     private final IHDF5GenericReader genericReader;
@@ -509,6 +509,18 @@ class HDF5Reader implements IHDF5Reader
         return enumReader.getEnumAttribute(objectPath, attributeName);
     }
 
+    public String[] getEnumArrayAttributeAsString(final String objectPath,
+            final String attributeName) throws HDF5JavaException
+    {
+        return enumReader.getEnumArrayAttributeAsString(objectPath, attributeName);
+    }
+
+    public HDF5EnumerationValueArray getEnumArrayAttribute(final String objectPath,
+            final String attributeName) throws HDF5JavaException
+    {
+        return enumReader.getEnumArrayAttribute(objectPath, attributeName);
+    }
+
     public HDF5EnumerationType getEnumType(String dataTypeName)
     {
         return enumReader.getEnumType(dataTypeName);
@@ -682,7 +694,7 @@ class HDF5Reader implements IHDF5Reader
     //
     // Reference
     //
-    
+
     public String readObjectReference(final String objectPath)
     {
         return referenceReader.readObjectReference(objectPath);

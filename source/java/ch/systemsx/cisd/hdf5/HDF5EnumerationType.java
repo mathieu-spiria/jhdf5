@@ -16,6 +16,9 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I16LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I32LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I8LE;
@@ -29,6 +32,9 @@ import java.util.Map;
 
 import ncsa.hdf.hdf5lib.HDFNativeData;
 
+import ch.systemsx.cisd.base.convert.NativeData;
+import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
+
 /**
  * A class that represents an enumeration for a given HDF5 file and <var>values</var> array.
  * 
@@ -38,21 +44,30 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
 {
     enum StorageFormEnum
     {
-        BYTE(1, H5T_STD_I8LE), SHORT(2, H5T_STD_I16LE), INT(4, H5T_STD_I32LE);
+        BYTE(1, H5T_NATIVE_INT8, H5T_STD_I8LE), SHORT(2, H5T_NATIVE_INT16, H5T_STD_I16LE), INT(4,
+                H5T_NATIVE_INT32, H5T_STD_I32LE);
 
         private final byte storageSize;
-        
+
+        private final int intNativeType;
+
         private final int intStorageType;
 
-        StorageFormEnum(int storageSize, int intStorageType)
+        StorageFormEnum(int storageSize, int intNativeType, int intStorageType)
         {
             this.storageSize = (byte) storageSize;
+            this.intNativeType = intNativeType;
             this.intStorageType = intStorageType;
         }
 
         byte getStorageSize()
         {
             return storageSize;
+        }
+
+        int getIntNativeTypeId()
+        {
+            return intNativeType;
         }
         
         int getIntStorageTypeId()
@@ -66,13 +81,21 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     private final String[] values;
 
     private Map<String, Integer> nameToIndexMap;
-    
+
     /**
      * Returns the storage data type id of the corresponding integer type of this type.
      */
     int getIntStorageTypeId()
     {
         return getStorageForm().getIntStorageTypeId();
+    }
+
+    /**
+     * Returns the native data type id of the corresponding integer type of this type.
+     */
+    int getIntNativeTypeId()
+    {
+        return getStorageForm().getIntNativeTypeId();
     }
 
     HDF5EnumerationType(int fileId, int storageTypeId, int nativeTypeId, String nameOrNull,
@@ -188,6 +211,35 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
                 return HDFNativeData.shortToByte((short) ordinal);
             case INT:
                 return HDFNativeData.intToByte(ordinal);
+        }
+        throw new Error("Illegal storage size.");
+    }
+
+    static int fromStorageForm(byte[] data)
+    {
+        if (data.length == 1)
+        {
+            return data[0];
+        } else if (data.length == 2)
+        {
+            return NativeData.byteToShort(data, ByteOrder.NATIVE)[0];
+        } else if (data.length == 4)
+        {
+            return NativeData.byteToInt(data, ByteOrder.NATIVE)[0];
+        }
+        throw new Error("Illegal storage size.");
+    }
+
+    static Object fromStorageForm(byte[] data, StorageFormEnum storageForm)
+    {
+        switch (storageForm)
+        {
+            case BYTE:
+                return data;
+            case SHORT:
+                return NativeData.byteToShort(data, ByteOrder.NATIVE);
+            case INT:
+                return NativeData.byteToInt(data, ByteOrder.NATIVE);
         }
         throw new Error("Illegal storage size.");
     }

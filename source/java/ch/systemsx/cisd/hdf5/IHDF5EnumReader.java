@@ -101,6 +101,30 @@ public interface IHDF5EnumReader
     public HDF5EnumerationValue getEnumAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException;
 
+    /**
+     * Reads an <code>enum</code> array attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute values as read from the data set as Strinsg.
+     * @throws HDF5JavaException If the attribute is not an enum type.
+     */
+    public String[] getEnumArrayAttributeAsString(final String objectPath,
+            final String attributeName) throws HDF5JavaException;
+
+    /**
+     * Reads an <code>enum</code> array attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute values as read from the data set.
+     * @throws HDF5JavaException If the attribute is not an enum type.
+     */
+    public HDF5EnumerationValueArray getEnumArrayAttribute(final String objectPath,
+            final String attributeName) throws HDF5JavaException;
+    
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -249,6 +273,5 @@ public interface IHDF5EnumReader
      */
     public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getEnumArrayNaturalBlocks(
             final String objectPath, final HDF5EnumerationType enumType) throws HDF5JavaException;
-
 
 }

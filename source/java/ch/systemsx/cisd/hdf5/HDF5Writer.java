@@ -840,6 +840,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         enumWriter.setEnumAttribute(objectPath, name, value);
     }
 
+    public void setEnumArrayAttribute(String objectPath, String name,
+            HDF5EnumerationValueArray value)
+    {
+        enumWriter.setEnumArrayAttribute(objectPath, name, value);
+    }
+
     public void writeEnum(String objectPath, HDF5EnumerationValue value) throws HDF5JavaException
     {
         enumWriter.writeEnum(objectPath, value);

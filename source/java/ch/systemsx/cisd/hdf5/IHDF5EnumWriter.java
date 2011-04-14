@@ -75,6 +75,19 @@ public interface IHDF5EnumWriter
     public void setEnumAttribute(final String objectPath, final String name,
             final HDF5EnumerationValue value);
 
+    /**
+     * Sets an enum array attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setEnumArrayAttribute(final String objectPath, final String name,
+            final HDF5EnumerationValueArray value);
+    
     // /////////////////////
     // Data Sets
     // /////////////////////
