@@ -36,14 +36,16 @@ public class HDF5LibraryException extends HDF5Exception
     private static final long serialVersionUID = 1L;
 
     private final int majorErrorNumber;
-    
+
     private final int minorErrorNumber;
-    
+
     private final String majorErrorMessage;
 
     private final String minorErrorMessage;
-    
+
     private final String hdf5ErrorStackString;
+
+    private final String hdf5ErrorStackLastElementString;
 
     /**
      * Constructs an <code>HDF5LibraryException</code> with the specified detail message.
@@ -70,6 +72,31 @@ public class HDF5LibraryException extends HDF5Exception
         this.minorErrorNumber = minorErrorNumber;
         this.minorErrorMessage = minorErrorMessage;
         this.hdf5ErrorStackString = retrieveHDF5ErrorStackAsString();
+        this.hdf5ErrorStackLastElementString = getLastErrorStackElement(hdf5ErrorStackString);
+    }
+
+    private static String getLastErrorStackElement(String hdf5ErrorStackString)
+    {
+        int idx = hdf5ErrorStackString.length() - 3;
+        int lastLineBreakIdx = hdf5ErrorStackString.length();
+        while (--idx > 0)
+        {
+            if (hdf5ErrorStackString.charAt(idx) == '\n')
+            {
+                lastLineBreakIdx = idx;
+            }
+            if (hdf5ErrorStackString.substring(idx - 1, idx + 3).equals("\n  #"))
+            {
+                idx += 3;
+                while (idx < hdf5ErrorStackString.length()
+                        && hdf5ErrorStackString.charAt(idx) != ' ')
+                {
+                    ++idx;
+                }
+                return hdf5ErrorStackString.substring(idx + 1, lastLineBreakIdx);
+            }
+        }
+        return null;
     }
 
     /**
@@ -93,6 +120,19 @@ public class HDF5LibraryException extends HDF5Exception
         this.minorErrorNumber = UNKNOWN;
         this.minorErrorMessage = "";
         this.hdf5ErrorStackString = "No error stack";
+        this.hdf5ErrorStackLastElementString = null;
+    }
+
+    @Override
+    public String getMessage()
+    {
+        if (hdf5ErrorStackLastElementString != null)
+        {
+            return super.getMessage() + " [\"" + hdf5ErrorStackLastElementString + "\"]";
+        } else
+        {
+            return super.getMessage();
+        }
     }
 
     /**
