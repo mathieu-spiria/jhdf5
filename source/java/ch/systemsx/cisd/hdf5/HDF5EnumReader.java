@@ -21,9 +21,6 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 
 import java.util.Iterator;
 
@@ -434,77 +431,28 @@ class HDF5EnumReader implements IHDF5EnumReader
                                     vectorLength, registry);
                     final int size = baseReader.h5.getDataTypeSize(nativeDataTypeId);
 
-                    final String[] value = new String[vectorLength];
-                    switch (size)
+                    final String[] values = new String[vectorLength];
+                    final byte[] data = new byte[vectorLength * size];
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
+                    if (enumTypeOrNull != null)
                     {
-                        case 1:
+                        for (int i = 0; i < vectorLength; ++i)
                         {
-                            final byte[] data = new byte[vectorLength];
-                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
-                            if (enumTypeOrNull != null)
-                            {
-                                for (int i = 0; i < data.length; ++i)
-                                {
-                                    value[i] = enumTypeOrNull.getValueArray()[data[i]];
-                                }
-                            } else
-                            {
-                                for (int i = 0; i < data.length; ++i)
-                                {
-                                    value[i] =
-                                            baseReader.h5.getNameForEnumOrCompoundMemberIndex(
-                                                    storageDataTypeId, data[i]);
-                                }
-                            }
-                            break;
+                            values[i] =
+                                    enumTypeOrNull.getValueArray()[HDF5EnumerationType
+                                            .fromStorageForm(data, i, size)];
                         }
-                        case 2:
+                    } else
+                    {
+                        for (int i = 0; i < vectorLength; ++i)
                         {
-                            final short[] data = new short[vectorLength];
-                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
-                            if (enumTypeOrNull != null)
-                            {
-                                for (int i = 0; i < data.length; ++i)
-                                {
-                                    value[i] = enumTypeOrNull.getValueArray()[data[i]];
-                                }
-                            } else
-                            {
-                                for (int i = 0; i < data.length; ++i)
-                                {
-                                    value[i] =
-                                            baseReader.h5.getNameForEnumOrCompoundMemberIndex(
-                                                    storageDataTypeId, data[i]);
-                                }
-                            }
-                            break;
+                            values[i] =
+                                    baseReader.h5.getNameForEnumOrCompoundMemberIndex(
+                                            storageDataTypeId, HDF5EnumerationType
+                                                    .fromStorageForm(data, i, size));
                         }
-                        case 4:
-                        {
-                            final int[] data = new int[vectorLength];
-                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
-                            if (enumTypeOrNull != null)
-                            {
-                                for (int i = 0; i < data.length; ++i)
-                                {
-                                    value[i] = enumTypeOrNull.getValueArray()[data[i]];
-                                }
-                            } else
-                            {
-                                for (int i = 0; i < data.length; ++i)
-                                {
-                                    value[i] =
-                                            baseReader.h5.getNameForEnumOrCompoundMemberIndex(
-                                                    storageDataTypeId, data[i]);
-                                }
-                            }
-                            break;
-                        }
-                        default:
-                            throw new HDF5JavaException("Unexpected size for Enum data type ("
-                                    + size + ")");
                     }
-                    return value;
+                    return values;
                 }
             };
         return baseReader.runner.call(writeRunnable);
@@ -549,62 +497,23 @@ class HDF5EnumReader implements IHDF5EnumReader
                             final HDF5EnumerationType actualEnumType =
                                     (enumTypeOrNull == null) ? getEnumTypeForDataSetId(dataSetId,
                                             objectPath, scaledEnum, registry) : enumTypeOrNull;
-                            switch (actualEnumType.getStorageForm())
+                            final byte[] data =
+                                    new byte[spaceParams.blockSize
+                                            * actualEnumType.getStorageForm().getStorageSize()];
+                            if (scaledEnum)
                             {
-                                case BYTE:
-                                {
-                                    final byte[] data = new byte[spaceParams.blockSize];
-                                    if (scaledEnum)
-                                    {
-                                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT8,
-                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
-                                                data);
-                                    } else
-                                    {
-                                        baseReader.h5.readDataSet(dataSetId,
-                                                actualEnumType.getNativeTypeId(),
-                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
-                                                data);
-                                    }
-                                    return new HDF5EnumerationValueArray(actualEnumType, data);
-                                }
-                                case SHORT:
-                                {
-                                    final short[] data = new short[spaceParams.blockSize];
-                                    if (scaledEnum)
-                                    {
-                                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
-                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
-                                                data);
-                                    } else
-                                    {
-                                        baseReader.h5.readDataSet(dataSetId,
-                                                actualEnumType.getNativeTypeId(),
-                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
-                                                data);
-                                    }
-                                    return new HDF5EnumerationValueArray(actualEnumType, data);
-                                }
-                                case INT:
-                                {
-                                    final int[] data = new int[spaceParams.blockSize];
-                                    if (scaledEnum)
-                                    {
-                                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT32,
-                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
-                                                data);
-                                    } else
-                                    {
-                                        baseReader.h5.readDataSet(dataSetId,
-                                                actualEnumType.getNativeTypeId(),
-                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
-                                                data);
-                                    }
-                                    return new HDF5EnumerationValueArray(actualEnumType, data);
-                                }
+                                baseReader.h5.readDataSet(dataSetId, actualEnumType
+                                        .getStorageForm().getIntNativeTypeId(),
+                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                            } else
+                            {
+                                baseReader.h5.readDataSet(dataSetId,
+                                        actualEnumType.getNativeTypeId(),
+                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                             }
-                            throw new Error("Illegal storage form ("
-                                    + actualEnumType.getStorageForm() + ".)");
+                            return new HDF5EnumerationValueArray(actualEnumType,
+                                    HDF5EnumerationType.fromStorageForm(data,
+                                            actualEnumType.getStorageForm()));
                         }
                     };
 

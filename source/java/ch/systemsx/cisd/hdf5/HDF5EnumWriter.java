@@ -17,13 +17,8 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_int;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_short;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -330,44 +325,16 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     if (baseWriter.isScaledEnum(dataSetId, registry))
                     {
-                        switch (data.getStorageForm())
-                        {
-                            case BYTE:
-                                H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId,
-                                        H5P_DEFAULT, data.getStorageFormBArray());
-                                break;
-                            case SHORT:
-                                H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, memorySpaceId,
-                                        dataSpaceId, H5P_DEFAULT, data.getStorageFormSArray());
-                                break;
-                            case INT:
-                                H5Dwrite_int(dataSetId, H5T_NATIVE_INT32, memorySpaceId,
-                                        dataSpaceId, H5P_DEFAULT, data.getStorageFormIArray());
-                                break;
-                        }
+                        H5Dwrite(dataSetId, data.getType().getIntNativeTypeId(), memorySpaceId,
+                                dataSpaceId, H5P_DEFAULT, data.toStorageForm());
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
                         baseWriter.setStringAttribute(dataSetId,
                                 HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, data.getType().getName(), data
                                         .getType().getName().length(), registry);
                     } else
                     {
-                        switch (data.getStorageForm())
-                        {
-                            case BYTE:
-                                H5Dwrite(dataSetId, data.getType().getNativeTypeId(),
-                                        memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                                        data.getStorageFormBArray());
-                                break;
-                            case SHORT:
-                                H5Dwrite_short(dataSetId, data.getType().getNativeTypeId(),
-                                        memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                                        data.getStorageFormSArray());
-                                break;
-                            case INT:
-                                H5Dwrite_int(dataSetId, data.getType().getNativeTypeId(),
-                                        memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                                        data.getStorageFormIArray());
-                        }
+                        H5Dwrite(dataSetId, data.getType().getNativeTypeId(), memorySpaceId,
+                                dataSpaceId, H5P_DEFAULT, data.toStorageForm());
                     }
                     return null; // Nothing to return.
                 }

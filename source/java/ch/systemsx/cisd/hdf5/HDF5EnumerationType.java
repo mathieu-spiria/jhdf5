@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import ncsa.hdf.hdf5lib.HDFNativeData;
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
@@ -227,7 +228,24 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         {
             return NativeData.byteToInt(data, ByteOrder.NATIVE)[0];
         }
-        throw new Error("Illegal storage size.");
+        throw new HDF5JavaException("Unexpected size for Enum data type ("
+                + data.length + ")");
+    }
+
+    static int fromStorageForm(byte[] data, int index, int size)
+    {
+        if (size == 1)
+        {
+            return data[index];
+        } else if (size == 2)
+        {
+            return NativeData.byteToShort(data, ByteOrder.NATIVE, size * index, 1)[0];
+        } else if (size == 4)
+        {
+            return NativeData.byteToInt(data, ByteOrder.NATIVE, index, 1)[0];
+        }
+        throw new HDF5JavaException("Unexpected size for Enum data type ("
+                + size + ")");
     }
 
     static Object fromStorageForm(byte[] data, StorageFormEnum storageForm)
