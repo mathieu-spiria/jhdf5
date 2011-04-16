@@ -46,24 +46,33 @@ public interface IHDF5CompoundInformationRetriever
 
     /**
      * Returns the member information for the committed compound data type <var>compoundClass</var>
-     * (using its "simple name"). The returned array will contain the members in alphabetical order.
-     * It is a failure condition if this compound data type does not exist.
+     * (using its "simple name") in the order that the members appear in the compound type. It is a
+     * failure condition if this compound data type does not exist.
+     * <p>
+     * Call <code>Arrays.sort(compoundInformation.members)</code> to sort the array in alphabetical
+     * order of names.
      */
     public <T> HDF5CompoundMemberInformation[] getCompoundMemberInformation(
             final Class<T> compoundClass);
 
     /**
-     * Returns the member information for the committed compound data type <var>dataTypeName</var>.
-     * The returned array will contain the members in alphabetical order. It is a failure condition
-     * if this compound data type does not exist. If the <var>dataTypeName</var> starts with '/', it
-     * will be considered a data type path instead of a data type name.
+     * Returns the member information for the committed compound data type <var>dataTypeName</var>
+     * in the order that the members appear in the compound type. It is a failure condition if this
+     * compound data type does not exist. If the <var>dataTypeName</var> starts with '/', it will be
+     * considered a data type path instead of a data type name.
+     * <p>
+     * Call <code>Arrays.sort(compoundInformation.members)</code> to sort the array in alphabetical
+     * order of names.
      */
     public HDF5CompoundMemberInformation[] getCompoundMemberInformation(final String dataTypeName);
 
     /**
-     * Returns the compound member information for the data set <var>dataSetPath</var>. The returned
-     * array will contain the members in alphabetical order. It is a failure condition if this data
-     * set does not exist or is not of compound type.
+     * Returns the compound member information for the data set <var>dataSetPath</var> in the order
+     * that the members appear in the compound type. It is a failure condition if this data set does
+     * not exist or is not of compound type.
+     * <p>
+     * Call <code>Arrays.sort(compoundInformation.members)</code> to sort the array in alphabetical
+     * order of names.
      * 
      * @throws HDF5JavaException If the data set is not of type compound.
      */
@@ -71,10 +80,14 @@ public interface IHDF5CompoundInformationRetriever
             throws HDF5JavaException;
 
     /**
-     * Returns the compound member information for the data set <var>dataSetPath</var>. The returned
-     * array will contain the members in alphabetical order, if <var>sortAlphabetically</var> is
-     * <code>true</code> or else in the order of definition of the compound type. It is a failure
-     * condition if this data set does not exist or is not of compound type.
+     * Returns the compound member information for the data set <var>dataSetPath</var> in the order
+     * that the members appear in the compound type. The returned array will contain the members in
+     * alphabetical order, if <var>sortAlphabetically</var> is <code>true</code> or else in the
+     * order of definition of the compound type. It is a failure condition if this data set does not
+     * exist or is not of compound type.
+     * <p>
+     * Call <code>Arrays.sort(compoundInformation.members)</code> to sort the array in alphabetical
+     * order of names.
      * 
      * @throws HDF5JavaException If the data set is not of type compound.
      */

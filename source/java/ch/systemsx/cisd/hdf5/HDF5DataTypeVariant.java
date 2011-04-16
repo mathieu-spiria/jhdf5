@@ -16,6 +16,11 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * An enum of all type variants. Type variants contain additional information on how to interpret a
  * data set, similar to the tag for the opaque type.
@@ -35,43 +40,99 @@ public enum HDF5DataTypeVariant
      * Used for data sets that encode time stamps as number of milli-seconds since midnight, January
      * 1, 1970 UTC (aka "start of the epoch").
      */
-    TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+    TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH(long.class, Long.class, Date.class),
 
     /**
      * A time duration in micro-seconds.
      */
-    TIME_DURATION_MICROSECONDS,
+    TIME_DURATION_MICROSECONDS(HDF5Utils.allNumberTypes),
 
     /**
      * A time duration in milli-seconds.
      */
-    TIME_DURATION_MILLISECONDS,
+    TIME_DURATION_MILLISECONDS(HDF5Utils.allNumberTypes),
 
     /**
      * A time duration in seconds.
      */
-    TIME_DURATION_SECONDS,
+    TIME_DURATION_SECONDS(HDF5Utils.allNumberTypes),
 
     /**
      * A time duration in minutes.
      */
-    TIME_DURATION_MINUTES,
+    TIME_DURATION_MINUTES(HDF5Utils.allNumberTypes),
 
     /**
      * A time duration in hours.
      */
-    TIME_DURATION_HOURS,
+    TIME_DURATION_HOURS(HDF5Utils.allNumberTypes),
 
     /**
      * A time duration in days.
      */
-    TIME_DURATION_DAYS,
-    
+    TIME_DURATION_DAYS(HDF5Utils.allNumberTypes),
+
     /**
      * An enumeration.
      */
-    ENUM;
-    
+    ENUM(HDF5EnumerationValue.class, HDF5EnumerationValueArray.class),
+
+    /**
+     * No type variant.
+     */
+    NONE;
+
+    private Set<Class<?>> compatibleTypes;
+
+    private HDF5DataTypeVariant(Class<?>... compatibleTypes)
+    {
+        this.compatibleTypes = new HashSet<Class<?>>(Arrays.asList(compatibleTypes));
+    }
+
+    /**
+     * Returns <code>true</code>, if <var>typeVariantOrNull</var> is not
+     * <code>null</codeL and not <code>NONE</code>.
+     */
+    public static boolean isTypeVariant(HDF5DataTypeVariant typeVariantOrNull)
+    {
+        return (typeVariantOrNull != null) && typeVariantOrNull.isTypeVariant();
+    }
+
+    /**
+     * Returns <code>true</code>, if <var>typeVariantOrdinal</var> does not
+     * represent <code>NONE</code>.
+     */
+    public static boolean isTypeVariant(int typeVariantOrdinal)
+    {
+        return typeVariantOrdinal != NONE.ordinal();
+    }
+
+    /**
+     * Returns <var>typeVariantOrNull</var>, if it is not <code>null</code>, and <code>NONE</code>
+     * otherwise.
+     */
+    public static HDF5DataTypeVariant maskNull(HDF5DataTypeVariant typeVariantOrNull)
+    {
+        return (typeVariantOrNull != null) ? typeVariantOrNull : NONE;
+    }
+
+    /**
+     * Returns <var>typeVariantOrNull</var>, if it is not <code>NONE</code>, and <code>null</code>
+     * otherwise.
+     */
+    public static HDF5DataTypeVariant unmaskNone(HDF5DataTypeVariant typeVariantOrNull)
+    {
+        return (typeVariantOrNull != NONE) ? typeVariantOrNull : null;
+    }
+
+    /**
+     * Returns <code>true</code>, if this type variant is not <code>NONE</code>.
+     */
+    public boolean isTypeVariant()
+    {
+        return this != NONE;
+    }
+
     /**
      * Returns <code>true</code>, if the type variant denoted by <var>typeVariantOrdinal</var>
      * corresponds to a time duration.
@@ -82,6 +143,14 @@ public enum HDF5DataTypeVariant
                 && typeVariantOrdinal <= TIME_DURATION_DAYS.ordinal();
     }
 
+    /**
+     * Returns <code>true</code> if <var>type</var> is compatible with this type variant.
+     */
+    public boolean isCompatible(Class<?> type)
+    {
+        return compatibleTypes.contains(type);
+    }
+    
     /**
      * Returns the time unit for the given <var>typeVariantOrdinal</var>. Note that it is an error
      * if <var>typeVariantOrdinal</var> does not correspond to a time unit.
@@ -117,5 +186,5 @@ public enum HDF5DataTypeVariant
         final int ordinal = ordinal();
         return isTimeDuration(ordinal) ? getTimeUnit(ordinal) : null;
     }
-
+    
 }

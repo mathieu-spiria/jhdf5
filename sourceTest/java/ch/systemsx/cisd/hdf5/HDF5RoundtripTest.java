@@ -273,8 +273,8 @@ public class HDF5RoundtripTest
         test.testCompound();
         test.testInferredCompoundType();
         test.testNameChangeInCompoundMapping();
-        test.testInferredCompoundWithEnum();
-        test.testInferredCompoundWithEnumArray();
+        test.testInferredCompoundTypedWithEnum();
+        test.testInferredCompoundTypeWithEnumArray();
         test.testCompoundMap();
         test.testDateCompound();
         test.testMatrixCompound();
@@ -3089,6 +3089,8 @@ public class HDF5RoundtripTest
         assertFalse(info.isTimeDuration());
         assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                 info.tryGetTypeVariant());
+        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, info
+                .getTypeInformation().tryGetTypeVariant());
         assertEquals(timestampValue, reader.readTimeStamp(timeStampDS));
         assertEquals(timestampValue, reader.readDate(timeStampDS).getTime());
         try
@@ -4506,20 +4508,21 @@ public class HDF5RoundtripTest
         {
             return new HDF5CompoundMemberMapping[]
                 { mapping("a"), mapping("b"), mapping("l"), mapping("c"), mapping("d"),
-                        mapping("e"), mapping("f", 3), mapping("g", enumType), mapping("ar", 3),
-                        mapping("br", 2), mapping("lr", 3), mapping("cr", 1), mapping("dr", 2),
-                        mapping("er", 4), mapping("fr", new int[]
-                            { 2, 2 }), mapping("gr", 5) };
+                        mapping("e"), mapping("f").length(3), mapping("g").enumType(enumType),
+                        mapping("ar").length(3), mapping("br").length(2), mapping("lr").length(3),
+                        mapping("cr").length(1), mapping("dr").length(2), mapping("er").length(4),
+                        mapping("fr").dimensions(2, 2), mapping("gr").length(5) };
         }
 
         private static HDF5CompoundMemberMapping[] getShuffledMapping(HDF5EnumerationType enumType)
         {
             return new HDF5CompoundMemberMapping[]
-                { mapping("er", 4), mapping("e"), mapping("b"), mapping("br", 2),
-                        mapping("g", enumType), mapping("lr", 3), mapping("gr", 5), mapping("c"),
-                        mapping("ar", 3), mapping("a"), mapping("d"), mapping("cr", 1),
-                        mapping("f", 3), mapping("fr", new int[]
-                            { 2, 2 }), mapping("dr", 2), mapping("l") };
+                { mapping("er").length(4), mapping("e"), mapping("b"), mapping("br").length(2),
+                        mapping("g").enumType(enumType), mapping("lr").length(3),
+                        mapping("gr").length(5), mapping("c"), mapping("ar").length(3),
+                        mapping("a"), mapping("d"), mapping("cr").length(1),
+                        mapping("f").length(3), mapping("fr").dimensions(2, 2),
+                        mapping("dr").length(2), mapping("l") };
         }
 
         //
@@ -4688,7 +4691,8 @@ public class HDF5RoundtripTest
                 writer.getCompoundType(DateRecord.class, new HDF5CompoundMemberMapping[]
                     { mapping("d") });
         final DateRecord recordWritten = new DateRecord(new Date());
-        writer.writeCompound("/testDateCompound", compoundType, recordWritten);
+        final String objectPath = "/testDateCompound";
+        writer.writeCompound(objectPath, compoundType, recordWritten);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final HDF5CompoundMemberInformation[] memMemberInfo =
@@ -4704,10 +4708,18 @@ public class HDF5RoundtripTest
         }
         compoundType = reader.getCompoundType(DateRecord.class, new HDF5CompoundMemberMapping[]
             { mapping("d") });
+        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                compoundType.getObjectByteifyer().getByteifyers()[0].getTypeVariant());
         final DateRecord recordRead =
-                reader.readCompound("/testDateCompound",
+                reader.readCompound(objectPath,
                         reader.getCompoundType(DateRecord.class, mapping("d")));
         assertEquals(recordWritten, recordRead);
+        HDF5CompoundType<HDF5CompoundDataMap> mapCompoundType =
+                reader.getDataSetCompoundType(objectPath, HDF5CompoundDataMap.class);
+        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                mapCompoundType.getObjectByteifyer().getByteifyers()[0].getTypeVariant());
+        final HDF5CompoundDataMap mapRead = reader.readCompound(objectPath, mapCompoundType);
+        assertEquals(recordWritten.d, mapRead.get("d"));
         reader.close();
     }
 
@@ -4742,8 +4754,9 @@ public class HDF5RoundtripTest
         static HDF5CompoundMemberMapping[] getMapping()
         {
             return new HDF5CompoundMemberMapping[]
-                { mapping("b", 1, 2), mapping("s", 2, 1), mapping("i", 2, 2), mapping("l", 3, 2),
-                        mapping("f", 2, 2), mapping("d", 2, 3) };
+                { mapping("b").dimensions(1, 2), mapping("s").dimensions(2, 1),
+                        mapping("i").dimensions(2, 2), mapping("l").dimensions(3, 2),
+                        mapping("f").dimensions(2, 2), mapping("d").dimensions(2, 3) };
         }
 
         @Override
@@ -5126,12 +5139,13 @@ public class HDF5RoundtripTest
 
         static HDF5CompoundMemberInformation[] getMemberInfo()
         {
-            return HDF5CompoundMemberInformation.create(BitFieldRecord.class, mapping("bs", 100));
+            return HDF5CompoundMemberInformation.create(BitFieldRecord.class,
+                    mapping("bs").length(100));
         }
 
         static HDF5CompoundType<BitFieldRecord> getHDF5Type(IHDF5Reader reader)
         {
-            return reader.getCompoundType(BitFieldRecord.class, mapping("bs", 100));
+            return reader.getCompoundType(BitFieldRecord.class, mapping("bs").length(100));
         }
 
         @Override
@@ -5736,6 +5750,9 @@ public class HDF5RoundtripTest
 
         private int i;
 
+        @CompoundElement(typeVariant = HDF5DataTypeVariant.TIME_DURATION_SECONDS)
+        private short d;
+
         @CompoundElement(dimensions = 4)
         private String s;
 
@@ -5743,7 +5760,7 @@ public class HDF5RoundtripTest
         {
         }
 
-        SimpleRecord(float f, int i, String s)
+        SimpleRecord(float f, int i, short d, String s)
         {
             this.f = f;
             this.i = i;
@@ -5758,6 +5775,11 @@ public class HDF5RoundtripTest
         public int getI()
         {
             return i;
+        }
+
+        public short getD()
+        {
+            return d;
         }
 
         public String getS()
@@ -5776,9 +5798,9 @@ public class HDF5RoundtripTest
             { 2, 3 })
         private long[][] l;
 
-        public SimpleInheretingRecord(float f, int i, String s, long[][] l)
+        public SimpleInheretingRecord(float f, int i, short d, String s, long[][] l)
         {
-            super(f, i, s);
+            super(f, i, d, s);
             this.l = l;
         }
 
@@ -5798,15 +5820,15 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         final HDF5CompoundType<SimpleRecord> typeW =
                 writer.getInferredCompoundType(SimpleRecord.class);
-        writer.writeCompound("sc", typeW, new SimpleRecord(2.2f, 17, "test"));
+        writer.writeCompound("sc", typeW, new SimpleRecord(2.2f, 17, (short) 10, "test"));
         long[][] arrayWritten = new long[][]
             {
                 { 1, 2, 3 },
                 { 4, 5, 6 } };
         final HDF5CompoundType<SimpleInheretingRecord> itype =
                 writer.getInferredCompoundType(SimpleInheretingRecord.class);
-        writer.writeCompound("sci", itype, new SimpleInheretingRecord(-3.1f, 42, "some",
-                arrayWritten));
+        writer.writeCompound("sci", itype, new SimpleInheretingRecord(-3.1f, 42, (short) 17,
+                "some", arrayWritten));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().configureForReading(file).reader();
         final HDF5CompoundType<SimpleRecord> typeR =
@@ -5816,6 +5838,11 @@ public class HDF5RoundtripTest
                 reader.getInferredCompoundType(SimpleInheretingRecord.class);
         final SimpleInheretingRecord recordInheritedRead =
                 reader.readCompound("sci", inheritedTypeR);
+        final HDF5CompoundMemberInformation[] info =
+                reader.getCompoundMemberInformation(SimpleRecord.class);
+        assertEquals("d", info[2].getName());
+        assertEquals(HDF5DataTypeVariant.TIME_DURATION_SECONDS, info[2].getType()
+                .tryGetTypeVariant());
         reader.close();
 
         assertEquals(2.2f, recordRead.getF());
@@ -5867,7 +5894,7 @@ public class HDF5RoundtripTest
     }
 
     @Test
-    public void testInferredCompoundWithEnum()
+    public void testInferredCompoundTypedWithEnum()
     {
         final File file = new File(workingDirectory, "inferredCompoundTypeWithEnum.h5");
         file.delete();
@@ -5910,7 +5937,7 @@ public class HDF5RoundtripTest
     }
 
     @Test
-    public void testInferredCompoundWithEnumArray()
+    public void testInferredCompoundTypeWithEnumArray()
     {
         final File file = new File(workingDirectory, "inferredCompoundTypeWithEnumArray.h5");
         file.delete();
@@ -5967,7 +5994,7 @@ public class HDF5RoundtripTest
         private static HDF5CompoundMemberMapping[] getMapping()
         {
             return new HDF5CompoundMemberMapping[]
-                { mapping("s", 5), mapping("fm", 2, 2) };
+                { mapping("s").length(5), mapping("fm").dimensions(2, 2) };
         }
 
     }
@@ -6049,14 +6076,16 @@ public class HDF5RoundtripTest
                         "MapCompoundA",
                         HDF5CompoundDataMap.class,
                         new HDF5CompoundMemberMapping[]
-                            { HDF5CompoundMemberMapping.mapping("a", float.class),
-                                    mapping("b", int[].class, new int[]
-                                        { 2 }), mapping("c", char[].class, 12),
-                                    mapping("d", enumType, new int[]
-                                        { 2 }), mapping("e", BitSet.class, 2),
-                                    mapping("f", float[][].class, new int[]
-                                        { 2, 2 }), mapping("g", MDLongArray.class, new int[]
-                                        { 2, 2, 2 }) });
+                            {
+                                    HDF5CompoundMemberMapping.mapping("a").memberClass(float.class),
+                                    mapping("b").memberClass(int[].class).length(2),
+                                    mapping("c").memberClass(char[].class).length(12),
+                                    mapping("d").enumType(enumType).length(2),
+                                    mapping("e").memberClass(BitSet.class).length(2),
+                                    mapping("f").memberClass(float[][].class).dimensions(2, 2),
+                                    mapping("g").memberClass(MDLongArray.class).dimensions(
+                                            new int[]
+                                                { 2, 2, 2 }) });
         final HDF5CompoundDataMap map = new HDF5CompoundDataMap();
         final float a = 3.14159f;
         map.put("a", a);

@@ -29,7 +29,6 @@ import ncsa.hdf.hdf5lib.HDFNativeData;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>BitSet</code>
- * .
  * 
  * @author Bernd Rinn
  */
@@ -64,27 +63,28 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
         {
             case FIELD:
                 return createByteifyerForField(fieldOrNull, memberName, offset,
-                        memberTypeLengthInLongs, memberTypeId);
+                        memberTypeLengthInLongs, memberTypeId, member.tryGetTypeVariant());
             case MAP:
                 return createByteifyerForMap(memberName, offset, memberTypeLengthInLongs,
-                        memberTypeId);
+                        memberTypeId, member.tryGetTypeVariant());
             case LIST:
                 return createByteifyerForList(memberName, index, offset, memberTypeLengthInLongs,
-                        memberTypeId);
+                        memberTypeId, member.tryGetTypeVariant());
             case ARRAY:
                 return createByteifyerForArray(memberName, index, offset, memberTypeLengthInLongs,
-                        memberTypeId);
+                        memberTypeId, member.tryGetTypeVariant());
             default:
                 throw new Error("Unknown access type");
         }
     }
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
-            final int offset, final int memberTypeLengthInLongs, final int memberTypeId)
+            final int offset, final int memberTypeLengthInLongs, final int memberTypeId,
+            final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
         return new HDF5MemberByteifyer(field, memberName, memberTypeLengthInLongs * LONG_SIZE,
-                offset)
+                offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -119,10 +119,11 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final int memberTypeLengthInLongs, final int memberTypeId)
+            final int memberTypeLengthInLongs, final int memberTypeId,
+            final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, memberTypeLengthInLongs * LONG_SIZE,
-                offset)
+                offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -157,10 +158,11 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
     }
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
-            final int offset, final int memberTypeLengthInLongs, final int memberTypeId)
+            final int offset, final int memberTypeLengthInLongs, final int memberTypeId,
+            final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, memberTypeLengthInLongs * LONG_SIZE,
-                offset)
+                offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -195,10 +197,11 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
     }
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
-            final int offset, final int memberTypeLengthInLongs, final int memberTypeId)
+            final int offset, final int memberTypeLengthInLongs, final int memberTypeId,
+            final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, memberTypeLengthInLongs * LONG_SIZE,
-                offset)
+                offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()

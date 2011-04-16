@@ -38,6 +38,24 @@ class HDF5ValueObjectByteifyer<T>
 
     private final int recordSize;
 
+    @SuppressWarnings("unchecked")
+    private static <T> T newMap(int size)
+    {
+        return (T) new HDF5CompoundDataMap(size);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T newList(int size)
+    {
+        return (T) new HDF5CompoundDataList(Collections.nCopies(size, null));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T newArray(int size)
+    {
+        return (T) new Object[size];
+    }
+
     /** A role that provides some information about the HDF5 file to this byteifyer. */
     interface FileInfoProvider
     {
@@ -55,7 +73,9 @@ class HDF5ValueObjectByteifyer<T>
     public HDF5ValueObjectByteifyer(Class<T> clazz, FileInfoProvider fileInfoProvider,
             HDF5CompoundMemberMapping... members)
     {
-        byteifyers = HDF5CompoundByteifyerFactory.createMemberByteifyers(clazz, fileInfoProvider, members);
+        byteifyers =
+                HDF5CompoundByteifyerFactory.createMemberByteifyers(clazz, fileInfoProvider,
+                        members);
         if (byteifyers.length > 0)
         {
             recordSize = byteifyers[byteifyers.length - 1].getTotalSize();
@@ -63,7 +83,6 @@ class HDF5ValueObjectByteifyer<T>
         {
             recordSize = 0;
         }
-
     }
 
     public int insertMemberTypes(int dataTypeId)
@@ -216,33 +235,24 @@ class HDF5ValueObjectByteifyer<T>
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private static <T> T newMap(int size)
-    {
-        return (T) new HDF5CompoundDataMap(size);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> T newList(int size)
-    {
-        return (T) new HDF5CompoundDataList(Collections.nCopies(size, null));
-    }
-
-    @SuppressWarnings("unchecked")
-    private static <T> T newArray(int size)
-    {
-        return (T) new Object[size];
-    }
-
     public int getRecordSize()
     {
         return recordSize;
     }
+
+    public HDF5MemberByteifyer[] getByteifyers()
+    {
+        return byteifyers;
+    }
+
+    //
+    // Object
+    //
 
     @Override
     public String toString()
     {
         return "HDF5ValueObjectByteifyer [byteifyers=" + Arrays.toString(byteifyers) + "]";
     }
-    
+
 }

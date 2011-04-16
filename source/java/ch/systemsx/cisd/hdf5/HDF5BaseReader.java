@@ -20,10 +20,12 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.BOOLEAN_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.DATATYPE_GROUP;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_MEMBERS_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
 
 import java.io.File;
@@ -617,9 +619,87 @@ class HDF5BaseReader
         return runner.call(readRunnable);
     }
 
-    HDF5DataTypeVariant tryGetTypeVariant(final int dataSetId, ICleanUpRegistry registry)
+    HDF5EnumerationValueArray getEnumValueArray(final int attributeId, ICleanUpRegistry registry)
     {
-        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, registry);
+        final int storageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+        final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
+        final int len;
+        final HDF5EnumerationType enumType;
+        if (h5.getClassType(storageDataTypeId) == H5T_ARRAY)
+        {
+            final int[] arrayDimensions = h5.getArrayDimensions(storageDataTypeId);
+            if (arrayDimensions.length != 1)
+            {
+                throw new HDF5JavaException("Array needs to be of rank 1, but is of rank "
+                        + arrayDimensions.length);
+            }
+            len = arrayDimensions[0];
+            final int baseTypeId = h5.getBaseDataType(storageDataTypeId, registry);
+            if (h5.getClassType(baseTypeId) != H5T_ENUM)
+            {
+                throw new HDF5JavaException("Attribute is not of type Enumeration array.");
+            }
+            enumType = getEnumTypeForStorageDataType(null, baseTypeId, fileRegistry);
+        } else
+        {
+            if (h5.getClassType(storageDataTypeId) != H5T_ENUM)
+            {
+                throw new HDF5JavaException("Attribute is not of type Enumeration array.");
+            }
+            final long[] arrayDimensions = h5.getDataDimensionsForAttribute(attributeId, registry);
+            len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
+            enumType = getEnumTypeForAttributeId(attributeId);
+        }
+        final byte[] data =
+                h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, len
+                        * enumType.getStorageForm().getStorageSize());
+        final HDF5EnumerationValueArray value =
+                new HDF5EnumerationValueArray(enumType, HDF5EnumerationType.fromStorageForm(data,
+                        enumType.getStorageForm()));
+        return value;
+    }
+
+    HDF5EnumerationType getEnumTypeForAttributeId(final int objectId)
+    {
+        final int storageDataTypeId = h5.getDataTypeForAttribute(objectId, fileRegistry);
+        return getEnumTypeForStorageDataType(null, storageDataTypeId, fileRegistry);
+    }
+
+    HDF5DataTypeVariant[] tryGetTypeVariantForCompoundMembers(String dataTypePathOrNull,
+            ICleanUpRegistry registry)
+    {
+        if (dataTypePathOrNull == null)
+        {
+            return null;
+        }
+        checkOpen();
+        final int objectId = h5.openObject(fileId, dataTypePathOrNull, registry);
+        if (h5.existsAttribute(objectId, TYPE_VARIANT_MEMBERS_ATTRIBUTE) == false)
+        {
+            return null;
+        }
+        final int attributeId =
+                h5.openAttribute(objectId, TYPE_VARIANT_MEMBERS_ATTRIBUTE, registry);
+        final HDF5EnumerationValueArray valueArray = getEnumValueArray(attributeId, registry);
+        final HDF5DataTypeVariant[] variants = new HDF5DataTypeVariant[valueArray.getLength()];
+        boolean hasVariants = false;
+        for (int i = 0; i < variants.length; ++i)
+        {
+            variants[i] = HDF5DataTypeVariant.values()[valueArray.getOrdinal(i)];
+            hasVariants |= variants[i].isTypeVariant();
+        }
+        if (hasVariants)
+        {
+            return variants;
+        } else
+        {
+            return null;
+        }
+    }
+
+    HDF5DataTypeVariant tryGetTypeVariant(final int objectId, ICleanUpRegistry registry)
+    {
+        final int typeVariantOrdinal = getAttributeTypeVariant(objectId, registry);
         return typeVariantOrdinal < 0 ? null : HDF5DataTypeVariant.values()[typeVariantOrdinal];
     }
 
@@ -662,7 +742,8 @@ class HDF5BaseReader
             final int numberOfElements = MDArray.getLength(arrayDimensions);
             final int size = totalSize / numberOfElements;
             final int baseTypeId = h5.getBaseDataType(dataTypeId, registry);
-            return new HDF5DataTypeInformation(tryGetDataTypePath(baseTypeId), dataClass, size,
+            final String dataTypePathOrNull = tryGetDataTypePath(baseTypeId);
+            return new HDF5DataTypeInformation(dataTypePathOrNull, dataClass, size,
                     arrayDimensions, true);
         } else
         {
@@ -675,8 +756,9 @@ class HDF5BaseReader
             {
                 opaqueTagOrNull = null;
             }
-            return new HDF5DataTypeInformation(tryGetDataTypePath(dataTypeId), dataClass,
-                    totalSize, 1, opaqueTagOrNull);
+            final String dataTypePathOrNull = tryGetDataTypePath(dataTypeId);
+            return new HDF5DataTypeInformation(dataTypePathOrNull, dataClass, totalSize, 1,
+                    opaqueTagOrNull);
         }
     }
 

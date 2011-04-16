@@ -37,8 +37,8 @@ import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberByt
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 
 /**
- * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>double</code>,
- * <code>double[]</code>, <code>double[][]</code> and <code>MDDoubleArray</code>.
+ * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>double</code>
+ * , <code>double[]</code>, <code>double[][]</code> and <code>MDDoubleArray</code>.
  * 
  * @author Bernd Rinn
  */
@@ -49,8 +49,8 @@ public class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMe
 
     private enum Rank
     {
-        SCALAR(double.class, true), ARRAY1D(double[].class, false), ARRAY2D(double[][].class, false),
-        ARRAYMD(MDDoubleArray.class, false);
+        SCALAR(double.class, true), ARRAY1D(double[].class, false),
+        ARRAY2D(double[][].class, false), ARRAYMD(MDDoubleArray.class, false);
 
         private Class<?> clazz;
 
@@ -103,16 +103,16 @@ public class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMe
         {
             case FIELD:
                 return createByteifyerForField(fieldOrNull, memberName, offset, dimensions, len,
-                        memberTypeId, rank);
+                        memberTypeId, rank, member.tryGetTypeVariant());
             case MAP:
                 return createByteifyerForMap(memberName, offset, dimensions, len, memberTypeId,
-                        rank);
+                        rank, member.tryGetTypeVariant());
             case LIST:
                 return createByteifyerForList(memberName, index, offset, dimensions, len,
-                        memberTypeId, rank);
+                        memberTypeId, rank, member.tryGetTypeVariant());
             case ARRAY:
                 return createByteifyerForArray(memberName, index, offset, dimensions, len,
-                        memberTypeId, rank);
+                        memberTypeId, rank, member.tryGetTypeVariant());
             default:
                 throw new Error("Unknown access type");
         }
@@ -120,10 +120,10 @@ public class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMe
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
             final int offset, final int[] dimensions, final int len, final int memberTypeId,
-            final Rank rank)
+            final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, DOUBLE_SIZE * len, offset)
+        return new HDF5MemberByteifyer(field, memberName, DOUBLE_SIZE * len, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -200,9 +200,10 @@ public class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMe
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final int[] dimensions, final int len, final int memberTypeId, final Rank rank)
+            final int[] dimensions, final int len, final int memberTypeId, final Rank rank,
+            final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, DOUBLE_SIZE * len, offset)
+        return new HDF5MemberByteifyer(null, memberName, DOUBLE_SIZE * len, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -280,9 +281,9 @@ public class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMe
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
             final int offset, final int[] dimensions, final int len, final int memberTypeId,
-            final Rank rank)
+            final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, DOUBLE_SIZE * len, offset)
+        return new HDF5MemberByteifyer(null, memberName, DOUBLE_SIZE * len, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -360,9 +361,9 @@ public class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMe
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
             final int offset, final int[] dimensions, final int len, final int memberTypeId,
-            final Rank rank)
+            final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, DOUBLE_SIZE * len, offset)
+        return new HDF5MemberByteifyer(null, memberName, DOUBLE_SIZE * len, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()

@@ -64,8 +64,30 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
         {
             storageDataTypeId = baseWriter.createStorageCompoundDataType(objectByteifyer);
             baseWriter.commitDataType(dataTypePath, storageDataTypeId);
+            final HDF5EnumerationValueArray typeVariants =
+                    tryCreateDataTypeVariantArray(objectByteifyer);
+            if (typeVariants != null)
+            {
+                baseWriter.setEnumArrayAttribute(dataTypePath,
+                        HDF5Utils.TYPE_VARIANT_MEMBERS_ATTRIBUTE, typeVariants);
+            }
         }
         return storageDataTypeId;
+    }
+
+    private <T> HDF5EnumerationValueArray tryCreateDataTypeVariantArray(
+            final HDF5ValueObjectByteifyer<T> objectByteifyer)
+    {
+        final byte[] typeVariantOrdinals = new byte[objectByteifyer.getByteifyers().length];
+        boolean hasTypeVariants = false;
+        for (int i = 0; i < typeVariantOrdinals.length; ++i)
+        {
+            typeVariantOrdinals[i] =
+                    (byte) objectByteifyer.getByteifyers()[i].getTypeVariant().ordinal();
+            hasTypeVariants |= HDF5DataTypeVariant.isTypeVariant(typeVariantOrdinals[i]);
+        }
+        return hasTypeVariants ? new HDF5EnumerationValueArray(baseWriter.typeVariantDataType,
+                typeVariantOrdinals) : null;
     }
 
     public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,

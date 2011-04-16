@@ -86,13 +86,13 @@ class HDF5CompoundByteifyerFactory
             final AccessType accessType = getAccessType(clazz);
             final Field fieldOrNull =
                     (accessType == AccessType.FIELD) ? members[i].getField(clazz) : null;
-            final Class<?> memberClazz =
+            final Class<?> memberClazzOrNull =
                     (fieldOrNull != null) ? fieldOrNull.getType() : members[i].tryGetMemberClass();
             final IHDF5CompoundMemberBytifyerFactory factory =
-                    findFactory(memberClazz, members[i].getMemberName());
+                    findFactory(memberClazzOrNull, members[i].getMemberName());
             result[i] =
-                    factory.createBytifyer(accessType, fieldOrNull, members[i], memberClazz, i,
-                            offset, fileInfoProvider);
+                    factory.createBytifyer(accessType, fieldOrNull, members[i], memberClazzOrNull,
+                            i, offset, fileInfoProvider);
             offset += result[i].getSizeInBytes();
         }
         return result;

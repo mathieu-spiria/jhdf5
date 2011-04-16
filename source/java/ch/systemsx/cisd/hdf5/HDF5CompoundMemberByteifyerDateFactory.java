@@ -48,30 +48,34 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
     }
 
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
-            HDF5CompoundMemberMapping member, Class<?> memberClazz, int index,
-            int offset, FileInfoProvider fileInfoProvider)
+            HDF5CompoundMemberMapping member, Class<?> memberClazz, int index, int offset,
+            FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
+        final HDF5DataTypeVariant typeVariant =
+                HDF5DataTypeVariant.isTypeVariant(member.tryGetTypeVariant()) ? member
+                        .tryGetTypeVariant()
+                        : HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH;
         switch (accessType)
         {
             case FIELD:
-                return createByteifyerForField(fieldOrNull, memberName, offset);
+                return createByteifyerForField(fieldOrNull, memberName, offset, typeVariant);
             case MAP:
-                return createByteifyerForMap(memberName, offset);
+                return createByteifyerForMap(memberName, offset, typeVariant);
             case LIST:
-                return createByteifyerForList(memberName, index, offset);
+                return createByteifyerForList(memberName, index, offset, typeVariant);
             case ARRAY:
-                return createByteifyerForArray(memberName, index, offset);
+                return createByteifyerForArray(memberName, index, offset, typeVariant);
             default:
                 throw new Error("Unknown access type");
         }
     }
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
-            final int offset)
+            final int offset, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, LONG_SIZE, offset)
+        return new HDF5MemberByteifyer(field, memberName, LONG_SIZE, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -104,9 +108,10 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
             };
     }
 
-    private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset)
+    private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
+            final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset)
+        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -141,9 +146,9 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
     }
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
-            final int offset)
+            final int offset, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset)
+        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -178,40 +183,41 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
     }
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
-            final int offset)
+            final int offset, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset)
-        {
-            @Override
-            protected int getMemberStorageTypeId()
+        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
             {
-                return H5T_STD_I64LE;
-            }
+                @Override
+                protected int getMemberStorageTypeId()
+                {
+                    return H5T_STD_I64LE;
+                }
 
-            @Override
-            protected int getMemberNativeTypeId()
-            {
-                return -1;
-            }
+                @Override
+                protected int getMemberNativeTypeId()
+                {
+                    return -1;
+                }
 
-            @Override
-            public byte[] byteify(int compoundDataTypeId, Object obj)
-                    throws IllegalAccessException
-            {
-                return HDFNativeData.longToByte(((java.util.Date) getArray(obj, index))
-                        .getTime());
-            }
+                @Override
+                public byte[] byteify(int compoundDataTypeId, Object obj)
+                        throws IllegalAccessException
+                {
+                    return HDFNativeData.longToByte(((java.util.Date) getArray(obj, index))
+                            .getTime());
+                }
 
-            @Override
-            public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
-                    int arrayOffset) throws IllegalAccessException
-            {
-                setArray(obj,
-                        index,
-                        new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                + offset)));
-            }
-        };
+                @Override
+                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                        int arrayOffset) throws IllegalAccessException
+                {
+                    setArray(
+                            obj,
+                            index,
+                            new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
+                                    + offset)));
+                }
+            };
     }
 
 }

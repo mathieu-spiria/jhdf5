@@ -46,6 +46,12 @@ final class HDF5Utils
     /** The attribute to signal that this is a variant of the data type. */
     static final String TYPE_VARIANT_ATTRIBUTE = "__TYPE_VARIANT__";
 
+    /**
+     * The attribute to signal that this compound type has members with variant of the member data
+     * type.
+     */
+    static final String TYPE_VARIANT_MEMBERS_ATTRIBUTE = "__TYPE_VARIANT_MEMBERS__";
+
     /** The attribute to store the name of the enum data type. */
     static final String ENUM_TYPE_NAME_ATTRIBUTE = "__ENUM_TYPE_NAME__";
 
@@ -83,6 +89,26 @@ final class HDF5Utils
      * 8.10).
      */
     static final String DATASET_IS_EMPTY_LEGACY_ATTRIBUTE = "__EMPTY__";
+
+    /**
+     * All integer types in Java.
+     */
+    static Class<?>[] allIntegerTypes = new Class<?>[]
+        { byte.class, Byte.class, short.class, Short.class, int.class, Integer.class, long.class,
+                Long.class };
+
+    /**
+     * All float types in Java.
+     */
+    static Class<?>[] allFloatTypes = new Class<?>[]
+        { float.class, Float.class, double.class, Double.class };
+
+    /**
+     * All number types in Java.
+     */
+    static Class<?>[] allNumberTypes = new Class<?>[]
+        { byte.class, Byte.class, short.class, Short.class, int.class, Integer.class, long.class,
+                Long.class, float.class, Float.class, double.class, Double.class };
 
     static String getSuperGroup(String path)
     {
@@ -190,6 +216,15 @@ final class HDF5Utils
 
     /**
      * Returns the name for a committed data type with <var>pathOrNull</var>. If
+     * <code>pathOrNull == null</code>, the method will return <code>UNKNOWN</code>.
+     */
+    static String getDataTypeNameFromPath(String pathOrNull, HDF5DataClass dataClass)
+    {
+        return (pathOrNull == null) ? "UNKNOWN" : tryGetDataTypeNameFromPath(pathOrNull, dataClass);
+    }
+
+    /**
+     * Returns the name for a committed data type with <var>pathOrNull</var>. If
      * <code>pathOrNull == null</code>, the method will return <code>null</code>.
      */
     static String tryGetDataTypeNameFromPath(String pathOrNull, HDF5DataClass dataClass)
@@ -219,8 +254,8 @@ final class HDF5Utils
     }
 
     /**
-     * Returns a prefix for a given data class, or <code>""</code>, if this data class does not
-     * have a prefix.
+     * Returns a prefix for a given data class, or <code>""</code>, if this data class does not have
+     * a prefix.
      */
     static String getPrefixForDataClass(HDF5DataClass dataClass)
     {

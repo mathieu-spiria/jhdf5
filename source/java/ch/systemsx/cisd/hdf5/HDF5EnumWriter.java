@@ -90,29 +90,7 @@ class HDF5EnumWriter implements IHDF5EnumWriter
     public void setEnumArrayAttribute(final String objectPath, final String name,
             final HDF5EnumerationValueArray value)
     {
-        assert objectPath != null;
-        assert name != null;
-        assert value != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int baseMemoryTypeId = value.getType().getNativeTypeId();
-                    final int memoryTypeId =
-                            baseWriter.h5.createArrayType(baseMemoryTypeId, value.getLength(),
-                                    registry);
-                    final int baseStorageTypeId = value.getType().getStorageTypeId();
-                    final int storageTypeId =
-                            baseWriter.h5.createArrayType(baseStorageTypeId, value.getLength(),
-                                    registry);
-                    baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId,
-                            value.toStorageForm());
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(setAttributeRunnable);
+        baseWriter.setEnumArrayAttribute(objectPath, name, value);
     }
 
     // /////////////////////

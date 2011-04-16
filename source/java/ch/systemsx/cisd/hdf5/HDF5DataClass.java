@@ -64,7 +64,7 @@ public enum HDF5DataClass
      */
     interface IHDF5JavaTypeProvider
     {
-        Class<?> getJavaType(int rank, int elementSize);
+        Class<?> getJavaType(int rank, int elementSize, HDF5DataTypeVariant typeVariantOrNull);
     }
 
     private final int id;
@@ -89,7 +89,7 @@ public enum HDF5DataClass
     {
         return typeProvider;
     }
-    
+
     /**
      * Returns the {@link HDF5DataClass} for the given data <var>classId</var>.
      * <p>
@@ -131,7 +131,7 @@ public enum HDF5DataClass
             this.javaTypeMDArrayOrNull = javaTypeMDArrayOrNull;
         }
 
-        public Class<?> getJavaType(int rank, int elementSize)
+        public Class<?> getJavaType(int rank, int elementSize, HDF5DataTypeVariant typeVariantOrNull)
         {
             if (rank == 0)
             {
@@ -151,10 +151,16 @@ public enum HDF5DataClass
 
     private static class IntJavaTypeProvider implements IHDF5JavaTypeProvider
     {
-        public Class<?> getJavaType(int rank, int elementSize)
+        public Class<?> getJavaType(int rank, int elementSize, HDF5DataTypeVariant typeVariantOrNull)
         {
             if (rank == 0)
             {
+                // FIXME: that shouldn't be hardcoded
+                if (typeVariantOrNull == HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH
+                        && elementSize == 8)
+                {
+                    return java.util.Date.class;
+                }
                 switch (elementSize)
                 {
                     case 1:
@@ -219,7 +225,7 @@ public enum HDF5DataClass
 
     private static class FloatJavaTypeProvider implements IHDF5JavaTypeProvider
     {
-        public Class<?> getJavaType(int rank, int elementSize)
+        public Class<?> getJavaType(int rank, int elementSize, HDF5DataTypeVariant typeVariantOrNull)
         {
             if (rank == 0)
             {

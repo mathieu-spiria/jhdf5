@@ -126,10 +126,12 @@ public class DirectoryIndex implements Iterable<Link>
     private static HDF5CompoundMemberMapping[] getMapping(HDF5EnumerationType linkEnumerationType)
     {
         return new HDF5CompoundMemberMapping[]
-            { mapping("linkNameLength"),
-                    mapping("hdf5EncodedLinkType", "linkType", linkEnumerationType),
-                    mapping("size"), mapping("lastModified"), mapping("uid"), mapping("gid"),
-                    mapping("permissions"), mapping("crc32", "checksum") };
+            {
+                    mapping("linkNameLength"),
+                    mapping("linkType").fieldName("hdf5EncodedLinkType").enumType(
+                            linkEnumerationType), mapping("size"), mapping("lastModified"),
+                    mapping("uid"), mapping("gid"), mapping("permissions"),
+                    mapping("checksum").fieldName("crc32") };
     }
 
     /**
@@ -241,8 +243,8 @@ public class DirectoryIndex implements Iterable<Link>
         for (Link link : work)
         {
             namePos =
-                    link.initAfterReading(concatenatedNames, namePos, hdf5Reader,
-                            groupPath, readLinkTargets);
+                    link.initAfterReading(concatenatedNames, namePos, hdf5Reader, groupPath,
+                            readLinkTargets);
         }
     }
 
@@ -297,9 +299,8 @@ public class DirectoryIndex implements Iterable<Link>
             final String indexDataSetName = getIndexDataSetName();
             final CRC32 crc32 = new CRC32();
             hdf5WriterOrNull.writeCompoundArray(indexDataSetName,
-                    getHDF5LinkCompoundType(hdf5WriterOrNull, linkTypeEnumeration),
-                    getLinks().toArray(),
-                    HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
+                    getHDF5LinkCompoundType(hdf5WriterOrNull, linkTypeEnumeration), getLinks()
+                            .toArray(), HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                     new IHDF5Reader.IByteArrayInspector()
                         {
                             public void inspect(byte[] byteArray)
@@ -347,7 +348,7 @@ public class DirectoryIndex implements Iterable<Link>
     {
         return links.get();
     }
-    
+
     private void setLinks(LinkList newLinks)
     {
         links.set(newLinks);

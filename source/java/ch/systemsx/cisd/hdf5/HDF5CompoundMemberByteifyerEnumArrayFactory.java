@@ -55,16 +55,16 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
         {
             case FIELD:
                 return createByteifyerForField(fieldOrNull, memberName, offset, enumType,
-                        memberTypeLength, memberStorageTypeId);
+                        memberTypeLength, memberStorageTypeId, member.tryGetTypeVariant());
             case MAP:
-                return createByteifyerForMap(memberName, offset, enumType,
-                        memberTypeLength, memberStorageTypeId);
+                return createByteifyerForMap(memberName, offset, enumType, memberTypeLength,
+                        memberStorageTypeId, member.tryGetTypeVariant());
             case LIST:
                 return createByteifyerForList(memberName, index, offset, enumType,
-                        memberTypeLength, memberStorageTypeId);
+                        memberTypeLength, memberStorageTypeId, member.tryGetTypeVariant());
             case ARRAY:
                 return createByteifyerForArray(memberName, index, offset, enumType,
-                        memberTypeLength, memberStorageTypeId);
+                        memberTypeLength, memberStorageTypeId, member.tryGetTypeVariant());
             default:
                 throw new Error("Unknown access type");
         }
@@ -72,11 +72,11 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
             final int offset, final HDF5EnumerationType enumType, final int memberTypeLength,
-            final int memberStorageTypeId)
+            final int memberStorageTypeId, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
         return new HDF5MemberByteifyer(field, memberName, enumType.getStorageForm()
-                .getStorageSize() * memberTypeLength, offset)
+                .getStorageSize() * memberTypeLength, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -118,10 +118,10 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
             final HDF5EnumerationType enumType, final int memberTypeLength,
-            final int memberStorageTypeId)
+            final int memberStorageTypeId, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, enumType.getStorageForm()
-                .getStorageSize() * memberTypeLength, offset)
+        return new HDF5MemberByteifyer(null, memberName, enumType.getStorageForm().getStorageSize()
+                * memberTypeLength, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -163,10 +163,10 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
             final int offset, final HDF5EnumerationType enumType, final int memberTypeLength,
-            final int memberStorageTypeId)
+            final int memberStorageTypeId, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, enumType.getStorageForm()
-                .getStorageSize() * memberTypeLength, offset)
+        return new HDF5MemberByteifyer(null, memberName, enumType.getStorageForm().getStorageSize()
+                * memberTypeLength, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -208,10 +208,10 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
             final int offset, final HDF5EnumerationType enumType, final int memberTypeLength,
-            final int memberStorageTypeId)
+            final int memberStorageTypeId, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, enumType.getStorageForm()
-                .getStorageSize() * memberTypeLength, offset)
+        return new HDF5MemberByteifyer(null, memberName, enumType.getStorageForm().getStorageSize()
+                * memberTypeLength, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()

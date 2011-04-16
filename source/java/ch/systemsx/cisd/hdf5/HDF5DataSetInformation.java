@@ -30,8 +30,6 @@ public final class HDF5DataSetInformation
 {
     private final HDF5DataTypeInformation typeInformation;
 
-    private final HDF5DataTypeVariant typeVariantOrNull;
-
     private long[] dimensions;
 
     private long[] maxDimensions;
@@ -44,7 +42,10 @@ public final class HDF5DataSetInformation
             HDF5DataTypeVariant typeVariantOrNull)
     {
         this.typeInformation = typeInformation;
-        this.typeVariantOrNull = typeVariantOrNull;
+        if (typeVariantOrNull != null)
+        {
+            typeInformation.setTypeVariant(typeVariantOrNull);
+        }
     }
 
     /**
@@ -61,7 +62,7 @@ public final class HDF5DataSetInformation
      */
     public HDF5DataTypeVariant tryGetTypeVariant()
     {
-        return typeVariantOrNull;
+        return typeInformation.tryGetTypeVariant();
     }
 
     /**
@@ -69,7 +70,7 @@ public final class HDF5DataSetInformation
      */
     public boolean isTimeStamp()
     {
-        return (typeVariantOrNull != null) ? typeVariantOrNull.isTimeStamp() : false;
+        return typeInformation.isTimeStamp();
     }
 
     /**
@@ -78,7 +79,7 @@ public final class HDF5DataSetInformation
      */
     public boolean isTimeDuration()
     {
-        return (typeVariantOrNull != null) ? typeVariantOrNull.isTimeDuration() : false;
+        return typeInformation.isTimeDuration();
     }
 
     /**
@@ -87,7 +88,7 @@ public final class HDF5DataSetInformation
      */
     public HDF5TimeUnit tryGetTimeUnit()
     {
-        return (typeVariantOrNull != null) ? typeVariantOrNull.tryGetTimeUnit() : null;
+        return typeInformation.tryGetTimeUnit();
     }
 
     /**
@@ -209,7 +210,6 @@ public final class HDF5DataSetInformation
         final HDF5DataSetInformation that = (HDF5DataSetInformation) obj;
         final EqualsBuilder builder = new EqualsBuilder();
         builder.append(typeInformation, that.typeInformation);
-        builder.append(typeVariantOrNull, that.typeVariantOrNull);
         builder.append(dimensions, that.dimensions);
         builder.append(maxDimensions, that.maxDimensions);
         return builder.isEquals();
@@ -220,7 +220,6 @@ public final class HDF5DataSetInformation
     {
         final HashCodeBuilder builder = new HashCodeBuilder();
         builder.append(typeInformation);
-        builder.append(typeVariantOrNull);
         builder.append(dimensions);
         builder.append(maxDimensions);
         return builder.toHashCode();
@@ -229,13 +228,6 @@ public final class HDF5DataSetInformation
     @Override
     public String toString()
     {
-        if (typeVariantOrNull != null)
-        {
-            return typeInformation.toString() + "/" + typeVariantOrNull + ":"
-                    + ArrayUtils.toString(dimensions);
-        } else
-        {
-            return typeInformation.toString() + ":" + ArrayUtils.toString(dimensions);
-        }
+        return typeInformation.toString() + ":" + ArrayUtils.toString(dimensions);
     }
 }

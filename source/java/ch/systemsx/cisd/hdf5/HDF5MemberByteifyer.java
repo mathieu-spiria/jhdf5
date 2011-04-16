@@ -41,13 +41,23 @@ abstract class HDF5MemberByteifyer
 
     protected final CharacterEncoding encoding;
 
-    HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int offset)
+    private final HDF5DataTypeVariant typeVariant;
+
+    HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int offset,
+            HDF5DataTypeVariant typeVariantOrNull)
     {
-        this(fieldOrNull, memberName, size, size, offset, CharacterEncoding.ASCII);
+        this(fieldOrNull, memberName, size, size, offset, CharacterEncoding.ASCII,
+                typeVariantOrNull);
     }
 
     HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int sizeInBytes,
             int offset, CharacterEncoding encoding)
+    {
+        this(fieldOrNull, memberName, size, sizeInBytes, offset, encoding, HDF5DataTypeVariant.NONE);
+    }
+
+    HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int sizeInBytes,
+            int offset, CharacterEncoding encoding, HDF5DataTypeVariant typeVariantOrNull)
     {
         this.fieldOrNull = fieldOrNull;
         this.memberName = memberName;
@@ -55,6 +65,7 @@ abstract class HDF5MemberByteifyer
         this.sizeInBytes = sizeInBytes;
         this.offset = offset;
         this.encoding = encoding;
+        this.typeVariant = HDF5DataTypeVariant.maskNull(typeVariantOrNull);
     }
 
     public abstract byte[] byteify(int compoundDataTypeId, Object obj)
@@ -105,6 +116,11 @@ abstract class HDF5MemberByteifyer
     public final int getTotalSize()
     {
         return offset + sizeInBytes;
+    }
+
+    public HDF5DataTypeVariant getTypeVariant()
+    {
+        return typeVariant;
     }
 
     public final String describe()

@@ -44,6 +44,8 @@ public final class HDF5DataTypeInformation
 
     private String opaqueTagOrNull;
 
+    private HDF5DataTypeVariant typeVariantOrNull;
+
     HDF5DataTypeInformation(String dataTypePathOrNull, HDF5DataClass dataClass, int elementSize)
     {
         this(dataTypePathOrNull, dataClass, elementSize, new int[]
@@ -183,13 +185,52 @@ public final class HDF5DataTypeInformation
     }
 
     /**
+     * The {@link HDF5DataTypeVariant}, or <code>null</code>, if this type has no variant.
+     */
+    public HDF5DataTypeVariant tryGetTypeVariant()
+    {
+        return typeVariantOrNull;
+    }
+
+    void setTypeVariant(HDF5DataTypeVariant typeVariant)
+    {
+        this.typeVariantOrNull = typeVariant;
+    }
+
+    /**
+     * Returns <code>true</code>, if the data set is a time stamp, or <code>false</code> otherwise.
+     */
+    public boolean isTimeStamp()
+    {
+        return (typeVariantOrNull != null) ? typeVariantOrNull.isTimeStamp() : false;
+    }
+
+    /**
+     * Returns <code>true</code>, if the data set is a time duration, or <code>false</code>
+     * otherwise.
+     */
+    public boolean isTimeDuration()
+    {
+        return (typeVariantOrNull != null) ? typeVariantOrNull.isTimeDuration() : false;
+    }
+
+    /**
+     * Returns the time unit of the data set, if the data set is a time duration, or
+     * <code>null</code> otherwise.
+     */
+    public HDF5TimeUnit tryGetTimeUnit()
+    {
+        return (typeVariantOrNull != null) ? typeVariantOrNull.tryGetTimeUnit() : null;
+    }
+
+    /**
      * Returns an appropriate Java type, or <code>null</code>, if this HDF5 type has no appropriate
      * Java type.
      */
     public Class<?> tryGetJavaType()
     {
         final int rank = (dimensions.length == 1 && dimensions[0] == 1) ? 0 : dimensions.length;
-        return dataClass.getJavaTypeProvider().getJavaType(rank, elementSize);
+        return dataClass.getJavaTypeProvider().getJavaType(rank, elementSize, typeVariantOrNull);
     }
 
     //
@@ -207,14 +248,16 @@ public final class HDF5DataTypeInformation
         return dataClass.equals(that.dataClass) && elementSize == that.elementSize
                 && numberOfElements == that.numberOfElements
                 && ObjectUtils.equals(nameOrNull, that.nameOrNull)
-                && ObjectUtils.equals(dataTypePathOrNull, that.dataTypePathOrNull);
+                && ObjectUtils.equals(dataTypePathOrNull, that.dataTypePathOrNull)
+                && ObjectUtils.equals(typeVariantOrNull, that.typeVariantOrNull);
     }
 
     @Override
     public int hashCode()
     {
-        return ((((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + numberOfElements) * 59 + ObjectUtils
-                .hashCode(nameOrNull)) * 59 + ObjectUtils.hashCode(dataTypePathOrNull);
+        return (((((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + numberOfElements) * 59 + ObjectUtils
+                .hashCode(nameOrNull)) * 59 + ObjectUtils.hashCode(dataTypePathOrNull) * 59)
+                + ObjectUtils.hashCode(typeVariantOrNull);
     }
 
     @Override
@@ -254,6 +297,11 @@ public final class HDF5DataTypeInformation
             }
             builder.append(']');
             builder.append(')');
+            if (typeVariantOrNull != null)
+            {
+                builder.append('/');
+                builder.append(typeVariantOrNull.toString());
+            }
             return builder.toString();
         }
     }

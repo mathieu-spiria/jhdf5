@@ -50,23 +50,27 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
         switch (accessType)
         {
             case FIELD:
-                return createByteifyerForField(fieldOrNull, memberName, offset, booleanDataTypeId);
+                return createByteifyerForField(fieldOrNull, memberName, offset, booleanDataTypeId,
+                        member.tryGetTypeVariant());
             case MAP:
-                return createByteifyerForMap(memberName, offset, booleanDataTypeId);
+                return createByteifyerForMap(memberName, offset, booleanDataTypeId,
+                        member.tryGetTypeVariant());
             case LIST:
-                return createByteifyerForList(memberName, index, offset, booleanDataTypeId);
+                return createByteifyerForList(memberName, index, offset, booleanDataTypeId,
+                        member.tryGetTypeVariant());
             case ARRAY:
-                return createByteifyerForArray(memberName, index, offset, booleanDataTypeId);
+                return createByteifyerForArray(memberName, index, offset, booleanDataTypeId,
+                        member.tryGetTypeVariant());
             default:
                 throw new Error("Unknown access type");
         }
     }
 
-    private HDF5MemberByteifyer createByteifyerForField(final Field field,
-            final String memberName, final int offset, final int booleanDataTypeId)
+    private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
+            final int offset, final int booleanDataTypeId, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, 1, offset)
+        return new HDF5MemberByteifyer(field, memberName, 1, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -98,9 +102,9 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final int booleanDataTypeId)
+            final int booleanDataTypeId, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, 1, offset)
+        return new HDF5MemberByteifyer(null, memberName, 1, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -133,9 +137,9 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
     }
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
-            final int offset, final int booleanDataTypeId)
+            final int offset, final int booleanDataTypeId, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, 1, offset)
+        return new HDF5MemberByteifyer(null, memberName, 1, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -168,9 +172,9 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
     }
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
-            final int offset, final int booleanDataTypeId)
+            final int offset, final int booleanDataTypeId, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, 1, offset)
+        return new HDF5MemberByteifyer(null, memberName, 1, offset, typeVariant)
             {
                 @Override
                 protected int getMemberStorageTypeId()
