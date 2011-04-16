@@ -146,7 +146,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F64LE, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F64LE, new long[]
                                 { data.length }, 8, features, registry);
                     H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
@@ -363,7 +363,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F64LE, 
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F64LE, 
                                     data.longDimensions(), 8, features, registry);
                     H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());

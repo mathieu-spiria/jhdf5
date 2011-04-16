@@ -137,7 +137,7 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                                         .getDeflateLevel(), data.getType().getNumberOfBits(),
                                         baseWriter.keepDataIfExists(features));
                         final int dataSetId =
-                                baseWriter.getDataSetId(objectPath, data.getType()
+                                baseWriter.getOrCreateDataSetId(objectPath, data.getType()
                                         .getIntStorageTypeId(), new long[]
                                     { data.getLength() }, data.getStorageForm().getStorageSize(),
                                         actualFeatures, registry);
@@ -150,7 +150,7 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                     } else
                     {
                         final int dataSetId =
-                                baseWriter.getDataSetId(objectPath, data.getType()
+                                baseWriter.getOrCreateDataSetId(objectPath, data.getType()
                                         .getStorageTypeId(), new long[]
                                     { data.getLength() }, data.getStorageForm().getStorageSize(),
                                         features, registry);

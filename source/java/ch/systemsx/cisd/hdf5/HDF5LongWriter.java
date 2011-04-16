@@ -146,7 +146,7 @@ class HDF5LongWriter implements IHDF5LongWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE, new long[]
                                 { data.length }, 8, features, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
@@ -363,7 +363,7 @@ class HDF5LongWriter implements IHDF5LongWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, 
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE, 
                                     data.longDimensions(), 8, features, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());

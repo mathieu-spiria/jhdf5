@@ -143,7 +143,7 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I8LE, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I8LE, new long[]
                                 { data.length }, 1, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
@@ -357,7 +357,7 @@ class HDF5ByteWriter implements IHDF5ByteWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I8LE,
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I8LE,
                                     data.longDimensions(), 1, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
                             .getAsFlatArray());

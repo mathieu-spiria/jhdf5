@@ -138,7 +138,7 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, type.getStorageTypeId(), new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(), new long[]
                                 { data.length }, type.getObjectByteifyer().getRecordSize(),
                                     features, registry);
                     final byte[] byteArray =
@@ -350,7 +350,7 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, type.getStorageTypeId(), MDArray
+                            baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(), MDArray
                                     .toLong(data.dimensions()), type.getObjectByteifyer()
                                     .getRecordSize(), features, registry);
                     final byte[] byteArray =

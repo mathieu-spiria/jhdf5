@@ -346,12 +346,10 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 {
                     final int baseMemoryTypeId = value.getType().getNativeTypeId();
                     final int memoryTypeId =
-                            h5.createArrayType(baseMemoryTypeId, value.getLength(),
-                                    registry);
+                            h5.createArrayType(baseMemoryTypeId, value.getLength(), registry);
                     final int baseStorageTypeId = value.getType().getStorageTypeId();
                     final int storageTypeId =
-                            h5.createArrayType(baseStorageTypeId, value.getLength(),
-                                    registry);
+                            h5.createArrayType(baseStorageTypeId, value.getLength(), registry);
                     setAttribute(objectPath, name, storageTypeId, memoryTypeId,
                             value.toStorageForm());
                     return null; // Nothing to return.
@@ -570,9 +568,12 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     /**
-     * Returns the data set id for the given <var>objectPath</var>.
+     * Returns the data set id for the given <var>objectPath</var>. If the data sets exists, it
+     * depends on the <code>features</code> and on the status of <code>keepDataSetIfExists</code>
+     * whether the existing data set will be opened or whether the data set will be deleted and
+     * re-created.
      */
-    int getDataSetId(final String objectPath, final int storageDataTypeId, final long[] dimensions,
+    int getOrCreateDataSetId(final String objectPath, final int storageDataTypeId, final long[] dimensions,
             int elementLength, final HDF5AbstractStorageFeatures features, ICleanUpRegistry registry)
     {
         final int dataSetId;

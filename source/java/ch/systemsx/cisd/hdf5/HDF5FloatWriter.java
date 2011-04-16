@@ -146,7 +146,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F32LE, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F32LE, new long[]
                                 { data.length }, 4, features, registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
@@ -363,7 +363,7 @@ class HDF5FloatWriter implements IHDF5FloatWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_IEEE_F32LE, 
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F32LE, 
                                     data.longDimensions(), 4, features, registry);
                     H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());

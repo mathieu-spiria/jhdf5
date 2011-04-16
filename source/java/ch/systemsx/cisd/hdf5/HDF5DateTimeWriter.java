@@ -163,7 +163,7 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                 {
                     final int longBytes = 8;
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE, new long[]
                                 { timeStamps.length }, longBytes, features, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeStamps);
@@ -397,7 +397,7 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                 {
                     final int longBytes = 8;
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I64LE, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE, new long[]
                                 { timeDurations.length }, longBytes, features, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeDurations);

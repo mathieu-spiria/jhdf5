@@ -146,7 +146,7 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, __Storagetype__, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, __Storagetype__, new long[]
                                 { data.length }, __elementsize__, features, registry);
                     H5Dwrite__appendix__(dataSetId, __Memorytype__, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
@@ -363,7 +363,7 @@ class HDF5__Name__Writer implements IHDF5__Name__Writer
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, __Storagetype__, 
+                            baseWriter.getOrCreateDataSetId(objectPath, __Storagetype__, 
                                     data.longDimensions(), __elementsize__, features, registry);
                     H5Dwrite__appendix__(dataSetId, __Memorytype__, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());

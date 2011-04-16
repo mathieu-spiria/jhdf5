@@ -89,7 +89,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
                     final int msb = data.length();
                     final int realLength = msb / longBits + (msb % longBits != 0 ? 1 : 0);
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_B64LE, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_B64LE, new long[]
                                 { realLength }, longBytes, features, registry);
                     H5Dwrite_long(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             BitSetConversionUtils.toStorageForm(data));

@@ -61,7 +61,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
                 {
                     final int dataTypeId = getOrCreateOpaqueTypeId(tag);
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, dataTypeId, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, dataTypeId, new long[]
                                 { data.length }, 1, features, registry);
                     H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.

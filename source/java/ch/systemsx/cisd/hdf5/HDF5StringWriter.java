@@ -285,7 +285,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, stringDataTypeId, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId, new long[]
                                 { data.length }, elementSize, features, registry);
                     if (variableLength)
                     {
@@ -483,7 +483,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     final int stringDataTypeId =
                             baseWriter.h5.createDataTypeString(realMaxLength, registry);
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, stringDataTypeId,
+                            baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
                                     data.longDimensions(), realMaxLength, features, registry);
                     writeStringArray(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             data.getAsFlatArray(), maxLength);
@@ -757,7 +757,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     final int pointerSize = 8; // 64bit pointers
                     final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, stringDataTypeId,
+                            baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
                                     MDArray.toLong(data.dimensions()), pointerSize, features,
                                     registry);
                     baseWriter.writeStringVL(dataSetId, data.getAsFlatArray());

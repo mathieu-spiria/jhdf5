@@ -146,7 +146,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I16LE, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I16LE, new long[]
                                 { data.length }, 2, features, registry);
                     H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data);
@@ -363,7 +363,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getDataSetId(objectPath, H5T_STD_I16LE, 
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I16LE, 
                                     data.longDimensions(), 2, features, registry);
                     H5Dwrite_short(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
