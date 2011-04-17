@@ -4626,6 +4626,8 @@ public class HDF5RoundtripTest
         final HDF5CompoundMemberInformation[] diskMemberInfo =
                 reader.getCompoundDataSetInformation("/testCompound");
         assertEquals(memMemberInfo.length, diskMemberInfo.length);
+        Arrays.sort(memMemberInfo);
+        Arrays.sort(diskMemberInfo);
         for (int i = 0; i < memMemberInfo.length; ++i)
         {
             assertEquals(memMemberInfo[i], diskMemberInfo[i]);

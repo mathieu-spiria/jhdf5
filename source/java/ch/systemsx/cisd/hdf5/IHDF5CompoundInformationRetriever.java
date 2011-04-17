@@ -49,8 +49,8 @@ public interface IHDF5CompoundInformationRetriever
      * (using its "simple name") in the order that the members appear in the compound type. It is a
      * failure condition if this compound data type does not exist.
      * <p>
-     * Call <code>Arrays.sort(compoundInformation.members)</code> to sort the array in alphabetical
-     * order of names.
+     * Call <code>Arrays.sort(compoundInformation)</code> to sort the array in alphabetical order of
+     * names.
      */
     public <T> HDF5CompoundMemberInformation[] getCompoundMemberInformation(
             final Class<T> compoundClass);
@@ -61,8 +61,8 @@ public interface IHDF5CompoundInformationRetriever
      * compound data type does not exist. If the <var>dataTypeName</var> starts with '/', it will be
      * considered a data type path instead of a data type name.
      * <p>
-     * Call <code>Arrays.sort(compoundInformation.members)</code> to sort the array in alphabetical
-     * order of names.
+     * Call <code>Arrays.sort(compoundInformation)</code> to sort the array in alphabetical order of
+     * names.
      */
     public HDF5CompoundMemberInformation[] getCompoundMemberInformation(final String dataTypeName);
 
@@ -71,8 +71,8 @@ public interface IHDF5CompoundInformationRetriever
      * that the members appear in the compound type. It is a failure condition if this data set does
      * not exist or is not of compound type.
      * <p>
-     * Call <code>Arrays.sort(compoundInformation.members)</code> to sort the array in alphabetical
-     * order of names.
+     * Call <code>Arrays.sort(compoundInformation)</code> to sort the array in alphabetical order of
+     * names.
      * 
      * @throws HDF5JavaException If the data set is not of type compound.
      */
@@ -86,11 +86,12 @@ public interface IHDF5CompoundInformationRetriever
      * order of definition of the compound type. It is a failure condition if this data set does not
      * exist or is not of compound type.
      * <p>
-     * Call <code>Arrays.sort(compoundInformation.members)</code> to sort the array in alphabetical
-     * order of names.
      * 
      * @throws HDF5JavaException If the data set is not of type compound.
+     * @deprecated Use {@link #getCompoundDataSetInformation(String)} and
+     *             <code>Arrays.sort(compoundInformation)</code>, if needed.
      */
+    @Deprecated
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath,
             final boolean sortAlphabetically) throws HDF5JavaException;
 

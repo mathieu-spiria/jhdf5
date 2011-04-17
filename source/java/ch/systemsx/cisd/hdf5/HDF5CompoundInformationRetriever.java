@@ -78,7 +78,7 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath)
             throws HDF5JavaException
     {
-        return getCompoundDataSetInformation(dataSetPath, true);
+        return getCompoundDataSetInformation(dataSetPath, false);
     }
 
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath,

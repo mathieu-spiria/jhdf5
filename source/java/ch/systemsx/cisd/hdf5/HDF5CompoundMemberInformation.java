@@ -98,7 +98,11 @@ public final class HDF5CompoundMemberInformation implements
 
     /**
      * Creates the compound member information for the given <var>compoundClass</var> and
-     * <var>members</var>. The returned array will contain the members in alphabetical order.
+     * <var>members</var>. The returned array will contain the members in the order of the
+     * <var>members</var>.
+     * <p>
+     * Call <code>Arrays.sort(compoundInformation)</code> to sort the array in alphabetical order of
+     * names.
      * <p>
      * Can be used to compare compound types, e.g. via
      * {@link java.util.Arrays#equals(Object[], Object[])}.
