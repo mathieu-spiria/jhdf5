@@ -553,6 +553,17 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         referenceWriter.writeObjectReference(objectPath, referencedObjectPath);
     }
 
+    public void writeObjectReferenceArray(String objectPath, String[] referencedObjectPath)
+    {
+        referenceWriter.writeObjectReferenceArray(objectPath, referencedObjectPath);
+    }
+
+    public void writeObjectReferenceArray(String objectPath, String[] referencedObjectPath,
+            HDF5IntStorageFeatures features)
+    {
+        referenceWriter.writeObjectReferenceArray(objectPath, referencedObjectPath, features);
+    }
+
     public void setObjectReferenceAttribute(String objectPath, String name,
             String referencedObjectPath)
     {

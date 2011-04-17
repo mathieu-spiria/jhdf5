@@ -19,8 +19,7 @@ package ch.systemsx.cisd.hdf5;
 /**
  * An interface for reading references in HDF5 files.
  * 
- *  @see IHDF5ReferenceWriter
- *
+ * @see IHDF5ReferenceWriter
  * @author Bernd Rinn
  */
 public interface IHDF5ReferenceReader
@@ -43,7 +42,7 @@ public interface IHDF5ReferenceReader
 
     public String[] getObjectReferenceArrayAttribute(final String objectPath,
             final String attributeName);
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -56,5 +55,14 @@ public interface IHDF5ReferenceReader
      *         object reference refers to an unnamed object.
      */
     public String readObjectReference(final String objectPath);
+
+    /**
+     * Reads an array of object references from the object <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The array of the paths of objects that the references refers to. Each string may be
+     *         empty, if the correspondig object reference refers to an unnamed object.
+     */
+    public String[] readObjectReferenceArray(final String objectPath);
 
 }

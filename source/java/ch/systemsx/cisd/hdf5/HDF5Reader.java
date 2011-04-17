@@ -700,6 +700,11 @@ class HDF5Reader implements IHDF5Reader
         return referenceReader.readObjectReference(objectPath);
     }
 
+    public String[] readObjectReferenceArray(String objectPath)
+    {
+        return referenceReader.readObjectReferenceArray(objectPath);
+    }
+
     public String getObjectReferenceAttribute(final String objectPath, final String attributeName)
     {
         return referenceReader.getObjectReferenceAttribute(objectPath, attributeName);
@@ -874,6 +879,7 @@ class HDF5Reader implements IHDF5Reader
         return compoundReader.getCompoundMDArrayNaturalBlocks(objectPath, type);
     }
 
+    @SuppressWarnings("deprecation")
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(String dataSetPath,
             boolean sortAlphabetically) throws HDF5JavaException
     {

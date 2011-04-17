@@ -74,4 +74,23 @@ public interface IHDF5ReferenceWriter
      */
     public void writeObjectReference(String objectPath, String referencedObjectPath);
 
+    /**
+     * Writes an array (of rank 1) of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param referencedObjectPath The names of the object to write.
+     */
+    public void writeObjectReferenceArray(final String objectPath,
+            final String[] referencedObjectPath);
+    
+    /**
+     * Writes an array (of rank 1) of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param referencedObjectPath The names of the object to write.
+     * @param features The storage features of the data set.
+     */
+    public void writeObjectReferenceArray(final String objectPath,
+            final String[] referencedObjectPath, final HDF5IntStorageFeatures features);
+    
 }
