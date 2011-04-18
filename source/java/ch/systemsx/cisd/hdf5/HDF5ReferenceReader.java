@@ -127,6 +127,67 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    public MDArray<String> getObjectReferenceMDArrayAttribute(final String objectPath,
+            final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDArray<String>> getAttributeRunnable =
+                new ICallableWithCleanUp<MDArray<String>>()
+                    {
+                        public MDArray<String> call(ICleanUpRegistry registry)
+                        {
+                            try
+                            {
+                                final int objectId =
+                                        baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                                registry);
+                                final int attributeId =
+                                        baseReader.h5.openAttribute(objectId, attributeName,
+                                                registry);
+                                final int attributeTypeId =
+                                        baseReader.h5
+                                                .getDataTypeForAttribute(attributeId, registry);
+                                final int memoryTypeId;
+                                final int[] arrayDimensions;
+                                if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+                                {
+                                    final int baseDataTypeId =
+                                            baseReader.h5
+                                                    .getBaseDataType(attributeTypeId, registry);
+                                    checkReference(baseDataTypeId, objectPath);
+                                    arrayDimensions =
+                                            baseReader.h5.getArrayDimensions(attributeTypeId);
+                                    memoryTypeId =
+                                            baseReader.h5.createArrayType(H5T_STD_REF_OBJ,
+                                                    arrayDimensions, registry);
+                                } else
+                                {
+                                    checkReference(attributeId, objectPath);
+                                    arrayDimensions =
+                                            MDArray.toInt(baseReader.h5
+                                                    .getDataDimensionsForAttribute(attributeId,
+                                                            registry));
+                                    memoryTypeId = H5T_STD_REF_OBJ;
+                                }
+                                final int len;
+                                len = MDArray.getLength(arrayDimensions);
+                                final long[] references =
+                                        baseReader.h5.readAttributeAsLongArray(attributeId,
+                                                memoryTypeId, len);
+                                return new MDArray<String>(baseReader.h5.getReferencedObjectNames(
+                                        attributeId, references), arrayDimensions);
+                            } catch (IllegalArgumentException ex)
+                            {
+                                throw new HDF5JavaException(ex.getMessage());
+                            }
+                        }
+                    };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
     // /////////////////////
     // Data Sets
     // /////////////////////

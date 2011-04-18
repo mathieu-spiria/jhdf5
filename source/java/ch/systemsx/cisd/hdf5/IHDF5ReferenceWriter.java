@@ -58,8 +58,33 @@ public interface IHDF5ReferenceWriter
     public void setObjectReferenceAttribute(final String objectPath, final String name,
             final String referencedObjectPath);
 
+    /**
+     * Sets a 1D object reference array attribute to referenced objects.
+     * <p>
+     * Both the object referenced with <var>objectPath</var> and all
+     * <var>referencedObjectPaths</var> must exist, that is it need to have been written before by
+     * one of the <code>write()</code> or <code>create()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param referencedObjectPaths The paths of the objects to reference.
+     */
     public void setObjectReferenceArrayAttribute(final String objectPath, final String name,
-            final String[] value);
+            final String[] referencedObjectPaths);
+
+    /**
+     * Sets an object reference array attribute to referenced objects.
+     * <p>
+     * Both the object referenced with <var>objectPath</var> and all
+     * <var>referencedObjectPaths</var> must exist, that is it need to have been written before by
+     * one of the <code>write()</code> or <code>create()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param referencedObjectPaths The paths of the objects to reference.
+     */
+    public void setObjectReferenceMDArrayAttribute(final String objectPath, final String name,
+            final MDArray<String> referencedObjectPaths);
 
     // /////////////////////
     // Data Sets

@@ -83,6 +83,31 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
         baseWriter.runner.call(setAttributeRunnable);
     }
 
+    public void setObjectReferenceMDArrayAttribute(final String objectPath, final String name,
+            final MDArray<String> value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int typeId =
+                            baseWriter.h5.createArrayType(H5T_STD_REF_OBJ, value.dimensions(),
+                                    registry);
+                    final long[] references =
+                            baseWriter.h5.createObjectReferences(baseWriter.fileId,
+                                    value.getAsFlatArray());
+                    baseWriter.setAttribute(objectPath, name, typeId, typeId, references);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(setAttributeRunnable);
+    }
+
     // /////////////////////
     // Data Sets
     // /////////////////////

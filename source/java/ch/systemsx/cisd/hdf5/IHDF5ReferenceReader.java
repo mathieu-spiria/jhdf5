@@ -42,9 +42,30 @@ public interface IHDF5ReferenceReader
      */
     public String getObjectReferenceAttribute(final String objectPath, final String attributeName);
 
+    /**
+     * Reads a 1D object reference array attribute named <var>attributeName</var> from the object
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The paths of the objects that the references refers to. Each string may be
+     *         empty, if the corresponding object reference refers to an unnamed object.
+     */
     public String[] getObjectReferenceArrayAttribute(final String objectPath,
             final String attributeName);
 
+    /**
+     * Reads an object reference array attribute named <var>attributeName</var> from the object
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The paths of the objects that the references refers to. Each string may be
+     *         empty, if the corresponding object reference refers to an unnamed object.
+     */
+    public MDArray<String> getObjectReferenceMDArrayAttribute(final String objectPath,
+            final String attributeName);
+    
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -63,7 +84,7 @@ public interface IHDF5ReferenceReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The array of the paths of objects that the references refers to. Each string may be
-     *         empty, if the correspondig object reference refers to an unnamed object.
+     *         empty, if the corresponding object reference refers to an unnamed object.
      */
     public String[] readObjectReferenceArray(final String objectPath);
 
