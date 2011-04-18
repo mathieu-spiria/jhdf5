@@ -437,6 +437,76 @@ public class H5
             throws HDF5LibraryException, NullPointerException;
 
     /**
+     * H5Awrite writes an attribute, specified with attr_id. The attribute's memory datatype is
+     * specified with mem_type_id. The entire attribute is written from buf to the file.
+     * 
+     * @param attr_id IN: Identifier of an attribute to write.
+     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
+     * @param buf IN: Data to be written.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data is null.
+     */
+    public synchronized static native int H5Awrite(int attr_id, int mem_type_id, short[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * H5Awrite writes an attribute, specified with attr_id. The attribute's memory datatype is
+     * specified with mem_type_id. The entire attribute is written from buf to the file.
+     * 
+     * @param attr_id IN: Identifier of an attribute to write.
+     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
+     * @param buf IN: Data to be written.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data is null.
+     */
+    public synchronized static native int H5Awrite(int attr_id, int mem_type_id, int[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * H5Awrite writes an attribute, specified with attr_id. The attribute's memory datatype is
+     * specified with mem_type_id. The entire attribute is written from buf to the file.
+     * 
+     * @param attr_id IN: Identifier of an attribute to write.
+     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
+     * @param buf IN: Data to be written.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data is null.
+     */
+    public synchronized static native int H5Awrite(int attr_id, int mem_type_id, long[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * H5Awrite writes an attribute, specified with attr_id. The attribute's memory datatype is
+     * specified with mem_type_id. The entire attribute is written from buf to the file.
+     * 
+     * @param attr_id IN: Identifier of an attribute to write.
+     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
+     * @param buf IN: Data to be written.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data is null.
+     */
+    public synchronized static native int H5Awrite(int attr_id, int mem_type_id, float[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * H5Awrite writes an attribute, specified with attr_id. The attribute's memory datatype is
+     * specified with mem_type_id. The entire attribute is written from buf to the file.
+     * 
+     * @param attr_id IN: Identifier of an attribute to write.
+     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
+     * @param buf IN: Data to be written.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data is null.
+     */
+    public synchronized static native int H5Awrite(int attr_id, int mem_type_id, double[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
      * H5AwriteString writes a (partial) variable length String attribute, specified by its
      * identifier attr_id, from the application memory buffer buf into the file.
      * 
@@ -471,6 +541,76 @@ public class H5
      * @exception NullPointerException - data buffer is null.
      */
     public synchronized static native int H5Aread(int attr_id, int mem_type_id, byte[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * H5Aread reads an attribute, specified with attr_id. The attribute's memory datatype is
+     * specified with mem_type_id. The entire attribute is read into buf from the file.
+     * 
+     * @param attr_id IN: Identifier of an attribute to read.
+     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
+     * @param buf IN: Buffer for data to be read.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data buffer is null.
+     */
+    public synchronized static native int H5Aread(int attr_id, int mem_type_id, short[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * H5Aread reads an attribute, specified with attr_id. The attribute's memory datatype is
+     * specified with mem_type_id. The entire attribute is read into buf from the file.
+     * 
+     * @param attr_id IN: Identifier of an attribute to read.
+     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
+     * @param buf IN: Buffer for data to be read.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data buffer is null.
+     */
+    public synchronized static native int H5Aread(int attr_id, int mem_type_id, int[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * H5Aread reads an attribute, specified with attr_id. The attribute's memory datatype is
+     * specified with mem_type_id. The entire attribute is read into buf from the file.
+     * 
+     * @param attr_id IN: Identifier of an attribute to read.
+     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
+     * @param buf IN: Buffer for data to be read.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data buffer is null.
+     */
+    public synchronized static native int H5Aread(int attr_id, int mem_type_id, long[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * H5Aread reads an attribute, specified with attr_id. The attribute's memory datatype is
+     * specified with mem_type_id. The entire attribute is read into buf from the file.
+     * 
+     * @param attr_id IN: Identifier of an attribute to read.
+     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
+     * @param buf IN: Buffer for data to be read.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data buffer is null.
+     */
+    public synchronized static native int H5Aread(int attr_id, int mem_type_id, float[] buf)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * H5Aread reads an attribute, specified with attr_id. The attribute's memory datatype is
+     * specified with mem_type_id. The entire attribute is read into buf from the file.
+     * 
+     * @param attr_id IN: Identifier of an attribute to read.
+     * @param mem_type_id IN: Identifier of the attribute datatype (in memory).
+     * @param buf IN: Buffer for data to be read.
+     * @return a non-negative value if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - data buffer is null.
+     */
+    public synchronized static native int H5Aread(int attr_id, int mem_type_id, double[] buf)
             throws HDF5LibraryException, NullPointerException;
 
     public synchronized static native int H5AreadVL(int attr_id, int mem_type_id, String[] buf)
@@ -2004,6 +2144,19 @@ public class H5
     }
 
     /**
+     * H5Rcreate creates the object references, pointing to the object names located at loc_id.
+     * 
+     * @param loc_id IN: Location identifier used to locate the object being pointed to.
+     * @param name IN: Names of objects at location loc_id.
+     * @return the reference (long[]) if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - an input array is null.
+     * @exception IllegalArgumentException - an input array is invalid.
+     */
+    public synchronized static native long[] H5Rcreate(final int loc_id, final String[] name)
+            throws HDF5LibraryException, NullPointerException, IllegalArgumentException;
+
+    /**
      * Given a reference to some object, H5Rdereference opens that object and return an identifier.
      * 
      * @param dataset IN: Dataset containing reference object.
@@ -2060,6 +2213,20 @@ public class H5
      * @exception IllegalArgumentException - array is invalid.
      */
     public synchronized static native String H5Rget_name(int loc_id, int ref_type, byte[] ref);
+
+    /**
+     * Given an array of object references (ref), H5Rget_name returns the names (paths) of the
+     * objects pointed to.
+     * 
+     * @param loc_id Identifier of the reference object.
+     * @param ref The references.
+     * @return The paths of the objects being pointed to, or an empty string, if an object being
+     *         pointed to has no name.
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - array is null.
+     * @exception IllegalArgumentException - array is invalid.
+     */
+    public synchronized static native String[] H5Rget_name(int loc_id, long[] ref);
 
     // ////////////////////////////////////////////////////////////
     // //
@@ -3383,23 +3550,23 @@ public class H5
     // //
     // //////////////////////////////////////////////////////////////////
 
-    public synchronized static native int H5Dread_short(int dataset_id, int mem_type_id,
+    public synchronized static native int H5Dread(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, short[] buf)
             throws HDF5LibraryException, NullPointerException;
 
-    public synchronized static native int H5Dread_int(int dataset_id, int mem_type_id,
+    public synchronized static native int H5Dread(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, int[] buf)
             throws HDF5LibraryException, NullPointerException;
 
-    public synchronized static native int H5Dread_long(int dataset_id, int mem_type_id,
+    public synchronized static native int H5Dread(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, long[] buf)
             throws HDF5LibraryException, NullPointerException;
 
-    public synchronized static native int H5Dread_float(int dataset_id, int mem_type_id,
+    public synchronized static native int H5Dread(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, float[] buf)
             throws HDF5LibraryException, NullPointerException;
 
-    public synchronized static native int H5Dread_double(int dataset_id, int mem_type_id,
+    public synchronized static native int H5Dread(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, double[] buf)
             throws HDF5LibraryException, NullPointerException;
 
@@ -3411,23 +3578,23 @@ public class H5
             int mem_space_id, int file_space_id, int xfer_plist_id, String[] buf)
             throws HDF5LibraryException, NullPointerException;
 
-    public synchronized static native int H5Dwrite_short(int dataset_id, int mem_type_id,
+    public synchronized static native int H5Dwrite(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, short[] buf)
             throws HDF5LibraryException, NullPointerException;
 
-    public synchronized static native int H5Dwrite_int(int dataset_id, int mem_type_id,
+    public synchronized static native int H5Dwrite(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, int[] buf)
             throws HDF5LibraryException, NullPointerException;
 
-    public synchronized static native int H5Dwrite_long(int dataset_id, int mem_type_id,
+    public synchronized static native int H5Dwrite(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, long[] buf)
             throws HDF5LibraryException, NullPointerException;
 
-    public synchronized static native int H5Dwrite_float(int dataset_id, int mem_type_id,
+    public synchronized static native int H5Dwrite(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, float[] buf)
             throws HDF5LibraryException, NullPointerException;
 
-    public synchronized static native int H5Dwrite_double(int dataset_id, int mem_type_id,
+    public synchronized static native int H5Dwrite(int dataset_id, int mem_type_id,
             int mem_space_id, int file_space_id, int xfer_plist_id, double[] buf)
             throws HDF5LibraryException, NullPointerException;
 

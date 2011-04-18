@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_long;
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
@@ -31,7 +31,7 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * Implementation of {@link IHDF5BooleanWriter}.
- *
+ * 
  * @author Bernd Rinn
  */
 public class HDF5BooleanWriter implements IHDF5BooleanWriter
@@ -91,7 +91,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_B64LE, new long[]
                                 { realLength }, longBytes, features, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                    H5Dwrite(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             BitSetConversionUtils.toStorageForm(data));
                     return null; // Nothing to return.
                 }

@@ -624,7 +624,7 @@ class HDF5BaseReader
         final int storageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
         final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
         final int len;
-        final HDF5EnumerationType enumType;
+        final int enumTypeId;
         if (h5.getClassType(storageDataTypeId) == H5T_ARRAY)
         {
             final int[] arrayDimensions = h5.getArrayDimensions(storageDataTypeId);
@@ -634,22 +634,23 @@ class HDF5BaseReader
                         + arrayDimensions.length);
             }
             len = arrayDimensions[0];
-            final int baseTypeId = h5.getBaseDataType(storageDataTypeId, registry);
-            if (h5.getClassType(baseTypeId) != H5T_ENUM)
+            enumTypeId = h5.getBaseDataType(storageDataTypeId, registry);
+            if (h5.getClassType(enumTypeId) != H5T_ENUM)
             {
                 throw new HDF5JavaException("Attribute is not of type Enumeration array.");
             }
-            enumType = getEnumTypeForStorageDataType(null, baseTypeId, fileRegistry);
         } else
         {
             if (h5.getClassType(storageDataTypeId) != H5T_ENUM)
             {
                 throw new HDF5JavaException("Attribute is not of type Enumeration array.");
             }
+            enumTypeId = storageDataTypeId;
             final long[] arrayDimensions = h5.getDataDimensionsForAttribute(attributeId, registry);
             len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
-            enumType = getEnumTypeForAttributeId(attributeId);
         }
+        final HDF5EnumerationType enumType =
+                getEnumTypeForStorageDataType(null, enumTypeId, fileRegistry);
         final byte[] data =
                 h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, len
                         * enumType.getStorageForm().getStorageSize());
@@ -659,10 +660,17 @@ class HDF5BaseReader
         return value;
     }
 
-    HDF5EnumerationType getEnumTypeForAttributeId(final int objectId)
+    int getEnumDataTypeId(final int storageDataTypeId, ICleanUpRegistry registry)
     {
-        final int storageDataTypeId = h5.getDataTypeForAttribute(objectId, fileRegistry);
-        return getEnumTypeForStorageDataType(null, storageDataTypeId, fileRegistry);
+        final int enumDataTypeId;
+        if (h5.getClassType(storageDataTypeId) == H5T_ARRAY)
+        {
+            enumDataTypeId = h5.getBaseDataType(storageDataTypeId, registry);
+        } else
+        {
+            enumDataTypeId = storageDataTypeId;
+        }
+        return enumDataTypeId;
     }
 
     HDF5DataTypeVariant[] tryGetTypeVariantForCompoundMembers(String dataTypePathOrNull,
@@ -718,14 +726,16 @@ class HDF5BaseReader
             return -1;
         }
         final int attributeId = h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
-        return getEnumOrdinal(attributeId, typeVariantDataType);
+        return getEnumOrdinal(attributeId, -1, typeVariantDataType);
     }
 
-    int getEnumOrdinal(final int attributeId, final HDF5EnumerationType enumType)
+    int getEnumOrdinal(final int attributeId, int nativeDataTypeId,
+            final HDF5EnumerationType enumType)
     {
         final byte[] data =
-                h5.readAttributeAsByteArray(attributeId, enumType.getNativeTypeId(), enumType
-                        .getStorageForm().getStorageSize());
+                h5.readAttributeAsByteArray(attributeId,
+                        (nativeDataTypeId < 0) ? enumType.getNativeTypeId() : nativeDataTypeId,
+                        enumType.getStorageForm().getStorageSize());
         return HDF5EnumerationType.fromStorageForm(data);
     }
 

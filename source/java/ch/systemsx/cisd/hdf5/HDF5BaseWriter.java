@@ -404,31 +404,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     /**
-     * Writes a variable-length string array data set.
-     */
-    void writeStringVL(int dataSetId, int memorySpaceId, int fileSpaceId, String[] value)
-    {
-        h5.writeStringVL(dataSetId, variableLengthStringDataTypeId, memorySpaceId, fileSpaceId,
-                value);
-    }
-
-    /**
-     * Writes a variable-length string array data set.
-     */
-    void writeStringVL(int dataSetId, String[] value)
-    {
-        h5.writeStringVL(dataSetId, variableLengthStringDataTypeId, value);
-    }
-
-    /**
-     * Writes a variable-length string array attribute.
-     */
-    void writeAttributeStringVL(int attributeId, String[] value)
-    {
-        h5.writeAttributeStringVL(attributeId, variableLengthStringDataTypeId, value);
-    }
-
-    /**
      * Internal method for writing a scalar value provided as <code>byte[]</code>.
      */
     int writeScalar(final String dataSetPath, final int storageDataTypeId,
@@ -453,6 +428,331 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
         H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, value);
         return dataSetId;
+    }
+
+    /**
+     * Write a scalar value provided as <code>byte</code>.
+     */
+    void writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final byte value)
+    {
+        assert dataSetPath != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+
+        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
+                            true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeScalarRunnable);
+    }
+
+    /**
+     * Internal method for writing a scalar value provided as <code>byte</code>.
+     */
+    int writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final byte value, final boolean compactLayout,
+            final boolean keepDatasetIfExists, ICleanUpRegistry registry)
+    {
+        final int dataSetId;
+        boolean exists = h5.exists(fileId, dataSetPath);
+        if (exists && keepDatasetIfExists == false)
+        {
+            h5.deleteObject(fileId, dataSetPath);
+            exists = false;
+        }
+        if (exists)
+        {
+            dataSetId = h5.openObject(fileId, dataSetPath, registry);
+        } else
+        {
+            dataSetId =
+                    h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath, compactLayout,
+                            registry);
+        }
+        H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, new byte[]
+            { value });
+        return dataSetId;
+    }
+
+    /**
+     * Write a scalar value provided as <code>short</code>.
+     */
+    void writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final short value)
+    {
+        assert dataSetPath != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+
+        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
+                            true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeScalarRunnable);
+    }
+
+    /**
+     * Internal method for writing a scalar value provided as <code>short</code>.
+     */
+    int writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final short value, final boolean compactLayout,
+            final boolean keepDatasetIfExists, ICleanUpRegistry registry)
+    {
+        final int dataSetId;
+        boolean exists = h5.exists(fileId, dataSetPath);
+        if (exists && keepDatasetIfExists == false)
+        {
+            h5.deleteObject(fileId, dataSetPath);
+            exists = false;
+        }
+        if (exists)
+        {
+            dataSetId = h5.openObject(fileId, dataSetPath, registry);
+        } else
+        {
+            dataSetId =
+                    h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath, compactLayout,
+                            registry);
+        }
+        H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, new short[]
+            { value });
+        return dataSetId;
+    }
+
+    /**
+     * Write a scalar value provided as <code>int</code>.
+     */
+    void writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final int value)
+    {
+        assert dataSetPath != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+
+        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
+                            true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeScalarRunnable);
+    }
+
+    /**
+     * Internal method for writing a scalar value provided as <code>int</code>.
+     */
+    int writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final int value, final boolean compactLayout,
+            final boolean keepDatasetIfExists, ICleanUpRegistry registry)
+    {
+        final int dataSetId;
+        boolean exists = h5.exists(fileId, dataSetPath);
+        if (exists && keepDatasetIfExists == false)
+        {
+            h5.deleteObject(fileId, dataSetPath);
+            exists = false;
+        }
+        if (exists)
+        {
+            dataSetId = h5.openObject(fileId, dataSetPath, registry);
+        } else
+        {
+            dataSetId =
+                    h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath, compactLayout,
+                            registry);
+        }
+        H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, new int[]
+            { value });
+        return dataSetId;
+    }
+
+    /**
+     * Write a scalar value provided as <code>long</code>.
+     */
+    void writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final long value)
+    {
+        assert dataSetPath != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+
+        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
+                            true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeScalarRunnable);
+    }
+
+    /**
+     * Internal method for writing a scalar value provided as <code>long</code>.
+     */
+    int writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final long value, final boolean compactLayout,
+            final boolean keepDatasetIfExists, ICleanUpRegistry registry)
+    {
+        final int dataSetId;
+        boolean exists = h5.exists(fileId, dataSetPath);
+        if (exists && keepDatasetIfExists == false)
+        {
+            h5.deleteObject(fileId, dataSetPath);
+            exists = false;
+        }
+        if (exists)
+        {
+            dataSetId = h5.openObject(fileId, dataSetPath, registry);
+        } else
+        {
+            dataSetId =
+                    h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath, compactLayout,
+                            registry);
+        }
+        H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, new long[]
+            { value });
+        return dataSetId;
+    }
+
+    /**
+     * Write a scalar value provided as <code>float</code>.
+     */
+    void writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final float value)
+    {
+        assert dataSetPath != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+
+        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
+                            true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeScalarRunnable);
+    }
+
+    /**
+     * Internal method for writing a scalar value provided as <code>float</code>.
+     */
+    int writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final float value, final boolean compactLayout,
+            final boolean keepDatasetIfExists, ICleanUpRegistry registry)
+    {
+        final int dataSetId;
+        boolean exists = h5.exists(fileId, dataSetPath);
+        if (exists && keepDatasetIfExists == false)
+        {
+            h5.deleteObject(fileId, dataSetPath);
+            exists = false;
+        }
+        if (exists)
+        {
+            dataSetId = h5.openObject(fileId, dataSetPath, registry);
+        } else
+        {
+            dataSetId =
+                    h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath, compactLayout,
+                            registry);
+        }
+        H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, new float[]
+            { value });
+        return dataSetId;
+    }
+
+    /**
+     * Write a scalar value provided as <code>double</code>.
+     */
+    void writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final double value)
+    {
+        assert dataSetPath != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+
+        final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
+            {
+                public Object call(ICleanUpRegistry registry)
+                {
+                    writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
+                            true, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(writeScalarRunnable);
+    }
+
+    /**
+     * Internal method for writing a scalar value provided as <code>double</code>.
+     */
+    int writeScalar(final String dataSetPath, final int storageDataTypeId,
+            final int nativeDataTypeId, final double value, final boolean compactLayout,
+            final boolean keepDatasetIfExists, ICleanUpRegistry registry)
+    {
+        final int dataSetId;
+        boolean exists = h5.exists(fileId, dataSetPath);
+        if (exists && keepDatasetIfExists == false)
+        {
+            h5.deleteObject(fileId, dataSetPath);
+            exists = false;
+        }
+        if (exists)
+        {
+            dataSetId = h5.openObject(fileId, dataSetPath, registry);
+        } else
+        {
+            dataSetId =
+                    h5.createScalarDataSet(fileId, storageDataTypeId, dataSetPath, compactLayout,
+                            registry);
+        }
+        H5Dwrite(dataSetId, nativeDataTypeId, H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, new double[]
+            { value });
+        return dataSetId;
+    }
+
+    /**
+     * Writes a variable-length string array data set.
+     */
+    void writeStringVL(int dataSetId, int memorySpaceId, int fileSpaceId, String[] value)
+    {
+        h5.writeStringVL(dataSetId, variableLengthStringDataTypeId, memorySpaceId, fileSpaceId,
+                value);
+    }
+
+    /**
+     * Writes a variable-length string array data set.
+     */
+    void writeStringVL(int dataSetId, String[] value)
+    {
+        h5.writeStringVL(dataSetId, variableLengthStringDataTypeId, value);
+    }
+
+    /**
+     * Writes a variable-length string array attribute.
+     */
+    void writeAttributeStringVL(int attributeId, String[] value)
+    {
+        h5.writeAttributeStringVL(attributeId, variableLengthStringDataTypeId, value);
     }
 
     /**
@@ -573,8 +873,9 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * whether the existing data set will be opened or whether the data set will be deleted and
      * re-created.
      */
-    int getOrCreateDataSetId(final String objectPath, final int storageDataTypeId, final long[] dimensions,
-            int elementLength, final HDF5AbstractStorageFeatures features, ICleanUpRegistry registry)
+    int getOrCreateDataSetId(final String objectPath, final int storageDataTypeId,
+            final long[] dimensions, int elementLength, final HDF5AbstractStorageFeatures features,
+            ICleanUpRegistry registry)
     {
         final int dataSetId;
         boolean exists = h5.exists(fileId, objectPath);
@@ -647,6 +948,221 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     void setAttribute(final int objectId, final String name, final int storageDataTypeId,
             final int nativeDataTypeId, final byte[] value, ICleanUpRegistry registry)
+    {
+        int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+            final int oldStorageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
+            {
+                h5.deleteAttribute(objectId, name);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            }
+        } else
+        {
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+        }
+        h5.writeAttribute(attributeId, nativeDataTypeId, value);
+    }
+
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final short[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+        assert value != null;
+
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final int objectId = h5.openObject(fileId, objectPath, registry);
+                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
+                                    value, registry);
+                            return null; // Nothing to return.
+                        }
+                    };
+        runner.call(addAttributeRunnable);
+    }
+
+    void setAttribute(final int objectId, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final short[] value, ICleanUpRegistry registry)
+    {
+        int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+            final int oldStorageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
+            {
+                h5.deleteAttribute(objectId, name);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            }
+        } else
+        {
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+        }
+        h5.writeAttribute(attributeId, nativeDataTypeId, value);
+    }
+
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final int[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+        assert value != null;
+
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final int objectId = h5.openObject(fileId, objectPath, registry);
+                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
+                                    value, registry);
+                            return null; // Nothing to return.
+                        }
+                    };
+        runner.call(addAttributeRunnable);
+    }
+
+    void setAttribute(final int objectId, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final int[] value, ICleanUpRegistry registry)
+    {
+        int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+            final int oldStorageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
+            {
+                h5.deleteAttribute(objectId, name);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            }
+        } else
+        {
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+        }
+        h5.writeAttribute(attributeId, nativeDataTypeId, value);
+    }
+
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final long[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+        assert value != null;
+
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final int objectId = h5.openObject(fileId, objectPath, registry);
+                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
+                                    value, registry);
+                            return null; // Nothing to return.
+                        }
+                    };
+        runner.call(addAttributeRunnable);
+    }
+
+    void setAttribute(final int objectId, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final long[] value, ICleanUpRegistry registry)
+    {
+        int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+            final int oldStorageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
+            {
+                h5.deleteAttribute(objectId, name);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            }
+        } else
+        {
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+        }
+        h5.writeAttribute(attributeId, nativeDataTypeId, value);
+    }
+
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final float[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+        assert value != null;
+
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final int objectId = h5.openObject(fileId, objectPath, registry);
+                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
+                                    value, registry);
+                            return null; // Nothing to return.
+                        }
+                    };
+        runner.call(addAttributeRunnable);
+    }
+
+    void setAttribute(final int objectId, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final float[] value, ICleanUpRegistry registry)
+    {
+        int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+            final int oldStorageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
+            {
+                h5.deleteAttribute(objectId, name);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            }
+        } else
+        {
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+        }
+        h5.writeAttribute(attributeId, nativeDataTypeId, value);
+    }
+
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final double[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+        assert value != null;
+
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final int objectId = h5.openObject(fileId, objectPath, registry);
+                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
+                                    value, registry);
+                            return null; // Nothing to return.
+                        }
+                    };
+        runner.call(addAttributeRunnable);
+    }
+
+    void setAttribute(final int objectId, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final double[] value, ICleanUpRegistry registry)
     {
         int attributeId;
         if (h5.existsAttribute(objectId, name))

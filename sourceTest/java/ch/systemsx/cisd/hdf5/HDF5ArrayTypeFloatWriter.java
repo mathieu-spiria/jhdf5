@@ -18,17 +18,16 @@ package ch.systemsx.cisd.hdf5;
 
 import static ncsa.hdf.hdf5lib.H5.H5Aclose;
 import static ncsa.hdf.hdf5lib.H5.H5Acreate;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_float;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_double;
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.H5.H5Sclose;
 import static ncsa.hdf.hdf5lib.H5.H5Screate_simple;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32BE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F64BE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
 import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
@@ -63,8 +62,7 @@ public class HDF5ArrayTypeFloatWriter
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F32BE, new long[]
                                 { data.length }, 4, features, registry);
-                    H5Dwrite_float(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
-                            data);
+                    H5Dwrite(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
             };
@@ -84,8 +82,7 @@ public class HDF5ArrayTypeFloatWriter
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F64BE, new long[]
                                 { data.length }, 4, features, registry);
-                    H5Dwrite_double(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
-                            data);
+                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
             };
@@ -109,7 +106,7 @@ public class HDF5ArrayTypeFloatWriter
                     final int dataSetId =
                             baseWriter.h5.createScalarDataSet(baseWriter.fileId, storageTypeId,
                                     objectPath, true, registry);
-                    H5Dwrite_float(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    H5Dwrite(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
             };
@@ -135,8 +132,8 @@ public class HDF5ArrayTypeFloatWriter
                     final int dataSetId =
                             baseWriter.h5.createScalarDataSet(baseWriter.fileId, storageTypeId,
                                     objectPath, true, registry);
-                    H5Dwrite_float(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data
-                            .getAsFlatArray());
+                    H5Dwrite(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            data.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
@@ -170,8 +167,8 @@ public class HDF5ArrayTypeFloatWriter
                             baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
                     final int attributeId =
                             createAttribute(objectId, name, H5T_IEEE_F32LE, dataSpaceId, registry);
-                    baseWriter.h5.writeAttribute(attributeId, H5T_NATIVE_FLOAT, HDFNativeData
-                            .floatToByte(value));
+                    baseWriter.h5.writeAttribute(attributeId, H5T_NATIVE_FLOAT,
+                            HDFNativeData.floatToByte(value));
                     return null; // Nothing to return.
                 }
             };

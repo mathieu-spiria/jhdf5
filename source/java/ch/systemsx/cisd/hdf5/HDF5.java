@@ -835,32 +835,32 @@ class HDF5
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, short[] data)
     {
-        H5Dread_short(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL,
-                numericConversionXferPropertyListID, data);
+        H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+                data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, int[] data)
     {
-        H5Dread_int(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL,
-                numericConversionXferPropertyListID, data);
+        H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+                data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, long[] data)
     {
-        H5Dread_long(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL,
-                numericConversionXferPropertyListID, data);
+        H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+                data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, float[] data)
     {
-        H5Dread_float(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL,
-                numericConversionXferPropertyListID, data);
+        H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+                data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, double[] data)
     {
-        H5Dread_double(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL,
-                numericConversionXferPropertyListID, data);
+        H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
+                data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
@@ -873,35 +873,35 @@ class HDF5
     public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
             int fileSpaceId, short[] data)
     {
-        H5Dread_short(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+        H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
             int fileSpaceId, int[] data)
     {
-        H5Dread_int(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+        H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
             int fileSpaceId, long[] data)
     {
-        H5Dread_long(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+        H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
             int fileSpaceId, float[] data)
     {
-        H5Dread_float(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+        H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
     public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
             int fileSpaceId, double[] data)
     {
-        H5Dread_double(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
+        H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
@@ -1029,12 +1029,72 @@ class HDF5
         return data;
     }
 
+    public short[] readAttributeAsShortArray(int attributeId, int dataTypeId, int length)
+    {
+        final short[] data = new short[length];
+        H5Aread(attributeId, dataTypeId, data);
+        return data;
+    }
+
+    public int[] readAttributeAsIntArray(int attributeId, int dataTypeId, int length)
+    {
+        final int[] data = new int[length];
+        H5Aread(attributeId, dataTypeId, data);
+        return data;
+    }
+
+    public long[] readAttributeAsLongArray(int attributeId, int dataTypeId, int length)
+    {
+        final long[] data = new long[length];
+        H5Aread(attributeId, dataTypeId, data);
+        return data;
+    }
+
+    public float[] readAttributeAsFloatArray(int attributeId, int dataTypeId, int length)
+    {
+        final float[] data = new float[length];
+        H5Aread(attributeId, dataTypeId, data);
+        return data;
+    }
+
+    public double[] readAttributeAsDoubleArray(int attributeId, int dataTypeId, int length)
+    {
+        final double[] data = new double[length];
+        H5Aread(attributeId, dataTypeId, data);
+        return data;
+    }
+
     public void readAttributeVL(int attributeId, int dataTypeId, String[] data)
     {
         H5AreadVL(attributeId, dataTypeId, data);
     }
 
     public void writeAttribute(int attributeId, int dataTypeId, byte[] value)
+    {
+        H5Awrite(attributeId, dataTypeId, value);
+    }
+
+    public void writeAttribute(int attributeId, int dataTypeId, short[] value)
+    {
+        H5Awrite(attributeId, dataTypeId, value);
+    }
+
+    public void writeAttribute(int attributeId, int dataTypeId, int[] value)
+    {
+        H5Awrite(attributeId, dataTypeId, value);
+    }
+
+    public void writeAttribute(int attributeId, int dataTypeId, long[] value)
+    {
+        H5Awrite(attributeId, dataTypeId, value);
+    }
+
+    public void writeAttribute(int attributeId, int dataTypeId, float[] value)
+    {
+        H5Awrite(attributeId, dataTypeId, value);
+    }
+
+    public void writeAttribute(int attributeId, int dataTypeId, double[] value)
     {
         H5Awrite(attributeId, dataTypeId, value);
     }
@@ -1833,6 +1893,11 @@ class HDF5
         return H5Rget_name(objectId, H5R_OBJECT, reference);
     }
 
+    String[] getReferencedObjectNames(int objectId, long[] reference)
+    {
+        return H5Rget_name(objectId, reference);
+    }
+
     String getReferencedObjectName(int objectId, byte[] references, int ofs)
     {
         final byte[] reference = new byte[HDF5BaseReader.REFERENCE_SIZE_IN_BYTES];
@@ -1843,5 +1908,10 @@ class HDF5
     byte[] createObjectReference(int fileId, String objectPath)
     {
         return H5Rcreate(fileId, objectPath, H5R_OBJECT, -1);
+    }
+
+    long[] createObjectReferences(int fileId, String[] objectPaths)
+    {
+        return H5Rcreate(fileId, objectPaths);
     }
 }

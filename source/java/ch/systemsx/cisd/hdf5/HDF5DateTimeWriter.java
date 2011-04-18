@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite_long;
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
@@ -30,8 +30,8 @@ import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
- * Implementation of {@link IHDF5DateTimeWriter}. 
- *
+ * Implementation of {@link IHDF5DateTimeWriter}.
+ * 
  * @author Bernd Rinn
  */
 public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
@@ -165,8 +165,7 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE, new long[]
                                 { timeStamps.length }, longBytes, features, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            timeStamps);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, timeStamps);
                     baseWriter.setTypeVariant(dataSetId,
                             HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                             registry);
@@ -201,8 +200,8 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
                     final int memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data);
                     return null; // Nothing to return.
                 }
             };
@@ -234,8 +233,8 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
                     final int memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data);
                     return null; // Nothing to return.
                 }
             };
@@ -399,7 +398,7 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE, new long[]
                                 { timeDurations.length }, longBytes, features, registry);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             timeDurations);
                     baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
@@ -428,15 +427,15 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                                     baseWriter.fileFormat, new long[]
                                         { data.length * (blockNumber + 1) }, -1, registry);
                     final HDF5TimeUnit storedUnit =
-                        baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
+                            baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
                     final int memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     HDF5DateTimeReader.convertTimeDurations(timeUnit, storedUnit, data);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data);
                     return null; // Nothing to return.
                 }
             };
@@ -463,15 +462,15 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
                     final HDF5TimeUnit storedUnit =
-                        baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
+                            baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
                     final int memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     HDF5DateTimeReader.convertTimeDurations(timeUnit, storedUnit, data);
-                    H5Dwrite_long(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, data);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data);
                     return null; // Nothing to return.
                 }
             };

@@ -24,7 +24,6 @@ import java.util.Iterator;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 import ncsa.hdf.hdf5lib.HDF5Constants;
-import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MD__Name__Array;
@@ -66,10 +65,10 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     final int attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final byte[] data =
+                    final __name__[] data =
                             baseReader.h5
-                                    .readAttributeAsByteArray(attributeId, __Memorytype__, __elementsize__);
-                    return HDFNativeData.byteTo__Name__(data, 0);
+                                    .readAttributeAs__Name__Array(attributeId, __Memorytype__, 1);
+                    return data[0];
                 }
             };
         return baseReader.runner.call(getAttributeRunnable);
@@ -117,10 +116,10 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
                                 memoryTypeId = __Memorytype__;
                                 len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
                             }
-                            final byte[] data =
-                                    baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            memoryTypeId, __elementsize__ * len);
-                            return HDFNativeData.byteTo__Name__(data, 0, len);
+                            final __name__[] data =
+                                    baseReader.h5.readAttributeAs__Name__Array(attributeId,
+                                            memoryTypeId, len);
+                            return data;
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
@@ -168,11 +167,10 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
                             {
                                 throw new HDF5JavaException(ex.getMessage());
                             }
-                            final byte[] data =
-                                    baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            memoryTypeId, __elementsize__ * len);
-                            return new MD__Name__Array(HDFNativeData.byteTo__Name__(data, 0, len),
-                                    arrayDimensions);
+                            final __name__[] data =
+                                    baseReader.h5.readAttributeAs__Name__Array(attributeId,
+                                            memoryTypeId, len);
+                            return new MD__Name__Array(data, arrayDimensions);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
