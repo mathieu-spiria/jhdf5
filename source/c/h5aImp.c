@@ -178,21 +178,20 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Aopen_1idx
  * Method:    H5Awrite
  * Signature: (II[B)I
  */
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Awrite
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Awrite__II_3B
   (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jbyteArray buf)
 {
     herr_t status;
     jbyte *byteP;
-    jboolean isCopy;
 
     if (buf == NULL) {
         h5nullArgument( env,"H5Awrite:  buf is NULL");
         return -1;
     }
 #ifdef __cplusplus
-    byteP = env->GetByteArrayElements(buf,&isCopy);
+    byteP = env->GetByteArrayElements(buf,NULL);
 #else
-    byteP = (*env)->GetByteArrayElements(env,buf,&isCopy);
+    byteP = (*env)->GetByteArrayElements(env,buf,NULL);
 #endif
     if (byteP == NULL) {
         h5JNIFatalError( env,"H5Awrite: buf is not pinned");
@@ -203,6 +202,191 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Awrite
     env->ReleaseByteArrayElements(buf,byteP,JNI_ABORT);
 #else
     (*env)->ReleaseByteArrayElements(env,buf,byteP,JNI_ABORT);
+#endif
+
+    if (status < 0) {
+        h5libraryError(env);
+    }
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Awrite
+ * Signature: (II[S)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Awrite__II_3S
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jshortArray buf)
+{
+    herr_t status;
+    jshort *byteP;
+
+    if (buf == NULL) {
+        h5nullArgument( env,"H5Awrite:  buf is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    byteP = env->GetShortArrayElements(buf,NULL);
+#else
+    byteP = (*env)->GetShortArrayElements(env,buf,NULL);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env,"H5Awrite: buf is not pinned");
+        return -1;
+    }
+    status = H5Awrite((hid_t)attr_id, (hid_t)mem_type_id, byteP);
+#ifdef __cplusplus
+    env->ReleaseShortArrayElements(buf,byteP,JNI_ABORT);
+#else
+    (*env)->ReleaseShortArrayElements(env,buf,byteP,JNI_ABORT);
+#endif
+
+    if (status < 0) {
+        h5libraryError(env);
+    }
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Awrite
+ * Signature: (II[I)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Awrite__II_3I
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jintArray buf)
+{
+    herr_t status;
+    jint *byteP;
+
+    if (buf == NULL) {
+        h5nullArgument( env,"H5Awrite:  buf is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    byteP = env->GetIntArrayElements(buf,NULL);
+#else
+    byteP = (*env)->GetIntArrayElements(env,buf,NULL);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env,"H5Awrite: buf is not pinned");
+        return -1;
+    }
+    status = H5Awrite((hid_t)attr_id, (hid_t)mem_type_id, byteP);
+#ifdef __cplusplus
+    env->ReleaseIntArrayElements(buf,byteP,JNI_ABORT);
+#else
+    (*env)->ReleaseIntArrayElements(env,buf,byteP,JNI_ABORT);
+#endif
+
+    if (status < 0) {
+        h5libraryError(env);
+    }
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Awrite
+ * Signature: (II[J)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Awrite__II_3J
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jlongArray buf)
+{
+    herr_t status;
+    jlong *byteP;
+
+    if (buf == NULL) {
+        h5nullArgument( env,"H5Awrite:  buf is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    byteP = env->GetLongArrayElements(buf,NULL);
+#else
+    byteP = (*env)->GetLongArrayElements(env,buf,NULL);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env,"H5Awrite: buf is not pinned");
+        return -1;
+    }
+    status = H5Awrite((hid_t)attr_id, (hid_t)mem_type_id, byteP);
+#ifdef __cplusplus
+    env->ReleaseLongArrayElements(buf,byteP,JNI_ABORT);
+#else
+    (*env)->ReleaseLongArrayElements(env,buf,byteP,JNI_ABORT);
+#endif
+
+    if (status < 0) {
+        h5libraryError(env);
+    }
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Awrite
+ * Signature: (II[F)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Awrite__II_3F
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jfloatArray buf)
+{
+    herr_t status;
+    jfloat *byteP;
+
+    if (buf == NULL) {
+        h5nullArgument( env,"H5Awrite:  buf is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    byteP = env->GetFloatArrayElements(buf,NULL);
+#else
+    byteP = (*env)->GetFloatArrayElements(env,buf,NULL);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env,"H5Awrite: buf is not pinned");
+        return -1;
+    }
+    status = H5Awrite((hid_t)attr_id, (hid_t)mem_type_id, byteP);
+#ifdef __cplusplus
+    env->ReleaseFloatArrayElements(buf,byteP,JNI_ABORT);
+#else
+    (*env)->ReleaseFloatArrayElements(env,buf,byteP,JNI_ABORT);
+#endif
+
+    if (status < 0) {
+        h5libraryError(env);
+    }
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Awrite
+ * Signature: (II[D)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Awrite__II_3D
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jdoubleArray buf)
+{
+    herr_t status;
+    jdouble *byteP;
+
+    if (buf == NULL) {
+        h5nullArgument( env,"H5Awrite:  buf is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    byteP = env->GetDoubleArrayElements(buf,NULL);
+#else
+    byteP = (*env)->GetDoubleArrayElements(env,buf,NULL);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env,"H5Awrite: buf is not pinned");
+        return -1;
+    }
+    status = H5Awrite((hid_t)attr_id, (hid_t)mem_type_id, byteP);
+#ifdef __cplusplus
+    env->ReleaseDoubleArrayElements(buf,byteP,JNI_ABORT);
+#else
+    (*env)->ReleaseDoubleArrayElements(env,buf,byteP,JNI_ABORT);
 #endif
 
     if (status < 0) {
@@ -294,21 +478,20 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5AwriteString
  * Method:    H5Aread
  * Signature: (II[B)I
  */
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Aread
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Aread__II_3B
   (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jbyteArray buf)
 {
     herr_t status;
     jbyte *byteP;
-    jboolean isCopy;
 
     if (buf == NULL) {
         h5nullArgument( env,"H5Aread:  buf is NULL");
         return -1;
     }
 #ifdef __cplusplus
-    byteP = env->GetByteArrayElements(buf,&isCopy);
+    byteP = env->GetByteArrayElements(buf,NULL);
 #else
-    byteP = (*env)->GetByteArrayElements(env,buf,&isCopy);
+    byteP = (*env)->GetByteArrayElements(env,buf,NULL);
 #endif
     if (byteP == NULL) {
         h5JNIFatalError( env,"H5Aread: buf is not pinned");
@@ -333,7 +516,231 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Aread
     }
 
     return (jint)status;
+}
 
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Aread
+ * Signature: (II[S)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Aread__II_3S
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jshortArray buf)
+{
+    herr_t status;
+    jshort *byteP;
+
+    if (buf == NULL) {
+        h5nullArgument( env,"H5Aread:  buf is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    byteP = env->GetShortArrayElements(buf,NULL);
+#else
+    byteP = (*env)->GetShortArrayElements(env,buf,NULL);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env,"H5Aread: buf is not pinned");
+        return -1;
+    }
+
+    status = H5Aread((hid_t)attr_id, (hid_t)mem_type_id, byteP);
+
+    if (status < 0) {
+#ifdef __cplusplus
+        env->ReleaseShortArrayElements(buf,byteP,JNI_ABORT);
+#else
+        (*env)->ReleaseShortArrayElements(env,buf,byteP,JNI_ABORT);
+#endif
+        h5libraryError(env);
+    } else  {
+#ifdef __cplusplus
+        env->ReleaseShortArrayElements(buf,byteP,0);
+#else
+        (*env)->ReleaseShortArrayElements(env,buf,byteP,0);
+#endif
+    }
+
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Aread
+ * Signature: (II[I)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Aread__II_3I
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jintArray buf)
+{
+    herr_t status;
+    jint *byteP;
+
+    if (buf == NULL) {
+        h5nullArgument( env,"H5Aread:  buf is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    byteP = env->GetIntArrayElements(buf,NULL);
+#else
+    byteP = (*env)->GetIntArrayElements(env,buf,NULL);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env,"H5Aread: buf is not pinned");
+        return -1;
+    }
+
+    status = H5Aread((hid_t)attr_id, (hid_t)mem_type_id, byteP);
+
+    if (status < 0) {
+#ifdef __cplusplus
+        env->ReleaseIntArrayElements(buf,byteP,JNI_ABORT);
+#else
+        (*env)->ReleaseIntArrayElements(env,buf,byteP,JNI_ABORT);
+#endif
+        h5libraryError(env);
+    } else  {
+#ifdef __cplusplus
+        env->ReleaseIntArrayElements(buf,byteP,0);
+#else
+        (*env)->ReleaseIntArrayElements(env,buf,byteP,0);
+#endif
+    }
+
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Aread
+ * Signature: (II[J)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Aread__II_3J
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jlongArray buf)
+{
+    herr_t status;
+    jlong *byteP;
+
+    if (buf == NULL) {
+        h5nullArgument( env,"H5Aread:  buf is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    byteP = env->GetLongArrayElements(buf,NULL);
+#else
+    byteP = (*env)->GetLongArrayElements(env,buf,NULL);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env,"H5Aread: buf is not pinned");
+        return -1;
+    }
+
+    status = H5Aread((hid_t)attr_id, (hid_t)mem_type_id, byteP);
+
+    if (status < 0) {
+#ifdef __cplusplus
+        env->ReleaseLongArrayElements(buf,byteP,JNI_ABORT);
+#else
+        (*env)->ReleaseLongArrayElements(env,buf,byteP,JNI_ABORT);
+#endif
+        h5libraryError(env);
+    } else  {
+#ifdef __cplusplus
+        env->ReleaseLongArrayElements(buf,byteP,0);
+#else
+        (*env)->ReleaseLongArrayElements(env,buf,byteP,0);
+#endif
+    }
+
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Aread
+ * Signature: (II[F)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Aread__II_3F
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jfloatArray buf)
+{
+    herr_t status;
+    jfloat *byteP;
+
+    if (buf == NULL) {
+        h5nullArgument( env,"H5Aread:  buf is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    byteP = env->GetFloatArrayElements(buf,NULL);
+#else
+    byteP = (*env)->GetFloatArrayElements(env,buf,NULL);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env,"H5Aread: buf is not pinned");
+        return -1;
+    }
+
+    status = H5Aread((hid_t)attr_id, (hid_t)mem_type_id, byteP);
+
+    if (status < 0) {
+#ifdef __cplusplus
+        env->ReleaseFloatArrayElements(buf,byteP,JNI_ABORT);
+#else
+        (*env)->ReleaseFloatArrayElements(env,buf,byteP,JNI_ABORT);
+#endif
+        h5libraryError(env);
+    } else  {
+#ifdef __cplusplus
+        env->ReleaseFloatArrayElements(buf,byteP,0);
+#else
+        (*env)->ReleaseFloatArrayElements(env,buf,byteP,0);
+#endif
+    }
+
+    return (jint)status;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Aread
+ * Signature: (II[D)I
+ */
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Aread__II_3D
+  (JNIEnv *env, jclass clss, jint attr_id, jint mem_type_id, jdoubleArray buf)
+{
+    herr_t status;
+    jdouble *byteP;
+
+    if (buf == NULL) {
+        h5nullArgument( env,"H5Aread:  buf is NULL");
+        return -1;
+    }
+#ifdef __cplusplus
+    byteP = env->GetDoubleArrayElements(buf,NULL);
+#else
+    byteP = (*env)->GetDoubleArrayElements(env,buf,NULL);
+#endif
+    if (byteP == NULL) {
+        h5JNIFatalError( env,"H5Aread: buf is not pinned");
+        return -1;
+    }
+
+    status = H5Aread((hid_t)attr_id, (hid_t)mem_type_id, byteP);
+
+    if (status < 0) {
+#ifdef __cplusplus
+        env->ReleaseDoubleArrayElements(buf,byteP,JNI_ABORT);
+#else
+        (*env)->ReleaseDoubleArrayElements(env,buf,byteP,JNI_ABORT);
+#endif
+        h5libraryError(env);
+    } else  {
+#ifdef __cplusplus
+        env->ReleaseDoubleArrayElements(buf,byteP,0);
+#else
+        (*env)->ReleaseDoubleArrayElements(env,buf,byteP,0);
+#endif
+    }
+
+    return (jint)status;
 }
 
 /*
