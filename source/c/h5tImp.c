@@ -1057,9 +1057,9 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tconvert_1to_1little_1endian__
     status = H5Tconvert(H5T_NATIVE_INT16, H5T_STD_I16LE, nelem, byteP, NULL, H5P_DEFAULT);
 
 #ifdef __cplusplus
-    env->ReleaseShortArrayElements(value,byteP,JNI_COMMIT);
+    env->ReleaseShortArrayElements(value,byteP,0);
 #else
-    (*env)->ReleaseShortArrayElements(env,value,byteP,JNI_COMMIT);
+    (*env)->ReleaseShortArrayElements(env,value,byteP,0);
 #endif
 
     if (status < 0) {
@@ -1097,9 +1097,9 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Tconvert_1to_1little_1endian__
     status = H5Tconvert(H5T_NATIVE_INT32, H5T_STD_I32LE, nelem, byteP, NULL, H5P_DEFAULT);
 
 #ifdef __cplusplus
-    env->ReleaseIntArrayElements(value,byteP,JNI_COMMIT);
+    env->ReleaseIntArrayElements(value,byteP,0);
 #else
-    (*env)->ReleaseIntArrayElements(env,value,byteP,JNI_COMMIT);
+    (*env)->ReleaseIntArrayElements(env,value,byteP,0);
 #endif
 
     if (status < 0) {

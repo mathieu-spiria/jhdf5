@@ -248,9 +248,9 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Oget_1info_1by_1name
 			    *infoPP++ = obj_info.ctime;
 			    *infoPP++ = obj_info.num_attrs;
 #ifdef __cplusplus
-          env->ReleasePrimitiveArrayCritical(info,infoP,JNI_COMMIT);
+          env->ReleasePrimitiveArrayCritical(info,infoP,0);
 #else
-          (*env)->ReleasePrimitiveArrayCritical(env,info,infoP,JNI_COMMIT);
+          (*env)->ReleasePrimitiveArrayCritical(env,info,infoP,0);
 #endif
 			    
 			  }
