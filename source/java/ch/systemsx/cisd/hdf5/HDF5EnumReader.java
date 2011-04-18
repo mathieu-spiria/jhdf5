@@ -23,7 +23,6 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
 
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
@@ -139,15 +138,16 @@ class HDF5EnumReader implements IHDF5EnumReader
                             baseReader.h5.getDataTypeForAttribute(attributeId, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataType(storageDataTypeId, registry);
+                    final int size = baseReader.h5.getDataTypeSize(nativeDataTypeId);
                     final byte[] data =
-                            baseReader.h5
-                                    .readAttributeAsByteArray(attributeId, nativeDataTypeId, 4);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId,
+                                    size);
                     final String value =
                             baseReader.h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
-                                    HDFNativeData.byteToInt(data, 0));
+                                    HDF5EnumerationType.fromStorageForm(data, 0, size));
                     if (value == null)
                     {
-                        throw new HDF5JavaException("Attribute " + attributeName + " of path "
+                        throw new HDF5JavaException("Attribute " + attributeName + " of object "
                                 + objectPath + " needs to be an Enumeration.");
                     }
                     return value;
@@ -392,8 +392,8 @@ class HDF5EnumReader implements IHDF5EnumReader
                         {
                             values[i] =
                                     baseReader.h5.getNameForEnumOrCompoundMemberIndex(
-                                            storageDataTypeId, HDF5EnumerationType
-                                                    .fromStorageForm(data, i, size));
+                                            storageDataTypeId,
+                                            HDF5EnumerationType.fromStorageForm(data, i, size));
                         }
                     }
                     return values;
