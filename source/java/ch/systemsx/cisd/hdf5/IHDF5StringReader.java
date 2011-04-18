@@ -51,7 +51,18 @@ public interface IHDF5StringReader
      * @return The attribute value read from the data set.
      */
     public String[] getStringArrayAttribute(final String objectPath, final String attributeName);
-    
+
+    /**
+     * Reads a multi-dimensional String array attribute named <var>attributeName</var> from the data
+     * set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute value read from the data set.
+     */
+    public MDArray<String> getStringMDArrayAttribute(final String objectPath,
+            final String attributeName);
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -112,7 +123,7 @@ public interface IHDF5StringReader
      * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
      */
     public MDArray<String> readStringMDArray(final String objectPath);
-    
+
     /**
      * Reads a block of a <code>String</code> array (of rank N) from the data set
      * <var>objectPath</var>. The elements of this data set need to be a string type.

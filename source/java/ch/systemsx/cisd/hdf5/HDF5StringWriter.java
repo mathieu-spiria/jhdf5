@@ -106,6 +106,12 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     public void setStringArrayAttribute(final String objectPath, final String name,
+            final String[] value)
+    {
+        setStringArrayAttribute(objectPath, name, value, getMaxLength(value));
+    }
+
+    public void setStringArrayAttribute(final String objectPath, final String name,
             final String[] value, final int maxLength)
     {
         assert objectPath != null;
@@ -126,10 +132,31 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(setAttributeRunnable);
     }
 
-    public void setStringArrayAttribute(final String objectPath, final String name,
-            final String[] value)
+    public void setStringMDArrayAttribute(final String objectPath, final String name,
+            final MDArray<String> value)
     {
-        setStringArrayAttribute(objectPath, name, value, getMaxLength(value));
+        setStringMDArrayAttribute(objectPath, name, value, getMaxLength(value.getAsFlatArray()));
+    }
+
+    public void setStringMDArrayAttribute(final String objectPath, final String name,
+            final MDArray<String> value, final int maxLength)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
+                    baseWriter.setStringArrayAttribute(objectId, name, value, maxLength, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(setAttributeRunnable);
     }
 
     // /////////////////////

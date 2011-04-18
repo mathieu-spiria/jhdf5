@@ -740,6 +740,11 @@ class HDF5Reader implements IHDF5Reader
         return stringReader.getStringArrayAttribute(objectPath, attributeName);
     }
 
+    public MDArray<String> getStringMDArrayAttribute(String objectPath, String attributeName)
+    {
+        return stringReader.getStringMDArrayAttribute(objectPath, attributeName);
+    }
+
     public String readString(String objectPath) throws HDF5JavaException
     {
         return stringReader.readString(objectPath);

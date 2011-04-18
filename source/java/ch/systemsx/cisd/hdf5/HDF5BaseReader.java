@@ -961,14 +961,14 @@ class HDF5BaseReader
         final boolean isArray = (h5.getClassType(stringArrayDataTypeId) == H5T_ARRAY);
         if (isArray == false)
         {
-            throw new IllegalArgumentException("Attribute " + attributeName + " of object "
+            throw new HDF5JavaException("Attribute " + attributeName + " of object "
                     + objectPath + " needs to be a String array of rank 1.");
         }
         final int stringDataTypeId = h5.getBaseDataType(stringArrayDataTypeId, registry);
         final boolean isStringArray = (h5.getClassType(stringDataTypeId) == H5T_STRING);
         if (isStringArray == false)
         {
-            throw new IllegalArgumentException("Attribute " + attributeName + " of object "
+            throw new HDF5JavaException("Attribute " + attributeName + " of object "
                     + objectPath + " needs to be a String array of rank 1.");
         }
         final int size = h5.getDataTypeSize(stringArrayDataTypeId);
@@ -983,7 +983,7 @@ class HDF5BaseReader
             final int[] arrayDimensions = h5.getArrayDimensions(stringArrayDataTypeId);
             if (arrayDimensions.length != 1)
             {
-                throw new IllegalArgumentException("Attribute " + attributeName + " of object "
+                throw new HDF5JavaException("Attribute " + attributeName + " of object "
                         + objectPath + " needs to be a String array of rank 1.");
             }
             final int lengthPerElement = h5.getDataTypeSize(stringDataTypeId);
@@ -996,6 +996,47 @@ class HDF5BaseReader
                 result[i] = StringUtils.fromBytes0Term(data, startIdx, maxEndIdx, encoding);
             }
             return result;
+        }
+    }
+
+    MDArray<String> getStringMDArrayAttribute(final int objectId, final String objectPath,
+            final String attributeName, final ICleanUpRegistry registry)
+    {
+        final int attributeId = h5.openAttribute(objectId, attributeName, registry);
+        final int stringArrayDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+        final boolean isArray = (h5.getClassType(stringArrayDataTypeId) == H5T_ARRAY);
+        if (isArray == false)
+        {
+            throw new HDF5JavaException("Attribute " + attributeName + " of object "
+                    + objectPath + " needs to be a String array.");
+        }
+        final int stringDataTypeId = h5.getBaseDataType(stringArrayDataTypeId, registry);
+        final boolean isStringArray = (h5.getClassType(stringDataTypeId) == H5T_STRING);
+        if (isStringArray == false)
+        {
+            throw new HDF5JavaException("Attribute " + attributeName + " of object "
+                    + objectPath + " needs to be a String array.");
+        }
+        final int size = h5.getDataTypeSize(stringArrayDataTypeId);
+        if (h5.isVariableLengthString(stringDataTypeId))
+        {
+            String[] data = new String[1];
+            h5.readAttributeVL(attributeId, stringDataTypeId, data);
+            return new MDArray<String>(data, new int[] { 1 });
+        } else
+        {
+            byte[] data = h5.readAttributeAsByteArray(attributeId, stringArrayDataTypeId, size);
+            final int[] arrayDimensions = h5.getArrayDimensions(stringArrayDataTypeId);
+            final int lengthPerElement = h5.getDataTypeSize(stringDataTypeId);
+            final int numberOfElements = MDArray.getLength(arrayDimensions);
+            final String[] result = new String[numberOfElements];
+            for (int i = 0; i < numberOfElements; ++i)
+            {
+                final int startIdx = i * lengthPerElement;
+                final int maxEndIdx = startIdx + lengthPerElement;
+                result[i] = StringUtils.fromBytes0Term(data, startIdx, maxEndIdx, encoding);
+            }
+            return new MDArray<String>(result, arrayDimensions);
         }
     }
 

@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatasetInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.namedthread.NamingThreadPoolExecutor;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
@@ -1276,6 +1277,36 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final byte[] arrData = array.toArray();
         final int stringDataTypeId = h5.createDataTypeString(array.getMaxLengthInByte(), registry);
         final int storageDataTypeId = h5.createArrayType(stringDataTypeId, value.length, registry);
+        int attributeId;
+        if (h5.existsAttribute(objectId, name))
+        {
+            attributeId = h5.openAttribute(objectId, name, registry);
+            final int oldStorageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
+            {
+                h5.deleteAttribute(objectId, name);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            }
+        } else
+        {
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+        }
+        h5.writeAttribute(attributeId, storageDataTypeId, arrData);
+    }
+
+    void setStringArrayAttribute(final int objectId, final String name,
+            final MDArray<String> value, final int maxLength, ICleanUpRegistry registry)
+    {
+        final StringArrayBuffer array =
+                new StringArrayBuffer(maxLength, value.getAsFlatArray().length * 10);
+        for (int i = 0; i < value.getAsFlatArray().length; ++i)
+        {
+            array.add(value.getAsFlatArray()[i]);
+        }
+        final byte[] arrData = array.toArray();
+        final int stringDataTypeId = h5.createDataTypeString(array.getMaxLengthInByte(), registry);
+        final int storageDataTypeId =
+                h5.createArrayType(stringDataTypeId, value.dimensions(), registry);
         int attributeId;
         if (h5.existsAttribute(objectId, name))
         {

@@ -661,6 +661,17 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         stringWriter.setStringArrayAttribute(objectPath, name, value);
     }
 
+    public void setStringMDArrayAttribute(String objectPath, String name, MDArray<String> value)
+    {
+        stringWriter.setStringMDArrayAttribute(objectPath, name, value);
+    }
+
+    public void setStringMDArrayAttribute(String objectPath, String name, MDArray<String> value,
+            int maxLength)
+    {
+        stringWriter.setStringMDArrayAttribute(objectPath, name, value, maxLength);
+    }
+
     public void setStringAttributeVariableLength(String objectPath, String name, String value)
     {
         stringWriter.setStringAttributeVariableLength(objectPath, name, value);

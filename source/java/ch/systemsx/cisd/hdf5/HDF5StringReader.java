@@ -87,6 +87,26 @@ public class HDF5StringReader implements IHDF5StringReader
         return baseReader.runner.call(readRunnable);
     }
 
+    public MDArray<String> getStringMDArrayAttribute(final String objectPath,
+            final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDArray<String>> readRunnable = new ICallableWithCleanUp<MDArray<String>>()
+            {
+                public MDArray<String> call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    return baseReader.getStringMDArrayAttribute(objectId, objectPath, attributeName,
+                            registry);
+                }
+            };
+        return baseReader.runner.call(readRunnable);
+    }
+
     //
     // Data Sets
     //
@@ -326,8 +346,8 @@ public class HDF5StringReader implements IHDF5StringReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final String[] block =
-                                        readStringArrayBlockWithOffset(dataSetPath, index
-                                                .getBlockSize(), offset);
+                                        readStringArrayBlockWithOffset(dataSetPath,
+                                                index.getBlockSize(), offset);
                                 return new HDF5DataBlock<String[]>(block, index.getAndIncIndex(),
                                         offset);
                             }
@@ -366,10 +386,10 @@ public class HDF5StringReader implements IHDF5StringReader
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
                                 final MDArray<String> data =
-                                        readStringMDArrayBlockWithOffset(objectPath, index
-                                                .getBlockSize(), offset);
-                                return new HDF5MDDataBlock<MDArray<String>>(data, index
-                                        .getIndexClone(), offset);
+                                        readStringMDArrayBlockWithOffset(objectPath,
+                                                index.getBlockSize(), offset);
+                                return new HDF5MDDataBlock<MDArray<String>>(data,
+                                        index.getIndexClone(), offset);
                             }
 
                             public void remove()

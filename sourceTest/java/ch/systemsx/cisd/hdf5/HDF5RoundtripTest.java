@@ -3368,6 +3368,15 @@ public class HDF5RoundtripTest
             { "Some String Value I", "Some String Value II", "Some String Value III" };
         writer.setStringArrayAttribute(datasetName, stringArrayAttributeName,
                 stringArrayAttributeValueWritten);
+        final String string2DArrayAttributeName = "String 2D Array Attribute";
+        final MDArray<String> string2DArrayAttributeValueWritten =
+                new MDArray<String>(
+                        new String[]
+                            { "Some String Value I", "Some String Value II",
+                                    "Some String Value III", "IV" }, new int[]
+                            { 2, 2 });
+        writer.setStringMDArrayAttribute(datasetName, string2DArrayAttributeName,
+                string2DArrayAttributeValueWritten);
         final HDF5EnumerationType enumType = writer.getEnumType("MyEnum", new String[]
             { "ONE", "TWO", "THREE" }, false);
         final String enumAttributeName = "Enum Attribute";
@@ -3434,6 +3443,9 @@ public class HDF5RoundtripTest
         assertEquals(22, info.getElementSize()); // maxlength
         assertEquals(3, info.getNumberOfElements());
         assertEquals(1, info.getDimensions().length);
+        final MDArray<String> string2DArrayAttributeValueRead =
+                reader.getStringMDArrayAttribute(datasetName, string2DArrayAttributeName);
+        assertEquals(string2DArrayAttributeValueWritten, string2DArrayAttributeValueRead);
         final String stringAttributeValueVLRead =
                 reader.getStringAttribute(datasetName, stringAttributeNameVL);
         assertEquals(stringAttributeValueVLWritten2, stringAttributeValueVLRead);
@@ -6449,7 +6461,8 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final MDArray<String> referencesRead =
                 reader.getObjectReferenceMDArrayAttribute("b", "partner");
-        assertTrue(ArrayUtils.isEquals(new int[] { 2, 2 }, referencesRead.dimensions()));
+        assertTrue(ArrayUtils.isEquals(new int[]
+            { 2, 2 }, referencesRead.dimensions()));
         assertEquals("/a1", referencesRead.get(0, 0));
         assertEquals("/a2", referencesRead.get(0, 1));
         assertEquals("/a3", referencesRead.get(1, 0));
