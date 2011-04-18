@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
+
 /**
  * An interface for writing references. References can refer to objects or regions of datasets. This
  * version only supports object references.
@@ -58,7 +60,7 @@ public interface IHDF5ReferenceWriter
 
     public void setObjectReferenceArrayAttribute(final String objectPath, final String name,
             final String[] value);
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -82,7 +84,7 @@ public interface IHDF5ReferenceWriter
      */
     public void writeObjectReferenceArray(final String objectPath,
             final String[] referencedObjectPath);
-    
+
     /**
      * Writes an array (of rank 1) of object references.
      * 
@@ -92,5 +94,23 @@ public interface IHDF5ReferenceWriter
      */
     public void writeObjectReferenceArray(final String objectPath,
             final String[] referencedObjectPath, final HDF5IntStorageFeatures features);
-    
+
+    /**
+     * Writes an array (of rank N) of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param referencedObjectPaths The names of the object to write.
+     */
+    public void writeObjectReferenceMDArray(final String objectPath,
+            final MDArray<String> referencedObjectPaths);
+
+    /**
+     * Writes an array (of rank N) of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param referencedObjectPaths The names of the object to write.
+     * @param features The storage features of the data set.
+     */
+    public void writeObjectReferenceMDArray(final String objectPath,
+            final MDArray<String> referencedObjectPaths, final HDF5IntStorageFeatures features);
 }

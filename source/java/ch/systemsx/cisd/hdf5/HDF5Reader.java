@@ -705,6 +705,11 @@ class HDF5Reader implements IHDF5Reader
         return referenceReader.readObjectReferenceArray(objectPath);
     }
 
+    public MDArray<String> readObjectReferenceMDArray(String objectPath)
+    {
+        return referenceReader.readObjectReferenceMDArray(objectPath);
+    }
+
     public String getObjectReferenceAttribute(final String objectPath, final String attributeName)
     {
         return referenceReader.getObjectReferenceAttribute(objectPath, attributeName);

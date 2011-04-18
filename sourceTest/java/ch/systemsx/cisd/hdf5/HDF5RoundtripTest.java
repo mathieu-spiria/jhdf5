@@ -345,6 +345,7 @@ public class HDF5RoundtripTest
         test.testObjectReferenceOverwriteWithKeepOverridden();
         test.testObjectReferenceAttribute();
         test.testObjectReferenceArrayAttribute();
+        test.testObjectReferenceMDArray();
 
         test.finalize();
     }
@@ -364,7 +365,6 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
-    
     @Test
     public void testCreateSomeDeepGroup()
     {
@@ -6354,6 +6354,36 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         assertTrue(ArrayUtils.isEquals(new String[]
             { "/C", "/a2", "/a3" }, reader.readObjectReferenceArray("/b")));
+        reader.close();
+    }
+
+    @Test
+    public void testObjectReferenceMDArray()
+    {
+        final File file = new File(workingDirectory, "testObjectReferenceMDArray.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.writeString("a1", "TestA");
+        writer.writeString("a2", "TestA");
+        writer.writeString("a3", "TestA");
+        writer.writeString("a4", "TestA");
+        writer.writeObjectReferenceMDArray("b", new MDArray<String>(new String[]
+            { "a1", "a2", "a3", "a4" }, new int[]
+            { 2, 2 }));
+        assertEquals(new MDArray<String>(new String[]
+            { "/a1", "/a2", "/a3", "/a4" }, new int[]
+            { 2, 2 }), writer.readObjectReferenceMDArray("/b"));
+        writer.move("/a1", "/C");
+        assertEquals(new MDArray<String>(new String[]
+            { "/C", "/a2", "/a3", "/a4" }, new int[]
+            { 2, 2 }), writer.readObjectReferenceMDArray("/b"));
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        assertEquals(new MDArray<String>(new String[]
+            { "/C", "/a2", "/a3", "/a4" }, new int[]
+            { 2, 2 }), reader.readObjectReferenceMDArray("/b"));
         reader.close();
     }
 

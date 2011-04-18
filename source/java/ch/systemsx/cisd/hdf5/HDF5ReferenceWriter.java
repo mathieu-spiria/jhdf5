@@ -22,6 +22,7 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
@@ -121,6 +122,37 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_REF_OBJ, new long[]
                                 { referencedObjectPath.length }, REFERENCE_SIZE_IN_BYTES, features,
                                     registry);
+                    H5Dwrite(dataSetId, H5T_STD_REF_OBJ, H5S_ALL, H5S_ALL, H5P_DEFAULT, references);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    public void writeObjectReferenceMDArray(final String objectPath,
+            final MDArray<String> referencedObjectPaths)
+    {
+        writeObjectReferenceMDArray(objectPath, referencedObjectPaths,
+                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+    }
+
+    public void writeObjectReferenceMDArray(final String objectPath,
+            final MDArray<String> referencedObjectPaths, final HDF5IntStorageFeatures features)
+    {
+        assert referencedObjectPaths != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] references =
+                            baseWriter.h5.createObjectReferences(baseWriter.fileId,
+                                    referencedObjectPaths.getAsFlatArray());
+                    final int dataSetId =
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_REF_OBJ,
+                                    referencedObjectPaths.longDimensions(),
+                                    REFERENCE_SIZE_IN_BYTES, features, registry);
                     H5Dwrite(dataSetId, H5T_STD_REF_OBJ, H5S_ALL, H5S_ALL, H5P_DEFAULT, references);
                     return null; // Nothing to return.
                 }

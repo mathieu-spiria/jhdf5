@@ -23,6 +23,7 @@ import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
 import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -164,16 +165,15 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                     final int dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final int dataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
+                    final long[] references;
                     if (baseReader.h5.getClassType(dataTypeId) == H5T_REFERENCE)
                     {
                         final DataSpaceParameters spaceParams =
                                 baseReader.getSpaceParameters(dataSetId, registry);
                         checkRank1(spaceParams.dimensions, objectPath);
-                        final long[] references = new long[spaceParams.blockSize];
+                        references = new long[spaceParams.blockSize];
                         baseReader.h5.readDataSet(dataSetId, dataTypeId, spaceParams.memorySpaceId,
                                 spaceParams.dataSpaceId, references);
-                        return baseReader.h5
-                                .getReferencedObjectNames(baseReader.fileId, references);
                     } else if (baseReader.h5.getClassType(dataTypeId) == HDF5Constants.H5T_ARRAY
                             && baseReader.h5.getClassType(baseReader.h5.getBaseDataType(dataTypeId,
                                     registry)) == H5T_REFERENCE)
@@ -182,20 +182,72 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                         final int[] dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
                         checkRank1(dimensions, objectPath);
                         final int len = dimensions[0];
-                        final long[] references = new long[len];
+                        references = new long[len];
                         final int memoryTypeId =
                                 baseReader.h5.createArrayType(H5T_STD_REF_OBJ, len, registry);
                         baseReader.h5.readDataSet(dataSetId, memoryTypeId, spaceId, spaceId,
                                 references);
-                        return baseReader.h5
-                                .getReferencedObjectNames(baseReader.fileId, references);
                     } else
                     {
                         throw new HDF5JavaException("Dataset " + objectPath
                                 + " is not a reference.");
                     }
+                    return baseReader.h5.getReferencedObjectNames(baseReader.fileId, references);
                 }
             };
+        return baseReader.runner.call(readCallable);
+    }
+
+    public MDArray<String> readObjectReferenceMDArray(final String objectPath)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDArray<String>> readCallable =
+                new ICallableWithCleanUp<MDArray<String>>()
+                    {
+                        public MDArray<String> call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final int dataTypeId =
+                                    baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
+                            final long[] references;
+                            final int[] dimensions;
+                            if (baseReader.h5.getClassType(dataTypeId) == H5T_REFERENCE)
+                            {
+                                final DataSpaceParameters spaceParams =
+                                        baseReader.getSpaceParameters(dataSetId, registry);
+                                dimensions = MDArray.toInt(spaceParams.dimensions);
+                                references = new long[spaceParams.blockSize];
+                                baseReader.h5.readDataSet(dataSetId, dataTypeId,
+                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                        references);
+                            } else if (baseReader.h5.getClassType(dataTypeId) == HDF5Constants.H5T_ARRAY
+                                    && baseReader.h5.getClassType(baseReader.h5.getBaseDataType(
+                                            dataTypeId, registry)) == H5T_REFERENCE)
+                            {
+                                final int spaceId = baseReader.h5.createScalarDataSpace();
+                                dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
+                                final int len = MDArray.getLength(dimensions);
+                                references = new long[len];
+                                final int memoryTypeId =
+                                        baseReader.h5.createArrayType(H5T_STD_REF_OBJ, len,
+                                                registry);
+                                baseReader.h5.readDataSet(dataSetId, memoryTypeId, spaceId,
+                                        spaceId, references);
+                            } else
+                            {
+                                throw new HDF5JavaException("Dataset " + objectPath
+                                        + " is not a reference.");
+                            }
+                            final String[] referencedObjectNames =
+                                    baseReader.h5.getReferencedObjectNames(baseReader.fileId,
+                                            references);
+                            return new MDArray<String>(referencedObjectNames, dimensions);
+                        }
+                    };
         return baseReader.runner.call(readCallable);
     }
 

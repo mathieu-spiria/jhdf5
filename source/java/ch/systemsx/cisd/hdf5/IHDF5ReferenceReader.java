@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
+
 /**
  * An interface for reading references in HDF5 files.
  * 
@@ -65,4 +67,13 @@ public interface IHDF5ReferenceReader
      */
     public String[] readObjectReferenceArray(final String objectPath);
 
+    /**
+     * Reads an array (or rank N) of object references from the object <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The multi-dimensionsl array of the paths of objects that the references refers to.
+     *         Each string may be empty, if the correspondig object reference refers to an unnamed
+     *         object.
+     */
+    public MDArray<String> readObjectReferenceMDArray(final String objectPath);
 }
