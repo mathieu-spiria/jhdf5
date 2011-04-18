@@ -123,6 +123,7 @@ public class HDF5RoundtripTest
                 + libversion[2]);
 
         // Tests
+        test.testStrangeDataSetName();
         test.testCreateSomeDeepGroup();
         test.testGetGroupMembersIteratively();
         test.testScalarValues();
@@ -348,6 +349,22 @@ public class HDF5RoundtripTest
         test.finalize();
     }
 
+    @Test
+    public void testStrangeDataSetName()
+    {
+        final File file = new File(workingDirectory, "testStrangeDataSetName.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.writeInt("\0\255", 15);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        assertEquals(15, reader.readInt("\0\255"));
+        reader.close();
+    }
+
+    
     @Test
     public void testCreateSomeDeepGroup()
     {
