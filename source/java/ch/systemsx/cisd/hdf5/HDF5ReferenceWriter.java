@@ -73,16 +73,8 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
                 {
                     final int typeId =
                             baseWriter.h5.createArrayType(H5T_STD_REF_OBJ, value.length, registry);
-                    final byte[] references = new byte[REFERENCE_SIZE_IN_BYTES * value.length];
-                    int ofs = 0;
-                    for (String referencedObjectPath : value)
-                    {
-                        final byte[] reference =
-                                baseWriter.h5.createObjectReference(baseWriter.fileId,
-                                        referencedObjectPath);
-                        System.arraycopy(reference, 0, references, ofs, REFERENCE_SIZE_IN_BYTES);
-                        ofs += REFERENCE_SIZE_IN_BYTES;
-                    }
+                    final long[] references =
+                            baseWriter.h5.createObjectReferences(baseWriter.fileId, value);
                     baseWriter.setAttribute(objectPath, name, typeId, typeId, references);
                     return null; // Nothing to return.
                 }
@@ -122,16 +114,9 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final byte[] references =
-                            new byte[referencedObjectPath.length * REFERENCE_SIZE_IN_BYTES];
-                    for (int i = 0; i < referencedObjectPath.length; ++i)
-                    {
-                        final byte[] reference =
-                                baseWriter.h5.createObjectReference(baseWriter.fileId,
-                                        referencedObjectPath[i]);
-                        System.arraycopy(reference, 0, references, i * REFERENCE_SIZE_IN_BYTES,
-                                REFERENCE_SIZE_IN_BYTES);
-                    }
+                    final long[] references =
+                            baseWriter.h5.createObjectReferences(baseWriter.fileId,
+                                    referencedObjectPath);
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_REF_OBJ, new long[]
                                 { referencedObjectPath.length }, REFERENCE_SIZE_IN_BYTES, features,

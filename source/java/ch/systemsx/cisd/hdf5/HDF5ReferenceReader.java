@@ -117,17 +117,10 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                 memoryTypeId = H5T_STD_REF_OBJ;
                                 len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
                             }
-                            final byte[] references =
-                                    baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            memoryTypeId, REFERENCE_SIZE_IN_BYTES * len);
-                            final String[] referencedObjectPaths = new String[len];
-                            for (int i = 0; i < len; ++i)
-                            {
-                                referencedObjectPaths[i] =
-                                        baseReader.h5.getReferencedObjectName(attributeId,
-                                                references, i * REFERENCE_SIZE_IN_BYTES);
-                            }
-                            return referencedObjectPaths;
+                            final long[] references =
+                                    baseReader.h5.readAttributeAsLongArray(attributeId,
+                                            memoryTypeId, len);
+                            return baseReader.h5.getReferencedObjectNames(attributeId, references);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
@@ -176,11 +169,11 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                         final DataSpaceParameters spaceParams =
                                 baseReader.getSpaceParameters(dataSetId, registry);
                         checkRank1(spaceParams.dimensions, objectPath);
-                        final byte[] references =
-                                new byte[REFERENCE_SIZE_IN_BYTES * spaceParams.blockSize];
+                        final long[] references = new long[spaceParams.blockSize];
                         baseReader.h5.readDataSet(dataSetId, dataTypeId, spaceParams.memorySpaceId,
                                 spaceParams.dataSpaceId, references);
-                        return getReferencedObjects(references);
+                        return baseReader.h5
+                                .getReferencedObjectNames(baseReader.fileId, references);
                     } else if (baseReader.h5.getClassType(dataTypeId) == HDF5Constants.H5T_ARRAY
                             && baseReader.h5.getClassType(baseReader.h5.getBaseDataType(dataTypeId,
                                     registry)) == H5T_REFERENCE)
@@ -189,12 +182,13 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                         final int[] dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
                         checkRank1(dimensions, objectPath);
                         final int len = dimensions[0];
-                        final byte[] references = new byte[REFERENCE_SIZE_IN_BYTES * len];
+                        final long[] references = new long[len];
                         final int memoryTypeId =
                                 baseReader.h5.createArrayType(H5T_STD_REF_OBJ, len, registry);
                         baseReader.h5.readDataSet(dataSetId, memoryTypeId, spaceId, spaceId,
                                 references);
-                        return getReferencedObjects(references);
+                        return baseReader.h5
+                                .getReferencedObjectNames(baseReader.fileId, references);
                     } else
                     {
                         throw new HDF5JavaException("Dataset " + objectPath
@@ -203,25 +197,6 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                 }
             };
         return baseReader.runner.call(readCallable);
-    }
-
-    private String[] getReferencedObjects(final byte[] references)
-    {
-        final int length = references.length / REFERENCE_SIZE_IN_BYTES;
-        final String[] referencesObjects = new String[length];
-        for (int i = 0; i < referencesObjects.length; ++i)
-        {
-            referencesObjects[i] = getReferencedObject(references, i);
-        }
-        return referencesObjects;
-    }
-
-    private String getReferencedObject(byte[] references, int index)
-    {
-        final byte[] reference = new byte[REFERENCE_SIZE_IN_BYTES];
-        System.arraycopy(references, REFERENCE_SIZE_IN_BYTES * index, reference, 0,
-                REFERENCE_SIZE_IN_BYTES);
-        return baseReader.h5.getReferencedObjectName(baseReader.fileId, reference);
     }
 
     private void checkReference(final int dataTypeId, final String objectPath)
