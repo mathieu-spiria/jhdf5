@@ -3340,6 +3340,11 @@ public class HDF5RoundtripTest
         final String stringAttributeValueVLWritten2 = "Some Other String Value";
         writer.setStringAttributeVariableLength(datasetName, stringAttributeNameVL,
                 stringAttributeValueVLWritten2);
+        final String integerArrayAttributeName = "Integer Array Attribute";
+        final int[] integerArrayAttributeValueWritten = new int[]
+            { 17, 23, 42 };
+        writer.setIntArrayAttribute(datasetName, integerArrayAttributeName,
+                integerArrayAttributeValueWritten);
         final String stringArrayAttributeName = "String Array Attribute";
         final String[] stringArrayAttributeValueWritten = new String[]
             { "Some String Value I", "Some String Value II", "Some String Value III" };
@@ -3399,6 +3404,9 @@ public class HDF5RoundtripTest
         final String stringAttributeValueRead =
                 reader.getStringAttribute(datasetName, stringAttributeName);
         assertEquals(stringAttributeValueWritten, stringAttributeValueRead);
+        final int[] intArrayAttributeValueRead =
+                reader.getIntArrayAttribute(datasetName, integerArrayAttributeName);
+        assertTrue(Arrays.equals(integerArrayAttributeValueWritten, intArrayAttributeValueRead));
         final String[] stringArrayAttributeValueRead =
                 reader.getStringArrayAttribute(datasetName, stringArrayAttributeName);
         assertTrue(Arrays.equals(stringArrayAttributeValueWritten, stringArrayAttributeValueRead));
@@ -3434,6 +3442,12 @@ public class HDF5RoundtripTest
             assertEquals(enumArrayAttributeValueWritten.getValue(i),
                     enumArrayAttributeRead.getValue(i));
         }
+        // Let's try to read the first element of the array using getEnumAttributeAsString
+        assertEquals(enumArrayAttributeValueWritten.getValue(0),
+                reader.getEnumAttributeAsString(datasetName, enumArrayAttributeName));
+        // Let's try to read the first element of the array using getEnumAttribute
+        assertEquals(enumArrayAttributeValueWritten.getValue(0),
+                reader.getEnumAttribute(datasetName, enumArrayAttributeName).getValue());
         assertFalse(reader.hasAttribute(datasetName, volatileAttributeName));
         assertTrue(Arrays.equals(floatArrayAttribute,
                 reader.getFloatArrayAttribute(datasetName, floatArrayAttributeName)));
