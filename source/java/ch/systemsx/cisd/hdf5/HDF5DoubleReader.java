@@ -139,40 +139,43 @@ class HDF5DoubleReader implements IHDF5DoubleReader
                     {
                         public MDDoubleArray call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
-                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
-                                            registry);
-                            final int attributeId =
-                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
-                            final int attributeTypeId =
-                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                            final int memoryTypeId;
-                            final int[] arrayDimensions;
-                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
-                            {
-                                arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
-                                memoryTypeId =
-                                        baseReader.h5.createArrayType(H5T_NATIVE_DOUBLE,
-                                                arrayDimensions, registry);
-                            } else
-                            {
-                                arrayDimensions =
-                                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
-                                                attributeId, registry));
-                                memoryTypeId = H5T_NATIVE_DOUBLE;
-                            }
-                            final int len;
                             try
                             {
-                                len = MDArray.getLength(arrayDimensions);
+                                final int objectId =
+                                        baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                                registry);
+                                final int attributeId =
+                                        baseReader.h5.openAttribute(objectId, attributeName,
+                                                registry);
+                                final int attributeTypeId =
+                                        baseReader.h5
+                                                .getDataTypeForAttribute(attributeId, registry);
+                                final int memoryTypeId;
+                                final int[] arrayDimensions;
+                                if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+                                {
+                                    arrayDimensions =
+                                            baseReader.h5.getArrayDimensions(attributeTypeId);
+                                    memoryTypeId =
+                                            baseReader.h5.createArrayType(H5T_NATIVE_DOUBLE,
+                                                    arrayDimensions, registry);
+                                } else
+                                {
+                                    arrayDimensions =
+                                            MDArray.toInt(baseReader.h5
+                                                    .getDataDimensionsForAttribute(attributeId,
+                                                            registry));
+                                    memoryTypeId = H5T_NATIVE_DOUBLE;
+                                }
+                                final int len = MDArray.getLength(arrayDimensions);
+                                final double[] data =
+                                        baseReader.h5.readAttributeAsDoubleArray(attributeId,
+                                                memoryTypeId, len);
+                                return new MDDoubleArray(data, arrayDimensions);
                             } catch (IllegalArgumentException ex)
                             {
                                 throw new HDF5JavaException(ex.getMessage());
                             }
-                            final double[] data =
-                                    baseReader.h5.readAttributeAsDoubleArray(attributeId,
-                                            memoryTypeId, len);
-                            return new MDDoubleArray(data, arrayDimensions);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);

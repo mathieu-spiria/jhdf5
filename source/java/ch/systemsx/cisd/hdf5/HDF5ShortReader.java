@@ -136,40 +136,43 @@ class HDF5ShortReader implements IHDF5ShortReader
                     {
                         public MDShortArray call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
-                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
-                                            registry);
-                            final int attributeId =
-                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
-                            final int attributeTypeId =
-                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                            final int memoryTypeId;
-                            final int[] arrayDimensions;
-                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
-                            {
-                                arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
-                                memoryTypeId =
-                                        baseReader.h5.createArrayType(H5T_NATIVE_INT16,
-                                                arrayDimensions, registry);
-                            } else
-                            {
-                                arrayDimensions =
-                                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
-                                                attributeId, registry));
-                                memoryTypeId = H5T_NATIVE_INT16;
-                            }
-                            final int len;
                             try
                             {
-                                len = MDArray.getLength(arrayDimensions);
+                                final int objectId =
+                                        baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                                registry);
+                                final int attributeId =
+                                        baseReader.h5.openAttribute(objectId, attributeName,
+                                                registry);
+                                final int attributeTypeId =
+                                        baseReader.h5
+                                                .getDataTypeForAttribute(attributeId, registry);
+                                final int memoryTypeId;
+                                final int[] arrayDimensions;
+                                if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+                                {
+                                    arrayDimensions =
+                                            baseReader.h5.getArrayDimensions(attributeTypeId);
+                                    memoryTypeId =
+                                            baseReader.h5.createArrayType(H5T_NATIVE_INT16,
+                                                    arrayDimensions, registry);
+                                } else
+                                {
+                                    arrayDimensions =
+                                            MDArray.toInt(baseReader.h5
+                                                    .getDataDimensionsForAttribute(attributeId,
+                                                            registry));
+                                    memoryTypeId = H5T_NATIVE_INT16;
+                                }
+                                final int len = MDArray.getLength(arrayDimensions);
+                                final short[] data =
+                                        baseReader.h5.readAttributeAsShortArray(attributeId,
+                                                memoryTypeId, len);
+                                return new MDShortArray(data, arrayDimensions);
                             } catch (IllegalArgumentException ex)
                             {
                                 throw new HDF5JavaException(ex.getMessage());
                             }
-                            final short[] data =
-                                    baseReader.h5.readAttributeAsShortArray(attributeId,
-                                            memoryTypeId, len);
-                            return new MDShortArray(data, arrayDimensions);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);

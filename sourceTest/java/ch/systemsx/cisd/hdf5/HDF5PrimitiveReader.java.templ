@@ -137,40 +137,39 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
                     {
                         public MD__Name__Array call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
-                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
-                                            registry);
-                            final int attributeId =
-                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
-                            final int attributeTypeId =
-                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                            final int memoryTypeId;
-                            final int[] arrayDimensions;
-                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
-                            {
-                                arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
-                                memoryTypeId =
-                                        baseReader.h5.createArrayType(__Memorytype__,
-                                                arrayDimensions, registry);
-                            } else
-                            {
-                                arrayDimensions =
-                                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
-                                                attributeId, registry));
-                                memoryTypeId = __Memorytype__;
-                            }
-                            final int len;
                             try
                             {
-                                len = MDArray.getLength(arrayDimensions);
+                                final int objectId =
+                                        baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                                registry);
+                                final int attributeId =
+                                        baseReader.h5.openAttribute(objectId, attributeName, registry);
+                                final int attributeTypeId =
+                                        baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                                final int memoryTypeId;
+                                final int[] arrayDimensions;
+                                if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+                                {
+                                    arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
+                                    memoryTypeId =
+                                            baseReader.h5.createArrayType(__Memorytype__,
+                                                    arrayDimensions, registry);
+                                } else
+                                {
+                                    arrayDimensions =
+                                            MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                                                    attributeId, registry));
+                                    memoryTypeId = __Memorytype__;
+                                }
+                                final int len = MDArray.getLength(arrayDimensions);
+                                final __name__[] data =
+                                        baseReader.h5.readAttributeAs__Name__Array(attributeId,
+                                                memoryTypeId, len);
+                                return new MD__Name__Array(data, arrayDimensions);
                             } catch (IllegalArgumentException ex)
                             {
                                 throw new HDF5JavaException(ex.getMessage());
                             }
-                            final __name__[] data =
-                                    baseReader.h5.readAttributeAs__Name__Array(attributeId,
-                                            memoryTypeId, len);
-                            return new MD__Name__Array(data, arrayDimensions);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
