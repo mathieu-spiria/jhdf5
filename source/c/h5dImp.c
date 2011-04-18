@@ -751,9 +751,9 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dget_1space_1status
 /*
  * Class:     ncsa_hdf_hdf5lib_H5
  * Method:    H5Dread_short
- * Signature: (IIIII[B)I
+ * Signature: (IIIII[S)I
  */
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1short
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread__IIIII_3S
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jshortArray buf)
 {
@@ -797,7 +797,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1short
     return (jint)status;
 }
 
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1int
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread__IIIII_3I
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jintArray buf)
 {
@@ -841,7 +841,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1int
 }
 
 
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1long
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread__IIIII_3J
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jlongArray buf)
 {
@@ -884,7 +884,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1long
     return (jint)status;
 }
 
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1float
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread__IIIII_3F
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jfloatArray buf)
 {
@@ -927,7 +927,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1float
     return (jint)status;
 }
 
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1double
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread__IIIII_3D
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jdoubleArray buf)
 {
@@ -1228,7 +1228,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dread_1reg_1ref (JNIEnv *env, 
 }
 
 
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite_1short
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite__IIIII_3S
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jshortArray buf)
 {
@@ -1266,7 +1266,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite_1short
     return (jint)status;
 }
 
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite_1int
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite__IIIII_3I
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jintArray buf)
 {
@@ -1305,7 +1305,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite_1int
 }
 
 
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite_1long
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite__IIIII_3J
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jlongArray buf)
 {
@@ -1343,7 +1343,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite_1long
     return (jint)status;
 }
 
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite_1float
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite__IIIII_3F
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jfloatArray buf)
 {
@@ -1381,7 +1381,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite_1float
     return (jint)status;
 }
 
-JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite_1double
+JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite__IIIII_3D
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id,
   jint file_space_id, jint xfer_plist_id, jdoubleArray buf)
 {
@@ -1424,7 +1424,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Dwrite_1double
 /* 
  * Class:     ncsa_hdf_hdf5lib_H5 
  * Method:    H5DwriteString 
- * Signature: (IIIII[B)I 
+ * Signature: (IIIII[Ljava/lang/String;)I 
  */ 
 JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5DwriteString 
   (JNIEnv *env, jclass clss, jint dataset_id, jint mem_type_id, jint mem_space_id, 
