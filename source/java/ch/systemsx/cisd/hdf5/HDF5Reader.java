@@ -730,6 +730,44 @@ class HDF5Reader implements IHDF5Reader
         return referenceReader.getObjectReferenceMDArrayAttribute(objectPath, attributeName);
     }
 
+    public String[] readObjectReferenceArrayBlock(String objectPath, int blockSize, long blockNumber)
+    {
+        return referenceReader.readObjectReferenceArrayBlock(objectPath, blockSize, blockNumber);
+    }
+
+    public String[] readObjectReferenceArrayBlockWithOffset(String objectPath, int blockSize,
+            long offset)
+    {
+        return referenceReader.readObjectReferenceArrayBlockWithOffset(objectPath, blockSize,
+                offset);
+    }
+
+    public MDArray<String> readObjectReferenceMDArrayBlock(String objectPath,
+            int[] blockDimensions, long[] blockNumber)
+    {
+        return referenceReader.readObjectReferenceMDArrayBlock(objectPath, blockDimensions,
+                blockNumber);
+    }
+
+    public MDArray<String> readObjectReferenceMDArrayBlockWithOffset(String objectPath,
+            int[] blockDimensions, long[] offset)
+    {
+        return referenceReader.readObjectReferenceMDArrayBlockWithOffset(objectPath,
+                blockDimensions, offset);
+    }
+
+    public Iterable<HDF5DataBlock<String[]>> getObjectReferenceArrayNaturalBlocks(String dataSetPath)
+            throws HDF5JavaException
+    {
+        return referenceReader.getObjectReferenceArrayNaturalBlocks(dataSetPath);
+    }
+
+    public Iterable<HDF5MDDataBlock<MDArray<String>>> getObjectReferenceMDArrayNaturalBlocks(
+            String dataSetPath)
+    {
+        return referenceReader.getObjectReferenceMDArrayNaturalBlocks(dataSetPath);
+    }
+
     public String getStringAttribute(String objectPath, String attributeName)
     {
         return stringReader.getStringAttribute(objectPath, attributeName);

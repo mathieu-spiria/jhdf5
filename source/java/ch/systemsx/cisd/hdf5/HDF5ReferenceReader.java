@@ -20,6 +20,9 @@ import static ch.systemsx.cisd.hdf5.HDF5BaseReader.REFERENCE_SIZE_IN_BYTES;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_REFERENCE;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
+
+import java.util.Iterator;
+
 import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
@@ -259,6 +262,36 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         return baseReader.runner.call(readCallable);
     }
 
+    public String[] readObjectReferenceArrayBlock(final String objectPath, final int blockSize,
+            final long blockNumber)
+    {
+        return readObjectReferenceArrayBlockWithOffset(objectPath, blockSize, blockNumber
+                * blockSize);
+    }
+
+    public String[] readObjectReferenceArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<String[]> readCallable = new ICallableWithCleanUp<String[]>()
+            {
+                public String[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final long[] references = new long[spaceParams.blockSize];
+                    baseReader.h5.readDataSet(dataSetId, H5T_STD_REF_OBJ,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, references);
+                    return baseReader.h5.getReferencedObjectNames(baseReader.fileId, references);
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+
     public MDArray<String> readObjectReferenceMDArray(final String objectPath)
     {
         assert objectPath != null;
@@ -340,4 +373,126 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         }
     }
 
+    public MDArray<String> readObjectReferenceMDArrayBlock(final String objectPath,
+            final int[] blockDimensions, final long[] blockNumber)
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readObjectReferenceMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
+    public MDArray<String> readObjectReferenceMDArrayBlockWithOffset(final String objectPath,
+            final int[] blockDimensions, final long[] offset)
+    {
+        assert objectPath != null;
+        assert blockDimensions != null;
+        assert offset != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDArray<String>> readCallable =
+                new ICallableWithCleanUp<MDArray<String>>()
+                    {
+                        public MDArray<String> call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
+                            final long[] referencesBlock = new long[spaceParams.blockSize];
+                            baseReader.h5.readDataSet(dataSetId, H5T_STD_REF_OBJ,
+                                    spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                    referencesBlock);
+                            final String[] referencedObjectNamesBlock =
+                                    baseReader.h5.getReferencedObjectNames(baseReader.fileId,
+                                            referencesBlock);
+                            return new MDArray<String>(referencedObjectNamesBlock, blockDimensions);
+                        }
+                    };
+        return baseReader.runner.call(readCallable);
+    }
+
+    public Iterable<HDF5DataBlock<String[]>> getObjectReferenceArrayNaturalBlocks(
+            final String dataSetPath) throws HDF5JavaException
+    {
+        baseReader.checkOpen();
+        final HDF5NaturalBlock1DParameters params =
+                new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(dataSetPath));
+
+        return new Iterable<HDF5DataBlock<String[]>>()
+            {
+                public Iterator<HDF5DataBlock<String[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<String[]>>()
+                        {
+                            final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
+                                    params.getNaturalBlockIndex();
+
+                            public boolean hasNext()
+                            {
+                                return index.hasNext();
+                            }
+
+                            public HDF5DataBlock<String[]> next()
+                            {
+                                final long offset = index.computeOffsetAndSizeGetOffset();
+                                final String[] referencesBlock =
+                                        readObjectReferenceArrayBlockWithOffset(dataSetPath,
+                                                index.getBlockSize(), offset);
+                                return new HDF5DataBlock<String[]>(referencesBlock,
+                                        index.getAndIncIndex(), offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    public Iterable<HDF5MDDataBlock<MDArray<String>>> getObjectReferenceMDArrayNaturalBlocks(
+            final String dataSetPath)
+    {
+        baseReader.checkOpen();
+        final HDF5NaturalBlockMDParameters params =
+                new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(dataSetPath));
+
+        return new Iterable<HDF5MDDataBlock<MDArray<String>>>()
+            {
+                public Iterator<HDF5MDDataBlock<MDArray<String>>> iterator()
+                {
+                    return new Iterator<HDF5MDDataBlock<MDArray<String>>>()
+                        {
+                            final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
+                                    params.getNaturalBlockIndex();
+
+                            public boolean hasNext()
+                            {
+                                return index.hasNext();
+                            }
+
+                            public HDF5MDDataBlock<MDArray<String>> next()
+                            {
+                                final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
+                                final MDArray<String> data =
+                                        readObjectReferenceMDArrayBlockWithOffset(dataSetPath,
+                                                index.getBlockSize(), offset);
+                                return new HDF5MDDataBlock<MDArray<String>>(data,
+                                        index.getIndexClone(), offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
 }

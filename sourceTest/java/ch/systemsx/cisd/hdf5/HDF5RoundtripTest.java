@@ -343,10 +343,12 @@ public class HDF5RoundtripTest
         test.testObjectReferenceArray();
         test.testObjectReferenceOverwriteWithKeep();
         test.testObjectReferenceOverwriteWithKeepOverridden();
+        test.testObjectReferenceArrayBlockWise();
         test.testObjectReferenceAttribute();
         test.testObjectReferenceArrayAttribute();
         test.testObjectReferenceMDArrayAttribute();
         test.testObjectReferenceMDArray();
+        test.testObjectReferenceMDArrayBlockWise();
 
         test.finalize();
     }
@@ -6371,6 +6373,46 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testObjectReferenceArrayBlockWise()
+    {
+        final File file = new File(workingDirectory, "testObjectReferenceArrayBlockWise.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        final String[] completeArray = new String[16];
+        for (int i = 0; i < completeArray.length; ++i)
+        {
+            writer.writeString("a" + (i + 1), "TestA" + i);
+            completeArray[i] = "/a" + (i + 1);
+        }
+        writer.createObjectReferenceArray("b", completeArray.length, completeArray.length / 4,
+                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+        final String[][] chunk = new String[4][4];
+        System.arraycopy(completeArray, 0, chunk[0], 0, 4);
+        System.arraycopy(completeArray, 4, chunk[1], 0, 4);
+        System.arraycopy(completeArray, 8, chunk[2], 0, 4);
+        System.arraycopy(completeArray, 12, chunk[3], 0, 4);
+        writer.writeObjectReferenceArrayBlock("b", chunk[0], 0);
+        writer.writeObjectReferenceArrayBlock("b", chunk[2], 2);
+        writer.writeObjectReferenceArrayBlock("b", chunk[1], 1);
+        writer.writeObjectReferenceArrayBlock("b", chunk[3], 3);
+        assertTrue(ArrayUtils.isEquals(completeArray, writer.readObjectReferenceArray("/b")));
+        writer.move("/a1", "/C");
+        completeArray[0] = "/C";
+        chunk[0][0] = "/C";
+        assertTrue(ArrayUtils.isEquals(completeArray, writer.readObjectReferenceArray("/b")));
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        int idx = 0;
+        for (HDF5DataBlock<String[]> block : reader.getObjectReferenceArrayNaturalBlocks("b"))
+        {
+            assertTrue("" + idx, ArrayUtils.isEquals(chunk[idx++], block.getData()));
+        }
+        reader.close();
+    }
+
+    @Test
     public void testObjectReferenceMDArray()
     {
         final File file = new File(workingDirectory, "testObjectReferenceMDArray.h5");
@@ -6397,6 +6439,59 @@ public class HDF5RoundtripTest
         assertEquals(new MDArray<String>(new String[]
             { "/C", "/a2", "/a3", "/a4" }, new int[]
             { 2, 2 }), reader.readObjectReferenceMDArray("/b"));
+        reader.close();
+    }
+
+    @Test
+    public void testObjectReferenceMDArrayBlockWise()
+    {
+        final File file = new File(workingDirectory, "testObjectReferenceMDArrayBlockWise.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        final String[] completeArray = new String[16];
+        for (int i = 0; i < completeArray.length; ++i)
+        {
+            writer.writeString("a" + (i + 1), "TestA" + i);
+            completeArray[i] = "/a" + (i + 1);
+        }
+        writer.createObjectReferenceMDArray("b", new long[]
+            { 4, 4 }, new int[]
+            { 1, 4 }, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+        final String[][] chunk = new String[4][4];
+        System.arraycopy(completeArray, 0, chunk[0], 0, 4);
+        System.arraycopy(completeArray, 4, chunk[1], 0, 4);
+        System.arraycopy(completeArray, 8, chunk[2], 0, 4);
+        System.arraycopy(completeArray, 12, chunk[3], 0, 4);
+        writer.writeObjectReferenceMDArrayBlock("b", new MDArray<String>(chunk[0], new int[]
+            { 1, 4 }), new long[]
+            { 0, 0 });
+        writer.writeObjectReferenceMDArrayBlock("b", new MDArray<String>(chunk[2], new int[]
+            { 1, 4 }), new long[]
+            { 2, 0 });
+        writer.writeObjectReferenceMDArrayBlock("b", new MDArray<String>(chunk[1], new int[]
+            { 1, 4 }), new long[]
+            { 1, 0 });
+        writer.writeObjectReferenceMDArrayBlock("b", new MDArray<String>(chunk[3], new int[]
+            { 1, 4 }), new long[]
+            { 3, 0 });
+        assertEquals(new MDArray<String>(completeArray, new int[]
+            { 4, 4 }), writer.readObjectReferenceMDArray("/b"));
+        writer.move("/a1", "/C");
+        completeArray[0] = "/C";
+        chunk[0][0] = "/C";
+        assertEquals(new MDArray<String>(completeArray, new int[]
+            { 4, 4 }), writer.readObjectReferenceMDArray("/b"));
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        int idx = 0;
+        for (HDF5MDDataBlock<MDArray<String>> block : reader
+                .getObjectReferenceMDArrayNaturalBlocks("b"))
+        {
+            assertEquals("" + idx, new MDArray<String>(chunk[idx++], new int[]
+                { 1, 4 }), block.getData());
+        }
         reader.close();
     }
 

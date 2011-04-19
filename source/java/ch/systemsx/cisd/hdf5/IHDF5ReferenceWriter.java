@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
  * An interface for writing references. References can refer to objects or regions of datasets. This
@@ -121,6 +122,95 @@ public interface IHDF5ReferenceWriter
             final String[] referencedObjectPath, final HDF5IntStorageFeatures features);
 
     /**
+     * Creates an array (of rank 1) of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the array to create. This will be the total size for non-extendable
+     *            data sets and the size of one chunk for extendable (chunked) data sets. For
+     *            extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     */
+    public void createObjectReferenceArray(final String objectPath, final int size);
+
+    /**
+     * Creates an array (of rank 1) of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     */
+    public void createLongArray(final String objectPath, final long size, final int blockSize);
+
+    /**
+     * Creates an array (of rank 1) of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the array to create. This will be the total size for non-extendable
+     *            data sets and the size of one chunk for extendable (chunked) data sets. For
+     *            extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5IntStorageFeatures}.
+     * @param features The storage features of the data set.
+     */
+    public void createObjectReferenceArray(final String objectPath, final int size,
+            final HDF5IntStorageFeatures features);
+
+    /**
+     * Creates an array (of rank 1) of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
+     * @param features The storage features of the data set.
+     */
+    public void createObjectReferenceArray(final String objectPath, final long size,
+            final int blockSize, final HDF5IntStorageFeatures features);
+
+    /**
+     * Writes out a block of an array (of rank 1) of object references. The data set needs to have
+     * been created by
+     * {@link #createObjectReferenceArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
+     * <p>
+     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
+     * to the <var>blockSize</var> argument of the
+     * {@link #createObjectReferenceArray(String, long, int, HDF5IntStorageFeatures)} call that was
+     * used to create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param referencedObjectPaths The paths of the referenced objects to write. The length defines
+     *            the block size. Must not be <code>null</code> or of length 0.
+     * @param blockNumber The number of the block to write.
+     */
+    public void writeObjectReferenceArrayBlock(final String objectPath,
+            final String[] referencedObjectPaths, final long blockNumber);
+
+    /**
+     * Writes out a block of an array (of rank 1) of object references. The data set needs to have
+     * been created by
+     * {@link #createObjectReferenceArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
+     * <p>
+     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
+     * to the <var>blockSize</var> argument of the
+     * {@link #createObjectReferenceArray(String, long, int, HDF5IntStorageFeatures)} call that was
+     * used to create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param referencedObjectPaths The paths of the referenced objects to write. The length defines
+     *            the block size. Must not be <code>null</code> or of length 0.
+     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
+     *            )
+     * @param offset The offset in the data set to start writing to.
+     */
+    public void writeObjectReferenceArrayBlockWithOffset(final String objectPath,
+            final String[] referencedObjectPaths, final int dataSize, final long offset);
+
+    /**
      * Writes an array (of rank N) of object references.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -138,4 +228,88 @@ public interface IHDF5ReferenceWriter
      */
     public void writeObjectReferenceMDArray(final String objectPath,
             final MDArray<String> referencedObjectPaths, final HDF5IntStorageFeatures features);
+
+    /**
+     * Creates a multi-dimensional array of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array to create. This will be the total dimensions
+     *            for non-extendable data sets and the dimensions of one chunk (extent along each
+     *            axis) for extendable (chunked) data sets. For extendable data sets the initial
+     *            size of the array along each axis will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     */
+    public void createObjectReferenceMDArray(final String objectPath, final int[] dimensions);
+
+    /**
+     * Creates a multi-dimensional array of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     */
+    public void createObjectReferenceMDArray(final String objectPath, final long[] dimensions,
+            final int[] blockDimensions);
+
+    /**
+     * Creates a multi-dimensional array of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array to create. This will be the total dimensions
+     *            for non-extendable data sets and the dimensions of one chunk (extent along each
+     *            axis) for extendable (chunked) data sets. For extendable data sets the initial
+     *            size of the array along each axis will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param features The storage features of the data set.
+     */
+    public void createObjectReferenceMDArray(final String objectPath, final int[] dimensions,
+            final HDF5IntStorageFeatures features);
+
+    /**
+     * Creates a multi-dimensional array of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     * @param features The storage features of the data set.
+     */
+    public void createObjectReferenceMDArray(final String objectPath, final long[] dimensions,
+            final int[] blockDimensions, final HDF5IntStorageFeatures features);
+
+    /**
+     * Writes out a block of a multi-dimensional array of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param referencedObjectPaths The paths of the object references to write. Must not be
+     *            <code>null</code>. All columns need to have the same length.
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
+     *            the according dimension).
+     */
+    public void writeObjectReferenceMDArrayBlock(final String objectPath,
+            final MDArray<String> referencedObjectPaths, final long[] blockNumber);
+
+    /**
+     * Writes out a block of a multi-dimensional array of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param referencedObjectPaths The paths of the object references to write. Must not be
+     *            <code>null</code>.
+     * @param offset The offset in the data set to start writing to in each dimension.
+     */
+    public void writeObjectReferenceMDArrayBlockWithOffset(final String objectPath,
+            final MDArray<String> referencedObjectPaths, final long[] offset);
+
+    /**
+     * Writes out a block of a multi-dimensional array of object references.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param referencedObjectPaths The paths of the object references to write. Must not be
+     *            <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeObjectReferenceMDArrayBlockWithOffset(final String objectPath,
+            final MDLongArray referencedObjectPaths, final int[] blockDimensions,
+            final long[] offset, final int[] memoryOffset);
 }
