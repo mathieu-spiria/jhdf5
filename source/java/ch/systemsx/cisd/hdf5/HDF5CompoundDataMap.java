@@ -20,7 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A map to be used to store the member ata of a compound. 
+ * A map to be used to store the member data of a compound. 
  *
  * @author Bernd Rinn
  */
