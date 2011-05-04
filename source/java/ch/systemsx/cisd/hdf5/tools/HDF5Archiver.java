@@ -19,16 +19,13 @@ package ch.systemsx.cisd.hdf5.tools;
 import java.io.File;
 import java.util.List;
 
-import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 
 /**
  * An archiver based on HDF5 as archive format for directory with fast random access to particular
- * files.
+ * files in the archive.
  * 
  * @author Bernd Rinn
  */
@@ -37,100 +34,92 @@ public class HDF5Archiver
 
     private final static int MB = 1024 * 1024;
 
-    private final static int BUFFER_SIZE = 10 * MB;
+    final static int BUFFER_SIZE = 10 * MB;
 
-    private final IHDF5Writer hdf5WriterOrNull;
+    private final HDF5ArchiveLister lister;
 
-    private final IHDF5Reader hdf5Reader;
+    private final HDF5ArchiveExtractor extracter;
 
-    private final ArchivingStrategy strategy;
+    private final HDF5ArchiveUpdater updaterOrNull;
 
-    private final boolean continueOnError;
-
-    private byte[] buffer;
+    private final HDF5ArchiveDeleter deleterOrNull;
 
     public HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat,
             boolean continueOnError)
     {
-        if (readOnly)
-        {
-            this.hdf5WriterOrNull = null;
-            this.hdf5Reader =
-                    HDF5FactoryProvider.get().configureForReading(archiveFile)
-                            .useUTF8CharacterEncoding().reader();
-        } else
-        {
-            final IHDF5WriterConfigurator config = HDF5FactoryProvider.get().configure(archiveFile);
-            config.fileFormat(fileFormat);
-            config.useUTF8CharacterEncoding();
-            if (noSync == false)
-            {
-                config.syncMode(SyncMode.SYNC);
-            }
-            this.hdf5WriterOrNull = config.writer();
-            this.hdf5Reader = hdf5WriterOrNull;
-        }
-        this.continueOnError = continueOnError;
-        this.strategy = new ArchivingStrategy();
-        this.buffer = new byte[BUFFER_SIZE];
+        this(archiveFile, new ArchivingStrategy(), readOnly, noSync, fileFormat, continueOnError);
     }
 
-    public ArchivingStrategy getStrategy()
+    public HDF5Archiver(File archiveFile, ArchivingStrategy strategy, boolean readOnly,
+            boolean noSync, FileFormat fileFormat, boolean continueOnError)
     {
-        return strategy;
-    }
-
-    public HDF5Archiver archiveAll(File path, boolean verbose) throws IllegalStateException
-    {
-        final File absolutePath = path.getAbsoluteFile();
-        return archive(absolutePath.getParentFile(), absolutePath, verbose);
-    }
-
-    public HDF5Archiver archive(File root, File path, boolean verbose) throws IllegalStateException
-    {
+        final byte[] buffer = new byte[BUFFER_SIZE];
+        final IHDF5Writer hdf5WriterOrNull =
+                readOnly ? null : HDF5ArchiveUpdater.createHDF5Writer(archiveFile, fileFormat,
+                        noSync);
+        final IHDF5Reader hdf5Reader =
+                (hdf5WriterOrNull != null) ? hdf5WriterOrNull : HDF5ArchiveExtractor
+                        .createHDF5Reader(archiveFile);
+        this.lister = new HDF5ArchiveLister(hdf5Reader, strategy, continueOnError, buffer);
+        this.extracter = new HDF5ArchiveExtractor(hdf5Reader, strategy, continueOnError, buffer);
         if (hdf5WriterOrNull == null)
         {
-            throw new IllegalStateException("Cannot archive in read-only mode.");
+            this.updaterOrNull = null;
+            this.deleterOrNull = null;
+        } else
+        {
+            this.updaterOrNull =
+                    new HDF5ArchiveUpdater(hdf5WriterOrNull, strategy, continueOnError, buffer);
+            this.deleterOrNull = new HDF5ArchiveDeleter(hdf5WriterOrNull, continueOnError);
         }
-        HDF5ArchiveTools.archive(hdf5WriterOrNull, strategy, root.getAbsoluteFile(),
-                path.getAbsoluteFile(), continueOnError, verbose, buffer);
-        return this;
+    }
+
+    public void close()
+    {
+        extracter.close();
+    }
+
+    public void list(String fileOrDir, String rootOrNull, boolean recursive,
+            boolean suppressDirectoryEntries, boolean verbose, boolean numeric, Check check,
+            ListEntryVisitor visitor)
+    {
+        lister.list(fileOrDir, rootOrNull, recursive, suppressDirectoryEntries, verbose, numeric,
+                check, visitor);
     }
 
     public HDF5Archiver extract(File root, String path, boolean verbose)
             throws IllegalStateException
     {
-        HDF5ArchiveTools
-                .extract(hdf5Reader, strategy, root, path, continueOnError, verbose, buffer);
+        extracter.extract(root, path, verbose);
+        return this;
+    }
+
+    public HDF5Archiver archiveAll(File path, boolean verbose) throws IllegalStateException
+    {
+        checkReadWrite();
+        updaterOrNull.archiveAll(path, verbose);
+        return this;
+    }
+
+    public HDF5Archiver archive(File root, File path, boolean verbose) throws IllegalStateException
+    {
+        checkReadWrite();
+        updaterOrNull.archive(root, path, verbose);
         return this;
     }
 
     public HDF5Archiver delete(List<String> hdf5ObjectPaths, boolean verbose)
     {
-        if (hdf5WriterOrNull == null)
-        {
-            // delete() must not be called if we only have a reader.
-            throw new IllegalStateException("Cannot delete in read-only mode.");
-        }
-        HDF5ArchiveTools.delete(hdf5WriterOrNull, hdf5ObjectPaths, continueOnError, verbose);
+        checkReadWrite();
+        deleterOrNull.delete(hdf5ObjectPaths, verbose);
         return this;
     }
 
-    public void list(String fileOrDir, String rootOrNull, boolean recursive,
-            boolean suppressDirectoryEntries, boolean verbose, boolean numeric,
-            HDF5ArchiveTools.Check check, HDF5ArchiveTools.ListEntryVisitor visitor)
+    private void checkReadWrite()
     {
-        final HDF5ArchiveTools.ListParameters params =
-                new HDF5ArchiveTools.ListParameters().fileOrDirectoryInArchive(fileOrDir)
-                        .directoryOnFileSystem(rootOrNull).strategy(strategy).recursive(recursive)
-                        .suppressDirectoryEntries(suppressDirectoryEntries).numeric(numeric)
-                        .verbose(verbose).check(check);
-        HDF5ArchiveTools.list(hdf5Reader, params, visitor, continueOnError, buffer);
+        if (updaterOrNull == null)
+        {
+            throw new IllegalStateException("Cannot update archive in read-only mode.");
+        }
     }
-
-    public void close()
-    {
-        hdf5Reader.close();
-    }
-
 }

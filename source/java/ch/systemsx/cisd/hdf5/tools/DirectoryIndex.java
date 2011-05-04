@@ -215,8 +215,7 @@ public class DirectoryIndex implements Iterable<Link>
             }
         } catch (RuntimeException ex)
         {
-            HDF5ArchiveTools
-                    .dealWithError(new ListArchiveException(groupPath, ex), continueOnError);
+            HDF5ArchiveOutputHelper.dealWithError(new ListArchiveException(groupPath, ex), continueOnError);
         }
         if (listRead == false)
         {
@@ -312,8 +311,7 @@ public class DirectoryIndex implements Iterable<Link>
                     (int) crc32.getValue());
         } catch (HDF5Exception ex)
         {
-            HDF5ArchiveTools
-                    .dealWithError(new ListArchiveException(groupPath, ex), continueOnError);
+            HDF5ArchiveOutputHelper.dealWithError(new ListArchiveException(groupPath, ex), continueOnError);
         }
     }
 

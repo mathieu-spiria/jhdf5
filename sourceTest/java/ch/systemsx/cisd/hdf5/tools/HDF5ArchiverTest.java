@@ -26,13 +26,13 @@ import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
 
 /**
- * Tests for {@link HDF5ArchiveTools}.
+ * Tests for {@link HDF5Archiver}.
  * 
  * @author Bernd Rinn
  */
 @Friend(toClasses =
-    { HDF5ArchiveTools.class, IdCache.class, Link.class })
-public class HDF5ArchiveToolsTest
+    { HDF5Archiver.class, IdCache.class, Link.class })
+public class HDF5ArchiverTest
 {
 
     private static Link createPerms(int perms)

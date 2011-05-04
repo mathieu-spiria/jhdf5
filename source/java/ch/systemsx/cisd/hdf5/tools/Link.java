@@ -80,7 +80,7 @@ public final class Link implements Comparable<Link>
             return new Link(file, includeOwnerAndPermissions);
         } catch (IOExceptionUnchecked ex)
         {
-            HDF5ArchiveTools.dealWithError(new ArchivingException(file, ex.getCause()),
+            HDF5ArchiveOutputHelper.dealWithError(new ArchivingException(file, ex.getCause()),
                     continueOnError);
             return null;
         }

@@ -30,7 +30,6 @@ import ch.systemsx.cisd.args4j.ExampleMode;
 import ch.systemsx.cisd.args4j.Option;
 import ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
-import ch.systemsx.cisd.hdf5.tools.HDF5ArchiveTools.Check;
 
 /**
  * The main class of the HDF5 based archiver.
@@ -236,11 +235,12 @@ public class HDF5ArchiverMain
     {
         final FileFormat fileFormatEnum =
                 (fileFormat == 1) ? FileFormat.STRICTLY_1_6 : FileFormat.STRICTLY_1_8;
+        final ArchivingStrategy strategy = createArchivingStrategy();
         try
         {
             archiver =
-                    new HDF5Archiver(archiveFile, command.isReadOnly(), noSync, fileFormatEnum,
-                            (stopOnError == false));
+                    new HDF5Archiver(archiveFile, strategy, command.isReadOnly(), noSync,
+                            fileFormatEnum, (stopOnError == false));
         } catch (HDF5JavaException ex)
         {
             // Problem opening the archive file: non readable / writable
@@ -253,32 +253,38 @@ public class HDF5ArchiverMain
                     + ex.getClass().getSimpleName() + ": " + ex.getMessage() + "]");
             return false;
         }
-        archiver.getStrategy().setCompressAll(compressAll);
+        return true;
+    }
+
+    private ArchivingStrategy createArchivingStrategy()
+    {
+        final ArchivingStrategy strategy = new ArchivingStrategy();
+        strategy.setCompressAll(compressAll);
         for (String pattern : fileWhiteList)
         {
-            archiver.getStrategy().addToFileWhiteList(pattern);
+            strategy.addToFileWhiteList(pattern);
         }
         for (String pattern : fileBlackList)
         {
-            archiver.getStrategy().addToFileBlackList(pattern);
+            strategy.addToFileBlackList(pattern);
         }
         for (String pattern : dirWhiteList)
         {
-            archiver.getStrategy().addToDirWhiteList(pattern);
+            strategy.addToDirWhiteList(pattern);
         }
         for (String pattern : dirBlackList)
         {
-            archiver.getStrategy().addToDirBlackList(pattern);
+            strategy.addToDirBlackList(pattern);
         }
         for (String pattern : fileWhiteList)
         {
-            archiver.getStrategy().addToFileWhiteList(pattern);
+            strategy.addToFileWhiteList(pattern);
         }
         for (String pattern : compressionWhiteList)
         {
-            archiver.getStrategy().addToCompressionWhiteList(pattern);
+            strategy.addToCompressionWhiteList(pattern);
         }
-        return true;
+        return strategy;
     }
 
     private File getFSRoot()
@@ -286,7 +292,7 @@ public class HDF5ArchiverMain
         return (rootOrNull == null) ? new File(".") : rootOrNull;
     }
 
-    private static class ListingVisitor implements HDF5ArchiveTools.ListEntryVisitor
+    private static class ListingVisitor implements ListEntryVisitor
     {
         private final boolean verifying;
 
