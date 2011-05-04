@@ -319,10 +319,10 @@ public class DirectoryIndex implements Iterable<Link>
      * Add <var>entries</var> to the index. Any link that already exists in the index will be
      * replaced.
      */
-    public void addToIndex(List<Link> entries)
+    public void updateIndex(List<Link> entries)
     {
         ensureWriteMode();
-        setLinks(getLinks().add(entries));
+        setLinks(getLinks().update(entries));
     }
 
     /**

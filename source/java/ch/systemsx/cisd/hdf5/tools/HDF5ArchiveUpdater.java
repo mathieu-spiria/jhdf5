@@ -157,7 +157,7 @@ public class HDF5ArchiveUpdater
             {
                 linkOrNull.setCrc32(crc32Processing);
                 crc32Processing = 0; // Directories don't have a checksum
-                index.addToIndex(Collections.singletonList(linkOrNull));
+                index.updateIndex(Collections.singletonList(linkOrNull));
                 index.writeIndexToArchive();
             }
             pathProcessing = dirProcessingOrNull;
@@ -254,7 +254,7 @@ public class HDF5ArchiveUpdater
 
         final DirectoryIndex index =
                 new DirectoryIndex(hdf5Writer, hdf5GroupPath, continueOnError, verbose);
-        index.addToIndex(linkEntries);
+        index.updateIndex(linkEntries);
         index.writeIndexToArchive();
         return true;
     }

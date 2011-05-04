@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.Iterator;
 
 /**
- * An immutable list of {@link Link}. The order is to have all directories (in alphabetical order)
- * before all files (in alphabetical order).
+ * An immutable list of {@link Link}s in a fixed order. The order is to have all directories (in
+ * alphabetical order) before all files (in alphabetical order).
  * 
  * @author Bernd Rinn
  */
@@ -181,14 +181,27 @@ final class LinkList implements Iterable<Link>
     }
 
     /**
-     * Creates a new link list containing all current links and the <var>entries</var>.
+     * Creates a new link list containing all current links and the <var>entries</var>. Each entry
+     * in <var>entries</var> is checked on whether it already exists in the list, and, if yes,
+     * updated. So, given the current links are unique on link names, the new <code>LinkList</code>
+     * will be unique as well.
      */
-    public LinkList add(Collection<Link> entries)
+    public LinkList update(Collection<Link> entries)
     {
         final ArrayList<Link> newEntries =
                 new ArrayList<Link>(internalList.size() + entries.size());
         newEntries.addAll(internalList);
-        newEntries.addAll(entries);
+        for (Link entry : entries)
+        {
+            int index = getLinkIndex(entry.getLinkName());
+            if (index < 0)
+            {
+                newEntries.add(entry);
+            } else
+            {
+                newEntries.set(index, entry);
+            }
+        }
         return new LinkList(newEntries, true);
     }
 
