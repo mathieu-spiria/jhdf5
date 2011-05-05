@@ -85,6 +85,15 @@ public class HDF5ArchiverMain
         }
     }
 
+    private final static IErrorStrategy ERROR_STRATEGY_CONTINUE = new IErrorStrategy()
+        {
+            public void dealWithError(ArchiverException ex) throws ArchiverException
+            {
+                System.err.println(ex.getMessage());
+            }
+
+        };
+
     @Argument
     private List<String> arguments;
 
@@ -240,7 +249,8 @@ public class HDF5ArchiverMain
         {
             archiver =
                     new HDF5Archiver(archiveFile, strategy, command.isReadOnly(), noSync,
-                            fileFormatEnum, (stopOnError == false));
+                            fileFormatEnum, stopOnError ? IErrorStrategy.DEFAULT_ERROR_STRATEGY
+                                    : ERROR_STRATEGY_CONTINUE);
         } catch (HDF5JavaException ex)
         {
             // Problem opening the archive file: non readable / writable
@@ -292,7 +302,7 @@ public class HDF5ArchiverMain
         return (rootOrNull == null) ? new File(".") : rootOrNull;
     }
 
-    private static class ListingVisitor implements ListEntryVisitor
+    private static class ListingVisitor implements IListEntryVisitor
     {
         private final boolean verifying;
 
@@ -359,13 +369,14 @@ public class HDF5ArchiverMain
                         for (int i = 2; i < arguments.size(); ++i)
                         {
                             archiver.archive(rootOrNull, new File(rootOrNull, arguments.get(i)),
-                                    verbose);
+                                    verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                         }
                     } else
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.archiveAll(new File(arguments.get(i)), verbose);
+                            archiver.archiveAll(new File(arguments.get(i)),
+                                    verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                         }
                     }
                     break;
@@ -376,12 +387,14 @@ public class HDF5ArchiverMain
                     }
                     if (arguments.size() == 2)
                     {
-                        archiver.extract(getFSRoot(), "/", verbose);
+                        archiver.extract(getFSRoot(), "/",
+                                verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                     } else
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.extract(getFSRoot(), arguments.get(i), verbose);
+                            archiver.extract(getFSRoot(), arguments.get(i),
+                                    verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                         }
                     }
                     break;
@@ -396,7 +409,8 @@ public class HDF5ArchiverMain
                     {
                         break;
                     }
-                    archiver.delete(arguments.subList(2, arguments.size()), verbose);
+                    archiver.delete(arguments.subList(2, arguments.size()),
+                            verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                     break;
                 case VERIFY:
                 {

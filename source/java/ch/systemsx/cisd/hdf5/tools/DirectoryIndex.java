@@ -62,7 +62,7 @@ public class DirectoryIndex implements Iterable<Link>
 
     private final String groupPath;
 
-    private final boolean continueOnError;
+    private final IErrorStrategy errorStrategy;
 
     private final boolean readLinkTargets;
 
@@ -86,12 +86,12 @@ public class DirectoryIndex implements Iterable<Link>
      * @return A list of {@link Link}s in the same order as <var>entries</var>.
      */
     public static List<Link> convertFilesToLinks(File[] entries, boolean storeOwnerAndPermissions,
-            boolean continueOnError)
+            IErrorStrategy errorStrategy)
     {
         final List<Link> list = new LinkedList<Link>();
         for (File entry : entries)
         {
-            list.add(Link.tryCreate(entry, storeOwnerAndPermissions, continueOnError));
+            list.add(Link.tryCreate(entry, storeOwnerAndPermissions, errorStrategy));
         }
         return list;
     }
@@ -138,8 +138,8 @@ public class DirectoryIndex implements Iterable<Link>
      * Creates a new directory (group) index. Note that <var>hdf5Reader</var> needs to be an
      * instance of {@link IHDF5Writer} if you intend to write the index to the archive.
      */
-    public DirectoryIndex(IHDF5Reader hdf5Reader, String groupPath, boolean continueOnError,
-            boolean readLinkTargets)
+    public DirectoryIndex(IHDF5Reader hdf5Reader, String groupPath,
+            IErrorStrategy errorStrategyOrNull, boolean readLinkTargets)
     {
         assert hdf5Reader != null;
         assert groupPath != null;
@@ -148,8 +148,14 @@ public class DirectoryIndex implements Iterable<Link>
         this.hdf5WriterOrNull =
                 (hdf5Reader instanceof IHDF5Writer) ? (IHDF5Writer) hdf5Reader : null;
         this.groupPath = (groupPath.length() == 0) ? "/" : groupPath;
-        this.continueOnError = continueOnError;
         this.readLinkTargets = readLinkTargets;
+        if (errorStrategyOrNull == null)
+        {
+            this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
+        } else
+        {
+            this.errorStrategy = errorStrategyOrNull;
+        }
         readIndex();
     }
 
@@ -215,7 +221,7 @@ public class DirectoryIndex implements Iterable<Link>
             }
         } catch (RuntimeException ex)
         {
-            HDF5ArchiveOutputHelper.dealWithError(new ListArchiveException(groupPath, ex), continueOnError);
+            errorStrategy.dealWithError(new ListArchiveException(groupPath, ex));
         }
         if (listRead == false)
         {
@@ -311,7 +317,7 @@ public class DirectoryIndex implements Iterable<Link>
                     (int) crc32.getValue());
         } catch (HDF5Exception ex)
         {
-            HDF5ArchiveOutputHelper.dealWithError(new ListArchiveException(groupPath, ex), continueOnError);
+            errorStrategy.dealWithError(new ListArchiveException(groupPath, ex));
         }
     }
 

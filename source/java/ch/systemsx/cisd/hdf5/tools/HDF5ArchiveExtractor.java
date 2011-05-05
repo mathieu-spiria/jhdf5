@@ -45,29 +45,35 @@ public class HDF5ArchiveExtractor
 
     private final IHDF5Reader hdf5Reader;
 
-    private final boolean continueOnError;
+    private final IErrorStrategy errorStrategy;
 
     private final ArchivingStrategy strategy;
 
     private final byte[] buffer;
 
-    public HDF5ArchiveExtractor(File archiveFile, boolean continueOnError)
+    public HDF5ArchiveExtractor(File archiveFile, IErrorStrategy errorStrategyOrNull)
     {
-        this(createHDF5Reader(archiveFile), new ArchivingStrategy(), continueOnError,
+        this(createHDF5Reader(archiveFile), new ArchivingStrategy(), errorStrategyOrNull,
                 new byte[HDF5Archiver.BUFFER_SIZE]);
     }
 
     static IHDF5Reader createHDF5Reader(File archiveFile)
     {
-        return HDF5FactoryProvider.get().configureForReading(archiveFile).useUTF8CharacterEncoding()
-                .reader();
+        return HDF5FactoryProvider.get().configureForReading(archiveFile)
+                .useUTF8CharacterEncoding().reader();
     }
 
     public HDF5ArchiveExtractor(IHDF5Reader hdf5Reader, ArchivingStrategy strategy,
-            boolean continueOnError, byte[] buffer)
+            IErrorStrategy errorStrategyOrNull, byte[] buffer)
     {
         this.hdf5Reader = hdf5Reader;
-        this.continueOnError = continueOnError;
+        if (errorStrategyOrNull == null)
+        {
+            this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
+        } else
+        {
+            this.errorStrategy = errorStrategyOrNull;
+        }
         this.strategy = strategy;
         this.buffer = buffer;
     }
@@ -77,7 +83,7 @@ public class HDF5ArchiveExtractor
         hdf5Reader.close();
     }
 
-    public HDF5ArchiveExtractor extract(File root, String path, boolean verbose)
+    public HDF5ArchiveExtractor extract(File root, String path, IPathVisitor pathVisitorOrNull)
             throws IllegalStateException
     {
         final String unixPath = FilenameUtils.separatorsToUnix(path);
@@ -86,16 +92,16 @@ public class HDF5ArchiveExtractor
             throw new UnarchivingException(unixPath, "Object does not exist in archive.");
         }
         final boolean isRoot = "/".equals(unixPath);
-        final Link linkOrNull = isRoot ? null : tryGetLink(hdf5Reader, unixPath, continueOnError);
+        final Link linkOrNull = isRoot ? null : tryGetLink(hdf5Reader, unixPath);
         final boolean isDir =
                 (linkOrNull != null && linkOrNull.isDirectory())
                         || ((linkOrNull == null && (isRoot || hdf5Reader.isGroup(unixPath, false))));
         if (isDir)
         {
-            extractDirectory(new GroupCache(), root, unixPath, linkOrNull, verbose);
+            extractDirectory(new GroupCache(), root, unixPath, linkOrNull, pathVisitorOrNull);
         } else
         {
-            extractFile(new GroupCache(), root, unixPath, linkOrNull, verbose);
+            extractFile(new GroupCache(), root, unixPath, linkOrNull, pathVisitorOrNull);
         }
         return this;
     }
@@ -107,23 +113,23 @@ public class HDF5ArchiveExtractor
      * <em>Note that a return value of <code>null</code> does not necessarily mean that <var>path</var>
      * is not in the archive!<em>
      */
-    private static Link tryGetLink(IHDF5Reader reader, String path, boolean continueOnError)
+    private Link tryGetLink(IHDF5Reader reader, String path)
     {
         final DirectoryIndex index =
                 new DirectoryIndex(reader, FilenameUtils.separatorsToUnix(FilenameUtils
-                        .getFullPathNoEndSeparator(path)), continueOnError, true);
+                        .getFullPathNoEndSeparator(path)), errorStrategy, true);
         return index.tryGetLink(FilenameUtils.getName(path));
     }
 
     private void extractDirectory(GroupCache groupCache, File root, String groupPath,
-            Link dirLinkOrNull, boolean verbose) throws UnarchivingException
+            Link dirLinkOrNull, IPathVisitor pathVisitorOrNull) throws UnarchivingException
     {
         String objectPathOrNull = null;
         try
         {
             final File groupFile = new File(root, groupPath);
             groupFile.mkdir();
-            for (Link link : new DirectoryIndex(hdf5Reader, groupPath, continueOnError, true))
+            for (Link link : new DirectoryIndex(hdf5Reader, groupPath, errorStrategy, true))
             {
                 objectPathOrNull =
                         (groupPath.endsWith("/") ? groupPath : (groupPath + "/"))
@@ -134,24 +140,27 @@ public class HDF5ArchiveExtractor
                     {
                         continue;
                     }
-                    HDF5ArchiveOutputHelper.writeToConsole(objectPathOrNull, verbose);
-                    extractDirectory(groupCache, root, objectPathOrNull, link, verbose);
+                    if (pathVisitorOrNull != null)
+                    {
+                        pathVisitorOrNull.visit(objectPathOrNull);
+                    }
+                    extractDirectory(groupCache, root, objectPathOrNull, link, pathVisitorOrNull);
                 } else if (link.isRegularFile() || link.isSymLink())
                 {
-                    extractFile(groupCache, root, objectPathOrNull, link, verbose);
+                    extractFile(groupCache, root, objectPathOrNull, link, pathVisitorOrNull);
                 } else
                 {
-                    HDF5ArchiveOutputHelper.dealWithError(
-                            new UnarchivingException(objectPathOrNull, "Unexpected object type: "
+                    errorStrategy.dealWithError(new UnarchivingException(objectPathOrNull,
+                            "Unexpected object type: "
                                     + tryGetObjectTypeDescriptionForErrorMessage(hdf5Reader,
-                                            objectPathOrNull) + "."), continueOnError);
+                                            objectPathOrNull) + "."));
                 }
             }
             restoreAttributes(groupFile, dirLinkOrNull, groupCache);
         } catch (HDF5Exception ex)
         {
-            HDF5ArchiveOutputHelper.dealWithError(new UnarchivingException(
-                    objectPathOrNull == null ? groupPath : objectPathOrNull, ex), continueOnError);
+            errorStrategy.dealWithError(new UnarchivingException(
+                    objectPathOrNull == null ? groupPath : objectPathOrNull, ex));
         }
     }
 
@@ -170,7 +179,7 @@ public class HDF5ArchiveExtractor
     }
 
     private void extractFile(GroupCache groupCache, File root, String hdf5ObjectPath,
-            Link linkOrNull, boolean verbose) throws UnarchivingException
+            Link linkOrNull, IPathVisitor pathVisitorOrNull) throws UnarchivingException
     {
         if (strategy.doExclude(hdf5ObjectPath, false))
         {
@@ -192,22 +201,22 @@ public class HDF5ArchiveExtractor
                                     .tryGetSymbolicLinkTarget(hdf5ObjectPath);
                     if (linkTargetOrNull == null)
                     {
-                        HDF5ArchiveOutputHelper.dealWithError(new UnarchivingException(hdf5ObjectPath,
-                                "Cannot extract symlink as no link target stored."),
-                                continueOnError);
+                        errorStrategy.dealWithError(new UnarchivingException(hdf5ObjectPath,
+                                "Cannot extract symlink as no link target stored."));
                     } else
                     {
                         Unix.createSymbolicLink(linkTargetOrNull, file.getAbsolutePath());
-                        HDF5ArchiveOutputHelper.writeToConsole(hdf5ObjectPath, verbose);
+                        if (pathVisitorOrNull != null)
+                        {
+                            pathVisitorOrNull.visit(hdf5ObjectPath);
+                        }
                     }
                 } catch (IOExceptionUnchecked ex)
                 {
-                    HDF5ArchiveOutputHelper.dealWithError(new UnarchivingException(file, ex),
-                            continueOnError);
+                    errorStrategy.dealWithError(new UnarchivingException(file, ex));
                 } catch (HDF5Exception ex)
                 {
-                    HDF5ArchiveOutputHelper.dealWithError(new UnarchivingException(hdf5ObjectPath, ex),
-                            continueOnError);
+                    errorStrategy.dealWithError(new UnarchivingException(hdf5ObjectPath, ex));
                 }
                 return;
             } else
@@ -225,21 +234,22 @@ public class HDF5ArchiveExtractor
             // storedCrc32 == 0 means: no checksum stored.
             final boolean checksumStored = (storedCrc32 != 0);
             final boolean checksumOK = (crc32 == storedCrc32);
-            HDF5ArchiveOutputHelper.writeToConsole(hdf5ObjectPath, checksumStored, checksumOK, crc32,
-                    verbose);
+            if (pathVisitorOrNull != null)
+            {
+                pathVisitorOrNull.visit(hdf5ObjectPath, checksumStored, checksumOK, crc32);
+            }
             if (checksumStored && checksumOK == false)
             {
-                HDF5ArchiveOutputHelper.dealWithError(new UnarchivingException(hdf5ObjectPath,
+                errorStrategy.dealWithError(new UnarchivingException(hdf5ObjectPath,
                         "CRC checksum mismatch. Expected: " + ListEntry.hashToString(storedCrc32)
-                                + ", found: " + ListEntry.hashToString(crc32)), continueOnError);
+                                + ", found: " + ListEntry.hashToString(crc32)));
             }
         } catch (IOException ex)
         {
-            HDF5ArchiveOutputHelper.dealWithError(new UnarchivingException(file, ex), continueOnError);
+            errorStrategy.dealWithError(new UnarchivingException(file, ex));
         } catch (HDF5Exception ex)
         {
-            HDF5ArchiveOutputHelper.dealWithError(new UnarchivingException(hdf5ObjectPath, ex),
-                    continueOnError);
+            errorStrategy.dealWithError(new UnarchivingException(hdf5ObjectPath, ex));
         }
     }
 

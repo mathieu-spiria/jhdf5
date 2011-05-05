@@ -37,12 +37,13 @@ public class HDF5ArchiveDeleter
 
     private final IHDF5Writer hdf5Writer;
 
-    private final boolean continueOnError;
+    private final IErrorStrategy errorStrategy;
 
     public HDF5ArchiveDeleter(File archiveFile, boolean noSync, FileFormat fileFormat,
-            boolean continueOnError)
+            IErrorStrategy errorStrategyOrNull)
     {
-        this(HDF5ArchiveUpdater.createHDF5Writer(archiveFile, fileFormat, noSync), continueOnError);
+        this(HDF5ArchiveUpdater.createHDF5Writer(archiveFile, fileFormat, noSync),
+                errorStrategyOrNull);
     }
 
     static IHDF5Writer createHDF5Writer(File archiveFile, FileFormat fileFormat, boolean noSync)
@@ -57,14 +58,20 @@ public class HDF5ArchiveDeleter
         return config.writer();
     }
 
-    public HDF5ArchiveDeleter(IHDF5Writer hdf5Writer, boolean continueOnError)
+    public HDF5ArchiveDeleter(IHDF5Writer hdf5Writer, IErrorStrategy errorStrategyOrNull)
     {
         this.hdf5Writer = hdf5Writer;
-        this.continueOnError = continueOnError;
+        if (errorStrategyOrNull == null)
+        {
+            this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
+        } else
+        {
+            this.errorStrategy = errorStrategyOrNull;
+        }
     }
 
     @SuppressWarnings("null")
-    public HDF5ArchiveDeleter delete(List<String> hdf5ObjectPaths, boolean verbose)
+    public HDF5ArchiveDeleter delete(List<String> hdf5ObjectPaths, IPathVisitor pathVisitorOrNull)
     {
         DirectoryIndex indexOrNull = null;
         String lastGroupOrNull = null;
@@ -84,18 +91,20 @@ public class HDF5ArchiveDeleter
                 {
                     indexOrNull.writeIndexToArchive();
                 }
-                indexOrNull = new DirectoryIndex(hdf5Writer, group, continueOnError, false);
+                indexOrNull = new DirectoryIndex(hdf5Writer, group, errorStrategy, false);
             }
             try
             {
                 hdf5Writer.delete(normalizedPath);
                 final String name = normalizedPath.substring(groupDelimIndex + 1);
                 indexOrNull.remove(name);
-                HDF5ArchiveOutputHelper.writeToConsole(normalizedPath, verbose);
+                if (pathVisitorOrNull != null)
+                {
+                    pathVisitorOrNull.visit(normalizedPath);
+                }
             } catch (HDF5Exception ex)
             {
-                HDF5ArchiveOutputHelper.dealWithError(new DeleteFromArchiveException(path, ex),
-                        continueOnError);
+                errorStrategy.dealWithError(new DeleteFromArchiveException(path, ex));
             }
         }
         if (indexOrNull != null)

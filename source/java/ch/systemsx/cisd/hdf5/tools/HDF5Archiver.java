@@ -45,13 +45,14 @@ public class HDF5Archiver
     private final HDF5ArchiveDeleter deleterOrNull;
 
     public HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat,
-            boolean continueOnError)
+            IErrorStrategy errorStrategyOrNull)
     {
-        this(archiveFile, new ArchivingStrategy(), readOnly, noSync, fileFormat, continueOnError);
+        this(archiveFile, new ArchivingStrategy(), readOnly, noSync, fileFormat,
+                errorStrategyOrNull);
     }
 
     public HDF5Archiver(File archiveFile, ArchivingStrategy strategy, boolean readOnly,
-            boolean noSync, FileFormat fileFormat, boolean continueOnError)
+            boolean noSync, FileFormat fileFormat, IErrorStrategy errorStrategyOrNull)
     {
         final byte[] buffer = new byte[BUFFER_SIZE];
         final IHDF5Writer hdf5WriterOrNull =
@@ -60,8 +61,9 @@ public class HDF5Archiver
         final IHDF5Reader hdf5Reader =
                 (hdf5WriterOrNull != null) ? hdf5WriterOrNull : HDF5ArchiveExtractor
                         .createHDF5Reader(archiveFile);
-        this.lister = new HDF5ArchiveLister(hdf5Reader, strategy, continueOnError, buffer);
-        this.extracter = new HDF5ArchiveExtractor(hdf5Reader, strategy, continueOnError, buffer);
+        this.lister = new HDF5ArchiveLister(hdf5Reader, strategy, errorStrategyOrNull, buffer);
+        this.extracter =
+                new HDF5ArchiveExtractor(hdf5Reader, strategy, errorStrategyOrNull, buffer);
         if (hdf5WriterOrNull == null)
         {
             this.updaterOrNull = null;
@@ -69,8 +71,8 @@ public class HDF5Archiver
         } else
         {
             this.updaterOrNull =
-                    new HDF5ArchiveUpdater(hdf5WriterOrNull, strategy, continueOnError, buffer);
-            this.deleterOrNull = new HDF5ArchiveDeleter(hdf5WriterOrNull, continueOnError);
+                    new HDF5ArchiveUpdater(hdf5WriterOrNull, strategy, errorStrategyOrNull, buffer);
+            this.deleterOrNull = new HDF5ArchiveDeleter(hdf5WriterOrNull, errorStrategyOrNull);
         }
     }
 
@@ -81,37 +83,39 @@ public class HDF5Archiver
 
     public void list(String fileOrDir, String rootOrNull, boolean recursive,
             boolean suppressDirectoryEntries, boolean verbose, boolean numeric, Check check,
-            ListEntryVisitor visitor)
+            IListEntryVisitor visitor)
     {
         lister.list(fileOrDir, rootOrNull, recursive, suppressDirectoryEntries, verbose, numeric,
                 check, visitor);
     }
 
-    public HDF5Archiver extract(File root, String path, boolean verbose)
+    public HDF5Archiver extract(File root, String path, IPathVisitor pathVisitorOrNull)
             throws IllegalStateException
     {
-        extracter.extract(root, path, verbose);
+        extracter.extract(root, path, pathVisitorOrNull);
         return this;
     }
 
-    public HDF5Archiver archiveAll(File path, boolean verbose) throws IllegalStateException
+    public HDF5Archiver archiveAll(File path, IPathVisitor pathVisitorOrNull)
+            throws IllegalStateException
     {
         checkReadWrite();
-        updaterOrNull.archiveAll(path, verbose);
+        updaterOrNull.archiveAll(path, pathVisitorOrNull);
         return this;
     }
 
-    public HDF5Archiver archive(File root, File path, boolean verbose) throws IllegalStateException
+    public HDF5Archiver archive(File root, File path, IPathVisitor pathVisitorOrNull)
+            throws IllegalStateException
     {
         checkReadWrite();
-        updaterOrNull.archive(root, path, verbose);
+        updaterOrNull.archive(root, path, pathVisitorOrNull);
         return this;
     }
 
-    public HDF5Archiver delete(List<String> hdf5ObjectPaths, boolean verbose)
+    public HDF5Archiver delete(List<String> hdf5ObjectPaths, IPathVisitor pathVisitorOrNull)
     {
         checkReadWrite();
-        deleterOrNull.delete(hdf5ObjectPaths, verbose);
+        deleterOrNull.delete(hdf5ObjectPaths, pathVisitorOrNull);
         return this;
     }
 

@@ -38,21 +38,27 @@ public class HDF5ArchiveLister
 
     private final ArchivingStrategy strategy;
 
-    private final boolean continueOnError;
+    private final IErrorStrategy errorStrategy;
 
     private byte[] buffer;
 
-    public HDF5ArchiveLister(File archiveFile, boolean continueOnError)
+    public HDF5ArchiveLister(File archiveFile, IErrorStrategy errorStrategyOrNull)
     {
-        this(HDF5ArchiveExtractor.createHDF5Reader(archiveFile), new ArchivingStrategy(), continueOnError,
-                new byte[HDF5Archiver.BUFFER_SIZE]);
+        this(HDF5ArchiveExtractor.createHDF5Reader(archiveFile), new ArchivingStrategy(),
+                errorStrategyOrNull, new byte[HDF5Archiver.BUFFER_SIZE]);
     }
 
     public HDF5ArchiveLister(IHDF5Reader hdf5Reader, ArchivingStrategy strategy,
-            boolean continueOnError, byte[] buffer)
+            IErrorStrategy errorStrategyOrNull, byte[] buffer)
     {
         this.hdf5Reader = hdf5Reader;
-        this.continueOnError = continueOnError;
+        if (errorStrategyOrNull == null)
+        {
+            this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
+        } else
+        {
+            this.errorStrategy = errorStrategyOrNull;
+        }
         this.strategy = strategy;
         this.buffer = buffer;
     }
@@ -64,7 +70,7 @@ public class HDF5ArchiveLister
 
     public void list(String fileOrDir, String rootOrNull, boolean recursive,
             boolean suppressDirectoryEntries, boolean verbose, boolean numeric, Check check,
-            ListEntryVisitor visitor)
+            IListEntryVisitor visitor)
     {
         final ListParameters params =
                 new ListParameters().fileOrDirectoryInArchive(fileOrDir)
@@ -85,12 +91,12 @@ public class HDF5ArchiveLister
         {
             final String dir = FilenameUtils.getFullPathNoEndSeparator(objectPath);
             final Link linkOrNull =
-                    new DirectoryIndex(hdf5Reader, "".equals(dir) ? "/" : dir, continueOnError,
+                    new DirectoryIndex(hdf5Reader, "".equals(dir) ? "/" : dir, errorStrategy,
                             params.isVerbose()).tryGetLink(FilenameUtils.getName(objectPath));
             if (linkOrNull == null)
             {
-                HDF5ArchiveOutputHelper.dealWithError(new ListArchiveException(objectPath,
-                        "Object not found in archive."), continueOnError);
+                errorStrategy.dealWithError(new ListArchiveException(objectPath,
+                        "Object not found in archive."));
                 return;
             }
             try
@@ -99,11 +105,10 @@ public class HDF5ArchiveLister
             } catch (IOException ex)
             {
                 final File f = new File(objectPath);
-                HDF5ArchiveOutputHelper.dealWithError(new ListArchiveException(f, ex), continueOnError);
+                errorStrategy.dealWithError(new ListArchiveException(f, ex));
             } catch (HDF5Exception ex)
             {
-                HDF5ArchiveOutputHelper.dealWithError(new ListArchiveException(objectPath, ex),
-                        continueOnError);
+                errorStrategy.dealWithError(new ListArchiveException(objectPath, ex));
             }
         }
     }
@@ -111,17 +116,17 @@ public class HDF5ArchiveLister
     /**
      * Provide the entries of <var>dir</var> to <var>visitor</var> recursively.
      */
-    private void list(String dir, ListEntryVisitor visitor, ListParameters params, IdCache idCache)
+    private void list(String dir, IListEntryVisitor visitor, ListParameters params, IdCache idCache)
     {
         if (hdf5Reader.exists(dir, false) == false)
         {
-            HDF5ArchiveOutputHelper.dealWithError(new ListArchiveException(dir,
-                    "Directory not found in archive."), continueOnError);
+            errorStrategy.dealWithError(new ListArchiveException(dir,
+                    "Directory not found in archive."));
             return;
         }
         final String dirPrefix = dir.endsWith("/") ? dir : (dir + "/");
         String path = "UNKNOWN";
-        for (Link link : new DirectoryIndex(hdf5Reader, dir, continueOnError, params.isVerbose()))
+        for (Link link : new DirectoryIndex(hdf5Reader, dir, errorStrategy, params.isVerbose()))
         {
             try
             {
@@ -141,16 +146,15 @@ public class HDF5ArchiveLister
             } catch (IOException ex)
             {
                 final File f = new File(path);
-                HDF5ArchiveOutputHelper.dealWithError(new ListArchiveException(f, ex), continueOnError);
+                errorStrategy.dealWithError(new ListArchiveException(f, ex));
             } catch (HDF5Exception ex)
             {
-                HDF5ArchiveOutputHelper
-                        .dealWithError(new ListArchiveException(path, ex), continueOnError);
+                errorStrategy.dealWithError(new ListArchiveException(path, ex));
             }
         }
     }
 
-    private void process(String path, Link link, ListEntryVisitor visitor, ListParameters params,
+    private void process(String path, Link link, IListEntryVisitor visitor, ListParameters params,
             IdCache idCache) throws IOException
     {
         final String errorLineOrNull = doCheck(path, link, params, idCache);

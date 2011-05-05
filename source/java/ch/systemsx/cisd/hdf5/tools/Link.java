@@ -73,15 +73,14 @@ public final class Link implements Comparable<Link>
      * <code>null</code> if a system call fails and <var>continueOnError</var> is <code>true</code>.
      */
     public static Link tryCreate(File file, boolean includeOwnerAndPermissions,
-            boolean continueOnError)
+            IErrorStrategy errorStrategy)
     {
         try
         {
             return new Link(file, includeOwnerAndPermissions);
         } catch (IOExceptionUnchecked ex)
         {
-            HDF5ArchiveOutputHelper.dealWithError(new ArchivingException(file, ex.getCause()),
-                    continueOnError);
+            errorStrategy.dealWithError(new ArchivingException(file, ex.getCause()));
             return null;
         }
     }
@@ -261,7 +260,7 @@ public final class Link implements Comparable<Link>
     {
         return linkType == FileLinkType.REGULAR_FILE;
     }
-    
+
     public FileLinkType getLinkType()
     {
         return linkType;

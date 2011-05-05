@@ -56,19 +56,18 @@ public class HDF5ArchiveUpdater
 
     private final ArchivingStrategy strategy;
 
-    private final boolean continueOnError;
+    private final IErrorStrategy errorStrategy;
 
     private final byte[] buffer;
 
     public HDF5ArchiveUpdater(File archiveFile, boolean noSync, FileFormat fileFormat,
-            boolean continueOnError)
+            IErrorStrategy errorStrategyOrNull)
     {
         this(createHDF5Writer(archiveFile, fileFormat, noSync), new ArchivingStrategy(),
-                continueOnError, new byte[HDF5Archiver.BUFFER_SIZE]);
+                errorStrategyOrNull, new byte[HDF5Archiver.BUFFER_SIZE]);
     }
 
-    static IHDF5Writer createHDF5Writer(File archiveFile, FileFormat fileFormat,
-            boolean noSync)
+    static IHDF5Writer createHDF5Writer(File archiveFile, FileFormat fileFormat, boolean noSync)
     {
         final IHDF5WriterConfigurator config = HDF5FactoryProvider.get().configure(archiveFile);
         config.fileFormat(fileFormat);
@@ -81,10 +80,16 @@ public class HDF5ArchiveUpdater
     }
 
     public HDF5ArchiveUpdater(IHDF5Writer hdf5Writer, ArchivingStrategy strategy,
-            boolean continueOnError, byte[] buffer)
+            IErrorStrategy errorStrategyOrNull, byte[] buffer)
     {
         this.hdf5Writer = hdf5Writer;
-        this.continueOnError = continueOnError;
+        if (errorStrategyOrNull == null)
+        {
+            this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
+        } else
+        {
+            this.errorStrategy = errorStrategyOrNull;
+        }
         this.strategy = strategy;
         this.buffer = buffer;
     }
@@ -94,37 +99,37 @@ public class HDF5ArchiveUpdater
         hdf5Writer.close();
     }
 
-    public HDF5ArchiveUpdater archiveAll(File path, boolean verbose) throws IllegalStateException
+    public HDF5ArchiveUpdater archiveAll(File path, IPathVisitor pathVisitorOrNull)
+            throws IllegalStateException
     {
         final File absolutePath = path.getAbsoluteFile();
-        return archive(absolutePath.getParentFile(), absolutePath, verbose);
+        return archive(absolutePath.getParentFile(), absolutePath, pathVisitorOrNull);
     }
 
-    public HDF5ArchiveUpdater archive(File root, File path, boolean verbose)
+    public HDF5ArchiveUpdater archive(File root, File path, IPathVisitor pathVisitorOrNull)
             throws IllegalStateException
     {
         final File absoluteRoot = root.getAbsoluteFile();
         final File absolutePath = path.getAbsoluteFile();
         final boolean ok;
         int crc32 = 0;
-        final Link linkOrNull = Link.tryCreate(absolutePath, true, continueOnError);
+        final Link linkOrNull = Link.tryCreate(absolutePath, true, errorStrategy);
         if (linkOrNull != null && linkOrNull.isSymLink())
         {
-            ok = archiveSymLink("", linkOrNull, absolutePath);
+            ok = archiveSymLink("", linkOrNull, absolutePath, pathVisitorOrNull);
         } else if (absolutePath.isDirectory())
         {
-            ok = archiveDirectory(absoluteRoot, absolutePath, verbose);
+            ok = archiveDirectory(absoluteRoot, absolutePath, pathVisitorOrNull);
         } else if (absolutePath.isFile())
         {
             final Link pseudoLinkForChecksum = new Link();
-            ok = archiveFile(absoluteRoot, absolutePath, pseudoLinkForChecksum, verbose);
+            ok = archiveFile(absoluteRoot, absolutePath, pseudoLinkForChecksum, pathVisitorOrNull);
             crc32 = pseudoLinkForChecksum.getCrc32();
         } else
         {
             ok = false;
-            HDF5ArchiveOutputHelper.dealWithError(new ArchivingException(absolutePath,
-                    new IOException("Path corresponds to neither a file nor a directory.")),
-                    continueOnError);
+            errorStrategy.dealWithError(new ArchivingException(absolutePath, new IOException(
+                    "Path corresponds to neither a file nor a directory.")));
         }
         if (ok)
         {
@@ -149,10 +154,10 @@ public class HDF5ArchiveUpdater
             }
             final String hdf5GroupPath = getRelativePath(rootAbsolute, dirAbsolute);
             final DirectoryIndex index =
-                    new DirectoryIndex(hdf5Writer, hdf5GroupPath, continueOnError, false);
+                    new DirectoryIndex(hdf5Writer, hdf5GroupPath, errorStrategy, false);
             final Link linkOrNull =
                     Link.tryCreate(pathProcessing, strategy.doStoreOwnerAndPermissions(),
-                            continueOnError);
+                            errorStrategy);
             if (linkOrNull != null)
             {
                 linkOrNull.setCrc32(crc32Processing);
@@ -167,14 +172,14 @@ public class HDF5ArchiveUpdater
         }
     }
 
-    private boolean archiveDirectory(File root, File dir, boolean verbose)
+    private boolean archiveDirectory(File root, File dir, IPathVisitor pathVisitorOrNull)
             throws ArchivingException
     {
         final File[] fileEntries = dir.listFiles();
         if (fileEntries == null)
         {
-            HDF5ArchiveOutputHelper.dealWithError(new ArchivingException(dir, new IOException(
-                    "Cannot read directory")), continueOnError);
+            errorStrategy.dealWithError(new ArchivingException(dir, new IOException(
+                    "Cannot read directory")));
             return false;
         }
         final String hdf5GroupPath = getRelativePath(root, dir);
@@ -189,15 +194,17 @@ public class HDF5ArchiveUpdater
                 hdf5Writer.createGroup(hdf5GroupPath, totalLength * SIZEHINT_FACTOR);
             } catch (HDF5Exception ex)
             {
-                HDF5ArchiveOutputHelper.dealWithError(new ArchivingException(hdf5GroupPath, ex),
-                        continueOnError);
+                errorStrategy.dealWithError(new ArchivingException(hdf5GroupPath, ex));
             }
         }
         final List<Link> linkEntries =
                 DirectoryIndex.convertFilesToLinks(fileEntries,
-                        strategy.doStoreOwnerAndPermissions(), continueOnError);
+                        strategy.doStoreOwnerAndPermissions(), errorStrategy);
 
-        HDF5ArchiveOutputHelper.writeToConsole(hdf5GroupPath, verbose);
+        if (pathVisitorOrNull != null)
+        {
+            pathVisitorOrNull.visit(hdf5GroupPath);
+        }
         final Iterator<Link> linkIt = linkEntries.iterator();
         for (int i = 0; i < fileEntries.length; ++i)
         {
@@ -216,7 +223,7 @@ public class HDF5ArchiveUpdater
                     linkIt.remove();
                     continue;
                 }
-                final boolean ok = archiveDirectory(root, file, verbose);
+                final boolean ok = archiveDirectory(root, file, pathVisitorOrNull);
                 if (ok == false)
                 {
                     linkIt.remove();
@@ -230,52 +237,57 @@ public class HDF5ArchiveUpdater
                 }
                 if (linkOrNull.isSymLink())
                 {
-                    final boolean ok = archiveSymLink(hdf5GroupPath, linkOrNull, file);
+                    final boolean ok =
+                            archiveSymLink(hdf5GroupPath, linkOrNull, file, pathVisitorOrNull);
                     if (ok == false)
                     {
                         linkIt.remove();
                     }
                 } else if (linkOrNull.isRegularFile())
                 {
-                    final boolean ok = archiveFile(root, file, linkOrNull, verbose);
+                    final boolean ok = archiveFile(root, file, linkOrNull, pathVisitorOrNull);
                     if (ok == false)
                     {
                         linkIt.remove();
                     }
                 } else
                 {
-                    HDF5ArchiveOutputHelper.dealWithError(
-                            new ArchivingException(file, new IOException(
-                                    "Path corresponds to neither a file nor a directory.")),
-                            continueOnError);
+                    errorStrategy.dealWithError(new ArchivingException(file, new IOException(
+                            "Path corresponds to neither a file nor a directory.")));
                 }
             }
         }
 
+        final boolean verbose = (pathVisitorOrNull != null);
         final DirectoryIndex index =
-                new DirectoryIndex(hdf5Writer, hdf5GroupPath, continueOnError, verbose);
+                new DirectoryIndex(hdf5Writer, hdf5GroupPath, errorStrategy, verbose);
         index.updateIndex(linkEntries);
         index.writeIndexToArchive();
         return true;
     }
 
-    private boolean archiveSymLink(String hdf5GroupPath, Link link, File file)
+    private boolean archiveSymLink(String hdf5GroupPath, Link link, File file,
+            IPathVisitor pathVisitorOrNull)
     {
         final String linkTargetOrNull = Link.tryReadLinkTarget(file);
         if (linkTargetOrNull == null)
         {
-            HDF5ArchiveOutputHelper.dealWithError(new ArchivingException(file, new IOException(
-                    "Cannot read link target of symbolic link.")), continueOnError);
+            errorStrategy.dealWithError(new ArchivingException(file, new IOException(
+                    "Cannot read link target of symbolic link.")));
             return false;
         }
         try
         {
-            hdf5Writer.createSoftLink(linkTargetOrNull, hdf5GroupPath + "/" + link.getLinkName());
+            final String hdf5LinkPath = hdf5GroupPath + "/" + link.getLinkName();
+            hdf5Writer.createSoftLink(linkTargetOrNull, hdf5LinkPath);
+            if (pathVisitorOrNull != null)
+            {
+                pathVisitorOrNull.visit(hdf5LinkPath);
+            }
         } catch (HDF5Exception ex)
         {
-            HDF5ArchiveOutputHelper.dealWithError(
-                    new ArchivingException(hdf5GroupPath + "/" + link.getLinkName(), ex),
-                    continueOnError);
+            errorStrategy.dealWithError(new ArchivingException(hdf5GroupPath + "/"
+                    + link.getLinkName(), ex));
             return false;
         }
         return true;
@@ -292,7 +304,7 @@ public class HDF5ArchiveUpdater
         return totalLength;
     }
 
-    private boolean archiveFile(File root, File file, Link link, boolean verbose)
+    private boolean archiveFile(File root, File file, Link link, IPathVisitor pathVisitorOrNull)
             throws ArchivingException
     {
         boolean ok = true;
@@ -303,17 +315,18 @@ public class HDF5ArchiveUpdater
             final long size = file.length();
             final int crc32 = copyToHDF5(file, hdf5ObjectPath, size, compression);
             link.setCrc32(crc32);
-            HDF5ArchiveOutputHelper.writeToConsole(hdf5ObjectPath, verbose);
+            if (pathVisitorOrNull != null)
+            {
+                pathVisitorOrNull.visit(hdf5ObjectPath);
+            }
         } catch (IOException ex)
         {
             ok = false;
-            HDF5ArchiveOutputHelper
-                    .dealWithError(new ArchivingException(file, ex), continueOnError);
+            errorStrategy.dealWithError(new ArchivingException(file, ex));
         } catch (HDF5Exception ex)
         {
             ok = false;
-            HDF5ArchiveOutputHelper.dealWithError(new ArchivingException(hdf5ObjectPath, ex),
-                    continueOnError);
+            errorStrategy.dealWithError(new ArchivingException(hdf5ObjectPath, ex));
         }
         return ok;
     }

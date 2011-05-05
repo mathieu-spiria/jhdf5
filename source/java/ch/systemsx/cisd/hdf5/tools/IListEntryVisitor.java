@@ -21,7 +21,7 @@ package ch.systemsx.cisd.hdf5.tools;
  * 
  * @author Bernd Rinn
  */
-public interface ListEntryVisitor
+public interface IListEntryVisitor
 {
     public void visit(ListEntry entry);
 }
