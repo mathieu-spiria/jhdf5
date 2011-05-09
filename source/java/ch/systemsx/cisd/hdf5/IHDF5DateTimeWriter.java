@@ -148,8 +148,8 @@ public interface IHDF5DateTimeWriter
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link IHDF5LongWriter#createLongArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
-     * create the data set.
+     * {@link IHDF5LongWriter#createLongArray(String, long, int, HDF5IntStorageFeatures)} call that
+     * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -219,6 +219,16 @@ public interface IHDF5DateTimeWriter
      */
     public void writeTimeDuration(final String objectPath, final long timeDuration,
             final HDF5TimeUnit timeUnit);
+
+    /**
+     * Writes out a time duration value. The data set will be tagged as the according type variant.
+     * <p>
+     * <em>Note: Time durations are stored as <code>long</code> values.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDuration The duration of time to write.
+     */
+    public void writeTimeDuration(final String objectPath, final HDF5TimeDuration timeDuration);
 
     /**
      * Creates a time duration array (of rank 1).
@@ -311,6 +321,20 @@ public interface IHDF5DateTimeWriter
      * Writes out a time duration array (of rank 1). The data set will be tagged as the according
      * type variant.
      * <p>
+     * <em>Note: Time durations are stored as <code>long[]</code> arrays.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDurations The time durations to write in the given <var>timeUnit</var>. The array
+     *            will be stored in the smallest time unit, durations given in larger time units
+     *            will be converted.
+     */
+    public void writeTimeDurationArray(final String objectPath,
+            final HDF5TimeDuration[] timeDurations);
+
+    /**
+     * Writes out a time duration array (of rank 1). The data set will be tagged as the according
+     * type variant.
+     * <p>
      * <em>Note: Time durations are stored as <code>long</code> values.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -320,6 +344,20 @@ public interface IHDF5DateTimeWriter
      */
     public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
             final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features);
+
+    /**
+     * Writes out a time duration array (of rank 1). The data set will be tagged as the according
+     * type variant.
+     * <p>
+     * <em>Note: Time durations are stored as <code>long[]</code> arrays.</em>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param timeDurations The time durations to write in the given <var>timeUnit</var>. The array
+     *            will be stored in the smallest time unit, durations given in larger time units
+     *            will be converted.
+     */
+    public void writeTimeDurationArray(final String objectPath,
+            final HDF5TimeDuration[] timeDurations, final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a time duration array (which is stored as a <code>long</code> array of
@@ -364,5 +402,49 @@ public interface IHDF5DateTimeWriter
      */
     public void writeTimeDurationArrayBlockWithOffset(final String objectPath, final long[] data,
             final int dataSize, final long offset, final HDF5TimeUnit timeUnit);
+
+    /**
+     * Writes out a block of a time duration array (which is stored as a <code>long</code> array of
+     * rank 1). The data set needs to have been created by
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericStorageFeatures)}
+     * beforehand.
+     * <p>
+     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
+     * to the <var>blockSize</var> argument of the
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericStorageFeatures)}
+     * call that was used to create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param blockNumber The number of the block to write.
+     */
+    public void writeTimeDurationArrayBlock(final String objectPath, final HDF5TimeDuration[] data,
+            final long blockNumber);
+
+    /**
+     * Writes out a block of a time duration array (which is stored as a <code>long</code> array of
+     * rank 1). The data set needs to have been created by
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericStorageFeatures)}
+     * beforehand.
+     * <p>
+     * Use this method instead of
+     * {@link #writeTimeDurationArrayBlock(String, long[], long, HDF5TimeUnit)} if the total size of
+     * the data set is not a multiple of the block size.
+     * <p>
+     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
+     * chosen to be equal to the <var>blockSize</var> argument of the
+     * {@link #createTimeDurationArray(String, long, int, HDF5TimeUnit, HDF5GenericStorageFeatures)}
+     * call that was used to create the data set.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
+     *            )
+     * @param offset The offset in the data set to start writing to.
+     */
+    public void writeTimeDurationArrayBlockWithOffset(final String objectPath,
+            final HDF5TimeDuration[] data, final int dataSize, final long offset);
 
 }

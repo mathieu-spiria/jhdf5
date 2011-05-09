@@ -45,32 +45,32 @@ public enum HDF5DataTypeVariant
     /**
      * A time duration in micro-seconds.
      */
-    TIME_DURATION_MICROSECONDS(HDF5Utils.allNumberTypes),
+    TIME_DURATION_MICROSECONDS(HDF5Utils.allTimeDurationTypes),
 
     /**
      * A time duration in milli-seconds.
      */
-    TIME_DURATION_MILLISECONDS(HDF5Utils.allNumberTypes),
+    TIME_DURATION_MILLISECONDS(HDF5Utils.allTimeDurationTypes),
 
     /**
      * A time duration in seconds.
      */
-    TIME_DURATION_SECONDS(HDF5Utils.allNumberTypes),
+    TIME_DURATION_SECONDS(HDF5Utils.allTimeDurationTypes),
 
     /**
      * A time duration in minutes.
      */
-    TIME_DURATION_MINUTES(HDF5Utils.allNumberTypes),
+    TIME_DURATION_MINUTES(HDF5Utils.allTimeDurationTypes),
 
     /**
      * A time duration in hours.
      */
-    TIME_DURATION_HOURS(HDF5Utils.allNumberTypes),
+    TIME_DURATION_HOURS(HDF5Utils.allTimeDurationTypes),
 
     /**
      * A time duration in days.
      */
-    TIME_DURATION_DAYS(HDF5Utils.allNumberTypes),
+    TIME_DURATION_DAYS(HDF5Utils.allTimeDurationTypes),
 
     /**
      * An enumeration.
@@ -151,6 +151,16 @@ public enum HDF5DataTypeVariant
         return compatibleTypes.contains(type);
     }
     
+    /**
+     * Returns the time unit for the given <var>typeVariant</var>. Note that it is an error
+     * if <var>typeVariant</var> does not correspond to a time unit.
+     */
+    public static HDF5TimeUnit getTimeUnit(final HDF5DataTypeVariant typeVariant)
+    {
+        return HDF5TimeUnit.values()[typeVariant.ordinal()
+                - HDF5DataTypeVariant.TIME_DURATION_MICROSECONDS.ordinal()];
+    }
+
     /**
      * Returns the time unit for the given <var>typeVariantOrdinal</var>. Note that it is an error
      * if <var>typeVariantOrdinal</var> does not correspond to a time unit.

@@ -230,7 +230,17 @@ public final class HDF5DataTypeInformation
     public Class<?> tryGetJavaType()
     {
         final int rank = (dimensions.length == 1 && dimensions[0] == 1) ? 0 : dimensions.length;
-        return dataClass.getJavaTypeProvider().getJavaType(rank, elementSize, typeVariantOrNull);
+        final Class<?> overrideDataTypeOrNull =
+                HDF5CompoundByteifyerFactory.tryGetOverrideJavaType(dataClass, rank, elementSize,
+                        typeVariantOrNull);
+        if (overrideDataTypeOrNull != null)
+        {
+            return overrideDataTypeOrNull;
+        } else
+        {
+            return dataClass.getJavaTypeProvider()
+                    .tryGetJavaType(rank, elementSize, typeVariantOrNull);
+        }
     }
 
     //

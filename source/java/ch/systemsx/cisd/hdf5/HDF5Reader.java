@@ -620,6 +620,12 @@ class HDF5Reader implements IHDF5Reader
         return dateTimeReader.getTimeDurationArrayNaturalBlocks(dataSetPath, timeUnit);
     }
 
+    public Iterable<HDF5DataBlock<HDF5TimeDuration[]>> getTimeDurationAndUnitArrayNaturalBlocks(
+            String objectPath) throws HDF5JavaException
+    {
+        return dateTimeReader.getTimeDurationAndUnitArrayNaturalBlocks(objectPath);
+    }
+
     public Iterable<HDF5DataBlock<long[]>> getTimeStampArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
@@ -646,6 +652,11 @@ class HDF5Reader implements IHDF5Reader
         return dateTimeReader.readTimeDuration(objectPath);
     }
 
+    public HDF5TimeDuration readTimeDurationAndUnit(String objectPath) throws HDF5JavaException
+    {
+        return dateTimeReader.readTimeDurationAndUnit(objectPath);
+    }
+
     public long[] readTimeDurationArray(String objectPath, HDF5TimeUnit timeUnit)
             throws HDF5JavaException
     {
@@ -655,6 +666,12 @@ class HDF5Reader implements IHDF5Reader
     public long[] readTimeDurationArray(String objectPath) throws HDF5JavaException
     {
         return dateTimeReader.readTimeDurationArray(objectPath);
+    }
+
+    public HDF5TimeDuration[] readTimeDurationAndUnitArray(String objectPath)
+            throws HDF5JavaException
+    {
+        return dateTimeReader.readTimeDurationAndUnitArray(objectPath);
     }
 
     public long[] readTimeDurationArrayBlock(String objectPath, int blockSize, long blockNumber,
@@ -669,6 +686,19 @@ class HDF5Reader implements IHDF5Reader
     {
         return dateTimeReader.readTimeDurationArrayBlockWithOffset(objectPath, blockSize, offset,
                 timeUnit);
+    }
+
+    public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlock(String objectPath, int blockSize,
+            long blockNumber) throws HDF5JavaException
+    {
+        return dateTimeReader.readTimeDurationAndUnitArrayBlock(objectPath, blockSize, blockNumber);
+    }
+
+    public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlockWithOffset(String objectPath,
+            int blockSize, long offset) throws HDF5JavaException
+    {
+        return dateTimeReader.readTimeDurationAndUnitArrayBlockWithOffset(objectPath, blockSize,
+                offset);
     }
 
     public long readTimeStamp(String objectPath) throws HDF5JavaException

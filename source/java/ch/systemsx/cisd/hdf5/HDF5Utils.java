@@ -104,11 +104,12 @@ final class HDF5Utils
         { float.class, Float.class, double.class, Double.class };
 
     /**
-     * All number types in Java.
+     * All types in Java that can store time durations.
      */
-    static Class<?>[] allNumberTypes = new Class<?>[]
+    static Class<?>[] allTimeDurationTypes = new Class<?>[]
         { byte.class, Byte.class, short.class, Short.class, int.class, Integer.class, long.class,
-                Long.class, float.class, Float.class, double.class, Double.class };
+                Long.class, float.class, Float.class, double.class, Double.class,
+                HDF5TimeDuration.class };
 
     static String getSuperGroup(String path)
     {

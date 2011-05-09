@@ -336,6 +336,7 @@ public class HDF5RoundtripTest
         test.testTimestampArrayChunked();
         test.testTimeDurations();
         test.testSmallTimeDurations();
+        test.testTimeDurationArray();
         test.testTimeDurationArrayChunked();
         test.testNumericConversion();
         test.testSetDataSetSize();
@@ -3214,6 +3215,7 @@ public class HDF5RoundtripTest
     {
         final File datasetFile = new File(workingDirectory, "timedurations.h5");
         final String timeDurationDS = "someDuration";
+        final String timeDurationDS2 = "someOtherDuration";
         final long timeDurationInSeconds = 10000L;
         final long timeDurationInMilliSeconds = 10000L * 1000L;
         final long timeDurationInHoursRounded = 3L;
@@ -3224,6 +3226,9 @@ public class HDF5RoundtripTest
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         writer.writeTimeDuration(timeDurationDS, timeDurationInSeconds, HDF5TimeUnit.SECONDS);
+        final HDF5TimeDuration timeDurationWithUnit =
+                new HDF5TimeDuration(timeDurationInHoursRounded, HDF5TimeUnit.HOURS);
+        writer.writeTimeDuration(timeDurationDS2, timeDurationWithUnit);
         writer.writeLong(noTimestampDS, someLong);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
@@ -3243,6 +3248,9 @@ public class HDF5RoundtripTest
                 reader.readTimeDuration(timeDurationDS, HDF5TimeUnit.MILLISECONDS));
         assertEquals(timeDurationInHoursRounded,
                 reader.readTimeDuration(timeDurationDS, HDF5TimeUnit.HOURS));
+        assertEquals(new HDF5TimeDuration(timeDurationInSeconds, HDF5TimeUnit.SECONDS),
+                reader.readTimeDurationAndUnit(timeDurationDS));
+        assertEquals(timeDurationWithUnit, reader.readTimeDurationAndUnit(timeDurationDS2));
         try
         {
             reader.readTimeDuration(noTimestampDS, HDF5TimeUnit.HOURS);
@@ -3295,14 +3303,47 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testTimeDurationArray()
+    {
+        final File datasetFile = new File(workingDirectory, "timedurationarray.h5");
+        final String timeDurationDS = "someDuration";
+        final HDF5TimeDuration[] durationsWritten =
+                new HDF5TimeDuration[]
+                    { new HDF5TimeDuration(2, HDF5TimeUnit.SECONDS),
+                            new HDF5TimeDuration(5, HDF5TimeUnit.HOURS),
+                            new HDF5TimeDuration(1, HDF5TimeUnit.DAYS) };
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        writer.writeTimeDurationArray(timeDurationDS, durationsWritten);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationDS);
+        assertTrue(info.isTimeDuration());
+        assertFalse(info.isTimeStamp());
+        assertEquals(HDF5TimeUnit.SECONDS, info.tryGetTimeUnit());
+        final HDF5TimeDuration[] durationsRead =
+                reader.readTimeDurationAndUnitArray(timeDurationDS);
+        assertEquals(durationsWritten.length, durationsRead.length);
+        for (int i = 0; i < durationsWritten.length; ++i)
+        {
+            assertTrue(durationsRead[i].isEquivalent(durationsWritten[i]));
+        }
+    }
+
+    @Test
     public void testTimeDurationArrayChunked()
     {
         final File datasetFile = new File(workingDirectory, "timeDurationArrayChunked.h5");
         final String timeDurationSeriesDS = "/some/timeseries";
-        final long[] timeDurationSeries = new long[10];
-        for (int i = 0; i < timeDurationSeries.length; ++i)
+        final String timeDurationSeriesDS2 = "/some/timeseries2";
+        final long[] timeDurationSeriesMillis = new long[10];
+        final long[] timeDurationSeriesMicros = new long[10];
+        for (int i = 0; i < timeDurationSeriesMillis.length; ++i)
         {
-            timeDurationSeries[i] = i * 10000L;
+            timeDurationSeriesMillis[i] = i * 10000L;
+            timeDurationSeriesMicros[i] = timeDurationSeriesMillis[i] * 1000L;
         }
         datasetFile.delete();
         assertFalse(datasetFile.exists());
@@ -3312,20 +3353,75 @@ public class HDF5RoundtripTest
                 GENERIC_DEFLATE);
         for (int i = 0; i < 10; ++i)
         {
-            writer.writeTimeDurationArrayBlock(timeDurationSeriesDS, timeDurationSeries, i,
-                    HDF5TimeUnit.MILLISECONDS);
+            writer.writeTimeDurationArrayBlock(timeDurationSeriesDS, timeDurationSeriesMicros, i,
+                    HDF5TimeUnit.MICROSECONDS);
+        }
+        writer.createTimeDurationArray(timeDurationSeriesDS2, 100, 10, HDF5TimeUnit.SECONDS,
+                GENERIC_DEFLATE);
+        final HDF5TimeDuration[] timeDurationSeries =
+                new HDF5TimeDuration[]
+                    {
+                            new HDF5TimeDuration(timeDurationSeriesMicros[0],
+                                    HDF5TimeUnit.MICROSECONDS),
+                            new HDF5TimeDuration(timeDurationSeriesMicros[1],
+                                    HDF5TimeUnit.MICROSECONDS),
+                            new HDF5TimeDuration(timeDurationSeriesMillis[2],
+                                    HDF5TimeUnit.MILLISECONDS),
+                            new HDF5TimeDuration(timeDurationSeriesMillis[3],
+                                    HDF5TimeUnit.MILLISECONDS),
+                            new HDF5TimeDuration(timeDurationSeriesMillis[4] / 1000L,
+                                    HDF5TimeUnit.SECONDS),
+                            new HDF5TimeDuration(timeDurationSeriesMillis[5] / 1000L,
+                                    HDF5TimeUnit.SECONDS),
+                            new HDF5TimeDuration(6, HDF5TimeUnit.HOURS),
+                            new HDF5TimeDuration(7, HDF5TimeUnit.HOURS),
+                            new HDF5TimeDuration(8, HDF5TimeUnit.DAYS),
+                            new HDF5TimeDuration(9, HDF5TimeUnit.DAYS) };
+        for (int i = 0; i < 10; ++i)
+        {
+            writer.writeTimeDurationArrayBlock(timeDurationSeriesDS2, timeDurationSeries, i);
         }
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationSeriesDS);
         assertEquals(HDF5DataTypeVariant.TIME_DURATION_MILLISECONDS, info.tryGetTypeVariant());
         assertChunkSizes(info, 10);
-        HDF5DateTimeReader.convertTimeDurations(HDF5TimeUnit.MICROSECONDS,
-                HDF5TimeUnit.MILLISECONDS, timeDurationSeries);
         for (int i = 0; i < 10; ++i)
         {
-            assertTrue(Arrays.equals(timeDurationSeries, reader.readTimeDurationArrayBlock(
+            assertTrue(Arrays.equals(timeDurationSeriesMicros, reader.readTimeDurationArrayBlock(
                     timeDurationSeriesDS, 10, i, HDF5TimeUnit.MICROSECONDS)));
+        }
+        final HDF5DataSetInformation info2 = reader.getDataSetInformation(timeDurationSeriesDS2);
+        assertEquals(HDF5DataTypeVariant.TIME_DURATION_SECONDS, info2.tryGetTypeVariant());
+        assertChunkSizes(info2, 10);
+        for (int i = 0; i < 10; ++i)
+        {
+            final long[] block =
+                    reader.readTimeDurationArrayBlock(timeDurationSeriesDS2, 10, i,
+                            HDF5TimeUnit.MICROSECONDS);
+            for (int j = 0; j < block.length; ++j)
+            {
+                assertEquals(HDF5TimeUnit.MICROSECONDS.convert(timeDurationSeries[j]), block[j]);
+            }
+        }
+        for (int i = 0; i < 10; ++i)
+        {
+            final HDF5TimeDuration[] block =
+                    reader.readTimeDurationAndUnitArrayBlock(timeDurationSeriesDS2, 10, i);
+            for (int j = 0; j < block.length; ++j)
+            {
+                assertTrue(block[j].isEquivalent(timeDurationSeries[j]));
+            }
+        }
+        for (HDF5DataBlock<HDF5TimeDuration[]> block : reader
+                .getTimeDurationAndUnitArrayNaturalBlocks(timeDurationSeriesDS2))
+        {
+            final HDF5TimeDuration[] data = block.getData();
+            for (int j = 0; j < data.length; ++j)
+            {
+                assertTrue(data[j] + "<>" + timeDurationSeries[j],
+                        data[j].isEquivalent(timeDurationSeries[j]));
+            }
         }
         reader.close();
     }
@@ -6134,7 +6230,10 @@ public class HDF5RoundtripTest
                                     mapping("f").memberClass(float[][].class).dimensions(2, 2),
                                     mapping("g").memberClass(MDLongArray.class).dimensions(
                                             new int[]
-                                                { 2, 2, 2 }) });
+                                                { 2, 2, 2 }),
+                                    mapping("h").memberClass(HDF5TimeDuration.class).typeVariant(
+                                            HDF5DataTypeVariant.TIME_DURATION_HOURS),
+                                    mapping("i").memberClass(Date.class) });
         final HDF5CompoundDataMap map = new HDF5CompoundDataMap();
         final float a = 3.14159f;
         map.put("a", a);
@@ -6158,6 +6257,10 @@ public class HDF5RoundtripTest
             { 1, 2, 3, 4, 5, 6, 7, 8 }, new int[]
             { 2, 2, 2 });
         map.put("g", g);
+        final HDF5TimeDuration h = new HDF5TimeDuration(17, HDF5TimeUnit.HOURS);
+        map.put("h", h);
+        final Date ii = new Date(10000);
+        map.put("i", ii);
         writer.writeCompound("cpd", type, map);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
@@ -6165,7 +6268,7 @@ public class HDF5RoundtripTest
                 reader.getDataSetCompoundType("cpd", HDF5CompoundDataMap.class);
         assertEquals("MapCompoundA", typeRead.getName());
         final HDF5CompoundDataMap mapRead = reader.readCompound("cpd", typeRead);
-        assertEquals(7, mapRead.size());
+        assertEquals(9, mapRead.size());
         assertEquals(a, mapRead.get("a"));
         assertTrue(ArrayUtils.toString(mapRead.get("b")), ArrayUtils.isEquals(b, mapRead.get("b")));
         assertEquals(c, mapRead.get("c"));
@@ -6179,6 +6282,8 @@ public class HDF5RoundtripTest
         assertEquals(e, mapRead.get("e"));
         assertTrue(ArrayUtils.toString(mapRead.get("f")), ArrayUtils.isEquals(f, mapRead.get("f")));
         assertEquals(g, mapRead.get("g"));
+        assertEquals(h, mapRead.get("h"));
+        assertEquals(ii, mapRead.get("i"));
         reader.close();
     }
 

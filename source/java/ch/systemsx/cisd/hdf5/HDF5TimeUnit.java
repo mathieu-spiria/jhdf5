@@ -148,4 +148,20 @@ public enum HDF5TimeUnit
         return doConvert(currentUnitOrdinal, currentUnitOrdinal - ordinal(), duration);
     }
 
+    /**
+     * Convert the given time duration in the given unit to this unit. Conversions from smaller to
+     * larger units perform rounding, so they lose precision. Conversions from larger to smaller
+     * units with arguments that would numerically overflow saturate to <code>Long.MIN_VALUE</code>
+     * if negative or <code>Long.MAX_VALUE</code> if positive.
+     * 
+     * @param duration The time duration and its unit.
+     * @return The converted duration in this unit, or <code>Long.MIN_VALUE</code> if conversion
+     *         would negatively overflow, or <code>Long.MAX_VALUE</code> if it would positively
+     *         overflow.
+     */
+    public long convert(HDF5TimeDuration duration)
+    {
+        return convert(duration.getDuration(), duration.getUnit());
+    }
+
 }

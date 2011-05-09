@@ -22,7 +22,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * An interface that provides methods for reading time and date values from HDF5 files.
- *
+ * 
  * @author Bernd Rinn
  */
 public interface IHDF5DateTimeReader
@@ -172,6 +172,29 @@ public interface IHDF5DateTimeReader
             throws HDF5JavaException;
 
     /**
+     * Reads a time duration value and its unit from the data set <var>objectPath</var>, converts it
+     * to the given <var>timeUnit</var> and returns it as <code>long</code>. It needs to be tagged
+     * as one of the type variants that indicate a time duration, for example
+     * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * This tagging is done by the writer when using
+     * {@link IHDF5Writer#writeTimeDuration(String, long, HDF5TimeUnit)} or can be done by calling
+     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniantly by code
+     * like
+     * 
+     * <pre>
+     * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
+     * </pre>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The time duration and its unit.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     */
+    public HDF5TimeDuration readTimeDurationAndUnit(final String objectPath)
+            throws HDF5JavaException;
+
+    /**
      * Reads a time duration array from the data set <var>objectPath</var>, converts it to seconds
      * and returns it as a <code>long[]</code> array. It needs to be tagged as one of the type
      * variants that indicate a time duration, for example
@@ -181,11 +204,27 @@ public interface IHDF5DateTimeReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The time duration in seconds.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not defined as type variant
-     *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
      * @see #readTimeDurationArray(String, HDF5TimeUnit)
      */
     public long[] readTimeDurationArray(final String objectPath) throws HDF5JavaException;
+
+    /**
+     * Reads a time duration array from the data set <var>objectPath</var>and returns it as a
+     * <code>HDF5TimeDuration[]</code>. It needs to be tagged as one of the type variants that
+     * indicate a time duration, for example {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * See {@link #readTimeDuration(String, HDF5TimeUnit)} for how the tagging is done.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The time durations in their respective time unit.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     * @see #readTimeDurationArray(String, HDF5TimeUnit)
+     */
+    public HDF5TimeDuration[] readTimeDurationAndUnitArray(final String objectPath)
+            throws HDF5JavaException;
 
     /**
      * Reads a time duration array from the data set <var>objectPath</var>, converts it to the given
@@ -198,16 +237,19 @@ public interface IHDF5DateTimeReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeUnit The time unit that the duration should be converted to.
      * @return The time duration in the given unit.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not defined as type variant
-     *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
      */
     public long[] readTimeDurationArray(final String objectPath, final HDF5TimeUnit timeUnit)
             throws HDF5JavaException;
 
     /**
-     * Reads a block of a time stamp array (of rank 1) from the data set <var>objectPath</var>. The
-     * time stamp is stored as a <code>long</code> value in the HDF5 file. It needs to be tagged as
-     * type variant {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * Reads a block of a time duration array (of rank 1) from the data set <var>objectPath</var>.
+     * The time durations are stored as a <code>long[]</code> value in the HDF5 file. It needs to be
+     * tagged as one of the type variants that indicate a time duration, for example
+     * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * See {@link #readTimeDuration(String, HDF5TimeUnit)} for how the tagging is done.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSize The block size (this will be the length of the <code>long[]</code> returned
@@ -215,16 +257,22 @@ public interface IHDF5DateTimeReader
      * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
      *            <var>blockSize</var>).
      * @param timeUnit The time unit that the duration should be converted to.
-     * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
-     *         blockSize).
+     * @return The data read from the data set. The length will be
+     *         <code>min(size - blockSize*blockNumber,
+     *         blockSize)</code>.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
      */
     public long[] readTimeDurationArrayBlock(final String objectPath, final int blockSize,
-            final long blockNumber, final HDF5TimeUnit timeUnit);
+            final long blockNumber, final HDF5TimeUnit timeUnit) throws HDF5JavaException;
 
     /**
-     * Reads a block of a time stamp array (of rank 1) from the data set <var>objectPath</var>. The
-     * time stamp is stored as a <code>long</code> value in the HDF5 file. It needs to be tagged as
-     * type variant {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * Reads a block of a time duration array (of rank 1) from the data set <var>objectPath</var>.
+     * The time durations are stored as a <code>long[]</code> value in the HDF5 file. It needs to be
+     * tagged as one of the type variants that indicate a time duration, for example
+     * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * See {@link #readTimeDuration(String, HDF5TimeUnit)} for how the tagging is done.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSize The block size (this will be the length of the <code>long[]</code>
@@ -233,18 +281,78 @@ public interface IHDF5DateTimeReader
      *            0).
      * @param timeUnit The time unit that the duration should be converted to.
      * @return The data block read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
      */
     public long[] readTimeDurationArrayBlockWithOffset(final String objectPath,
-            final int blockSize, final long offset, final HDF5TimeUnit timeUnit);
+            final int blockSize, final long offset, final HDF5TimeUnit timeUnit)
+            throws HDF5JavaException;
 
     /**
-     * Provides all natural blocks of this one-dimensional data set of time stamps to iterate over.
+     * Reads a block of a time duration array (of rank 1) from the data set <var>objectPath</var>.
+     * The time durations are stored as a <code>HDF5TimeDuration[]</code> value in the HDF5 file. It
+     * needs to be tagged as one of the type variants that indicate a time duration, for example
+     * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * See {@link #readTimeDuration(String, HDF5TimeUnit)} for how the tagging is done.
      * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The block size (this will be the length of the <code>long[]</code> returned
+     *            if the data set is long enough).
+     * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
+     *            <var>blockSize</var>).
+     * @return The data read from the data set. The length will be
+     *         <code>min(size - blockSize*blockNumber,
+     *         blockSize)</code>.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     */
+    public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlock(final String objectPath,
+            final int blockSize, final long blockNumber) throws HDF5JavaException;
+
+    /**
+     * Reads a block of a time duration array (of rank 1) from the data set <var>objectPath</var>.
+     * The time durations are stored as a <code>HDF5TimeDuration[]</code> value in the HDF5 file. It
+     * needs to be tagged as one of the type variants that indicate a time duration, for example
+     * {@link HDF5DataTypeVariant#TIME_DURATION_SECONDS}.
+     * <p>
+     * See {@link #readTimeDuration(String, HDF5TimeUnit)} for how the tagging is done.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The block size (this will be the length of the <code>long[]</code>
+     *            returned).
+     * @param offset The offset of the block in the data set to start reading from (starting with
+     *            0).
+     * @return The data block read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     */
+    public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset) throws HDF5JavaException;
+
+    /**
+     * Provides all natural blocks of this one-dimensional data set of time durations to iterate
+     * over.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of a time duration data type or not of rank
+     *             1.
+     */
+    public Iterable<HDF5DataBlock<HDF5TimeDuration[]>> getTimeDurationAndUnitArrayNaturalBlocks(
+            final String objectPath) throws HDF5JavaException;
+
+    /**
+     * Provides all natural blocks of this one-dimensional data set of time durations to iterate
+     * over.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeUnit The time unit that the duration should be converted to.
      * @see HDF5DataBlock
-     * @throws HDF5JavaException If the data set is not of rank 1.
+     * @throws HDF5JavaException If the data set is not of a time duration data type or not of rank
+     *             1.
      */
     public Iterable<HDF5DataBlock<long[]>> getTimeDurationArrayNaturalBlocks(
-            final String dataSetPath, final HDF5TimeUnit timeUnit) throws HDF5JavaException;
+            final String objectPath, final HDF5TimeUnit timeUnit) throws HDF5JavaException;
 
 }

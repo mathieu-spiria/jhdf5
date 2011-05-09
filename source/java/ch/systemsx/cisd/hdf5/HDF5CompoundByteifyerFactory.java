@@ -46,6 +46,7 @@ class HDF5CompoundByteifyerFactory
         memberFactories.add(new HDF5CompoundMemberByteifyerStringFactory());
         memberFactories.add(new HDF5CompoundMemberByteifyerBitSetFactory());
         memberFactories.add(new HDF5CompoundMemberByteifyerDateFactory());
+        memberFactories.add(new HDF5CompoundMemberByteifyerHDF5TimeDurationFactory());
         memberFactories.add(new HDF5CompoundMemberByteifyerEnumFactory());
         memberFactories.add(new HDF5CompoundMemberByteifyerEnumArrayFactory());
     }
@@ -74,6 +75,31 @@ class HDF5CompoundByteifyerFactory
         HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
                 final HDF5CompoundMemberMapping member, Class<?> memberClazz, final int index,
                 final int offset, final FileInfoProvider fileInfoProvider);
+
+        /**
+         * Returns a suitable Java type, if this factory has one, or <code>null</code> otherwise.
+         */
+        public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
+                HDF5DataTypeVariant typeVariantOrNull);
+    }
+
+    /**
+     * Returns a Java type overriding the one given by {@link HDF5DataClass}, if the factories have
+     * one, or <code>null</code> otherwise.
+     */
+    static Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
+            HDF5DataTypeVariant typeVariantOrNull)
+    {
+        for (IHDF5CompoundMemberBytifyerFactory factory : memberFactories)
+        {
+            final Class<?> javaClassOrNull =
+                    factory.tryGetOverrideJavaType(dataClass, rank, elementSize, typeVariantOrNull);
+            if (javaClassOrNull != null)
+            {
+                return javaClassOrNull;
+            }
+        }
+        return null;
     }
 
     static HDF5MemberByteifyer[] createMemberByteifyers(Class<?> clazz,

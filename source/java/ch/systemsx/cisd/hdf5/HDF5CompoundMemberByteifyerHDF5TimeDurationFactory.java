@@ -26,7 +26,6 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setList;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 
 import java.lang.reflect.Field;
-import java.util.Date;
 
 import ncsa.hdf.hdf5lib.HDFNativeData;
 
@@ -35,27 +34,27 @@ import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberByt
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 
 /**
- * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>Date</code>.
+ * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for
+ * {@link HDF5TimeDuration}.
  * 
  * @author Bernd Rinn
  */
-public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytifyerFactory
+public class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
+        IHDF5CompoundMemberBytifyerFactory
 {
 
     public boolean canHandle(Class<?> clazz)
     {
-        return (clazz == Date.class);
+        return (clazz == HDF5TimeDuration.class);
     }
 
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
             HDF5DataTypeVariant typeVariantOrNull)
     {
-        if (dataClass == HDF5DataClass.INTEGER
-                && rank == 0
-                && elementSize == 8
-                && typeVariantOrNull == HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH)
+        if (dataClass == HDF5DataClass.INTEGER && rank == 0 && elementSize == 8
+                && typeVariantOrNull != null && typeVariantOrNull.isTimeDuration())
         {
-            return java.util.Date.class;
+            return HDF5TimeDuration.class;
         } else
         {
             return null;
@@ -69,8 +68,7 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
         final String memberName = member.getMemberName();
         final HDF5DataTypeVariant typeVariant =
                 HDF5DataTypeVariant.isTypeVariant(member.tryGetTypeVariant()) ? member
-                        .tryGetTypeVariant()
-                        : HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH;
+                        .tryGetTypeVariant() : HDF5DataTypeVariant.TIME_DURATION_MICROSECONDS;
         switch (accessType)
         {
             case FIELD:
@@ -92,6 +90,8 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
         ReflectionUtils.ensureAccessible(field);
         return new HDF5MemberByteifyer(field, memberName, LONG_SIZE, offset, typeVariant)
             {
+                final HDF5TimeUnit timeUnit = HDF5DataTypeVariant.getTimeUnit(typeVariant);
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -108,7 +108,9 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
                 public byte[] byteify(int compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
-                    return HDFNativeData.longToByte(((java.util.Date) field.get(obj)).getTime());
+                    final HDF5TimeDuration duration = (HDF5TimeDuration) field.get(obj);
+                    return HDFNativeData.longToByte(timeUnit.convert(duration.getDuration(),
+                            duration.getUnit()));
                 }
 
                 @Override
@@ -117,8 +119,8 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
                 {
                     field.set(
                             obj,
-                            new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset)));
+                            new HDF5TimeDuration(HDFNativeData.byteToLong(byteArr, arrayOffset
+                                    + offset), timeUnit));
                 }
             };
     }
@@ -128,6 +130,8 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
     {
         return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
             {
+                final HDF5TimeUnit timeUnit = HDF5DataTypeVariant.getTimeUnit(typeVariant);
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -144,8 +148,9 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
                 public byte[] byteify(int compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
-                    return HDFNativeData.longToByte(((java.util.Date) getMap(obj, memberName))
-                            .getTime());
+                    final HDF5TimeDuration duration = (HDF5TimeDuration) getMap(obj, memberName);
+                    return HDFNativeData.longToByte(timeUnit.convert(duration.getDuration(),
+                            duration.getUnit()));
                 }
 
                 @Override
@@ -154,8 +159,8 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
                 {
                     putMap(obj,
                             memberName,
-                            new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset)));
+                            new HDF5TimeDuration(HDFNativeData.byteToLong(byteArr, arrayOffset
+                                    + offset), timeUnit));
                 }
             };
     }
@@ -165,6 +170,8 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
     {
         return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
             {
+                final HDF5TimeUnit timeUnit = HDF5DataTypeVariant.getTimeUnit(typeVariant);
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -181,8 +188,9 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
                 public byte[] byteify(int compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
-                    return HDFNativeData.longToByte(((java.util.Date) getList(obj, index))
-                            .getTime());
+                    final HDF5TimeDuration duration = (HDF5TimeDuration) getList(obj, index);
+                    return HDFNativeData.longToByte(timeUnit.convert(duration.getDuration(),
+                            duration.getUnit()));
                 }
 
                 @Override
@@ -191,8 +199,8 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
                 {
                     setList(obj,
                             index,
-                            new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset)));
+                            new HDF5TimeDuration(HDFNativeData.byteToLong(byteArr, arrayOffset
+                                    + offset), timeUnit));
                 }
             };
     }
@@ -202,6 +210,8 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
     {
         return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
             {
+                final HDF5TimeUnit timeUnit = HDF5DataTypeVariant.getTimeUnit(typeVariant);
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -218,8 +228,9 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
                 public byte[] byteify(int compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
-                    return HDFNativeData.longToByte(((java.util.Date) getArray(obj, index))
-                            .getTime());
+                    final HDF5TimeDuration duration = (HDF5TimeDuration) getArray(obj, index);
+                    return HDFNativeData.longToByte(timeUnit.convert(duration.getDuration(),
+                            duration.getUnit()));
                 }
 
                 @Override
@@ -229,8 +240,8 @@ public class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemb
                     setArray(
                             obj,
                             index,
-                            new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset)));
+                            new HDF5TimeDuration(HDFNativeData.byteToLong(byteArr, arrayOffset
+                                    + offset), timeUnit));
                 }
             };
     }

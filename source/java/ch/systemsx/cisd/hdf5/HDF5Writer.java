@@ -509,6 +509,11 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         dateTimeWriter.writeTimeDuration(objectPath, timeDuration, timeUnit);
     }
 
+    public void writeTimeDuration(String objectPath, HDF5TimeDuration timeDuration)
+    {
+        dateTimeWriter.writeTimeDuration(objectPath, timeDuration);
+    }
+
     public void writeTimeDuration(String objectPath, long timeDuration)
     {
         dateTimeWriter.writeTimeDuration(objectPath, timeDuration);
@@ -531,6 +536,17 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations);
     }
 
+    public void writeTimeDurationArray(String objectPath, HDF5TimeDuration[] timeDurations)
+    {
+        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations);
+    }
+
+    public void writeTimeDurationArray(String objectPath, HDF5TimeDuration[] timeDurations,
+            HDF5IntStorageFeatures features)
+    {
+        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, features);
+    }
+
     public void writeTimeDurationArrayBlock(String objectPath, long[] data, long blockNumber,
             HDF5TimeUnit timeUnit)
     {
@@ -548,6 +564,18 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     // References
     //
     
+    public void writeTimeDurationArrayBlock(String objectPath, HDF5TimeDuration[] data,
+            long blockNumber)
+    {
+        dateTimeWriter.writeTimeDurationArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeTimeDurationArrayBlockWithOffset(String objectPath, HDF5TimeDuration[] data,
+            int dataSize, long offset)
+    {
+        dateTimeWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset);
+    }
+
     public void writeObjectReference(String objectPath, String referencedObjectPath)
     {
         referenceWriter.writeObjectReference(objectPath, referencedObjectPath);

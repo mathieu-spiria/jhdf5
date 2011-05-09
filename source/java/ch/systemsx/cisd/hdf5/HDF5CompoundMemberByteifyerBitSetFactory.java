@@ -40,6 +40,12 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
         return (clazz == BitSet.class);
     }
 
+    public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
+            HDF5DataTypeVariant typeVariantOrNull)
+    {
+        return null;
+    }
+
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
             final HDF5CompoundMemberMapping member, Class<?> memberClazz, final int index,
             final int offset, final FileInfoProvider fileInfoProvider)

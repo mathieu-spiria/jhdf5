@@ -29,7 +29,7 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * The implementation of {@link IHDF5DateTimeReader}.
- *
+ * 
  * @author Bernd Rinn
  */
 class HDF5DateTimeReader implements IHDF5DateTimeReader
@@ -179,8 +179,8 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final long[] block =
-                                        readTimeStampArrayBlockWithOffset(dataSetPath, index
-                                                .getBlockSize(), offset);
+                                        readTimeStampArrayBlockWithOffset(dataSetPath,
+                                                index.getBlockSize(), offset);
                                 return new HDF5DataBlock<long[]>(block, index.getAndIncIndex(),
                                         offset);
                             }
@@ -239,12 +239,36 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                     final int dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final HDF5TimeUnit storedUnit =
-                        baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
+                            baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
                     final long[] data = new long[1];
                     baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
                     return timeUnit.convert(data[0], storedUnit);
                 }
             };
+        return baseReader.runner.call(readCallable);
+    }
+
+    public HDF5TimeDuration readTimeDurationAndUnit(final String objectPath)
+            throws HDF5JavaException
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5TimeDuration> readCallable =
+                new ICallableWithCleanUp<HDF5TimeDuration>()
+                    {
+                        public HDF5TimeDuration call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final HDF5TimeUnit storedUnit =
+                                    baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
+                            final long[] data = new long[1];
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
+                            return new HDF5TimeDuration(data[0], storedUnit);
+                        }
+                    };
         return baseReader.runner.call(readCallable);
     }
 
@@ -266,7 +290,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                     final int dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final HDF5TimeUnit storedUnit =
-                        baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
+                            baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final long[] data = new long[spaceParams.blockSize];
@@ -276,6 +300,33 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                     return data;
                 }
             };
+        return baseReader.runner.call(readCallable);
+    }
+
+    public HDF5TimeDuration[] readTimeDurationAndUnitArray(final String objectPath)
+            throws HDF5JavaException
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5TimeDuration[]> readCallable =
+                new ICallableWithCleanUp<HDF5TimeDuration[]>()
+                    {
+                        public HDF5TimeDuration[] call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final HDF5TimeUnit storedUnit =
+                                    baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, registry);
+                            final long[] data = new long[spaceParams.blockSize];
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                                    spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                            return convertTimeDurations(storedUnit, data);
+                        }
+                    };
         return baseReader.runner.call(readCallable);
     }
 
@@ -292,7 +343,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                     final int dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final HDF5TimeUnit storedUnit =
-                        baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
+                            baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
@@ -332,11 +383,86 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
         return baseReader.runner.call(readCallable);
     }
 
-    public Iterable<HDF5DataBlock<long[]>> getTimeDurationArrayNaturalBlocks(
-            final String dataSetPath, final HDF5TimeUnit timeUnit) throws HDF5JavaException
+    public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlock(final String objectPath,
+            final int blockSize, final long blockNumber) throws HDF5JavaException
+    {
+        return readTimeDurationAndUnitArrayBlockWithOffset(objectPath, blockSize, blockSize
+                * blockNumber);
+    }
+
+    public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset) throws HDF5JavaException
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5TimeDuration[]> readCallable =
+                new ICallableWithCleanUp<HDF5TimeDuration[]>()
+                    {
+                        public HDF5TimeDuration[] call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final HDF5TimeUnit storedUnit =
+                                    baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset, blockSize,
+                                            registry);
+                            final long[] data = new long[spaceParams.blockSize];
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                                    spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                            return convertTimeDurations(storedUnit, data);
+                        }
+                    };
+        return baseReader.runner.call(readCallable);
+
+    }
+
+    public Iterable<HDF5DataBlock<HDF5TimeDuration[]>> getTimeDurationAndUnitArrayNaturalBlocks(
+            final String objectPath) throws HDF5JavaException
     {
         final HDF5NaturalBlock1DParameters params =
-                new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(dataSetPath));
+                new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(objectPath));
+
+        return new Iterable<HDF5DataBlock<HDF5TimeDuration[]>>()
+            {
+                public Iterator<HDF5DataBlock<HDF5TimeDuration[]>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<HDF5TimeDuration[]>>()
+                        {
+                            final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
+                                    params.getNaturalBlockIndex();
+
+                            public boolean hasNext()
+                            {
+                                return index.hasNext();
+                            }
+
+                            public HDF5DataBlock<HDF5TimeDuration[]> next()
+                            {
+                                final long offset = index.computeOffsetAndSizeGetOffset();
+                                final HDF5TimeDuration[] block =
+                                        readTimeDurationAndUnitArrayBlockWithOffset(objectPath,
+                                                index.getBlockSize(), offset);
+                                return new HDF5DataBlock<HDF5TimeDuration[]>(block,
+                                        index.getAndIncIndex(), offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    public Iterable<HDF5DataBlock<long[]>> getTimeDurationArrayNaturalBlocks(
+            final String objectPath, final HDF5TimeUnit timeUnit) throws HDF5JavaException
+    {
+        final HDF5NaturalBlock1DParameters params =
+                new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(objectPath));
 
         return new Iterable<HDF5DataBlock<long[]>>()
             {
@@ -356,8 +482,8 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final long[] block =
-                                        readTimeDurationArrayBlockWithOffset(dataSetPath, index
-                                                .getBlockSize(), offset, timeUnit);
+                                        readTimeDurationArrayBlockWithOffset(objectPath,
+                                                index.getBlockSize(), offset, timeUnit);
                                 return new HDF5DataBlock<long[]>(block, index.getAndIncIndex(),
                                         offset);
                             }
@@ -371,16 +497,26 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
             };
     }
 
-    static void convertTimeDurations(final HDF5TimeUnit timeUnit, final HDF5TimeUnit storedUnit,
-            final long[] data)
+    static void convertTimeDurations(final HDF5TimeUnit toTimeUnit,
+            final HDF5TimeUnit fromTimeUnit, final long[] data)
     {
-        if (timeUnit != storedUnit)
+        if (toTimeUnit != fromTimeUnit)
         {
             for (int i = 0; i < data.length; ++i)
             {
-                data[i] = timeUnit.convert(data[i], storedUnit);
+                data[i] = toTimeUnit.convert(data[i], fromTimeUnit);
             }
         }
+    }
+
+    static HDF5TimeDuration[] convertTimeDurations(final HDF5TimeUnit timeUnit, final long[] data)
+    {
+        final HDF5TimeDuration[] durations = new HDF5TimeDuration[data.length];
+        for (int i = 0; i < data.length; ++i)
+        {
+            durations[i] = new HDF5TimeDuration(data[i], timeUnit);
+        }
+        return durations;
     }
 
 }

@@ -35,6 +35,7 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
+import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 
 /**
  * Identifies the class of a data type. Note that for array types the class of the elements is
@@ -64,7 +65,7 @@ public enum HDF5DataClass
      */
     interface IHDF5JavaTypeProvider
     {
-        Class<?> getJavaType(int rank, int elementSize, HDF5DataTypeVariant typeVariantOrNull);
+        Class<?> tryGetJavaType(int rank, int elementSize, HDF5DataTypeVariant typeVariantOrNull);
     }
 
     private final int id;
@@ -83,7 +84,12 @@ public enum HDF5DataClass
     }
 
     /**
-     * Returns a {@link IHDF5JavaTypeProvider} for an appropriate java type.
+     * Returns a {@link IHDF5JavaTypeProvider} that returns the default Java type for this data
+     * class.
+     * <p>
+     * Overriding the default for particular choices should be done by one of the
+     * {@link IHDF5CompoundMemberBytifyerFactory}s in
+     * {@link IHDF5CompoundMemberBytifyerFactory#tryGetOverrideJavaType(HDF5DataClass, int, int, HDF5DataTypeVariant)}.
      */
     IHDF5JavaTypeProvider getJavaTypeProvider()
     {
@@ -131,7 +137,8 @@ public enum HDF5DataClass
             this.javaTypeMDArrayOrNull = javaTypeMDArrayOrNull;
         }
 
-        public Class<?> getJavaType(int rank, int elementSize, HDF5DataTypeVariant typeVariantOrNull)
+        public Class<?> tryGetJavaType(int rank, int elementSize,
+                HDF5DataTypeVariant typeVariantOrNull)
         {
             if (rank == 0)
             {
@@ -151,16 +158,11 @@ public enum HDF5DataClass
 
     private static class IntJavaTypeProvider implements IHDF5JavaTypeProvider
     {
-        public Class<?> getJavaType(int rank, int elementSize, HDF5DataTypeVariant typeVariantOrNull)
+        public Class<?> tryGetJavaType(int rank, int elementSize,
+                HDF5DataTypeVariant typeVariantOrNull)
         {
             if (rank == 0)
             {
-                // FIXME: that shouldn't be hardcoded
-                if (typeVariantOrNull == HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH
-                        && elementSize == 8)
-                {
-                    return java.util.Date.class;
-                }
                 switch (elementSize)
                 {
                     case 1:
@@ -225,7 +227,8 @@ public enum HDF5DataClass
 
     private static class FloatJavaTypeProvider implements IHDF5JavaTypeProvider
     {
-        public Class<?> getJavaType(int rank, int elementSize, HDF5DataTypeVariant typeVariantOrNull)
+        public Class<?> tryGetJavaType(int rank, int elementSize,
+                HDF5DataTypeVariant typeVariantOrNull)
         {
             if (rank == 0)
             {

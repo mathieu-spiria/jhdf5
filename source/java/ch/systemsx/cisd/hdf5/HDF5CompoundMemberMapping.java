@@ -588,6 +588,8 @@ public final class HDF5CompoundMemberMapping
     {
         typeVariantMap.put(java.util.Date.class,
                 HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH);
+        typeVariantMap.put(HDF5TimeDuration.class,
+                HDF5DataTypeVariant.TIME_DURATION_MICROSECONDS);
     }
 
     /**

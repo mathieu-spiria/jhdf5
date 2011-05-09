@@ -86,6 +86,12 @@ public class HDF5CompoundMemberByteifyerIntFactory implements IHDF5CompoundMembe
         return classToRankMap.containsKey(clazz);
     }
 
+    public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
+            HDF5DataTypeVariant typeVariantOrNull)
+    {
+        return null;
+    }
+
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
             HDF5CompoundMemberMapping member, Class<?> memberClazz, int index, int offset,
             FileInfoProvider fileInfoProvider)

@@ -36,6 +36,12 @@ public class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMe
         return (clazz == String.class) || (clazz == char[].class);
     }
 
+    public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
+            HDF5DataTypeVariant typeVariantOrNull)
+    {
+        return null;
+    }
+
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
             HDF5CompoundMemberMapping member, Class<?> memberClazz, int index, int offset,
             FileInfoProvider fileInfoProvider)
