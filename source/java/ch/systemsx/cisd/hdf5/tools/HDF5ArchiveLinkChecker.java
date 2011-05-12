@@ -34,7 +34,7 @@ import ch.systemsx.cisd.base.utilities.OSUtilities;
  * 
  * @author Bernd Rinn
  */
-public class HDF5ArchiveLinkChecker
+class HDF5ArchiveLinkChecker
 {
 
     static String checkLink(Link link, String path, ListParameters params, IdCache idCache,

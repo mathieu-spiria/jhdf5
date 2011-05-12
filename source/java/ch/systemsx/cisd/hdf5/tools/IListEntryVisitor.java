@@ -17,7 +17,7 @@
 package ch.systemsx.cisd.hdf5.tools;
 
 /**
- * An entry to visit {@Link ListEntry}s.
+ * An entry to visit {@link ListEntry}s.
  * 
  * @author Bernd Rinn
  */

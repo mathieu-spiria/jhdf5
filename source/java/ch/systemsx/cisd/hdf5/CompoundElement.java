@@ -45,7 +45,7 @@ public @interface CompoundElement
     int[] dimensions() default 0;
     
     /**
-     * The {@Link HDF5DataTypeVariant} of this compound element, if any.
+     * The {@link HDF5DataTypeVariant} of this compound element, if any.
      */
     HDF5DataTypeVariant typeVariant() default HDF5DataTypeVariant.NONE;
 }
