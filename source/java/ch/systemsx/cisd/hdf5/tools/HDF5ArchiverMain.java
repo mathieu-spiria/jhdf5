@@ -46,7 +46,8 @@ public class HDF5ArchiverMain
     private enum Command
     {
         ARCHIVE(new String[]
-            { "A", "AR", "ARCHIVE" }, false), EXTRACT(new String[]
+            { "A", "AR", "ARCHIVE" }, false), CAT(new String[]
+            { "C", "CT", "CAT" }, true), EXTRACT(new String[]
             { "E", "EX", "EXTRACT" }, true), DELETE(new String[]
             { "D", "RM", "DELETE", "REMOVE" }, false), LIST(new String[]
             { "L", "LS", "LIST" }, true), VERIFY(new String[]
@@ -121,7 +122,7 @@ public class HDF5ArchiverMain
     @Option(name = "C", longName = "compress-all", usage = "Regex of files to compress")
     private boolean compressAll = false;
 
-    @Option(name = "r", longName = "root-dir", metaVar = "DIR", usage = "Root directory for archiving / extracting")
+    @Option(name = "r", longName = "root-dir", metaVar = "DIR", usage = "Root directory for archiving / extracting / verifying")
     private File rootOrNull;
 
     @Option(name = "D", longName = "suppress-directories", usage = "Supress output for directories itself for LIST and VERIFY")
@@ -148,7 +149,7 @@ public class HDF5ArchiverMain
     @Option(longName = "stop-on-error", skipForExample = true, usage = "Stop on first error and give detailed error report")
     private boolean stopOnError = false;
 
-    @Option(longName = "no-sync", skipForExample = true, usage = "Do not sync to disk before program exits (writing mode only)")
+    @Option(longName = "no-sync", skipForExample = true, usage = "Do not sync to disk before program exits (write mode only)")
     private boolean noSync = false;
 
     private HDF5Archiver archiver;
@@ -230,11 +231,19 @@ public class HDF5ArchiverMain
         }
         parser.printHelp("h5ar", "[option [...]]",
                 "[ARCHIVE <archive_file> <item-to-archive> [...] | "
+                        + "CAT <archive_file> <item-to-cat> [...] | "
                         + "EXTRACT <archive_file> [<item-to-unarchive> [...]] | "
                         + "DELETE <archive_file> <item-to-delete> [...] | "
-                        + "LIST <archive_file>]", ExampleMode.NONE);
+                        + "LIST <archive_file> | VERIFY <archive_file>]", ExampleMode.NONE);
+        System.err.println("ARCHIVE: add files on the file system to an archive");
+        System.err.println("CAT: extract files from an archive to stdout");
+        System.err.println("EXTRACT: extract files from an archive to the file system");
+        System.err.println("DELETE: delete files from an archive");
+        System.err.println("LIST: list files in an archive");
         System.err
-                .println("Command aliases: ARCHIVE: A, AR; EXTRACT: E, EX; DELETE: D, REMOVE, RM; LIST: L, LS");
+                .println("VERIFY: verify the existence and integrity of files on the file system vs. the content of an archive");
+        System.err
+                .println("Command aliases: ARCHIVE: A, AR; CAT: C, CT; EXTRACT: E, EX; DELETE: D, REMOVE, RM; LIST: L, LS; VERIFY: V, VF");
         System.err.println("Example: h5ar" + parser.printExample(ExampleMode.ALL)
                 + " ARCHIVE archive.h5ar .");
         helpPrinted = true;
@@ -358,7 +367,7 @@ public class HDF5ArchiverMain
                     if (arguments.size() == 2)
                     {
                         System.err.println("Nothing to archive.");
-                        printHelp(true);
+                        break;
                     }
                     if (createArchiver() == false)
                     {
@@ -377,6 +386,23 @@ public class HDF5ArchiverMain
                         {
                             archiver.archiveAll(new File(arguments.get(i)),
                                     verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
+                        }
+                    }
+                    break;
+                case CAT:
+                    if (createArchiver() == false)
+                    {
+                        break;
+                    }
+                    if (arguments.size() == 2)
+                    {
+                        System.err.println("Nothing to cat.");
+                        break;
+                    } else
+                    {
+                        for (int i = 2; i < arguments.size(); ++i)
+                        {
+                            archiver.cat(getFSRoot(), arguments.get(i));
                         }
                     }
                     break;
@@ -402,7 +428,6 @@ public class HDF5ArchiverMain
                     if (arguments.size() == 2)
                     {
                         System.err.println("Nothing to delete.");
-                        printHelp(true);
                         break;
                     }
                     if (createArchiver() == false)

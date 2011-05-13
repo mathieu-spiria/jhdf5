@@ -17,8 +17,14 @@
 package ch.systemsx.cisd.hdf5.tools;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
+import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
+import ch.systemsx.cisd.hdf5.HDF5DataBlock;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
@@ -35,6 +41,10 @@ public class HDF5Archiver
     private final static int MB = 1024 * 1024;
 
     final static int BUFFER_SIZE = 10 * MB;
+
+    private final IHDF5Reader hdf5Reader;
+
+    private final IErrorStrategy errorStrategy;
 
     private final HDF5ArchiveLister lister;
 
@@ -58,7 +68,7 @@ public class HDF5Archiver
         final IHDF5Writer hdf5WriterOrNull =
                 readOnly ? null : HDF5ArchiveUpdater.createHDF5Writer(archiveFile, fileFormat,
                         noSync);
-        final IHDF5Reader hdf5Reader =
+        hdf5Reader =
                 (hdf5WriterOrNull != null) ? hdf5WriterOrNull : HDF5ArchiveExtractor
                         .createHDF5Reader(archiveFile);
         this.lister = new HDF5ArchiveLister(hdf5Reader, strategy, errorStrategyOrNull, buffer);
@@ -74,6 +84,13 @@ public class HDF5Archiver
                     new HDF5ArchiveUpdater(hdf5WriterOrNull, strategy, errorStrategyOrNull, buffer);
             this.deleterOrNull = new HDF5ArchiveDeleter(hdf5WriterOrNull, errorStrategyOrNull);
         }
+        if (errorStrategyOrNull == null)
+        {
+            this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
+        } else
+        {
+            this.errorStrategy = errorStrategyOrNull;
+        }
     }
 
     public void close()
@@ -87,6 +104,27 @@ public class HDF5Archiver
     {
         lister.list(fileOrDir, rootOrNull, recursive, suppressDirectoryEntries, verbose, numeric,
                 check, visitor);
+    }
+
+    public HDF5Archiver cat(File root, String path) throws IOExceptionUnchecked
+    {
+        if (hdf5Reader.isDataSet(path) == false)
+        {
+            errorStrategy.dealWithError(new UnarchivingException(path, "not found in archive"));
+            return this;
+        }
+        try
+        {
+            final OutputStream os = new FileOutputStream(FileDescriptor.out);
+            for (HDF5DataBlock<byte[]> block : hdf5Reader.getAsByteArrayNaturalBlocks(path))
+            {
+                os.write(block.getData());
+            }
+        } catch (IOException ex)
+        {
+            errorStrategy.dealWithError(new UnarchivingException(new File("stdout"), ex));
+        }
+        return this;
     }
 
     public HDF5Archiver extract(File root, String path, IPathVisitor pathVisitorOrNull)
