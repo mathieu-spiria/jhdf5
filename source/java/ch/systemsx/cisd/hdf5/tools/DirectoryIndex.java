@@ -261,7 +261,7 @@ public class DirectoryIndex implements Iterable<Link>
      */
     public Link tryGetLink(String name)
     {
-        return getLinks().tryGetLink(name);
+        return tryGetLinks().tryGetLink(name);
     }
 
     //
@@ -270,7 +270,7 @@ public class DirectoryIndex implements Iterable<Link>
 
     public Iterator<Link> iterator()
     {
-        return getLinks().iterator();
+        return tryGetLinks().iterator();
     }
 
     //
@@ -292,7 +292,7 @@ public class DirectoryIndex implements Iterable<Link>
             final HDF5EnumerationType linkTypeEnumeration =
                     getHDF5LinkTypeEnumeration(hdf5WriterOrNull);
             final StringBuilder concatenatedNames = new StringBuilder();
-            for (Link link : getLinks())
+            for (Link link : tryGetLinks())
             {
                 link.prepareForWriting(linkTypeEnumeration, concatenatedNames);
             }
@@ -304,7 +304,7 @@ public class DirectoryIndex implements Iterable<Link>
             final String indexDataSetName = getIndexDataSetName();
             final CRC32 crc32 = new CRC32();
             hdf5WriterOrNull.writeCompoundArray(indexDataSetName,
-                    getHDF5LinkCompoundType(hdf5WriterOrNull, linkTypeEnumeration), getLinks()
+                    getHDF5LinkCompoundType(hdf5WriterOrNull, linkTypeEnumeration), tryGetLinks()
                             .toArray(), HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                     new IHDF5Reader.IByteArrayInspector()
                         {
@@ -328,7 +328,20 @@ public class DirectoryIndex implements Iterable<Link>
     public void updateIndex(List<Link> entries)
     {
         ensureWriteMode();
-        setLinks(getLinks().update(entries));
+        final LinkList linkListOrNull = tryGetLinks();
+        setLinks((linkListOrNull == null) ? new LinkList(toArrayList(entries)) : linkListOrNull
+                .update(entries));
+    }
+
+    private ArrayList<Link> toArrayList(List<Link> entries)
+    {
+        if (entries instanceof ArrayList<?>)
+        {
+            return (ArrayList<Link>) entries;
+        } else
+        {
+            return new ArrayList<Link>(entries);
+        }
     }
 
     /**
@@ -339,16 +352,17 @@ public class DirectoryIndex implements Iterable<Link>
     public boolean remove(String name)
     {
         ensureWriteMode();
-        final Link linkOrNull = getLinks().tryGetLink(name);
+        final LinkList linkListOrNull = tryGetLinks();
+        final Link linkOrNull = (linkListOrNull == null) ? null : linkListOrNull.tryGetLink(name);
         if (linkOrNull != null)
         {
-            setLinks(getLinks().remove(Collections.singleton(linkOrNull)));
+            setLinks(tryGetLinks().remove(Collections.singleton(linkOrNull)));
             return true;
         }
         return false;
     }
 
-    private LinkList getLinks()
+    private LinkList tryGetLinks()
     {
         return links.get();
     }
