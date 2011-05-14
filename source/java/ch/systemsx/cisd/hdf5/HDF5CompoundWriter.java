@@ -20,8 +20,6 @@ import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 
-import java.util.Map;
-
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -121,11 +119,6 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 byteArray);
     }
 
-    public void writeCompoundFromMap(String objectPath, Map<String, ?> data)
-    {
-        primWriteCompound(objectPath, getInferredCompoundType(data), data, null);
-    }
-
     public <T> void writeCompound(String objectPath, T data)
     {
         primWriteCompound(objectPath, getInferredCompoundType(data), data, null);
@@ -195,22 +188,6 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
     }
 
     public <T> void writeCompoundArray(String objectPath, T[] data,
-            HDF5GenericStorageFeatures features)
-    {
-        assert data != null && data.length > 0;
-
-        primWriteCompoundArray(objectPath, getInferredCompoundType(data[0]), data, features, null);
-    }
-
-    public void writeCompoundFromMapArray(String objectPath, Map<String, ?>[] data)
-    {
-        assert data != null && data.length > 0;
-
-        primWriteCompoundArray(objectPath, getInferredCompoundType(data[0]), data,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, null);
-    }
-
-    public void writeCompoundFromMapArray(String objectPath, Map<String, ?>[] data,
             HDF5GenericStorageFeatures features)
     {
         assert data != null && data.length > 0;
@@ -678,24 +655,6 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
         baseWriter.checkOpen();
         primWriteCompoundMDArray(objectPath, getInferredCompoundType(data.getAsFlatArray()[0]),
                 data, features, null);
-    }
-
-    public void writeCompoundFromMapMDArray(String objectPath, MDArray<Map<String, ?>> data)
-    {
-        writeCompoundMDArray(objectPath, data, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
-    }
-
-    @SuppressWarnings("unchecked")
-    public void writeCompoundFromMapMDArray(String objectPath, MDArray<Map<String, ?>> data,
-            HDF5GenericStorageFeatures features)
-    {
-        assert objectPath != null;
-        assert data != null && data.size() > 0;
-
-        baseWriter.checkOpen();
-        final HDF5CompoundType<?> type = getInferredCompoundType(data.getAsFlatArray()[0]);
-        primWriteCompoundMDArray(objectPath, (HDF5CompoundType<Map<String, ?>>) type, data,
-                features, null);
     }
 
 }

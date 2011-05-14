@@ -273,7 +273,9 @@ public interface IHDF5SimpleReader
      * Reads a compound from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param pojoClass The class to return the result in.
+     * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
+     *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
+     *            <code>Object[]</code> to get it in an array.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
@@ -281,34 +283,16 @@ public interface IHDF5SimpleReader
             throws HDF5JavaException;
 
     /**
-     * Reads a compound from the data set <var>objectPath</var> into a map.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public HDF5CompoundDataMap readCompoundToMap(final String objectPath) throws HDF5JavaException;
-
-    /**
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param pojoClass The class to return the compound data in.
+     * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
+     *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
+     *            <code>Object[]</code> to get it in an array.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
     public <T> T[] readCompoundArray(final String objectPath, final Class<T> pojoClass)
             throws HDF5JavaException;
-
-    /**
-     * Reads a compound array (of rank 1) from the data set <var>objectPath</var> into a map.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public HDF5CompoundDataMap[] readCompoundArrayToMap(final String objectPath)
-            throws HDF5JavaException;
-
 
 }

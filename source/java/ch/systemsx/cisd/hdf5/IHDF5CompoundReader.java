@@ -47,40 +47,14 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * Reads a compound from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param pojoClass The class to return the result in.
+     * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
+     *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
+     *            <code>Object[]</code> to get it in an array.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
     public <T> T readCompound(final String objectPath, final Class<T> pojoClass)
             throws HDF5JavaException;
-
-    /**
-     * Reads a compound from the data set <var>objectPath</var> into a map.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public HDF5CompoundDataMap readCompoundToMap(final String objectPath) throws HDF5JavaException;
-
-    /**
-     * Reads a compound from the data set <var>objectPath</var> into a list.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public HDF5CompoundDataList readCompoundToList(final String objectPath)
-            throws HDF5JavaException;
-
-    /**
-     * Reads a compound from the data set <var>objectPath</var> into an array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public Object[] readCompoundToArray(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a compound from the data set <var>objectPath</var>.
@@ -123,41 +97,14 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param pojoClass The class to return the compound data in.
+     * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
+     *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
+     *            <code>Object[]</code> to get it in an array.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
     public <T> T[] readCompoundArray(final String objectPath, final Class<T> pojoClass)
             throws HDF5JavaException;
-
-    /**
-     * Reads a compound array (of rank 1) from the data set <var>objectPath</var> into a map.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public HDF5CompoundDataMap[] readCompoundArrayToMap(final String objectPath)
-            throws HDF5JavaException;
-
-    /**
-     * Reads a compound array (of rank 1) from the data set <var>objectPath</var> into a list.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public HDF5CompoundDataList[] readCompoundArrayToList(final String objectPath)
-            throws HDF5JavaException;
-
-    /**
-     * Reads a compound array (of rank 1) from the data set <var>objectPath</var> into an array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public Object[][] readCompoundArrayToArray(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
@@ -253,45 +200,14 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * Provides all natural blocks of this one-dimensional data set of compounds to iterate over.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param pojoClass The class to return the compound data in.
+     * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
+     *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
+     *            <code>Object[]</code> to get it in an array.
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
      */
     public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String objectPath,
             final Class<T> pojoClass) throws HDF5JavaException;
-
-    /**
-     * Provides all natural blocks of this one-dimensional data set of compounds to iterate over.
-     * Provides each compound value as a map.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @see HDF5DataBlock
-     * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
-     */
-    public <T> Iterable<HDF5DataBlock<HDF5CompoundDataMap[]>> getCompoundArrayAsMapNaturalBlocks(
-            final String objectPath) throws HDF5JavaException;
-
-    /**
-     * Provides all natural blocks of this one-dimensional data set of compounds to iterate over.
-     * Provides each compound value as a list.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @see HDF5DataBlock
-     * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
-     */
-    public <T> Iterable<HDF5DataBlock<HDF5CompoundDataList[]>> getCompoundArrayAsListNaturalBlocks(
-            final String objectPath) throws HDF5JavaException;
-
-    /**
-     * Provides all natural blocks of this one-dimensional data set of compounds to iterate over.
-     * Provides each compound value as an array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @see HDF5DataBlock
-     * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
-     */
-    public <T> Iterable<HDF5DataBlock<Object[][]>> getCompoundArrayAsArrayNaturalBlocks(
-            final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a compound array from the data set <var>objectPath</var>.
@@ -308,41 +224,13 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * Reads a compound array from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param pojoClass The class to return the compound data in.
+     * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
+     *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
+     *            <code>Object[]</code> to get it in an array.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
     public <T> MDArray<T> readCompoundMDArray(final String objectPath, final Class<T> pojoClass)
-            throws HDF5JavaException;
-
-    /**
-     * Reads a compound array from the data set <var>objectPath</var> into a map.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public MDArray<HDF5CompoundDataMap> readCompoundMDArrayToMap(final String objectPath)
-            throws HDF5JavaException;
-
-    /**
-     * Reads a compound array from the data set <var>objectPath</var> into a list.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public MDArray<HDF5CompoundDataList> readCompoundMDArrayToList(final String objectPath)
-            throws HDF5JavaException;
-
-    /**
-     * Reads a compound array from the data set <var>objectPath</var> into an array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public MDArray<Object[]> readCompoundMDArrayToArray(final String objectPath)
             throws HDF5JavaException;
 
     /**
@@ -446,44 +334,13 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * Provides all natural blocks of this multi-dimensional data set of compounds to iterate over.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param pojoClass The class to return the compound data in.
+     * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
+     *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
+     *            <code>Object[]</code> to get it in an array.
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not a compound data set.
      */
-    public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(final String objectPath,
-            final Class<T> pojoClass) throws HDF5JavaException;
-
-    /**
-     * Provides all natural blocks of this multi-dimensional data set of compounds to iterate over.
-     * Provides each compound value as a map.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @see HDF5DataBlock
-     * @throws HDF5JavaException If the data set is not a compound data set.
-     */
-    public <T> Iterable<HDF5MDDataBlock<MDArray<HDF5CompoundDataMap>>> getCompoundMDArrayAsMapNaturalBlocks(
-            final String objectPath) throws HDF5JavaException;
-
-    /**
-     * Provides all natural blocks of this multi-dimensional data set of compounds to iterate over.
-     * Provides each compound value as a list.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @see HDF5DataBlock
-     * @throws HDF5JavaException If the data set is not a compound data set.
-     */
-    public <T> Iterable<HDF5MDDataBlock<MDArray<HDF5CompoundDataList>>> getCompoundMDArrayAsListNaturalBlocks(
-            final String objectPath) throws HDF5JavaException;
-
-    /**
-     * Provides all natural blocks of this multi-dimensional data set of compounds to iterate over.
-     * Provides each compound value as an array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @see HDF5DataBlock
-     * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
-     */
-    public <T> Iterable<HDF5MDDataBlock<MDArray<Object[]>>> getCompoundMDArrayAsArrayNaturalBlocks(
-            final String objectPath) throws HDF5JavaException;
+    public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
+            final String objectPath, final Class<T> pojoClass) throws HDF5JavaException;
 
 }
