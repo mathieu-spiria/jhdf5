@@ -16,12 +16,18 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
@@ -524,6 +530,274 @@ public final class HDF5CompoundMemberMapping
             }
         }
         return result.toArray(new HDF5CompoundMemberMapping[result.size()]);
+    }
+
+    /**
+     * Returns the inferred compound member mapping for the given <var>compoundMap</var>. All
+     * entries that correspond to members with length or dimension information take this information
+     * from the values supplied.
+     * <p>
+     * <em>Example:</em>
+     * 
+     * <pre>
+     * Map&lt;String, Object&gt; mw = new HashMap&lt;String, Object&gt;();
+     * mw.put(&quot;date&quot;, new Date());
+     * mw.put(&quot;temperatureInDegreeCelsius&quot;, 19.5f);
+     * mw.put(&quot;voltagesInMilliVolts&quot;, new double[][] { 1, 2, 3 }, { 4, 5, 6 } });
+     * </pre>
+     * 
+     * will lead to:
+     * 
+     * <pre>
+     * inferMapping(mw) -> { mapping("date").memberClass(Date.class), 
+     *                       mapping("temperatureInDegreeCelsius").memberClass(float.class), 
+     *                       mapping("voltagesInMilliVolts").memberClass(double[][].class).dimensions(new int[] { 3, 3 } }
+     * </pre>
+     */
+    public static HDF5CompoundMemberMapping[] inferMapping(final Map<String, Object> compoundMap)
+    {
+        final List<HDF5CompoundMemberMapping> result =
+                inferMapping(compoundMap.size(), compoundMap.entrySet());
+        Collections.sort(result, new Comparator<HDF5CompoundMemberMapping>()
+            {
+                public int compare(HDF5CompoundMemberMapping o1, HDF5CompoundMemberMapping o2)
+                {
+                    return o1.memberName.compareTo(o2.memberName);
+                }
+            });
+        return result.toArray(new HDF5CompoundMemberMapping[result.size()]);
+    }
+
+    /**
+     * Returns the inferred compound member mapping for the given <var>memberNames</var> and
+     * <var>memberValues</var>. All entries that correspond to members with length or dimension
+     * information take this information from the values supplied.
+     * <p>
+     * <em>Example:</em>
+     * 
+     * <pre>
+     * List&lt;String&gt; n = Arrays.asList("date", "temperatureInDegreeCelsius", "voltagesInMilliVolts");
+     * List&lt;Object&gt; l = Arrays. &lt;Object&gt;asList(new Date(), 19.5f, new double[][] { 1, 2, 3 }, { 4, 5, 6 } });
+     * </pre>
+     * 
+     * will lead to:
+     * 
+     * <pre>
+     * inferMapping(n, l) -> { mapping("date").memberClass(Date.class), 
+     *                       mapping("temperatureInDegreeCelsius").memberClass(float.class), 
+     *                       mapping("voltagesInMilliVolts").memberClass(double[][].class).dimensions(new int[] { 3, 3 } }
+     * </pre>
+     */
+    public static HDF5CompoundMemberMapping[] inferMapping(final List<String> memberNames,
+            final List<?> memberValues)
+    {
+        assert memberNames != null;
+        assert memberValues != null;
+        assert memberNames.size() == memberValues.size();
+
+        final List<HDF5CompoundMemberMapping> result =
+                inferMapping(memberNames.size(), createEntryIterable(memberNames, memberValues));
+        return result.toArray(new HDF5CompoundMemberMapping[result.size()]);
+    }
+
+    /**
+     * Returns the inferred compound member mapping for the given <var>memberNames</var> and
+     * <var>memberValues</var>. All entries that correspond to members with length or dimension
+     * information take this information from the values supplied.
+     * <p>
+     * <em>Example:</em>
+     * 
+     * <pre>
+     * String[] n = new String[] { "date", "temperatureInDegreeCelsius", "voltagesInMilliVolts" };
+     * Object[] l = new Object[] { new Date(), 19.5f, new double[][] { 1, 2, 3 }, { 4, 5, 6 } } };
+     * </pre>
+     * 
+     * will lead to:
+     * 
+     * <pre>
+     * inferMapping(n, l) -> { mapping("date").memberClass(Date.class), 
+     *                       mapping("temperatureInDegreeCelsius").memberClass(float.class), 
+     *                       mapping("voltagesInMilliVolts").memberClass(double[][].class).dimensions(new int[] { 3, 3 } }
+     * </pre>
+     */
+    public static HDF5CompoundMemberMapping[] inferMapping(final String[] memberNames,
+            final Object[] memberValues)
+    {
+        assert memberNames != null;
+        assert memberValues != null;
+        assert memberNames.length == memberValues.length;
+
+        final List<HDF5CompoundMemberMapping> result =
+                inferMapping(memberNames.length, createEntryIterable(memberNames, memberValues));
+        return result.toArray(new HDF5CompoundMemberMapping[result.size()]);
+    }
+
+    private static Iterable<Entry<String, Object>> createEntryIterable(
+            final List<String> memberNames, final List<?> memberValues)
+    {
+        return new Iterable<Map.Entry<String, Object>>()
+            {
+                public Iterator<Entry<String, Object>> iterator()
+                {
+                    return new Iterator<Map.Entry<String, Object>>()
+                        {
+                            int idx = -1;
+
+                            public boolean hasNext()
+                            {
+                                return idx < memberNames.size() - 1;
+                            }
+
+                            public Entry<String, Object> next()
+                            {
+                                ++idx;
+                                return new Entry<String, Object>()
+                                    {
+                                        public String getKey()
+                                        {
+                                            return memberNames.get(idx);
+                                        }
+
+                                        public Object getValue()
+                                        {
+                                            return memberValues.get(idx);
+                                        }
+
+                                        public Object setValue(Object value)
+                                        {
+                                            throw new UnsupportedOperationException();
+                                        }
+                                    };
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    private static Iterable<Entry<String, Object>> createEntryIterable(final String[] memberNames,
+            final Object[] memberValues)
+    {
+        return new Iterable<Map.Entry<String, Object>>()
+            {
+                public Iterator<Entry<String, Object>> iterator()
+                {
+                    return new Iterator<Map.Entry<String, Object>>()
+                        {
+                            int idx = -1;
+
+                            public boolean hasNext()
+                            {
+                                return idx < memberNames.length - 1;
+                            }
+
+                            public Entry<String, Object> next()
+                            {
+                                ++idx;
+                                return new Entry<String, Object>()
+                                    {
+                                        public String getKey()
+                                        {
+                                            return memberNames[idx];
+                                        }
+
+                                        public Object getValue()
+                                        {
+                                            return memberValues[idx];
+                                        }
+
+                                        public Object setValue(Object value)
+                                        {
+                                            throw new UnsupportedOperationException();
+                                        }
+                                    };
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    private static List<HDF5CompoundMemberMapping> inferMapping(final int size,
+            final Iterable<Map.Entry<String, Object>> entries)
+    {
+        final List<HDF5CompoundMemberMapping> result =
+                new ArrayList<HDF5CompoundMemberMapping>(size);
+        for (Map.Entry<String, Object> entry : entries)
+        {
+            final String memberName = entry.getKey();
+            final Object memberValue = entry.getValue();
+            final Class<?> memberClass = HDF5Utils.unwrapClass(memberValue.getClass());
+            if (memberClass.isArray())
+            {
+                final int lenx = Array.getLength(memberValue);
+                if (lenx > 0 && Array.get(memberValue, 0).getClass().isArray())
+                {
+                    final int leny = Array.getLength(Array.get(memberValue, 0));
+                    result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
+                            null, new int[]
+                                { lenx, leny }));
+                } else
+                {
+                    result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
+                            null, new int[]
+                                { lenx }));
+                }
+            } else if (MDAbstractArray.class.isInstance(memberValue))
+            {
+                result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName, null,
+                        ((MDAbstractArray<?>) memberValue).dimensions()));
+            } else
+            {
+                HDF5EnumerationType enumTypeOrNull = null;
+                if (memberClass == HDF5EnumerationValue.class)
+                {
+                    enumTypeOrNull = ((HDF5EnumerationValue) memberValue).getType();
+                } else if (memberClass == HDF5EnumerationValueArray.class)
+                {
+                    enumTypeOrNull = ((HDF5EnumerationValueArray) memberValue).getType();
+                }
+                result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
+                        enumTypeOrNull, new int[0]));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Infers a name for a compound type from the given <var>memberNames</var> by concatenating
+     * them.
+     * 
+     * @param memberNames The names of the members to use to build the compound type name from.
+     * @param sort If <code>true</code>, the names will be sorted before they are concatenated.
+     */
+    public static String constructCompoundTypeName(final Collection<String> memberNames,
+            boolean sort)
+    {
+        final Collection<String> names = sort ? sort(memberNames) : memberNames;
+        final StringBuilder b = new StringBuilder();
+        for (String name : names)
+        {
+            b.append(name);
+            b.append(':');
+        }
+        b.setLength(b.length() - 1);
+        return b.toString();
+    }
+
+    private static List<String> sort(Collection<String> memberNames)
+    {
+        final List<String> names = new ArrayList<String>(memberNames);
+        Collections.sort(names);
+        return names;
     }
 
     /**

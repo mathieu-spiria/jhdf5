@@ -249,17 +249,60 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
     @SuppressWarnings("unchecked")
     public <T> HDF5CompoundType<T> getInferredCompoundType(final String name, final T pojo)
     {
-        final Class<T> pojoClass = (Class<T>) pojo.getClass();
-        return getCompoundType(
-                name,
-                pojoClass,
-                HDF5CompoundMemberMapping.inferMapping(pojoClass,
-                        HDF5CompoundMemberMapping.inferEnumerationTypeMap(pojo)));
+        if (Map.class.isInstance(pojo))
+        {
+            final String compoundTypeName =
+                    (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(((Map) pojo).keySet(),
+                            true) : name;
+            return (HDF5CompoundType<T>) getCompoundType(compoundTypeName, Map.class,
+                    HDF5CompoundMemberMapping.inferMapping((Map) pojo));
+        } else
+        {
+            final Class<T> pojoClass = (Class<T>) pojo.getClass();
+            return getCompoundType(
+                    name,
+                    pojoClass,
+                    HDF5CompoundMemberMapping.inferMapping(pojoClass,
+                            HDF5CompoundMemberMapping.inferEnumerationTypeMap(pojo)));
+        }
     }
 
     public <T> HDF5CompoundType<T> getInferredCompoundType(final T pojo)
     {
         return getInferredCompoundType(null, pojo);
+    }
+
+    public HDF5CompoundType<List<?>> getInferredCompoundType(List<String> memberNames,
+            List<?> data)
+    {
+        return getInferredCompoundType(null, memberNames, data);
+    }
+
+    @SuppressWarnings("unchecked")
+    public HDF5CompoundType<List<?>> getInferredCompoundType(String name,
+            List<String> memberNames, List<?> data)
+    {
+        final String compoundTypeName =
+                (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(memberNames, false) : name;
+        final HDF5CompoundType<?> type =
+                getCompoundType(compoundTypeName, List.class,
+                        HDF5CompoundMemberMapping.inferMapping(memberNames, data));
+        return (HDF5CompoundType<List<?>>) type;
+    }
+
+    public HDF5CompoundType<Object[]> getInferredCompoundType(String[] memberNames, Object[] data)
+    {
+        return getInferredCompoundType(null, memberNames, data);
+    }
+
+    public HDF5CompoundType<Object[]> getInferredCompoundType(String name, String[] memberNames,
+            Object[] data)
+    {
+        final String compoundTypeName =
+                (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(
+                        Arrays.asList(memberNames), false) : name;
+        return getCompoundType(compoundTypeName, Object[].class,
+                HDF5CompoundMemberMapping.inferMapping(memberNames, data));
     }
 
     public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> pojoClass)

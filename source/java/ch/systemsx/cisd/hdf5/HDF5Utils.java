@@ -111,6 +111,39 @@ final class HDF5Utils
                 Long.class, float.class, Float.class, double.class, Double.class,
                 HDF5TimeDuration.class };
 
+    /**
+     * Returns the primitive type for wrapper classes of primitive types, and the <var>clazz</var>
+     * itself, otherwise.
+     */
+    static Class<?> unwrapClass(Class<?> clazz)
+    {
+        if (clazz == Byte.class)
+        {
+            return byte.class;
+        } else if (clazz == Short.class)
+        {
+            return short.class;
+        } else if (clazz == Integer.class)
+        {
+            return int.class;
+        } else if (clazz == Long.class)
+        {
+            return long.class;
+        } else if (clazz == Float.class)
+        {
+            return float.class;
+        } else if (clazz == Double.class)
+        {
+            return double.class;
+        } else if (clazz == Boolean.class)
+        {
+            return boolean.class;
+        } else
+        {
+            return clazz;
+        }
+    }
+
     static String getSuperGroup(String path)
     {
         assert path != null;

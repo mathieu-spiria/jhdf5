@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.util.List;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
@@ -143,7 +145,7 @@ public interface IHDF5CompoundInformationRetriever
      * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
      * Java compound type to the HDF5 type by reflection.
      * 
-     * @param name The name of the compound in the HDF5 file.
+     * @param name The name of the compound type in the HDF5 file.
      * @param template The compound to infer the HDF5 compound type from.
      * @see HDF5CompoundMemberMapping#inferMapping
      */
@@ -158,6 +160,56 @@ public interface IHDF5CompoundInformationRetriever
      * @see HDF5CompoundMemberMapping#inferMapping
      */
     public <T> HDF5CompoundType<T> getInferredCompoundType(final T template);
+
+    /**
+     * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
+     * the members.
+     * 
+     * @param name The name of the compound type in the HDF5 file.
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length than <var>memberNames</var>.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<List<?>> getInferredCompoundType(final String name,
+            List<String> memberNames, List<?> template);
+
+    /**
+     * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
+     * the members.
+     * 
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length than <var>memberNames</var>.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<List<?>> getInferredCompoundType(List<String> memberNames,
+            List<?> template);
+
+    /**
+     * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
+     * the members.
+     * 
+     * @param name The name of the compound type in the HDF5 file.
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length than <var>memberNames</var>.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<Object[]> getInferredCompoundType(final String name,
+            String[] memberNames, Object[] template);
+
+    /**
+     * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
+     * the members.
+     * 
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length than <var>memberNames</var>.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<Object[]> getInferredCompoundType(String[] memberNames,
+            Object[] template);
 
     /**
      * Returns the compound type for the given compound data set in <var>objectPath</var>, mapping
