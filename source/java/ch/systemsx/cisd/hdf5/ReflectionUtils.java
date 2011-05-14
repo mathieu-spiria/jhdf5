@@ -72,11 +72,11 @@ final class ReflectionUtils
     /**
      * Ensures that the given <var>member</var> is accessible even if by definition it is not.
      */
-    public static void ensureAccessible(final AccessibleObject member)
+    public static void ensureAccessible(final AccessibleObject memberOrNull)
     {
-        if (member.isAccessible() == false)
+        if (memberOrNull != null && memberOrNull.isAccessible() == false)
         {
-            member.setAccessible(true);
+            memberOrNull.setAccessible(true);
         }
     }
 
