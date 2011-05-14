@@ -81,12 +81,12 @@ abstract class HDF5MemberByteifyer
      */
     protected abstract int getMemberNativeTypeId();
 
-    public final void insertType(int dataTypeId)
+    public void insertType(int dataTypeId)
     {
         H5Tinsert(dataTypeId, memberName, offset, getMemberStorageTypeId());
     }
 
-    public final void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
+    public void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
     {
         if (getMemberNativeTypeId() < 0)
         {
@@ -98,22 +98,22 @@ abstract class HDF5MemberByteifyer
         }
     }
 
-    public final int getSize()
+    public int getSize()
     {
         return size;
     }
 
-    public final int getSizeInBytes()
+    public int getSizeInBytes()
     {
         return sizeInBytes;
     }
 
-    public final int getOffset()
+    public int getOffset()
     {
         return offset;
     }
 
-    public final int getTotalSize()
+    public int getTotalSize()
     {
         return offset + sizeInBytes;
     }
@@ -123,7 +123,7 @@ abstract class HDF5MemberByteifyer
         return typeVariant;
     }
 
-    public final String describe()
+    public String describe()
     {
         if (fieldOrNull != null)
         {
