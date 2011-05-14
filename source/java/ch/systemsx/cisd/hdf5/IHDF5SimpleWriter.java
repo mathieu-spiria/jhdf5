@@ -21,8 +21,8 @@ import java.util.Date;
 
 /**
  * A HDF5 writer which contains only the basic methods. If you feel overwhelmed with all the methods
- * of {@link IHDF5Writer}, then assign the writer to a {@link IHDF5SimpleWriter} variable and let the
- * code completion of your IDE help you find the method you are looking for.
+ * of {@link IHDF5Writer}, then assign the writer to a {@link IHDF5SimpleWriter} variable and let
+ * the code completion of your IDE help you find the method you are looking for.
  * <p>
  * Usage:
  * 
@@ -210,7 +210,7 @@ public interface IHDF5SimpleWriter extends IHDF5SimpleReader
      * @param timeDurations The time durations to write in seconds.
      */
     public void writeTimeDurationArray(final String objectPath, final long[] timeDurations);
-    
+
     /**
      * Writes out a <code>String</code> with a fixed maximal length.
      * 
@@ -234,8 +234,11 @@ public interface IHDF5SimpleWriter extends IHDF5SimpleReader
      * Writes out a compound value. The type is inferred based on the values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The value of the data set. May be a {@link HDF5CompoundDataMap},
-     *            {@link HDF5CompoundDataList} or <code>Object[]</code>.
+     * @param data The value of the data set. May be a pojo (Data Transfer Object), a
+     *            {@link HDF5CompoundDataMap}, {@link HDF5CompoundDataList} or <code>Object[]</code>
+     *            .
+     * @see CompoundType
+     * @see CompoundElement
      */
     public <T> void writeCompound(String objectPath, T data);
 
@@ -243,8 +246,11 @@ public interface IHDF5SimpleWriter extends IHDF5SimpleReader
      * Writes out an array (of rank 1) of compound values. The type is inferred based on the values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The value of the data set. May be a {@link HDF5CompoundDataMap},
-     *            {@link HDF5CompoundDataList} or <code>Object[]</code>.
+     * @param data The value of the data set. May be a pojo (Data Transfer Object), a
+     *            {@link HDF5CompoundDataMap}, {@link HDF5CompoundDataList} or <code>Object[]</code>
+     *            .
+     * @see CompoundType
+     * @see CompoundElement
      */
     public <T> void writeCompoundArray(final String objectPath, final T[] data);
 

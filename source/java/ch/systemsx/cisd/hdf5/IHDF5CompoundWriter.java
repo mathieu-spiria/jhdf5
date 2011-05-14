@@ -44,8 +44,11 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
      * Writes out a compound value. The type is inferred based on the values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The value of the data set. May be a {@link HDF5CompoundDataMap},
-     *            {@link HDF5CompoundDataList} or <code>Object[]</code>.
+     * @param data The value of the data set. May be a pojo (Data Transfer Object), a
+     *            {@link HDF5CompoundDataMap}, {@link HDF5CompoundDataList} or <code>Object[]</code>
+     *            .
+     * @see CompoundType
+     * @see CompoundElement
      */
     public <T> void writeCompound(String objectPath, T data);
 
@@ -101,8 +104,11 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
      * Writes out an array (of rank 1) of compound values. The type is inferred based on the values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The value of the data set. May be a {@link HDF5CompoundDataMap},
-     *            {@link HDF5CompoundDataList} or <code>Object[]</code>.
+     * @param data The value of the data set. May be a pojo (Data Transfer Object), a
+     *            {@link HDF5CompoundDataMap}, {@link HDF5CompoundDataList} or <code>Object[]</code>
+     *            .
+     * @see CompoundType
+     * @see CompoundElement
      */
     public <T> void writeCompoundArray(final String objectPath, final T[] data);
 
@@ -113,6 +119,8 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
      * @param data The value of the data set. May be a {@link HDF5CompoundDataMap},
      *            {@link HDF5CompoundDataList} or <code>Object[]</code>.
      * @param features The storage features of the data set.
+     * @see CompoundType
+     * @see CompoundElement
      */
     public <T> void writeCompoundArray(final String objectPath, final T[] data,
             final HDF5GenericStorageFeatures features);
@@ -260,8 +268,11 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
      * Writes out an array (of rank N) of compound values. The type is inferred based on the values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The value of the data set. May be a {@link HDF5CompoundDataMap},
-     *            {@link HDF5CompoundDataList} or <code>Object[]</code>.
+     * @param data The value of the data set. May be a pojo (Data Transfer Object), a
+     *            {@link HDF5CompoundDataMap}, {@link HDF5CompoundDataList} or <code>Object[]</code>
+     *            .
+     * @see CompoundType
+     * @see CompoundElement
      */
     public <T> void writeCompoundMDArray(final String objectPath, final MDArray<T> data);
 
@@ -269,9 +280,12 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
      * Writes out an array (of rank N) of compound values. The type is inferred based on the values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The value of the data set. May be a {@link HDF5CompoundDataMap},
-     *            {@link HDF5CompoundDataList} or <code>Object[]</code>.
+     * @param data The value of the data set. May be a pojo (Data Transfer Object), a
+     *            {@link HDF5CompoundDataMap}, {@link HDF5CompoundDataList} or <code>Object[]</code>
+     *            .
      * @param features The storage features of the data set.
+     * @see CompoundType
+     * @see CompoundElement
      */
     public <T> void writeCompoundMDArray(final String objectPath, final MDArray<T> data,
             final HDF5GenericStorageFeatures features);

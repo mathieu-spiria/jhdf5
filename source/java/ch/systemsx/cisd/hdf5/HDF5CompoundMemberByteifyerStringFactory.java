@@ -28,7 +28,7 @@ import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
  * 
  * @author Bernd Rinn
  */
-public class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberBytifyerFactory
+class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
     public boolean canHandle(Class<?> clazz)

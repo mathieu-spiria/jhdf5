@@ -42,7 +42,7 @@ import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
  * 
  * @author Bernd Rinn
  */
-public class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberBytifyerFactory
+class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
     private static Map<Class<?>, Rank> classToRankMap = new IdentityHashMap<Class<?>, Rank>();

@@ -23,7 +23,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * An annotation that describes the properties of a field as a member of an HDF5 compound data type.
+ * A marker annotation for fields intended to be mapped to an HDF5 compound data type member. This
+ * marker interface is optional for many fields as otherwise the fields properties are inferred.
+ * However, for arrays, <code>String</code>s and <code>BitSet</code>s the maximum length needs to be
+ * given in {@link #dimensions()}.
  * 
  * @author Bernd Rinn
  */
@@ -33,7 +36,8 @@ public @interface CompoundElement
 {
 
     /**
-     * The name of the member in the compound type. Leave empty to use the field name as member name.
+     * The name of the member in the compound type. Leave empty to use the field name as member
+     * name.
      */
     String memberName() default "";
 
@@ -43,7 +47,7 @@ public @interface CompoundElement
      * fixed length, e.g. a float field.
      */
     int[] dimensions() default 0;
-    
+
     /**
      * The {@link HDF5DataTypeVariant} of this compound element, if any.
      */

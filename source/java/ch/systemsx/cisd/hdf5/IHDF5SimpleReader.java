@@ -25,8 +25,8 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * A HDF5 reader which contains only the basic methods. If you feel overwhelmed with all the methods
- * of {@link IHDF5Reader}, then assign the reader to a {@link IHDF5SimpleReader} variable and let the
- * code completion of your IDE help you find the method you are looking for.
+ * of {@link IHDF5Reader}, then assign the reader to a {@link IHDF5SimpleReader} variable and let
+ * the code completion of your IDE help you find the method you are looking for.
  * <p>
  * Usage:
  * 
@@ -99,8 +99,8 @@ public interface IHDF5SimpleReader
      * <p>
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by
-     * {@link IHDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but will
-     * throw a {@link HDF5DatatypeInterfaceException}.
+     * {@link IHDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but
+     * will throw a {@link HDF5DatatypeInterfaceException}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The {@link BitSet} read from the data set.
@@ -268,16 +268,19 @@ public interface IHDF5SimpleReader
      * @return The data read from the data set.
      */
     public String[] readStringArray(final String objectPath) throws HDF5JavaException;
-    
+
     /**
      * Reads a compound from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
      *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
-     *            <code>Object[]</code> to get it in an array.
+     *            <code>Object[]</code> to get it in an array, or use a pojo (Data Transfer Object),
+     *            in which case the compound members will be mapped to Java fields.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
+     * @see CompoundType
+     * @see CompoundElement
      */
     public <T> T readCompound(final String objectPath, final Class<T> pojoClass)
             throws HDF5JavaException;
@@ -288,9 +291,12 @@ public interface IHDF5SimpleReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
      *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
-     *            <code>Object[]</code> to get it in an array.
+     *            <code>Object[]</code> to get it in an array, or use a pojo (Data Transfer Object),
+     *            in which case the compound members will be mapped to Java fields.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
+     * @see CompoundType
+     * @see CompoundElement
      */
     public <T> T[] readCompoundArray(final String objectPath, final Class<T> pojoClass)
             throws HDF5JavaException;

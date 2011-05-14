@@ -39,7 +39,7 @@ import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
  * 
  * @author Bernd Rinn
  */
-public class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
+class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
         IHDF5CompoundMemberBytifyerFactory
 {
 
