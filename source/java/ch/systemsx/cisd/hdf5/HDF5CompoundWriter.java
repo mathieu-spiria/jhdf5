@@ -20,6 +20,8 @@ import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
 
+import java.util.Map;
+
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -93,15 +95,24 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
     public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
             final T data)
     {
-        writeCompound(objectPath, type, data, null);
+        primWriteCompound(objectPath, type, data, null);
     }
 
     public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
             final T data, final IByteArrayInspector inspectorOrNull)
     {
+        primWriteCompound(objectPath, type, data, inspectorOrNull);
+    }
+
+    private <T> void primWriteCompound(final String objectPath, final HDF5CompoundType<?> type,
+            final T data, final IByteArrayInspector inspectorOrNull)
+    {
         baseWriter.checkOpen();
         type.check(baseWriter.fileId);
-        final byte[] byteArray = type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+        @SuppressWarnings("unchecked")
+        final byte[] byteArray =
+                ((HDF5CompoundType<T>) type).getObjectByteifyer().byteify(type.getStorageTypeId(),
+                        data);
         if (inspectorOrNull != null)
         {
             inspectorOrNull.inspect(byteArray);
@@ -110,22 +121,39 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 byteArray);
     }
 
+    public void writeCompoundFromMap(String objectPath, Map<String, ?> data)
+    {
+        primWriteCompound(objectPath, getInferredCompoundType(data), data, null);
+    }
+
+    public <T> void writeCompound(String objectPath, T data)
+    {
+        primWriteCompound(objectPath, getInferredCompoundType(data), data, null);
+    }
+
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final T[] data)
     {
-        writeCompoundArray(objectPath, type, data,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        primWriteCompoundArray(objectPath, type, data,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, null);
     }
 
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final T[] data, final HDF5GenericStorageFeatures features)
     {
-        writeCompoundArray(objectPath, type, data, features, null);
+        primWriteCompoundArray(objectPath, type, data, features, null);
     }
 
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final T[] data, final HDF5GenericStorageFeatures features,
             final IByteArrayInspector inspectorOrNull)
+    {
+        primWriteCompoundArray(objectPath, type, data, features, inspectorOrNull);
+    }
+
+    private <T> void primWriteCompoundArray(final String objectPath,
+            final HDF5CompoundType<?> type, final T[] data,
+            final HDF5GenericStorageFeatures features, final IByteArrayInspector inspectorOrNull)
     {
         assert objectPath != null;
         assert type != null;
@@ -138,11 +166,14 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(), new long[]
-                                { data.length }, type.getObjectByteifyer().getRecordSize(),
+                            baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(),
+                                    new long[]
+                                        { data.length }, type.getObjectByteifyer().getRecordSize(),
                                     features, registry);
+                    @SuppressWarnings("unchecked")
                     final byte[] byteArray =
-                            type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+                            ((HDF5CompoundType<T>) type).getObjectByteifyer().byteify(
+                                    type.getStorageTypeId(), data);
                     if (inspectorOrNull != null)
                     {
                         inspectorOrNull.inspect(byteArray);
@@ -153,6 +184,38 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 }
             };
         baseWriter.runner.call(writeRunnable);
+    }
+
+    public <T> void writeCompoundArray(String objectPath, T[] data)
+    {
+        assert data != null && data.length > 0;
+
+        primWriteCompoundArray(objectPath, getInferredCompoundType(data[0]), data,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, null);
+    }
+
+    public <T> void writeCompoundArray(String objectPath, T[] data,
+            HDF5GenericStorageFeatures features)
+    {
+        assert data != null && data.length > 0;
+
+        primWriteCompoundArray(objectPath, getInferredCompoundType(data[0]), data, features, null);
+    }
+
+    public void writeCompoundFromMapArray(String objectPath, Map<String, ?>[] data)
+    {
+        assert data != null && data.length > 0;
+
+        primWriteCompoundArray(objectPath, getInferredCompoundType(data[0]), data,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, null);
+    }
+
+    public void writeCompoundFromMapArray(String objectPath, Map<String, ?>[] data,
+            HDF5GenericStorageFeatures features)
+    {
+        assert data != null && data.length > 0;
+
+        primWriteCompoundArray(objectPath, getInferredCompoundType(data[0]), data, features, null);
     }
 
     public <T> void writeCompoundArrayBlock(final String objectPath,
@@ -345,14 +408,21 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
 
         baseWriter.checkOpen();
         type.check(baseWriter.fileId);
+        primWriteCompoundMDArray(objectPath, type, data, features, inspectorOrNull);
+    }
+
+    private <T> void primWriteCompoundMDArray(final String objectPath,
+            final HDF5CompoundType<T> type, final MDArray<T> data,
+            final HDF5GenericStorageFeatures features, final IByteArrayInspector inspectorOrNull)
+    {
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(), MDArray
-                                    .toLong(data.dimensions()), type.getObjectByteifyer()
-                                    .getRecordSize(), features, registry);
+                            baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(),
+                                    MDArray.toLong(data.dimensions()), type.getObjectByteifyer()
+                                            .getRecordSize(), features, registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
                                     data.getAsFlatArray());
@@ -592,6 +662,40 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 }
             };
         baseWriter.runner.call(writeRunnable);
+    }
+
+    public <T> void writeCompoundMDArray(String objectPath, MDArray<T> data)
+    {
+        writeCompoundMDArray(objectPath, data, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+    }
+
+    public <T> void writeCompoundMDArray(String objectPath, MDArray<T> data,
+            HDF5GenericStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert data != null && data.size() > 0;
+
+        baseWriter.checkOpen();
+        primWriteCompoundMDArray(objectPath, getInferredCompoundType(data.getAsFlatArray()[0]),
+                data, features, null);
+    }
+
+    public void writeCompoundFromMapMDArray(String objectPath, MDArray<Map<String, ?>> data)
+    {
+        writeCompoundMDArray(objectPath, data, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+    }
+
+    @SuppressWarnings("unchecked")
+    public void writeCompoundFromMapMDArray(String objectPath, MDArray<Map<String, ?>> data,
+            HDF5GenericStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert data != null && data.size() > 0;
+
+        baseWriter.checkOpen();
+        final HDF5CompoundType<?> type = getInferredCompoundType(data.getAsFlatArray()[0]);
+        primWriteCompoundMDArray(objectPath, (HDF5CompoundType<Map<String, ?>>) type, data,
+                features, null);
     }
 
 }

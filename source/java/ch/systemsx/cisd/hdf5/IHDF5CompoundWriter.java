@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.util.Map;
+
 import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
@@ -31,8 +33,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
     // /////////////////////
 
     /**
-     * Writes out an array (of rank 1) of compound values. Uses a compact storage layout. Must only
-     * be used for small data sets.
+     * Writes out a compound value of <var>type</var> given in <var>data</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
@@ -40,6 +41,22 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
      */
     public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
             final T data);
+
+    /**
+     * Writes out a compound value. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     */
+    public <T> void writeCompound(String objectPath, T data);
+
+    /**
+     * Writes out a compound value. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     */
+    public void writeCompoundFromMap(final String objectPath, final Map<String, ?> data);
 
     /**
      * Writes out an array (of rank 1) of compound values. Uses a compact storage layout. Must only
@@ -88,6 +105,42 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
     public <T> void writeCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
             final T[] data, final HDF5GenericStorageFeatures features,
             final IByteArrayInspector inspectorOrNull);
+
+    /**
+     * Writes out an array (of rank 1) of compound values. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     */
+    public <T> void writeCompoundArray(final String objectPath, final T[] data);
+
+    /**
+     * Writes out an array (of rank 1) of compound values. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     * @param features The storage features of the data set.
+     */
+    public <T> void writeCompoundArray(final String objectPath, final T[] data,
+            final HDF5GenericStorageFeatures features);
+
+    /**
+     * Writes out an array (of rank 1) of compound values. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     */
+    public void writeCompoundFromMapArray(final String objectPath, final Map<String, ?>[] data);
+
+    /**
+     * Writes out an array (of rank 1) of compound values. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     * @param features The storage features of the data set.
+     */
+    public void writeCompoundFromMapArray(final String objectPath, final Map<String, ?>[] data,
+            final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a block <var>blockNumber</var> of an array (of rank 1) of compound values.
@@ -227,6 +280,43 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
     public <T> void writeCompoundMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final MDArray<T> data, final HDF5GenericStorageFeatures features,
             final IByteArrayInspector inspectorOrNull);
+
+    /**
+     * Writes out an array (of rank N) of compound values. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     */
+    public <T> void writeCompoundMDArray(final String objectPath, final MDArray<T> data);
+
+    /**
+     * Writes out an array (of rank N) of compound values. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     * @param features The storage features of the data set.
+     */
+    public <T> void writeCompoundMDArray(final String objectPath, final MDArray<T> data,
+            final HDF5GenericStorageFeatures features);
+
+    /**
+     * Writes out an array (of rank N) of compound values. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     */
+    public void writeCompoundFromMapMDArray(final String objectPath,
+            final MDArray<Map<String, ?>> data);
+
+    /**
+     * Writes out an array (of rank N) of compound values. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     * @param features The storage features of the data set.
+     */
+    public void writeCompoundFromMapMDArray(final String objectPath,
+            final MDArray<Map<String, ?>> data, final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a block of an array (of rank N) of compound values.

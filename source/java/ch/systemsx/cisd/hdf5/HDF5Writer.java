@@ -20,6 +20,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 
 import java.util.BitSet;
 import java.util.Date;
+import java.util.Map;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
@@ -1121,6 +1122,16 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         compoundWriter.writeCompound(objectPath, type, data);
     }
 
+    public <T> void writeCompound(String objectPath, T data)
+    {
+        compoundWriter.writeCompound(objectPath, data);
+    }
+
+    public void writeCompoundFromMap(String objectPath, Map<String, ?> data)
+    {
+        compoundWriter.writeCompoundFromMap(objectPath, data);
+    }
+
     public <T> void writeCompoundArray(String objectPath, HDF5CompoundType<T> type, T[] data,
             HDF5GenericStorageFeatures features, IByteArrayInspector inspectorOrNull)
     {
@@ -1136,6 +1147,17 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public <T> void writeCompoundArray(String objectPath, HDF5CompoundType<T> type, T[] data)
     {
         compoundWriter.writeCompoundArray(objectPath, type, data);
+    }
+
+    public void writeCompoundFromMapArray(String objectPath, Map<String, ?>[] data)
+    {
+        compoundWriter.writeCompoundFromMapArray(objectPath, data);
+    }
+
+    public void writeCompoundFromMapArray(String objectPath, Map<String, ?>[] data,
+            HDF5GenericStorageFeatures features)
+    {
+        compoundWriter.writeCompoundFromMapArray(objectPath, data, features);
     }
 
     public <T> void writeCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type, T[] data,
@@ -1181,6 +1203,39 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             MDArray<T> data)
     {
         compoundWriter.writeCompoundMDArray(objectPath, type, data);
+    }
+
+    public <T> void writeCompoundArray(String objectPath, T[] data)
+    {
+        compoundWriter.writeCompoundArray(objectPath, data);
+    }
+
+    public <T> void writeCompoundArray(String objectPath, T[] data,
+            HDF5GenericStorageFeatures features)
+    {
+        compoundWriter.writeCompoundArray(objectPath, data, features);
+    }
+
+    public <T> void writeCompoundMDArray(String objectPath, MDArray<T> data)
+    {
+        compoundWriter.writeCompoundMDArray(objectPath, data);
+    }
+
+    public <T> void writeCompoundMDArray(String objectPath, MDArray<T> data,
+            HDF5GenericStorageFeatures features)
+    {
+        compoundWriter.writeCompoundMDArray(objectPath, data, features);
+    }
+
+    public void writeCompoundFromMapMDArray(String objectPath, MDArray<Map<String, ?>> data)
+    {
+        compoundWriter.writeCompoundFromMapMDArray(objectPath, data);
+    }
+
+    public void writeCompoundFromMapMDArray(String objectPath, MDArray<Map<String, ?>> data,
+            HDF5GenericStorageFeatures features)
+    {
+        compoundWriter.writeCompoundFromMapMDArray(objectPath, data, features);
     }
 
     public <T> void writeCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,

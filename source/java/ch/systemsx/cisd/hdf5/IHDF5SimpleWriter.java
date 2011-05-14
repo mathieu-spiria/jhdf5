@@ -18,6 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import java.util.BitSet;
 import java.util.Date;
+import java.util.Map;
 
 /**
  * A HDF5 writer which contains only the basic methods. If you feel overwhelmed with all the methods
@@ -229,5 +230,37 @@ public interface IHDF5SimpleWriter extends IHDF5SimpleReader
      * @param maxLength The maximal length of any of the strings in <var>data</var>.
      */
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength);
+
+    /**
+     * Writes out a compound value. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     */
+    public <T> void writeCompound(String objectPath, T data);
+
+    /**
+     * Writes out a compound value. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     */
+    public void writeCompoundFromMap(final String objectPath, final Map<String, ?> data);
+
+    /**
+     * Writes out an array (of rank 1) of compound values. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     */
+    public <T> void writeCompoundArray(final String objectPath, final T[] data);
+
+    /**
+     * Writes out an array (of rank 1) of compound values. The type is inferred based on the values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The value of the data set.
+     */
+    public void writeCompoundFromMapArray(final String objectPath, final Map<String, ?>[] data);
 
 }
