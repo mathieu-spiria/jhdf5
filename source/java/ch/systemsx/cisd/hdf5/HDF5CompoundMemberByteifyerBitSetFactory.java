@@ -51,9 +51,9 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
             final int offset, final FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
-        final int memberTypeLengthInBytes = member.getMemberTypeLength();
+        final int memberTypeLengthInBits = member.getMemberTypeLength();
         final int memberTypeLengthInLongs =
-                memberTypeLengthInBytes / 64 + (memberTypeLengthInBytes % 64 != 0 ? 1 : 0);
+                memberTypeLengthInBits / 64 + (memberTypeLengthInBits % 64 != 0 ? 1 : 0);
 
         if (memberTypeLengthInLongs <= 0)
         {
