@@ -49,27 +49,30 @@ public class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMe
         final String memberName = member.getMemberName();
         // May be -1 if not known
         final int memberTypeId = member.getStorageDataTypeId();
+        final int maxLengthChars = member.getMemberTypeLength();
+        final int maxLengthBytes =
+                (fileInfoProvider.getCharacterEncoding() == CharacterEncoding.UTF8 ? 2 : 1)
+                        * maxLengthChars;
         final int stringDataTypeId =
-                (memberTypeId < 0) ? fileInfoProvider.getStringDataTypeId(member
-                        .getMemberTypeLength()) : memberTypeId;
+                (memberTypeId < 0) ? fileInfoProvider.getStringDataTypeId(maxLengthBytes)
+                        : memberTypeId;
         final boolean isCharArray = (memberClazz == char[].class);
         switch (accessType)
         {
             case FIELD:
                 return createByteifyerForField(fieldOrNull, memberName, offset, stringDataTypeId,
-                        member.getMemberTypeLength(), fileInfoProvider.getCharacterEncoding(),
+                        maxLengthChars, maxLengthBytes, fileInfoProvider.getCharacterEncoding(),
                         isCharArray);
             case MAP:
-                return createByteifyerForMap(memberName, offset, stringDataTypeId,
-                        member.getMemberTypeLength(), fileInfoProvider.getCharacterEncoding(),
-                        isCharArray);
+                return createByteifyerForMap(memberName, offset, stringDataTypeId, maxLengthChars,
+                        maxLengthBytes, fileInfoProvider.getCharacterEncoding(), isCharArray);
             case LIST:
                 return createByteifyerForList(memberName, index, offset, stringDataTypeId,
-                        member.getMemberTypeLength(), fileInfoProvider.getCharacterEncoding(),
+                        maxLengthChars, maxLengthBytes, fileInfoProvider.getCharacterEncoding(),
                         isCharArray);
             case ARRAY:
                 return createByteifyerForArray(memberName, index, offset, stringDataTypeId,
-                        member.getMemberTypeLength(), fileInfoProvider.getCharacterEncoding(),
+                        maxLengthChars, maxLengthBytes, fileInfoProvider.getCharacterEncoding(),
                         isCharArray);
             default:
                 throw new Error("Unknown access type");
@@ -78,14 +81,13 @@ public class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMe
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
             final int offset, final int stringDataTypeId, final int maxLength,
-            final CharacterEncoding encoding, final boolean isCharArray)
+            final int maxLengthInBytes, final CharacterEncoding encoding, final boolean isCharArray)
     {
         ReflectionUtils.ensureAccessible(field);
-        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength + 1;
         if (isCharArray)
         {
-            return new HDF5MemberByteifyer(field, memberName, maxLength, realMaxLength, offset,
-                    encoding)
+            return new HDF5MemberByteifyer(field, memberName, maxLength, maxLengthInBytes + 1,
+                    offset, encoding)
                 {
                     @Override
                     protected int getMemberStorageTypeId()
@@ -120,8 +122,8 @@ public class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMe
                 };
         } else
         {
-            return new HDF5MemberByteifyer(field, memberName, maxLength, realMaxLength, offset,
-                    encoding)
+            return new HDF5MemberByteifyer(field, memberName, maxLength, maxLengthInBytes + 1,
+                    offset, encoding)
                 {
                     @Override
                     protected int getMemberStorageTypeId()
@@ -157,11 +159,11 @@ public class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMe
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final int stringDataTypeId, final int maxLength, final CharacterEncoding encoding,
-            final boolean isCharArray)
+            final int stringDataTypeId, final int maxLength, final int maxLengthInBytes,
+            final CharacterEncoding encoding, final boolean isCharArray)
     {
-        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength + 1;
-        return new HDF5MemberByteifyer(null, memberName, maxLength, realMaxLength, offset, encoding)
+        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes + 1, offset,
+                encoding)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -212,10 +214,10 @@ public class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMe
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
             final int offset, final int stringDataTypeId, final int maxLength,
-            final CharacterEncoding encoding, final boolean isCharArray)
+            final int maxLengthInBytes, final CharacterEncoding encoding, final boolean isCharArray)
     {
-        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength + 1;
-        return new HDF5MemberByteifyer(null, memberName, maxLength, realMaxLength, offset, encoding)
+        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes + 1, offset,
+                encoding)
             {
                 @Override
                 protected int getMemberStorageTypeId()
@@ -266,10 +268,10 @@ public class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMe
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
             final int offset, final int stringDataTypeId, final int maxLength,
-            final CharacterEncoding encoding, final boolean isCharArray)
+            final int maxLengthInBytes, final CharacterEncoding encoding, final boolean isCharArray)
     {
-        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength + 1;
-        return new HDF5MemberByteifyer(null, memberName, maxLength, realMaxLength, offset, encoding)
+        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes + 1, offset,
+                encoding)
             {
                 @Override
                 protected int getMemberStorageTypeId()
