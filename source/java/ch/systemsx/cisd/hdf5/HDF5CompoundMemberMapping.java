@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -736,6 +737,14 @@ public final class HDF5CompoundMemberMapping
             final String memberName = entry.getKey();
             final Object memberValue = entry.getValue();
             final Class<?> memberClass = HDF5Utils.unwrapClass(memberValue.getClass());
+            HDF5DataTypeVariant variantOrNull;
+            if (memberClass == HDF5TimeDuration.class)
+            {
+                variantOrNull = ((HDF5TimeDuration) memberValue).getUnit().getTypeVariant();
+            } else
+            {
+                variantOrNull = null;
+            }
             if (memberClass.isArray())
             {
                 final int lenx = Array.getLength(memberValue);
@@ -744,29 +753,42 @@ public final class HDF5CompoundMemberMapping
                     final int leny = Array.getLength(Array.get(memberValue, 0));
                     result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
                             null, new int[]
-                                { lenx, leny }));
+                                { lenx, leny }, variantOrNull));
                 } else
                 {
                     result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
                             null, new int[]
-                                { lenx }));
+                                { lenx }, variantOrNull));
                 }
             } else if (MDAbstractArray.class.isInstance(memberValue))
             {
                 result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName, null,
-                        ((MDAbstractArray<?>) memberValue).dimensions()));
+                        ((MDAbstractArray<?>) memberValue).dimensions(), variantOrNull));
             } else
             {
                 HDF5EnumerationType enumTypeOrNull = null;
+                final int[] dimensions;
                 if (memberClass == HDF5EnumerationValue.class)
                 {
                     enumTypeOrNull = ((HDF5EnumerationValue) memberValue).getType();
+                    dimensions = new int[0];
                 } else if (memberClass == HDF5EnumerationValueArray.class)
                 {
                     enumTypeOrNull = ((HDF5EnumerationValueArray) memberValue).getType();
+                    dimensions = new int[] { ((HDF5EnumerationValueArray) memberValue).getLength() };
+                } else if (memberClass == String.class)
+                {
+                    dimensions = new int[] { ((String) memberValue).length() };
+                } else if (memberClass == BitSet.class)
+                {
+                    final int len = ((BitSet) memberValue).length();
+                    dimensions = new int[] { len > 0 ? len : 1 };
+                } else 
+                {
+                    dimensions = new int[0];
                 }
                 result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
-                        enumTypeOrNull, new int[0]));
+                        enumTypeOrNull, dimensions, variantOrNull));
             }
         }
         return result;
