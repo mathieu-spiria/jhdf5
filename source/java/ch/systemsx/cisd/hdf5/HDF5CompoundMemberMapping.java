@@ -23,12 +23,12 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
 import org.apache.commons.lang.StringUtils;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
-
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * A class that maps a Java field to a member of a HDF5 compound data type.
@@ -588,8 +588,7 @@ public final class HDF5CompoundMemberMapping
     {
         typeVariantMap.put(java.util.Date.class,
                 HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH);
-        typeVariantMap.put(HDF5TimeDuration.class,
-                HDF5DataTypeVariant.TIME_DURATION_MICROSECONDS);
+        typeVariantMap.put(HDF5TimeDuration.class, HDF5DataTypeVariant.TIME_DURATION_MICROSECONDS);
     }
 
     /**
@@ -668,12 +667,12 @@ public final class HDF5CompoundMemberMapping
         return this;
     }
 
-    Field getField(Class<?> clazz) throws HDF5JavaException
+    Field tryGetField(Class<?> clazz) throws HDF5JavaException
     {
-        return getField(clazz, clazz);
+        return tryGetField(clazz, clazz);
     }
 
-    private Field getField(Class<?> clazz, Class<?> searchClass) throws HDF5JavaException
+    private Field tryGetField(Class<?> clazz, Class<?> searchClass) throws HDF5JavaException
     {
         try
         {
@@ -706,11 +705,10 @@ public final class HDF5CompoundMemberMapping
             final Class<?> superClassOrNull = clazz.getSuperclass();
             if (superClassOrNull == null || superClassOrNull == Object.class)
             {
-                throw new HDF5JavaException("No field '" + fieldName + "' found for class '"
-                        + searchClass.getCanonicalName() + "'.");
+                return null;
             } else
             {
-                return getField(superClassOrNull, searchClass);
+                return tryGetField(superClassOrNull, searchClass);
             }
         }
     }

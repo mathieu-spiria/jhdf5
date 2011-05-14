@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.BitSet;
 
@@ -128,7 +129,8 @@ public final class HDF5CompoundMemberInformation implements
     private static HDF5DataTypeInformation getTypeInformation(Class<?> compoundClass,
             final HDF5CompoundMemberMapping member)
     {
-        final Class<?> fieldType = member.getField(compoundClass).getType();
+        final Field fieldOrNull = member.tryGetField(compoundClass);
+        final Class<?> fieldType = (fieldOrNull == null) ? null : fieldOrNull.getType();
         final HDF5DataTypeInformation typeInfo;
         if (fieldType == boolean.class)
         {

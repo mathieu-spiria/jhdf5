@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * A factory for {@link HDF5MemberByteifyer}s.
@@ -111,17 +112,127 @@ class HDF5CompoundByteifyerFactory
         {
             final AccessType accessType = getAccessType(clazz);
             final Field fieldOrNull =
-                    (accessType == AccessType.FIELD) ? members[i].getField(clazz) : null;
+                    (accessType == AccessType.FIELD) ? members[i].tryGetField(clazz) : null;
             final Class<?> memberClazzOrNull =
                     (fieldOrNull != null) ? fieldOrNull.getType() : members[i].tryGetMemberClass();
             final IHDF5CompoundMemberBytifyerFactory factory =
                     findFactory(memberClazzOrNull, members[i].getMemberName());
-            result[i] =
-                    factory.createBytifyer(accessType, fieldOrNull, members[i], memberClazzOrNull,
-                            i, offset, fileInfoProvider);
+            if (isDummy(accessType, fieldOrNull))
+            {
+                result[i] =
+                        new HDF5DummyMemberByteifyer(factory.createBytifyer(accessType,
+                                fieldOrNull, members[i], memberClazzOrNull, i, offset,
+                                fileInfoProvider));
+            } else
+            {
+                result[i] =
+                        factory.createBytifyer(accessType, fieldOrNull, members[i],
+                                memberClazzOrNull, i, offset, fileInfoProvider);
+            }
             offset += result[i].getSizeInBytes();
         }
         return result;
+    }
+
+    //
+    // Dummy helpers
+    //
+    
+    private static boolean isDummy(AccessType accessType, Field fieldOrNull)
+    {
+        return (accessType == AccessType.FIELD) && (fieldOrNull == null);
+    }
+
+    private static class HDF5DummyMemberByteifyer extends HDF5MemberByteifyer
+    {
+        private final HDF5MemberByteifyer delegate;
+
+        public HDF5DummyMemberByteifyer(HDF5MemberByteifyer delegate)
+        {
+            super(null, null, 0, 0, null);
+            this.delegate = delegate;
+        }
+
+        @Override
+        public byte[] byteify(int compoundDataTypeId, Object obj) throws IllegalAccessException
+        {
+            // Dummy implementation
+            return new byte[delegate.getSizeInBytes()];
+        }
+
+        @Override
+        public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                int arrayOffset) throws IllegalAccessException
+        {
+            // Dummy implementation
+        }
+
+        @Override
+        protected int getMemberStorageTypeId()
+        {
+            return delegate.getMemberStorageTypeId();
+        }
+
+        @Override
+        protected int getMemberNativeTypeId()
+        {
+            return delegate.getMemberNativeTypeId();
+        }
+
+        @Override
+        public HDF5DataTypeVariant getTypeVariant()
+        {
+            return delegate.getTypeVariant();
+        }
+
+        @Override
+        public void insertType(int dataTypeId)
+        {
+            delegate.insertType(dataTypeId);
+        }
+
+        @Override
+        public void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
+        {
+            delegate.insertNativeType(dataTypeId, h5, registry);
+        }
+
+        @Override
+        public int getSize()
+        {
+            return delegate.getSize();
+        }
+
+        @Override
+        public int getSizeInBytes()
+        {
+            return delegate.getSizeInBytes();
+        }
+
+        @Override
+        public int getOffset()
+        {
+            return delegate.getOffset();
+        }
+
+        @Override
+        public int getTotalSize()
+        {
+            return delegate.getTotalSize();
+        }
+
+        @Override
+        public String describe()
+        {
+            return delegate.describe();
+        }
+
+        @Override
+        public String toString()
+        {
+            return delegate.toString();
+        }
+
     }
 
     //
