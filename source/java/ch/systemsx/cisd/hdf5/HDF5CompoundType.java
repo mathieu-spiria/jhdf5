@@ -225,7 +225,7 @@ public class HDF5CompoundType<T> extends HDF5DataType
 
     private Set<Field> getUnmappedFields()
     {
-        if (compoundType.isAssignableFrom(Map.class) || compoundType.isAssignableFrom(List.class)
+        if (Map.class.isAssignableFrom(compoundType) || List.class.isAssignableFrom(compoundType)
                 || compoundType == Object[].class)
         {
             return Collections.emptySet();
