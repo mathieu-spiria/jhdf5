@@ -1040,15 +1040,13 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     @Override
     public <T> HDF5CompoundType<T> getInferredCompoundType(final String name, Class<T> pojoClass)
     {
-        return compoundWriter.getCompoundType(name, pojoClass,
-                HDF5CompoundMemberMapping.inferMapping(pojoClass));
+        return compoundWriter.getInferredCompoundType(name, pojoClass);
     }
 
     @Override
     public <T> HDF5CompoundType<T> getInferredCompoundType(Class<T> pojoClass)
     {
-        return compoundWriter.getCompoundType(pojoClass,
-                HDF5CompoundMemberMapping.inferMapping(pojoClass));
+        return compoundWriter.getInferredCompoundType(pojoClass);
     }
 
     @Override
