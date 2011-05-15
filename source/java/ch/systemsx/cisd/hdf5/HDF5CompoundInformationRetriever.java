@@ -134,13 +134,16 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
     {
         final String name;
 
+        final int compoundDataTypeId;
+
         final HDF5CompoundMemberInformation[] members;
 
         final int[] dataTypeIds;
 
-        CompoundTypeInformation(String name, int length)
+        CompoundTypeInformation(String name, int compoundDataTypeId, int length)
         {
             this.name = name;
+            this.compoundDataTypeId = compoundDataTypeId;
             this.members = new HDF5CompoundMemberInformation[length];
             this.dataTypeIds = new int[length];
         }
@@ -154,7 +157,7 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
         final String[] memberNames =
                 baseReader.h5.getNamesForEnumOrCompoundMembers(compoundDataTypeId);
         final CompoundTypeInformation compoundInfo =
-                new CompoundTypeInformation(typeName, memberNames.length);
+                new CompoundTypeInformation(typeName, compoundDataTypeId, memberNames.length);
         int offset = 0;
         final HDF5DataTypeVariant[] memberTypeVariantsOrNull =
                 baseReader.tryGetTypeVariantForCompoundMembers(dataTypePathOrNull, registry);
@@ -217,13 +220,15 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
         baseReader.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectArrayifyer =
                 baseReader.createCompoundByteifyers(pojoClass, members);
-        return getCompoundType(name, pojoClass, objectArrayifyer);
+        return getCompoundType(name, -1, pojoClass, objectArrayifyer);
     }
 
-    private <T> HDF5CompoundType<T> getCompoundType(final String name, final Class<T> compoundType,
-            final HDF5ValueObjectByteifyer<T> objectArrayifyer)
+    private <T> HDF5CompoundType<T> getCompoundType(final String name, int committedDataTypeId,
+            final Class<T> compoundType, final HDF5ValueObjectByteifyer<T> objectArrayifyer)
     {
-        final int storageDataTypeId = baseReader.createStorageCompoundDataType(objectArrayifyer);
+        final int storageDataTypeId =
+                (committedDataTypeId < 0) ? baseReader
+                        .createStorageCompoundDataType(objectArrayifyer) : committedDataTypeId;
         final int nativeDataTypeId = baseReader.createNativeCompoundDataType(objectArrayifyer);
         return new HDF5CompoundType<T>(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
                 name, compoundType, objectArrayifyer);
@@ -252,8 +257,8 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
         if (Map.class.isInstance(pojo))
         {
             final String compoundTypeName =
-                    (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(((Map) pojo).keySet(),
-                            true) : name;
+                    (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(
+                            ((Map) pojo).keySet(), true) : name;
             return (HDF5CompoundType<T>) getCompoundType(compoundTypeName, Map.class,
                     HDF5CompoundMemberMapping.inferMapping((Map) pojo));
         } else
@@ -272,18 +277,18 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
         return getInferredCompoundType(null, pojo);
     }
 
-    public HDF5CompoundType<List<?>> getInferredCompoundType(List<String> memberNames,
-            List<?> data)
+    public HDF5CompoundType<List<?>> getInferredCompoundType(List<String> memberNames, List<?> data)
     {
         return getInferredCompoundType(null, memberNames, data);
     }
 
     @SuppressWarnings("unchecked")
-    public HDF5CompoundType<List<?>> getInferredCompoundType(String name,
-            List<String> memberNames, List<?> data)
+    public HDF5CompoundType<List<?>> getInferredCompoundType(String name, List<String> memberNames,
+            List<?> data)
     {
         final String compoundTypeName =
-                (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(memberNames, false) : name;
+                (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(memberNames,
+                        false) : name;
         final HDF5CompoundType<?> type =
                 getCompoundType(compoundTypeName, List.class,
                         HDF5CompoundMemberMapping.inferMapping(memberNames, data));
@@ -310,7 +315,7 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
         final CompoundTypeInformation cpdTypeInfo =
                 getFullCompoundDataSetInformation(objectPath, baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getCompoundType(cpdTypeInfo.name, pojoClass,
+                getCompoundType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
                         createByteifyers(pojoClass, cpdTypeInfo));
         return typeForClass;
     }
@@ -324,14 +329,11 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
     {
         final String dataTypePath =
                 HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName);
+        final CompoundTypeInformation cpdTypeInfo =
+                getFullCompoundDataTypeInformation(dataTypePath, baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getCompoundType(
-                        dataTypeName,
-                        pojoClass,
-                        createByteifyers(
-                                pojoClass,
-                                getFullCompoundDataTypeInformation(dataTypePath,
-                                        baseReader.fileRegistry)));
+                getCompoundType(dataTypeName, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                        createByteifyers(pojoClass, cpdTypeInfo));
         return typeForClass;
     }
 

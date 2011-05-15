@@ -48,21 +48,45 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 baseWriter.createCompoundByteifyers(pojoClass, members);
         final String dataTypeName = (name != null) ? name : pojoClass.getSimpleName();
         final int storageDataTypeId =
-                getOrCreateCompoundDataType(dataTypeName, pojoClass, objectByteifyer);
+                getOrCreateCompoundDataType(dataTypeName, pojoClass, objectByteifyer,
+                        baseWriter.keepDataSetIfExists);
         final int nativeDataTypeId = baseWriter.createNativeCompoundDataType(objectByteifyer);
         return new HDF5CompoundType<T>(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
                 dataTypeName, pojoClass, objectByteifyer);
     }
 
     private <T> int getOrCreateCompoundDataType(final String dataTypeName,
-            final Class<T> compoundClass, final HDF5ValueObjectByteifyer<T> objectByteifyer)
+            final Class<T> compoundClass, final HDF5ValueObjectByteifyer<T> objectByteifyer,
+            boolean committedDataTypeHasPreference)
     {
         final String dataTypePath =
                 HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName);
-        int storageDataTypeId = baseWriter.getDataTypeId(dataTypePath);
-        if (storageDataTypeId < 0)
+        final int committedStorageDataTypeId = baseWriter.getDataTypeId(dataTypePath);
+        final boolean typeExists = (committedStorageDataTypeId >= 0);
+        int storageDataTypeId = committedStorageDataTypeId;
+        final boolean commitType;
+        if ((typeExists == false) || (committedDataTypeHasPreference == false))
         {
             storageDataTypeId = baseWriter.createStorageCompoundDataType(objectByteifyer);
+            final boolean typesAreEqual =
+                    typeExists
+                            && baseWriter.h5.dataTypesAreEqual(committedStorageDataTypeId,
+                                    storageDataTypeId);
+            commitType = (typeExists == false) || (typesAreEqual == false);
+            if (typeExists && commitType)
+            {
+                baseWriter.h5.deleteObject(baseWriter.fileId, dataTypePath);
+            }
+            if (typesAreEqual)
+            {
+                storageDataTypeId = committedStorageDataTypeId;
+            }
+        } else
+        {
+            commitType = false;
+        }
+        if (commitType)
+        {
             baseWriter.commitDataType(dataTypePath, storageDataTypeId);
             final HDF5EnumerationValueArray typeVariants =
                     tryCreateDataTypeVariantArray(objectByteifyer);
@@ -73,6 +97,26 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
             }
         }
         return storageDataTypeId;
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getInferredCompoundType(String name, Class<T> pojoClass)
+    {
+        if (baseWriter.keepDataSetIfExists == false)
+        {
+            return super.getInferredCompoundType(name, pojoClass);
+        } else
+        {
+            final String dataTypePath =
+                HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, name);
+            if (baseReader.h5.exists(baseReader.fileId, dataTypePath))
+            {
+                return getNamedCompoundType(name, pojoClass);
+            } else
+            {
+                return super.getInferredCompoundType(name, pojoClass);
+            }
+        }
     }
 
     private <T> HDF5EnumerationValueArray tryCreateDataTypeVariantArray(
