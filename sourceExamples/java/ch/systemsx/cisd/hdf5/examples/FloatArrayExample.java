@@ -24,10 +24,8 @@ import ch.systemsx.cisd.hdf5.IHDF5SimpleWriter;
 
 /**
  * A simple example for writing and reading a float array.
- * 
- * @author Bernd Rinn
  */
-public class FloatArray
+public class FloatArrayExample
 {
     public static void main(String[] args)
     {
