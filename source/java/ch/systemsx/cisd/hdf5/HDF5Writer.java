@@ -20,6 +20,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 
 import java.util.BitSet;
 import java.util.Date;
+import java.util.List;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
@@ -1251,6 +1252,79 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             HDF5CompoundType<T> type, MDArray<T> data, long[] offset)
     {
         compoundWriter.writeCompoundMDArrayBlockWithOffset(objectPath, type, data, offset);
+    }
+
+    @Override
+    public <T> HDF5CompoundMemberInformation[] getCompoundMemberInformation(Class<T> compoundClass)
+    {
+        return compoundWriter.getCompoundMemberInformation(compoundClass);
+    }
+
+    @Override
+    public HDF5CompoundMemberInformation[] getCompoundMemberInformation(String dataTypeName)
+    {
+        return compoundWriter.getCompoundMemberInformation(dataTypeName);
+    }
+
+    @Override
+    public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(String dataSetPath)
+            throws HDF5JavaException
+    {
+        return compoundWriter.getCompoundDataSetInformation(dataSetPath);
+    }
+
+    @SuppressWarnings("deprecation")
+    @Override
+    public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(String dataSetPath,
+            boolean sortAlphabetically) throws HDF5JavaException
+    {
+        return compoundWriter.getCompoundDataSetInformation(dataSetPath, sortAlphabetically);
+    }
+
+    @Override
+    public HDF5CompoundType<List<?>> getInferredCompoundType(String name, List<String> memberNames,
+            List<?> template)
+    {
+        return compoundWriter.getInferredCompoundType(name, memberNames, template);
+    }
+
+    @Override
+    public HDF5CompoundType<List<?>> getInferredCompoundType(List<String> memberNames,
+            List<?> template)
+    {
+        return compoundWriter.getInferredCompoundType(memberNames, template);
+    }
+
+    @Override
+    public HDF5CompoundType<Object[]> getInferredCompoundType(String name, String[] memberNames,
+            Object[] template)
+    {
+        return compoundWriter.getInferredCompoundType(name, memberNames, template);
+    }
+
+    @Override
+    public HDF5CompoundType<Object[]> getInferredCompoundType(String[] memberNames,
+            Object[] template)
+    {
+        return compoundWriter.getInferredCompoundType(memberNames, template);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> pojoClass)
+    {
+        return compoundWriter.getDataSetCompoundType(objectPath, pojoClass);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> pojoClass)
+    {
+        return compoundWriter.getNamedCompoundType(dataTypeName, pojoClass);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getNamedCompoundType(Class<T> pojoClass)
+    {
+        return compoundWriter.getNamedCompoundType(pojoClass);
     }
 
     // ------------------------------------------------------------------------------
