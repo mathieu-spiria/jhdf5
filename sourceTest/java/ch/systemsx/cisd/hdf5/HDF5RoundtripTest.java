@@ -4836,6 +4836,7 @@ public class HDF5RoundtripTest
         try
         {
             type.checkMappingComplete();
+            fail("Uncomplete mapping not detected.");
         } catch (HDF5JavaException ex)
         {
             assertEquals(
@@ -6240,11 +6241,16 @@ public class HDF5RoundtripTest
                 HDF5FactoryProvider.get().configureForReading(file).performNumericConversions()
                         .reader();
         HDF5CompoundType<RecordB> compoundTypeFloat = RecordB.getHDF5Type(reader);
-        final RecordB recordRead = reader.readCompound("/testCompound", compoundTypeFloat);
-        assertTrue("written: " + recordWritten.a + ", read: " + recordRead.a,
-                recordWritten.a == recordRead.a);
-        assertTrue("written: " + recordWritten.b + ", read: " + recordRead.b,
-                recordWritten.b == recordRead.b);
+        try
+        {
+            reader.readCompound("/testCompound", compoundTypeFloat);
+            fail("Unsuitable data set type not detected.");
+        } catch (HDF5JavaException ex)
+        {
+            assertEquals(
+                    "The compound type 'UNKNOWN' is not suitable for data set '/testCompound'.",
+                    ex.getMessage());
+        }
         reader.close();
     }
 

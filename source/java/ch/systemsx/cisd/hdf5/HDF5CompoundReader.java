@@ -199,7 +199,7 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final int storageDataTypeId =
                             baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                    checkCompoundType(storageDataTypeId, objectPath, registry);
+                    checkCompoundType(storageDataTypeId, objectPath, type);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int nativeDataTypeId = type.getNativeTypeId();
@@ -231,7 +231,7 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final int storageDataTypeId =
                             baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                    checkCompoundType(storageDataTypeId, objectPath, registry);
+                    checkCompoundType(storageDataTypeId, objectPath, type);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int nativeDataTypeId = type.getNativeTypeId();
@@ -252,12 +252,19 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
     }
 
     private void checkCompoundType(final int dataTypeId, final String path,
-            final ICleanUpRegistry registry)
+            final HDF5CompoundType<?> type) throws HDF5JavaException
     {
         final boolean isCompound = (baseReader.h5.getClassType(dataTypeId) == H5T_COMPOUND);
         if (isCompound == false)
         {
-            throw new HDF5JavaException(path + " needs to be a Compound.");
+            throw new HDF5JavaException("Data set '" + path + "' is no compound.");
+        }
+        final boolean isEqual =
+                (baseReader.h5.dataTypesAreEqual(dataTypeId, type.getStorageTypeId()));
+        if (isEqual == false)
+        {
+            throw new HDF5JavaException("The compound type '" + type.getName()
+                    + "' is not suitable for data set '" + path + "'.");
         }
     }
 
@@ -397,7 +404,7 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                                             registry);
                             final int storageDataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                            checkCompoundType(storageDataTypeId, objectPath, registry);
+                            checkCompoundType(storageDataTypeId, objectPath, type);
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, offsetOrNull,
                                             dimensionsOrNull, registry);
