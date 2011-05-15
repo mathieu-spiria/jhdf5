@@ -455,6 +455,7 @@
 		<copy todir="${targets}/doc">
 			<fileset dir="${sources.examples}"/>
 		</copy>
+		<copy file="${original.dist}/doc/JHDF5.pdf" todir="${targets}/doc" />
 	</target>
 
 	<target name="dist" depends="clean, jar-all, doc">
