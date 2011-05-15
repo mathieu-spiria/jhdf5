@@ -397,7 +397,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 public Object call(ICleanUpRegistry registry)
                 {
                     writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
-                            true, registry);
+                            keepDataSetIfExists, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -646,7 +646,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 public Object call(ICleanUpRegistry registry)
                 {
                     writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
-                            true, registry);
+                            keepDataSetIfExists, registry);
                     return null; // Nothing to return.
                 }
             };

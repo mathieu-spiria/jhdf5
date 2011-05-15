@@ -127,6 +127,8 @@ public class HDF5RoundtripTest
         test.testCreateSomeDeepGroup();
         test.testGetGroupMembersIteratively();
         test.testScalarValues();
+        test.testOverwriteScalar();
+        test.testOverwriteScalarKeepDataSet();
         test.testDataSets();
         test.testCompactDataset();
         test.testMaxPathLength();
@@ -417,6 +419,43 @@ public class HDF5RoundtripTest
         assertEquals(2, members2.size());
         assertTrue(members2.contains(dset1Name));
         assertTrue(members2.contains(dset2Name));
+        writer.close();
+    }
+
+    @Test
+    public void testOverwriteScalar()
+    {
+        final File datasetFile = new File(workingDirectory, "overwriteScalar.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(datasetFile);
+        writer.writeInt("a", 4);
+        assertEquals(HDF5DataClass.INTEGER, writer.getDataSetInformation("a").getTypeInformation()
+                .getDataClass());
+        writer.writeFloat("a", 1e6f);
+        assertEquals(HDF5DataClass.FLOAT, writer.getDataSetInformation("a").getTypeInformation()
+                .getDataClass());
+        assertEquals(1e6f, writer.readFloat("a"));
+        writer.close();
+    }
+
+    @Test
+    public void testOverwriteScalarKeepDataSet()
+    {
+        final File datasetFile = new File(workingDirectory, "overwriteScalarKeepDataSet.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer =
+                HDF5Factory.configure(datasetFile).keepDataSetsIfTheyExist().writer();
+        writer.writeInt("a", 4);
+        assertEquals(HDF5DataClass.INTEGER, writer.getDataSetInformation("a").getTypeInformation()
+                .getDataClass());
+        writer.writeFloat("a", 5.1f);
+        assertEquals(HDF5DataClass.INTEGER, writer.getDataSetInformation("a").getTypeInformation()
+                .getDataClass());
+        assertEquals(5, writer.readInt("a"));
         writer.close();
     }
 
@@ -5797,7 +5836,8 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         final MDArray<SimpleRecord> records = reader.readCompoundMDArray("cpd", SimpleRecord.class);
         assertEquals(6, records.size());
-        assertTrue(ArrayUtils.isEquals(new int[] { 2, 3 }, records.dimensions()));
+        assertTrue(ArrayUtils.isEquals(new int[]
+            { 2, 3 }, records.dimensions()));
         assertEquals(createSR(1), records.get(0, 0));
         assertEquals(createSR(2), records.get(0, 1));
         assertEquals(createSR(3), records.get(0, 2));
