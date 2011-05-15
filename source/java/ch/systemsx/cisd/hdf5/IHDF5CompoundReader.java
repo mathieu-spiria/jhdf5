@@ -52,7 +52,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      *            <code>Object[]</code> to get it in an array, or use a pojo (Data Transfer Object),
      *            in which case the compound members will be mapped to Java fields.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set or if the
+     *             mapping between the compound type and the POJO is not complete.
      * @see CompoundType
      * @see CompoundElement
      */
@@ -105,7 +106,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      *            <code>Object[]</code> to get it in an array, or use a pojo (Data Transfer Object),
      *            in which case the compound members will be mapped to Java fields.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set or if the
+     *             mapping between the compound type and the POJO is not complete.
      * @see CompoundType
      * @see CompoundElement
      */
@@ -212,6 +214,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      *            in which case the compound members will be mapped to Java fields.
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
+     * @throws HDF5JavaException If the data set is not of rank 1, not a compound data set or if the
+     *             mapping between the compound type and the POJO is not complete.
      */
     public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String objectPath,
             final Class<T> pojoClass) throws HDF5JavaException;
@@ -236,7 +240,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      *            <code>Object[]</code> to get it in an array, or use a pojo (Data Transfer Object),
      *            in which case the compound members will be mapped to Java fields.
      * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set or if the
+     *             mapping between the compound type and the POJO is not complete.
      * @see CompoundType
      * @see CompoundElement
      */
@@ -350,7 +355,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @see HDF5DataBlock
      * @see CompoundType
      * @see CompoundElement
-     * @throws HDF5JavaException If the data set is not a compound data set.
+     * @throws HDF5JavaException If the data set is not a compound data set or if the
+     *             mapping between the compound type and the POJO is not complete.
      */
     public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
             final String objectPath, final Class<T> pojoClass) throws HDF5JavaException;

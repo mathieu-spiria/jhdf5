@@ -49,7 +49,11 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
     public <T> T readCompound(final String objectPath, final Class<T> pojoClass)
             throws HDF5JavaException
     {
-        return readCompound(objectPath, getDataSetCompoundType(objectPath, pojoClass), null);
+        baseReader.checkOpen();
+        final HDF5CompoundType<T> dataSetCompoundType =
+                getDataSetCompoundType(objectPath, pojoClass);
+        dataSetCompoundType.checkMappingComplete();
+        return readCompound(objectPath, dataSetCompoundType, null);
     }
 
     public <T> T readCompound(final String objectPath, final HDF5CompoundType<T> type,
@@ -77,7 +81,11 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
     public <T> T[] readCompoundArray(final String objectPath, final Class<T> pojoClass)
             throws HDF5JavaException
     {
-        return readCompoundArray(objectPath, getDataSetCompoundType(objectPath, pojoClass), null);
+        baseReader.checkOpen();
+        final HDF5CompoundType<T> dataSetCompoundType =
+                getDataSetCompoundType(objectPath, pojoClass);
+        dataSetCompoundType.checkMappingComplete();
+        return readCompoundArray(objectPath, dataSetCompoundType, null);
     }
 
     public <T> T[] readCompoundArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
@@ -173,8 +181,10 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
         final HDF5NaturalBlock1DParameters params =
                 new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(objectPath));
 
-        return primGetCompoundArrayNaturalBlocks(objectPath,
-                getDataSetCompoundType(objectPath, pojoClass), params, null);
+        final HDF5CompoundType<T> dataSetCompoundType =
+                getDataSetCompoundType(objectPath, pojoClass);
+        dataSetCompoundType.checkMappingComplete();
+        return primGetCompoundArrayNaturalBlocks(objectPath, dataSetCompoundType, params, null);
     }
 
     private <T> T primReadCompound(final String objectPath, final int blockSize, final long offset,
@@ -272,8 +282,10 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
             throws HDF5JavaException
     {
         baseReader.checkOpen();
-        return primReadCompoundArrayRankN(objectPath,
-                getDataSetCompoundType(objectPath, pojoClass), null, null, null);
+        final HDF5CompoundType<T> dataSetCompoundType =
+                getDataSetCompoundType(objectPath, pojoClass);
+        dataSetCompoundType.checkMappingComplete();
+        return primReadCompoundArrayRankN(objectPath, dataSetCompoundType, null, null, null);
     }
 
     public <T> MDArray<T> readCompoundMDArrayBlock(final String objectPath,
@@ -414,8 +426,10 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
         final HDF5NaturalBlockMDParameters params =
                 new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(objectPath));
 
-        return primGetCompoundMDArrayNaturalBlocks(objectPath,
-                getDataSetCompoundType(objectPath, pojoClass), params, null);
+        final HDF5CompoundType<T> dataSetCompoundType =
+                getDataSetCompoundType(objectPath, pojoClass);
+        dataSetCompoundType.checkMappingComplete();
+        return primGetCompoundMDArrayNaturalBlocks(objectPath, dataSetCompoundType, params, null);
     }
 
 }
