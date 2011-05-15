@@ -231,7 +231,37 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
                         .createStorageCompoundDataType(objectArrayifyer) : committedDataTypeId;
         final int nativeDataTypeId = baseReader.createNativeCompoundDataType(objectArrayifyer);
         return new HDF5CompoundType<T>(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
-                name, compoundType, objectArrayifyer);
+                name, compoundType, objectArrayifyer,
+                new HDF5CompoundType.IHDF5InternalCompoundMemberInformationRetriever()
+                    {
+                        public HDF5CompoundMemberInformation[] getCompoundMemberInformation()
+                        {
+                            return HDF5CompoundInformationRetriever.this
+                                    .getCompoundMemberInformation(storageDataTypeId, name);
+                        }
+                    });
+    }
+
+    HDF5CompoundMemberInformation[] getCompoundMemberInformation(final int storageDataTypeId,
+            final String dataTypeNameOrNull)
+    {
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5CompoundMemberInformation[]> writeRunnable =
+                new ICallableWithCleanUp<HDF5CompoundMemberInformation[]>()
+                    {
+                        public HDF5CompoundMemberInformation[] call(final ICleanUpRegistry registry)
+                        {
+                            final String dataTypePath =
+                                    (dataTypeNameOrNull == null) ? null : HDF5Utils
+                                            .createDataTypePath(HDF5Utils.COMPOUND_PREFIX,
+                                                    dataTypeNameOrNull);
+                            final CompoundTypeInformation compoundInformation =
+                                    getCompoundTypeInformation(storageDataTypeId, dataTypePath,
+                                            registry);
+                            return compoundInformation.members;
+                        }
+                    };
+        return baseReader.runner.call(writeRunnable);
     }
 
     public <T> HDF5CompoundType<T> getCompoundType(final Class<T> pojoClass,

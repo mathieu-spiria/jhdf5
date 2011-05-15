@@ -4799,9 +4799,14 @@ public class HDF5RoundtripTest
         writer.writeCompound("cpd", recordWritten);
         writer.close();
 
-        final IHDF5SimpleReader reader = HDF5Factory.openForReading(file);
-        final SimpleInheretingRecord recordRead =
-                reader.readCompound("cpd", SimpleInheretingRecord.class);
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<SimpleInheretingRecord> type =
+                reader.getDataSetCompoundType("cpd", SimpleInheretingRecord.class);
+        assertFalse(type.isMappingIncomplete());
+        assertFalse(type.isDiskRepresentationIncomplete());
+        assertFalse(type.isMemoryRepresentationIncomplete());
+        type.checkMappingComplete();
+        final SimpleInheretingRecord recordRead = reader.readCompound("cpd", type);
         assertEquals(recordWritten, recordRead);
         reader.close();
     }
@@ -4822,8 +4827,22 @@ public class HDF5RoundtripTest
         writer.writeCompound("cpd", recordWritten);
         writer.close();
 
-        final IHDF5SimpleReader reader = HDF5Factory.openForReading(file);
-        final SimpleRecord recordRead = reader.readCompound("cpd", SimpleRecord.class);
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<SimpleRecord> type =
+                reader.getDataSetCompoundType("cpd", SimpleRecord.class);
+        assertTrue(type.isMappingIncomplete());
+        assertFalse(type.isDiskRepresentationIncomplete());
+        assertTrue(type.isMemoryRepresentationIncomplete());
+        try
+        {
+            type.checkMappingComplete();
+        } catch (HDF5JavaException ex)
+        {
+            assertEquals(
+                    "Incomplete mapping for compound type 'SimpleInheretingRecord': unmapped members: {ll}",
+                    ex.getMessage());
+        }
+        final SimpleRecord recordRead = reader.readCompound("cpd", type);
         assertEquals(recordWritten.getF(), recordRead.getF());
         assertEquals(recordWritten.getI(), recordRead.getI());
         assertEquals(recordWritten.getD(), recordRead.getD());

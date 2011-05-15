@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -243,6 +244,45 @@ class HDF5ValueObjectByteifyer<T>
     public HDF5MemberByteifyer[] getByteifyers()
     {
         return byteifyers;
+    }
+
+    /**
+     * Returns <code>true</code> if the value object byteifyer has any members that cannot be mapped
+     * to the in-memory representation.
+     */
+    public boolean hasUnmappedMembers()
+    {
+        for (HDF5MemberByteifyer memberByteifyer : byteifyers)
+        {
+            if (memberByteifyer.isDummy())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns a list with the names of all members that cannot be mapped to the in-memory
+     * representation.
+     */
+    public String[] getUnmappedMembers()
+    {
+        if (hasUnmappedMembers())
+        {
+            final List<String> unmappedMembers = new ArrayList<String>();
+            for (HDF5MemberByteifyer memberByteifyer : byteifyers)
+            {
+                if (memberByteifyer.isDummy())
+                {
+                    unmappedMembers.add(memberByteifyer.getMemberName());
+                }
+            }
+            return unmappedMembers.toArray(new String[unmappedMembers.size()]);
+        } else
+        {
+            return new String[0];
+        }
     }
 
     //

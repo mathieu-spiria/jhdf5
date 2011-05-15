@@ -98,6 +98,16 @@ abstract class HDF5MemberByteifyer
         }
     }
 
+    public String getMemberName()
+    {
+        return memberName;
+    }
+    
+    Field tryGetField()
+    {
+        return fieldOrNull;
+    }
+
     public int getSize()
     {
         return size;
@@ -133,6 +143,11 @@ abstract class HDF5MemberByteifyer
         {
             return "member '" + memberName + "'";
         }
+    }
+    
+    public boolean isDummy()
+    {
+        return false;
     }
 
     @Override

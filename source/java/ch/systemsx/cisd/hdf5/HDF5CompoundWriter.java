@@ -52,7 +52,15 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                         baseWriter.keepDataSetIfExists);
         final int nativeDataTypeId = baseWriter.createNativeCompoundDataType(objectByteifyer);
         return new HDF5CompoundType<T>(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
-                dataTypeName, pojoClass, objectByteifyer);
+                dataTypeName, pojoClass, objectByteifyer,
+                new HDF5CompoundType.IHDF5InternalCompoundMemberInformationRetriever()
+                    {
+                        public HDF5CompoundMemberInformation[] getCompoundMemberInformation()
+                        {
+                            return HDF5CompoundWriter.this.getCompoundMemberInformation(
+                                    storageDataTypeId, name);
+                        }
+                    });
     }
 
     private <T> int getOrCreateCompoundDataType(final String dataTypeName,
@@ -108,7 +116,7 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
         } else
         {
             final String dataTypePath =
-                HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, name);
+                    HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, name);
             if (baseReader.h5.exists(baseReader.fileId, dataTypePath))
             {
                 return getNamedCompoundType(name, pojoClass);

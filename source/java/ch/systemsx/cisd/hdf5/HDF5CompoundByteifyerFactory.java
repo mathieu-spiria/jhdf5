@@ -222,9 +222,21 @@ class HDF5CompoundByteifyerFactory
         }
 
         @Override
+        public String getMemberName()
+        {
+            return delegate.getMemberName();
+        }
+
+        @Override
         public String describe()
         {
             return delegate.describe();
+        }
+
+        @Override
+        public boolean isDummy()
+        {
+            return true;
         }
 
         @Override
