@@ -13,7 +13,9 @@
 	          value="${dist}/cisd-jhdf5-batteries_included_lin_win_mac.jar" />
 	<property name="jar.core.file" value="${dist}/cisd-jhdf5-core.jar" />
 	<property name="jar.tools.file" value="${dist}/cisd-jhdf5-tools.jar" />
+	<property name="sources.examples" value="sourceExamples/java" />
 	<property name="src.zip.file" value="${dist}/cisd-jhdf5-src.zip" />
+	<property name="examples.src.zip.file" value="${dist}/cisd-jhdf5-examples-src.zip" />
 	<property name="javadoc.zip.file" value="${dist}/cisd-jhdf5-javadoc.zip" />
 	<property name="test.jar.file" value="${dist}/cisd-jhdf5-test.jar" />
 	<property name="lib" value="../libraries" />
@@ -175,6 +177,24 @@
 		</recursive-jar>
 	</target>
 
+	<target name="examples-src-zip">
+		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
+		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
+		<recursive-jar destfile="${examples.src.zip.file}">
+			<fileset dir="${classes}">
+				<include name="${build.info.filename}" />
+			</fileset>
+			<fileset dir="${sources.examples}">
+				<include name="**/*.java" />
+			</fileset>
+			<manifest>
+				<attribute name="Version" value="${version.number}" />
+				<attribute name="Build-Number"
+				           value="${version.number} (r${revision.number},${clean.flag})" />
+			</manifest>
+		</recursive-jar>
+	</target>
+
 	<target name="src-zip">
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
@@ -239,7 +259,7 @@
 		</jar>
 	</target>
 
-	<target name="jar-all" depends="jar-complete, src-zip, jar-core, jar-tools, jar-platforms" />
+	<target name="jar-all" depends="jar-complete, src-zip, examples-src-zip, jar-core, jar-tools, jar-platforms" />
 
 	<target name="jar-platforms"
 	        depends="jar-linux-intel, jar-solaris-intel, jar-solaris-sparc, jar-macosx-intel, jar-windows-intel" />
@@ -463,6 +483,7 @@
 		</unzip>
 		<move file="${src.zip.file}" todir="${dist}/${distfolder}/src" />
 		<move file="${javadoc.zip.file}" todir="${dist}/${distfolder}/doc" />
+		<move file="${examples.src.zip.file}" todir="${dist}/${distfolder}/doc" />
 		<copy todir="${dist}/${distfolder}">
 			<fileset dir="${original.dist}" />
 		</copy>

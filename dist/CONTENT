@@ -1,5 +1,8 @@
-Javadoc
+Documentation
   doc/jhdf5-javadoc.zip
+  
+  doc/cisd-jhdf5-examples-src.zip
+    Example programs for some of the features of JHDF5
 
 Source
   src/jhdf5-src.zip
@@ -25,7 +28,7 @@ Library
     No other file is needed when using one of these jar files. 
 
 	  All supported platforms:
-	    lib/batteries_included/cisd-jhdf5-batteries_included_lin_win_mac_sun.jar 
+	    lib/batteries_included/cisd-jhdf5-batteries_included_lin_win_mac_sol.jar 
 	  
 	  Linux/MacOS X/Windows, but no Solaris support: 
 	    lib/batteries_included/cisd-jhdf5-batteries_included_lin_win_mac.jar
