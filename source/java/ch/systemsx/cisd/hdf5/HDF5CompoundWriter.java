@@ -129,6 +129,29 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
         }
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> HDF5CompoundType<T> getInferredCompoundType(final String name, final T pojo)
+    {
+        if (baseWriter.keepDataSetIfExists == false)
+        {
+            return super.getInferredCompoundType(name, pojo);
+        } else
+        {
+            final String dataTypeName = (name != null) ? name : pojo.getClass().getSimpleName();
+            final boolean typeExists =
+                    baseReader.h5.exists(baseReader.fileId,
+                            HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName));
+            if (typeExists)
+            {
+                return (HDF5CompoundType<T>) getNamedCompoundType(dataTypeName, pojo.getClass());
+            } else
+            {
+                return super.getInferredCompoundType(dataTypeName, pojo);
+            }
+        }
+    }
+    
     private <T> HDF5EnumerationValueArray tryCreateDataTypeVariantArray(
             final HDF5ValueObjectByteifyer<T> objectByteifyer)
     {
