@@ -83,7 +83,8 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
             commitType = (typeExists == false) || (typesAreEqual == false);
             if (typeExists && commitType)
             {
-                baseWriter.h5.deleteObject(baseWriter.fileId, dataTypePath);
+                final String replacementDataTypePath = baseWriter.moveLinkOutOfTheWay(dataTypePath);
+                baseReader.renameNamedDataType(dataTypePath, replacementDataTypePath);
             }
             if (typesAreEqual)
             {
@@ -151,7 +152,7 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
             }
         }
     }
-    
+
     private <T> HDF5EnumerationValueArray tryCreateDataTypeVariantArray(
             final HDF5ValueObjectByteifyer<T> objectByteifyer)
     {

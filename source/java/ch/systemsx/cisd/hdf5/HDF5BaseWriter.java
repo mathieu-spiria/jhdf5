@@ -1347,4 +1347,22 @@ final class HDF5BaseWriter extends HDF5BaseReader
             { value });
     }
 
+    String moveLinkOutOfTheWay(String linkPath)
+    {
+        final String newLinkPath = createNonExistentReplacementLinkPath(linkPath);
+        h5.moveLink(fileId, linkPath, newLinkPath);
+        return newLinkPath;
+    }
+
+    private String createNonExistentReplacementLinkPath(final String dataTypePath)
+    {
+        final String dstLinkPath = dataTypePath + "__REPLACED_";
+        int idx = 1;
+        while (h5.exists(fileId, dstLinkPath + idx))
+        {
+            ++idx;
+        }
+        return dstLinkPath + idx;
+    }
+
 }

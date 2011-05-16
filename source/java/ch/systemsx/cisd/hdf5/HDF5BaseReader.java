@@ -206,6 +206,23 @@ class HDF5BaseReader
         return h5.tryGetDataTypePath(dataTypeId);
     }
 
+    void renameNamedDataType(String oldPath, String newPath)
+    {
+        final Integer typeIdOrNull = namedDataTypeMap.get(oldPath);
+        if (typeIdOrNull != null)
+        {
+            namedDataTypeMap.put(newPath, typeIdOrNull);
+        }
+        for (int i = 0; i < namedDataTypeList.size(); ++i)
+        {
+            final DataTypeContainer c = namedDataTypeList.get(i); 
+            if (c.typePath.equals(oldPath))
+            {
+                namedDataTypeList.set(i, new DataTypeContainer(c.typeId, newPath));
+            }
+        }
+    }
+
     String tryGetDataTypeName(int dataTypeId, HDF5DataClass dataClass)
     {
         final String dataTypePathOrNull = tryGetDataTypePath(dataTypeId);
@@ -961,15 +978,15 @@ class HDF5BaseReader
         final boolean isArray = (h5.getClassType(stringArrayDataTypeId) == H5T_ARRAY);
         if (isArray == false)
         {
-            throw new HDF5JavaException("Attribute " + attributeName + " of object "
-                    + objectPath + " needs to be a String array of rank 1.");
+            throw new HDF5JavaException("Attribute " + attributeName + " of object " + objectPath
+                    + " needs to be a String array of rank 1.");
         }
         final int stringDataTypeId = h5.getBaseDataType(stringArrayDataTypeId, registry);
         final boolean isStringArray = (h5.getClassType(stringDataTypeId) == H5T_STRING);
         if (isStringArray == false)
         {
-            throw new HDF5JavaException("Attribute " + attributeName + " of object "
-                    + objectPath + " needs to be a String array of rank 1.");
+            throw new HDF5JavaException("Attribute " + attributeName + " of object " + objectPath
+                    + " needs to be a String array of rank 1.");
         }
         final int size = h5.getDataTypeSize(stringArrayDataTypeId);
         if (h5.isVariableLengthString(stringDataTypeId))
@@ -1007,22 +1024,23 @@ class HDF5BaseReader
         final boolean isArray = (h5.getClassType(stringArrayDataTypeId) == H5T_ARRAY);
         if (isArray == false)
         {
-            throw new HDF5JavaException("Attribute " + attributeName + " of object "
-                    + objectPath + " needs to be a String array.");
+            throw new HDF5JavaException("Attribute " + attributeName + " of object " + objectPath
+                    + " needs to be a String array.");
         }
         final int stringDataTypeId = h5.getBaseDataType(stringArrayDataTypeId, registry);
         final boolean isStringArray = (h5.getClassType(stringDataTypeId) == H5T_STRING);
         if (isStringArray == false)
         {
-            throw new HDF5JavaException("Attribute " + attributeName + " of object "
-                    + objectPath + " needs to be a String array.");
+            throw new HDF5JavaException("Attribute " + attributeName + " of object " + objectPath
+                    + " needs to be a String array.");
         }
         final int size = h5.getDataTypeSize(stringArrayDataTypeId);
         if (h5.isVariableLengthString(stringDataTypeId))
         {
             String[] data = new String[1];
             h5.readAttributeVL(attributeId, stringDataTypeId, data);
-            return new MDArray<String>(data, new int[] { 1 });
+            return new MDArray<String>(data, new int[]
+                { 1 });
         } else
         {
             byte[] data = h5.readAttributeAsByteArray(attributeId, stringArrayDataTypeId, size);
