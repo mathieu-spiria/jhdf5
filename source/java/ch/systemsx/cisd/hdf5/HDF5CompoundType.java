@@ -20,13 +20,14 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang.ArrayUtils;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
+import org.apache.commons.lang.ArrayUtils;
 
 /**
  * The definition of a HDF5 compound type. For information on how to create and work with compound
@@ -233,6 +234,22 @@ public class HDF5CompoundType<T> extends HDF5DataType
         {
             final Set<Field> fieldSet =
                     new HashSet<Field>(ReflectionUtils.getFieldMap(compoundType).values());
+            // If the compound type is annotated with @CompoundType(mapAllFields = false)
+            // then remove all fields that do not have an @CompoundElement annotation
+            final CompoundType ct = compoundType.getAnnotation(CompoundType.class);
+            if (ct != null && ct.mapAllFields() == false)
+            {
+                final Iterator<Field> it = fieldSet.iterator();
+                while (it.hasNext())
+                {
+                    final Field f = it.next();
+                    final CompoundElement ce = f.getAnnotation(CompoundElement.class);
+                    if (ce == null)
+                    {
+                        it.remove();
+                    }
+                }
+            }
             for (HDF5MemberByteifyer byteiyfer : objectByteifyer.getByteifyers())
             {
                 fieldSet.remove(byteiyfer.tryGetField());

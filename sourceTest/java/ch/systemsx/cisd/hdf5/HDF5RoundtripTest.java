@@ -277,6 +277,7 @@ public class HDF5RoundtripTest
         test.testCompoundIncompleteJavaPojo();
         test.testCompoundManualMapping();
         test.testInferredCompoundType();
+        test.testInferredIncompletelyMappedCompoundType();
         test.testNameChangeInCompoundMapping();
         test.testInferredCompoundTypedWithEnum();
         test.testInferredCompoundTypeWithEnumArray();
@@ -6463,6 +6464,50 @@ public class HDF5RoundtripTest
         assertEquals(42, recordInheritedRead.getI());
         assertEquals("some", recordInheritedRead.getS());
         assertTrue(equals(arrayWritten, recordInheritedRead.getL()));
+    }
+
+    @CompoundType(mapAllFields = false)
+    static class IncompleteMappedCompound
+    {
+        @CompoundElement
+        float a;
+
+        @CompoundElement
+        int b;
+
+        // unmapped
+        String c;
+
+        public IncompleteMappedCompound()
+        {
+        }
+        
+        public IncompleteMappedCompound(float a, int b, String c)
+        {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
+
+    }
+
+    @Test
+    public void testInferredIncompletelyMappedCompoundType()
+    {
+        final File file = new File(workingDirectory, "inferredIncompletelyMappedCompoundType.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.writeCompound("cpd", new IncompleteMappedCompound(-1.111f, 11, "Not mapped"));
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().configureForReading(file).reader();
+        final IncompleteMappedCompound cpd =
+                reader.readCompound("cpd", IncompleteMappedCompound.class);
+        reader.close();
+        assertEquals(-1.111f, cpd.a);
+        assertEquals(11, cpd.b);
+        assertNull(cpd.c);
     }
 
     @Test
