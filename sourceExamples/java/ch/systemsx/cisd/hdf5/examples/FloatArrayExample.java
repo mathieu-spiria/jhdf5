@@ -36,12 +36,12 @@ public class FloatArrayExample
         }
 
         // Write a float array
-        IHDF5SimpleWriter writer = HDF5Factory.open("myfile.h5");
+        IHDF5SimpleWriter writer = HDF5Factory.open("farray.h5");
         writer.writeFloatArray("mydata", mydata);
         writer.close();
 
         // Read a float array
-        IHDF5SimpleReader reader = HDF5Factory.openForReading("myfile.h5");
+        IHDF5SimpleReader reader = HDF5Factory.openForReading("farray.h5");
         System.out.println(ArrayUtils.toString(reader.readFloatArray("mydata")));
         reader.close();
     }
