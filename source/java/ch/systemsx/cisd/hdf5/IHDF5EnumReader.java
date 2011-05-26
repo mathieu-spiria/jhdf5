@@ -70,9 +70,18 @@ public interface IHDF5EnumReader
      * Returns the enumeration type for the data set <var>dataSetPath</var>.
      * 
      * @param dataSetPath The name of data set to get the enumeration type for.
+     * @deprecated Use {@link #getDataSetEnumType(String)} instead.
      */
+    @Deprecated
     public HDF5EnumerationType getEnumTypeForObject(final String dataSetPath);
 
+    /**
+     * Returns the enumeration type for the data set <var>dataSetPath</var>.
+     * 
+     * @param dataSetPath The name of data set to get the enumeration type for.
+     */
+    public HDF5EnumerationType getDataSetEnumType(final String dataSetPath);
+    
     // /////////////////////
     // Attributes
     // /////////////////////

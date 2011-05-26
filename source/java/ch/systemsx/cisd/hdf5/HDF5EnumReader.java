@@ -81,6 +81,11 @@ class HDF5EnumReader implements IHDF5EnumReader
 
     public HDF5EnumerationType getEnumTypeForObject(final String dataSetPath)
     {
+        return getDataSetEnumType(dataSetPath);
+    }
+    
+    public HDF5EnumerationType getDataSetEnumType(final String dataSetPath)
+    {
         baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5EnumerationType> readEnumTypeCallable =
                 new ICallableWithCleanUp<HDF5EnumerationType>()

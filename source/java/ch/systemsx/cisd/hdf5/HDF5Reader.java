@@ -538,6 +538,12 @@ class HDF5Reader implements IHDF5Reader
         return enumReader.getEnumType(dataTypeName, values, check);
     }
 
+    public HDF5EnumerationType getDataSetEnumType(String dataSetPath)
+    {
+        return enumReader.getDataSetEnumType(dataSetPath);
+    }
+
+    @SuppressWarnings("deprecation")
     public HDF5EnumerationType getEnumTypeForObject(String dataSetPath)
     {
         return enumReader.getEnumTypeForObject(dataSetPath);

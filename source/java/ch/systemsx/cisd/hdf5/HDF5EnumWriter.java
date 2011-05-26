@@ -52,20 +52,53 @@ class HDF5EnumWriter implements IHDF5EnumWriter
             final boolean check) throws HDF5JavaException
     {
         baseWriter.checkOpen();
-        final String dataTypePath = HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, name);
-        int storageDataTypeId = baseWriter.getDataTypeId(dataTypePath);
-        if (storageDataTypeId < 0)
-        {
-            storageDataTypeId = baseWriter.h5.createDataTypeEnum(values, baseWriter.fileRegistry);
-            baseWriter.commitDataType(dataTypePath, storageDataTypeId);
-        } else if (check)
-        {
-            baseWriter.checkEnumValues(storageDataTypeId, values, name);
-        }
+        final int storageDataTypeId =
+                getOrCreateEnumDataType(name, values, baseWriter.keepDataSetIfExists, check);
         final int nativeDataTypeId =
                 baseWriter.h5.getNativeDataType(storageDataTypeId, baseWriter.fileRegistry);
         return new HDF5EnumerationType(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
                 name, values);
+    }
+
+    private int getOrCreateEnumDataType(final String dataTypeName, final String[] values,
+            boolean committedDataTypeHasPreference, boolean checkIfExists)
+    {
+        final String dataTypePath =
+                HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, dataTypeName);
+        final int committedStorageDataTypeId = baseWriter.getDataTypeId(dataTypePath);
+        final boolean typeExists = (committedStorageDataTypeId >= 0);
+        int storageDataTypeId = committedStorageDataTypeId;
+        final boolean commitType;
+        if ((typeExists == false) || (committedDataTypeHasPreference == false))
+        {
+            storageDataTypeId = baseWriter.h5.createDataTypeEnum(values, baseWriter.fileRegistry);
+            final boolean typesAreEqual =
+                    typeExists
+                            && baseWriter.h5.dataTypesAreEqual(committedStorageDataTypeId,
+                                    storageDataTypeId);
+            commitType = (typeExists == false) || (typesAreEqual == false);
+            if (typeExists && commitType)
+            {
+                final String replacementDataTypePath = baseWriter.moveLinkOutOfTheWay(dataTypePath);
+                baseWriter.renameNamedDataType(dataTypePath, replacementDataTypePath);
+            }
+            if (typesAreEqual)
+            {
+                storageDataTypeId = committedStorageDataTypeId;
+            }
+        } else
+        {
+            commitType = false;
+            if (checkIfExists)
+            {
+                baseWriter.checkEnumValues(storageDataTypeId, values, dataTypeName);
+            }
+        }
+        if (commitType)
+        {
+            baseWriter.commitDataType(dataTypePath, storageDataTypeId);
+        }
+        return storageDataTypeId;
     }
 
     // /////////////////////

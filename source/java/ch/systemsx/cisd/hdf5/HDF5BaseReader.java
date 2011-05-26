@@ -912,7 +912,7 @@ class HDF5BaseReader
             {
                 throw new HDF5JavaException("Enum member index " + i + " of enum "
                         + getEnumDataTypeName(nameOrNull, dataTypeId) + " is '" + valuesStored[i]
-                        + "', but should be " + values[i]);
+                        + "', but should be '" + values[i] + "'");
             }
         }
     }
