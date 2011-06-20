@@ -16,50 +16,49 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.H5.*;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5D_CHUNKED;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5D_COMPACT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5D_FILL_TIME_ALLOC;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_RDONLY;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_RDWR;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_TRUNC;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_LIBVER_LATEST;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5F_SCOPE_GLOBAL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_ATTRIBUTE_CREATE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DATASET_CREATE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_FILE_ACCESS;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_GROUP_CREATE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_LINK_CREATE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5R_OBJECT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_MAX_RANK;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SELECT_SET;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_UNLIMITED;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_BITFIELD;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_COMPOUND;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_C_S1;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_OPAQUE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_OPAQUE_TAG_MAX;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I16LE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I32LE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I8LE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_VARIABLE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5Z_SO_FLOAT_DSCALE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5Z_SO_INT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5D_CHUNKED;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5D_COMPACT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5D_FILL_TIME_ALLOC;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_ACC_RDONLY;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_ACC_RDWR;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_ACC_TRUNC;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_LIBVER_LATEST;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_SCOPE_GLOBAL;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_ATTRIBUTE_CREATE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DATASET_CREATE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_FILE_ACCESS;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_GROUP_CREATE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_LINK_CREATE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5R_OBJECT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_MAX_RANK;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SELECT_SET;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_UNLIMITED;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_BITFIELD;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_COMPOUND;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_C_S1;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_FLOAT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_INTEGER;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_OPAQUE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_OPAQUE_TAG_MAX;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_VARIABLE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5Z_SO_FLOAT_DSCALE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5Z_SO_INT;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import ncsa.hdf.hdf5lib.H5;
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
@@ -69,9 +68,10 @@ import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.H5;
 
 /**
- * A wrapper around {@link ncsa.hdf.hdf5lib.H5} that handles closing of resources automatically by
+ * A wrapper around {@link ch.systemsx.cisd.hdf5.hdf5lib.H5} that handles closing of resources automatically by
  * means of registering clean-up {@link Runnable}s.
  * 
  * @author Bernd Rinn

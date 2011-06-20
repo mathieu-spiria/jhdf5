@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.H5.H5Tinsert;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Tinsert;
 
 import java.lang.reflect.Field;
 

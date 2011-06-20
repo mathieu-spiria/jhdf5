@@ -16,11 +16,11 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 /**
  * An interface for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).

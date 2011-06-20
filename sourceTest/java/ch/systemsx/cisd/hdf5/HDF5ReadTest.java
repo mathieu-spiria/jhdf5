@@ -21,8 +21,8 @@ import java.util.BitSet;
 import java.util.List;
 
 import ch.systemsx.cisd.base.convert.NativeData;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
-import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 /**

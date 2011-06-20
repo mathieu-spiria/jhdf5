@@ -16,7 +16,8 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 
-import ncsa.hdf.hdf5lib.H5;
+import ch.systemsx.cisd.hdf5.hdf5lib.H5;
+
 
 /**
  * <p>

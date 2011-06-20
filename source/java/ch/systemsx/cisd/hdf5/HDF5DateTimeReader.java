@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 
 import java.util.Date;
 import java.util.Iterator;

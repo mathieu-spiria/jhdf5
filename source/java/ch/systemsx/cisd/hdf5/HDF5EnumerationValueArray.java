@@ -18,11 +18,11 @@ package ch.systemsx.cisd.hdf5;
 
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType.StorageFormEnum;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A class the represents an array of HDF enumeration values.

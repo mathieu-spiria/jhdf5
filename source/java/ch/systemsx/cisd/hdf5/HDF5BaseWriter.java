@@ -22,10 +22,10 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isNonPositive;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_UNLIMITED;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Dwrite;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_UNLIMITED;
 
 import java.io.File;
 import java.io.FileNotFoundException;

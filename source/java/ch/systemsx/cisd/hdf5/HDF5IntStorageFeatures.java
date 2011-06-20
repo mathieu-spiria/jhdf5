@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_INTEGER;
 
 /**
  * An object representing the storage features that are to be used for an integer data set.

@@ -16,18 +16,18 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_B64LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Dwrite;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_B64LE;
 
 import java.util.BitSet;
 
-import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * Implementation of {@link IHDF5BooleanWriter}.

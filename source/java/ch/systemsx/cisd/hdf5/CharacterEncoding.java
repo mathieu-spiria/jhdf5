@@ -16,8 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_CSET_ASCII;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_CSET_UTF8;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_CSET_ASCII;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_CSET_UTF8;
 
 /**
  * An enum for character encodings of path names and strings in JHDF5. 

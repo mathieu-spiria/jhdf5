@@ -43,8 +43,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import ncsa.hdf.hdf5lib.H5;
-import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
@@ -68,6 +66,8 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
+import ch.systemsx.cisd.hdf5.hdf5lib.H5;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 /**
  * Test cases for {@link IHDF5Writer} and {@link IHDF5Reader}, doing "round-trips" to the HDF5 disk
@@ -370,6 +370,7 @@ public class HDF5RoundtripTest
         test.testObjectReferenceMDArrayAttribute();
         test.testObjectReferenceMDArray();
         test.testObjectReferenceMDArrayBlockWise();
+        test.testHDFJavaLowLevel();
 
         test.finalize();
     }
@@ -7130,4 +7131,56 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
+    @Test
+    public void testHDFJavaLowLevel()
+    {
+        final File file = new File(workingDirectory, "testHDFJavaLowLevel.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        int fileId =
+                ncsa.hdf.hdf5lib.H5.H5Fcreate(file.getAbsolutePath(),
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_TRUNC,
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+        int groupId =
+                ncsa.hdf.hdf5lib.H5.H5Gcreate(fileId, "constants",
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+        int spcId = ncsa.hdf.hdf5lib.H5.H5Screate(ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR);
+        int dsId =
+                ncsa.hdf.hdf5lib.H5.H5Dcreate(groupId, "pi",
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE, spcId,
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+        ncsa.hdf.hdf5lib.H5.H5Dwrite(dsId, ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT,
+                ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR,
+                ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR,
+                ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT, new float[]
+                    { 3.14159f });
+        ncsa.hdf.hdf5lib.H5.H5Dclose(dsId);
+        ncsa.hdf.hdf5lib.H5.H5Sclose(spcId);
+        ncsa.hdf.hdf5lib.H5.H5Gclose(groupId);
+        ncsa.hdf.hdf5lib.H5.H5Fclose(fileId);
+
+        fileId =
+                ncsa.hdf.hdf5lib.H5.H5Fopen(file.getAbsolutePath(),
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_RDONLY,
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+        spcId = ncsa.hdf.hdf5lib.H5.H5Screate(ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR);
+        dsId =
+                ncsa.hdf.hdf5lib.H5.H5Dopen(fileId, "/constants/pi",
+                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+        final float[] data = new float[1];
+        ncsa.hdf.hdf5lib.H5.H5Dread(dsId, ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT,
+                ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL, ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL,
+                ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT, data);
+        assertEquals(3.14159f, data[0], 0f);
+
+        ncsa.hdf.hdf5lib.H5.H5Dclose(dsId);
+        ncsa.hdf.hdf5lib.H5.H5Sclose(spcId);
+        ncsa.hdf.hdf5lib.H5.H5Fclose(fileId);
+    }
 }

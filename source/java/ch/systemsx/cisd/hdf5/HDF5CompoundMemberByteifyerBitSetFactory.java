@@ -18,14 +18,14 @@ package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.base.convert.NativeData.LONG_SIZE;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.*;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_B64LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_B64LE;
 
 import java.lang.reflect.Field;
 import java.util.BitSet;
 
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
-import ncsa.hdf.hdf5lib.HDFNativeData;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>BitSet</code>

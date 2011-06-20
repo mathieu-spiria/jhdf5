@@ -1,6 +1,6 @@
 package ch.systemsx.cisd.hdf5;
 
-import ncsa.hdf.hdf5lib.HDF5Constants;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 /**
  * The storage layout of a data set in the HDF5 file. Not applicable for attributes.

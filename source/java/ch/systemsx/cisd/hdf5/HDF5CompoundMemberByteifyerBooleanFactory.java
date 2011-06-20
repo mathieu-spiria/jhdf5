@@ -21,8 +21,8 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.*;
 import java.lang.reflect.Field;
 
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
-import ncsa.hdf.hdf5lib.HDFNativeData;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for

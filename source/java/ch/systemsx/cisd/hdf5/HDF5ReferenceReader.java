@@ -17,19 +17,19 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5BaseReader.REFERENCE_SIZE_IN_BYTES;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_REFERENCE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_REFERENCE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
 
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 /**
  * A reader for HDF5 references.

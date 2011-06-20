@@ -19,7 +19,7 @@ package ch.systemsx.cisd.hdf5;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.ENUM_PREFIX;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
 
 import java.util.Iterator;
 

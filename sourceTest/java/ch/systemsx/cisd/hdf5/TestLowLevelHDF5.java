@@ -16,9 +16,10 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.H5.*;
-import static ncsa.hdf.hdf5lib.HDF5Constants.*;
-import ncsa.hdf.hdf5lib.HDF5Constants;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.*;
+
+import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 public class TestLowLevelHDF5
 {

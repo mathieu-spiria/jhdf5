@@ -16,12 +16,12 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I16LE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I32LE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I8LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,11 +30,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import ncsa.hdf.hdf5lib.HDFNativeData;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A class that represents an enumeration for a given HDF5 file and <var>values</var> array.

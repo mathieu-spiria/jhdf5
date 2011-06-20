@@ -16,12 +16,12 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5L_TYPE_EXTERNAL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5L_TYPE_SOFT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_DATASET;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_NAMED_DATATYPE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5O_TYPE_NTYPES;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5L_TYPE_EXTERNAL;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5L_TYPE_SOFT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5O_TYPE_DATASET;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5O_TYPE_NAMED_DATATYPE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5O_TYPE_NTYPES;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**

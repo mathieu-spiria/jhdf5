@@ -1,276 +1,487 @@
 /****************************************************************************
- * NCSA HDF                                                                 *
- * National Comptational Science Alliance                                   *
- * University of Illinois at Urbana-Champaign                               *
- * 605 E. Springfield, Champaign IL 61820                                   *
- *                                                                          *
- * For conditions of distribution and use, see the accompanying             *
- * hdf-java/COPYING file.                                                   *
- *                                                                          *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Board of Trustees of the University of Illinois.         *
+ * All rights reserved.                                                      *
+ *                                                                           *
+ * This file is part of HDF Java Products. The full HDF Java copyright       *
+ * notice, including terms governing use, modification, and redistribution,  *
+ * is contained in the file, COPYING.  COPYING can be found at the root of   *
+ * the source code distribution tree. You can also access it online  at      *
+ * http://www.hdfgroup.org/products/licenses.html.  If you do not have       *
+ * access to the file, you may request a copy from help@hdfgroup.org.        *
  ****************************************************************************/
 
 package ncsa.hdf.hdf5lib;
 
-import ch.systemsx.cisd.base.convert.NativeData;
-import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
+import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
- * This class provides a convenience interface to {@link NativeData}.
+ * This class encapsulates native methods to deal with arrays of numbers,
+ * converting from numbers to bytes and bytes to numbers.
+ * <p>
+ * These routines are used by class <b>HDFArray</b> to pass data to and from the
+ * HDF-5 library.
+ * <p>
+ * Methods xxxToByte() convert a Java array of primitive numbers (int, short,
+ * ...) to a Java array of bytes. Methods byteToXxx() convert from a Java array
+ * of bytes into a Java array of primitive numbers (int, short, ...)
+ * <p>
+ * Variant interfaces convert a section of an array, and also can convert to
+ * sub-classes of Java <b>Number</b>.
+ * <P>
+ * <b>See also:</b> ncsa.hdf.hdf5lib.HDFArray.
  */
 
-public class HDFNativeData
-{
+@SuppressWarnings("all")
+public class HDFNativeData {
 
-    static
-    {
-        NativeData.ensureNativeLibIsLoaded();
+    static {
+        int plist = HDF5Constants.H5P_DEFAULT;
+        int[] version_info = new int[4];
+        try {
+            H5.H5Pget_version(plist, version_info);
+        }
+        catch (Exception ex) {
+        }
     }
 
     /**
-     * Converts a <code>byte</code> value into a <code>byte[]</code>.
+     * Convert an array of bytes into an array of ints
      * 
-     * @param data The value to convert.
-     * @return The array containing the value.
+     * @param data
+     *            The input array of bytes
+     * @return an array of int
      */
-    public static byte[] byteToByte(byte data)
-    {
-        return new byte[]
-            { data };
+    public synchronized static native int[] byteToInt(byte[] data);
+
+    /**
+     * Convert an array of bytes into an array of floats
+     * 
+     * @param data
+     *            The input array of bytes
+     * @return an array of float
+     */
+    public synchronized static native float[] byteToFloat(byte[] data);
+
+    /**
+     * Convert an array of bytes into an array of shorts
+     * 
+     * @param data
+     *            The input array of bytes
+     * @return an array of short
+     */
+    public synchronized static native short[] byteToShort(byte[] data);
+
+    /**
+     * Convert an array of bytes into an array of long
+     * 
+     * @param data
+     *            The input array of bytes
+     * @return an array of long
+     */
+    /*
+     * does this really work? C 'long' is 32 bits, Java 'long' is 64-bits. What
+     * does this routine actually do?
+     */
+    public synchronized static native long[] byteToLong(byte[] data);
+
+    /**
+     * Convert an array of bytes into an array of double
+     * 
+     * @param data
+     *            The input array of bytes
+     * @return an array of double
+     */
+    public synchronized static native double[] byteToDouble(byte[] data);
+
+    /**
+     * Convert a range from an array of bytes into an array of int
+     * 
+     * @param start
+     *            The position in the input array of bytes to start
+     * @param len
+     *            The number of 'int' to convert
+     * @param data
+     *            The input array of bytes
+     * @return an array of 'len' int
+     */
+    public synchronized static native int[] byteToInt(int start, int len,
+            byte[] data);
+
+    /**
+     * Convert 4 bytes from an array of bytes into a single int
+     * 
+     * @param start
+     *            The position in the input array of bytes to start
+     * @param data
+     *            The input array of bytes
+     * @return The integer value of the bytes.
+     */
+    public synchronized static int byteToInt(byte[] data, int start) {
+        int[] ival = new int[1];
+        ival = byteToInt(start, 1, data);
+        return (ival[0]);
     }
 
     /**
-     * Converts a <code>short</code> value into a <code>byte[]</code>.
+     * Convert a range from an array of bytes into an array of short
      * 
-     * @param data The value to convert.
-     * @return The array containing the value.
+     * @param start
+     *            The position in the input array of bytes to start
+     * @param len
+     *            The number of 'short' to convert
+     * @param data
+     *            The input array of bytes
+     * @return an array of 'len' short
      */
-    public static byte[] shortToByte(short data)
-    {
-        return NativeData.shortToByte(new short[] { data }, ByteOrder.NATIVE); 
+    public synchronized static native short[] byteToShort(int start, int len,
+            byte[] data);
+
+    /**
+     * Convert 2 bytes from an array of bytes into a single short
+     * 
+     * @param start
+     *            The position in the input array of bytes to start
+     * @param data
+     *            The input array of bytes
+     * @return The short value of the bytes.
+     */
+    public synchronized static short byteToShort(byte[] data, int start) {
+        short[] sval = new short[1];
+        sval = byteToShort(start, 1, data);
+        return (sval[0]);
     }
 
     /**
-     * Converts an <code>int</code> value into a <code>byte[]</code>.
+     * Convert a range from an array of bytes into an array of float
      * 
-     * @param data The value to convert.
-     * @return The array containing the value.
+     * @param start
+     *            The position in the input array of bytes to start
+     * @param len
+     *            The number of 'float' to convert
+     * @param data
+     *            The input array of bytes
+     * @return an array of 'len' float
      */
-    public static byte[] intToByte(int data)
-    {
-        return NativeData.intToByte(new int[] { data }, ByteOrder.NATIVE); 
+    public synchronized static native float[] byteToFloat(int start, int len,
+            byte[] data);
+
+    /**
+     * Convert 4 bytes from an array of bytes into a single float
+     * 
+     * @param start
+     *            The position in the input array of bytes to start
+     * @param data
+     *            The input array of bytes
+     * @return The float value of the bytes.
+     */
+    public synchronized static float byteToFloat(byte[] data, int start) {
+        float[] fval = new float[1];
+        fval = byteToFloat(start, 1, data);
+        return (fval[0]);
     }
 
     /**
-     * Converts a <code>long</code> value into a <code>byte[]</code>.
+     * Convert a range from an array of bytes into an array of long
      * 
-     * @param data The value to convert.
-     * @return The array containing the value.
+     * @param start
+     *            The position in the input array of bytes to start
+     * @param len
+     *            The number of 'long' to convert
+     * @param data
+     *            The input array of bytes
+     * @return an array of 'len' long
      */
-    public static byte[] longToByte(long data)
-    {
-        return NativeData.longToByte(new long[] { data }, ByteOrder.NATIVE); 
+    public synchronized static native long[] byteToLong(int start, int len,
+            byte[] data);
+
+    /**
+     * Convert 8 bytes from an array of bytes into a single long
+     * 
+     * @param start
+     *            The position in the input array of bytes to start
+     * @param data
+     *            The input array of bytes
+     * @return The long value of the bytes.
+     */
+    public synchronized static long byteToLong(byte[] data, int start) {
+        long[] lval = new long[1];
+        lval = byteToLong(start, 1, data);
+        return (lval[0]);
     }
 
     /**
-     * Converts a <code>float</code> value into a <code>byte[]</code>.
+     * Convert a range from an array of bytes into an array of double
      * 
-     * @param data The value to convert.
-     * @return The array containing the value.
+     * @param start
+     *            The position in the input array of bytes to start
+     * @param len
+     *            The number of 'double' to convert
+     * @param data
+     *            The input array of bytes
+     * @return an array of 'len' double
      */
-    public static byte[] floatToByte(float data)
-    {
-        return NativeData.floatToByte(new float[] { data }, ByteOrder.NATIVE); 
+    public synchronized static native double[] byteToDouble(int start, int len,
+            byte[] data);
+
+    /**
+     * Convert 8 bytes from an array of bytes into a single double
+     * 
+     * @param start
+     *            The position in the input array of bytes to start
+     * @param data
+     *            The input array of bytes
+     * @return The double value of the bytes.
+     */
+    public synchronized static double byteToDouble(byte[] data, int start) {
+        double[] dval = new double[1];
+        dval = byteToDouble(start, 1, data);
+        return (dval[0]);
     }
 
     /**
-     * Converts a <code>double</code> value into a <code>byte[]</code>.
+     * Convert a range from an array of int into an array of bytes.
      * 
-     * @param data The value to convert.
-     * @return The array containing the value.
+     * @param start
+     *            The position in the input array of int to start
+     * @param len
+     *            The number of 'int' to convert
+     * @param data
+     *            The input array of int
+     * @return an array of bytes
      */
-    public static byte[] doubleToByte(double data)
-    {
-        return NativeData.doubleToByte(new double[] { data }, ByteOrder.NATIVE); 
+    public synchronized static native byte[] intToByte(int start, int len,
+            int[] data);
+
+    /**
+     * Convert a range from an array of short into an array of bytes.
+     * 
+     * @param start
+     *            The position in the input array of int to start
+     * @param len
+     *            The number of 'short' to convert
+     * @param data
+     *            The input array of short
+     * @return an array of bytes
+     */
+    public synchronized static native byte[] shortToByte(int start, int len,
+            short[] data);
+
+    /**
+     * Convert a range from an array of float into an array of bytes.
+     * 
+     * @param start
+     *            The position in the input array of int to start
+     * @param len
+     *            The number of 'float' to convert
+     * @param data
+     *            The input array of float
+     * @return an array of bytes
+     */
+    public synchronized static native byte[] floatToByte(int start, int len,
+            float[] data);
+
+    /**
+     * Convert a range from an array of long into an array of bytes.
+     * 
+     * @param start
+     *            The position in the input array of int to start
+     * @param len
+     *            The number of 'long' to convert
+     * @param data
+     *            The input array of long
+     * @return an array of bytes
+     */
+    public synchronized static native byte[] longToByte(int start, int len,
+            long[] data);
+
+    /**
+     * Convert a range from an array of double into an array of bytes.
+     * 
+     * @param start
+     *            The position in the input array of double to start
+     * @param len
+     *            The number of 'double' to convert
+     * @param data
+     *            The input array of double
+     * @return an array of bytes
+     */
+    public synchronized static native byte[] doubleToByte(int start, int len,
+            double[] data);
+
+    /**
+     * Convert a single byte into an array of one byte.
+     * <p>
+     * (This is a trivial method.)
+     * 
+     * @param data
+     *            The input byte
+     * @return an array of bytes
+     */
+    public synchronized static native byte[] byteToByte(byte data);
+
+    /**
+     * Convert a single Byte object into an array of one byte.
+     * <p>
+     * (This is an almost trivial method.)
+     * 
+     * @param data
+     *            The input Byte
+     * @return an array of bytes
+     */
+    public synchronized static byte[] byteToByte(Byte data) {
+        return byteToByte(data.byteValue());
     }
 
     /**
-     * Converts a range of a <code>byte[]</code> to a <code>short</code> value.
+     * Convert a single int into an array of 4 bytes.
      * 
-     * @param byteArr The value to convert.
-     * @param start The position in the <var>byteArr</var> to start the conversion.
-     * @return The <code>short</code> value.
+     * @param data
+     *            The input int
+     * @return an array of bytes
      */
-    public static short byteToShort(byte[] byteArr, int start)
-    {
-        return NativeData.byteToShort(byteArr, ByteOrder.NATIVE, start, 1)[0];
+    public synchronized static native byte[] intToByte(int data);
+
+    /**
+     * Convert a single Integer object into an array of 4 bytes.
+     * 
+     * @param data
+     *            The input Integer
+     * @return an array of bytes
+     */
+    public synchronized static byte[] intToByte(Integer data) {
+        return intToByte(data.intValue());
     }
 
     /**
-     * Converts a <code>byte[]</code> array into a <code>short[]</code> array.
+     * Convert a single short into an array of 2 bytes.
      * 
-     * @param byteArr The <code>byte[]</code> to convert.
-     * @param start The position in the <var>byteArr</var> to start the conversion.
-     * @param len The number of <code>short</code> values to convert.
-     * @return The <code>short[]</code> array.
+     * @param data
+     *            The input short
+     * @return an array of bytes
      */
-    public static short[] byteToShort(byte[] byteArr, int start, int len)
-    {
-        return NativeData.byteToShort(byteArr, ByteOrder.NATIVE, start, len);
+    public synchronized static native byte[] shortToByte(short data);
+
+    /**
+     * Convert a single Short object into an array of 2 bytes.
+     * 
+     * @param data
+     *            The input Short
+     * @return an array of bytes
+     */
+    public synchronized static byte[] shortToByte(Short data) {
+        return shortToByte(data.shortValue());
     }
 
     /**
-     * Converts a range of a <code>byte[]</code> to a <code>int</code> value.
+     * Convert a single float into an array of 4 bytes.
      * 
-     * @param byteArr The value to convert.
-     * @param start The position in the <var>byteArr</var> to start the conversion.
-     * @return The <code>int</code> value.
+     * @param data
+     *            The input float
+     * @return an array of bytes
      */
-    public static int byteToInt(byte[] byteArr, int start)
-    {
-        return NativeData.byteToInt(byteArr, ByteOrder.NATIVE, start, 1)[0];
+    public synchronized static native byte[] floatToByte(float data);
+
+    /**
+     * Convert a single Float object into an array of 4 bytes.
+     * 
+     * @param data
+     *            The input Float
+     * @return an array of bytes
+     */
+    public synchronized static byte[] floatToByte(Float data) {
+        return floatToByte(data.floatValue());
+    };
+
+    /**
+     * Convert a single long into an array of 8 bytes.
+     * 
+     * @param data
+     *            The input long
+     * @return an array of bytes
+     */
+    public synchronized static native byte[] longToByte(long data);
+
+    /**
+     * Convert a single Long object into an array of 8 bytes.
+     * 
+     * @param data
+     *            The input Long
+     * @return an array of bytes
+     */
+    public synchronized static byte[] longToByte(Long data) {
+        return longToByte(data.longValue());
     }
 
     /**
-     * Converts a <code>byte[]</code> array into an <code>int[]</code> array.
+     * Convert a single double into an array of 8 bytes.
      * 
-     * @param byteArr The <code>byte[]</code> to convert.
-     * @param start The position in the <var>byteArr</var> to start the conversion.
-     * @param len The number of <code>int</code> values to convert.
-     * @return The <code>int[]</code> array.
+     * @param data
+     *            The input double
+     * @return an array of bytes
      */
-    public static int[] byteToInt(byte[] byteArr, int start, int len)
-    {
-        return NativeData.byteToInt(byteArr, ByteOrder.NATIVE, start, len);
+    public synchronized static native byte[] doubleToByte(double data);
+
+    /**
+     * Convert a single Double object into an array of 8 bytes.
+     * 
+     * @param data
+     *            The input Double
+     * @return an array of bytes
+     */
+    public synchronized static byte[] doubleToByte(Double data) {
+        return doubleToByte(data.doubleValue());
     }
 
     /**
-     * Converts a range of a <code>byte[]</code> to a <code>long</code> value.
+     * Create a Number object from an array of bytes.
      * 
-     * @param byteArr The value to convert.
-     * @param start The position in the <var>byteArr</var> to start the conversion.
-     * @return The <code>long</code> value.
+     * @param barray
+     *            The bytes to be converted
+     * @param obj
+     *            Input object of the desired output class. Must be a sub-class
+     *            of Number.
+     * @return A Object of the type of obj.
      */
-    public static long byteToLong(byte[] byteArr, int start)
-    {
-        return NativeData.byteToLong(byteArr, ByteOrder.NATIVE, start, 1)[0];
-    }
+    public synchronized static Object byteToNumber(byte[] barray, Object obj)
+            throws HDF5Exception {
+        Class theClass = obj.getClass();
+        String type = theClass.getName();
+        Object retobj = null;
 
-    /**
-     * Converts a <code>byte[]</code> array into a <code>long[]</code> array.
-     * 
-     * @param byteArr The <code>byte[]</code> to convert.
-     * @param start The position in the <var>byteArr</var> to start the conversion.
-     * @param len The number of <code>long</code> values to convert.
-     * @return The <code>long[]</code> array.
-     */
-    public static long[] byteToLong(byte[] byteArr, int start, int len)
-    {
-        return NativeData.byteToLong(byteArr, ByteOrder.NATIVE, start, len);
+        if (type.equals("java.lang.Integer")) {
+            int[] i = ncsa.hdf.hdf5lib.HDFNativeData.byteToInt(0, 1, barray);
+            retobj = new Integer(i[0]);
+        }
+        else if (type.equals("java.lang.Byte")) {
+            retobj = new Byte(barray[0]);
+        }
+        else if (type.equals("java.lang.Short")) {
+            short[] f = ncsa.hdf.hdf5lib.HDFNativeData
+                    .byteToShort(0, 1, barray);
+            retobj = new Short(f[0]);
+        }
+        else if (type.equals("java.lang.Float")) {
+            float[] f = ncsa.hdf.hdf5lib.HDFNativeData
+                    .byteToFloat(0, 1, barray);
+            retobj = new Float(f[0]);
+        }
+        else if (type.equals("java.lang.Long")) {
+            long[] f = ncsa.hdf.hdf5lib.HDFNativeData.byteToLong(0, 1, barray);
+            retobj = new Long(f[0]);
+        }
+        else if (type.equals("java.lang.Double")) {
+            double[] f = ncsa.hdf.hdf5lib.HDFNativeData.byteToDouble(0, 1,
+                    barray);
+            retobj = new Double(f[0]);
+        }
+        else {
+            /* exception: unsupported type */
+            HDF5Exception ex = new HDF5JavaException(
+                    "byteToNumber: setfield bad type: " + obj + " " + type);
+            throw (ex);
+        }
+        return (retobj);
     }
-
-    /**
-     * Converts a range of a <code>byte[]</code> to a <code>float</code> value.
-     * 
-     * @param byteArr The value to convert.
-     * @param start The position in the <var>byteArr</var> to start the conversion.
-     * @return The <code>float</code> value.
-     */
-    public static float byteToFloat(byte[] byteArr, int start)
-    {
-        return NativeData.byteToFloat(byteArr, ByteOrder.NATIVE, start, 1)[0];
-    }
-
-    /**
-     * Converts a <code>byte[]</code> array into a <code>float[]</code> array.
-     * 
-     * @param byteArr The <code>byte[]</code> to convert.
-     * @param start The position in the <var>byteArr</var> to start the conversion.
-     * @param len The number of <code>float</code> values to convert.
-     * @return The <code>float[]</code> array.
-     */
-    public static float[] byteToFloat(byte[] byteArr, int start, int len)
-    {
-        return NativeData.byteToFloat(byteArr, ByteOrder.NATIVE, start, len);
-    }
-
-    /**
-     * Converts a range of a <code>byte[]</code> to a <code>double</code> value.
-     * 
-     * @param byteArr The value to convert.
-     * @param start The position in the <var>byteArr</var> to start the conversion.
-     * @return The <code>double</code> value.
-     */
-    public static double byteToDouble(byte[] byteArr, int start)
-    {
-        return NativeData.byteToDouble(byteArr, ByteOrder.NATIVE, start, 1)[0];
-    }
-
-    /**
-     * Converts a <code>byte[]</code> array into a <code>double[]</code> array.
-     * 
-     * @param byteArr The <code>byte[]</code> to convert.
-     * @param start The position in the <var>byteArr</var> to start the conversion.
-     * @param len The number of <code>double</code> values to convert.
-     * @return The <code>double[]</code> array.
-     */
-    public static double[] byteToDouble(byte[] byteArr, int start, int len)
-    {
-        return NativeData.byteToDouble(byteArr, ByteOrder.NATIVE, start, len);
-    }
-
-    /**
-     * Converts a <code>short[]</code> array to a <code>byte[]</code> array.
-     * 
-     *  @param data The <code>long[]</code> array to convert.
-     *  @return The <code>byte[]</code> array that corresponding to the <code>short[]</code> array. 
-     */
-    public static byte[] shortToByte(short[] data)
-    {
-        return NativeData.shortToByte(data, ByteOrder.NATIVE);
-    }
-
-    /**
-     * Converts an <code>int[]</code> array to a <code>byte[]</code> array.
-     * 
-     *  @param data The <code>long[]</code> array to convert.
-     *  @return The <code>byte[]</code> array that corresponding to the <code>int[]</code> array. 
-     */
-    public static byte[] intToByte(int[] data)
-    {
-        return NativeData.intToByte(data, ByteOrder.NATIVE);
-    }
-
-    /**
-     * Converts a <code>long[]</code> array to a <code>byte[]</code> array.
-     * 
-     *  @param data The <code>long[]</code> array to convert.
-     *  @return The <code>byte[]</code> array that corresponding to the <code>long[]</code> array. 
-     */
-    public static byte[] longToByte(long[] data)
-    {
-        return NativeData.longToByte(data, ByteOrder.NATIVE);
-    }
-
-    /**
-     * Converts a <code>float[]</code> array to a <code>byte[]</code> array.
-     * 
-     *  @param data The <code>long[]</code> array to convert.
-     *  @return The <code>byte[]</code> array that corresponding to the <code>float[]</code> array. 
-     */
-    public static byte[] floatToByte(float[] data)
-    {
-        return NativeData.floatToByte(data, ByteOrder.NATIVE);
-    }
-
-    /**
-     * Converts a <code>double[]</code> array to a <code>byte[]</code> array.
-     * 
-     *  @param data The <code>long[]</code> array to convert.
-     *  @return The <code>byte[]</code> array that corresponding to the <code>double[]</code> array. 
-     */
-    public static byte[] doubleToByte(double[] data)
-    {
-        return NativeData.doubleToByte(data, ByteOrder.NATIVE);
-    }
-
 }

@@ -23,15 +23,15 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.putMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setArray;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setList;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 
 import java.lang.reflect.Field;
 
-import ncsa.hdf.hdf5lib.HDFNativeData;
 
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for

@@ -23,10 +23,10 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_MEMBERS_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ENUM;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STRING;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STRING;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,7 +36,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -45,6 +44,7 @@ import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 /**
  * Class that provides base methods for reading HDF5 files.

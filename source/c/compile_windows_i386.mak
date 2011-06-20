@@ -43,7 +43,8 @@ SZIPLIB=
 #   Do not make any change below this line unless you know what you do
 #===========================================================================
 PATH=$(PATH);$(VCPPDIR)\BIN
-SRCDIR=$(HDFJAVADIR)
+SRCDIR1=$(HDFJAVADIR)\jhdf5
+SRCDIR2=$(HDFJAVADIR)\hdf-java
 
 VALID_PATH_SET=YES
 #-------------------------------------------------------
@@ -61,9 +62,15 @@ VALID_PATH_SET=NO
 VALID_PATH_SET=NO 
 !ENDIF
 
-!IF EXISTS("$(SRCDIR)")
+!IF EXISTS("$(SRCDIR1)")
 !ELSE
-!MESSAGE ERROR: C source directory $(SRCDIR) does not exist
+!MESSAGE ERROR: C source directory $(SRCDIR1) does not exist
+VALID_PATH_SET=NO 
+!ENDIF
+
+!IF EXISTS("$(SRCDIR2)")
+!ELSE
+!MESSAGE ERROR: C source directory $(SRCDIR2) does not exist
 VALID_PATH_SET=NO 
 !ENDIF
 
@@ -110,59 +117,6 @@ NULL=nul
 
 INTDIR=.\jhdf5\Release
 OUTDIR=$(HDFJAVADIR)\lib\win
-
-INCLUDES =  \
-	"$(JAVADIR)\include\jni.h" \
-	"$(JAVADIR)\include\win32\jni_md.h" \
-	"$(SRCDIR)\h5Constants.h" \
-	"$(HDFINCDIR)\H5ACpublic.h" \
-	"$(HDFINCDIR)\H5api_adpt.h" \
-	"$(HDFINCDIR)\H5Apkg.h" \
-	"$(HDFINCDIR)\H5Apublic.h" \
-	"$(HDFINCDIR)\H5Bpkg.h" \
-	"$(HDFINCDIR)\H5Bpublic.h" \
-#	"$(HDFINCDIR)\H5config.h" \
-	"$(HDFINCDIR)\H5Dpkg.h" \
-	"$(HDFINCDIR)\H5Dpublic.h" \
-	"$(HDFINCDIR)\H5Epublic.h" \
-	"$(HDFINCDIR)\H5FDcore.h" \
-	"$(HDFINCDIR)\H5FDfamily.h" \
-#	"$(HDFINCDIR)\H5FDfphdf5.h" \
-#	"$(HDFINCDIR)\H5FDgass.h" \
-	"$(HDFINCDIR)\H5FDlog.h" \
-	"$(HDFINCDIR)\H5FDmpio.h" \
-	"$(HDFINCDIR)\H5FDmpiposix.h" \
-	"$(HDFINCDIR)\H5FDmulti.h" \
-	"$(HDFINCDIR)\H5FDpublic.h" \
-	"$(HDFINCDIR)\H5FDsec2.h" \
-#	"$(HDFINCDIR)\H5FDsrb.h" \
-	"$(HDFINCDIR)\H5FDstdio.h" \
-#	"$(HDFINCDIR)\H5FDstream.h" \
-	"$(HDFINCDIR)\H5Fpkg.h" \
-#	"$(HDFINCDIR)\H5FPpublic.h" \
-	"$(HDFINCDIR)\H5Fpublic.h" \
-	"$(HDFINCDIR)\H5Gpkg.h" \
-	"$(HDFINCDIR)\H5Gpublic.h" \
-	"$(HDFINCDIR)\H5HGpublic.h" \
-	"$(HDFINCDIR)\H5HLpublic.h" \
-	"$(HDFINCDIR)\H5Ipkg.h" \
-	"$(HDFINCDIR)\H5Ipublic.h" \
-	"$(HDFINCDIR)\H5MMpublic.h" \
-	"$(HDFINCDIR)\H5Opkg.h" \
-	"$(HDFINCDIR)\H5Opublic.h" \
-	"$(HDFINCDIR)\H5Ppkg.h" \
-	"$(HDFINCDIR)\H5Ppublic.h" \
-	"$(HDFINCDIR)\H5pubconf.h" \
-	"$(HDFINCDIR)\H5public.h" \
-	"$(HDFINCDIR)\H5Rpublic.h" \
-	"$(HDFINCDIR)\H5Spkg.h" \
-	"$(HDFINCDIR)\H5Spublic.h" \
-	"$(HDFINCDIR)\H5Tpkg.h" \
-	"$(HDFINCDIR)\H5Tpublic.h" \
-	"$(HDFINCDIR)\H5Zpkg.h" \
-	"$(HDFINCDIR)\H5Zpublic.h" \
- 	"$(HDFINCDIR)\hdf5.h"
-
 
 ALL : "$(OUTDIR)\jhdf5.dll"
 
@@ -215,7 +169,22 @@ BSC32_SBRS= \
 LINK32=link.exe
 LINK32_FLAGS=$(HDFLIBDIR)\hdf5.lib $(SZIPLIB) $(GZIPLIB) /nologo /dll /nodefaultlib:msvcrt /incremental:no /pdb:"$(INTDIR)\jhdf5.pdb" /machine:I386 /out:"$(OUTDIR)\jhdf5.dll" /implib:"$(INTDIR)\jhdf5.lib" 
 LINK32_OBJS= \
-	"$(INTDIR)\exceptionImp.obj" \
+	"$(INTDIR)\exceptionImpJHDF5.obj" \
+	"$(INTDIR)\h5aImpJHDF5.obj" \
+	"$(INTDIR)\h5ConstantsJHDF5.obj" \
+	"$(INTDIR)\h5dImpJHDF5.obj" \
+	"$(INTDIR)\h5fImpJHDF5.obj" \
+	"$(INTDIR)\h5gImpJHDF5.obj" \
+	"$(INTDIR)\h5iImpJHDF5.obj" \
+	"$(INTDIR)\h5ImpJHDF5.obj" \
+	"$(INTDIR)\h5lImpJHDF5.obj" \
+	"$(INTDIR)\h5oImpJHDF5.obj" \
+	"$(INTDIR)\h5pImpJHDF5.obj" \
+	"$(INTDIR)\h5rImpJHDF5.obj" \
+	"$(INTDIR)\h5sImpJHDF5.obj" \
+	"$(INTDIR)\h5tImpJHDF5.obj" \
+	"$(INTDIR)\h5utilJHDF5.obj" \
+	"$(INTDIR)\h5zImpJHDF5.obj" \
 	"$(INTDIR)\h5aImp.obj" \
 	"$(INTDIR)\h5Constants.obj" \
 	"$(INTDIR)\h5dImp.obj" \
@@ -238,106 +207,211 @@ LINK32_OBJS= \
 <<
 
 
-SOURCE=$(SRCDIR)\exceptionImp.c
+SOURCE=$(SRCDIR1)\exceptionImpJHDF5.c
 
-"$(INTDIR)\exceptionImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\exceptionImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5aImp.c
+SOURCE=$(SRCDIR1)\h5aImpJHDF5.c
 
-"$(INTDIR)\h5aImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5aImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5Constants.c
+SOURCE=$(SRCDIR1)\h5ConstantsJHDF5.c
 
-"$(INTDIR)\h5Constants.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5ConstantsJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5dImp.c
+SOURCE=$(SRCDIR1)\h5dImpJHDF5.c
 
-"$(INTDIR)\h5dImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5dImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5fImp.c
+SOURCE=$(SRCDIR1)\h5fImpJHDF5.c
 
-"$(INTDIR)\h5fImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5fImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5gImp.c
+SOURCE=$(SRCDIR1)\h5gImpJHDF5.c
 
-"$(INTDIR)\h5gImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5gImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5iImp.c
+SOURCE=$(SRCDIR1)\h5iImpJHDF5.c
 
-"$(INTDIR)\h5iImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5iImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5Imp.c
+SOURCE=$(SRCDIR1)\h5ImpJHDF5.c
 
-"$(INTDIR)\h5Imp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5ImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5lImp.c
+SOURCE=$(SRCDIR1)\h5lImpJHDF5.c
 
-"$(INTDIR)\h5lImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5lImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5oImp.c
+SOURCE=$(SRCDIR1)\h5oImpJHDF5.c
 
-"$(INTDIR)\h5oImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5oImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5pImp.c
+SOURCE=$(SRCDIR1)\h5pImpJHDF5.c
 
-"$(INTDIR)\h5pImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5pImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5rImp.c
+SOURCE=$(SRCDIR1)\h5rImpJHDF5.c
 
-"$(INTDIR)\h5rImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5rImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5sImp.c
+SOURCE=$(SRCDIR1)\h5sImpJHDF5.c
 
-"$(INTDIR)\h5sImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5sImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5tImp.c
+SOURCE=$(SRCDIR1)\h5tImpJHDF5.c
 
-"$(INTDIR)\h5tImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5tImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5util.c
+SOURCE=$(SRCDIR1)\h5utilJHDF5.c
 
-"$(INTDIR)\h5util.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5utilJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
-SOURCE=$(SRCDIR)\h5zImp.c
+SOURCE=$(SRCDIR1)\h5zImpJHDF5.c
 
-"$(INTDIR)\h5zImp.obj" : $(SOURCE) $(INCLUDES) "$(INTDIR)"
+"$(INTDIR)\h5zImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
+
+
+SOURCE=$(SRCDIR2)\h5aImp.c
+
+"$(INTDIR)\h5aImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5Constants.c
+
+"$(INTDIR)\h5Constants.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5dImp.c
+
+"$(INTDIR)\h5dImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5fImp.c
+
+"$(INTDIR)\h5fImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5gImp.c
+
+"$(INTDIR)\h5gImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5iImp.c
+
+"$(INTDIR)\h5iImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5Imp.c
+
+"$(INTDIR)\h5Imp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5lImp.c
+
+"$(INTDIR)\h5lImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5oImp.c
+
+"$(INTDIR)\h5oImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5pImp.c
+
+"$(INTDIR)\h5pImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5rImp.c
+
+"$(INTDIR)\h5rImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5sImp.c
+
+"$(INTDIR)\h5sImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5tImp.c
+
+"$(INTDIR)\h5tImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5util.c
+
+"$(INTDIR)\h5util.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR2)\h5zImp.c
+
+"$(INTDIR)\h5zImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
 
 CLEAN :
-	-@erase "$(INTDIR)\exceptionImp.obj"
+	-@erase "$(INTDIR)\exceptionImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5aImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5ConstantsJHDF5.obj"
+	-@erase "$(INTDIR)\h5dImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5fImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5gImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5iImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5lImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5ImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5pImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5rImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5sImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5tImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5oImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5zImpJHDF5.obj"
+	-@erase "$(INTDIR)\h5utilJHDF5.obj"
 	-@erase "$(INTDIR)\h5aImp.obj"
 	-@erase "$(INTDIR)\h5Constants.obj"
 	-@erase "$(INTDIR)\h5dImp.obj"

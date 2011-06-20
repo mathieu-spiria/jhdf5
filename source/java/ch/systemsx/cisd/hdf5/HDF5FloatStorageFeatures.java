@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_FLOAT;
 
 /**
  * An object representing the storage features that are to be used for a float data set.

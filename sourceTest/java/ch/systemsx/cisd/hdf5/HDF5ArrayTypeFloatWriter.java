@@ -16,23 +16,23 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.H5.H5Aclose;
-import static ncsa.hdf.hdf5lib.H5.H5Acreate;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
-import static ncsa.hdf.hdf5lib.H5.H5Sclose;
-import static ncsa.hdf.hdf5lib.H5.H5Screate_simple;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32BE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F64BE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
-import ncsa.hdf.hdf5lib.HDFNativeData;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Aclose;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Acreate;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Dwrite;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Sclose;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Screate_simple;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32BE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F64BE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
 
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A writer for array type data sets.
