@@ -13,10 +13,8 @@
 
 package ncsa.hdf.hdf5lib;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import ncsa.hdf.hdf5lib.callbacks.H5L_iterate_cb;
