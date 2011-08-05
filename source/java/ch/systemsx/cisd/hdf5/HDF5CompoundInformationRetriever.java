@@ -281,7 +281,7 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
         return getInferredCompoundType(null, pojoClass);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public <T> HDF5CompoundType<T> getInferredCompoundType(final String name, final T pojo)
     {
         if (Map.class.isInstance(pojo))
