@@ -130,46 +130,46 @@ public final class HDF5CompoundMemberInformation implements
             final HDF5CompoundMemberMapping member)
     {
         final Field fieldOrNull = member.tryGetField(compoundClass);
-        final Class<?> fieldType = (fieldOrNull == null) ? null : fieldOrNull.getType();
+        final Class<?> fieldTypeOrNull = (fieldOrNull == null) ? null : fieldOrNull.getType();
         final HDF5DataTypeInformation typeInfo;
-        if (fieldType == boolean.class)
+        if (fieldTypeOrNull == boolean.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.BOOLEAN, 1);
-        } else if (fieldType == byte.class || fieldType == byte[].class
-                || fieldType == byte[][].class || fieldType == MDByteArray.class)
+        } else if (fieldTypeOrNull == byte.class || fieldTypeOrNull == byte[].class
+                || fieldTypeOrNull == byte[][].class || fieldTypeOrNull == MDByteArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 1);
-        } else if (fieldType == short.class || fieldType == short[].class
-                || fieldType == short[][].class || fieldType == MDShortArray.class)
+        } else if (fieldTypeOrNull == short.class || fieldTypeOrNull == short[].class
+                || fieldTypeOrNull == short[][].class || fieldTypeOrNull == MDShortArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 2);
-        } else if (fieldType == int.class || fieldType == int[].class || fieldType == int[][].class
-                || fieldType == MDIntArray.class)
+        } else if (fieldTypeOrNull == int.class || fieldTypeOrNull == int[].class || fieldTypeOrNull == int[][].class
+                || fieldTypeOrNull == MDIntArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 4);
-        } else if (fieldType == long.class || fieldType == long[].class
-                || fieldType == long[][].class || fieldType == MDLongArray.class)
+        } else if (fieldTypeOrNull == long.class || fieldTypeOrNull == long[].class
+                || fieldTypeOrNull == long[][].class || fieldTypeOrNull == MDLongArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 8);
-        } else if (fieldType == BitSet.class)
+        } else if (fieldTypeOrNull == BitSet.class)
         {
             typeInfo =
                     new HDF5DataTypeInformation(HDF5DataClass.BITFIELD, 8,
                             member.getMemberTypeLength() / 64
                                     + (member.getMemberTypeLength() % 64 != 0 ? 1 : 0));
-        } else if (fieldType == float.class || fieldType == float[].class
-                || fieldType == float[][].class || fieldType == MDFloatArray.class)
+        } else if (fieldTypeOrNull == float.class || fieldTypeOrNull == float[].class
+                || fieldTypeOrNull == float[][].class || fieldTypeOrNull == MDFloatArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, 4);
-        } else if (fieldType == double.class || fieldType == double[].class
-                || fieldType == double[][].class || fieldType == MDDoubleArray.class)
+        } else if (fieldTypeOrNull == double.class || fieldTypeOrNull == double[].class
+                || fieldTypeOrNull == double[][].class || fieldTypeOrNull == MDDoubleArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, 8);
-        } else if (fieldType == String.class || fieldType == char[].class)
+        } else if (fieldTypeOrNull == String.class || fieldTypeOrNull == char[].class)
         {
             typeInfo =
                     new HDF5DataTypeInformation(HDF5DataClass.STRING, member.getMemberTypeLength());
-        } else if (fieldType == HDF5EnumerationValue.class)
+        } else if (fieldTypeOrNull == HDF5EnumerationValue.class)
         {
             typeInfo =
                     new HDF5DataTypeInformation(HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX,
@@ -179,8 +179,8 @@ public final class HDF5CompoundMemberInformation implements
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.OTHER, -1);
         }
-        if ((fieldType.isArray() && fieldType != char[].class)
-                || MDAbstractArray.class.isAssignableFrom(fieldType))
+        if (fieldTypeOrNull != null && (fieldTypeOrNull.isArray() && fieldTypeOrNull != char[].class)
+                || MDAbstractArray.class.isAssignableFrom(fieldTypeOrNull))
         {
             typeInfo.setDimensions(member.getMemberTypeDimensions());
         }
