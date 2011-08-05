@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5.io;
 
 import static ch.systemsx.cisd.hdf5.io.HDF5IOAdapterFactory.asInputStream;
+import static ch.systemsx.cisd.hdf5.io.HDF5IOAdapterFactory.asOutputStream;
 import static ch.systemsx.cisd.hdf5.io.HDF5IOAdapterFactory.asRandomAccessFile;
 import static ch.systemsx.cisd.hdf5.io.HDF5IOAdapterFactory.asRandomAccessFileReadOnly;
 import static ch.systemsx.cisd.hdf5.io.HDF5IOAdapterFactory.asRandomAccessFileReadWrite;
@@ -26,9 +27,11 @@ import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
 import org.apache.commons.io.IOUtils;
@@ -382,6 +385,84 @@ public class HDF5DataSetRandomAccessFileTest
     }
 
     @Test
+    public void testWriteTwiceSmallBuffer() throws IOException
+    {
+        final File dataSetFile = new File(workingDirectory, "testWriteTwiceSmallBuffer.h5");
+        final String dataSetName = "ds";
+        dataSetFile.delete();
+        assertFalse(dataSetFile.exists());
+        dataSetFile.deleteOnExit();
+
+        final byte[] referenceArray = new byte[10];
+        for (int i = 0; i < referenceArray.length; ++i)
+        {
+            referenceArray[i] = (byte) i;
+        }
+        final IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
+        final HDF5DataSetRandomAccessFile raFile =
+                asRandomAccessFile(writer, dataSetName, HDF5GenericStorageFeatures.GENERIC_CHUNKED,
+                        11, null);
+        raFile.write(referenceArray);
+        raFile.write(referenceArray);
+        raFile.flush();
+        final HDF5DataSetInformation dsInfo = writer.getDataSetInformation(dataSetName);
+        assertEquals(HDF5StorageLayout.CHUNKED, dsInfo.getStorageLayout());
+        assertEquals(referenceArray.length * 2, dsInfo.getSize());
+        assertNull(dsInfo.getTypeInformation().tryGetOpaqueTag());
+        final byte[] arrayRead = writer.readByteArray(dataSetName);
+        assertEquals(referenceArray.length * 2, arrayRead.length);
+        for (int i = 0; i < referenceArray.length; ++i)
+        {
+            assertEquals(i, referenceArray[i], arrayRead[i]);
+        }
+        for (int i = 0; i < referenceArray.length; ++i)
+        {
+            assertEquals(i, referenceArray[i], arrayRead[referenceArray.length + i]);
+        }
+        raFile.close();
+    }
+
+    @Test
+    public void testWriteTwiceLargeBuffer() throws IOException
+    {
+        final File dataSetFile = new File(workingDirectory, "testWriteTwiceLargeBuffer.h5");
+        final String dataSetName = "ds";
+        dataSetFile.delete();
+        assertFalse(dataSetFile.exists());
+        dataSetFile.deleteOnExit();
+
+        final byte[] referenceArray = new byte[10];
+        for (int i = 0; i < referenceArray.length; ++i)
+        {
+            referenceArray[i] = (byte) i;
+        }
+        final IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
+        final HDF5DataSetRandomAccessFile raFile =
+                asRandomAccessFile(writer, dataSetName, HDF5GenericStorageFeatures.GENERIC_CHUNKED,
+                        100, null);
+        raFile.write(referenceArray);
+        raFile.write(referenceArray);
+        raFile.flush();
+        final HDF5DataSetInformation dsInfo = writer.getDataSetInformation(dataSetName);
+        assertEquals(HDF5StorageLayout.CHUNKED, dsInfo.getStorageLayout());
+        assertEquals(referenceArray.length * 2, dsInfo.getSize());
+        assertNull(dsInfo.getTypeInformation().tryGetOpaqueTag());
+        final byte[] arrayRead = writer.readByteArray(dataSetName);
+        assertEquals(referenceArray.length * 2, arrayRead.length);
+        for (int i = 0; i < referenceArray.length; ++i)
+        {
+            assertEquals(i, referenceArray[i], arrayRead[i]);
+        }
+        for (int i = 0; i < referenceArray.length; ++i)
+        {
+            assertEquals(i, referenceArray[i], arrayRead[referenceArray.length + i]);
+        }
+        raFile.close();
+    }
+
+    @Test
     public void testCopyIOUtils() throws IOException
     {
         final File dataSetFile = new File(workingDirectory, "testCopyIOUtils.h5");
@@ -391,17 +472,20 @@ public class HDF5DataSetRandomAccessFileTest
         dataSetFile.deleteOnExit();
 
         final byte[] referenceArray = new byte[10000];
-        final int chunkSize = referenceArray.length / 10;
         for (int i = 0; i < referenceArray.length; ++i)
         {
             referenceArray[i] = (byte) i;
         }
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArray.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArray);
-        assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
-                .getStorageLayout());
+        final OutputStream ostream =
+                asOutputStream(writer, dataSetName, HDF5GenericStorageFeatures.GENERIC_CHUNKED,
+                        12000, null);
+        IOUtils.copyLarge(new ByteArrayInputStream(referenceArray), ostream);
+        ostream.flush();
+        final HDF5DataSetInformation dsInfo = writer.getDataSetInformation(dataSetName);
+        assertEquals(HDF5StorageLayout.CHUNKED, dsInfo.getStorageLayout());
+        assertEquals(referenceArray.length, dsInfo.getSize());
         writer.close();
         final InputStream istream = asInputStream(dataSetFile, dataSetName);
         final byte[] arrayRead = IOUtils.toByteArray(istream);

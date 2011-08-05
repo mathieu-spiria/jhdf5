@@ -406,19 +406,24 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         close();
     }
 
-    private void ensureInitalized(boolean forWriting)
+    private void ensureInitalized(boolean forWriting, int lenCurrentOp)
     {
         if (realBlockSize < 0)
         {
-            final long minLen = blockOffset + blockSize;
+            long minLen = blockOffset + blockSize;
+            int readBlockSize = blockSize;
             if (forWriting && minLen > length())
             {
-                setLength(minLen);
+            	readBlockSize = Math.min(readBlockSize, lenCurrentOp);
+                minLen = blockOffset + readBlockSize;
+                if (minLen > length())
+                {
+                    setLength(minLen);
+                }
             }
             this.realBlockSize =
-                    reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, blockSize,
+                    reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, readBlockSize,
                             blockOffset, 0);
-
         }
     }
 
@@ -481,9 +486,9 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         }
     }
 
-    private void checkWrite()
+    private void checkWrite(int lenCurrentOp)
     {
-        ensureInitalized(true);
+        ensureInitalized(true, lenCurrentOp);
         checkWriteDoNotExtend();
         if (extensionPending)
         {
@@ -506,7 +511,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     public int read() throws IOExceptionUnchecked
     {
-        ensureInitalized(false);
+        ensureInitalized(false, 0);
         if (positionInBlock == realBlockSize)
         {
             if (eof())
@@ -529,7 +534,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     public int read(byte[] b, int off, int len) throws IOExceptionUnchecked
     {
-        ensureInitalized(false);
+        ensureInitalized(false, 0);
         int realLen = getRealLen(len);
         if (realLen == 0)
         {
@@ -827,7 +832,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     public void write(int b) throws IOExceptionUnchecked
     {
-        checkWrite();
+        checkWrite(1);
         extend(1);
         if (positionInBlock == realBlockSize)
         {
@@ -846,7 +851,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     public void write(byte[] b, int off, int len) throws IOExceptionUnchecked
     {
-        checkWrite();
+        checkWrite(len);
         extend(len);
         int bytesLeft = len;
         int currentOff = off;
