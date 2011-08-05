@@ -148,7 +148,7 @@ public class HDF5ArchiveUpdater
             File dirProcessingOrNull = pathProcessing.getParentFile();
             String dirAbsolute =
                     (dirProcessingOrNull != null) ? dirProcessingOrNull.getAbsolutePath() : "";
-            if (dirAbsolute.startsWith(rootAbsolute) == false)
+            if (dirProcessingOrNull == null || dirAbsolute.startsWith(rootAbsolute) == false)
             {
                 break;
             }
@@ -166,9 +166,6 @@ public class HDF5ArchiveUpdater
                 index.writeIndexToArchive();
             }
             pathProcessing = dirProcessingOrNull;
-            dirProcessingOrNull = pathProcessing.getParentFile();
-            dirAbsolute =
-                    (dirProcessingOrNull != null) ? dirProcessingOrNull.getAbsolutePath() : "";
         }
     }
 
