@@ -51,8 +51,6 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     private final static int DEFAULT_CHUNK_SIZE = 10 * MB;
 
-    private final File hdf5File;
-
     private final IHDF5Reader reader;
 
     private final IHDF5Writer writerOrNull;
@@ -94,7 +92,9 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      * @param hdf5File The file of the HDF5 container.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @return The {@link HDF5DataSetRandomAccessFile}.
+     * @deprecated Use {@link HDF5IOAdapterFactory#asRandomAccessFile(IHDF5Reader, String)} instead.
      */
+    @Deprecated
     public static HDF5DataSetRandomAccessFile createForReading(File hdf5File, String dataSetPath)
     {
         return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
@@ -107,7 +107,9 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      * @param hdf5File The file of the HDF5 container.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @return The {@link HDF5DataSetRandomAccessFile}.
+     * @deprecated Use {@link HDF5IOAdapterFactory#asRandomAccessFile(IHDF5Writer, String)} instead.
      */
+    @Deprecated
     public static HDF5DataSetRandomAccessFile create(File hdf5File, String dataSetPath)
     {
         return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
@@ -121,7 +123,11 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @param chunkSize If the dataset does not yet exist, use this value as the chunk size.
      * @return The {@link HDF5DataSetRandomAccessFile}.
+     * @deprecated Use
+     *             {@link HDF5IOAdapterFactory#asRandomAccessFile(IHDF5Writer, String, HDF5GenericStorageFeatures, int, String)}
+     *             instead.
      */
+    @Deprecated
     public static HDF5DataSetRandomAccessFile create(File hdf5File, String dataSetPath,
             int chunkSize)
     {
@@ -136,7 +142,11 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      * @param hdf5File The file of the HDF5 container.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @return The {@link HDF5DataSetRandomAccessFile}.
+     * @deprecated Use
+     *             {@link HDF5IOAdapterFactory#asRandomAccessFile(IHDF5Writer, String, HDF5GenericStorageFeatures, int, String)}
+     *             instead.
      */
+    @Deprecated
     public static HDF5DataSetRandomAccessFile createCompress(File hdf5File, String dataSetPath)
     {
         return new HDF5DataSetRandomAccessFile(hdf5File, dataSetPath,
@@ -151,7 +161,11 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @param chunkSize If the dataset does not yet exist, use this value as the chunk size.
      * @return The {@link HDF5DataSetRandomAccessFile}.
+     * @deprecated Use
+     *             {@link HDF5IOAdapterFactory#asRandomAccessFile(IHDF5Writer, String, HDF5GenericStorageFeatures, int, String)}
+     *             instead.
      */
+    @Deprecated
     public static HDF5DataSetRandomAccessFile createCompress(File hdf5File, String dataSetPath,
             int chunkSize)
     {
@@ -168,7 +182,11 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      * @param opaqueTag If the data does not yet exist, use this value as the tag of the opaque data
      *            type.
      * @return The {@link HDF5DataSetRandomAccessFile}.
+     * @deprecated Use
+     *             {@link HDF5IOAdapterFactory#asRandomAccessFile(IHDF5Writer, String, HDF5GenericStorageFeatures, int, String)}
+     *             instead.
      */
+    @Deprecated
     public static HDF5DataSetRandomAccessFile createOpaque(File hdf5File, String dataSetPath,
             String opaqueTag)
     {
@@ -186,7 +204,11 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      *            type.
      * @param chunkSize If the dataset does not yet exist, use this value as the chunk size.
      * @return The {@link HDF5DataSetRandomAccessFile}.
+     * @deprecated Use
+     *             {@link HDF5IOAdapterFactory#asRandomAccessFile(IHDF5Writer, String, HDF5GenericStorageFeatures, int, String)}
+     *             instead.
      */
+    @Deprecated
     public static HDF5DataSetRandomAccessFile createOpaque(File hdf5File, String dataSetPath,
             String opaqueTag, int chunkSize)
     {
@@ -203,7 +225,11 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      * @param opaqueTag If the data does not yet exist, use this value as the tag of the opaque data
      *            type.
      * @return The {@link HDF5DataSetRandomAccessFile}.
+     * @deprecated Use
+     *             {@link HDF5IOAdapterFactory#asRandomAccessFile(IHDF5Writer, String, HDF5GenericStorageFeatures, int, String)}
+     *             instead.
      */
+    @Deprecated
     public static HDF5DataSetRandomAccessFile createOpaqueCompress(File hdf5File,
             String dataSetPath, String opaqueTag)
     {
@@ -221,7 +247,11 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      *            type.
      * @param chunkSize If the dataset does not yet exist, use this value as the chunk size.
      * @return The {@link HDF5DataSetRandomAccessFile}.
+     * @deprecated Use
+     *             {@link HDF5IOAdapterFactory#asRandomAccessFile(IHDF5Writer, String, HDF5GenericStorageFeatures, int, String)}
+     *             instead.
      */
+    @Deprecated
     public static HDF5DataSetRandomAccessFile createOpaqueCompress(File hdf5File,
             String dataSetPath, String opaqueTag, int chunkSize)
     {
@@ -247,7 +277,11 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      * @param creationStorageFeature If the dataset does not yet exist, use this value as the
      *            storage features of the new dataset.
      * @return The {@link HDF5DataSetRandomAccessFile}.
+     * @deprecated Use
+     *             {@link HDF5IOAdapterFactory#asRandomAccessFile(IHDF5Writer, String, HDF5GenericStorageFeatures, int, String)}
+     *             instead.
      */
+    @Deprecated
     public static HDF5DataSetRandomAccessFile createFullControl(File hdf5File, String dataSetPath,
             String opaqueTagOrNull, int size, HDF5GenericStorageFeatures creationStorageFeature)
     {
@@ -255,20 +289,47 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
                 opaqueTagOrNull, false);
     }
 
-    private HDF5DataSetRandomAccessFile(File hdf5File, String dataSetPath,
+    /**
+     * Creates a new HDF5DataSetRandomAccessFile for the given hdf5File and dataSetPath.
+     */
+    HDF5DataSetRandomAccessFile(File hdf5File, String dataSetPath,
             HDF5GenericStorageFeatures creationStorageFeature, int size, String opaqueTagOrNull,
             boolean readOnly)
     {
-        this.hdf5File = hdf5File;
+        this(createHDF5ReaderOrWriter(hdf5File, readOnly), dataSetPath, creationStorageFeature,
+                size, opaqueTagOrNull);
+    }
+
+    private static IHDF5Reader createHDF5ReaderOrWriter(File hdf5File, boolean readOnly)
+    {
+        if (readOnly)
+        {
+            return HDF5FactoryProvider.get().openForReading(hdf5File);
+        } else
+        {
+            return HDF5FactoryProvider.get().open(hdf5File);
+        }
+    }
+
+    /**
+     * Creates a new HDF5DataSetRandomAccessFile for the given reader and dataSetPath.
+     * <p>
+     * If <code>reader instanceof IHDF5Writer</code>, the random access file will be in read-write
+     * mode, else it will be in readonly mode.
+     */
+    HDF5DataSetRandomAccessFile(IHDF5Reader reader, String dataSetPath,
+            HDF5GenericStorageFeatures creationStorageFeature, int size, String opaqueTagOrNull)
+    {
+        final boolean readOnly = (reader instanceof IHDF5Writer) == false;
         try
         {
             if (readOnly)
             {
-                this.reader = HDF5FactoryProvider.get().openForReading(hdf5File);
+                this.reader = reader;
                 this.writerOrNull = null;
             } else
             {
-                this.writerOrNull = HDF5FactoryProvider.get().open(hdf5File);
+                this.writerOrNull = (IHDF5Writer) reader;
                 this.reader = writerOrNull;
                 if (writerOrNull.exists(dataSetPath) == false)
                 {
@@ -394,7 +455,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     public File getHdf5File()
     {
-        return hdf5File;
+        return reader.getFile();
     }
 
     public String getDataSetPath()
