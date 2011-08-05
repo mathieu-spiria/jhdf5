@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
@@ -406,23 +407,40 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         close();
     }
 
-    private void ensureInitalized(boolean forWriting, int lenCurrentOp)
+    private void ensureInitalizedForWriting(int lenCurrentOp)
     {
         if (realBlockSize < 0)
         {
-            long minLen = blockOffset + blockSize;
-            int readBlockSize = blockSize;
-            if (forWriting && minLen > length())
+            realBlockSize = blockSize;
+            long minLen = blockOffset + realBlockSize;
+            final long oldLength = length();
+            if (minLen > oldLength)
             {
-            	readBlockSize = Math.min(readBlockSize, lenCurrentOp);
-                minLen = blockOffset + readBlockSize;
-                if (minLen > length())
+            	realBlockSize = Math.min(realBlockSize, lenCurrentOp);
+                minLen = blockOffset + realBlockSize;
+                if (minLen > oldLength)
                 {
                     setLength(minLen);
                 }
             }
+            if ((oldLength - blockSize) > 0)
+            {
+                this.realBlockSize =
+                        reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, realBlockSize,
+                                blockOffset, 0);
+            } else
+            {
+                Arrays.fill(block, (byte) 0);
+            }
+        }
+    }
+
+    private void ensureInitalizedForReading()
+    {
+        if (realBlockSize < 0)
+        {
             this.realBlockSize =
-                    reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, readBlockSize,
+                    reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, blockSize,
                             blockOffset, 0);
         }
     }
@@ -488,7 +506,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     private void checkWrite(int lenCurrentOp)
     {
-        ensureInitalized(true, lenCurrentOp);
+        ensureInitalizedForWriting(lenCurrentOp);
         checkWriteDoNotExtend();
         if (extensionPending)
         {
@@ -511,7 +529,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     public int read() throws IOExceptionUnchecked
     {
-        ensureInitalized(false, 0);
+        ensureInitalizedForReading();
         if (positionInBlock == realBlockSize)
         {
             if (eof())
@@ -534,7 +552,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     public int read(byte[] b, int off, int len) throws IOExceptionUnchecked
     {
-        ensureInitalized(false, 0);
+        ensureInitalizedForReading();
         int realLen = getRealLen(len);
         if (realLen == 0)
         {
