@@ -24,7 +24,8 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
+import ncsa.hdf.hdf5lib.exceptions.HDF5FileNotFoundException;
 
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.exceptions.CheckedExceptionTunnel;
@@ -305,12 +306,21 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     private static IHDF5Reader createHDF5ReaderOrWriter(File hdf5File, boolean readOnly)
     {
-        if (readOnly)
+        try
         {
-            return HDF5FactoryProvider.get().openForReading(hdf5File);
-        } else
+            if (readOnly)
+            {
+                return HDF5FactoryProvider.get().openForReading(hdf5File);
+            } else
+            {
+                return HDF5FactoryProvider.get().open(hdf5File);
+            }
+        } catch (HDF5FileNotFoundException ex)
         {
-            return HDF5FactoryProvider.get().open(hdf5File);
+            throw new IOExceptionUnchecked(new FileNotFoundException(ex.getMessage()));
+        } catch (HDF5Exception ex)
+        {
+            throw new IOExceptionUnchecked(ex);
         }
     }
 
@@ -322,7 +332,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      */
     HDF5DataSetRandomAccessFile(IHDF5Reader reader, String dataSetPath,
             HDF5GenericStorageFeatures creationStorageFeature, int size, String opaqueTagOrNull,
-            boolean closeReaderOnCloseFile)
+            boolean closeReaderOnCloseFile) throws IOExceptionUnchecked
     {
         this.closeReaderOnCloseFile = closeReaderOnCloseFile;
         final boolean readOnly = (reader instanceof IHDF5Writer) == false;
@@ -350,9 +360,9 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
                     }
                 }
             }
-        } catch (HDF5JavaException ex)
+        } catch (HDF5Exception ex)
         {
-            throw new IOExceptionUnchecked(new FileNotFoundException(ex.getMessage()));
+            throw new IOExceptionUnchecked(ex);
         }
         this.dataSetPath = dataSetPath;
         this.dataSetInfo = reader.getDataSetInformation(dataSetPath);
@@ -366,13 +376,13 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         }
         if (dataSetInfo.getRank() != 1)
         {
-            throw new IOExceptionUnchecked(new IOException("Dataset has wrong rank (r="
-                    + dataSetInfo.getRank() + ")"));
+            throw new IOExceptionUnchecked("Dataset has wrong rank (r=" + dataSetInfo.getRank()
+                    + ")");
         }
         if (dataSetInfo.getTypeInformation().getElementSize() != 1)
         {
-            throw new IOExceptionUnchecked(new IOException("Dataset has wrong element size (size="
-                    + dataSetInfo.getTypeInformation().getElementSize() + " bytes)"));
+            throw new IOExceptionUnchecked("Dataset has wrong element size (size="
+                    + dataSetInfo.getTypeInformation().getElementSize() + " bytes)");
         }
         this.length = dataSetInfo.getSize();
 
@@ -385,8 +395,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
             // Limitation: we do not yet handle the case of contiguous data sets larger than 2GB
             if ((int) length != length())
             {
-                throw new IOExceptionUnchecked(new IOException("Dataset is too large (size="
-                        + length + " bytes)"));
+                throw new IOExceptionUnchecked("Dataset is too large (size=" + length + " bytes)");
 
             }
             this.blockSize = (int) length;
@@ -411,7 +420,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         close();
     }
 
-    private void ensureInitalizedForWriting(int lenCurrentOp)
+    private void ensureInitalizedForWriting(int lenCurrentOp) throws IOExceptionUnchecked
     {
         if (realBlockSize < 0)
         {
@@ -429,9 +438,15 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
             }
             if ((oldLength - blockSize) > 0)
             {
-                this.realBlockSize =
-                        reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, realBlockSize,
-                                blockOffset, 0);
+                try
+                {
+                    this.realBlockSize =
+                            reader.readAsByteArrayToBlockWithOffset(dataSetPath, block,
+                                    realBlockSize, blockOffset, 0);
+                } catch (HDF5Exception ex)
+                {
+                    throw new IOExceptionUnchecked(ex);
+                }
             } else
             {
                 Arrays.fill(block, (byte) 0);
@@ -439,24 +454,36 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         }
     }
 
-    private void ensureInitalizedForReading()
+    private void ensureInitalizedForReading() throws IOExceptionUnchecked
     {
         if (realBlockSize < 0)
         {
-            this.realBlockSize =
-                    reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, blockSize,
-                            blockOffset, 0);
+            try
+            {
+                this.realBlockSize =
+                        reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, blockSize,
+                                blockOffset, 0);
+            } catch (HDF5Exception ex)
+            {
+                throw new IOExceptionUnchecked(ex);
+            }
         }
     }
 
-    private void readBlock(long newBlockOffset)
+    private void readBlock(long newBlockOffset) throws IOExceptionUnchecked
     {
         if (newBlockOffset != blockOffset)
         {
             flush();
-            this.realBlockSize =
-                    reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, blockSize,
-                            newBlockOffset, 0);
+            try
+            {
+                this.realBlockSize =
+                        reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, blockSize,
+                                newBlockOffset, 0);
+            } catch (HDF5Exception ex)
+            {
+                throw new IOExceptionUnchecked(ex);
+            }
             this.blockOffset = newBlockOffset;
         }
     }
@@ -498,7 +525,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         return (writerOrNull == null);
     }
 
-    private void extend(int numberOfBytesToExtend)
+    private void extend(int numberOfBytesToExtend) throws IOExceptionUnchecked
     {
         final long len = length();
         final long pos = getFilePointer();
@@ -508,7 +535,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         }
     }
 
-    private void checkWrite(int lenCurrentOp)
+    private void checkWrite(int lenCurrentOp) throws IOExceptionUnchecked
     {
         ensureInitalizedForWriting(lenCurrentOp);
         checkWriteDoNotExtend();
@@ -518,11 +545,11 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         }
     }
 
-    private void checkWriteDoNotExtend()
+    private void checkWriteDoNotExtend() throws IOExceptionUnchecked
     {
         if (isReadOnly())
         {
-            throw new IllegalStateException("HDF5 dataset opened in read-only mode.");
+            throw new IOExceptionUnchecked("HDF5 dataset opened in read-only mode.");
         }
     }
 
@@ -616,7 +643,13 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         flush();
         if (closeReaderOnCloseFile)
         {
-            reader.close();
+            try
+            {
+                reader.close();
+            } catch (HDF5Exception ex)
+            {
+                throw new IOExceptionUnchecked(ex);
+            }
         }
     }
 
@@ -645,14 +678,20 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
     {
         if (isReadOnly() == false && blockDirty)
         {
-            if (opaqueTypeOrNull != null)
+            try
             {
-                writerOrNull.writeOpaqueByteArrayBlockWithOffset(dataSetPath, opaqueTypeOrNull,
-                        block, realBlockSize, blockOffset);
-            } else
+                if (opaqueTypeOrNull != null)
+                {
+                    writerOrNull.writeOpaqueByteArrayBlockWithOffset(dataSetPath, opaqueTypeOrNull,
+                            block, realBlockSize, blockOffset);
+                } else
+                {
+                    writerOrNull.writeByteArrayBlockWithOffset(dataSetPath, block, realBlockSize,
+                            blockOffset);
+                }
+            } catch (HDF5Exception ex)
             {
-                writerOrNull.writeByteArrayBlockWithOffset(dataSetPath, block, realBlockSize,
-                        blockOffset);
+                throw new IOExceptionUnchecked(ex);
             }
             blockDirty = false;
         }
@@ -663,7 +702,13 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         if (writerOrNull != null)
         {
             flush();
-            writerOrNull.flushSyncBlocking();
+            try
+            {
+                writerOrNull.flushSyncBlocking();
+            } catch (HDF5Exception ex)
+            {
+                throw new IOExceptionUnchecked(ex);
+            }
         }
     }
 
@@ -688,12 +733,12 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
     {
         if (pos < 0)
         {
-            throw new IOExceptionUnchecked(new IOException("New position may not be negative."));
+            throw new IOExceptionUnchecked("New position may not be negative.");
         }
         if (isReadOnly() && pos >= length())
         {
-            throw new IOExceptionUnchecked(new IOException(
-                    "In read-only mode, new position may not be larger than file size."));
+            throw new IOExceptionUnchecked(
+                    "In read-only mode, new position may not be larger than file size.");
         }
         final long newBlockOffset = (pos / blockSize) * blockSize;
         this.positionInBlock = (int) (pos % blockSize);
@@ -721,10 +766,15 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
         checkWriteDoNotExtend();
         if (extendable == false)
         {
-            throw new IOExceptionUnchecked(new IOException(
-                    "setLength() called on non-extendable dataset."));
+            throw new IOExceptionUnchecked("setLength() called on non-extendable dataset.");
         }
-        writerOrNull.setDataSetSize(dataSetPath, newLength);
+        try
+        {
+            writerOrNull.setDataSetSize(dataSetPath, newLength);
+        } catch (HDF5Exception ex)
+        {
+            throw new IOExceptionUnchecked(ex);
+        }
         length = newLength;
     }
 
