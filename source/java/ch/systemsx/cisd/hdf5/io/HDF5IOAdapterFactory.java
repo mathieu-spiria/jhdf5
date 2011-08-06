@@ -203,14 +203,15 @@ public class HDF5IOAdapterFactory
      * <b>Note that returned object is buffered. Do not access <var>dataSetPath</var> by directly
      * accessing <var>writer</var> while this object is used or else the behavior is undefined!</b>
      * 
-     * @param writer The HDF5 writer to create the adapter for.
+     * @param writer The HDF5 writer to create the adapter for. The writer will <i>not be closed
+     *            when the returned object is closed.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @return The {@link IOutputStream}.
      */
     public static IOutputStream asIOutputStream(IHDF5Writer writer, String dataSetPath)
     {
         return new HDF5DataSetRandomAccessFile(writer, dataSetPath,
-                HDF5GenericStorageFeatures.GENERIC_CHUNKED, BUFFER_SIZE, OPAQUE_TAG_FILE);
+                HDF5GenericStorageFeatures.GENERIC_CHUNKED, BUFFER_SIZE, OPAQUE_TAG_FILE, false);
     }
 
     /**
@@ -219,7 +220,9 @@ public class HDF5IOAdapterFactory
      * <b>Note that returned object is buffered. Do not access <var>dataSetPath</var> by directly
      * accessing <var>writer</var> while this object is used or else the behavior is undefined!</b>
      * 
-     * @param writer The HDF5 writer to create the adapter for.
+     * @param writer The HDF5 writer to create the adapter for. The writer will <i>not be closed
+     *            when the returned object is closed.
+
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @param creationStorageFeature If the dataset does not yet exist, use this value as the
      *            storage features when creating it.
@@ -233,7 +236,7 @@ public class HDF5IOAdapterFactory
             HDF5GenericStorageFeatures creationStorageFeature, int chunkSize, String opaqueTagOrNull)
     {
         return new HDF5DataSetRandomAccessFile(writer, dataSetPath, creationStorageFeature,
-                chunkSize, opaqueTagOrNull);
+                chunkSize, opaqueTagOrNull, false);
     }
 
     /**
@@ -245,7 +248,8 @@ public class HDF5IOAdapterFactory
      * <b>Note that returned object is buffered. Do not access <var>dataSetPath</var> by directly
      * accessing <var>writer</var> while this object is used or else the behavior is undefined!</b>
      * 
-     * @param writer The HDF5 writer to create the adapter for.
+     * @param writer The HDF5 writer to create the adapter for. The writer will <i>not be closed
+     *            when the returned object is closed.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @return The {@link OutputStream}.
      */
@@ -261,7 +265,8 @@ public class HDF5IOAdapterFactory
      * <b>Note that returned object is buffered. Do not access <var>dataSetPath</var> by directly
      * accessing <var>writer</var> while this object is used or else the behavior is undefined!</b>
      * 
-     * @param writer The HDF5 writer to create the adapter for.
+     * @param writer The HDF5 writer to create the adapter for. The writer will <i>not be closed
+     *            when the returned object is closed.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @param creationStorageFeature If the dataset does not yet exist, use this value as the
      *            storage features when creating it.
@@ -284,7 +289,8 @@ public class HDF5IOAdapterFactory
      * <b>Note that returned object is buffered. Do not access <var>dataSetPath</var> by directly
      * accessing <var>writer</var> while this object is used or else the behavior is undefined!</b>
      * 
-     * @param writer The HDF5 writer to create the adapter for.
+     * @param writer The HDF5 writer to create the adapter for. The writer will <i>not be closed
+     *            when the returned object is closed.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @param creationStorageFeature If the dataset does not yet exist, use this value as the
      *            storage features when creating it.
@@ -299,7 +305,7 @@ public class HDF5IOAdapterFactory
             String opaqueTagOrNull)
     {
         return new HDF5DataSetRandomAccessFile(writer, dataSetPath, creationStorageFeature,
-                chunkSize, opaqueTagOrNull);
+                chunkSize, opaqueTagOrNull, false);
     }
 
     /**
@@ -308,7 +314,8 @@ public class HDF5IOAdapterFactory
      * <b>Note that returned object is buffered. Do not access <var>dataSetPath</var> by directly
      * accessing <var>writer</var> while this object is used or else the behavior is undefined!</b>
      * 
-     * @param writer The HDF5 writer to create the adapter for.
+     * @param writer The HDF5 writer to create the adapter for. The writer will <i>not be closed
+     *            when the returned object is closed.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @return The {@link HDF5DataSetRandomAccessFile}.
      */
@@ -316,7 +323,7 @@ public class HDF5IOAdapterFactory
             String dataSetPath)
     {
         return new HDF5DataSetRandomAccessFile(writer, dataSetPath,
-                HDF5GenericStorageFeatures.GENERIC_CHUNKED, BUFFER_SIZE, OPAQUE_TAG_FILE);
+                HDF5GenericStorageFeatures.GENERIC_CHUNKED, BUFFER_SIZE, OPAQUE_TAG_FILE, false);
     }
 
     //
@@ -326,19 +333,21 @@ public class HDF5IOAdapterFactory
     /**
      * Creates an adapter of the <var>reader</var> as an {@link IInputStream}.
      * 
-     * @param reader The HDF5 reader to create the adapter for.
+     * @param reader The HDF5 reader to create the adapter for. The reader will <i>not be closed
+     *            when the returned object is closed.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @return The {@link IInputStream}.
      */
     public static IInputStream asIInputStream(IHDF5Reader reader, String dataSetPath)
     {
-        return new HDF5DataSetRandomAccessFile(reader, dataSetPath, null, 0, null);
+        return new HDF5DataSetRandomAccessFile(reader, dataSetPath, null, 0, null, false);
     }
 
     /**
      * Creates an adapter of the <var>reader</var> as an {@link InputStream}.
      * 
-     * @param reader The HDF5 reader to create the adapter for.
+     * @param reader The HDF5 reader to create the adapter for. The reader will <i>not be closed
+     *            when the returned object is closed.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @return The {@link InputStream}.
      */
@@ -350,14 +359,15 @@ public class HDF5IOAdapterFactory
     /**
      * Creates an adapter of the <var>reader</var> as an {@link HDF5DataSetRandomAccessFile}.
      * 
-     * @param reader The HDF5 reader to create the adapter for.
+     * @param reader The HDF5 reader to create the adapter for. The reader will <i>not be closed
+     *            when the returned object is closed.
      * @param dataSetPath The path of the HDF5 dataset in the HDF5 container to use as a file.
      * @return The {@link HDF5DataSetRandomAccessFile}.
      */
     public static HDF5DataSetRandomAccessFile asRandomAccessFile(IHDF5Reader reader,
             String dataSetPath)
     {
-        return new HDF5DataSetRandomAccessFile(reader, dataSetPath, null, 0, null);
+        return new HDF5DataSetRandomAccessFile(reader, dataSetPath, null, 0, null, false);
     }
 
 }

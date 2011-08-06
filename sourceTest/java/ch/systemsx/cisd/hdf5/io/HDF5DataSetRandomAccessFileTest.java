@@ -89,6 +89,25 @@ public class HDF5DataSetRandomAccessFileTest
     }
 
     @Test
+    public void testWriterOpenAfterRAFileClosed()
+    {
+        final File dataSetFile = new File(workingDirectory, "testReaderOpenAfterRAFileClosed.h5");
+        final String dataSetName = "ds";
+        dataSetFile.delete();
+        assertFalse(dataSetFile.exists());
+        dataSetFile.deleteOnExit();
+
+        final IHDF5Writer writer =
+                HDF5FactoryProvider.get().open(dataSetFile);
+        final HDF5DataSetRandomAccessFile raFile =
+                asRandomAccessFile(writer, dataSetName);
+        raFile.close();
+        // Checks that reader is still open
+        writer.exists("/");
+        writer.close();
+    }
+    
+    @Test
     public void testReadContiguousByteByByte()
     {
         final File dataSetFile = new File(workingDirectory, "testReadContiguousByteByByte.h5");

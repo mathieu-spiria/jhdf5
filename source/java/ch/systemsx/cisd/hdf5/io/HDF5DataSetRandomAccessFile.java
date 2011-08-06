@@ -66,6 +66,8 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
 
     private final boolean extendable;
 
+    private final boolean closeReaderOnCloseFile;
+
     private long length;
 
     private int realBlockSize;
@@ -298,7 +300,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
             boolean readOnly)
     {
         this(createHDF5ReaderOrWriter(hdf5File, readOnly), dataSetPath, creationStorageFeature,
-                size, opaqueTagOrNull);
+                size, opaqueTagOrNull, true);
     }
 
     private static IHDF5Reader createHDF5ReaderOrWriter(File hdf5File, boolean readOnly)
@@ -319,8 +321,10 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
      * mode, else it will be in readonly mode.
      */
     HDF5DataSetRandomAccessFile(IHDF5Reader reader, String dataSetPath,
-            HDF5GenericStorageFeatures creationStorageFeature, int size, String opaqueTagOrNull)
+            HDF5GenericStorageFeatures creationStorageFeature, int size, String opaqueTagOrNull,
+            boolean closeReaderOnCloseFile)
     {
+        this.closeReaderOnCloseFile = closeReaderOnCloseFile;
         final boolean readOnly = (reader instanceof IHDF5Writer) == false;
         try
         {
@@ -416,7 +420,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
             final long oldLength = length();
             if (minLen > oldLength)
             {
-            	realBlockSize = Math.min(realBlockSize, lenCurrentOp);
+                realBlockSize = Math.min(realBlockSize, lenCurrentOp);
                 minLen = blockOffset + realBlockSize;
                 if (minLen > oldLength)
                 {
@@ -610,7 +614,10 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
     public void close() throws IOExceptionUnchecked
     {
         flush();
-        reader.close();
+        if (closeReaderOnCloseFile)
+        {
+            reader.close();
+        }
     }
 
     public void mark(int readlimit)
