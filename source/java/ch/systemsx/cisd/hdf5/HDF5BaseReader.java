@@ -36,6 +36,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5FileNotFoundException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -150,11 +151,11 @@ class HDF5BaseReader
     {
         if (hdf5File.exists() == false)
         {
-            throw new HDF5JavaException("File " + this.hdf5File.getPath() + " does not exit.");
+            throw new HDF5FileNotFoundException(hdf5File, "File does not exit.");
         }
         if (hdf5File.canRead() == false)
         {
-            throw new HDF5JavaException("File " + this.hdf5File.getPath() + " not readable.");
+            throw new HDF5FileNotFoundException(hdf5File, "File is not readable.");
         }
         return h5.openFileReadOnly(hdf5File.getPath(), fileRegistry);
     }

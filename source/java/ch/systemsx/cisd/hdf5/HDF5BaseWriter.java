@@ -38,6 +38,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatasetInterfaceException;
+import ncsa.hdf.hdf5lib.exceptions.HDF5FileNotFoundException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -189,7 +190,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             if (hdf5File.canWrite() == false)
             {
-                throw new HDF5JavaException("File " + this.hdf5File.getPath() + " not writable.");
+                throw new HDF5FileNotFoundException(hdf5File, "File is not writable.");
             }
             return h5.openFileReadWrite(hdf5File.getPath(), enforce_1_8, fileRegistry);
         } else
@@ -197,12 +198,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
             final File directory = hdf5File.getParentFile();
             if (directory.exists() == false)
             {
-                throw new HDF5JavaException("Directory '" + directory.getPath()
-                        + "' does not exist.");
+                throw new HDF5FileNotFoundException(directory, "Directory does not exist.");
             }
             if (directory.canWrite() == false)
             {
-                throw new HDF5JavaException("Directory " + directory.getPath() + " not writable.");
+                throw new HDF5FileNotFoundException(directory, "Directory is not writable.");
             }
             return h5.createFile(hdf5File.getPath(), enforce_1_8, fileRegistry);
         }
