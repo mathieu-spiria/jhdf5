@@ -953,7 +953,7 @@ public class HDF5DataSetRandomAccessFileTest
         final int[] chunkSizesOrNull = info.tryGetChunkSizes();
         assertNotNull(chunkSizesOrNull);
         assertEquals(1, chunkSizesOrNull.length);
-        assertEquals(10 * 1024 * 1024, chunkSizesOrNull[0]);
+        assertEquals(1024 * 1024, chunkSizesOrNull[0]);
         reader.close();
     }
 
