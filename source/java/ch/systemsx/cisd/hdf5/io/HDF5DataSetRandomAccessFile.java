@@ -529,8 +529,14 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
     {
         final long len = length();
         final long pos = getFilePointer();
-        if (pos + numberOfBytesToExtend >= len)
+        final long newLen = pos + numberOfBytesToExtend;
+        if (newLen > len)
         {
+            if (extendable == false)
+            {
+                throw new IOExceptionUnchecked("Unable to extend dataset from " + len + " to "
+                        + newLen + ": dataset is not extenable.");
+            }
             setLength(pos + numberOfBytesToExtend);
         }
     }
