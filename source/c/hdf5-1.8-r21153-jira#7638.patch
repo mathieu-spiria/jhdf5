@@ -1,0 +1,82 @@
+diff -ruN hdf5-1.8.7.orig/src/H5A.c hdf5-1.8.7/src/H5A.c
+--- src/H5A.c	2011-04-20 23:22:42.000000000 +0200
++++ src/H5A.c	2011-08-27 19:40:28.000000000 +0200
+@@ -1268,6 +1268,10 @@
+     if(NULL == (attr = (H5A_t *)H5I_object_verify(attr_id, H5I_ATTR)))
+         HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not an attribute")
+ 
++    /* Patch the datatype's "top level" file pointer */
++    if(H5T_patch_file(attr->shared->dt, attr->oloc.file) < 0)
++        HGOTO_ERROR(H5E_ATTR, H5E_CANTINIT, FAIL, "unable to patch datatype's file pointer")
++
+     /*
+      * Copy the attribute's datatype.  If the type is a named type then
+      * reopen the type before returning it to the user. Make the type
+diff -ruN hdf5-1.8.7.orig/src/H5D.c hdf5-1.8.7/src/H5D.c
+--- src/H5D.c	2011-04-20 23:22:42.000000000 +0200
++++ src/H5D.c	2011-08-27 19:40:28.000000000 +0200
+@@ -523,6 +523,10 @@
+     if(NULL == (dset = (H5D_t *)H5I_object_verify(dset_id, H5I_DATASET)))
+ 	HGOTO_ERROR(H5E_ARGS, H5E_BADTYPE, FAIL, "not a dataset")
+ 
++    /* Patch the datatype's "top level" file pointer */
++    if(H5T_patch_file(dset->shared->type, dset->oloc.file) < 0)
++        HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to patch datatype's file pointer")
++
+     /* Copy the dataset's datatype */
+     if(NULL == (dt = H5T_copy(dset->shared->type, H5T_COPY_REOPEN)))
+ 	HGOTO_ERROR(H5E_DATASET, H5E_CANTINIT, FAIL, "unable to copy datatype")
+diff -ruN hdf5-1.8.7.orig/src/H5T.c hdf5-1.8.7/src/H5T.c
+--- src/H5T.c	2011-05-09 18:47:57.000000000 +0200
++++ src/H5T.c	2011-08-27 19:40:28.000000000 +0200
+@@ -5283,3 +5283,39 @@
+     FUNC_LEAVE_NOAPI(ret_value)
+ } /* end H5T_set_latest_version() */
+ 
++
++/*-------------------------------------------------------------------------
++ * Function:    H5T_patch_file
++ *
++ * Purpose:     Patch the top-level file pointers contained in dt to point
++ *              to f, if dt is a committed type.  This is possible because
++ *              the top-level file pointer can be closed out from under
++ *              dt while dt is contained in the shared file's cache.
++ *
++ * Return:      SUCCEED
++ *
++ * Programmer:  Neil Fortner
++ *              Thursday, July 14, 2011
++ *
++ *-------------------------------------------------------------------------
++ */
++herr_t
++H5T_patch_file(H5T_t *dt, H5F_t *f)
++{
++    herr_t ret_value = SUCCEED;
++
++    FUNC_ENTER_NOAPI(H5T_patch_file, FAIL)
++
++    /* Sanity check */
++    HDassert(dt);
++    HDassert(f);
++
++    if(H5T_STATE_OPEN == dt->shared->state || H5T_STATE_NAMED == dt->shared->state) {
++        dt->oloc.file = f;
++        dt->sh_loc.file = f;
++    } /* end if */
++
++done:
++    FUNC_LEAVE_NOAPI(ret_value)
++} /* end H5T_patch_file() */
++
+diff -ruN hdf5-1.8.7.orig/src/H5Tprivate.h hdf5-1.8.7/src/H5Tprivate.h
+--- src/H5Tprivate.h	2011-04-20 23:22:42.000000000 +0200
++++ src/H5Tprivate.h	2011-08-27 19:40:28.000000000 +0200
+@@ -135,6 +135,7 @@
+ H5_DLL htri_t H5T_is_sensible(const H5T_t *dt);
+ H5_DLL uint32_t H5T_hash(H5F_t * file, const H5T_t *dt);
+ H5_DLL herr_t H5T_set_latest_version(H5T_t *dt);
++H5_DLL herr_t H5T_patch_file(H5T_t *dt, H5F_t *f);
+ H5_DLL htri_t H5T_is_variable_str(const H5T_t *dt);
+ 
+ /* Reference specific functions */

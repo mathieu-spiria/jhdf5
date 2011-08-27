@@ -14,13 +14,15 @@ tar xvf hdf5-$VERSION.tar
 
 cd hdf5-$VERSION
 
+patch -p0 < ../hdf5-1.8-r21153-jira#7638.patch
+
 if [ -n "$PATCHES" ]; then
   for p in $PATCHES; do
     patch -p0 < ../$p
   done
 fi
 
-CFLAGS=$CFLAGS ./configure --prefix=/opt/hdf5-$VERSION-$PLATFORM --enable-debug=none $ADDITIONAL &> configure.log
+CFLAGS=$CFLAGS ./configure --prefix=/opt/hdf5-$VERSION-$PLATFORM --enable-debug=none --enable-production $ADDITIONAL &> configure.log
 
 make &> make.log
 
