@@ -266,7 +266,7 @@ public class H5 {
     }
 
     public static void loadH5Lib() {
-        ch.systemsx.cisd.hdf5.hdf5lib.H5.ensureNativeLibIsLoaded();
+        ch.systemsx.cisd.hdf5.hdf5lib.H5General.ensureNativeLibIsLoaded();
     }
 
     /**

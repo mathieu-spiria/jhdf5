@@ -16,7 +16,14 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5F.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5A.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5GLO.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5P.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5RI.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5T.*;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5D_CHUNKED;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5D_COMPACT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5D_FILL_TIME_ALLOC;
@@ -68,11 +75,10 @@ import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.H5;
 
 /**
- * A wrapper around {@link ch.systemsx.cisd.hdf5.hdf5lib.H5} that handles closing of resources automatically by
- * means of registering clean-up {@link Runnable}s.
+ * A wrapper around {@link ch.systemsx.cisd.hdf5.hdf5lib.H5General} that handles closing of resources 
+ * automatically by means of registering clean-up {@link Runnable}s.
  * 
  * @author Bernd Rinn
  */
@@ -1277,7 +1283,7 @@ class HDF5
         {
             values[i] = i;
         }
-        H5.H5Tconvert_to_little_endian(values);
+        H5Tconvert_to_little_endian(values);
         return values;
     }
 
@@ -1288,7 +1294,7 @@ class HDF5
         {
             values[i] = i;
         }
-        H5.H5Tconvert_to_little_endian(values);
+        H5Tconvert_to_little_endian(values);
         return values;
     }
 

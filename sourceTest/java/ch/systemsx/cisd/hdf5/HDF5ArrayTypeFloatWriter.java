@@ -16,11 +16,11 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Aclose;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Acreate;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Sclose;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Screate_simple;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5A.H5Aclose;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5A.H5Acreate;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Sclose;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Screate_simple;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32BE;

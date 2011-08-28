@@ -17,7 +17,8 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5DwriteString;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5DwriteString;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
@@ -29,7 +30,6 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.H5;
 
 /**
  * The implementation of {@link IHDF5StringWriter}.
@@ -233,7 +233,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                             stringDataTypeId, features, objectPath, layout,
                                             baseWriter.fileFormat, registry);
                         }
-                        H5.H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                        H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                                 StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding));
                     }
                     return null; // Nothing to return.
@@ -824,7 +824,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
 
         /* will raise exception on error */
         final int status =
-                H5.H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id,
+                H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id,
                         buf);
 
         return status;

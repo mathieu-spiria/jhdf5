@@ -24,11 +24,31 @@ import java.util.List;
  * 
  * @author Bernd Rinn
  */
-public final class CleanUpRegistry implements ICleanUpRegistry
+public class CleanUpRegistry implements ICleanUpRegistry
 {
-
     private final List<Runnable> cleanUpList = new ArrayList<Runnable>();
 
+    /**
+     * Creates a synchronized version of a {@link CleanUpRegistry}. 
+     */
+    public static CleanUpRegistry createSynchonized()
+    {
+        return new CleanUpRegistry()
+            {
+                @Override
+                public synchronized void registerCleanUp(Runnable cleanUp)
+                {
+                    super.registerCleanUp(cleanUp);
+                }
+
+                @Override
+                public synchronized void cleanUp(boolean suppressExceptions)
+                {
+                    super.cleanUp(suppressExceptions);
+                }
+            };
+    }
+    
     public void registerCleanUp(Runnable cleanUp)
     {
         cleanUpList.add(cleanUp);

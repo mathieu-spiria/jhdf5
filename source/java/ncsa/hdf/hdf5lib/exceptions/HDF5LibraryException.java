@@ -11,12 +11,12 @@
 
 package ncsa.hdf.hdf5lib.exceptions;
 
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5General.H5open;
+
 import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-
-import ch.systemsx.cisd.hdf5.hdf5lib.H5;
 
 
 /**
@@ -64,7 +64,7 @@ public class HDF5LibraryException extends HDF5Exception
         // to assure that the native methods are available
         try
         {
-            H5.H5open();
+            H5open();
         } catch (final Exception e)
         {
         }
@@ -112,7 +112,7 @@ public class HDF5LibraryException extends HDF5Exception
         // to assure that the native methods are available
         try
         {
-            H5.H5open();
+            H5open();
         } catch (final Exception e)
         {
         }

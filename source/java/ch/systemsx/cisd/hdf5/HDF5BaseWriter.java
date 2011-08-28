@@ -22,7 +22,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isNonPositive;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5.H5Dwrite;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_UNLIMITED;
@@ -234,16 +234,19 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * <p>
      * To be called from the syncer thread only.
      */
-    synchronized private void closeNow()
+    private void closeNow()
     {
-        if (state == State.OPEN)
+        synchronized (fileRegistry)
         {
-            super.close();
-            if (SYNC_ON_CLOSE_MODES.contains(syncMode))
+            if (state == State.OPEN)
             {
-                syncNow();
+                super.close();
+                if (SYNC_ON_CLOSE_MODES.contains(syncMode))
+                {
+                    syncNow();
+                }
+                closeSync();
             }
-            closeSync();
         }
     }
 
@@ -258,47 +261,56 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
     }
 
-    synchronized void flush()
+    void flush()
     {
-        h5.flushFile(fileId);
-        if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
+        synchronized (fileRegistry)
         {
-            commandQueue.add(Command.SYNC);
-        } else if (BLOCKING_SYNC_MODES.contains(syncMode))
+            h5.flushFile(fileId);
+            if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
+            {
+                commandQueue.add(Command.SYNC);
+            } else if (BLOCKING_SYNC_MODES.contains(syncMode))
+            {
+                syncNow();
+            }
+        }
+    }
+
+    void flushSyncBlocking()
+    {
+        synchronized (fileRegistry)
         {
+            h5.flushFile(fileId);
             syncNow();
         }
     }
 
-    synchronized void flushSyncBlocking()
-    {
-        h5.flushFile(fileId);
-        syncNow();
-    }
-
     @Override
-    synchronized void close()
+    void close()
     {
-        if (state == State.OPEN)
+        synchronized (fileRegistry)
         {
-            super.close();
-            if (SyncMode.SYNC == syncMode)
+            if (state == State.OPEN)
             {
-                commandQueue.add(Command.SYNC);
-            } else if (SyncMode.SYNC_BLOCK == syncMode)
-            {
-                syncNow();
-            }
-
-            if (EnumSet.complementOf(NON_BLOCKING_SYNC_MODES).contains(syncMode))
-            {
-                closeSync();
-                commandQueue.add(Command.EXIT);
-            } else
-            {
-                // End syncer thread and avoid a race condition for non-blocking sync modes as the
-                // syncer thread still may want to use the fileForSynching
-                commandQueue.add(Command.CLOSE_SYNC);
+                super.close();
+                if (SyncMode.SYNC == syncMode)
+                {
+                    commandQueue.add(Command.SYNC);
+                } else if (SyncMode.SYNC_BLOCK == syncMode)
+                {
+                    syncNow();
+                }
+    
+                if (EnumSet.complementOf(NON_BLOCKING_SYNC_MODES).contains(syncMode))
+                {
+                    closeSync();
+                    commandQueue.add(Command.EXIT);
+                } else
+                {
+                    // End syncer thread and avoid a race condition for non-blocking sync modes as the
+                    // syncer thread still may want to use the fileForSynching
+                    commandQueue.add(Command.CLOSE_SYNC);
+                }
             }
         }
     }

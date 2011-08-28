@@ -16,7 +16,10 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5F.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5T.*;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.*;
 
 import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;

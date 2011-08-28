@@ -66,7 +66,7 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
-import ch.systemsx.cisd.hdf5.hdf5lib.H5;
+import ch.systemsx.cisd.hdf5.hdf5lib.H5General;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 /**
@@ -118,7 +118,7 @@ public class HDF5RoundtripTest
 
         // Print Library Version
         final int[] libversion = new int[3];
-        H5.H5get_libversion(libversion);
+        H5General.H5get_libversion(libversion);
         System.out.println("HDF5 Version: " + libversion[0] + "." + libversion[1] + "."
                 + libversion[2]);
 

@@ -977,956 +977,963 @@ public class HDF5Constants
     // Get the HDF5 constants from the library //
     // /////////////////////////////////////////////////////////////////////////
 
-    final public static int H5_SZIP_MAX_PIXELS_PER_BLOCK = H5.J2C(JH5_SZIP_MAX_PIXELS_PER_BLOCK);
+    final public static int H5_SZIP_MAX_PIXELS_PER_BLOCK = javaToC(JH5_SZIP_MAX_PIXELS_PER_BLOCK);
 
-    final public static int H5_SZIP_NN_OPTION_MASK = H5.J2C(JH5_SZIP_NN_OPTION_MASK);
+    final public static int H5_SZIP_NN_OPTION_MASK = javaToC(JH5_SZIP_NN_OPTION_MASK);
 
-    final public static int H5_SZIP_EC_OPTION_MASK = H5.J2C(JH5_SZIP_EC_OPTION_MASK);
+    final public static int H5_SZIP_EC_OPTION_MASK = javaToC(JH5_SZIP_EC_OPTION_MASK);
 
-    final public static int H5_SZIP_ALLOW_K13_OPTION_MASK = H5.J2C(JH5_SZIP_ALLOW_K13_OPTION_MASK);
+    final public static int H5_SZIP_ALLOW_K13_OPTION_MASK = javaToC(JH5_SZIP_ALLOW_K13_OPTION_MASK);
 
-    final public static int H5_SZIP_CHIP_OPTION_MASK = H5.J2C(JH5_SZIP_CHIP_OPTION_MASK);
+    final public static int H5_SZIP_CHIP_OPTION_MASK = javaToC(JH5_SZIP_CHIP_OPTION_MASK);
 
-    final public static int H5D_ALLOC_TIME_DEFAULT = H5.J2C(JH5D_ALLOC_TIME_DEFAULT);
+    final public static int H5D_ALLOC_TIME_DEFAULT = javaToC(JH5D_ALLOC_TIME_DEFAULT);
 
-    final public static int H5D_ALLOC_TIME_EARLY = H5.J2C(JH5D_ALLOC_TIME_EARLY);
+    final public static int H5D_ALLOC_TIME_EARLY = javaToC(JH5D_ALLOC_TIME_EARLY);
 
-    final public static int H5D_ALLOC_TIME_ERROR = H5.J2C(JH5D_ALLOC_TIME_ERROR);
+    final public static int H5D_ALLOC_TIME_ERROR = javaToC(JH5D_ALLOC_TIME_ERROR);
 
-    final public static int H5D_ALLOC_TIME_INCR = H5.J2C(JH5D_ALLOC_TIME_INCR);
+    final public static int H5D_ALLOC_TIME_INCR = javaToC(JH5D_ALLOC_TIME_INCR);
 
-    final public static int H5D_ALLOC_TIME_LATE = H5.J2C(JH5D_ALLOC_TIME_LATE);
+    final public static int H5D_ALLOC_TIME_LATE = javaToC(JH5D_ALLOC_TIME_LATE);
 
-    final public static int H5D_CHUNKED = H5.J2C(JH5D_CHUNKED);
+    final public static int H5D_CHUNKED = javaToC(JH5D_CHUNKED);
 
-    final public static int H5D_COMPACT = H5.J2C(JH5D_COMPACT);
+    final public static int H5D_COMPACT = javaToC(JH5D_COMPACT);
 
-    final public static int H5D_CONTIGUOUS = H5.J2C(JH5D_CONTIGUOUS);
+    final public static int H5D_CONTIGUOUS = javaToC(JH5D_CONTIGUOUS);
 
-    final public static int H5D_FILL_TIME_ALLOC = H5.J2C(JH5D_FILL_TIME_ALLOC);
+    final public static int H5D_FILL_TIME_ALLOC = javaToC(JH5D_FILL_TIME_ALLOC);
 
-    final public static int H5D_FILL_TIME_ERROR = H5.J2C(JH5D_FILL_TIME_ERROR);
+    final public static int H5D_FILL_TIME_ERROR = javaToC(JH5D_FILL_TIME_ERROR);
 
-    final public static int H5D_FILL_TIME_NEVER = H5.J2C(JH5D_FILL_TIME_NEVER);
+    final public static int H5D_FILL_TIME_NEVER = javaToC(JH5D_FILL_TIME_NEVER);
 
-    final public static int H5D_FILL_VALUE_DEFAULT = H5.J2C(JH5D_FILL_VALUE_DEFAULT);
+    final public static int H5D_FILL_VALUE_DEFAULT = javaToC(JH5D_FILL_VALUE_DEFAULT);
 
-    final public static int H5D_FILL_VALUE_ERROR = H5.J2C(JH5D_FILL_VALUE_ERROR);
+    final public static int H5D_FILL_VALUE_ERROR = javaToC(JH5D_FILL_VALUE_ERROR);
 
-    final public static int H5D_FILL_VALUE_UNDEFINED = H5.J2C(JH5D_FILL_VALUE_UNDEFINED);
+    final public static int H5D_FILL_VALUE_UNDEFINED = javaToC(JH5D_FILL_VALUE_UNDEFINED);
 
-    final public static int H5D_FILL_VALUE_USER_DEFINED = H5.J2C(JH5D_FILL_VALUE_USER_DEFINED);
+    final public static int H5D_FILL_VALUE_USER_DEFINED = javaToC(JH5D_FILL_VALUE_USER_DEFINED);
 
-    final public static int H5D_LAYOUT_ERROR = H5.J2C(JH5D_LAYOUT_ERROR);
+    final public static int H5D_LAYOUT_ERROR = javaToC(JH5D_LAYOUT_ERROR);
 
-    final public static int H5D_NLAYOUTS = H5.J2C(JH5D_NLAYOUTS);
+    final public static int H5D_NLAYOUTS = javaToC(JH5D_NLAYOUTS);
 
-    final public static int H5D_SPACE_STATUS_ALLOCATED = H5.J2C(JH5D_SPACE_STATUS_ALLOCATED);
+    final public static int H5D_SPACE_STATUS_ALLOCATED = javaToC(JH5D_SPACE_STATUS_ALLOCATED);
 
-    final public static int H5D_SPACE_STATUS_ERROR = H5.J2C(JH5D_SPACE_STATUS_ERROR);
+    final public static int H5D_SPACE_STATUS_ERROR = javaToC(JH5D_SPACE_STATUS_ERROR);
 
     final public static int H5D_SPACE_STATUS_NOT_ALLOCATED =
-            H5.J2C(JH5D_SPACE_STATUS_NOT_ALLOCATED);
+            javaToC(JH5D_SPACE_STATUS_NOT_ALLOCATED);
 
     final public static int H5D_SPACE_STATUS_PART_ALLOCATED =
-            H5.J2C(JH5D_SPACE_STATUS_PART_ALLOCATED);
+            javaToC(JH5D_SPACE_STATUS_PART_ALLOCATED);
 
-    final public static int H5E_ALIGNMENT = H5.J2C(JH5E_ALIGNMENT);
+    final public static int H5E_ALIGNMENT = javaToC(JH5E_ALIGNMENT);
 
-    final public static int H5E_ALREADYEXISTS = H5.J2C(JH5E_ALREADYEXISTS);
+    final public static int H5E_ALREADYEXISTS = javaToC(JH5E_ALREADYEXISTS);
 
-    final public static int H5E_ALREADYINIT = H5.J2C(JH5E_ALREADYINIT);
+    final public static int H5E_ALREADYINIT = javaToC(JH5E_ALREADYINIT);
 
-    final public static int H5E_ARGS = H5.J2C(JH5E_ARGS);
+    final public static int H5E_ARGS = javaToC(JH5E_ARGS);
 
-    final public static int H5E_ATOM = H5.J2C(JH5E_ATOM);
+    final public static int H5E_ATOM = javaToC(JH5E_ATOM);
 
-    final public static int H5E_ATTR = H5.J2C(JH5E_ATTR);
+    final public static int H5E_ATTR = javaToC(JH5E_ATTR);
 
-    final public static int H5E_BADATOM = H5.J2C(JH5E_BADATOM);
+    final public static int H5E_BADATOM = javaToC(JH5E_BADATOM);
 
-    final public static int H5E_BADFILE = H5.J2C(JH5E_BADFILE);
+    final public static int H5E_BADFILE = javaToC(JH5E_BADFILE);
 
-    final public static int H5E_BADGROUP = H5.J2C(JH5E_BADGROUP);
+    final public static int H5E_BADGROUP = javaToC(JH5E_BADGROUP);
 
-    final public static int H5E_BADMESG = H5.J2C(JH5E_BADMESG);
+    final public static int H5E_BADMESG = javaToC(JH5E_BADMESG);
 
-    final public static int H5E_BADRANGE = H5.J2C(JH5E_BADRANGE);
+    final public static int H5E_BADRANGE = javaToC(JH5E_BADRANGE);
 
-    final public static int H5E_BADSELECT = H5.J2C(JH5E_BADSELECT);
+    final public static int H5E_BADSELECT = javaToC(JH5E_BADSELECT);
 
-    final public static int H5E_BADSIZE = H5.J2C(JH5E_BADSIZE);
+    final public static int H5E_BADSIZE = javaToC(JH5E_BADSIZE);
 
-    final public static int H5E_BADTYPE = H5.J2C(JH5E_BADTYPE);
+    final public static int H5E_BADTYPE = javaToC(JH5E_BADTYPE);
 
-    final public static int H5E_BADVALUE = H5.J2C(JH5E_BADVALUE);
+    final public static int H5E_BADVALUE = javaToC(JH5E_BADVALUE);
 
-    final public static int H5E_BTREE = H5.J2C(JH5E_BTREE);
+    final public static int H5E_BTREE = javaToC(JH5E_BTREE);
 
-    final public static int H5E_CACHE = H5.J2C(JH5E_CACHE);
+    final public static int H5E_CACHE = javaToC(JH5E_CACHE);
 
-    final public static int H5E_CALLBACK = H5.J2C(JH5E_CALLBACK);
+    final public static int H5E_CALLBACK = javaToC(JH5E_CALLBACK);
 
-    final public static int H5E_CANAPPLY = H5.J2C(JH5E_CANAPPLY);
+    final public static int H5E_CANAPPLY = javaToC(JH5E_CANAPPLY);
 
-    final public static int H5E_CANTCLIP = H5.J2C(JH5E_CANTCLIP);
+    final public static int H5E_CANTCLIP = javaToC(JH5E_CANTCLIP);
 
-    final public static int H5E_CANTCLOSEFILE = H5.J2C(JH5E_CANTCLOSEFILE);
+    final public static int H5E_CANTCLOSEFILE = javaToC(JH5E_CANTCLOSEFILE);
 
-    final public static int H5E_CANTCONVERT = H5.J2C(JH5E_CANTCONVERT);
+    final public static int H5E_CANTCONVERT = javaToC(JH5E_CANTCONVERT);
 
-    final public static int H5E_CANTCOPY = H5.J2C(JH5E_CANTCOPY);
+    final public static int H5E_CANTCOPY = javaToC(JH5E_CANTCOPY);
 
-    final public static int H5E_CANTCOUNT = H5.J2C(JH5E_CANTCOUNT);
+    final public static int H5E_CANTCOUNT = javaToC(JH5E_CANTCOUNT);
 
-    final public static int H5E_CANTCREATE = H5.J2C(JH5E_CANTCREATE);
+    final public static int H5E_CANTCREATE = javaToC(JH5E_CANTCREATE);
 
-    final public static int H5E_CANTDEC = H5.J2C(JH5E_CANTDEC);
+    final public static int H5E_CANTDEC = javaToC(JH5E_CANTDEC);
 
-    final public static int H5E_CANTDECODE = H5.J2C(JH5E_CANTDECODE);
+    final public static int H5E_CANTDECODE = javaToC(JH5E_CANTDECODE);
 
-    final public static int H5E_CANTDELETE = H5.J2C(JH5E_CANTDELETE);
+    final public static int H5E_CANTDELETE = javaToC(JH5E_CANTDELETE);
 
-    final public static int H5E_CANTENCODE = H5.J2C(JH5E_CANTENCODE);
+    final public static int H5E_CANTENCODE = javaToC(JH5E_CANTENCODE);
 
-    final public static int H5E_CANTFLUSH = H5.J2C(JH5E_CANTFLUSH);
+    final public static int H5E_CANTFLUSH = javaToC(JH5E_CANTFLUSH);
 
-    final public static int H5E_CANTFREE = H5.J2C(JH5E_CANTFREE);
+    final public static int H5E_CANTFREE = javaToC(JH5E_CANTFREE);
 
-    final public static int H5E_CANTGET = H5.J2C(JH5E_CANTGET);
+    final public static int H5E_CANTGET = javaToC(JH5E_CANTGET);
 
-    final public static int H5E_CANTINC = H5.J2C(JH5E_CANTINC);
+    final public static int H5E_CANTINC = javaToC(JH5E_CANTINC);
 
-    final public static int H5E_CANTINIT = H5.J2C(JH5E_CANTINIT);
+    final public static int H5E_CANTINIT = javaToC(JH5E_CANTINIT);
 
-    final public static int H5E_CANTINSERT = H5.J2C(JH5E_CANTINSERT);
+    final public static int H5E_CANTINSERT = javaToC(JH5E_CANTINSERT);
 
-    final public static int H5E_CANTLIST = H5.J2C(JH5E_CANTLIST);
+    final public static int H5E_CANTLIST = javaToC(JH5E_CANTLIST);
 
-    final public static int H5E_CANTLOAD = H5.J2C(JH5E_CANTLOAD);
+    final public static int H5E_CANTLOAD = javaToC(JH5E_CANTLOAD);
 
-    final public static int H5E_CANTLOCK = H5.J2C(JH5E_CANTLOCK);
+    final public static int H5E_CANTLOCK = javaToC(JH5E_CANTLOCK);
 
-    final public static int H5E_CANTNEXT = H5.J2C(JH5E_CANTNEXT);
+    final public static int H5E_CANTNEXT = javaToC(JH5E_CANTNEXT);
 
-    final public static int H5E_CANTOPENFILE = H5.J2C(JH5E_CANTOPENFILE);
+    final public static int H5E_CANTOPENFILE = javaToC(JH5E_CANTOPENFILE);
 
-    final public static int H5E_CANTOPENOBJ = H5.J2C(JH5E_CANTOPENOBJ);
+    final public static int H5E_CANTOPENOBJ = javaToC(JH5E_CANTOPENOBJ);
 
-    final public static int H5E_CANTREGISTER = H5.J2C(JH5E_CANTREGISTER);
+    final public static int H5E_CANTREGISTER = javaToC(JH5E_CANTREGISTER);
 
-    final public static int H5E_CANTRELEASE = H5.J2C(JH5E_CANTRELEASE);
+    final public static int H5E_CANTRELEASE = javaToC(JH5E_CANTRELEASE);
 
-    final public static int H5E_CANTSELECT = H5.J2C(JH5E_CANTSELECT);
+    final public static int H5E_CANTSELECT = javaToC(JH5E_CANTSELECT);
 
-    final public static int H5E_CANTSET = H5.J2C(JH5E_CANTSET);
+    final public static int H5E_CANTSET = javaToC(JH5E_CANTSET);
 
-    final public static int H5E_CANTSPLIT = H5.J2C(JH5E_CANTSPLIT);
+    final public static int H5E_CANTSPLIT = javaToC(JH5E_CANTSPLIT);
 
-    final public static int H5E_CANTUNLOCK = H5.J2C(JH5E_CANTUNLOCK);
+    final public static int H5E_CANTUNLOCK = javaToC(JH5E_CANTUNLOCK);
 
-    final public static int H5E_CLOSEERROR = H5.J2C(JH5E_CLOSEERROR);
+    final public static int H5E_CLOSEERROR = javaToC(JH5E_CLOSEERROR);
 
-    final public static int H5E_COMPLEN = H5.J2C(JH5E_COMPLEN);
+    final public static int H5E_COMPLEN = javaToC(JH5E_COMPLEN);
 
-    final public static int H5E_DATASET = H5.J2C(JH5E_DATASET);
+    final public static int H5E_DATASET = javaToC(JH5E_DATASET);
 
-    final public static int H5E_DATASPACE = H5.J2C(JH5E_DATASPACE);
+    final public static int H5E_DATASPACE = javaToC(JH5E_DATASPACE);
 
-    final public static int H5E_DATATYPE = H5.J2C(JH5E_DATATYPE);
+    final public static int H5E_DATATYPE = javaToC(JH5E_DATATYPE);
 
-    final public static int H5E_DUPCLASS = H5.J2C(JH5E_DUPCLASS);
+    final public static int H5E_DUPCLASS = javaToC(JH5E_DUPCLASS);
 
-    final public static int H5E_EFL = H5.J2C(JH5E_EFL);
+    final public static int H5E_EFL = javaToC(JH5E_EFL);
 
-    final public static int H5E_EXISTS = H5.J2C(JH5E_EXISTS);
+    final public static int H5E_EXISTS = javaToC(JH5E_EXISTS);
 
-    final public static int H5E_FCNTL = H5.J2C(JH5E_FCNTL);
+    final public static int H5E_FCNTL = javaToC(JH5E_FCNTL);
 
-    final public static int H5E_FILE = H5.J2C(JH5E_FILE);
+    final public static int H5E_FILE = javaToC(JH5E_FILE);
 
-    final public static int H5E_FILEEXISTS = H5.J2C(JH5E_FILEEXISTS);
+    final public static int H5E_FILEEXISTS = javaToC(JH5E_FILEEXISTS);
 
-    final public static int H5E_FILEOPEN = H5.J2C(JH5E_FILEOPEN);
+    final public static int H5E_FILEOPEN = javaToC(JH5E_FILEOPEN);
 
-    final public static int H5E_FUNC = H5.J2C(JH5E_FUNC);
+    final public static int H5E_FUNC = javaToC(JH5E_FUNC);
 
-    final public static int H5E_HEAP = H5.J2C(JH5E_HEAP);
+    final public static int H5E_HEAP = javaToC(JH5E_HEAP);
 
-    final public static int H5E_INTERNAL = H5.J2C(JH5E_INTERNAL);
+    final public static int H5E_INTERNAL = javaToC(JH5E_INTERNAL);
 
-    final public static int H5E_IO = H5.J2C(JH5E_IO);
+    final public static int H5E_IO = javaToC(JH5E_IO);
 
-    final public static int H5E_LINK = H5.J2C(JH5E_LINK);
+    final public static int H5E_LINK = javaToC(JH5E_LINK);
 
-    final public static int H5E_LINKCOUNT = H5.J2C(JH5E_LINKCOUNT);
+    final public static int H5E_LINKCOUNT = javaToC(JH5E_LINKCOUNT);
 
-    final public static int H5E_MOUNT = H5.J2C(JH5E_MOUNT);
+    final public static int H5E_MOUNT = javaToC(JH5E_MOUNT);
 
-    final public static int H5E_MPI = H5.J2C(JH5E_MPI);
+    final public static int H5E_MPI = javaToC(JH5E_MPI);
 
-    final public static int H5E_MPIERRSTR = H5.J2C(JH5E_MPIERRSTR);
+    final public static int H5E_MPIERRSTR = javaToC(JH5E_MPIERRSTR);
 
-    final public static int H5E_NOFILTER = H5.J2C(JH5E_NOFILTER);
+    final public static int H5E_NOFILTER = javaToC(JH5E_NOFILTER);
 
-    final public static int H5E_NOIDS = H5.J2C(JH5E_NOIDS);
+    final public static int H5E_NOIDS = javaToC(JH5E_NOIDS);
 
-    final public static int H5E_NONE_MAJOR = H5.J2C(JH5E_NONE_MAJOR);
+    final public static int H5E_NONE_MAJOR = javaToC(JH5E_NONE_MAJOR);
 
-    final public static int H5E_NONE_MINOR = H5.J2C(JH5E_NONE_MINOR);
+    final public static int H5E_NONE_MINOR = javaToC(JH5E_NONE_MINOR);
 
-    final public static int H5E_NOSPACE = H5.J2C(JH5E_NOSPACE);
+    final public static int H5E_NOSPACE = javaToC(JH5E_NOSPACE);
 
-    final public static int H5E_NOTCACHED = H5.J2C(JH5E_NOTCACHED);
+    final public static int H5E_NOTCACHED = javaToC(JH5E_NOTCACHED);
 
-    final public static int H5E_NOTFOUND = H5.J2C(JH5E_NOTFOUND);
+    final public static int H5E_NOTFOUND = javaToC(JH5E_NOTFOUND);
 
-    final public static int H5E_NOTHDF5 = H5.J2C(JH5E_NOTHDF5);
+    final public static int H5E_NOTHDF5 = javaToC(JH5E_NOTHDF5);
 
-    final public static int H5E_OHDR = H5.J2C(JH5E_OHDR);
+    final public static int H5E_OHDR = javaToC(JH5E_OHDR);
 
-    final public static int H5E_OVERFLOW = H5.J2C(JH5E_OVERFLOW);
+    final public static int H5E_OVERFLOW = javaToC(JH5E_OVERFLOW);
 
-    final public static int H5E_PLINE = H5.J2C(JH5E_PLINE);
+    final public static int H5E_PLINE = javaToC(JH5E_PLINE);
 
-    final public static int H5E_PLIST = H5.J2C(JH5E_PLIST);
+    final public static int H5E_PLIST = javaToC(JH5E_PLIST);
 
-    final public static int H5E_PROTECT = H5.J2C(JH5E_PROTECT);
+    final public static int H5E_PROTECT = javaToC(JH5E_PROTECT);
 
-    final public static int H5E_READERROR = H5.J2C(JH5E_READERROR);
+    final public static int H5E_READERROR = javaToC(JH5E_READERROR);
 
-    final public static int H5E_REFERENCE = H5.J2C(JH5E_REFERENCE);
+    final public static int H5E_REFERENCE = javaToC(JH5E_REFERENCE);
 
-    final public static int H5E_RESOURCE = H5.J2C(JH5E_RESOURCE);
+    final public static int H5E_RESOURCE = javaToC(JH5E_RESOURCE);
 
-    final public static int H5E_RS = H5.J2C(JH5E_RS);
+    final public static int H5E_RS = javaToC(JH5E_RS);
 
-    final public static int H5E_SEEKERROR = H5.J2C(JH5E_SEEKERROR);
+    final public static int H5E_SEEKERROR = javaToC(JH5E_SEEKERROR);
 
-    final public static int H5E_SETLOCAL = H5.J2C(JH5E_SETLOCAL);
+    final public static int H5E_SETLOCAL = javaToC(JH5E_SETLOCAL);
 
-    final public static int H5E_STORAGE = H5.J2C(JH5E_STORAGE);
+    final public static int H5E_STORAGE = javaToC(JH5E_STORAGE);
 
-    final public static int H5E_SYM = H5.J2C(JH5E_SYM);
+    final public static int H5E_SYM = javaToC(JH5E_SYM);
 
-    final public static int H5E_TRUNCATED = H5.J2C(JH5E_TRUNCATED);
+    final public static int H5E_TRUNCATED = javaToC(JH5E_TRUNCATED);
 
-    final public static int H5E_TST = H5.J2C(JH5E_TST);
+    final public static int H5E_TST = javaToC(JH5E_TST);
 
-    final public static int H5E_UNINITIALIZED = H5.J2C(JH5E_UNINITIALIZED);
+    final public static int H5E_UNINITIALIZED = javaToC(JH5E_UNINITIALIZED);
 
-    final public static int H5E_UNSUPPORTED = H5.J2C(JH5E_UNSUPPORTED);
+    final public static int H5E_UNSUPPORTED = javaToC(JH5E_UNSUPPORTED);
 
-    final public static int H5E_VERSION = H5.J2C(JH5E_VERSION);
+    final public static int H5E_VERSION = javaToC(JH5E_VERSION);
 
-    final public static int H5E_VFL = H5.J2C(JH5E_VFL);
+    final public static int H5E_VFL = javaToC(JH5E_VFL);
 
-    final public static int H5E_WALK_DOWNWARD = H5.J2C(JH5E_WALK_DOWNWARD);
+    final public static int H5E_WALK_DOWNWARD = javaToC(JH5E_WALK_DOWNWARD);
 
-    final public static int H5E_WALK_UPWARD = H5.J2C(JH5E_WALK_UPWARD);
+    final public static int H5E_WALK_UPWARD = javaToC(JH5E_WALK_UPWARD);
 
-    final public static int H5E_WRITEERROR = H5.J2C(JH5E_WRITEERROR);
+    final public static int H5E_WRITEERROR = javaToC(JH5E_WRITEERROR);
 
-    final public static int H5F_ACC_CREAT = H5.J2C(JH5F_ACC_CREAT);
+    final public static int H5F_ACC_CREAT = javaToC(JH5F_ACC_CREAT);
 
-    final public static int H5F_ACC_DEBUG = H5.J2C(JH5F_ACC_DEBUG);
+    final public static int H5F_ACC_DEBUG = javaToC(JH5F_ACC_DEBUG);
 
-    final public static int H5F_ACC_EXCL = H5.J2C(JH5F_ACC_EXCL);
+    final public static int H5F_ACC_EXCL = javaToC(JH5F_ACC_EXCL);
 
-    final public static int H5F_ACC_RDONLY = H5.J2C(JH5F_ACC_RDONLY);
+    final public static int H5F_ACC_RDONLY = javaToC(JH5F_ACC_RDONLY);
 
-    final public static int H5F_ACC_RDWR = H5.J2C(JH5F_ACC_RDWR);
+    final public static int H5F_ACC_RDWR = javaToC(JH5F_ACC_RDWR);
 
-    final public static int H5F_ACC_TRUNC = H5.J2C(JH5F_ACC_TRUNC);
+    final public static int H5F_ACC_TRUNC = javaToC(JH5F_ACC_TRUNC);
 
-    final public static int H5F_CLOSE_DEFAULT = H5.J2C(JH5F_CLOSE_DEFAULT);
+    final public static int H5F_CLOSE_DEFAULT = javaToC(JH5F_CLOSE_DEFAULT);
 
-    final public static int H5F_CLOSE_SEMI = H5.J2C(JH5F_CLOSE_SEMI);
+    final public static int H5F_CLOSE_SEMI = javaToC(JH5F_CLOSE_SEMI);
 
-    final public static int H5F_CLOSE_STRONG = H5.J2C(JH5F_CLOSE_STRONG);
+    final public static int H5F_CLOSE_STRONG = javaToC(JH5F_CLOSE_STRONG);
 
-    final public static int H5F_CLOSE_WEAK = H5.J2C(JH5F_CLOSE_WEAK);
+    final public static int H5F_CLOSE_WEAK = javaToC(JH5F_CLOSE_WEAK);
 
-    final public static int H5F_OBJ_ALL = H5.J2C(JH5F_OBJ_ALL);
+    final public static int H5F_OBJ_ALL = javaToC(JH5F_OBJ_ALL);
 
-    final public static int H5F_OBJ_ATTR = H5.J2C(JH5F_OBJ_ATTR);
+    final public static int H5F_OBJ_ATTR = javaToC(JH5F_OBJ_ATTR);
 
-    final public static int H5F_OBJ_DATASET = H5.J2C(JH5F_OBJ_DATASET);
+    final public static int H5F_OBJ_DATASET = javaToC(JH5F_OBJ_DATASET);
 
-    final public static int H5F_OBJ_DATATYPE = H5.J2C(JH5F_OBJ_DATATYPE);
+    final public static int H5F_OBJ_DATATYPE = javaToC(JH5F_OBJ_DATATYPE);
 
-    final public static int H5F_OBJ_FILE = H5.J2C(JH5F_OBJ_FILE);
+    final public static int H5F_OBJ_FILE = javaToC(JH5F_OBJ_FILE);
 
-    final public static int H5F_OBJ_GROUP = H5.J2C(JH5F_OBJ_GROUP);
+    final public static int H5F_OBJ_GROUP = javaToC(JH5F_OBJ_GROUP);
 
-    final public static int H5F_SCOPE_GLOBAL = H5.J2C(JH5F_SCOPE_GLOBAL);
+    final public static int H5F_SCOPE_GLOBAL = javaToC(JH5F_SCOPE_GLOBAL);
 
-    final public static int H5F_SCOPE_LOCAL = H5.J2C(JH5F_SCOPE_LOCAL);
+    final public static int H5F_SCOPE_LOCAL = javaToC(JH5F_SCOPE_LOCAL);
 
-    final public static int H5F_UNLIMITED = H5.J2C(JH5F_UNLIMITED);
+    final public static int H5F_UNLIMITED = javaToC(JH5F_UNLIMITED);
 
-    final public static int H5F_LIBVER_EARLIEST = H5.J2C(JH5F_LIBVER_EARLIEST);
+    final public static int H5F_LIBVER_EARLIEST = javaToC(JH5F_LIBVER_EARLIEST);
 
-    final public static int H5F_LIBVER_LATEST = H5.J2C(JH5F_LIBVER_LATEST);
+    final public static int H5F_LIBVER_LATEST = javaToC(JH5F_LIBVER_LATEST);
 
-    final public static int H5G_DATASET = H5.J2C(JH5G_DATASET);
+    final public static int H5G_DATASET = javaToC(JH5G_DATASET);
 
-    final public static int H5G_GROUP = H5.J2C(JH5G_GROUP);
+    final public static int H5G_GROUP = javaToC(JH5G_GROUP);
 
-    final public static int H5G_LINK = H5.J2C(JH5G_LINK);
+    final public static int H5G_LINK = javaToC(JH5G_LINK);
 
-    final public static int H5G_LINK_ERROR = H5.J2C(JH5G_LINK_ERROR);
+    final public static int H5G_LINK_ERROR = javaToC(JH5G_LINK_ERROR);
 
-    final public static int H5G_LINK_HARD = H5.J2C(JH5G_LINK_HARD);
+    final public static int H5G_LINK_HARD = javaToC(JH5G_LINK_HARD);
 
-    final public static int H5G_LINK_SOFT = H5.J2C(JH5G_LINK_SOFT);
+    final public static int H5G_LINK_SOFT = javaToC(JH5G_LINK_SOFT);
 
-    final public static int H5G_NLIBTYPES = H5.J2C(JH5G_NLIBTYPES);
+    final public static int H5G_NLIBTYPES = javaToC(JH5G_NLIBTYPES);
 
-    final public static int H5G_NTYPES = H5.J2C(JH5G_NTYPES);
+    final public static int H5G_NTYPES = javaToC(JH5G_NTYPES);
 
-    final public static int H5G_NUSERTYPES = H5.J2C(JH5G_NUSERTYPES);
+    final public static int H5G_NUSERTYPES = javaToC(JH5G_NUSERTYPES);
 
-    final public static int H5G_RESERVED_5 = H5.J2C(JH5G_RESERVED_5);
+    final public static int H5G_RESERVED_5 = javaToC(JH5G_RESERVED_5);
 
-    final public static int H5G_RESERVED_6 = H5.J2C(JH5G_RESERVED_6);
+    final public static int H5G_RESERVED_6 = javaToC(JH5G_RESERVED_6);
 
-    final public static int H5G_RESERVED_7 = H5.J2C(JH5G_RESERVED_7);
+    final public static int H5G_RESERVED_7 = javaToC(JH5G_RESERVED_7);
 
-    final public static int H5G_SAME_LOC = H5.J2C(JH5G_SAME_LOC);
+    final public static int H5G_SAME_LOC = javaToC(JH5G_SAME_LOC);
 
-    final public static int H5G_TYPE = H5.J2C(JH5G_TYPE);
+    final public static int H5G_TYPE = javaToC(JH5G_TYPE);
 
-    final public static int H5G_UNKNOWN = H5.J2C(JH5G_UNKNOWN);
+    final public static int H5G_UNKNOWN = javaToC(JH5G_UNKNOWN);
 
-    final public static int H5I_ATTR = H5.J2C(JH5I_ATTR);
+    final public static int H5I_ATTR = javaToC(JH5I_ATTR);
 
-    final public static int H5I_BADID = H5.J2C(JH5I_BADID);
+    final public static int H5I_BADID = javaToC(JH5I_BADID);
 
-    final public static int H5I_DATASET = H5.J2C(JH5I_DATASET);
+    final public static int H5I_DATASET = javaToC(JH5I_DATASET);
 
-    final public static int H5I_DATASPACE = H5.J2C(JH5I_DATASPACE);
+    final public static int H5I_DATASPACE = javaToC(JH5I_DATASPACE);
 
-    final public static int H5I_DATATYPE = H5.J2C(JH5I_DATATYPE);
+    final public static int H5I_DATATYPE = javaToC(JH5I_DATATYPE);
 
-    final public static int H5I_FILE = H5.J2C(JH5I_FILE);
+    final public static int H5I_FILE = javaToC(JH5I_FILE);
 
-    final public static int H5I_GENPROP_CLS = H5.J2C(JH5I_GENPROP_CLS);
+    final public static int H5I_GENPROP_CLS = javaToC(JH5I_GENPROP_CLS);
 
-    final public static int H5I_GENPROP_LST = H5.J2C(JH5I_GENPROP_LST);
+    final public static int H5I_GENPROP_LST = javaToC(JH5I_GENPROP_LST);
 
-    final public static int H5I_GROUP = H5.J2C(JH5I_GROUP);
+    final public static int H5I_GROUP = javaToC(JH5I_GROUP);
 
-    final public static int H5I_INVALID_HID = H5.J2C(JH5I_INVALID_HID);
+    final public static int H5I_INVALID_HID = javaToC(JH5I_INVALID_HID);
 
-    final public static int H5I_REFERENCE = H5.J2C(JH5I_REFERENCE);
+    final public static int H5I_REFERENCE = javaToC(JH5I_REFERENCE);
 
-    final public static int H5I_VFL = H5.J2C(JH5I_VFL);
+    final public static int H5I_VFL = javaToC(JH5I_VFL);
 
-    final public static int H5O_TYPE_UNKNOWN = H5.J2C(JH5O_TYPE_UNKNOWN);
+    final public static int H5O_TYPE_UNKNOWN = javaToC(JH5O_TYPE_UNKNOWN);
 
-    final public static int H5O_TYPE_GROUP = H5.J2C(JH5O_TYPE_GROUP);
+    final public static int H5O_TYPE_GROUP = javaToC(JH5O_TYPE_GROUP);
 
-    final public static int H5O_TYPE_DATASET = H5.J2C(JH5O_TYPE_DATASET);
+    final public static int H5O_TYPE_DATASET = javaToC(JH5O_TYPE_DATASET);
 
-    final public static int H5O_TYPE_NAMED_DATATYPE = H5.J2C(JH5O_TYPE_NAMED_DATATYPE);
+    final public static int H5O_TYPE_NAMED_DATATYPE = javaToC(JH5O_TYPE_NAMED_DATATYPE);
 
-    final public static int H5O_TYPE_NTYPES = H5.J2C(JH5O_TYPE_NTYPES);
+    final public static int H5O_TYPE_NTYPES = javaToC(JH5O_TYPE_NTYPES);
 
-    final public static int H5L_TYPE_ERROR = H5.J2C(JH5L_TYPE_ERROR);
+    final public static int H5L_TYPE_ERROR = javaToC(JH5L_TYPE_ERROR);
 
-    final public static int H5L_TYPE_HARD = H5.J2C(JH5L_TYPE_HARD);
+    final public static int H5L_TYPE_HARD = javaToC(JH5L_TYPE_HARD);
 
-    final public static int H5L_TYPE_SOFT = H5.J2C(JH5L_TYPE_SOFT);
+    final public static int H5L_TYPE_SOFT = javaToC(JH5L_TYPE_SOFT);
 
-    final public static int H5L_TYPE_EXTERNAL = H5.J2C(JH5L_TYPE_EXTERNAL);
+    final public static int H5L_TYPE_EXTERNAL = javaToC(JH5L_TYPE_EXTERNAL);
 
-    final public static int H5L_TYPE_MAX = H5.J2C(JH5L_TYPE_MAX);
+    final public static int H5L_TYPE_MAX = javaToC(JH5L_TYPE_MAX);
 
-    final public static int H5P_DATASET_CREATE = H5.J2C(JH5P_DATASET_CREATE);
+    final public static int H5P_DATASET_CREATE = javaToC(JH5P_DATASET_CREATE);
 
-    final public static int H5P_DATASET_CREATE_DEFAULT = H5.J2C(JH5P_DATASET_CREATE_DEFAULT);
+    final public static int H5P_DATASET_CREATE_DEFAULT = javaToC(JH5P_DATASET_CREATE_DEFAULT);
 
-    final public static int H5P_DATASET_XFER = H5.J2C(JH5P_DATASET_XFER);
+    final public static int H5P_DATASET_XFER = javaToC(JH5P_DATASET_XFER);
 
-    final public static int H5P_DATASET_XFER_DEFAULT = H5.J2C(JH5P_DATASET_XFER_DEFAULT);
+    final public static int H5P_DATASET_XFER_DEFAULT = javaToC(JH5P_DATASET_XFER_DEFAULT);
 
-    final public static int H5P_DEFAULT = H5.J2C(JH5P_DEFAULT);
+    final public static int H5P_DEFAULT = javaToC(JH5P_DEFAULT);
 
-    final public static int H5P_FILE_ACCESS = H5.J2C(JH5P_FILE_ACCESS);
+    final public static int H5P_FILE_ACCESS = javaToC(JH5P_FILE_ACCESS);
 
-    final public static int H5P_FILE_ACCESS_DEFAULT = H5.J2C(JH5P_FILE_ACCESS_DEFAULT);
+    final public static int H5P_FILE_ACCESS_DEFAULT = javaToC(JH5P_FILE_ACCESS_DEFAULT);
 
-    final public static int H5P_FILE_CREATE = H5.J2C(JH5P_FILE_CREATE);
+    final public static int H5P_FILE_CREATE = javaToC(JH5P_FILE_CREATE);
 
-    final public static int H5P_FILE_CREATE_DEFAULT = H5.J2C(JH5P_FILE_CREATE_DEFAULT);
+    final public static int H5P_FILE_CREATE_DEFAULT = javaToC(JH5P_FILE_CREATE_DEFAULT);
 
-    final public static int H5P_NO_CLASS = H5.J2C(JH5P_NO_CLASS);
+    final public static int H5P_NO_CLASS = javaToC(JH5P_NO_CLASS);
     
-    final public static int H5P_ROOT = H5.J2C(JH5P_ROOT);
+    final public static int H5P_ROOT = javaToC(JH5P_ROOT);
 
-    final public static int H5P_OBJECT_CREATE = H5.J2C(JH5P_OBJECT_CREATE);
+    final public static int H5P_OBJECT_CREATE = javaToC(JH5P_OBJECT_CREATE);
 
-    final public static int H5P_DATASET_ACCESS = H5.J2C(JH5P_DATASET_ACCESS);
+    final public static int H5P_DATASET_ACCESS = javaToC(JH5P_DATASET_ACCESS);
 
-    final public static int H5P_DATASET_ACCESS_DEFAULT = H5.J2C(JH5P_DATASET_ACCESS_DEFAULT);
+    final public static int H5P_DATASET_ACCESS_DEFAULT = javaToC(JH5P_DATASET_ACCESS_DEFAULT);
 
-    final public static int H5P_FILE_MOUNT = H5.J2C(JH5P_FILE_MOUNT);
+    final public static int H5P_FILE_MOUNT = javaToC(JH5P_FILE_MOUNT);
 
-    final public static int H5P_FILE_MOUNT_DEFAULT = H5.J2C(JH5P_FILE_MOUNT_DEFAULT);
+    final public static int H5P_FILE_MOUNT_DEFAULT = javaToC(JH5P_FILE_MOUNT_DEFAULT);
 
-    final public static int H5P_GROUP_CREATE = H5.J2C(JH5P_GROUP_CREATE);
+    final public static int H5P_GROUP_CREATE = javaToC(JH5P_GROUP_CREATE);
 
-    final public static int H5P_GROUP_CREATE_DEFAULT = H5.J2C(JH5P_GROUP_CREATE_DEFAULT);
+    final public static int H5P_GROUP_CREATE_DEFAULT = javaToC(JH5P_GROUP_CREATE_DEFAULT);
 
-    final public static int H5P_GROUP_ACCESS = H5.J2C(JH5P_GROUP_ACCESS);
+    final public static int H5P_GROUP_ACCESS = javaToC(JH5P_GROUP_ACCESS);
 
-    final public static int H5P_GROUP_ACCESS_DEFAULT = H5.J2C(JH5P_GROUP_ACCESS_DEFAULT);
+    final public static int H5P_GROUP_ACCESS_DEFAULT = javaToC(JH5P_GROUP_ACCESS_DEFAULT);
 
-    final public static int H5P_DATATYPE_CREATE = H5.J2C(JH5P_DATATYPE_CREATE);
+    final public static int H5P_DATATYPE_CREATE = javaToC(JH5P_DATATYPE_CREATE);
 
-    final public static int H5P_DATATYPE_CREATE_DEFAULT = H5.J2C(JH5P_DATATYPE_CREATE_DEFAULT);
+    final public static int H5P_DATATYPE_CREATE_DEFAULT = javaToC(JH5P_DATATYPE_CREATE_DEFAULT);
 
-    final public static int H5P_DATATYPE_ACCESS = H5.J2C(JH5P_DATATYPE_ACCESS);
+    final public static int H5P_DATATYPE_ACCESS = javaToC(JH5P_DATATYPE_ACCESS);
 
-    final public static int H5P_DATATYPE_ACCESS_DEFAULT = H5.J2C(JH5P_DATATYPE_ACCESS_DEFAULT);
+    final public static int H5P_DATATYPE_ACCESS_DEFAULT = javaToC(JH5P_DATATYPE_ACCESS_DEFAULT);
 
-    final public static int H5P_STRING_CREATE = H5.J2C(JH5P_STRING_CREATE);
+    final public static int H5P_STRING_CREATE = javaToC(JH5P_STRING_CREATE);
 
-    final public static int H5P_ATTRIBUTE_CREATE = H5.J2C(JH5P_ATTRIBUTE_CREATE);
+    final public static int H5P_ATTRIBUTE_CREATE = javaToC(JH5P_ATTRIBUTE_CREATE);
 
-    final public static int H5P_ATTRIBUTE_CREATE_DEFAULT = H5.J2C(JH5P_ATTRIBUTE_CREATE_DEFAULT);
+    final public static int H5P_ATTRIBUTE_CREATE_DEFAULT = javaToC(JH5P_ATTRIBUTE_CREATE_DEFAULT);
 
-    final public static int H5P_OBJECT_COPY = H5.J2C(JH5P_OBJECT_COPY);
+    final public static int H5P_OBJECT_COPY = javaToC(JH5P_OBJECT_COPY);
 
-    final public static int H5P_OBJECT_COPY_DEFAULT = H5.J2C(JH5P_OBJECT_COPY_DEFAULT);
+    final public static int H5P_OBJECT_COPY_DEFAULT = javaToC(JH5P_OBJECT_COPY_DEFAULT);
 
-    final public static int H5P_LINK_CREATE = H5.J2C(JH5P_LINK_CREATE);
+    final public static int H5P_LINK_CREATE = javaToC(JH5P_LINK_CREATE);
 
-    final public static int H5P_LINK_CREATE_DEFAULT = H5.J2C(JH5P_LINK_CREATE_DEFAULT);
+    final public static int H5P_LINK_CREATE_DEFAULT = javaToC(JH5P_LINK_CREATE_DEFAULT);
 
-    final public static int H5P_LINK_ACCESS = H5.J2C(JH5P_LINK_ACCESS);
+    final public static int H5P_LINK_ACCESS = javaToC(JH5P_LINK_ACCESS);
 
-    final public static int H5P_LINK_ACCESS_DEFAULT = H5.J2C(JH5P_LINK_ACCESS_DEFAULT);
+    final public static int H5P_LINK_ACCESS_DEFAULT = javaToC(JH5P_LINK_ACCESS_DEFAULT);
 
-    final public static int H5R_BADTYPE = H5.J2C(JH5R_BADTYPE);
+    final public static int H5R_BADTYPE = javaToC(JH5R_BADTYPE);
 
-    final public static int H5R_DATASET_REGION = H5.J2C(JH5R_DATASET_REGION);
+    final public static int H5R_DATASET_REGION = javaToC(JH5R_DATASET_REGION);
 
-    final public static int H5R_MAXTYPE = H5.J2C(JH5R_MAXTYPE);
+    final public static int H5R_MAXTYPE = javaToC(JH5R_MAXTYPE);
 
-    final public static int H5R_OBJ_REF_BUF_SIZE = H5.J2C(JH5R_OBJ_REF_BUF_SIZE);
+    final public static int H5R_OBJ_REF_BUF_SIZE = javaToC(JH5R_OBJ_REF_BUF_SIZE);
 
-    final public static int H5R_OBJECT = H5.J2C(JH5R_OBJECT);
+    final public static int H5R_OBJECT = javaToC(JH5R_OBJECT);
 
-    final public static int H5S_ALL = H5.J2C(JH5S_ALL);
+    final public static int H5S_ALL = javaToC(JH5S_ALL);
 
-    final public static int H5S_MAX_RANK = H5.J2C(JH5S_MAX_RANK);
+    final public static int H5S_MAX_RANK = javaToC(JH5S_MAX_RANK);
 
-    final public static int H5S_NO_CLASS = H5.J2C(JH5S_NO_CLASS);
+    final public static int H5S_NO_CLASS = javaToC(JH5S_NO_CLASS);
 
-    final public static int H5S_SCALAR = H5.J2C(JH5S_SCALAR);
+    final public static int H5S_SCALAR = javaToC(JH5S_SCALAR);
 
-    final public static int H5S_SEL_ALL = H5.J2C(JH5S_SEL_ALL);
+    final public static int H5S_SEL_ALL = javaToC(JH5S_SEL_ALL);
 
-    final public static int H5S_SEL_ERROR = H5.J2C(JH5S_SEL_ERROR);
+    final public static int H5S_SEL_ERROR = javaToC(JH5S_SEL_ERROR);
 
-    final public static int H5S_SEL_HYPERSLABS = H5.J2C(JH5S_SEL_HYPERSLABS);
+    final public static int H5S_SEL_HYPERSLABS = javaToC(JH5S_SEL_HYPERSLABS);
 
-    final public static int H5S_SEL_N = H5.J2C(JH5S_SEL_N);
+    final public static int H5S_SEL_N = javaToC(JH5S_SEL_N);
 
-    final public static int H5S_SEL_NONE = H5.J2C(JH5S_SEL_NONE);
+    final public static int H5S_SEL_NONE = javaToC(JH5S_SEL_NONE);
 
-    final public static int H5S_SEL_POINTS = H5.J2C(JH5S_SEL_POINTS);
+    final public static int H5S_SEL_POINTS = javaToC(JH5S_SEL_POINTS);
 
-    final public static int H5S_SELECT_AND = H5.J2C(JH5S_SELECT_AND);
+    final public static int H5S_SELECT_AND = javaToC(JH5S_SELECT_AND);
 
-    final public static int H5S_SELECT_APPEND = H5.J2C(JH5S_SELECT_APPEND);
+    final public static int H5S_SELECT_APPEND = javaToC(JH5S_SELECT_APPEND);
 
-    final public static int H5S_SELECT_INVALID = H5.J2C(JH5S_SELECT_INVALID);
+    final public static int H5S_SELECT_INVALID = javaToC(JH5S_SELECT_INVALID);
 
-    final public static int H5S_SELECT_NOOP = H5.J2C(JH5S_SELECT_NOOP);
+    final public static int H5S_SELECT_NOOP = javaToC(JH5S_SELECT_NOOP);
 
-    final public static int H5S_SELECT_NOTA = H5.J2C(JH5S_SELECT_NOTA);
+    final public static int H5S_SELECT_NOTA = javaToC(JH5S_SELECT_NOTA);
 
-    final public static int H5S_SELECT_NOTB = H5.J2C(JH5S_SELECT_NOTB);
+    final public static int H5S_SELECT_NOTB = javaToC(JH5S_SELECT_NOTB);
 
-    final public static int H5S_SELECT_OR = H5.J2C(JH5S_SELECT_OR);
+    final public static int H5S_SELECT_OR = javaToC(JH5S_SELECT_OR);
 
-    final public static int H5S_SELECT_PREPEND = H5.J2C(JH5S_SELECT_PREPEND);
+    final public static int H5S_SELECT_PREPEND = javaToC(JH5S_SELECT_PREPEND);
 
-    final public static int H5S_SELECT_SET = H5.J2C(JH5S_SELECT_SET);
+    final public static int H5S_SELECT_SET = javaToC(JH5S_SELECT_SET);
 
-    final public static int H5S_SELECT_XOR = H5.J2C(JH5S_SELECT_XOR);
+    final public static int H5S_SELECT_XOR = javaToC(JH5S_SELECT_XOR);
 
-    final public static int H5S_SIMPLE = H5.J2C(JH5S_SIMPLE);
+    final public static int H5S_SIMPLE = javaToC(JH5S_SIMPLE);
 
-    final public static int H5S_UNLIMITED = H5.J2C(JH5S_UNLIMITED);
+    final public static int H5S_UNLIMITED = javaToC(JH5S_UNLIMITED);
 
-    final public static int H5T_ALPHA_B16 = H5.J2C(JH5T_ALPHA_B16);
+    final public static int H5T_ALPHA_B16 = javaToC(JH5T_ALPHA_B16);
 
-    final public static int H5T_ALPHA_B32 = H5.J2C(JH5T_ALPHA_B32);
+    final public static int H5T_ALPHA_B32 = javaToC(JH5T_ALPHA_B32);
 
-    final public static int H5T_ALPHA_B64 = H5.J2C(JH5T_ALPHA_B64);
+    final public static int H5T_ALPHA_B64 = javaToC(JH5T_ALPHA_B64);
 
-    final public static int H5T_ALPHA_B8 = H5.J2C(JH5T_ALPHA_B8);
+    final public static int H5T_ALPHA_B8 = javaToC(JH5T_ALPHA_B8);
 
-    final public static int H5T_ALPHA_F32 = H5.J2C(JH5T_ALPHA_F32);
+    final public static int H5T_ALPHA_F32 = javaToC(JH5T_ALPHA_F32);
 
-    final public static int H5T_ALPHA_F64 = H5.J2C(JH5T_ALPHA_F64);
+    final public static int H5T_ALPHA_F64 = javaToC(JH5T_ALPHA_F64);
 
-    final public static int H5T_ALPHA_I16 = H5.J2C(JH5T_ALPHA_I16);
+    final public static int H5T_ALPHA_I16 = javaToC(JH5T_ALPHA_I16);
 
-    final public static int H5T_ALPHA_I32 = H5.J2C(JH5T_ALPHA_I32);
+    final public static int H5T_ALPHA_I32 = javaToC(JH5T_ALPHA_I32);
 
-    final public static int H5T_ALPHA_I64 = H5.J2C(JH5T_ALPHA_I64);
+    final public static int H5T_ALPHA_I64 = javaToC(JH5T_ALPHA_I64);
 
-    final public static int H5T_ALPHA_I8 = H5.J2C(JH5T_ALPHA_I8);
+    final public static int H5T_ALPHA_I8 = javaToC(JH5T_ALPHA_I8);
 
-    final public static int H5T_ALPHA_U16 = H5.J2C(JH5T_ALPHA_U16);
+    final public static int H5T_ALPHA_U16 = javaToC(JH5T_ALPHA_U16);
 
-    final public static int H5T_ALPHA_U32 = H5.J2C(JH5T_ALPHA_U32);
+    final public static int H5T_ALPHA_U32 = javaToC(JH5T_ALPHA_U32);
 
-    final public static int H5T_ALPHA_U64 = H5.J2C(JH5T_ALPHA_U64);
+    final public static int H5T_ALPHA_U64 = javaToC(JH5T_ALPHA_U64);
 
-    final public static int H5T_ALPHA_U8 = H5.J2C(JH5T_ALPHA_U8);
+    final public static int H5T_ALPHA_U8 = javaToC(JH5T_ALPHA_U8);
 
-    final public static int H5T_ARRAY = H5.J2C(JH5T_ARRAY);
+    final public static int H5T_ARRAY = javaToC(JH5T_ARRAY);
 
-    final public static int H5T_BITFIELD = H5.J2C(JH5T_BITFIELD);
+    final public static int H5T_BITFIELD = javaToC(JH5T_BITFIELD);
 
-    final public static int H5T_BKG_NO = H5.J2C(JH5T_BKG_NO);
+    final public static int H5T_BKG_NO = javaToC(JH5T_BKG_NO);
 
-    final public static int H5T_BKG_YES = H5.J2C(JH5T_BKG_YES);
+    final public static int H5T_BKG_YES = javaToC(JH5T_BKG_YES);
 
-    final public static int H5T_C_S1 = H5.J2C(JH5T_C_S1);
+    final public static int H5T_C_S1 = javaToC(JH5T_C_S1);
 
-    final public static int H5T_COMPOUND = H5.J2C(JH5T_COMPOUND);
+    final public static int H5T_COMPOUND = javaToC(JH5T_COMPOUND);
 
-    final public static int H5T_CONV_CONV = H5.J2C(JH5T_CONV_CONV);
+    final public static int H5T_CONV_CONV = javaToC(JH5T_CONV_CONV);
 
-    final public static int H5T_CONV_FREE = H5.J2C(JH5T_CONV_FREE);
+    final public static int H5T_CONV_FREE = javaToC(JH5T_CONV_FREE);
 
-    final public static int H5T_CONV_INIT = H5.J2C(JH5T_CONV_INIT);
+    final public static int H5T_CONV_INIT = javaToC(JH5T_CONV_INIT);
 
-    final public static int H5T_CSET_ASCII = H5.J2C(JH5T_CSET_ASCII);
+    final public static int H5T_CSET_ASCII = javaToC(JH5T_CSET_ASCII);
     
-    final public static int H5T_CSET_UTF8 = H5.J2C(JH5T_CSET_UTF8);
+    final public static int H5T_CSET_UTF8 = javaToC(JH5T_CSET_UTF8);
 
-    final public static int H5T_CSET_ERROR = H5.J2C(JH5T_CSET_ERROR);
+    final public static int H5T_CSET_ERROR = javaToC(JH5T_CSET_ERROR);
 
-    final public static int H5T_CSET_RESERVED_10 = H5.J2C(JH5T_CSET_RESERVED_10);
+    final public static int H5T_CSET_RESERVED_10 = javaToC(JH5T_CSET_RESERVED_10);
 
-    final public static int H5T_CSET_RESERVED_11 = H5.J2C(JH5T_CSET_RESERVED_11);
+    final public static int H5T_CSET_RESERVED_11 = javaToC(JH5T_CSET_RESERVED_11);
 
-    final public static int H5T_CSET_RESERVED_12 = H5.J2C(JH5T_CSET_RESERVED_12);
+    final public static int H5T_CSET_RESERVED_12 = javaToC(JH5T_CSET_RESERVED_12);
 
-    final public static int H5T_CSET_RESERVED_13 = H5.J2C(JH5T_CSET_RESERVED_13);
+    final public static int H5T_CSET_RESERVED_13 = javaToC(JH5T_CSET_RESERVED_13);
 
-    final public static int H5T_CSET_RESERVED_14 = H5.J2C(JH5T_CSET_RESERVED_14);
+    final public static int H5T_CSET_RESERVED_14 = javaToC(JH5T_CSET_RESERVED_14);
 
-    final public static int H5T_CSET_RESERVED_15 = H5.J2C(JH5T_CSET_RESERVED_15);
+    final public static int H5T_CSET_RESERVED_15 = javaToC(JH5T_CSET_RESERVED_15);
 
-    final public static int H5T_CSET_RESERVED_2 = H5.J2C(JH5T_CSET_RESERVED_2);
+    final public static int H5T_CSET_RESERVED_2 = javaToC(JH5T_CSET_RESERVED_2);
 
-    final public static int H5T_CSET_RESERVED_3 = H5.J2C(JH5T_CSET_RESERVED_3);
+    final public static int H5T_CSET_RESERVED_3 = javaToC(JH5T_CSET_RESERVED_3);
 
-    final public static int H5T_CSET_RESERVED_4 = H5.J2C(JH5T_CSET_RESERVED_4);
+    final public static int H5T_CSET_RESERVED_4 = javaToC(JH5T_CSET_RESERVED_4);
 
-    final public static int H5T_CSET_RESERVED_5 = H5.J2C(JH5T_CSET_RESERVED_5);
+    final public static int H5T_CSET_RESERVED_5 = javaToC(JH5T_CSET_RESERVED_5);
 
-    final public static int H5T_CSET_RESERVED_6 = H5.J2C(JH5T_CSET_RESERVED_6);
+    final public static int H5T_CSET_RESERVED_6 = javaToC(JH5T_CSET_RESERVED_6);
 
-    final public static int H5T_CSET_RESERVED_7 = H5.J2C(JH5T_CSET_RESERVED_7);
+    final public static int H5T_CSET_RESERVED_7 = javaToC(JH5T_CSET_RESERVED_7);
 
-    final public static int H5T_CSET_RESERVED_8 = H5.J2C(JH5T_CSET_RESERVED_8);
+    final public static int H5T_CSET_RESERVED_8 = javaToC(JH5T_CSET_RESERVED_8);
 
-    final public static int H5T_CSET_RESERVED_9 = H5.J2C(JH5T_CSET_RESERVED_9);
+    final public static int H5T_CSET_RESERVED_9 = javaToC(JH5T_CSET_RESERVED_9);
 
-    final public static int H5T_DIR_ASCEND = H5.J2C(JH5T_DIR_ASCEND);
+    final public static int H5T_DIR_ASCEND = javaToC(JH5T_DIR_ASCEND);
 
-    final public static int H5T_DIR_DEFAULT = H5.J2C(JH5T_DIR_DEFAULT);
+    final public static int H5T_DIR_DEFAULT = javaToC(JH5T_DIR_DEFAULT);
 
-    final public static int H5T_DIR_DESCEND = H5.J2C(JH5T_DIR_DESCEND);
+    final public static int H5T_DIR_DESCEND = javaToC(JH5T_DIR_DESCEND);
 
-    final public static int H5T_ENUM = H5.J2C(JH5T_ENUM);
+    final public static int H5T_ENUM = javaToC(JH5T_ENUM);
 
-    final public static int H5T_FLOAT = H5.J2C(JH5T_FLOAT);
+    final public static int H5T_FLOAT = javaToC(JH5T_FLOAT);
 
-    final public static int H5T_FORTRAN_S1 = H5.J2C(JH5T_FORTRAN_S1);
+    final public static int H5T_FORTRAN_S1 = javaToC(JH5T_FORTRAN_S1);
 
-    final public static int H5T_IEEE_F32BE = H5.J2C(JH5T_IEEE_F32BE);
+    final public static int H5T_IEEE_F32BE = javaToC(JH5T_IEEE_F32BE);
 
-    final public static int H5T_IEEE_F32LE = H5.J2C(JH5T_IEEE_F32LE);
+    final public static int H5T_IEEE_F32LE = javaToC(JH5T_IEEE_F32LE);
 
-    final public static int H5T_IEEE_F64BE = H5.J2C(JH5T_IEEE_F64BE);
+    final public static int H5T_IEEE_F64BE = javaToC(JH5T_IEEE_F64BE);
 
-    final public static int H5T_IEEE_F64LE = H5.J2C(JH5T_IEEE_F64LE);
+    final public static int H5T_IEEE_F64LE = javaToC(JH5T_IEEE_F64LE);
 
-    final public static int H5T_INTEGER = H5.J2C(JH5T_INTEGER);
+    final public static int H5T_INTEGER = javaToC(JH5T_INTEGER);
 
-    final public static int H5T_INTEL_B16 = H5.J2C(JH5T_INTEL_B16);
+    final public static int H5T_INTEL_B16 = javaToC(JH5T_INTEL_B16);
 
-    final public static int H5T_INTEL_B32 = H5.J2C(JH5T_INTEL_B32);
+    final public static int H5T_INTEL_B32 = javaToC(JH5T_INTEL_B32);
 
-    final public static int H5T_INTEL_B64 = H5.J2C(JH5T_INTEL_B64);
+    final public static int H5T_INTEL_B64 = javaToC(JH5T_INTEL_B64);
 
-    final public static int H5T_INTEL_B8 = H5.J2C(JH5T_INTEL_B8);
+    final public static int H5T_INTEL_B8 = javaToC(JH5T_INTEL_B8);
 
-    final public static int H5T_INTEL_F32 = H5.J2C(JH5T_INTEL_F32);
+    final public static int H5T_INTEL_F32 = javaToC(JH5T_INTEL_F32);
 
-    final public static int H5T_INTEL_F64 = H5.J2C(JH5T_INTEL_F64);
+    final public static int H5T_INTEL_F64 = javaToC(JH5T_INTEL_F64);
 
-    final public static int H5T_INTEL_I16 = H5.J2C(JH5T_INTEL_I16);
+    final public static int H5T_INTEL_I16 = javaToC(JH5T_INTEL_I16);
 
-    final public static int H5T_INTEL_I32 = H5.J2C(JH5T_INTEL_I32);
+    final public static int H5T_INTEL_I32 = javaToC(JH5T_INTEL_I32);
 
-    final public static int H5T_INTEL_I64 = H5.J2C(JH5T_INTEL_I64);
+    final public static int H5T_INTEL_I64 = javaToC(JH5T_INTEL_I64);
 
-    final public static int H5T_INTEL_I8 = H5.J2C(JH5T_INTEL_I8);
+    final public static int H5T_INTEL_I8 = javaToC(JH5T_INTEL_I8);
 
-    final public static int H5T_INTEL_U16 = H5.J2C(JH5T_INTEL_U16);
+    final public static int H5T_INTEL_U16 = javaToC(JH5T_INTEL_U16);
 
-    final public static int H5T_INTEL_U32 = H5.J2C(JH5T_INTEL_U32);
+    final public static int H5T_INTEL_U32 = javaToC(JH5T_INTEL_U32);
 
-    final public static int H5T_INTEL_U64 = H5.J2C(JH5T_INTEL_U64);
+    final public static int H5T_INTEL_U64 = javaToC(JH5T_INTEL_U64);
 
-    final public static int H5T_INTEL_U8 = H5.J2C(JH5T_INTEL_U8);
+    final public static int H5T_INTEL_U8 = javaToC(JH5T_INTEL_U8);
 
-    final public static int H5T_MIPS_B16 = H5.J2C(JH5T_MIPS_B16);
+    final public static int H5T_MIPS_B16 = javaToC(JH5T_MIPS_B16);
 
-    final public static int H5T_MIPS_B32 = H5.J2C(JH5T_MIPS_B32);
+    final public static int H5T_MIPS_B32 = javaToC(JH5T_MIPS_B32);
 
-    final public static int H5T_MIPS_B64 = H5.J2C(JH5T_MIPS_B64);
+    final public static int H5T_MIPS_B64 = javaToC(JH5T_MIPS_B64);
 
-    final public static int H5T_MIPS_B8 = H5.J2C(JH5T_MIPS_B8);
+    final public static int H5T_MIPS_B8 = javaToC(JH5T_MIPS_B8);
 
-    final public static int H5T_MIPS_F32 = H5.J2C(JH5T_MIPS_F32);
+    final public static int H5T_MIPS_F32 = javaToC(JH5T_MIPS_F32);
 
-    final public static int H5T_MIPS_F64 = H5.J2C(JH5T_MIPS_F64);
+    final public static int H5T_MIPS_F64 = javaToC(JH5T_MIPS_F64);
 
-    final public static int H5T_MIPS_I16 = H5.J2C(JH5T_MIPS_I16);
+    final public static int H5T_MIPS_I16 = javaToC(JH5T_MIPS_I16);
 
-    final public static int H5T_MIPS_I32 = H5.J2C(JH5T_MIPS_I32);
+    final public static int H5T_MIPS_I32 = javaToC(JH5T_MIPS_I32);
 
-    final public static int H5T_MIPS_I64 = H5.J2C(JH5T_MIPS_I64);
+    final public static int H5T_MIPS_I64 = javaToC(JH5T_MIPS_I64);
 
-    final public static int H5T_MIPS_I8 = H5.J2C(JH5T_MIPS_I8);
+    final public static int H5T_MIPS_I8 = javaToC(JH5T_MIPS_I8);
 
-    final public static int H5T_MIPS_U16 = H5.J2C(JH5T_MIPS_U16);
+    final public static int H5T_MIPS_U16 = javaToC(JH5T_MIPS_U16);
 
-    final public static int H5T_MIPS_U32 = H5.J2C(JH5T_MIPS_U32);
+    final public static int H5T_MIPS_U32 = javaToC(JH5T_MIPS_U32);
 
-    final public static int H5T_MIPS_U64 = H5.J2C(JH5T_MIPS_U64);
+    final public static int H5T_MIPS_U64 = javaToC(JH5T_MIPS_U64);
 
-    final public static int H5T_MIPS_U8 = H5.J2C(JH5T_MIPS_U8);
+    final public static int H5T_MIPS_U8 = javaToC(JH5T_MIPS_U8);
 
-    final public static int H5T_NATIVE_B16 = H5.J2C(JH5T_NATIVE_B16);
+    final public static int H5T_NATIVE_B16 = javaToC(JH5T_NATIVE_B16);
 
-    final public static int H5T_NATIVE_B32 = H5.J2C(JH5T_NATIVE_B32);
+    final public static int H5T_NATIVE_B32 = javaToC(JH5T_NATIVE_B32);
 
-    final public static int H5T_NATIVE_B64 = H5.J2C(JH5T_NATIVE_B64);
+    final public static int H5T_NATIVE_B64 = javaToC(JH5T_NATIVE_B64);
 
-    final public static int H5T_NATIVE_B8 = H5.J2C(JH5T_NATIVE_B8);
+    final public static int H5T_NATIVE_B8 = javaToC(JH5T_NATIVE_B8);
 
-    final public static int H5T_NATIVE_CHAR = H5.J2C(JH5T_NATIVE_CHAR);
+    final public static int H5T_NATIVE_CHAR = javaToC(JH5T_NATIVE_CHAR);
 
-    final public static int H5T_NATIVE_DOUBLE = H5.J2C(JH5T_NATIVE_DOUBLE);
+    final public static int H5T_NATIVE_DOUBLE = javaToC(JH5T_NATIVE_DOUBLE);
 
-    final public static int H5T_NATIVE_FLOAT = H5.J2C(JH5T_NATIVE_FLOAT);
+    final public static int H5T_NATIVE_FLOAT = javaToC(JH5T_NATIVE_FLOAT);
 
-    final public static int H5T_NATIVE_HADDR = H5.J2C(JH5T_NATIVE_HADDR);
+    final public static int H5T_NATIVE_HADDR = javaToC(JH5T_NATIVE_HADDR);
 
-    final public static int H5T_NATIVE_HBOOL = H5.J2C(JH5T_NATIVE_HBOOL);
+    final public static int H5T_NATIVE_HBOOL = javaToC(JH5T_NATIVE_HBOOL);
 
-    final public static int H5T_NATIVE_HERR = H5.J2C(JH5T_NATIVE_HERR);
+    final public static int H5T_NATIVE_HERR = javaToC(JH5T_NATIVE_HERR);
 
-    final public static int H5T_NATIVE_HSIZE = H5.J2C(JH5T_NATIVE_HSIZE);
+    final public static int H5T_NATIVE_HSIZE = javaToC(JH5T_NATIVE_HSIZE);
 
-    final public static int H5T_NATIVE_HSSIZE = H5.J2C(JH5T_NATIVE_HSSIZE);
+    final public static int H5T_NATIVE_HSSIZE = javaToC(JH5T_NATIVE_HSSIZE);
 
-    final public static int H5T_NATIVE_INT = H5.J2C(JH5T_NATIVE_INT);
+    final public static int H5T_NATIVE_INT = javaToC(JH5T_NATIVE_INT);
 
-    final public static int H5T_NATIVE_INT_FAST16 = H5.J2C(JH5T_NATIVE_INT_FAST16);
+    final public static int H5T_NATIVE_INT_FAST16 = javaToC(JH5T_NATIVE_INT_FAST16);
 
-    final public static int H5T_NATIVE_INT_FAST32 = H5.J2C(JH5T_NATIVE_INT_FAST32);
+    final public static int H5T_NATIVE_INT_FAST32 = javaToC(JH5T_NATIVE_INT_FAST32);
 
-    final public static int H5T_NATIVE_INT_FAST64 = H5.J2C(JH5T_NATIVE_INT_FAST64);
+    final public static int H5T_NATIVE_INT_FAST64 = javaToC(JH5T_NATIVE_INT_FAST64);
 
-    final public static int H5T_NATIVE_INT_FAST8 = H5.J2C(JH5T_NATIVE_INT_FAST8);
+    final public static int H5T_NATIVE_INT_FAST8 = javaToC(JH5T_NATIVE_INT_FAST8);
 
-    final public static int H5T_NATIVE_INT_LEAST16 = H5.J2C(JH5T_NATIVE_INT_LEAST16);
+    final public static int H5T_NATIVE_INT_LEAST16 = javaToC(JH5T_NATIVE_INT_LEAST16);
 
-    final public static int H5T_NATIVE_INT_LEAST32 = H5.J2C(JH5T_NATIVE_INT_LEAST32);
+    final public static int H5T_NATIVE_INT_LEAST32 = javaToC(JH5T_NATIVE_INT_LEAST32);
 
-    final public static int H5T_NATIVE_INT_LEAST64 = H5.J2C(JH5T_NATIVE_INT_LEAST64);
+    final public static int H5T_NATIVE_INT_LEAST64 = javaToC(JH5T_NATIVE_INT_LEAST64);
 
-    final public static int H5T_NATIVE_INT_LEAST8 = H5.J2C(JH5T_NATIVE_INT_LEAST8);
+    final public static int H5T_NATIVE_INT_LEAST8 = javaToC(JH5T_NATIVE_INT_LEAST8);
 
-    final public static int H5T_NATIVE_INT16 = H5.J2C(JH5T_NATIVE_INT16);
+    final public static int H5T_NATIVE_INT16 = javaToC(JH5T_NATIVE_INT16);
 
-    final public static int H5T_NATIVE_INT32 = H5.J2C(JH5T_NATIVE_INT32);
+    final public static int H5T_NATIVE_INT32 = javaToC(JH5T_NATIVE_INT32);
 
-    final public static int H5T_NATIVE_INT64 = H5.J2C(JH5T_NATIVE_INT64);
+    final public static int H5T_NATIVE_INT64 = javaToC(JH5T_NATIVE_INT64);
 
-    final public static int H5T_NATIVE_INT8 = H5.J2C(JH5T_NATIVE_INT8);
+    final public static int H5T_NATIVE_INT8 = javaToC(JH5T_NATIVE_INT8);
 
-    final public static int H5T_NATIVE_LDOUBLE = H5.J2C(JH5T_NATIVE_LDOUBLE);
+    final public static int H5T_NATIVE_LDOUBLE = javaToC(JH5T_NATIVE_LDOUBLE);
 
-    final public static int H5T_NATIVE_LLONG = H5.J2C(JH5T_NATIVE_LLONG);
+    final public static int H5T_NATIVE_LLONG = javaToC(JH5T_NATIVE_LLONG);
 
-    final public static int H5T_NATIVE_LONG = H5.J2C(JH5T_NATIVE_LONG);
+    final public static int H5T_NATIVE_LONG = javaToC(JH5T_NATIVE_LONG);
 
-    final public static int H5T_NATIVE_OPAQUE = H5.J2C(JH5T_NATIVE_OPAQUE);
+    final public static int H5T_NATIVE_OPAQUE = javaToC(JH5T_NATIVE_OPAQUE);
 
-    final public static int H5T_NATIVE_SCHAR = H5.J2C(JH5T_NATIVE_SCHAR);
+    final public static int H5T_NATIVE_SCHAR = javaToC(JH5T_NATIVE_SCHAR);
 
-    final public static int H5T_NATIVE_SHORT = H5.J2C(JH5T_NATIVE_SHORT);
+    final public static int H5T_NATIVE_SHORT = javaToC(JH5T_NATIVE_SHORT);
 
-    final public static int H5T_NATIVE_UCHAR = H5.J2C(JH5T_NATIVE_UCHAR);
+    final public static int H5T_NATIVE_UCHAR = javaToC(JH5T_NATIVE_UCHAR);
 
-    final public static int H5T_NATIVE_UINT = H5.J2C(JH5T_NATIVE_UINT);
+    final public static int H5T_NATIVE_UINT = javaToC(JH5T_NATIVE_UINT);
 
-    final public static int H5T_NATIVE_UINT_FAST16 = H5.J2C(JH5T_NATIVE_UINT_FAST16);
+    final public static int H5T_NATIVE_UINT_FAST16 = javaToC(JH5T_NATIVE_UINT_FAST16);
 
-    final public static int H5T_NATIVE_UINT_FAST32 = H5.J2C(JH5T_NATIVE_UINT_FAST32);
+    final public static int H5T_NATIVE_UINT_FAST32 = javaToC(JH5T_NATIVE_UINT_FAST32);
 
-    final public static int H5T_NATIVE_UINT_FAST64 = H5.J2C(JH5T_NATIVE_UINT_FAST64);
+    final public static int H5T_NATIVE_UINT_FAST64 = javaToC(JH5T_NATIVE_UINT_FAST64);
 
-    final public static int H5T_NATIVE_UINT_FAST8 = H5.J2C(JH5T_NATIVE_UINT_FAST8);
+    final public static int H5T_NATIVE_UINT_FAST8 = javaToC(JH5T_NATIVE_UINT_FAST8);
 
-    final public static int H5T_NATIVE_UINT_LEAST16 = H5.J2C(JH5T_NATIVE_UINT_LEAST16);
+    final public static int H5T_NATIVE_UINT_LEAST16 = javaToC(JH5T_NATIVE_UINT_LEAST16);
 
-    final public static int H5T_NATIVE_UINT_LEAST32 = H5.J2C(JH5T_NATIVE_UINT_LEAST32);
+    final public static int H5T_NATIVE_UINT_LEAST32 = javaToC(JH5T_NATIVE_UINT_LEAST32);
 
-    final public static int H5T_NATIVE_UINT_LEAST64 = H5.J2C(JH5T_NATIVE_UINT_LEAST64);
+    final public static int H5T_NATIVE_UINT_LEAST64 = javaToC(JH5T_NATIVE_UINT_LEAST64);
 
-    final public static int H5T_NATIVE_UINT_LEAST8 = H5.J2C(JH5T_NATIVE_UINT_LEAST8);
+    final public static int H5T_NATIVE_UINT_LEAST8 = javaToC(JH5T_NATIVE_UINT_LEAST8);
 
-    final public static int H5T_NATIVE_UINT16 = H5.J2C(JH5T_NATIVE_UINT16);
+    final public static int H5T_NATIVE_UINT16 = javaToC(JH5T_NATIVE_UINT16);
 
-    final public static int H5T_NATIVE_UINT32 = H5.J2C(JH5T_NATIVE_UINT32);
+    final public static int H5T_NATIVE_UINT32 = javaToC(JH5T_NATIVE_UINT32);
 
-    final public static int H5T_NATIVE_UINT64 = H5.J2C(JH5T_NATIVE_UINT64);
+    final public static int H5T_NATIVE_UINT64 = javaToC(JH5T_NATIVE_UINT64);
 
-    final public static int H5T_NATIVE_UINT8 = H5.J2C(JH5T_NATIVE_UINT8);
+    final public static int H5T_NATIVE_UINT8 = javaToC(JH5T_NATIVE_UINT8);
 
-    final public static int H5T_NATIVE_ULLONG = H5.J2C(JH5T_NATIVE_ULLONG);
+    final public static int H5T_NATIVE_ULLONG = javaToC(JH5T_NATIVE_ULLONG);
 
-    final public static int H5T_NATIVE_ULONG = H5.J2C(JH5T_NATIVE_ULONG);
+    final public static int H5T_NATIVE_ULONG = javaToC(JH5T_NATIVE_ULONG);
 
-    final public static int H5T_NATIVE_USHORT = H5.J2C(JH5T_NATIVE_USHORT);
+    final public static int H5T_NATIVE_USHORT = javaToC(JH5T_NATIVE_USHORT);
 
-    final public static int H5T_NCLASSES = H5.J2C(JH5T_NCLASSES);
+    final public static int H5T_NCLASSES = javaToC(JH5T_NCLASSES);
 
-    final public static int H5T_NO_CLASS = H5.J2C(JH5T_NO_CLASS);
+    final public static int H5T_NO_CLASS = javaToC(JH5T_NO_CLASS);
 
-    final public static int H5T_NORM_ERROR = H5.J2C(JH5T_NORM_ERROR);
+    final public static int H5T_NORM_ERROR = javaToC(JH5T_NORM_ERROR);
 
-    final public static int H5T_NORM_IMPLIED = H5.J2C(JH5T_NORM_IMPLIED);
+    final public static int H5T_NORM_IMPLIED = javaToC(JH5T_NORM_IMPLIED);
 
-    final public static int H5T_NORM_MSBSET = H5.J2C(JH5T_NORM_MSBSET);
+    final public static int H5T_NORM_MSBSET = javaToC(JH5T_NORM_MSBSET);
 
-    final public static int H5T_NORM_NONE = H5.J2C(JH5T_NORM_NONE);
+    final public static int H5T_NORM_NONE = javaToC(JH5T_NORM_NONE);
 
-    final public static int H5T_NPAD = H5.J2C(JH5T_NPAD);
+    final public static int H5T_NPAD = javaToC(JH5T_NPAD);
 
-    final public static int H5T_NSGN = H5.J2C(JH5T_NSGN);
+    final public static int H5T_NSGN = javaToC(JH5T_NSGN);
 
-    final public static int H5T_OPAQUE = H5.J2C(JH5T_OPAQUE);
+    final public static int H5T_OPAQUE = javaToC(JH5T_OPAQUE);
 
-    final public static int H5T_OPAQUE_TAG_MAX = H5.J2C(JH5T_OPAQUE_TAG_MAX); /* 1.6.5 */
+    final public static int H5T_OPAQUE_TAG_MAX = javaToC(JH5T_OPAQUE_TAG_MAX); /* 1.6.5 */
 
-    final public static int H5T_ORDER_BE = H5.J2C(JH5T_ORDER_BE);
+    final public static int H5T_ORDER_BE = javaToC(JH5T_ORDER_BE);
 
-    final public static int H5T_ORDER_ERROR = H5.J2C(JH5T_ORDER_ERROR);
+    final public static int H5T_ORDER_ERROR = javaToC(JH5T_ORDER_ERROR);
 
-    final public static int H5T_ORDER_LE = H5.J2C(JH5T_ORDER_LE);
+    final public static int H5T_ORDER_LE = javaToC(JH5T_ORDER_LE);
 
-    final public static int H5T_ORDER_NONE = H5.J2C(JH5T_ORDER_NONE);
+    final public static int H5T_ORDER_NONE = javaToC(JH5T_ORDER_NONE);
 
-    final public static int H5T_ORDER_VAX = H5.J2C(JH5T_ORDER_VAX);
+    final public static int H5T_ORDER_VAX = javaToC(JH5T_ORDER_VAX);
 
-    final public static int H5T_PAD_BACKGROUND = H5.J2C(JH5T_PAD_BACKGROUND);
+    final public static int H5T_PAD_BACKGROUND = javaToC(JH5T_PAD_BACKGROUND);
 
-    final public static int H5T_PAD_ERROR = H5.J2C(JH5T_PAD_ERROR);
+    final public static int H5T_PAD_ERROR = javaToC(JH5T_PAD_ERROR);
 
-    final public static int H5T_PAD_ONE = H5.J2C(JH5T_PAD_ONE);
+    final public static int H5T_PAD_ONE = javaToC(JH5T_PAD_ONE);
 
-    final public static int H5T_PAD_ZERO = H5.J2C(JH5T_PAD_ZERO);
+    final public static int H5T_PAD_ZERO = javaToC(JH5T_PAD_ZERO);
 
-    final public static int H5T_PERS_DONTCARE = H5.J2C(JH5T_PERS_DONTCARE);
+    final public static int H5T_PERS_DONTCARE = javaToC(JH5T_PERS_DONTCARE);
 
-    final public static int H5T_PERS_HARD = H5.J2C(JH5T_PERS_HARD);
+    final public static int H5T_PERS_HARD = javaToC(JH5T_PERS_HARD);
 
-    final public static int H5T_PERS_SOFT = H5.J2C(JH5T_PERS_SOFT);
+    final public static int H5T_PERS_SOFT = javaToC(JH5T_PERS_SOFT);
 
-    final public static int H5T_REFERENCE = H5.J2C(JH5T_REFERENCE);
+    final public static int H5T_REFERENCE = javaToC(JH5T_REFERENCE);
 
-    final public static int H5T_SGN_2 = H5.J2C(JH5T_SGN_2);
+    final public static int H5T_SGN_2 = javaToC(JH5T_SGN_2);
 
-    final public static int H5T_SGN_ERROR = H5.J2C(JH5T_SGN_ERROR);
+    final public static int H5T_SGN_ERROR = javaToC(JH5T_SGN_ERROR);
 
-    final public static int H5T_SGN_NONE = H5.J2C(JH5T_SGN_NONE);
+    final public static int H5T_SGN_NONE = javaToC(JH5T_SGN_NONE);
 
-    final public static int H5T_STD_B16BE = H5.J2C(JH5T_STD_B16BE);
+    final public static int H5T_STD_B16BE = javaToC(JH5T_STD_B16BE);
 
-    final public static int H5T_STD_B16LE = H5.J2C(JH5T_STD_B16LE);
+    final public static int H5T_STD_B16LE = javaToC(JH5T_STD_B16LE);
 
-    final public static int H5T_STD_B32BE = H5.J2C(JH5T_STD_B32BE);
+    final public static int H5T_STD_B32BE = javaToC(JH5T_STD_B32BE);
 
-    final public static int H5T_STD_B32LE = H5.J2C(JH5T_STD_B32LE);
+    final public static int H5T_STD_B32LE = javaToC(JH5T_STD_B32LE);
 
-    final public static int H5T_STD_B64BE = H5.J2C(JH5T_STD_B64BE);
+    final public static int H5T_STD_B64BE = javaToC(JH5T_STD_B64BE);
 
-    final public static int H5T_STD_B64LE = H5.J2C(JH5T_STD_B64LE);
+    final public static int H5T_STD_B64LE = javaToC(JH5T_STD_B64LE);
 
-    final public static int H5T_STD_B8BE = H5.J2C(JH5T_STD_B8BE);
+    final public static int H5T_STD_B8BE = javaToC(JH5T_STD_B8BE);
 
-    final public static int H5T_STD_B8LE = H5.J2C(JH5T_STD_B8LE);
+    final public static int H5T_STD_B8LE = javaToC(JH5T_STD_B8LE);
 
-    final public static int H5T_STD_I16BE = H5.J2C(JH5T_STD_I16BE);
+    final public static int H5T_STD_I16BE = javaToC(JH5T_STD_I16BE);
 
-    final public static int H5T_STD_I16LE = H5.J2C(JH5T_STD_I16LE);
+    final public static int H5T_STD_I16LE = javaToC(JH5T_STD_I16LE);
 
-    final public static int H5T_STD_I32BE = H5.J2C(JH5T_STD_I32BE);
+    final public static int H5T_STD_I32BE = javaToC(JH5T_STD_I32BE);
 
-    final public static int H5T_STD_I32LE = H5.J2C(JH5T_STD_I32LE);
+    final public static int H5T_STD_I32LE = javaToC(JH5T_STD_I32LE);
 
-    final public static int H5T_STD_I64BE = H5.J2C(JH5T_STD_I64BE);
+    final public static int H5T_STD_I64BE = javaToC(JH5T_STD_I64BE);
 
-    final public static int H5T_STD_I64LE = H5.J2C(JH5T_STD_I64LE);
+    final public static int H5T_STD_I64LE = javaToC(JH5T_STD_I64LE);
 
-    final public static int H5T_STD_I8BE = H5.J2C(JH5T_STD_I8BE);
+    final public static int H5T_STD_I8BE = javaToC(JH5T_STD_I8BE);
 
-    final public static int H5T_STD_I8LE = H5.J2C(JH5T_STD_I8LE);
+    final public static int H5T_STD_I8LE = javaToC(JH5T_STD_I8LE);
 
-    final public static int H5T_STD_REF_DSETREG = H5.J2C(JH5T_STD_REF_DSETREG);
+    final public static int H5T_STD_REF_DSETREG = javaToC(JH5T_STD_REF_DSETREG);
 
-    final public static int H5T_STD_REF_OBJ = H5.J2C(JH5T_STD_REF_OBJ);
+    final public static int H5T_STD_REF_OBJ = javaToC(JH5T_STD_REF_OBJ);
 
-    final public static int H5T_STD_U16BE = H5.J2C(JH5T_STD_U16BE);
+    final public static int H5T_STD_U16BE = javaToC(JH5T_STD_U16BE);
 
-    final public static int H5T_STD_U16LE = H5.J2C(JH5T_STD_U16LE);
+    final public static int H5T_STD_U16LE = javaToC(JH5T_STD_U16LE);
 
-    final public static int H5T_STD_U32BE = H5.J2C(JH5T_STD_U32BE);
+    final public static int H5T_STD_U32BE = javaToC(JH5T_STD_U32BE);
 
-    final public static int H5T_STD_U32LE = H5.J2C(JH5T_STD_U32LE);
+    final public static int H5T_STD_U32LE = javaToC(JH5T_STD_U32LE);
 
-    final public static int H5T_STD_U64BE = H5.J2C(JH5T_STD_U64BE);
+    final public static int H5T_STD_U64BE = javaToC(JH5T_STD_U64BE);
 
-    final public static int H5T_STD_U64LE = H5.J2C(JH5T_STD_U64LE);
+    final public static int H5T_STD_U64LE = javaToC(JH5T_STD_U64LE);
 
-    final public static int H5T_STD_U8BE = H5.J2C(JH5T_STD_U8BE);
+    final public static int H5T_STD_U8BE = javaToC(JH5T_STD_U8BE);
 
-    final public static int H5T_STD_U8LE = H5.J2C(JH5T_STD_U8LE);
+    final public static int H5T_STD_U8LE = javaToC(JH5T_STD_U8LE);
 
-    final public static int H5T_STR_ERROR = H5.J2C(JH5T_STR_ERROR);
+    final public static int H5T_STR_ERROR = javaToC(JH5T_STR_ERROR);
 
-    final public static int H5T_STR_NULLPAD = H5.J2C(JH5T_STR_NULLPAD);
+    final public static int H5T_STR_NULLPAD = javaToC(JH5T_STR_NULLPAD);
 
-    final public static int H5T_STR_NULLTERM = H5.J2C(JH5T_STR_NULLTERM);
+    final public static int H5T_STR_NULLTERM = javaToC(JH5T_STR_NULLTERM);
 
-    final public static int H5T_STR_RESERVED_10 = H5.J2C(JH5T_STR_RESERVED_10);
+    final public static int H5T_STR_RESERVED_10 = javaToC(JH5T_STR_RESERVED_10);
 
-    final public static int H5T_STR_RESERVED_11 = H5.J2C(JH5T_STR_RESERVED_11);
+    final public static int H5T_STR_RESERVED_11 = javaToC(JH5T_STR_RESERVED_11);
 
-    final public static int H5T_STR_RESERVED_12 = H5.J2C(JH5T_STR_RESERVED_12);
+    final public static int H5T_STR_RESERVED_12 = javaToC(JH5T_STR_RESERVED_12);
 
-    final public static int H5T_STR_RESERVED_13 = H5.J2C(JH5T_STR_RESERVED_13);
+    final public static int H5T_STR_RESERVED_13 = javaToC(JH5T_STR_RESERVED_13);
 
-    final public static int H5T_STR_RESERVED_14 = H5.J2C(JH5T_STR_RESERVED_14);
+    final public static int H5T_STR_RESERVED_14 = javaToC(JH5T_STR_RESERVED_14);
 
-    final public static int H5T_STR_RESERVED_15 = H5.J2C(JH5T_STR_RESERVED_15);
+    final public static int H5T_STR_RESERVED_15 = javaToC(JH5T_STR_RESERVED_15);
 
-    final public static int H5T_STR_RESERVED_3 = H5.J2C(JH5T_STR_RESERVED_3);
+    final public static int H5T_STR_RESERVED_3 = javaToC(JH5T_STR_RESERVED_3);
 
-    final public static int H5T_STR_RESERVED_4 = H5.J2C(JH5T_STR_RESERVED_4);
+    final public static int H5T_STR_RESERVED_4 = javaToC(JH5T_STR_RESERVED_4);
 
-    final public static int H5T_STR_RESERVED_5 = H5.J2C(JH5T_STR_RESERVED_5);
+    final public static int H5T_STR_RESERVED_5 = javaToC(JH5T_STR_RESERVED_5);
 
-    final public static int H5T_STR_RESERVED_6 = H5.J2C(JH5T_STR_RESERVED_6);
+    final public static int H5T_STR_RESERVED_6 = javaToC(JH5T_STR_RESERVED_6);
 
-    final public static int H5T_STR_RESERVED_7 = H5.J2C(JH5T_STR_RESERVED_7);
+    final public static int H5T_STR_RESERVED_7 = javaToC(JH5T_STR_RESERVED_7);
 
-    final public static int H5T_STR_RESERVED_8 = H5.J2C(JH5T_STR_RESERVED_8);
+    final public static int H5T_STR_RESERVED_8 = javaToC(JH5T_STR_RESERVED_8);
 
-    final public static int H5T_STR_RESERVED_9 = H5.J2C(JH5T_STR_RESERVED_9);
+    final public static int H5T_STR_RESERVED_9 = javaToC(JH5T_STR_RESERVED_9);
 
-    final public static int H5T_STR_SPACEPAD = H5.J2C(JH5T_STR_SPACEPAD);
+    final public static int H5T_STR_SPACEPAD = javaToC(JH5T_STR_SPACEPAD);
 
-    final public static int H5T_STRING = H5.J2C(JH5T_STRING);
+    final public static int H5T_STRING = javaToC(JH5T_STRING);
 
-    final public static int H5T_TIME = H5.J2C(JH5T_TIME);
+    final public static int H5T_TIME = javaToC(JH5T_TIME);
 
-    final public static int H5T_UNIX_D32BE = H5.J2C(JH5T_UNIX_D32BE);
+    final public static int H5T_UNIX_D32BE = javaToC(JH5T_UNIX_D32BE);
 
-    final public static int H5T_UNIX_D32LE = H5.J2C(JH5T_UNIX_D32LE);
+    final public static int H5T_UNIX_D32LE = javaToC(JH5T_UNIX_D32LE);
 
-    final public static int H5T_UNIX_D64BE = H5.J2C(JH5T_UNIX_D64BE);
+    final public static int H5T_UNIX_D64BE = javaToC(JH5T_UNIX_D64BE);
 
-    final public static int H5T_UNIX_D64LE = H5.J2C(JH5T_UNIX_D64LE);
+    final public static int H5T_UNIX_D64LE = javaToC(JH5T_UNIX_D64LE);
 
-    final public static int H5T_VARIABLE = H5.J2C(JH5T_VARIABLE); // Rosetta Biosoftware
+    final public static int H5T_VARIABLE = javaToC(JH5T_VARIABLE); // Rosetta Biosoftware
 
-    final public static int H5T_VLEN = H5.J2C(JH5T_VLEN);
+    final public static int H5T_VLEN = javaToC(JH5T_VLEN);
 
-    final public static int H5Z_CB_CONT = H5.J2C(JH5Z_CB_CONT);
+    final public static int H5Z_CB_CONT = javaToC(JH5Z_CB_CONT);
 
-    final public static int H5Z_CB_ERROR = H5.J2C(JH5Z_CB_ERROR);
+    final public static int H5Z_CB_ERROR = javaToC(JH5Z_CB_ERROR);
 
-    final public static int H5Z_CB_FAIL = H5.J2C(JH5Z_CB_FAIL);
+    final public static int H5Z_CB_FAIL = javaToC(JH5Z_CB_FAIL);
 
-    final public static int H5Z_CB_NO = H5.J2C(JH5Z_CB_NO);
+    final public static int H5Z_CB_NO = javaToC(JH5Z_CB_NO);
 
-    final public static int H5Z_DISABLE_EDC = H5.J2C(JH5Z_DISABLE_EDC);
+    final public static int H5Z_DISABLE_EDC = javaToC(JH5Z_DISABLE_EDC);
 
-    final public static int H5Z_ENABLE_EDC = H5.J2C(JH5Z_ENABLE_EDC);
+    final public static int H5Z_ENABLE_EDC = javaToC(JH5Z_ENABLE_EDC);
 
-    final public static int H5Z_ERROR_EDC = H5.J2C(JH5Z_ERROR_EDC);
+    final public static int H5Z_ERROR_EDC = javaToC(JH5Z_ERROR_EDC);
 
-    final public static int H5Z_FILTER_DEFLATE = H5.J2C(JH5Z_FILTER_DEFLATE);
+    final public static int H5Z_FILTER_DEFLATE = javaToC(JH5Z_FILTER_DEFLATE);
 
-    final public static int H5Z_FILTER_ERROR = H5.J2C(JH5Z_FILTER_ERROR);
+    final public static int H5Z_FILTER_ERROR = javaToC(JH5Z_FILTER_ERROR);
 
-    final public static int H5Z_FILTER_FLETCHER32 = H5.J2C(JH5Z_FILTER_FLETCHER32);
+    final public static int H5Z_FILTER_FLETCHER32 = javaToC(JH5Z_FILTER_FLETCHER32);
 
-    final public static int H5Z_FILTER_MAX = H5.J2C(JH5Z_FILTER_MAX);
+    final public static int H5Z_FILTER_MAX = javaToC(JH5Z_FILTER_MAX);
 
-    final public static int H5Z_FILTER_NONE = H5.J2C(JH5Z_FILTER_NONE);
+    final public static int H5Z_FILTER_NONE = javaToC(JH5Z_FILTER_NONE);
 
-    final public static int H5Z_FILTER_RESERVED = H5.J2C(JH5Z_FILTER_RESERVED);
+    final public static int H5Z_FILTER_RESERVED = javaToC(JH5Z_FILTER_RESERVED);
 
-    final public static int H5Z_FILTER_SHUFFLE = H5.J2C(JH5Z_FILTER_SHUFFLE);
+    final public static int H5Z_FILTER_SHUFFLE = javaToC(JH5Z_FILTER_SHUFFLE);
 
-    final public static int H5Z_FILTER_SZIP = H5.J2C(JH5Z_FILTER_SZIP);
+    final public static int H5Z_FILTER_SZIP = javaToC(JH5Z_FILTER_SZIP);
 
-    final public static int H5Z_FLAG_DEFMASK = H5.J2C(JH5Z_FLAG_DEFMASK);
+    final public static int H5Z_FLAG_DEFMASK = javaToC(JH5Z_FLAG_DEFMASK);
 
-    final public static int H5Z_FLAG_INVMASK = H5.J2C(JH5Z_FLAG_INVMASK);
+    final public static int H5Z_FLAG_INVMASK = javaToC(JH5Z_FLAG_INVMASK);
 
-    final public static int H5Z_FLAG_MANDATORY = H5.J2C(JH5Z_FLAG_MANDATORY);
+    final public static int H5Z_FLAG_MANDATORY = javaToC(JH5Z_FLAG_MANDATORY);
 
-    final public static int H5Z_FLAG_OPTIONAL = H5.J2C(JH5Z_FLAG_OPTIONAL);
+    final public static int H5Z_FLAG_OPTIONAL = javaToC(JH5Z_FLAG_OPTIONAL);
 
-    final public static int H5Z_FLAG_REVERSE = H5.J2C(JH5Z_FLAG_REVERSE);
+    final public static int H5Z_FLAG_REVERSE = javaToC(JH5Z_FLAG_REVERSE);
 
-    final public static int H5Z_FLAG_SKIP_EDC = H5.J2C(JH5Z_FLAG_SKIP_EDC);
+    final public static int H5Z_FLAG_SKIP_EDC = javaToC(JH5Z_FLAG_SKIP_EDC);
 
-    final public static int H5Z_MAX_NFILTERS = H5.J2C(JH5Z_MAX_NFILTERS);
+    final public static int H5Z_MAX_NFILTERS = javaToC(JH5Z_MAX_NFILTERS);
 
-    final public static int H5Z_NO_EDC = H5.J2C(JH5Z_NO_EDC);
+    final public static int H5Z_NO_EDC = javaToC(JH5Z_NO_EDC);
 
-    final public static int H5Z_SO_INT = H5.J2C(JH5Z_SO_INT);
+    final public static int H5Z_SO_INT = javaToC(JH5Z_SO_INT);
     
-    final public static int H5Z_SO_FLOAT_DSCALE = H5.J2C(JH5Z_SO_FLOAT_DSCALE);
+    final public static int H5Z_SO_FLOAT_DSCALE = javaToC(JH5Z_SO_FLOAT_DSCALE);
     
-    final public static int H5Z_SO_FLOAT_ESCALE = H5.J2C(JH5Z_SO_FLOAT_ESCALE);
+    final public static int H5Z_SO_FLOAT_ESCALE = javaToC(JH5Z_SO_FLOAT_ESCALE);
     
     final public static int H5Z_FILTER_CONFIG_ENCODE_ENABLED =
-            H5.J2C(JH5Z_FILTER_CONFIG_ENCODE_ENABLED);
+            javaToC(JH5Z_FILTER_CONFIG_ENCODE_ENABLED);
 
     final public static int H5Z_FILTER_CONFIG_DECODE_ENABLED =
-            H5.J2C(JH5Z_FILTER_CONFIG_DECODE_ENABLED);
+            javaToC(JH5Z_FILTER_CONFIG_DECODE_ENABLED);
 
+    private static int javaToC(int javaConstant)
+    {
+        synchronized(ncsa.hdf.hdf5lib.H5.class)
+        {
+            return H5.J2C(javaConstant);
+        }
+    }
 }

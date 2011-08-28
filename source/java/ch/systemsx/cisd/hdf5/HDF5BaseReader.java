@@ -111,7 +111,7 @@ class HDF5BaseReader
         this.encoding = useUTF8CharEncoding ? CharacterEncoding.UTF8 : CharacterEncoding.ASCII;
         this.hdf5File = hdf5File.getAbsoluteFile();
         this.runner = new CleanUpCallable();
-        this.fileRegistry = new CleanUpRegistry();
+        this.fileRegistry = CleanUpRegistry.createSynchonized();
         this.namedDataTypeMap = new HashMap<String, Integer>();
         this.namedDataTypeList = new ArrayList<DataTypeContainer>();
         h5 = new HDF5(fileRegistry, performNumericConversions, useUTF8CharEncoding);
@@ -175,13 +175,16 @@ class HDF5BaseReader
      * Closes this object and the file referenced by this object. This object must not be used after
      * being closed.
      */
-    synchronized void close()
+    void close()
     {
-        if (state == State.OPEN)
+        synchronized (fileRegistry)
         {
-            fileRegistry.cleanUp(false);
+            if (state == State.OPEN)
+            {
+                fileRegistry.cleanUp(false);
+            }
+            state = State.CLOSED;
         }
-        state = State.CLOSED;
     }
 
     int openOrCreateBooleanDataType()
