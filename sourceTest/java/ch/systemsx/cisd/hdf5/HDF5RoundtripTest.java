@@ -32,6 +32,7 @@ import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -48,6 +49,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -7131,6 +7133,26 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
+    @Test
+    public void testHDF5FileDetection() throws IOException
+    {
+        final File hdf5File = new File(workingDirectory, "testHDF5FileDetection.h5");
+        hdf5File.delete();
+        assertFalse(hdf5File.exists());
+        hdf5File.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(hdf5File);
+        writer.writeString("a", "someString");
+        writer.close();
+        assertTrue(HDF5Factory.isHDF5File(hdf5File));
+        
+        final File noHdf5File = new File(workingDirectory, "testHDF5FileDetection.h5");
+        noHdf5File.delete();
+        assertFalse(noHdf5File.exists());
+        noHdf5File.deleteOnExit();
+        FileUtils.writeByteArrayToFile(noHdf5File, new byte[] { 1, 2, 3, 4 });
+        assertFalse(HDF5Factory.isHDF5File(noHdf5File));
+    }
+    
     @Test
     public void testHDFJavaLowLevel()
     {

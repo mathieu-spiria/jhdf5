@@ -19,9 +19,10 @@ package ch.systemsx.cisd.hdf5;
 import java.io.File;
 
 /**
- * A factory for creating writers and readers of HDF5 files. For straight-forward creation, see
- * methods {@link #open(File)} and {@link #openForReading(File)}. If you need full control over the
- * creation process, see the methods {@link #configure(File)} and {@link #configureForReading(File)}.
+ * A static wrapper for the {@link IHDF5Factory} for creating writers and readers of HDF5 files. For
+ * straight-forward creation, see methods {@link #open(File)} and {@link #openForReading(File)}. If
+ * you need full control over the creation process, see the methods {@link #configure(File)} and
+ * {@link #configureForReading(File)}.
  * 
  * @author Bernd Rinn
  */
@@ -38,8 +39,8 @@ public final class HDF5Factory
     }
 
     /**
-     * Opens an HDF5 file named <var>filePath</var> for writing and reading. If the file does not yet exist, it
-     * will be created.
+     * Opens an HDF5 file named <var>filePath</var> for writing and reading. If the file does not
+     * yet exist, it will be created.
      */
     public static IHDF5Writer open(String filePath)
     {
@@ -55,7 +56,8 @@ public final class HDF5Factory
     }
 
     /**
-     * Opens an HDF5 file named <var>filePath</var> for reading. It is an error if the file does not exist.
+     * Opens an HDF5 file named <var>filePath</var> for reading. It is an error if the file does not
+     * exist.
      */
     public static IHDF5Reader openForReading(String filePath)
     {
@@ -73,9 +75,9 @@ public final class HDF5Factory
     }
 
     /**
-     * Opens a configurator for an HDF5 file named <var>filePath</var> for writing and reading. Configure the
-     * writer as you need and then call {@link IHDF5WriterConfigurator#writer()} in order to start
-     * reading and writing the file.
+     * Opens a configurator for an HDF5 file named <var>filePath</var> for writing and reading.
+     * Configure the writer as you need and then call {@link IHDF5WriterConfigurator#writer()} in
+     * order to start reading and writing the file.
      */
     public static IHDF5WriterConfigurator configure(String filePath)
     {
@@ -100,6 +102,24 @@ public final class HDF5Factory
     public static IHDF5ReaderConfigurator configureForReading(String filePath)
     {
         return HDF5FactoryProvider.get().configureForReading(new File(filePath));
+    }
+
+    /**
+     * Returns <code>true</code>, if the <var>file</var> is an HDF5 file and <code>false</code>
+     * otherwise.
+     */
+    public static boolean isHDF5File(File file)
+    {
+        return HDF5FactoryProvider.get().isHDF5File(file);
+    }
+
+    /**
+     * Returns <code>true</code>, if the file named <var>filePath</var> is an HDF5 file and
+     * <code>false</code> otherwise.
+     */
+    public static boolean isHDF5File(String filePath)
+    {
+        return HDF5FactoryProvider.get().isHDF5File(new File(filePath));
     }
 
 }

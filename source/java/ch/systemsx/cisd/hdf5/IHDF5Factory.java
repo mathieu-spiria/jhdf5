@@ -21,7 +21,8 @@ import java.io.File;
 /**
  * A factory for creating writers and readers of HDF5 files. For straight-forward creation, see
  * methods {@link #open(File)} and {@link #openForReading(File)}. If you need full control over the
- * creation process, see the methods {@link #configure(File)} and {@link #configureForReading(File)}.
+ * creation process, see the methods {@link #configure(File)} and {@link #configureForReading(File)}
+ * .
  * 
  * @author Bernd Rinn
  */
@@ -51,5 +52,11 @@ public interface IHDF5Factory
      * file.
      */
     public IHDF5ReaderConfigurator configureForReading(File file);
+
+    /**
+     * Returns <code>true</code>, if the <var>file</var> is an HDF5 file and <code>false</code>
+     * otherwise.
+     */
+    public boolean isHDF5File(File file);
 
 }

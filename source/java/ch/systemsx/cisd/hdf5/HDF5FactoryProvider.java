@@ -18,6 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 import java.io.File;
 
+import ch.systemsx.cisd.hdf5.hdf5lib.H5F;
+
 /**
  * Provides access to a factory for HDF5 readers and writers.
  * 
@@ -46,6 +48,11 @@ public final class HDF5FactoryProvider
         public IHDF5Reader openForReading(File file)
         {
             return new HDF5ReaderConfigurator(file).reader();
+        }
+
+        public boolean isHDF5File(File file)
+        {
+            return H5F.H5Fis_hdf5(file.getPath());
         }
 
     }
