@@ -21,11 +21,17 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 /**
  * Low-level interface for HDF5 dataset functions.
+ * <p>
+ * <b>This is an internal API that should not be expected to be stable between releases!</b>
  * 
  * @author Bernd Rinn
  */
 public class H5D
 {
+    static
+    {
+        H5.ensureNativeLibIsLoaded();
+    }
 
     /**
      * H5Dcreate creates a data set with a name, name, in the file or in the group specified by the

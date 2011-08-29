@@ -28,6 +28,8 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  * <p>
  * For details of the HDF5 libraries, see the HDF5 Documentation at: <a
  * href="http://hdf.ncsa.uiuc.edu/HDF5/doc/">http://hdf.ncsa.uiuc.edu/HDF5/doc/</a>
+ * <p>
+ * <b>This is an internal API that should not be expected to be stable between releases!</b>
  */
 
 public class HDF5GroupInfo

@@ -16,6 +16,8 @@ import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 
 /**
  * This class provides a convenience interface to {@link NativeData}.
+ * <p>
+ * <b>This is an internal API that should not be expected to be stable between releases!</b>
  */
 
 public class HDFNativeData

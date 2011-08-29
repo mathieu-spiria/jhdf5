@@ -20,11 +20,17 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 /**
  * Low-level interface for HDF5 group, link and object functions.
+ * <p>
+ * <b>This is an internal API that should not be expected to be stable between releases!</b>
  * 
  * @author Bernd Rinn
  */
 public class H5GLO
 {
+    static
+    {
+        H5.ensureNativeLibIsLoaded();
+    }
 
     // ////////////////////////////////////////////////////////////
     // //

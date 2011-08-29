@@ -20,15 +20,16 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 /**
  * Low-level interface for HDF5 general functions.
+ * <p>
+ * <b>This is an internal API that should not be expected to be stable between releases!</b>
  * 
  * @author Bernd Rinn
  */
 public class H5General
 {
-
     static
     {
-        ensureNativeLibIsLoaded();
+        H5.ensureNativeLibIsLoaded();
     }
 
     /** Call to ensure that the native library is loaded. */

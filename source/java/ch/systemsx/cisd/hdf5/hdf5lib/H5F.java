@@ -20,11 +20,17 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 /**
  * Low-level interface for HDF5 file functions.
+ * <p>
+ * <b>This is an internal API that should not be expected to be stable between releases!</b>
  * 
  * @author Bernd Rinn
  */
 public class H5F
 {
+    static
+    {
+        H5.ensureNativeLibIsLoaded();
+    }
 
     /**
      * H5Fopen opens an existing file and is the primary function for accessing existing HDF5 files.

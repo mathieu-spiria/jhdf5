@@ -21,11 +21,17 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 /**
  * Low-level interface for HDF5 dataspace functions.
+ * <p>
+ * <b>This is an internal API that should not be expected to be stable between releases!</b>
  *
  * @author Bernd Rinn
  */
 public class H5S
 {
+    static
+    {
+        H5.ensureNativeLibIsLoaded();
+    }
 
     /**
      * H5Screate creates a new dataspace of a particular type.

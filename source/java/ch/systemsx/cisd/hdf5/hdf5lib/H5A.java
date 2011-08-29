@@ -20,11 +20,17 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 /**
  * Low-level interface for HDF5 attribute functions.
+ * <p>
+ * <b>This is an internal API that should not be expected to be stable between releases!</b>
  *
  * @author Bernd Rinn
  */
 public class H5A
 {
+    static
+    {
+        H5.ensureNativeLibIsLoaded();
+    }
 
     /**
      * H5Lexists returns <code>true</code> if an attribute with <var>name</var> exists for the
