@@ -238,8 +238,8 @@ public final class HDF5DataTypeInformation
             return overrideDataTypeOrNull;
         } else
         {
-            return dataClass.getJavaTypeProvider()
-                    .tryGetJavaType(rank, elementSize, typeVariantOrNull);
+            return dataClass.getJavaTypeProvider().tryGetJavaType(rank, elementSize,
+                    typeVariantOrNull);
         }
     }
 
@@ -276,18 +276,30 @@ public final class HDF5DataTypeInformation
         final String name;
         if (nameOrNull != null)
         {
-            name = "{" + nameOrNull + "}";
+            name = "<" + nameOrNull + ">";
         } else
         {
             name = "";
         }
         if (numberOfElements == 1)
         {
-            return name + dataClass + "(" + elementSize + ")";
+            if (typeVariantOrNull != null)
+            {
+                return name + dataClass + "(" + elementSize + ")/" + typeVariantOrNull.toString();
+            } else
+            {
+                return name + dataClass + "(" + elementSize + ")";
+            }
         } else if (dimensions.length == 1)
         {
-
-            return name + dataClass + "(" + elementSize + ", #" + numberOfElements + ")";
+            if (typeVariantOrNull != null)
+            {
+                return name + dataClass + "(" + elementSize + ", #" + numberOfElements + ")/"
+                        + typeVariantOrNull.toString();
+            } else
+            {
+                return name + dataClass + "(" + elementSize + ", #" + numberOfElements + ")";
+            }
         } else
         {
             final StringBuilder builder = new StringBuilder();
