@@ -50,11 +50,10 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
 
     public HDF5ReaderConfigurator performNumericConversions()
     {
-        if (platformSupportsNumericConversions() == false)
+        if (platformSupportsNumericConversions())
         {
-            return this;
+            this.performNumericConversions = true;
         }
-        this.performNumericConversions = true;
         return this;
     }
 
