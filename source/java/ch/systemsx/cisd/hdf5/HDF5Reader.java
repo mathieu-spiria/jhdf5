@@ -673,12 +673,14 @@ class HDF5Reader implements IHDF5Reader
         return dateTimeReader.tryGetTimeUnit(objectPath);
     }
 
+    @Deprecated
     public Iterable<HDF5DataBlock<long[]>> getTimeDurationArrayNaturalBlocks(String dataSetPath,
             HDF5TimeUnit timeUnit) throws HDF5JavaException
     {
         return dateTimeReader.getTimeDurationArrayNaturalBlocks(dataSetPath, timeUnit);
     }
 
+    @Deprecated
     public Iterable<HDF5DataBlock<HDF5TimeDuration[]>> getTimeDurationAndUnitArrayNaturalBlocks(
             String objectPath) throws HDF5JavaException
     {
@@ -701,38 +703,43 @@ class HDF5Reader implements IHDF5Reader
         return dateTimeReader.readDateArray(objectPath);
     }
 
+    @Deprecated
     public long readTimeDuration(String objectPath, HDF5TimeUnit timeUnit) throws HDF5JavaException
     {
         return dateTimeReader.readTimeDuration(objectPath, timeUnit);
     }
 
-    public long readTimeDuration(String objectPath) throws HDF5JavaException
+    public HDF5TimeDuration readTimeDuration(String objectPath) throws HDF5JavaException
     {
         return dateTimeReader.readTimeDuration(objectPath);
     }
 
+    @Deprecated
     public HDF5TimeDuration readTimeDurationAndUnit(String objectPath) throws HDF5JavaException
     {
         return dateTimeReader.readTimeDurationAndUnit(objectPath);
     }
 
+    @Deprecated
     public long[] readTimeDurationArray(String objectPath, HDF5TimeUnit timeUnit)
             throws HDF5JavaException
     {
         return dateTimeReader.readTimeDurationArray(objectPath, timeUnit);
     }
 
-    public long[] readTimeDurationArray(String objectPath) throws HDF5JavaException
+    public HDF5TimeDurationArray readTimeDurationArray(String objectPath) throws HDF5JavaException
     {
         return dateTimeReader.readTimeDurationArray(objectPath);
     }
 
+    @Deprecated
     public HDF5TimeDuration[] readTimeDurationAndUnitArray(String objectPath)
             throws HDF5JavaException
     {
         return dateTimeReader.readTimeDurationAndUnitArray(objectPath);
     }
 
+    @Deprecated
     public long[] readTimeDurationArrayBlock(String objectPath, int blockSize, long blockNumber,
             HDF5TimeUnit timeUnit)
     {
@@ -740,6 +747,7 @@ class HDF5Reader implements IHDF5Reader
                 timeUnit);
     }
 
+    @Deprecated
     public long[] readTimeDurationArrayBlockWithOffset(String objectPath, int blockSize,
             long offset, HDF5TimeUnit timeUnit)
     {
@@ -747,12 +755,14 @@ class HDF5Reader implements IHDF5Reader
                 timeUnit);
     }
 
+    @Deprecated
     public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlock(String objectPath, int blockSize,
             long blockNumber) throws HDF5JavaException
     {
         return dateTimeReader.readTimeDurationAndUnitArrayBlock(objectPath, blockSize, blockNumber);
     }
 
+    @Deprecated
     public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlockWithOffset(String objectPath,
             int blockSize, long offset) throws HDF5JavaException
     {
@@ -797,6 +807,24 @@ class HDF5Reader implements IHDF5Reader
     public MDArray<String> readObjectReferenceMDArray(String objectPath)
     {
         return referenceReader.readObjectReferenceMDArray(objectPath);
+    }
+
+    public HDF5TimeDurationArray readTimeDurationArrayBlock(String objectPath, int blockSize,
+            long blockNumber) throws HDF5JavaException
+    {
+        return dateTimeReader.readTimeDurationArrayBlock(objectPath, blockSize, blockNumber);
+    }
+
+    public HDF5TimeDurationArray readTimeDurationArrayBlockWithOffset(String objectPath,
+            int blockSize, long offset) throws HDF5JavaException
+    {
+        return dateTimeReader.readTimeDurationArrayBlockWithOffset(objectPath, blockSize, offset);
+    }
+
+    public Iterable<HDF5DataBlock<HDF5TimeDurationArray>> getTimeDurationArrayNaturalBlocks(
+            String objectPath) throws HDF5JavaException
+    {
+        return dateTimeReader.getTimeDurationArrayNaturalBlocks(objectPath);
     }
 
     public String getObjectReferenceAttribute(final String objectPath, final String attributeName)

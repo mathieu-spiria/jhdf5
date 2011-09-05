@@ -80,7 +80,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     private final IHDF5CompoundWriter compoundWriter;
 
     private final IHDF5DateTimeWriter dateTimeWriter;
-    
+
     private final IHDF5ReferenceWriter referenceWriter;
 
     private final IHDF5OpaqueWriter opaqueWriter;
@@ -569,45 +569,76 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         dateTimeWriter.writeTimeDuration(objectPath, timeDuration);
     }
 
+    @Deprecated
     public void writeTimeDuration(String objectPath, long timeDuration)
     {
         dateTimeWriter.writeTimeDuration(objectPath, timeDuration);
     }
 
+    @Deprecated
     public void writeTimeDurationArray(String objectPath, long[] timeDurations,
             HDF5TimeUnit timeUnit, HDF5IntStorageFeatures features)
     {
         dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, timeUnit, features);
     }
 
+    public void writeTimeDurationArray(String objectPath, HDF5TimeDurationArray timeDurations)
+    {
+        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations);
+    }
+
+    public void writeTimeDurationArray(String objectPath, HDF5TimeDurationArray timeDurations,
+            HDF5IntStorageFeatures features)
+    {
+        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, features);
+    }
+
+    @Deprecated
     public void writeTimeDurationArray(String objectPath, long[] timeDurations,
             HDF5TimeUnit timeUnit)
     {
         dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, timeUnit);
     }
 
+    @Deprecated
     public void writeTimeDurationArray(String objectPath, long[] timeDurations)
     {
         dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations);
     }
 
+    @Deprecated
     public void writeTimeDurationArray(String objectPath, HDF5TimeDuration[] timeDurations)
     {
         dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations);
     }
 
+    @Deprecated
     public void writeTimeDurationArray(String objectPath, HDF5TimeDuration[] timeDurations,
             HDF5IntStorageFeatures features)
     {
         dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, features);
     }
 
+    public void writeTimeDurationArrayBlock(String objectPath, HDF5TimeDurationArray data,
+            long blockNumber)
+    {
+        dateTimeWriter.writeTimeDurationArrayBlock(objectPath, data, blockNumber);
+    }
+
+    public void writeTimeDurationArrayBlockWithOffset(String objectPath,
+            HDF5TimeDurationArray data, int dataSize, long offset)
+    {
+        dateTimeWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset);
+    }
+
+    @Deprecated
     public void writeTimeDurationArrayBlock(String objectPath, long[] data, long blockNumber,
             HDF5TimeUnit timeUnit)
     {
         dateTimeWriter.writeTimeDurationArrayBlock(objectPath, data, blockNumber, timeUnit);
     }
 
+    @Deprecated
     public void writeTimeDurationArrayBlockWithOffset(String objectPath, long[] data, int dataSize,
             long offset, HDF5TimeUnit timeUnit)
     {
@@ -615,21 +646,23 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 timeUnit);
     }
 
-    //
-    // References
-    //
-    
+    @Deprecated
     public void writeTimeDurationArrayBlock(String objectPath, HDF5TimeDuration[] data,
             long blockNumber)
     {
         dateTimeWriter.writeTimeDurationArrayBlock(objectPath, data, blockNumber);
     }
 
+    @Deprecated
     public void writeTimeDurationArrayBlockWithOffset(String objectPath, HDF5TimeDuration[] data,
             int dataSize, long offset)
     {
         dateTimeWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
+
+    //
+    // References
+    //
 
     public void writeObjectReference(String objectPath, String referencedObjectPath)
     {
@@ -652,8 +685,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         referenceWriter.writeObjectReferenceMDArray(objectPath, referencedObjectPaths);
     }
 
-    public void writeObjectReferenceMDArray(String objectPath, MDArray<String> referencedObjectPaths,
-            HDF5IntStorageFeatures features)
+    public void writeObjectReferenceMDArray(String objectPath,
+            MDArray<String> referencedObjectPaths, HDF5IntStorageFeatures features)
     {
         referenceWriter.writeObjectReferenceMDArray(objectPath, referencedObjectPaths, features);
     }

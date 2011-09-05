@@ -230,25 +230,26 @@ public interface IHDF5SimpleReader
 
     /**
      * Reads a time duration value from the data set <var>objectPath</var>. It needs to have been
-     * written by {@link IHDF5SimpleWriter#writeTimeDuration(String, long)}.
+     * written by {@link IHDF5SimpleWriter#writeTimeDuration(String, HDF5TimeDuration)}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The time duration in seconds.
      * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
      *             corresponds to a time duration.
      */
-    public long readTimeDuration(final String objectPath) throws HDF5JavaException;
+    public HDF5TimeDuration readTimeDuration(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a time duration array from the data set <var>objectPath</var>. It needs to have been
-     * written by {@link IHDF5SimpleWriter#writeTimeDurationArray(String, long[])}.
+     * written by {@link IHDF5SimpleWriter#writeTimeDurationArray(String, HDF5TimeDurationArray)}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The time duration in seconds.
      * @throws HDF5JavaException If the <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      */
-    public long[] readTimeDurationArray(final String objectPath) throws HDF5JavaException;
+    public HDF5TimeDurationArray readTimeDurationArray(final String objectPath)
+            throws HDF5JavaException;
 
     /**
      * Reads a <code>String</code> from the data set <var>objectPath</var>. This needs to be a

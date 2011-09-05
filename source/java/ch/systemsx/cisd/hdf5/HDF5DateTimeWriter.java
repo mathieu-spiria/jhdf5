@@ -471,15 +471,13 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                 HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
-    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
-            final HDF5TimeUnit timeUnit)
+    public void writeTimeDurationArray(String objectPath, HDF5TimeDurationArray timeDurations)
     {
-        writeTimeDurationArray(objectPath, timeDurations, timeUnit,
-                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+        writeTimeDurationArray(objectPath, timeDurations, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
-    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
-            final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features)
+    public void writeTimeDurationArray(final String objectPath,
+            final HDF5TimeDurationArray timeDurations, final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert timeDurations != null;
@@ -492,14 +490,29 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
                     final int longBytes = 8;
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE, new long[]
-                                { timeDurations.length }, longBytes, features, registry);
+                                { timeDurations.timeDurations.length }, longBytes, features,
+                                    registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            timeDurations);
-                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
+                            timeDurations.timeDurations);
+                    baseWriter.setTypeVariant(dataSetId, timeDurations.timeUnit.getTypeVariant(),
+                            registry);
                     return null; // Nothing to return.
                 }
             };
         baseWriter.runner.call(writeRunnable);
+    }
+
+    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
+            final HDF5TimeUnit timeUnit)
+    {
+        writeTimeDurationArray(objectPath, timeDurations, timeUnit,
+                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+    }
+
+    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations,
+            final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features)
+    {
+        writeTimeDurationArray(objectPath, new HDF5TimeDurationArray(timeDurations, timeUnit));
     }
 
     public void writeTimeDurationArray(final String objectPath,
@@ -518,41 +531,49 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
         {
             return;
         }
-        final HDF5TimeDurationArray durations = convertToDurationArray(timeDurations);
-        writeTimeDurationArray(objectPath, durations.timeDurations, durations.timeUnit);
+        final HDF5TimeDurationArray durations = HDF5TimeDurationArray.create(timeDurations);
+        writeTimeDurationArray(objectPath, durations);
     }
 
-    private HDF5TimeDurationArray convertToDurationArray(HDF5TimeDuration[] timeDurations)
+    public void writeTimeDurationArrayBlock(String objectPath, HDF5TimeDurationArray data,
+            long blockNumber)
     {
-        HDF5TimeUnit unit = timeDurations[0].getUnit();
-        boolean needsConversion = false;
-        for (int i = 1; i < timeDurations.length; ++i)
-        {
-            final HDF5TimeUnit u = timeDurations[i].getUnit();
-            if (u != unit)
+        writeTimeDurationArrayBlockWithOffset(objectPath, data, data.getLength(), data.getLength()
+                * blockNumber);
+    }
+
+    public void writeTimeDurationArrayBlockWithOffset(final String objectPath,
+            final HDF5TimeDurationArray data, final int dataSize, final long offset)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
-                if (u.ordinal() < unit.ordinal())
+                public Void call(ICleanUpRegistry registry)
                 {
-                    unit = u;
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId =
+                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                    baseWriter.fileFormat, new long[]
+                                        { offset + dataSize }, -1, registry);
+                    final HDF5TimeUnit storedUnit =
+                            baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
+                    final int dataSpaceId =
+                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
+                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId =
+                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            storedUnit.convert(data));
+                    return null; // Nothing to return.
                 }
-                needsConversion = true;
-            }
-        }
-        final long[] durations = new long[timeDurations.length];
-        if (needsConversion)
-        {
-            for (int i = 0; i < timeDurations.length; ++i)
-            {
-                durations[i] = unit.convert(timeDurations[i]);
-            }
-        } else
-        {
-            for (int i = 0; i < timeDurations.length; ++i)
-            {
-                durations[i] = timeDurations[i].getValue();
-            }
-        }
-        return new HDF5TimeDurationArray(durations, unit);
+            };
+        baseWriter.runner.call(writeRunnable);
     }
 
     public void writeTimeDurationArrayBlock(final String objectPath, final long[] data,
@@ -565,35 +586,8 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
     public void writeTimeDurationArrayBlockWithOffset(final String objectPath, final long[] data,
             final int dataSize, final long offset, final HDF5TimeUnit timeUnit)
     {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { offset + dataSize }, -1, registry);
-                    final HDF5TimeUnit storedUnit =
-                            baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                            convertTimeDurations(storedUnit, timeUnit, data));
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        writeTimeDurationArrayBlockWithOffset(objectPath,
+                new HDF5TimeDurationArray(data, timeUnit), dataSize, offset);
     }
 
     public void writeTimeDurationArrayBlock(final String objectPath, final HDF5TimeDuration[] data,
@@ -606,62 +600,8 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
     public void writeTimeDurationArrayBlockWithOffset(final String objectPath,
             final HDF5TimeDuration[] data, final int dataSize, final long offset)
     {
-        assert objectPath != null;
-        assert data != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] blockDimensions = new long[]
-                        { dataSize };
-                    final long[] slabStartOrNull = new long[]
-                        { offset };
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, new long[]
-                                        { offset + dataSize }, -1, registry);
-                    final HDF5TimeUnit storedUnit =
-                            baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                            convertTimeDurations(storedUnit, data));
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
-
-    static long[] convertTimeDurations(final HDF5TimeUnit toTimeUnit,
-            final HDF5TimeUnit fromTimeUnit, final long[] data)
-    {
-        if (toTimeUnit != fromTimeUnit)
-        {
-            final long[] convertedData = new long[data.length];
-            for (int i = 0; i < data.length; ++i)
-            {
-                convertedData[i] = toTimeUnit.convert(data[i], fromTimeUnit);
-            }
-            return convertedData;
-        } else
-        {
-            return data;
-        }
-    }
-
-    static long[] convertTimeDurations(final HDF5TimeUnit toTimeUnit, final HDF5TimeDuration[] data)
-    {
-        final long[] convertedData = new long[data.length];
-        for (int i = 0; i < data.length; ++i)
-        {
-            convertedData[i] = toTimeUnit.convert(data[i]);
-        }
-        return convertedData;
+        writeTimeDurationArrayBlockWithOffset(objectPath, HDF5TimeDurationArray.create(data),
+                dataSize, offset);
     }
 
 }

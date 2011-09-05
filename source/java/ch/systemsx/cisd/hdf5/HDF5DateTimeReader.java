@@ -413,35 +413,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
     // Duration
     //
 
-    public long readTimeDuration(final String objectPath) throws HDF5JavaException
-    {
-        return readTimeDuration(objectPath, HDF5TimeUnit.SECONDS);
-    }
-
-    public long readTimeDuration(final String objectPath, final HDF5TimeUnit timeUnit)
-            throws HDF5JavaException
-    {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Long> readCallable = new ICallableWithCleanUp<Long>()
-            {
-                public Long call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final HDF5TimeUnit storedUnit =
-                            baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final long[] data = new long[1];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, data);
-                    return timeUnit.convert(data[0], storedUnit);
-                }
-            };
-        return baseReader.runner.call(readCallable);
-    }
-
-    public HDF5TimeDuration readTimeDurationAndUnit(final String objectPath)
-            throws HDF5JavaException
+    public HDF5TimeDuration readTimeDuration(final String objectPath) throws HDF5JavaException
     {
         assert objectPath != null;
 
@@ -464,47 +436,28 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
         return baseReader.runner.call(readCallable);
     }
 
-    public long[] readTimeDurationArray(final String objectPath) throws HDF5JavaException
+    public long readTimeDuration(final String objectPath, final HDF5TimeUnit timeUnit)
+            throws HDF5JavaException
     {
-        return readTimeDurationArray(objectPath, HDF5TimeUnit.SECONDS);
+        return timeUnit.convert(readTimeDuration(objectPath));
     }
 
-    public long[] readTimeDurationArray(final String objectPath, final HDF5TimeUnit timeUnit)
+    public HDF5TimeDuration readTimeDurationAndUnit(final String objectPath)
+            throws HDF5JavaException
+    {
+        return readTimeDuration(objectPath);
+    }
+
+    public HDF5TimeDurationArray readTimeDurationArray(final String objectPath)
             throws HDF5JavaException
     {
         assert objectPath != null;
 
         baseReader.checkOpen();
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final HDF5TimeUnit storedUnit =
-                            baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    convertTimeDurations(timeUnit, storedUnit, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
-    }
-
-    public HDF5TimeDuration[] readTimeDurationAndUnitArray(final String objectPath)
-            throws HDF5JavaException
-    {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<HDF5TimeDuration[]> readCallable =
-                new ICallableWithCleanUp<HDF5TimeDuration[]>()
+        final ICallableWithCleanUp<HDF5TimeDurationArray> readCallable =
+                new ICallableWithCleanUp<HDF5TimeDurationArray>()
                     {
-                        public HDF5TimeDuration[] call(ICleanUpRegistry registry)
+                        public HDF5TimeDurationArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
@@ -516,82 +469,47 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                             final long[] data = new long[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                            return convertTimeDurations(storedUnit, data);
+                            return new HDF5TimeDurationArray(data, storedUnit);
                         }
                     };
         return baseReader.runner.call(readCallable);
     }
 
+    public long[] readTimeDurationArray(final String objectPath, final HDF5TimeUnit timeUnit)
+            throws HDF5JavaException
+    {
+        return timeUnit.convert(readTimeDurationArray(objectPath));
+    }
+
+    public HDF5TimeDuration[] readTimeDurationAndUnitArray(final String objectPath)
+            throws HDF5JavaException
+    {
+        final HDF5TimeDurationArray durations = readTimeDurationArray(objectPath);
+        return convertTimeDurations(durations.timeUnit, durations.timeDurations);
+    }
+
     public long[] readTimeDurationArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber, final HDF5TimeUnit timeUnit)
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final HDF5TimeUnit storedUnit =
-                            baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
-                                    blockSize, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    convertTimeDurations(timeUnit, storedUnit, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
+        return timeUnit.convert(readTimeDurationArrayBlock(objectPath, blockSize, blockNumber));
     }
 
-    public long[] readTimeDurationArrayBlockWithOffset(final String objectPath,
-            final int blockSize, final long offset, final HDF5TimeUnit timeUnit)
+    public HDF5TimeDurationArray readTimeDurationArrayBlock(final String objectPath,
+            final int blockSize, final long blockNumber)
+    {
+        return readTimeDurationArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
+    }
+
+    public HDF5TimeDurationArray readTimeDurationArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset)
     {
         assert objectPath != null;
 
         baseReader.checkOpen();
-        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final HDF5TimeUnit storedUnit =
-                            baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    convertTimeDurations(timeUnit, storedUnit, data);
-                    return data;
-                }
-            };
-        return baseReader.runner.call(readCallable);
-    }
-
-    public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlock(final String objectPath,
-            final int blockSize, final long blockNumber) throws HDF5JavaException
-    {
-        return readTimeDurationAndUnitArrayBlockWithOffset(objectPath, blockSize, blockSize
-                * blockNumber);
-    }
-
-    public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlockWithOffset(final String objectPath,
-            final int blockSize, final long offset) throws HDF5JavaException
-    {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<HDF5TimeDuration[]> readCallable =
-                new ICallableWithCleanUp<HDF5TimeDuration[]>()
+        final ICallableWithCleanUp<HDF5TimeDurationArray> readCallable =
+                new ICallableWithCleanUp<HDF5TimeDurationArray>()
                     {
-                        public HDF5TimeDuration[] call(ICleanUpRegistry registry)
+                        public HDF5TimeDurationArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
@@ -604,11 +522,32 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                             final long[] data = new long[spaceParams.blockSize];
                             baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                            return convertTimeDurations(storedUnit, data);
+                            return new HDF5TimeDurationArray(data, storedUnit);
                         }
                     };
         return baseReader.runner.call(readCallable);
+    }
 
+    public long[] readTimeDurationArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset, final HDF5TimeUnit timeUnit)
+    {
+        return timeUnit
+                .convert(readTimeDurationArrayBlockWithOffset(objectPath, blockSize, offset));
+    }
+
+    public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlock(final String objectPath,
+            final int blockSize, final long blockNumber) throws HDF5JavaException
+    {
+        return readTimeDurationAndUnitArrayBlockWithOffset(objectPath, blockSize, blockSize
+                * blockNumber);
+    }
+
+    public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset) throws HDF5JavaException
+    {
+        final HDF5TimeDurationArray durations =
+                readTimeDurationArrayBlockWithOffset(objectPath, blockSize, offset);
+        return convertTimeDurations(durations.timeUnit, durations.timeDurations);
     }
 
     public Iterable<HDF5DataBlock<HDF5TimeDuration[]>> getTimeDurationAndUnitArrayNaturalBlocks(
@@ -638,6 +577,45 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                                         readTimeDurationAndUnitArrayBlockWithOffset(objectPath,
                                                 index.getBlockSize(), offset);
                                 return new HDF5DataBlock<HDF5TimeDuration[]>(block,
+                                        index.getAndIncIndex(), offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    public Iterable<HDF5DataBlock<HDF5TimeDurationArray>> getTimeDurationArrayNaturalBlocks(
+            final String objectPath) throws HDF5JavaException
+    {
+        final HDF5NaturalBlock1DParameters params =
+                new HDF5NaturalBlock1DParameters(baseReader.getDataSetInformation(objectPath));
+
+        return new Iterable<HDF5DataBlock<HDF5TimeDurationArray>>()
+            {
+                public Iterator<HDF5DataBlock<HDF5TimeDurationArray>> iterator()
+                {
+                    return new Iterator<HDF5DataBlock<HDF5TimeDurationArray>>()
+                        {
+                            final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
+                                    params.getNaturalBlockIndex();
+
+                            public boolean hasNext()
+                            {
+                                return index.hasNext();
+                            }
+
+                            public HDF5DataBlock<HDF5TimeDurationArray> next()
+                            {
+                                final long offset = index.computeOffsetAndSizeGetOffset();
+                                final HDF5TimeDurationArray block =
+                                        readTimeDurationArrayBlockWithOffset(objectPath,
+                                                index.getBlockSize(), offset);
+                                return new HDF5DataBlock<HDF5TimeDurationArray>(block,
                                         index.getAndIncIndex(), offset);
                             }
 
