@@ -469,6 +469,12 @@ class HDF5Reader implements IHDF5Reader
         return baseReader.tryGetTypeVariant(objectPath);
     }
 
+    public HDF5DataTypeVariant tryGetTypeVariant(String objectPath, String attributeName)
+    {
+        baseReader.checkOpen();
+        return baseReader.tryGetTypeVariant(objectPath, attributeName);
+    }
+
     // /////////////////////
     // Attributes
     // /////////////////////
@@ -605,6 +611,26 @@ class HDF5Reader implements IHDF5Reader
     // Time & date
     //
 
+    public long getTimeStampAttribute(String objectPath, String attributeName)
+    {
+        return dateTimeReader.getTimeStampAttribute(objectPath, attributeName);
+    }
+
+    public Date getDateAttribute(String objectPath, String attributeName)
+    {
+        return dateTimeReader.getDateAttribute(objectPath, attributeName);
+    }
+
+    public boolean isTimeStamp(String objectPath, String attributeName) throws HDF5JavaException
+    {
+        return dateTimeReader.isTimeStamp(objectPath, attributeName);
+    }
+
+    public HDF5TimeDuration getTimeDurationAttribute(String objectPath, String attributeName)
+    {
+        return dateTimeReader.getTimeDurationAttribute(objectPath, attributeName);
+    }
+
     public boolean isTimeDuration(String objectPath) throws HDF5JavaException
     {
         return dateTimeReader.isTimeDuration(objectPath);
@@ -613,6 +639,33 @@ class HDF5Reader implements IHDF5Reader
     public boolean isTimeStamp(String objectPath) throws HDF5JavaException
     {
         return dateTimeReader.isTimeStamp(objectPath);
+    }
+
+    public boolean isTimeDuration(String objectPath, String attributeName) throws HDF5JavaException
+    {
+        return dateTimeReader.isTimeDuration(objectPath, attributeName);
+    }
+
+    public HDF5TimeUnit tryGetTimeUnit(String objectPath, String attributeName)
+            throws HDF5JavaException
+    {
+        return dateTimeReader.tryGetTimeUnit(objectPath, attributeName);
+    }
+
+    public long[] getTimeStampArrayAttribute(String objectPath, String attributeName)
+    {
+        return dateTimeReader.getTimeStampArrayAttribute(objectPath, attributeName);
+    }
+
+    public Date[] getDateArrayAttribute(String objectPath, String attributeName)
+    {
+        return dateTimeReader.getDateArrayAttribute(objectPath, attributeName);
+    }
+
+    public HDF5TimeDurationArray getTimeDurationArrayAttribute(String objectPath,
+            String attributeName)
+    {
+        return dateTimeReader.getTimeDurationArrayAttribute(objectPath, attributeName);
     }
 
     public HDF5TimeUnit tryGetTimeUnit(String objectPath) throws HDF5JavaException

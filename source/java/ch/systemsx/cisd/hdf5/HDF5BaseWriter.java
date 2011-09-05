@@ -20,6 +20,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.DATATYPE_GROUP;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isNonPositive;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
@@ -300,14 +301,15 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 {
                     syncNow();
                 }
-    
+
                 if (EnumSet.complementOf(NON_BLOCKING_SYNC_MODES).contains(syncMode))
                 {
                     closeSync();
                     commandQueue.add(Command.EXIT);
                 } else
                 {
-                    // End syncer thread and avoid a race condition for non-blocking sync modes as the
+                    // End syncer thread and avoid a race condition for non-blocking sync modes as
+                    // the
                     // syncer thread still may want to use the fileForSynching
                     commandQueue.add(Command.CLOSE_SYNC);
                 }
@@ -1088,6 +1090,31 @@ final class HDF5BaseWriter extends HDF5BaseReader
         runner.call(addAttributeRunnable);
     }
 
+    void setAttribute(final String objectPath, final String name,
+            final HDF5DataTypeVariant typeVariant, final int storageDataTypeId,
+            final int nativeDataTypeId, final long[] value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert storageDataTypeId >= 0;
+        assert nativeDataTypeId >= 0;
+        assert value != null;
+
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final int objectId = h5.openObject(fileId, objectPath, registry);
+                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
+                                    value, registry);
+                            setTypeVariant(objectId, name, typeVariant, registry);
+                            return null; // Nothing to return.
+                        }
+                    };
+        runner.call(addAttributeRunnable);
+    }
+
     void setAttribute(final int objectId, final String name, final int storageDataTypeId,
             final int nativeDataTypeId, final long[] value, ICleanUpRegistry registry)
     {
@@ -1199,6 +1226,14 @@ final class HDF5BaseWriter extends HDF5BaseReader
     {
         setAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, typeVariantDataType.getStorageTypeId(),
                 typeVariantDataType.getNativeTypeId(),
+                typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
+    }
+
+    void setTypeVariant(final int objectId, final String attributeName,
+            final HDF5DataTypeVariant typeVariant, ICleanUpRegistry registry)
+    {
+        setAttribute(objectId, createTypeVariantAttributeName(attributeName),
+                typeVariantDataType.getStorageTypeId(), typeVariantDataType.getNativeTypeId(),
                 typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
     }
 

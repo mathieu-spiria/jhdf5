@@ -24,7 +24,6 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 
 import java.util.Date;
 
-
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
@@ -49,6 +48,55 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
     //
     // Date
     //
+
+    public void setTimeStampAttribute(String objectPath, String name, long timeStamp)
+    {
+        assert objectPath != null;
+        assert name != null;
+
+        baseWriter.checkOpen();
+        baseWriter.setAttribute(objectPath, name,
+                HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, H5T_STD_I64LE,
+                H5T_NATIVE_INT64, new long[]
+                    { timeStamp });
+    }
+
+    public void setDateAttribute(String objectPath, String name, Date date)
+    {
+        setTimeStampAttribute(objectPath, name, date.getTime());
+    }
+
+    public void setDateArrayAttribute(String objectPath, String name, Date[] dates)
+    {
+        setTimeStampArrayAttribute(objectPath, name, datesToTimeStamps(dates));
+    }
+
+    public void setTimeStampArrayAttribute(final String objectPath, final String name,
+            final long[] timeStamps)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert timeStamps != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(H5T_NATIVE_INT64, timeStamps.length,
+                                    registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(H5T_STD_I64LE, timeStamps.length,
+                                    registry);
+                    baseWriter.setAttribute(objectPath, name,
+                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                            storageTypeId, memoryTypeId, timeStamps);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(setAttributeRunnable);
+    }
 
     public void writeTimeStamp(final String objectPath, final long timeStamp)
     {
@@ -273,6 +321,48 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
     // Duration
     //
 
+    public void setTimeDurationAttribute(String objectPath, String name, long timeDuration,
+            HDF5TimeUnit timeUnit)
+    {
+        baseWriter.checkOpen();
+        baseWriter.setAttribute(objectPath, name, timeUnit.getTypeVariant(), H5T_STD_I64LE,
+                H5T_NATIVE_INT64, new long[]
+                    { timeDuration });
+    }
+
+    public void setTimeDurationAttribute(String objectPath, String name,
+            HDF5TimeDuration timeDuration)
+    {
+        setTimeDurationAttribute(objectPath, name, timeDuration.getValue(), timeDuration.getUnit());
+    }
+
+    public void setTimeDurationArrayAttribute(final String objectPath, final String name,
+            final HDF5TimeDurationArray timeDurations)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert timeDurations != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(H5T_NATIVE_INT64,
+                                    timeDurations.timeDurations.length, registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(H5T_STD_I64LE,
+                                    timeDurations.timeDurations.length, registry);
+                    baseWriter.setAttribute(objectPath, name,
+                            timeDurations.timeUnit.getTypeVariant(), storageTypeId, memoryTypeId,
+                            timeDurations.timeDurations);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(setAttributeRunnable);
+    }
+
     public void writeTimeDuration(final String objectPath, final long timeDuration)
     {
         writeTimeDuration(objectPath, timeDuration, HDF5TimeUnit.SECONDS);
@@ -300,7 +390,7 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
 
     public void writeTimeDuration(String objectPath, HDF5TimeDuration timeDuration)
     {
-        writeTimeDuration(objectPath, timeDuration.getDuration(), timeDuration.getUnit());
+        writeTimeDuration(objectPath, timeDuration.getValue(), timeDuration.getUnit());
     }
 
     public void createTimeDurationArray(String objectPath, int size, HDF5TimeUnit timeUnit)
@@ -428,6 +518,12 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
         {
             return;
         }
+        final HDF5TimeDurationArray durations = convertToDurationArray(timeDurations);
+        writeTimeDurationArray(objectPath, durations.timeDurations, durations.timeUnit);
+    }
+
+    private HDF5TimeDurationArray convertToDurationArray(HDF5TimeDuration[] timeDurations)
+    {
         HDF5TimeUnit unit = timeDurations[0].getUnit();
         boolean needsConversion = false;
         for (int i = 1; i < timeDurations.length; ++i)
@@ -453,10 +549,10 @@ public class HDF5DateTimeWriter implements IHDF5DateTimeWriter
         {
             for (int i = 0; i < timeDurations.length; ++i)
             {
-                durations[i] = timeDurations[i].getDuration();
+                durations[i] = timeDurations[i].getValue();
             }
         }
-        writeTimeDurationArray(objectPath, durations, unit);
+        return new HDF5TimeDurationArray(durations, unit);
     }
 
     public void writeTimeDurationArrayBlock(final String objectPath, final long[] data,

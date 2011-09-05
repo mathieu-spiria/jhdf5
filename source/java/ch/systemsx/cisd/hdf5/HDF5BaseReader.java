@@ -21,6 +21,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.DATATYPE_GROUP;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_MEMBERS_ATTRIBUTE;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
@@ -219,7 +220,7 @@ class HDF5BaseReader
         }
         for (int i = 0; i < namedDataTypeList.size(); ++i)
         {
-            final DataTypeContainer c = namedDataTypeList.get(i); 
+            final DataTypeContainer c = namedDataTypeList.get(i);
             if (c.typePath.equals(oldPath))
             {
                 namedDataTypeList.set(i, new DataTypeContainer(c.typeId, newPath));
@@ -640,6 +641,23 @@ class HDF5BaseReader
         return runner.call(readRunnable);
     }
 
+    HDF5DataTypeVariant tryGetTypeVariant(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+
+        final ICallableWithCleanUp<HDF5DataTypeVariant> readRunnable =
+                new ICallableWithCleanUp<HDF5DataTypeVariant>()
+                    {
+                        public HDF5DataTypeVariant call(ICleanUpRegistry registry)
+                        {
+                            final int objectId = h5.openObject(fileId, objectPath, registry);
+                            return tryGetTypeVariant(objectId, attributeName, registry);
+                        }
+                    };
+
+        return runner.call(readRunnable);
+    }
+
     HDF5EnumerationValueArray getEnumValueArray(final int attributeId, ICleanUpRegistry registry)
     {
         final int storageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
@@ -732,6 +750,13 @@ class HDF5BaseReader
         return typeVariantOrdinal < 0 ? null : HDF5DataTypeVariant.values()[typeVariantOrdinal];
     }
 
+    HDF5DataTypeVariant tryGetTypeVariant(final int objectId, String attributeName,
+            ICleanUpRegistry registry)
+    {
+        final int typeVariantOrdinal = getAttributeTypeVariant(objectId, attributeName, registry);
+        return typeVariantOrdinal < 0 ? null : HDF5DataTypeVariant.values()[typeVariantOrdinal];
+    }
+
     /**
      * Returns the ordinal for the type variant of <var>objectPath</var>, or <code>-1</code>, if no
      * type variant is defined for this <var>objectPath</var>.
@@ -747,6 +772,26 @@ class HDF5BaseReader
             return -1;
         }
         final int attributeId = h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
+        return getEnumOrdinal(attributeId, -1, typeVariantDataType);
+    }
+
+    /**
+     * Returns the ordinal for the type variant of <var>objectPath</var>, or <code>-1</code>, if no
+     * type variant is defined for this <var>objectPath</var>.
+     * 
+     * @param objectId The id of the data set object in the file.
+     * @param attributeName The name of the attribute to get the type variant for.
+     * @return The ordinal of the type variant or <code>null</code>.
+     */
+    int getAttributeTypeVariant(final int objectId, String attributeName, ICleanUpRegistry registry)
+    {
+        checkOpen();
+        final String typeVariantAttrName = createTypeVariantAttributeName(attributeName);
+        if (h5.existsAttribute(objectId, typeVariantAttrName) == false)
+        {
+            return -1;
+        }
+        final int attributeId = h5.openAttribute(objectId, typeVariantAttrName, registry);
         return getEnumOrdinal(attributeId, -1, typeVariantDataType);
     }
 
@@ -1075,6 +1120,18 @@ class HDF5BaseReader
         }
     }
 
+    void checkIsTimeStamp(final String objectPath, final String attributeName, final int dataSetId,
+            ICleanUpRegistry registry) throws HDF5JavaException
+    {
+        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, attributeName, registry);
+        if (typeVariantOrdinal != HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH
+                .ordinal())
+        {
+            throw new HDF5JavaException("Attribute '" + attributeName + "' of data set '"
+                    + objectPath + "' is not a time stamp.");
+        }
+    }
+
     HDF5TimeUnit checkIsTimeDuration(final String objectPath, final int dataSetId,
             ICleanUpRegistry registry) throws HDF5JavaException
     {
@@ -1082,6 +1139,18 @@ class HDF5BaseReader
         if (HDF5DataTypeVariant.isTimeDuration(typeVariantOrdinal) == false)
         {
             throw new HDF5JavaException("Data set '" + objectPath + "' is not a time duration.");
+        }
+        return HDF5DataTypeVariant.getTimeUnit(typeVariantOrdinal);
+    }
+
+    HDF5TimeUnit checkIsTimeDuration(final String objectPath, final String attributeName,
+            final int dataSetId, ICleanUpRegistry registry) throws HDF5JavaException
+    {
+        final int typeVariantOrdinal = getAttributeTypeVariant(dataSetId, attributeName, registry);
+        if (HDF5DataTypeVariant.isTimeDuration(typeVariantOrdinal) == false)
+        {
+            throw new HDF5JavaException("Attribute '" + attributeName + "' of data set '"
+                    + objectPath + "' is not a time duration.");
         }
         return HDF5DataTypeVariant.getTimeUnit(typeVariantOrdinal);
     }

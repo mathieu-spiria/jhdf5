@@ -161,7 +161,7 @@ public enum HDF5TimeUnit
      */
     public long convert(HDF5TimeDuration duration)
     {
-        return convert(duration.getDuration(), duration.getUnit());
+        return convert(duration.getValue(), duration.getUnit());
     }
 
 }

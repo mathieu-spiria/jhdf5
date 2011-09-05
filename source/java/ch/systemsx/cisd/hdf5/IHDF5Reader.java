@@ -337,6 +337,15 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      */
     public HDF5DataTypeVariant tryGetTypeVariant(final String objectPath);
 
+    /**
+     * Returns the data type variant of <var>attributeName</var> of object <var>objectPath</var>, or
+     * <code>null</code>, if no type variant is defined for this <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The data type variant or <code>null</code>.
+     */
+    public HDF5DataTypeVariant tryGetTypeVariant(final String objectPath, String attributeName);
+
     // /////////////////////
     // Attributes
     // /////////////////////

@@ -28,6 +28,114 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 public interface IHDF5DateTimeReader
 {
 
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    /**
+     * Returns <code>true</code>, if the attribute <var>attributeName</var> of data set
+     * <var>objectPath</var> is a time stamp and <code>false</code> otherwise.
+     */
+    public boolean isTimeStamp(final String objectPath, String attributeName)
+            throws HDF5JavaException;
+
+    /**
+     * Reads a time stamp attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The time stamp as number of milliseconds since January 1, 1970, 00:00:00 GMT.
+     * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
+     *             <var>objectPath</var> is not defined as type variant
+     *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     */
+    public long getTimeStampAttribute(final String objectPath, final String attributeName);
+
+    /**
+     * Reads a time stamp array attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The time stamp array; each element is a number of milliseconds since January 1, 1970,
+     *         00:00:00 GMT.
+     * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
+     *             <var>objectPath</var> is not defined as type variant
+     *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     */
+    public long[] getTimeStampArrayAttribute(final String objectPath, final String attributeName);
+
+    /**
+     * Reads a time stamp attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var> and returns it as a <code>Date</code>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The time stamp as number of milliseconds since January 1, 1970, 00:00:00 GMT.
+     * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
+     *             <var>objectPath</var> is not defined as type variant
+     *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     */
+    public Date getDateAttribute(final String objectPath, final String attributeName);
+
+    /**
+     * Reads a time stamp array attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var> and returns it as a <code>Date[]</code>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The time stamp as number of milliseconds since January 1, 1970, 00:00:00 GMT.
+     * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
+     *             <var>objectPath</var> is not defined as type variant
+     *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     */
+    public Date[] getDateArrayAttribute(final String objectPath, final String attributeName);
+
+    /**
+     * Returns <code>true</code>, if the attribute <var>attributeName</var> of data set
+     * <var>objectPath</var> is a time duration and <code>false</code> otherwise.
+     */
+    public boolean isTimeDuration(final String objectPath, String attributeName)
+            throws HDF5JavaException;
+
+    /**
+     * Reads a time duration attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The time duration.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     */
+    public HDF5TimeDuration getTimeDurationAttribute(final String objectPath,
+            final String attributeName);
+
+    /**
+     * Reads a time duration array attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The time duration.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     */
+    public HDF5TimeDurationArray getTimeDurationArrayAttribute(final String objectPath,
+            final String attributeName);
+
+    /**
+     * Returns the time unit, if the attribute given by <var>attributeName</var> of object
+     * <var>objectPath</var> is a time duration and <code>null</code> otherwise.
+     */
+    public HDF5TimeUnit tryGetTimeUnit(final String objectPath, final String attributeName)
+            throws HDF5JavaException;
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     /**
      * Returns <code>true</code>, if the data set given by <var>objectPath</var> is a time stamp and
      * <code>false</code> otherwise.
@@ -41,8 +149,8 @@ public interface IHDF5DateTimeReader
     public boolean isTimeDuration(final String objectPath) throws HDF5JavaException;
 
     /**
-     * Returns <code>true</code>, if the data set given by <var>objectPath</var> is a time duration
-     * and <code>false</code> otherwise.
+     * Returns the time unit, if the data set given by <var>objectPath</var> is a time duration and
+     * <code>null</code> otherwise.
      */
     public HDF5TimeUnit tryGetTimeUnit(final String objectPath) throws HDF5JavaException;
 

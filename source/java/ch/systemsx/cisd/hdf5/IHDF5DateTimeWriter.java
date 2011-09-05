@@ -26,6 +26,109 @@ import java.util.Date;
 public interface IHDF5DateTimeWriter
 {
 
+    // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    /**
+     * Set a date value as attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param attributeName The name of the attribute.
+     * @param date The value of the attribute.
+     */
+    public void setDateAttribute(final String objectPath, final String attributeName,
+            final Date date);
+
+    /**
+     * Set a date array value as attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param attributeName The name of the attribute.
+     * @param dates The value of the attribute.
+     */
+    public void setDateArrayAttribute(final String objectPath, final String attributeName,
+            final Date[] dates);
+
+    /**
+     * Set a time stamp value as attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param attributeName The name of the attribute.
+     * @param timeStamp The value of the attribute.
+     */
+    public void setTimeStampAttribute(final String objectPath, final String attributeName,
+            final long timeStamp);
+
+    /**
+     * Set a time stamp array value as attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param attributeName The name of the attribute.
+     * @param timeStamps The value of the attribute.
+     */
+    public void setTimeStampArrayAttribute(final String objectPath, final String attributeName,
+            final long[] timeStamps);
+
+    /**
+     * Set a time duration value as attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param attributeName The name of the attribute.
+     * @param timeDuration The value of the attribute.
+     * @param timeUnit The unit of the attribute.
+     */
+    public void setTimeDurationAttribute(final String objectPath, final String attributeName,
+            final long timeDuration, final HDF5TimeUnit timeUnit);
+
+    /**
+     * Set a time duration value as attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param attributeName The name of the attribute.
+     * @param timeDuration The value of the attribute.
+     */
+    public void setTimeDurationAttribute(final String objectPath, final String attributeName,
+            final HDF5TimeDuration timeDuration);
+
+    /**
+     * Set a time duration array value as attribute on the referenced object. The smallest time unit
+     * in <var>timeDurations</var> will be used as the time unit of the array.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * <p>
+     * <em>Note: Time durations are stored as a <code>long[]</code> array.</em>
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param attributeName The name of the attribute.
+     * @param timeDurations The value of the attribute.
+     */
+    public void setTimeDurationArrayAttribute(final String objectPath, final String attributeName,
+            final HDF5TimeDurationArray timeDurations);
+
+    // /////////////////////
+    // Data Sets
+    // /////////////////////
+
     /**
      * Writes out a time stamp value. The data set will be tagged as type variant
      * {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
@@ -319,9 +422,10 @@ public interface IHDF5DateTimeWriter
 
     /**
      * Writes out a time duration array (of rank 1). The data set will be tagged as the according
-     * type variant.
+     * type variant. The smallest time unit in <var>timeDurations</var> will be used as the time
+     * unit of the array.
      * <p>
-     * <em>Note: Time durations are stored as <code>long[]</code> arrays.</em>
+     * <em>Note: Time durations are stored as a <code>long[]</code> array.</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeDurations The time durations to write in the given <var>timeUnit</var>. The array

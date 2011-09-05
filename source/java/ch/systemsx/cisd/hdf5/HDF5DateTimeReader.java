@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 
 import java.util.Date;
@@ -44,10 +45,201 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
         this.baseReader = baseReader;
     }
 
+    public long getTimeStampAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<Long> getAttributeRunnable = new ICallableWithCleanUp<Long>()
+            {
+                public Long call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int attributeId =
+                            baseReader.h5.openAttribute(objectId, attributeName, registry);
+                    baseReader.checkIsTimeStamp(objectPath, attributeName, objectId, registry);
+                    final long[] data =
+                            baseReader.h5
+                                    .readAttributeAsLongArray(attributeId, H5T_NATIVE_INT64, 1);
+                    return data[0];
+                }
+            };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    public Date getDateAttribute(String objectPath, String attributeName)
+    {
+        return new Date(getTimeStampAttribute(objectPath, attributeName));
+    }
+
+    public long[] getTimeStampArrayAttribute(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<long[]> getAttributeRunnable =
+                new ICallableWithCleanUp<long[]>()
+                    {
+                        public long[] call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            final int attributeId =
+                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
+                            baseReader.checkIsTimeStamp(objectPath, attributeName, objectId,
+                                    registry);
+                            final int attributeTypeId =
+                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                            final int memoryTypeId;
+                            final int len;
+                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+                            {
+                                final int[] arrayDimensions =
+                                        baseReader.h5.getArrayDimensions(attributeTypeId);
+                                if (arrayDimensions.length != 1)
+                                {
+                                    throw new HDF5JavaException(
+                                            "Array needs to be of rank 1, but is of rank "
+                                                    + arrayDimensions.length);
+                                }
+                                len = arrayDimensions[0];
+                                memoryTypeId =
+                                        baseReader.h5.createArrayType(H5T_NATIVE_INT64, len,
+                                                registry);
+                            } else
+                            {
+                                final long[] arrayDimensions =
+                                        baseReader.h5.getDataDimensionsForAttribute(attributeId,
+                                                registry);
+                                memoryTypeId = H5T_NATIVE_INT64;
+                                len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
+                            }
+                            final long[] data =
+                                    baseReader.h5.readAttributeAsLongArray(attributeId,
+                                            memoryTypeId, len);
+                            return data;
+                        }
+                    };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    public Date[] getDateArrayAttribute(String objectPath, String attributeName)
+    {
+        final long[] timeStampArray = getTimeStampArrayAttribute(objectPath, attributeName);
+        return timeStampsToDates(timeStampArray);
+    }
+
+    public boolean isTimeStamp(String objectPath, String attributeName) throws HDF5JavaException
+    {
+        final HDF5DataTypeVariant typeVariantOrNull =
+                baseReader.tryGetTypeVariant(objectPath, attributeName);
+        return typeVariantOrNull != null && typeVariantOrNull.isTimeStamp();
+    }
+
     public boolean isTimeStamp(final String objectPath) throws HDF5JavaException
     {
         final HDF5DataTypeVariant typeVariantOrNull = baseReader.tryGetTypeVariant(objectPath);
         return typeVariantOrNull != null && typeVariantOrNull.isTimeStamp();
+    }
+
+    public HDF5TimeDuration getTimeDurationAttribute(final String objectPath,
+            final String attributeName)
+    {
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5TimeDuration> getAttributeRunnable =
+                new ICallableWithCleanUp<HDF5TimeDuration>()
+                    {
+                        public HDF5TimeDuration call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            final int attributeId =
+                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
+                            final HDF5TimeUnit unit =
+                                    baseReader.checkIsTimeDuration(objectPath, attributeName,
+                                            objectId, registry);
+                            final long[] data =
+                                    baseReader.h5.readAttributeAsLongArray(attributeId,
+                                            H5T_NATIVE_INT64, 1);
+                            return new HDF5TimeDuration(data[0], unit);
+                        }
+                    };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    public boolean isTimeDuration(String objectPath, String attributeName) throws HDF5JavaException
+    {
+        final HDF5DataTypeVariant typeVariantOrNull =
+                baseReader.tryGetTypeVariant(objectPath, attributeName);
+        return typeVariantOrNull != null && typeVariantOrNull.isTimeDuration();
+    }
+
+    public HDF5TimeUnit tryGetTimeUnit(String objectPath, String attributeName)
+            throws HDF5JavaException
+    {
+        final HDF5DataTypeVariant typeVariantOrNull =
+                baseReader.tryGetTypeVariant(objectPath, attributeName);
+        return (typeVariantOrNull != null) ? typeVariantOrNull.tryGetTimeUnit() : null;
+    }
+
+    public HDF5TimeDurationArray getTimeDurationArrayAttribute(final String objectPath,
+            final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5TimeDurationArray> getAttributeRunnable =
+                new ICallableWithCleanUp<HDF5TimeDurationArray>()
+                    {
+                        public HDF5TimeDurationArray call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            final int attributeId =
+                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
+                            final HDF5TimeUnit storedUnit =
+                                    baseReader.checkIsTimeDuration(objectPath, attributeName,
+                                            objectId, registry);
+                            final int attributeTypeId =
+                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                            final int memoryTypeId;
+                            final int len;
+                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+                            {
+                                final int[] arrayDimensions =
+                                        baseReader.h5.getArrayDimensions(attributeTypeId);
+                                if (arrayDimensions.length != 1)
+                                {
+                                    throw new HDF5JavaException(
+                                            "Array needs to be of rank 1, but is of rank "
+                                                    + arrayDimensions.length);
+                                }
+                                len = arrayDimensions[0];
+                                memoryTypeId =
+                                        baseReader.h5.createArrayType(H5T_NATIVE_INT64, len,
+                                                registry);
+                            } else
+                            {
+                                final long[] arrayDimensions =
+                                        baseReader.h5.getDataDimensionsForAttribute(attributeId,
+                                                registry);
+                                memoryTypeId = H5T_NATIVE_INT64;
+                                len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
+                            }
+                            final long[] data =
+                                    baseReader.h5.readAttributeAsLongArray(attributeId,
+                                            memoryTypeId, len);
+                            return new HDF5TimeDurationArray(data, storedUnit);
+                        }
+                    };
+        return baseReader.runner.call(getAttributeRunnable);
     }
 
     public boolean isTimeDuration(final String objectPath) throws HDF5JavaException

@@ -20,7 +20,6 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 /**
  * An interface for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).
@@ -157,8 +156,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * Moves or renames a link in the file atomically.
      * 
      * @throws HDF5SymbolTableException If <var>oldLinkPath</var> does not exist or if
-     *             <var>newLinkPath</var> already exists (minor in both (!) cases:
-     *             {@link HDF5Constants#H5E_NOTFOUND}).
+     *             <var>newLinkPath</var> already exists.
      */
     public void move(String oldLinkPath, String newLinkPath) throws HDF5SymbolTableException;
 
@@ -234,12 +232,23 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     // /////////////////////
 
     /**
-     * Sets a <var>typeVariant</var> to <var>objectPath</var>.
+     * Sets a <var>typeVariant</var> of object <var>objectPath</var>.
      * 
      * @param objectPath The name of the object to add the type variant to.
      * @param typeVariant The type variant to add.
      */
     public void setTypeVariant(final String objectPath, final HDF5DataTypeVariant typeVariant);
+
+    /**
+     * Sets a <var>typeVariant</var> of attribute <var>attributeName</var> of object
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name of the object.
+     * @param attributeName The name of attribute to add the type variant to.
+     * @param typeVariant The type variant to add.
+     */
+    public void setTypeVariant(final String objectPath, final String attributeName,
+            final HDF5DataTypeVariant typeVariant);
 
     /**
      * Deletes the <var>typeVariant</var> from <var>objectPath</var>.
@@ -250,6 +259,17 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param objectPath The name of the object to delete the type variant from.
      */
     public void deleteTypeVariant(final String objectPath);
+
+    /**
+     * Deletes the <var>typeVariant</var> from <var>attributeName</var> of <var>objectPath</var>.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object.
+     * @param attributeName The name of the attribute to delete the type variant from.
+     */
+    public void deleteTypeVariant(final String objectPath, final String attributeName);
 
     // /////////////////////
     // Attributes

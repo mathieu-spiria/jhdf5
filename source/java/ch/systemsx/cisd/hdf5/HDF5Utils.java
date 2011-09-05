@@ -355,6 +355,14 @@ final class HDF5Utils
     }
 
     /**
+     * Returns the type variant attribute for the given <var>attributeName</var>.
+     */
+    static String createTypeVariantAttributeName(String attributeName)
+    {
+        return TYPE_VARIANT_ATTRIBUTE + attributeName + "__";
+    }
+    
+    /**
      * Returns <code>true</code>, if <var>name</var> denotes an internal name used by the library
      * for house-keeping.
      */

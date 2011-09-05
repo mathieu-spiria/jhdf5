@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createTypeVariantAttributeName;
 
 import java.util.BitSet;
 import java.util.Date;
@@ -302,9 +303,24 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
                 baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
     }
 
+    public void setTypeVariant(String objectPath, String attributeName,
+            HDF5DataTypeVariant typeVariant)
+    {
+        baseWriter.checkOpen();
+        baseWriter.setAttribute(objectPath, createTypeVariantAttributeName(attributeName),
+                baseWriter.typeVariantDataType.getStorageTypeId(),
+                baseWriter.typeVariantDataType.getNativeTypeId(),
+                baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
+    }
+
     public void deleteTypeVariant(String objectPath)
     {
         deleteAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE);
+    }
+
+    public void deleteTypeVariant(String objectPath, String attributeName)
+    {
+        deleteAttribute(objectPath, createTypeVariantAttributeName(attributeName));
     }
 
     public void setBooleanAttribute(String objectPath, String name, boolean value)
@@ -418,6 +434,44 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             HDF5GenericStorageFeatures features)
     {
         dateTimeWriter.createTimeStampArray(objectPath, size, features);
+    }
+
+    public void setTimeStampAttribute(String objectPath, String name, long value)
+    {
+        dateTimeWriter.setTimeStampAttribute(objectPath, name, value);
+    }
+
+    public void setDateAttribute(String objectPath, String name, Date date)
+    {
+        dateTimeWriter.setDateAttribute(objectPath, name, date);
+    }
+
+    public void setTimeDurationAttribute(String objectPath, String name,
+            HDF5TimeDuration timeDuration)
+    {
+        dateTimeWriter.setTimeDurationAttribute(objectPath, name, timeDuration);
+    }
+
+    public void setTimeDurationAttribute(String objectPath, String name, long timeDuration,
+            HDF5TimeUnit timeUnit)
+    {
+        dateTimeWriter.setTimeDurationAttribute(objectPath, name, timeDuration, timeUnit);
+    }
+
+    public void setDateArrayAttribute(String objectPath, String name, Date[] dates)
+    {
+        dateTimeWriter.setDateArrayAttribute(objectPath, name, dates);
+    }
+
+    public void setTimeStampArrayAttribute(String objectPath, String name, long[] timeStamps)
+    {
+        dateTimeWriter.setTimeStampArrayAttribute(objectPath, name, timeStamps);
+    }
+
+    public void setTimeDurationArrayAttribute(String objectPath, String name,
+            HDF5TimeDurationArray timeDurations)
+    {
+        dateTimeWriter.setTimeDurationArrayAttribute(objectPath, name, timeDurations);
     }
 
     public void createTimeStampArray(String objectPath, int size)

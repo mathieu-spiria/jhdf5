@@ -109,7 +109,7 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                         throws IllegalAccessException
                 {
                     final HDF5TimeDuration duration = (HDF5TimeDuration) field.get(obj);
-                    return HDFNativeData.longToByte(timeUnit.convert(duration.getDuration(),
+                    return HDFNativeData.longToByte(timeUnit.convert(duration.getValue(),
                             duration.getUnit()));
                 }
 
@@ -149,7 +149,7 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                         throws IllegalAccessException
                 {
                     final HDF5TimeDuration duration = (HDF5TimeDuration) getMap(obj, memberName);
-                    return HDFNativeData.longToByte(timeUnit.convert(duration.getDuration(),
+                    return HDFNativeData.longToByte(timeUnit.convert(duration.getValue(),
                             duration.getUnit()));
                 }
 
@@ -189,7 +189,7 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                         throws IllegalAccessException
                 {
                     final HDF5TimeDuration duration = (HDF5TimeDuration) getList(obj, index);
-                    return HDFNativeData.longToByte(timeUnit.convert(duration.getDuration(),
+                    return HDFNativeData.longToByte(timeUnit.convert(duration.getValue(),
                             duration.getUnit()));
                 }
 
@@ -229,7 +229,7 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                         throws IllegalAccessException
                 {
                     final HDF5TimeDuration duration = (HDF5TimeDuration) getArray(obj, index);
-                    return HDFNativeData.longToByte(timeUnit.convert(duration.getDuration(),
+                    return HDFNativeData.longToByte(timeUnit.convert(duration.getValue(),
                             duration.getUnit()));
                 }
 

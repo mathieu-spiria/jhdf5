@@ -25,20 +25,39 @@ public class HDF5TimeDuration
 {
     private final long duration;
     
-    private final HDF5TimeUnit unit;
+    private final HDF5TimeUnit timeUnit;
     
-    public HDF5TimeDuration(long duration, HDF5TimeUnit unit)
+    public HDF5TimeDuration(long duration, HDF5TimeUnit timeUnit)
     {
         this.duration = duration;
-        this.unit = unit;
+        this.timeUnit = timeUnit;
+    }
+
+    /**
+     * The time duration, see {@link #getUnit()} for the time unit.
+     * 
+     * @deprecated Use {@link #getValue()}/
+     */
+    @Deprecated
+    public long getDuration()
+    {
+        return duration;
     }
 
     /**
      * The time duration, see {@link #getUnit()} for the time unit.
      */
-    public long getDuration()
+    public long getValue()
     {
         return duration;
+    }
+
+    /**
+     * The time duration in the given <var>targetUnit</var>.
+     */
+    public long getValue(HDF5TimeUnit targetUnit)
+    {
+        return (targetUnit == timeUnit) ? duration : targetUnit.convert(duration, timeUnit);
     }
 
     /**
@@ -46,7 +65,7 @@ public class HDF5TimeDuration
      */
     public HDF5TimeUnit getUnit()
     {
-        return unit;
+        return timeUnit;
     }
 
     /**
@@ -54,12 +73,12 @@ public class HDF5TimeDuration
      */
     public boolean isEquivalent(HDF5TimeDuration that)
     {
-        if (this.unit == that.unit)
+        if (this.timeUnit == that.timeUnit)
         {
             return this.duration == that.duration;
         } else
         {
-            return this.unit.convert(that) == this.duration;
+            return this.timeUnit.convert(that) == this.duration;
         }
     }
     
@@ -73,7 +92,7 @@ public class HDF5TimeDuration
         final int prime = 31;
         int result = 1;
         result = prime * result + (int) (duration ^ (duration >>> 32));
-        result = prime * result + ((unit == null) ? 0 : unit.hashCode());
+        result = prime * result + ((timeUnit == null) ? 0 : timeUnit.hashCode());
         return result;
     }
 
@@ -89,7 +108,7 @@ public class HDF5TimeDuration
         HDF5TimeDuration other = (HDF5TimeDuration) obj;
         if (duration != other.duration)
             return false;
-        if (unit != other.unit)
+        if (timeUnit != other.timeUnit)
             return false;
         return true;
     }
@@ -97,7 +116,7 @@ public class HDF5TimeDuration
     @Override
     public String toString()
     {
-        return Long.toString(duration) + " " + unit.toString();
+        return Long.toString(duration) + " " + timeUnit.toString();
     }
 
 }
