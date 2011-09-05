@@ -16,8 +16,6 @@
 
 package ch.systemsx.cisd.hdf5.examples;
 
-import java.util.Date;
-
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
@@ -36,14 +34,14 @@ public class AttributeExample
         writer.writeString("a string", "Just some random string.");
         // Set two attributes on it.
         writer.setBooleanAttribute("a string", "important", false);
-        writer.setLongAttribute("a string", "timestamp", System.currentTimeMillis());
+        writer.setTimeStampAttribute("a string", "timestamp", System.currentTimeMillis());
         writer.close();
 
         // Read the dataset and the attributes.
         IHDF5Reader reader = HDF5Factory.openForReading("attribute.h5");
         System.out.println(reader.readString("a string"));
         System.out.println(reader.getBooleanAttribute("a string", "important"));
-        System.out.println(new Date(reader.getLongAttribute("a string", "timestamp")));
+        System.out.println(reader.getDateAttribute("a string", "timestamp"));
         reader.close();
     }
 
