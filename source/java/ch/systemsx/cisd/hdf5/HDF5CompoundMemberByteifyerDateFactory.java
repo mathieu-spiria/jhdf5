@@ -144,8 +144,15 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                 public byte[] byteify(int compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
-                    return HDFNativeData.longToByte(((java.util.Date) getMap(obj, memberName))
-                            .getTime());
+                    final Object dateObj = getMap(obj, memberName);
+                    if (dateObj instanceof java.util.Date)
+                    {
+                        return HDFNativeData.longToByte(((java.util.Date) dateObj)
+                                .getTime());
+                    } else
+                    {
+                        return HDFNativeData.longToByte(((Long) dateObj));
+                    }
                 }
 
                 @Override
@@ -181,8 +188,15 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                 public byte[] byteify(int compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
-                    return HDFNativeData.longToByte(((java.util.Date) getList(obj, index))
-                            .getTime());
+                    final Object dateObj = getList(obj, index);
+                    if (dateObj instanceof java.util.Date)
+                    {
+                        return HDFNativeData.longToByte(((java.util.Date) dateObj)
+                                .getTime());
+                    } else
+                    {
+                        return HDFNativeData.longToByte(((Long) dateObj));
+                    }
                 }
 
                 @Override
@@ -218,8 +232,15 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                 public byte[] byteify(int compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
-                    return HDFNativeData.longToByte(((java.util.Date) getArray(obj, index))
-                            .getTime());
+                    final Object dateObj = getArray(obj, index);
+                    if (dateObj instanceof java.util.Date)
+                    {
+                        return HDFNativeData.longToByte(((java.util.Date) dateObj)
+                                .getTime());
+                    } else
+                    {
+                        return HDFNativeData.longToByte(((Long) dateObj));
+                    }
                 }
 
                 @Override

@@ -153,7 +153,17 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                         IllegalArgumentException
                 {
                     assert obj != null;
-                    return (HDF5EnumerationValue) getMap(obj, memberName);
+                    final Object enumObj = getMap(obj, memberName);
+                    if (enumObj instanceof HDF5EnumerationValue)
+                    {
+                        return (HDF5EnumerationValue) enumObj;
+                    } else if (enumObj instanceof Number)
+                    {
+                        return new HDF5EnumerationValue(enumType, ((Number) enumObj).intValue());
+                    } else
+                    {
+                        return new HDF5EnumerationValue(enumType, enumObj.toString());
+                    }
                 }
             };
     }
@@ -197,7 +207,17 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                         IllegalArgumentException
                 {
                     assert obj != null;
-                    return (HDF5EnumerationValue) getList(obj, index);
+                    final Object enumObj = getList(obj, index);
+                    if (enumObj instanceof HDF5EnumerationValue)
+                    {
+                        return (HDF5EnumerationValue) enumObj;
+                    } else if (enumObj instanceof Number)
+                    {
+                        return new HDF5EnumerationValue(enumType, ((Number) enumObj).intValue());
+                    } else
+                    {
+                        return new HDF5EnumerationValue(enumType, enumObj.toString());
+                    }
                 }
             };
     }
@@ -241,7 +261,17 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                         IllegalArgumentException
                 {
                     assert obj != null;
-                    return (HDF5EnumerationValue) getArray(obj, index);
+                    final Object enumObj = getArray(obj, index);
+                    if (enumObj instanceof HDF5EnumerationValue)
+                    {
+                        return (HDF5EnumerationValue) enumObj;
+                    } else if (enumObj instanceof Number)
+                    {
+                        return new HDF5EnumerationValue(enumType, ((Number) enumObj).intValue());
+                    } else
+                    {
+                        return new HDF5EnumerationValue(enumType, enumObj.toString());
+                    }
                 }
             };
     }

@@ -300,6 +300,7 @@ public class HDF5RoundtripTest
         test.testInferredCompoundTypeWithEnumArray();
         test.testCompoundMap();
         test.testCompoundMapManualMapping();
+        test.testCompoundMapManualMappingWithConversion();
         test.testDateCompound();
         test.testMatrixCompound();
         try
@@ -5190,6 +5191,65 @@ public class HDF5RoundtripTest
         assertEquals(g, mapRead.get("g"));
         assertEquals(h, mapRead.get("h"));
         assertEquals(ii, mapRead.get("i"));
+        reader.close();
+    }
+
+    @Test
+    public void testCompoundMapManualMappingWithConversion()
+    {
+        final File file = new File(workingDirectory, "testCompoundMapManualMappingWithConversion.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        final HDF5EnumerationType enumType = writer.getEnumType("someEnumType", new String[]
+            { "1", "Two", "THREE" });
+        final HDF5CompoundType<HDF5CompoundDataMap> type =
+                writer.getCompoundType(
+                        "MapCompoundA",
+                        HDF5CompoundDataMap.class,
+                        new HDF5CompoundMemberMapping[]
+                            {
+                                    HDF5CompoundMemberMapping.mapping("a").memberClass(float.class),
+                                    mapping("b").memberClass(short.class),
+                                    mapping("c").memberClass(Date.class),
+                                    mapping("d").enumType(enumType).length(2),
+                                    mapping("e").memberClass(double.class),
+                                    mapping("f").memberClass(HDF5TimeDuration.class).typeVariant(
+                                            HDF5DataTypeVariant.TIME_DURATION_HOURS) });
+        final HDF5CompoundDataMap map = new HDF5CompoundDataMap();
+        final double a = 3.14159;
+        map.put("a", a);
+        final int b = 17;
+        map.put("b", b);
+        final long c = System.currentTimeMillis();
+        map.put("c", c);
+        final int[] d = new int[] { 1, 0 };
+        map.put("d", d);
+        final long e = 187493613;
+        map.put("e", e);
+        final short f = 12;
+        map.put("f", f);
+        writer.writeCompound("cpd", type, map);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final HDF5CompoundType<HDF5CompoundDataMap> typeRead =
+                reader.getDataSetCompoundType("cpd", HDF5CompoundDataMap.class);
+        assertEquals("MapCompoundA", typeRead.getName());
+        final HDF5CompoundDataMap mapRead = reader.readCompound("cpd", typeRead);
+        assertEquals(map.size(), mapRead.size());
+        assertEquals((float) a, mapRead.get("a"));
+        assertEquals((short) b, mapRead.get("b"));
+        assertEquals(new Date(c), mapRead.get("c"));
+        final HDF5EnumerationValueArray dRead = (HDF5EnumerationValueArray) mapRead.get("d");
+        assertEquals("someEnumType", dRead.getType().getName());
+        assertEquals(d.length, dRead.getLength());
+        for (int i = 0; i < d.length; ++i)
+        {
+            assertEquals("enum array idx=" + i, d[i], dRead.getOrdinal(i));
+        }
+        assertEquals((double) e, mapRead.get("e"));
+        assertEquals(new HDF5TimeDuration(f, HDF5TimeUnit.HOURS), mapRead.get("f"));
         reader.close();
     }
 

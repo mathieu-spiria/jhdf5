@@ -29,7 +29,6 @@ import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
@@ -230,7 +229,8 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.floatToByte((Float) getMap(obj, memberName));
+                            return HDFNativeData.floatToByte(((Number) getMap(obj, memberName))
+                                    .floatValue());
                         case ARRAY1D:
                             return HDFNativeData.floatToByte((float[]) getMap(obj, memberName));
                         case ARRAY2D:
@@ -310,7 +310,8 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.floatToByte((Float) getList(obj, index));
+                            return HDFNativeData.floatToByte(((Number) getList(obj, index))
+                                    .floatValue());
                         case ARRAY1D:
                             return HDFNativeData.floatToByte((float[]) getList(obj, index));
                         case ARRAY2D:
@@ -390,7 +391,8 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.floatToByte((Float) getArray(obj, index));
+                            return HDFNativeData.floatToByte(((Number) getArray(obj, index))
+                                    .floatValue());
                         case ARRAY1D:
                             return HDFNativeData.floatToByte((float[]) getArray(obj, index));
                         case ARRAY2D:

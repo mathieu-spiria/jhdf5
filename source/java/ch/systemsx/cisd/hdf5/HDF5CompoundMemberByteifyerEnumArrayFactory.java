@@ -18,6 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.*;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
@@ -162,7 +163,8 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                         throws IllegalAccessException, IllegalArgumentException
                 {
                     assert obj != null;
-                    return (HDF5EnumerationValueArray) getMap(obj, memberName);
+                    final Object enumArrayObj = getMap(obj, memberName);
+                    return guessEnumArray(enumArrayObj, enumType);
                 }
             };
     }
@@ -207,7 +209,8 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                         throws IllegalAccessException, IllegalArgumentException
                 {
                     assert obj != null;
-                    return (HDF5EnumerationValueArray) getList(obj, index);
+                    final Object enumArrayObj = getList(obj, index);
+                    return guessEnumArray(enumArrayObj, enumType);
                 }
             };
     }
@@ -252,9 +255,33 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                         throws IllegalAccessException, IllegalArgumentException
                 {
                     assert obj != null;
-                    return (HDF5EnumerationValueArray) getArray(obj, index);
+                    final Object enumArrayObj = getArray(obj, index);
+                    return guessEnumArray(enumArrayObj, enumType);
                 }
             };
+    }
+
+    HDF5EnumerationValueArray guessEnumArray(final Object enumArrayObj,
+            final HDF5EnumerationType enumType)
+    {
+        if (enumArrayObj instanceof HDF5EnumerationValueArray)
+        {
+            return (HDF5EnumerationValueArray) enumArrayObj;
+        } else if (enumArrayObj instanceof int[])
+        {
+            return new HDF5EnumerationValueArray(enumType, (int[]) enumArrayObj);
+        } else if (enumArrayObj instanceof String[])
+        {
+            return new HDF5EnumerationValueArray(enumType, (String[]) enumArrayObj);
+        } else
+        {
+            final String[] options = new String[Array.getLength(enumArrayObj)];
+            for (int i = 0; i < options.length; ++i)
+            {
+                options[i] = Array.get(enumArrayObj, i).toString();
+            }
+            return new HDF5EnumerationValueArray(enumType, options);
+        }
     }
 
 }

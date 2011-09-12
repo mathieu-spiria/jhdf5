@@ -148,9 +148,16 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                 public byte[] byteify(int compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
-                    final HDF5TimeDuration duration = (HDF5TimeDuration) getMap(obj, memberName);
-                    return HDFNativeData.longToByte(timeUnit.convert(duration.getValue(),
-                            duration.getUnit()));
+                    final Object durationObj = getMap(obj, memberName);
+                    if (durationObj instanceof HDF5TimeDuration)
+                    {
+                        final HDF5TimeDuration duration = (HDF5TimeDuration) durationObj;
+                        return HDFNativeData.longToByte(timeUnit.convert(duration.getValue(),
+                                duration.getUnit()));
+                    } else
+                    {
+                        return HDFNativeData.longToByte(((Number) durationObj).longValue());
+                    }
                 }
 
                 @Override
@@ -188,9 +195,16 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                 public byte[] byteify(int compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
-                    final HDF5TimeDuration duration = (HDF5TimeDuration) getList(obj, index);
-                    return HDFNativeData.longToByte(timeUnit.convert(duration.getValue(),
-                            duration.getUnit()));
+                    final Object durationObj = getList(obj, index);
+                    if (durationObj instanceof HDF5TimeDuration)
+                    {
+                        final HDF5TimeDuration duration = (HDF5TimeDuration) durationObj;
+                        return HDFNativeData.longToByte(timeUnit.convert(duration.getValue(),
+                                duration.getUnit()));
+                    } else
+                    {
+                        return HDFNativeData.longToByte(((Number) durationObj).longValue());
+                    }
                 }
 
                 @Override
@@ -228,9 +242,16 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                 public byte[] byteify(int compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
-                    final HDF5TimeDuration duration = (HDF5TimeDuration) getArray(obj, index);
-                    return HDFNativeData.longToByte(timeUnit.convert(duration.getValue(),
-                            duration.getUnit()));
+                    final Object durationObj = getArray(obj, index);
+                    if (durationObj instanceof HDF5TimeDuration)
+                    {
+                        final HDF5TimeDuration duration = (HDF5TimeDuration) durationObj;
+                        return HDFNativeData.longToByte(timeUnit.convert(duration.getValue(),
+                                duration.getUnit()));
+                    } else
+                    {
+                        return HDFNativeData.longToByte(((Number) durationObj).longValue());
+                    }
                 }
 
                 @Override

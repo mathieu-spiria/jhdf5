@@ -29,7 +29,6 @@ import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
@@ -230,7 +229,8 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.shortToByte((Short) getMap(obj, memberName));
+                            return HDFNativeData.shortToByte(((Number) getMap(obj, memberName))
+                                    .shortValue());
                         case ARRAY1D:
                             return HDFNativeData.shortToByte((short[]) getMap(obj, memberName));
                         case ARRAY2D:
@@ -310,7 +310,8 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.shortToByte((Short) getList(obj, index));
+                            return HDFNativeData.shortToByte(((Number) getList(obj, index))
+                                    .shortValue());
                         case ARRAY1D:
                             return HDFNativeData.shortToByte((short[]) getList(obj, index));
                         case ARRAY2D:
@@ -390,7 +391,8 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.shortToByte((Short) getArray(obj, index));
+                            return HDFNativeData.shortToByte(((Number) getArray(obj, index))
+                                    .shortValue());
                         case ARRAY1D:
                             return HDFNativeData.shortToByte((short[]) getArray(obj, index));
                         case ARRAY2D:

@@ -29,7 +29,6 @@ import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
@@ -230,7 +229,8 @@ class HDF5CompoundMemberByteifyerLongFactory implements IHDF5CompoundMemberBytif
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.longToByte((Long) getMap(obj, memberName));
+                            return HDFNativeData.longToByte(((Number) getMap(obj, memberName))
+                                    .longValue());
                         case ARRAY1D:
                             return HDFNativeData.longToByte((long[]) getMap(obj, memberName));
                         case ARRAY2D:
@@ -310,7 +310,8 @@ class HDF5CompoundMemberByteifyerLongFactory implements IHDF5CompoundMemberBytif
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.longToByte((Long) getList(obj, index));
+                            return HDFNativeData.longToByte(((Number) getList(obj, index))
+                                    .longValue());
                         case ARRAY1D:
                             return HDFNativeData.longToByte((long[]) getList(obj, index));
                         case ARRAY2D:
@@ -390,7 +391,8 @@ class HDF5CompoundMemberByteifyerLongFactory implements IHDF5CompoundMemberBytif
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.longToByte((Long) getArray(obj, index));
+                            return HDFNativeData.longToByte(((Number) getArray(obj, index))
+                                    .longValue());
                         case ARRAY1D:
                             return HDFNativeData.longToByte((long[]) getArray(obj, index));
                         case ARRAY2D:

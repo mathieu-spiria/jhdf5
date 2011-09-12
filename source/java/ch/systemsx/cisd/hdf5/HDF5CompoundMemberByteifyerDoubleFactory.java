@@ -29,7 +29,6 @@ import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-
 import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
@@ -230,7 +229,8 @@ class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMemberByt
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.doubleToByte((Double) getMap(obj, memberName));
+                            return HDFNativeData.doubleToByte(((Number) getMap(obj, memberName))
+                                    .doubleValue());
                         case ARRAY1D:
                             return HDFNativeData.doubleToByte((double[]) getMap(obj, memberName));
                         case ARRAY2D:
@@ -310,7 +310,8 @@ class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMemberByt
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.doubleToByte((Double) getList(obj, index));
+                            return HDFNativeData.doubleToByte(((Number) getList(obj, index))
+                                    .doubleValue());
                         case ARRAY1D:
                             return HDFNativeData.doubleToByte((double[]) getList(obj, index));
                         case ARRAY2D:
@@ -390,7 +391,8 @@ class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMemberByt
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.doubleToByte((Double) getArray(obj, index));
+                            return HDFNativeData.doubleToByte(((Number) getArray(obj, index))
+                                    .doubleValue());
                         case ARRAY1D:
                             return HDFNativeData.doubleToByte((double[]) getArray(obj, index));
                         case ARRAY2D:

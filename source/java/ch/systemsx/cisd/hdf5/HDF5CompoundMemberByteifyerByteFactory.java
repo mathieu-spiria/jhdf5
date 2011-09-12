@@ -28,7 +28,6 @@ import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
@@ -207,7 +206,8 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final int[] dimensions, final int len, final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final int[] dimensions, final int len, final int memberTypeId, final Rank rank,
+            final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, len, offset, typeVariant)
             {
@@ -230,7 +230,8 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.byteToByte(((Byte) getMap(obj, memberName)));
+                            return HDFNativeData.byteToByte((((Number) getMap(obj, memberName))
+                                    .byteValue()));
                         case ARRAY1D:
                             return (byte[]) getMap(obj, memberName);
                         case ARRAY2D:
@@ -312,7 +313,8 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.byteToByte(((Byte) getList(obj, index)));
+                            return HDFNativeData.byteToByte((((Number) getList(obj, index))
+                                    .byteValue()));
                         case ARRAY1D:
                             return (byte[]) getList(obj, index);
                         case ARRAY2D:
@@ -394,7 +396,8 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
                     switch (rank)
                     {
                         case SCALAR:
-                            return HDFNativeData.byteToByte(((Byte) getArray(obj, index)));
+                            return HDFNativeData.byteToByte((((Number) getArray(obj, index))
+                                    .byteValue()));
                         case ARRAY1D:
                             return (byte[]) getArray(obj, index);
                         case ARRAY2D:
