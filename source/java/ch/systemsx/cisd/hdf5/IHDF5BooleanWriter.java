@@ -36,7 +36,7 @@ public interface IHDF5BooleanWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public abstract void setBooleanAttribute(final String objectPath, final String name,
+    public void setBooleanAttribute(final String objectPath, final String name,
             final boolean value);
 
     /**
@@ -45,7 +45,7 @@ public interface IHDF5BooleanWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param value The value of the data set.
      */
-    public abstract void writeBoolean(final String objectPath, final boolean value);
+    public void writeBoolean(final String objectPath, final boolean value);
 
     /**
      * Writes out a bit field ((which can be considered the equivalent to a boolean array of rank
@@ -59,7 +59,7 @@ public interface IHDF5BooleanWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
-    public abstract void writeBitField(final String objectPath, final BitSet data);
+    public void writeBitField(final String objectPath, final BitSet data);
 
     /**
      * Writes out a bit field ((which can be considered the equivalent to a boolean array of rank
@@ -74,7 +74,7 @@ public interface IHDF5BooleanWriter
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
      */
-    public abstract void writeBitField(final String objectPath, final BitSet data,
+    public void writeBitField(final String objectPath, final BitSet data,
             final HDF5GenericStorageFeatures features);
 
 }

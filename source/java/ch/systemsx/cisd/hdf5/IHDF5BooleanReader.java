@@ -38,7 +38,7 @@ public interface IHDF5BooleanReader
      * @return The attribute value read from the data set.
      * @throws HDF5JavaException If the attribute is not a boolean type.
      */
-    public abstract boolean getBooleanAttribute(final String objectPath, final String attributeName)
+    public boolean getBooleanAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException;
 
     /**
@@ -48,7 +48,7 @@ public interface IHDF5BooleanReader
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a boolean type.
      */
-    public abstract boolean readBoolean(final String objectPath) throws HDF5JavaException;
+    public boolean readBoolean(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a bit field (which can be considered the equivalent to a boolean array of rank 1) from
@@ -63,7 +63,7 @@ public interface IHDF5BooleanReader
      * @return The {@link BitSet} read from the data set.
      * @throws HDF5DatatypeInterfaceException If the <var>objectPath</var> is not of bit field type.
      */
-    public abstract BitSet readBitField(final String objectPath)
+    public BitSet readBitField(final String objectPath)
             throws HDF5DatatypeInterfaceException;
 
 }
