@@ -140,6 +140,8 @@ public class HDF5RoundtripTest
         test.testOverwriteContiguousDataSet();
         test.testScaleOffsetFilterInt();
         test.testScaleOffsetFilterFloat();
+        test.testBooleanArray();
+        test.testBooleanArrayBlock();
         test.testSmallString();
         test.testVeryLargeString();
         test.testOverwriteString();
@@ -578,6 +580,36 @@ public class HDF5RoundtripTest
         final HDF5DataSetInformation info = reader.getDataSetInformation(booleanDatasetName);
         assertEquals(HDF5DataClass.BITFIELD, info.getTypeInformation().getDataClass());
         assertChunkSizes(info, HDF5Utils.MIN_CHUNK_SIZE);
+        reader.close();
+    }
+
+    @Test
+    public void testBooleanArrayBlock()
+    {
+        final File datasetFile = new File(workingDirectory, "booleanArrayBlock.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String booleanDatasetName = "/booleanArray";
+        final BitSet arrayWritten = new BitSet();
+        writer.createBitField(booleanDatasetName, 4L, 2);
+        arrayWritten.set(32);
+        arrayWritten.set(40);
+        writer.writeBitFieldBlock(booleanDatasetName, arrayWritten, 2, 0);
+        arrayWritten.clear();
+        arrayWritten.set(0);
+        writer.writeBitFieldBlock(booleanDatasetName, arrayWritten, 2, 1);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final BitSet arrayBlockRead = reader.readBitFieldBlock(booleanDatasetName, 2, 1);
+        assertEquals(1, arrayBlockRead.cardinality());
+        assertTrue(arrayBlockRead.get(0));
+        assertTrue(reader.isBitSetInBitField(booleanDatasetName, 32));
+        assertTrue(reader.isBitSetInBitField(booleanDatasetName, 40));
+        assertTrue(reader.isBitSetInBitField(booleanDatasetName, 128));
+        assertFalse(reader.isBitSetInBitField(booleanDatasetName, 33));
+        assertFalse(reader.isBitSetInBitField(booleanDatasetName, 64));
         reader.close();
     }
 

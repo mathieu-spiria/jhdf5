@@ -139,4 +139,46 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
         return baseReader.runner.call(readCallable);
     }
 
+    public BitSet readBitFieldBlock(String objectPath, int blockSize, long blockNumber)
+    {
+        return readBitFieldBlockWithOffset(objectPath, blockSize, blockSize * blockNumber);
+    }
+
+    private long[] readBitFieldStorageForm(final String objectPath, final int blockSize,
+            final long offset)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
+            {
+                public long[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_B64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+
+    public BitSet readBitFieldBlockWithOffset(String objectPath, int blockSize, long offset)
+    {
+        baseReader.checkOpen();
+        return BitSetConversionUtils.fromStorageForm(readBitFieldStorageForm(objectPath, blockSize,
+                offset));
+    }
+
+    public boolean isBitSetInBitField(String objectPath, int bitIndex)
+    {
+        final int wordIndex = BitSetConversionUtils.getWordIndex(bitIndex);
+        final long word = readBitFieldStorageForm(objectPath, 1, wordIndex)[0];
+        return (word & BitSetConversionUtils.getBitMaskInWord(bitIndex)) != 0;
+    }
+
 }

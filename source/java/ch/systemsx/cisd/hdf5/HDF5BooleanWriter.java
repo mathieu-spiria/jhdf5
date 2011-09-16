@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
@@ -23,7 +24,6 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_B64LE;
 
 import java.util.BitSet;
-
 
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -93,6 +93,103 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
                                 { realLength }, longBytes, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             BitSetConversionUtils.toStorageForm(data));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    public void createBitField(String objectPath, int size)
+    {
+        createBitField(objectPath, size, INT_NO_COMPRESSION);
+
+    }
+
+    public void createBitField(String objectPath, long size, int blockSize)
+    {
+        createBitField(objectPath, size, blockSize, INT_NO_COMPRESSION);
+    }
+
+    public void createBitField(final String objectPath, final int size,
+            final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (features.requiresChunking())
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_STD_B64LE, features, new long[]
+                            { 0 }, new long[]
+                            { size }, 8, registry);
+
+                    } else
+                    {
+                        baseWriter.createDataSet(objectPath, H5T_STD_B64LE, features, new long[]
+                            { size }, null, 8, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
+    public void createBitField(final String objectPath, final long size, final int blockSize,
+            final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+        assert blockSize >= 0 && (blockSize <= size || size == 0);
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    baseWriter.createDataSet(objectPath, H5T_STD_B64LE, features, new long[]
+                        { size }, new long[]
+                        { blockSize }, 8, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
+    public void writeBitFieldBlock(String objectPath, BitSet data, int dataSize, long blockNumber)
+    {
+        writeBitFieldBlockWithOffset(objectPath, data, dataSize, dataSize * blockNumber);
+    }
+
+    public void writeBitFieldBlockWithOffset(final String objectPath, final BitSet data,
+            final int dataSize, final long offset)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    final int dataSetId =
+                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                    baseWriter.fileFormat, new long[]
+                                        { offset + dataSize }, -1, registry);
+                    final int dataSpaceId =
+                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
+                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId =
+                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_B64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            BitSetConversionUtils.toStorageForm(data, dataSize));
                     return null; // Nothing to return.
                 }
             };

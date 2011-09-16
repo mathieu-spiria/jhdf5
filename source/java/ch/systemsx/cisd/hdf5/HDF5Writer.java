@@ -379,6 +379,38 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     // Opaque
     //
 
+    public void createBitField(String objectPath, int size)
+    {
+        booleanWriter.createBitField(objectPath, size);
+    }
+
+    public void createBitField(String objectPath, long size, int blockSize)
+    {
+        booleanWriter.createBitField(objectPath, size, blockSize);
+    }
+
+    public void createBitField(String objectPath, int size, HDF5IntStorageFeatures features)
+    {
+        booleanWriter.createBitField(objectPath, size, features);
+    }
+
+    public void createBitField(String objectPath, long size, int blockSize,
+            HDF5IntStorageFeatures features)
+    {
+        booleanWriter.createBitField(objectPath, size, blockSize, features);
+    }
+
+    public void writeBitFieldBlock(String objectPath, BitSet data, int dataSize, long blockNumber)
+    {
+        booleanWriter.writeBitFieldBlock(objectPath, data, dataSize, blockNumber);
+    }
+
+    public void writeBitFieldBlockWithOffset(String objectPath, BitSet data, int dataSize,
+            long offset)
+    {
+        booleanWriter.writeBitFieldBlockWithOffset(objectPath, data, dataSize, offset);
+    }
+
     public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, int size,
             HDF5GenericStorageFeatures features)
     {

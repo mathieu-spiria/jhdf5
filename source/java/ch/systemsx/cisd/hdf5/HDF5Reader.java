@@ -602,6 +602,21 @@ class HDF5Reader implements IHDF5Reader
         return booleanReader.readBitField(objectPath);
     }
 
+    public BitSet readBitFieldBlock(String objectPath, int blockSize, long blockNumber)
+    {
+        return booleanReader.readBitFieldBlock(objectPath, blockSize, blockNumber);
+    }
+
+    public BitSet readBitFieldBlockWithOffset(String objectPath, int blockSize, long offset)
+    {
+        return booleanReader.readBitFieldBlockWithOffset(objectPath, blockSize, offset);
+    }
+
+    public boolean isBitSetInBitField(String objectPath, int bitIndex)
+    {
+        return booleanReader.isBitSetInBitField(objectPath, bitIndex);
+    }
+
     public boolean readBoolean(String objectPath) throws HDF5JavaException
     {
         return booleanReader.readBoolean(objectPath);

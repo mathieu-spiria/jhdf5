@@ -30,7 +30,6 @@ import ch.rinn.restrictions.Private;
  */
 class BitSetConversionUtils
 {
-
     private final static int ADDRESS_BITS_PER_WORD = 6;
 
     private final static int BITS_PER_WORD = 1 << ADDRESS_BITS_PER_WORD;
@@ -125,6 +124,17 @@ class BitSetConversionUtils
         }
     }
 
+    static long[] toStorageForm(final BitSet data, int numberOfWords)
+    {
+        if (BIT_SET_WORDS != null)
+        {
+            return toStorageFormFast(data, numberOfWords);
+        } else
+        {
+            return toStorageFormGeneric(data, numberOfWords);
+        }
+    }
+
     private static long[] toStorageFormFast(final BitSet data)
     {
         try
@@ -132,6 +142,18 @@ class BitSetConversionUtils
             long[] storageForm = (long[]) BIT_SET_WORDS.get(data);
             int inUse = BIT_SET_WORDS_IN_USE.getInt(data);
             return trim(storageForm, inUse);
+        } catch (final IllegalAccessException ex)
+        {
+            throw new IllegalAccessError(ex.getMessage());
+        }
+    }
+
+    private static long[] toStorageFormFast(final BitSet data, int numberOfWords)
+    {
+        try
+        {
+            long[] storageForm = (long[]) BIT_SET_WORDS.get(data);
+            return trimEnforceLen(storageForm, numberOfWords);
         } catch (final IllegalAccessException ex)
         {
             throw new IllegalAccessError(ex.getMessage());
@@ -150,9 +172,21 @@ class BitSetConversionUtils
         return array;
     }
     
-    private static int calcInUse(final long[] array, int inUse)
+    private static long[] trimEnforceLen(final long[] array, int len)
     {
-        int result = inUse;
+        if (len != array.length)
+        {
+            final long[] trimmedArray = new long[len];
+            final int inUse = calcInUse(array, len);
+            System.arraycopy(array, 0, trimmedArray, 0, inUse);
+            return trimmedArray;
+        }
+        return array;
+    }
+    
+    private static int calcInUse(final long[] array, int len)
+    {
+        int result = Math.min(len, array.length);
         while (result > 0 && array[result - 1] == 0)
         {
             --result;
@@ -160,12 +194,18 @@ class BitSetConversionUtils
         return result;
     }
     
-    private static int wordIndex(final int bitIndex)
+    /**
+     * Given a bit index return the word index containing it.
+     */
+    static int getWordIndex(final int bitIndex)
     {
         return bitIndex >> ADDRESS_BITS_PER_WORD;
     }
 
-    private static long bitInIndex(final int bitIndex)
+    /**
+     * Given a bit index, return a unit that masks that bit in its unit.
+     */
+    static long getBitMaskInWord(final int bitIndex)
     {
         return 1L << (bitIndex & BIT_INDEX_MASK);
     }
@@ -177,8 +217,25 @@ class BitSetConversionUtils
         for (int bitIndex = data.nextSetBit(0); bitIndex >= 0; bitIndex =
                 data.nextSetBit(bitIndex + 1))
         {
-            final int wordIndex = wordIndex(bitIndex);
-            words[wordIndex] |= bitInIndex(bitIndex);
+            final int wordIndex = getWordIndex(bitIndex);
+            words[wordIndex] |= getBitMaskInWord(bitIndex);
+        }
+        return words;
+    }
+
+    // @Private
+    static long[] toStorageFormGeneric(final BitSet data, final int numberOfWords)
+    {
+        final long[] words = new long[numberOfWords];
+        for (int bitIndex = data.nextSetBit(0); bitIndex >= 0; bitIndex =
+                data.nextSetBit(bitIndex + 1))
+        {
+            final int wordIndex = getWordIndex(bitIndex);
+            if (wordIndex >= words.length)
+            {
+                break;
+            }
+            words[wordIndex] |= getBitMaskInWord(bitIndex);
         }
         return words;
     }

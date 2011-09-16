@@ -23,7 +23,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * An interface that provides methods for reading boolean and bit field values from HDF5 files.
- *
+ * 
  * @author Bernd Rinn
  */
 public interface IHDF5BooleanReader
@@ -63,7 +63,48 @@ public interface IHDF5BooleanReader
      * @return The {@link BitSet} read from the data set.
      * @throws HDF5DatatypeInterfaceException If the <var>objectPath</var> is not of bit field type.
      */
-    public BitSet readBitField(final String objectPath)
-            throws HDF5DatatypeInterfaceException;
+    public BitSet readBitField(final String objectPath) throws HDF5DatatypeInterfaceException;
+
+    /**
+     * Reads a block of a bit field (which can be considered the equivalent to a boolean array of
+     * rank 1) from the data set <var>objectPath</var> and returns it as a Java {@link BitSet}.
+     * <p>
+     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
+     * in HDF5 to be interpreted bit-wise. Thus a data set written by
+     * {@link IHDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but
+     * will throw a {@link HDF5DatatypeInterfaceException}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The size of the block (in 64 bit words) to read.
+     * @param blockNumber The number of the block to read.
+     * @return The {@link BitSet} read from the data set.
+     * @throws HDF5DatatypeInterfaceException If the <var>objectPath</var> is not of bit field type.
+     */
+    public BitSet readBitFieldBlock(final String objectPath, final int blockSize,
+            final long blockNumber);
+
+    /**
+     * Reads a block of a bit field (which can be considered the equivalent to a boolean array of
+     * rank 1) from the data set <var>objectPath</var> and returns it as a Java {@link BitSet}.
+     * <p>
+     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
+     * in HDF5 to be interpreted bit-wise. Thus a data set written by
+     * {@link IHDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but
+     * will throw a {@link HDF5DatatypeInterfaceException}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The size of the block (in 64 bit words) to read.
+     * @param offset The offset of the block (in 64 bit words) to start reading from.
+     * @return The {@link BitSet} read from the data set.
+     * @throws HDF5DatatypeInterfaceException If the <var>objectPath</var> is not of bit field type.
+     */
+    public BitSet readBitFieldBlockWithOffset(final String objectPath, final int blockSize,
+            final long offset);
+
+    /**
+     * Returns <code>true</code> if the <var>bitIndex</var> of the bit field dataset
+     * <var>objectPath</var> is set, <code>false</code> otherwise.
+     */
+    public boolean isBitSetInBitField(final String objectPath, final int bitIndex);
 
 }
