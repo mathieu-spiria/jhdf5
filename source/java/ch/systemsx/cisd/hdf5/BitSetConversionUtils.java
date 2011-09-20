@@ -28,7 +28,7 @@ import ch.rinn.restrictions.Private;
  * 
  * @author Bernd Rinn
  */
-class BitSetConversionUtils
+public class BitSetConversionUtils
 {
     private final static int ADDRESS_BITS_PER_WORD = 6;
 
@@ -69,7 +69,7 @@ class BitSetConversionUtils
         }
     }
 
-    static BitSet fromStorageForm(final long[] serializedWordArray)
+    public static BitSet fromStorageForm(final long[] serializedWordArray)
     {
         if (BIT_SET_WORDS != null)
         {
@@ -113,7 +113,7 @@ class BitSetConversionUtils
         return result;
     }
 
-    static long[] toStorageForm(final BitSet data)
+    public static long[] toStorageForm(final BitSet data)
     {
         if (BIT_SET_WORDS != null)
         {
@@ -124,7 +124,7 @@ class BitSetConversionUtils
         }
     }
 
-    static long[] toStorageForm(final BitSet data, int numberOfWords)
+    public static long[] toStorageForm(final BitSet data, int numberOfWords)
     {
         if (BIT_SET_WORDS != null)
         {
@@ -197,7 +197,7 @@ class BitSetConversionUtils
     /**
      * Given a bit index return the word index containing it.
      */
-    static int getWordIndex(final int bitIndex)
+    public static int getWordIndex(final int bitIndex)
     {
         return bitIndex >> ADDRESS_BITS_PER_WORD;
     }
@@ -205,7 +205,7 @@ class BitSetConversionUtils
     /**
      * Given a bit index, return a unit that masks that bit in its unit.
      */
-    static long getBitMaskInWord(final int bitIndex)
+    public static long getBitMaskInWord(final int bitIndex)
     {
         return 1L << (bitIndex & BIT_INDEX_MASK);
     }
