@@ -91,6 +91,14 @@ public class HDF5CompoundType<T> extends HDF5DataType
     {
         return compoundType;
     }
+    
+    /**
+     * Returns the size of the record on disk (in bytes).
+     */
+    public int getRecordSize()
+    {
+        return objectByteifyer.getRecordSize();
+    }
 
     /**
      * Returns an array with the {@link HDF5CompoundMemberInformation} of all compound members.
