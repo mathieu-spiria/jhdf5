@@ -108,7 +108,6 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
  */
 public final class HDF5CompoundMemberMapping
 {
-
     private final String memberName;
 
     private final int storageDataTypeId;
@@ -124,6 +123,8 @@ public final class HDF5CompoundMemberMapping
     private HDF5EnumerationType enumTypeOrNull;
 
     private HDF5DataTypeVariant typeVariantOrNull;
+
+    private HDF5CompoundMappingHints hintsOrNull;
 
     /**
      * Adds a member mapping for <var>memberName</var>.
@@ -534,6 +535,24 @@ public final class HDF5CompoundMemberMapping
     }
 
     /**
+     * Adds the given <var>hintsOrNull</var> to all <var>mapping</var>.
+     * 
+     * @return <var>mapping</var>.
+     */
+    public static HDF5CompoundMemberMapping[] addHints(HDF5CompoundMemberMapping[] mapping,
+            HDF5CompoundMappingHints hintsOrNull)
+    {
+        if (hintsOrNull != null)
+        {
+            for (HDF5CompoundMemberMapping m : mapping)
+            {
+                m.hints(hintsOrNull);
+            }
+        }
+        return mapping;
+    }
+
+    /**
      * Returns the inferred compound member mapping for the given <var>compoundMap</var>. All
      * entries that correspond to members with length or dimension information take this information
      * from the values supplied.
@@ -775,15 +794,18 @@ public final class HDF5CompoundMemberMapping
                 } else if (memberClass == HDF5EnumerationValueArray.class)
                 {
                     enumTypeOrNull = ((HDF5EnumerationValueArray) memberValue).getType();
-                    dimensions = new int[] { ((HDF5EnumerationValueArray) memberValue).getLength() };
+                    dimensions = new int[]
+                        { ((HDF5EnumerationValueArray) memberValue).getLength() };
                 } else if (memberClass == String.class)
                 {
-                    dimensions = new int[] { ((String) memberValue).length() };
+                    dimensions = new int[]
+                        { ((String) memberValue).length() };
                 } else if (memberClass == BitSet.class)
                 {
                     final int len = ((BitSet) memberValue).length();
-                    dimensions = new int[] { len > 0 ? len : 1 };
-                } else 
+                    dimensions = new int[]
+                        { len > 0 ? len : 1 };
+                } else
                 {
                     dimensions = new int[0];
                 }
@@ -1074,6 +1096,15 @@ public final class HDF5CompoundMemberMapping
         return this;
     }
 
+    /**
+     * Sets mapping hints for this mapping.
+     */
+    public HDF5CompoundMemberMapping hints(HDF5CompoundMappingHints hints)
+    {
+        this.hintsOrNull = hints;
+        return this;
+    }
+
     private void checkEnumArrayRank()
     {
         if (memberTypeDimensions != null && memberTypeDimensions.length > 1)
@@ -1109,6 +1140,11 @@ public final class HDF5CompoundMemberMapping
     HDF5EnumerationType tryGetEnumerationType()
     {
         return enumTypeOrNull;
+    }
+
+    HDF5CompoundMappingHints tryGetHints()
+    {
+        return hintsOrNull;
     }
 
     /**

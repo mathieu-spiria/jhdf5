@@ -18,7 +18,6 @@ package ch.systemsx.cisd.hdf5;
 
 import java.util.Iterator;
 
-
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType.StorageFormEnum;
@@ -476,6 +475,28 @@ public class HDF5EnumerationValueArray implements Iterable<String>
                         offset, len));
         }
         throw new Error("Illegal storage form (" + enumType.getStorageForm() + ".)");
+    }
+
+    static String[] fromStorageFormToStringArray(HDF5EnumerationType enumType, byte[] data,
+            int offset, int len)
+    {
+        final String[] valueArray = new String[len];
+        for (int i = 0; i < len; ++i)
+        {
+            valueArray[i] = enumType.createStringFromStorageForm(data, offset + i);
+        }
+        return valueArray;
+    }
+
+    static int[] fromStorageFormToIntArray(HDF5EnumerationType enumType, byte[] data,
+            int offset, int len)
+    {
+        final int[] valueArray = new int[len];
+        for (int i = 0; i < len; ++i)
+        {
+            valueArray[i] = enumType.getOrdinalFromStorageForm(data, offset + i);
+        }
+        return valueArray;
     }
 
     //

@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.*;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.getEnumReturnType;
 
 import java.lang.reflect.Field;
 
@@ -58,13 +59,14 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                 return createByteifyerForField(fieldOrNull, memberName, offset, enumType,
                         member.tryGetTypeVariant());
             case MAP:
-                return createByteifyerForMap(memberName, offset, enumType, member.tryGetTypeVariant());
+                return createByteifyerForMap(memberName, offset, enumType,
+                        member.tryGetTypeVariant(), getEnumReturnType(member));
             case LIST:
                 return createByteifyerForList(memberName, index, offset, enumType,
-                        member.tryGetTypeVariant());
+                        member.tryGetTypeVariant(), getEnumReturnType(member));
             case ARRAY:
                 return createByteifyerForArray(memberName, index, offset, enumType,
-                        member.tryGetTypeVariant());
+                        member.tryGetTypeVariant(), getEnumReturnType(member));
             default:
                 throw new Error("Unknown access type");
         }
@@ -116,7 +118,8 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final HDF5EnumerationType enumType, final HDF5DataTypeVariant typeVariant)
+            final HDF5EnumerationType enumType, final HDF5DataTypeVariant typeVariant,
+            final HDF5CompoundMappingHints.EnumReturnType enumReturnType)
     {
         return new HDF5MemberByteifyer(null, memberName,
                 enumType.getStorageForm().getStorageSize(), offset, typeVariant)
@@ -144,8 +147,8 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                 public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
-                    final HDF5EnumerationValue enumValue =
-                            enumType.createFromStorageForm(byteArr, arrayOffset + offset);
+                    final Object enumValue =
+                            getEnumValue(enumType, byteArr, arrayOffset + offset, enumReturnType);
                     putMap(obj, memberName, enumValue);
                 }
 
@@ -170,7 +173,8 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
             final int offset, final HDF5EnumerationType enumType,
-            final HDF5DataTypeVariant typeVariant)
+            final HDF5DataTypeVariant typeVariant,
+            final HDF5CompoundMappingHints.EnumReturnType enumReturnType)
     {
         return new HDF5MemberByteifyer(null, memberName,
                 enumType.getStorageForm().getStorageSize(), offset, typeVariant)
@@ -198,8 +202,8 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                 public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
-                    final HDF5EnumerationValue enumValue =
-                            enumType.createFromStorageForm(byteArr, arrayOffset + offset);
+                    final Object enumValue =
+                            getEnumValue(enumType, byteArr, arrayOffset + offset, enumReturnType);
                     setList(obj, index, enumValue);
                 }
 
@@ -224,7 +228,8 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
             final int offset, final HDF5EnumerationType enumType,
-            final HDF5DataTypeVariant typeVariant)
+            final HDF5DataTypeVariant typeVariant,
+            final HDF5CompoundMappingHints.EnumReturnType enumReturnType)
     {
         return new HDF5MemberByteifyer(null, memberName,
                 enumType.getStorageForm().getStorageSize(), offset, typeVariant)
@@ -252,8 +257,8 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                 public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
-                    final HDF5EnumerationValue enumValue =
-                            enumType.createFromStorageForm(byteArr, arrayOffset + offset);
+                    final Object enumValue =
+                            getEnumValue(enumType, byteArr, arrayOffset + offset, enumReturnType);
                     setArray(obj, index, enumValue);
                 }
 
@@ -274,6 +279,22 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                     }
                 }
             };
+    }
+
+    static Object getEnumValue(final HDF5EnumerationType enumType, byte[] byteArr,
+            int arrayOffset, final HDF5CompoundMappingHints.EnumReturnType enumReturnType)
+    {
+        switch (enumReturnType)
+        {
+            case HDF5ENUMERATIONVALUE:
+                return enumType.createFromStorageForm(byteArr, arrayOffset);
+            case STRING:
+                return enumType.createStringFromStorageForm(byteArr, arrayOffset);
+            case ORDINAL:
+                return enumType.getOrdinalFromStorageForm(byteArr, arrayOffset);
+            default:
+                throw new Error("Unknown EnumReturnType " + enumReturnType);
+        }
     }
 
 }

@@ -66,6 +66,7 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
+import ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.EnumReturnType;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 import ch.systemsx.cisd.hdf5.hdf5lib.H5General;
@@ -5120,6 +5121,7 @@ public class HDF5RoundtripTest
         map.put("i", ii);
         writer.writeCompound("cpd", map);
         writer.close();
+
         final IHDF5Reader reader =
                 HDF5Factory.configureForReading(file).useUTF8CharacterEncoding().reader();
         final HDF5CompoundType<HDF5CompoundDataMap> typeRead =
@@ -5142,6 +5144,28 @@ public class HDF5RoundtripTest
         assertEquals(g, mapRead.get("g"));
         assertEquals(h, mapRead.get("h"));
         assertEquals(ii, mapRead.get("i"));
+
+        final HDF5CompoundType<HDF5CompoundDataMap> typeRead2 =
+                reader.getDataSetCompoundType("cpd", HDF5CompoundDataMap.class,
+                        new HDF5CompoundMappingHints().enumReturnType(EnumReturnType.STRING));
+        final HDF5CompoundDataMap mapRead2 = reader.readCompound("cpd", typeRead2);
+        final String[] dRead2 = (String[]) mapRead2.get("d");
+        assertEquals(dRead.getLength(), dRead2.length);
+        for (int i = 0; i < dRead2.length; ++i)
+        {
+            assertEquals(dRead.getValue(i), dRead2[i]);
+        }
+
+        final HDF5CompoundType<HDF5CompoundDataMap> typeRead3 =
+                reader.getDataSetCompoundType("cpd", HDF5CompoundDataMap.class,
+                        new HDF5CompoundMappingHints().enumReturnType(EnumReturnType.ORDINAL));
+        final HDF5CompoundDataMap mapRead3 = reader.readCompound("cpd", typeRead3);
+        final int[] dRead3 = (int[]) mapRead3.get("d");
+        assertEquals(dRead.getLength(), dRead3.length);
+        for (int i = 0; i < dRead3.length; ++i)
+        {
+            assertEquals(dRead.getOrdinal(i), dRead3[i]);
+        }
         reader.close();
     }
 
@@ -5229,7 +5253,8 @@ public class HDF5RoundtripTest
     @Test
     public void testCompoundMapManualMappingWithConversion()
     {
-        final File file = new File(workingDirectory, "testCompoundMapManualMappingWithConversion.h5");
+        final File file =
+                new File(workingDirectory, "testCompoundMapManualMappingWithConversion.h5");
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
@@ -5256,7 +5281,8 @@ public class HDF5RoundtripTest
         map.put("b", b);
         final long c = System.currentTimeMillis();
         map.put("c", c);
-        final int[] d = new int[] { 1, 0 };
+        final int[] d = new int[]
+            { 1, 0 };
         map.put("d", d);
         final long e = 187493613;
         map.put("e", e);
