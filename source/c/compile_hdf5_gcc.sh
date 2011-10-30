@@ -14,8 +14,6 @@ tar xvf hdf5-$VERSION.tar
 
 cd hdf5-$VERSION
 
-patch -p0 < ../hdf5-1.8-r21153-jira#7638.patch
-
 if [ -n "$PATCHES" ]; then
   for p in $PATCHES; do
     patch -p0 < ../$p

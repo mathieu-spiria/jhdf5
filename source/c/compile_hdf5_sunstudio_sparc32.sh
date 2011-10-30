@@ -9,8 +9,6 @@ tar xf hdf5-$VERSION.tar
 
 cd hdf5-$VERSION
 
-gpatch -p0 < ../hdf5-1.8-r21153-jira#7638.patch
-
 CPPFLAGS='-D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE' ./configure --prefix=/opt/hdf5-$VERSION-32 --enable-shared --enable-debug=none --enable-production
 
 make > make.log 2>&1

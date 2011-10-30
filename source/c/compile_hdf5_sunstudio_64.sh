@@ -9,8 +9,6 @@ tar xf hdf5-$VERSION.tar
 
 cd hdf5-$VERSION
 
-gpatch -p0 < ../hdf5-1.8-r21153-jira#7638.patch
-
 CFLAGS='-fast -m64 -KPIC' ./configure --prefix=/opt/hdf5-$VERSION-64 --enable-shared --enable-debug=none --enable-production
 
 make > make.log 2>&1
