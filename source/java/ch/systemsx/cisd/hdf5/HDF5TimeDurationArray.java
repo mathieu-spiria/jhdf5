@@ -174,6 +174,43 @@ public class HDF5TimeDurationArray
     }
 
     @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.hashCode(timeDurations);
+        result = prime * result + ((timeUnit == null) ? 0 : timeUnit.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null)
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        final HDF5TimeDurationArray other = (HDF5TimeDurationArray) obj;
+        if (Arrays.equals(timeDurations, other.timeDurations) == false)
+        {
+            return false;
+        }
+        if (timeUnit != other.timeUnit)
+        {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public String toString()
     {
         return "HDF5TimeDurationArray [timeDurations=" + Arrays.toString(timeDurations)
