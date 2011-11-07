@@ -101,6 +101,23 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
         return compoundInformation;
     }
 
+    private CompoundTypeInformation getFullCompoundAttributeInformation(final String objectPath,
+            final String attributeName, final ICleanUpRegistry registry) throws HDF5JavaException
+    {
+        final int dataSetId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+        final int attributeId = baseReader.h5.openAttribute(dataSetId, attributeName, registry);
+        final int compoundDataTypeId = baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+        if (baseReader.h5.getClassType(compoundDataTypeId) != H5T_COMPOUND)
+        {
+            throw new HDF5JavaException("Attribute '" + attributeName + "' of object '"
+                    + objectPath + "' is not of compound type.");
+        }
+        final String dataTypePathOrNull = baseReader.tryGetDataTypePath(compoundDataTypeId);
+        final CompoundTypeInformation compoundInformation =
+                getCompoundTypeInformation(compoundDataTypeId, dataTypePathOrNull, registry);
+        return compoundInformation;
+    }
+
     private CompoundTypeInformation getFullCompoundDataSetInformation(final String dataSetPath,
             final ICleanUpRegistry registry) throws HDF5JavaException
     {
@@ -381,6 +398,24 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
     public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> pojoClass)
     {
         return getDataSetCompoundType(objectPath, pojoClass, null);
+    }
+
+    public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
+            String attributeName, Class<T> pojoClass)
+    {
+        return getAttributeCompoundType(objectPath, attributeName, pojoClass, null);
+    }
+    
+    public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
+            String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints)
+    {
+        final CompoundTypeInformation cpdTypeInfo =
+                getFullCompoundAttributeInformation(objectPath, attributeName,
+                        baseReader.fileRegistry);
+        final HDF5CompoundType<T> typeForClass =
+                getCompoundType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                        createByteifyers(pojoClass, cpdTypeInfo, hints));
+        return typeForClass;
     }
 
     public <T> HDF5CompoundType<T> getNamedCompoundType(Class<T> pojoClass)

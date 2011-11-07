@@ -294,6 +294,7 @@ public class HDF5RoundtripTest
         test.testEnumArrayScaleCompression();
         test.testOpaqueType();
         test.testCompound();
+        test.testCompoundAttribute();
         test.testCompoundIncompleteJavaPojo();
         test.testCompoundManualMapping();
         test.testInferredCompoundType();
@@ -5012,6 +5013,35 @@ public class HDF5RoundtripTest
             return builder.toString();
         }
 
+    }
+
+    @Test
+    public void testCompoundAttribute()
+    {
+        final File file = new File(workingDirectory, "compoundAttribute.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        final SimpleInheretingRecord recordWritten =
+                new SimpleInheretingRecord(3.14159f, 42, (short) 17, "xzy", new long[][]
+                    {
+                        { 1, 2, 3 },
+                        { 4, 5, 6 } });
+        writer.setCompoundAttribute("/", "cpd", recordWritten);
+        writer.close();
+
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<SimpleInheretingRecord> type =
+                reader.getAttributeCompoundType("/", "cpd", SimpleInheretingRecord.class);
+        assertFalse(type.isMappingIncomplete());
+        assertFalse(type.isDiskRepresentationIncomplete());
+        assertFalse(type.isMemoryRepresentationIncomplete());
+        type.checkMappingComplete();
+        final SimpleInheretingRecord recordRead =
+                reader.getCompoundAttribute("/", "cpd", SimpleInheretingRecord.class);
+        assertEquals(recordWritten, recordRead);
+        reader.close();
     }
 
     @Test

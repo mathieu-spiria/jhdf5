@@ -27,6 +27,41 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
 {
 
     // /////////////////////
+    // Attributes
+    // /////////////////////
+
+    /**
+     * Sets a compound attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param attributeName The name of the attribute.
+     * @param type The type definition of this compound type.
+     * @param value The value of the attribute. May be a pojo (Data Transfer Object), a
+     *            {@link HDF5CompoundDataMap}, {@link HDF5CompoundDataList} or <code>Object[]</code>
+     *            .
+     */
+    public <T> void setCompoundAttribute(final String objectPath, final String attributeName,
+            final HDF5CompoundType<T> type, final T value);
+
+    /**
+     * Sets a compound attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param attributeName The name of the attribute.
+     * @param value The value of the attribute. May be a pojo (Data Transfer Object), a
+     *            {@link HDF5CompoundDataMap}, {@link HDF5CompoundDataList} or <code>Object[]</code>
+     *            .
+     */
+    public <T> void setCompoundAttribute(final String objectPath, final String attributeName,
+            final T value);
+
+    // /////////////////////
     // Data Sets
     // /////////////////////
 

@@ -1180,6 +1180,17 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         return compoundWriter.getInferredCompoundType(template);
     }
 
+    public <T> void setCompoundAttribute(String objectPath, String attributeName,
+            HDF5CompoundType<T> type, T data)
+    {
+        compoundWriter.setCompoundAttribute(objectPath, attributeName, type, data);
+    }
+
+    public <T> void setCompoundAttribute(String objectPath, String attributeName, T data)
+    {
+        compoundWriter.setCompoundAttribute(objectPath, attributeName, data);
+    }
+
     public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, int size)
     {
         compoundWriter.createCompoundArray(objectPath, type, size);

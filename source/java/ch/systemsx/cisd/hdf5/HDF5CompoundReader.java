@@ -40,6 +40,52 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
         super(baseReader);
     }
 
+    public <T> T getCompoundAttribute(final String objectPath, final String attributeName,
+            final HDF5CompoundType<T> type) throws HDF5JavaException
+    {
+        return primGetCompoundAttribute(objectPath, attributeName, type, null);
+    }
+
+    public <T> T getCompoundAttribute(final String objectPath, final String attributeName,
+            final Class<T> pojoClass) throws HDF5JavaException
+    {
+        baseReader.checkOpen();
+        final HDF5CompoundType<T> attributeCompoundType =
+                getAttributeCompoundType(objectPath, attributeName, pojoClass);
+        attributeCompoundType.checkMappingComplete();
+        return primGetCompoundAttribute(objectPath, attributeName, attributeCompoundType, null);
+    }
+
+    private <T> T primGetCompoundAttribute(final String objectPath, final String attributeName,
+            final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
+            throws HDF5JavaException
+    {
+        final ICallableWithCleanUp<T> writeRunnable = new ICallableWithCleanUp<T>()
+            {
+                public T call(final ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    final int attributeId =
+                            baseReader.h5.openAttribute(dataSetId, attributeName, registry);
+                    final int storageDataTypeId =
+                            baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+                    checkCompoundType(storageDataTypeId, objectPath, type);
+                    final int nativeDataTypeId = type.getNativeTypeId();
+                    final byte[] byteArr =
+                            baseReader.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId,
+                                    type.getObjectByteifyer().getRecordSize());
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArr);
+                    }
+                    return type.getObjectByteifyer().arrayifyScalar(storageDataTypeId, byteArr,
+                            type.getCompoundType());
+                }
+            };
+        return baseReader.runner.call(writeRunnable);
+    }
+
     public <T> T readCompound(final String objectPath, final HDF5CompoundType<T> type)
             throws HDF5JavaException
     {

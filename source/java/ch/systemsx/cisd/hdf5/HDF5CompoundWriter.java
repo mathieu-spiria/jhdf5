@@ -168,6 +168,37 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 typeVariantOrdinals) : null;
     }
 
+    public <T> void setCompoundAttribute(final String objectPath, final String attributeName,
+            final HDF5CompoundType<T> type, final T data)
+    {
+        primSetCompoundAttribute(objectPath, attributeName, type, data, null);
+    }
+
+    public <T> void setCompoundAttribute(final String objectPath, final String attributeName,
+            final T data)
+    {
+        final HDF5CompoundType<T> inferredCompoundType = getInferredCompoundType(data);
+        inferredCompoundType.checkMappingComplete();
+        primSetCompoundAttribute(objectPath, attributeName, inferredCompoundType, data, null);
+    }
+
+    private <T> void primSetCompoundAttribute(final String objectPath, final String attributeName,
+            final HDF5CompoundType<?> type, final T data, final IByteArrayInspector inspectorOrNull)
+    {
+        baseWriter.checkOpen();
+        type.check(baseWriter.fileId);
+        @SuppressWarnings("unchecked")
+        final byte[] byteArray =
+                ((HDF5CompoundType<T>) type).getObjectByteifyer().byteify(type.getStorageTypeId(),
+                        data);
+        if (inspectorOrNull != null)
+        {
+            inspectorOrNull.inspect(byteArray);
+        }
+        baseWriter.setAttribute(objectPath, attributeName, type.getStorageTypeId(),
+                type.getNativeTypeId(), byteArray);
+    }
+
     public <T> void writeCompound(final String objectPath, final HDF5CompoundType<T> type,
             final T data)
     {

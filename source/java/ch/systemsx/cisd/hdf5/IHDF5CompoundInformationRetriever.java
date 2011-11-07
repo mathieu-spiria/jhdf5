@@ -271,6 +271,27 @@ public interface IHDF5CompoundInformationRetriever
     public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> pojoClass);
 
     /**
+     * Returns the compound type for the given compound attribute in <var>attributeName</var> of
+     * <var>objectPath</var>, mapping it to <var>pojoClass</var>.
+     * 
+     * @param objectPath The path of the compound dataset to get the type from.
+     * @param pojoClass The class to use for the mapping.
+     */
+    public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
+            String attributeName, Class<T> pojoClass);
+
+    /**
+     * Returns the compound type for the given compound attribute in <var>attributeName</var> of
+     * <var>objectPath</var>, mapping it to <var>pojoClass</var>.
+     * 
+     * @param objectPath The path of the compound dataset to get the type from.
+     * @param pojoClass The class to use for the mapping.
+     * @param hints The hints to provide to the mapping procedure.
+     */
+    public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
+            String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints);
+
+    /**
      * Returns the named compound type with name <var>dataTypeName</var> from file, mapping it to
      * <var>pojoClass</var>. If the <var>dataTypeName</var> starts with '/', it will be considered a
      * data type path instead of a data type name.

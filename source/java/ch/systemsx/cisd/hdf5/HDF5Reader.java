@@ -1040,6 +1040,18 @@ class HDF5Reader implements IHDF5Reader
     // Compounds
     //
 
+    public <T> T getCompoundAttribute(String objectPath, String attributeName,
+            HDF5CompoundType<T> type) throws HDF5JavaException
+    {
+        return compoundReader.getCompoundAttribute(objectPath, attributeName, type);
+    }
+
+    public <T> T getCompoundAttribute(String objectPath, String attributeName, Class<T> pojoClass)
+            throws HDF5JavaException
+    {
+        return compoundReader.getCompoundAttribute(objectPath, attributeName, pojoClass);
+    }
+
     public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(String objectPath,
             HDF5CompoundType<T> type, IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
@@ -1121,6 +1133,18 @@ class HDF5Reader implements IHDF5Reader
     public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> compoundClass)
     {
         return compoundReader.getDataSetCompoundType(objectPath, compoundClass);
+    }
+
+    public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
+            String attributeName, Class<T> pojoClass)
+    {
+        return compoundReader.getAttributeCompoundType(objectPath, attributeName, pojoClass);
+    }
+
+    public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
+            String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints)
+    {
+        return compoundReader.getAttributeCompoundType(objectPath, attributeName, pojoClass, hints);
     }
 
     public <T> HDF5CompoundType<T> getInferredCompoundType(Class<T> pojoClass)
