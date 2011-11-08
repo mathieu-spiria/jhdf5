@@ -464,7 +464,7 @@ public final class HDF5CompoundMemberMapping
      * <p>
      * <em>Note 2:</em> <var>pojoClass</var> containing HDF5 enumerations need to have their
      * {@link HDF5EnumerationType} specified in the <var>fieldNameToEnumTypeMapOrNull</var>. You may
-     * use {@link #inferEnumerationTypeMap(Object)} to create
+     * use {@link #inferEnumerationTypeMap(Object, IHDF5EnumTypeRetriever)} to create
      * <var>fieldNameToEnumTypeMapOrNull</var>.
      * <p>
      * <em>Example 1:</em>
@@ -848,7 +848,8 @@ public final class HDF5CompoundMemberMapping
      * Infers the map from field names to {@link HDF5EnumerationType}s for the given <var>pojo</var>
      * object.
      */
-    public static <T> Map<String, HDF5EnumerationType> inferEnumerationTypeMap(T pojo)
+    public static <T> Map<String, HDF5EnumerationType> inferEnumerationTypeMap(T pojo,
+            IHDF5EnumTypeRetriever enumTypeRetriever)
     {
         Map<String, HDF5EnumerationType> resultOrNull = null;
         for (Class<?> c = pojo.getClass(); c != null; c = c.getSuperclass())
@@ -870,6 +871,23 @@ public final class HDF5CompoundMemberMapping
                     {
                         throw new Error(ex);
                     } catch (IllegalAccessException ex)
+                    {
+                        throw new Error(ex);
+                    }
+                }
+                if (f.getType().isEnum())
+                {
+                    ReflectionUtils.ensureAccessible(f);
+                    try
+                    {
+                        if (resultOrNull == null)
+                        {
+                            resultOrNull = new HashMap<String, HDF5EnumerationType>();
+                        }
+                        resultOrNull.put(f.getName(), enumTypeRetriever.getEnumType(f.getType()
+                                .getSimpleName(), ReflectionUtils
+                                .getEnumOptions(asEnumClass(f))));
+                    } catch (IllegalArgumentException ex)
                     {
                         throw new Error(ex);
                     }
@@ -896,6 +914,12 @@ public final class HDF5CompoundMemberMapping
             }
         }
         return resultOrNull;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Class<? extends Enum<?>> asEnumClass(Field f)
+    {
+        return (Class<? extends Enum<?>>) f.getType();
     }
 
     @SuppressWarnings("rawtypes")
@@ -1140,6 +1164,11 @@ public final class HDF5CompoundMemberMapping
     HDF5EnumerationType tryGetEnumerationType()
     {
         return enumTypeOrNull;
+    }
+
+    void setEnumerationType(HDF5EnumerationType enumType)
+    {
+        this.enumTypeOrNull = enumType;
     }
 
     HDF5CompoundMappingHints tryGetHints()

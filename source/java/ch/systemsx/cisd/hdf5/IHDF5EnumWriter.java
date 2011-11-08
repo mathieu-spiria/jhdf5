@@ -23,40 +23,8 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  *
  * @author Bernd Rinn
  */
-public interface IHDF5EnumWriter
+public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
 {
-
-    // /////////////////////
-    // Types
-    // /////////////////////
-
-    /**
-     * Returns the enumeration type <var>name</var> for this HDF5 file. Will check the type in the
-     * file with the <var>values</var>. If the <var>dataTypeName</var> starts with '/', it will be
-     * considered a data type path instead of a data type name.
-     * 
-     * @param dataTypeName The name of the enumeration in the HDF5 file.
-     * @param values The values of the enumeration.
-     * @throws HDF5JavaException If the data type exists and is not compatible with the
-     *             <var>values</var> provided.
-     */
-    public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values)
-            throws HDF5JavaException;
-
-    /**
-     * Returns the enumeration type <var>name</var> for this HDF5 file. If the
-     * <var>dataTypeName</var> starts with '/', it will be considered a data type path instead of a
-     * data type name.
-     * 
-     * @param dataTypeName The name of the enumeration in the HDF5 file.
-     * @param values The values of the enumeration.
-     * @param check If <code>true</code> and if the data type already exists, check whether it is
-     *            compatible with the <var>values</var> provided.
-     * @throws HDF5JavaException If <code>check = true</code>, the data type exists and is not
-     *             compatible with the <var>values</var> provided.
-     */
-    public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values,
-            final boolean check) throws HDF5JavaException;
 
     // /////////////////////
     // Attributes

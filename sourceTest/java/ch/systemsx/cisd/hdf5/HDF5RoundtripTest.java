@@ -294,6 +294,8 @@ public class HDF5RoundtripTest
         test.testEnumArrayScaleCompression();
         test.testOpaqueType();
         test.testCompound();
+        test.testCompoundJavaEnum();
+        test.testCompoundJavaEnumMap();
         test.testCompoundAttribute();
         test.testCompoundIncompleteJavaPojo();
         test.testCompoundManualMapping();
@@ -5073,6 +5075,56 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testCompoundJavaEnum()
+    {
+        final File file = new File(workingDirectory, "compoundJavaEnum.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        final JavaEnumCompoundType recordWritten = new JavaEnumCompoundType(TestEnum.CHERRY);
+        writer.writeCompound("cpd", recordWritten);
+        writer.close();
+
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<JavaEnumCompoundType> type =
+                reader.getDataSetCompoundType("cpd", JavaEnumCompoundType.class);
+        assertFalse(type.isMappingIncomplete());
+        assertFalse(type.isDiskRepresentationIncomplete());
+        assertFalse(type.isMemoryRepresentationIncomplete());
+        type.checkMappingComplete();
+        final JavaEnumCompoundType recordRead = reader.readCompound("cpd", type);
+        assertEquals(recordWritten, recordRead);
+        reader.close();
+    }
+
+    @Test
+    public void testCompoundJavaEnumMap()
+    {
+        final File file = new File(workingDirectory, "compoundJavaEnumMap.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        final HDF5CompoundDataMap recordWritten = new HDF5CompoundDataMap();
+        recordWritten.put("fruit", TestEnum.ORANGE);
+        writer.writeCompound("cpd", recordWritten);
+        writer.close();
+
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<HDF5CompoundDataMap> type =
+                reader.getDataSetCompoundType("cpd", HDF5CompoundDataMap.class);
+        assertFalse(type.isMappingIncomplete());
+        assertFalse(type.isDiskRepresentationIncomplete());
+        assertFalse(type.isMemoryRepresentationIncomplete());
+        type.checkMappingComplete();
+        final Map<String, Object> recordRead = reader.readCompound("cpd", type);
+        assertEquals(1, recordRead.size());
+        assertEquals("ORANGE", recordRead.get("fruit").toString());
+        reader.close();
+    }
+
+    @Test
     public void testCompoundIncompleteJavaPojo()
     {
         final File file = new File(workingDirectory, "compoundIncompleteJavaPojo.h5");
@@ -6764,6 +6816,57 @@ public class HDF5RoundtripTest
         {
             return "SimpleInheretingRecord [l=" + ArrayUtils.toString(l) + ", getF()=" + getF()
                     + ", getI()=" + getI() + ", getD()=" + getD() + ", getS()=" + getS() + "]";
+        }
+    }
+
+    enum TestEnum
+    {
+        APPLE, ORANGE, CHERRY
+    }
+
+    static class JavaEnumCompoundType
+    {
+        TestEnum fruit;
+
+        JavaEnumCompoundType()
+        {
+        }
+
+        JavaEnumCompoundType(TestEnum fruit)
+        {
+            this.fruit = fruit;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((fruit == null) ? 0 : fruit.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            JavaEnumCompoundType other = (JavaEnumCompoundType) obj;
+            if (fruit != other.fruit)
+            {
+                return false;
+            }
+            return true;
         }
     }
 

@@ -87,7 +87,7 @@ public final class HDF5EnumerationValue
      */
     public String getValue()
     {
-        return type.getValues().get(ordinal);
+        return type.getValueArray()[ordinal];
     }
 
     /**
@@ -96,6 +96,14 @@ public final class HDF5EnumerationValue
     public int getOrdinal()
     {
         return ordinal;
+    }
+
+    /**
+     * Returns a description of this value.
+     */
+    public String getDescription()
+    {
+        return type.getName() + " [" + type.getValueArray()[ordinal] + "]";
     }
 
     byte[] toStorageForm()
@@ -153,7 +161,7 @@ public final class HDF5EnumerationValue
     @Override
     public String toString()
     {
-        return type.getName() + " [" + type.getValueArray()[ordinal] + "]";
+        return getValue();
     }
 
 }

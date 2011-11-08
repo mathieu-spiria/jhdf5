@@ -98,7 +98,7 @@ class HDF5Reader implements IHDF5Reader
         this.booleanReader = new HDF5BooleanReader(baseReader);
         this.stringReader = new HDF5StringReader(baseReader);
         this.enumReader = new HDF5EnumReader(baseReader);
-        this.compoundReader = new HDF5CompoundReader(baseReader);
+        this.compoundReader = new HDF5CompoundReader(baseReader, enumReader);
         this.dateTimeReader = new HDF5DateTimeReader(baseReader);
         this.referenceReader = new HDF5ReferenceReader(baseReader);
         this.genericReader = new HDF5GenericReader(baseReader);

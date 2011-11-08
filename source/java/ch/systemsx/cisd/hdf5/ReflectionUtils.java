@@ -94,4 +94,23 @@ final class ReflectionUtils
 
     }
 
+    /**
+     * Returns the enum options of the given <var>enumClass</var>. If <var>enumClass</var> is not an
+     * enum class, return an empty array.
+     */
+    public static String[] getEnumOptions(Class<? extends Enum<?>> enumClass)
+    {
+        final Enum<?>[] constants = enumClass.getEnumConstants();
+        if (constants == null)
+        {
+            return new String[0];
+        }
+        final String[] options = new String[constants.length];
+        for (int i = 0; i < options.length; ++i)
+        {
+            options[i] = constants[i].name();
+        }
+        return options;
+    }
+
 }

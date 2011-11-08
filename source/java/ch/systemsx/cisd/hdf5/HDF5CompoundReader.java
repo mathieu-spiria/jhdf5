@@ -35,9 +35,9 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHDF5CompoundReader
 {
 
-    HDF5CompoundReader(HDF5BaseReader baseReader)
+    HDF5CompoundReader(HDF5BaseReader baseReader, IHDF5EnumReader enumReader)
     {
-        super(baseReader);
+        super(baseReader, enumReader);
     }
 
     public <T> T getCompoundAttribute(final String objectPath, final String attributeName,

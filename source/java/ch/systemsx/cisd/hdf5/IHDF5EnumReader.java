@@ -23,7 +23,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5EnumReader
+public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
 {
     // /////////////////////
     // Types

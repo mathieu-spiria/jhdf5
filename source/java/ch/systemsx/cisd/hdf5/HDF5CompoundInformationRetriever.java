@@ -34,16 +34,21 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformationRetriever
+abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformationRetriever
 {
 
     protected final HDF5BaseReader baseReader;
 
-    HDF5CompoundInformationRetriever(HDF5BaseReader baseReader)
+    private final IHDF5EnumTypeRetriever enumTypeRetriever;
+
+    HDF5CompoundInformationRetriever(HDF5BaseReader baseReader,
+            IHDF5EnumTypeRetriever enumTypeRetriever)
     {
         assert baseReader != null;
+        assert enumTypeRetriever != null;
 
         this.baseReader = baseReader;
+        this.enumTypeRetriever = enumTypeRetriever;
     }
 
     public <T> HDF5CompoundMemberInformation[] getCompoundMemberInformation(
@@ -321,15 +326,31 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
             return (HDF5CompoundType<T>) getCompoundType(
                     compoundTypeName,
                     Map.class,
-                    HDF5CompoundMemberMapping.addHints(
-                            HDF5CompoundMemberMapping.inferMapping((Map) pojo), hints));
+                    addEnumTypes(HDF5CompoundMemberMapping.addHints(
+                            HDF5CompoundMemberMapping.inferMapping((Map) pojo), hints)));
         } else
         {
             final Class<T> pojoClass = (Class<T>) pojo.getClass();
             return getCompoundType(name, pojoClass, HDF5CompoundMemberMapping.addHints(
-                    HDF5CompoundMemberMapping.inferMapping(pojoClass,
-                            HDF5CompoundMemberMapping.inferEnumerationTypeMap(pojo)), hints));
+                    HDF5CompoundMemberMapping.inferMapping(pojoClass, HDF5CompoundMemberMapping
+                            .inferEnumerationTypeMap(pojo, enumTypeRetriever)), hints));
         }
+    }
+
+    private HDF5CompoundMemberMapping[] addEnumTypes(HDF5CompoundMemberMapping[] mapping)
+    {
+        for (HDF5CompoundMemberMapping m : mapping)
+        {
+            final Class<?> memberClass = m.tryGetMemberClass();
+            if (memberClass != null && m.tryGetMemberClass().isEnum())
+            {
+                @SuppressWarnings("unchecked")
+                final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) memberClass;
+                m.setEnumerationType(enumTypeRetriever.getEnumType(memberClass.getSimpleName(),
+                        ReflectionUtils.getEnumOptions(enumClass)));
+            }
+        }
+        return mapping;
     }
 
     public <T> HDF5CompoundType<T> getInferredCompoundType(final String name, final T pojo)
@@ -405,7 +426,7 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
     {
         return getAttributeCompoundType(objectPath, attributeName, pojoClass, null);
     }
-    
+
     public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
             String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints)
     {
@@ -470,7 +491,8 @@ public class HDF5CompoundInformationRetriever implements IHDF5CompoundInformatio
                 if (dimensions.length == 0 || (dimensions.length == 1 && dimensions[0] == 1))
                 {
                     if (fieldOrNull != null
-                            && (fieldOrNull.getType() != HDF5EnumerationValue.class))
+                            && (fieldOrNull.getType() != HDF5EnumerationValue.class)
+                            && fieldOrNull.getType().isEnum() == false)
                     {
                         throw new HDF5JavaException(
                                 "Field of enum type does not correspond to enumeration value");

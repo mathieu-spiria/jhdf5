@@ -33,9 +33,9 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
 {
     private final HDF5BaseWriter baseWriter;
 
-    HDF5CompoundWriter(HDF5BaseWriter baseWriter)
+    HDF5CompoundWriter(HDF5BaseWriter baseWriter, IHDF5EnumTypeRetriever enumTypeRetriever)
     {
-        super(baseWriter);
+        super(baseWriter, enumTypeRetriever);
         this.baseWriter = baseWriter;
     }
 

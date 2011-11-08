@@ -49,6 +49,7 @@ class HDF5CompoundByteifyerFactory
         memberFactories.add(new HDF5CompoundMemberByteifyerDateFactory());
         memberFactories.add(new HDF5CompoundMemberByteifyerHDF5TimeDurationFactory());
         memberFactories.add(new HDF5CompoundMemberByteifyerEnumFactory());
+        memberFactories.add(new HDF5CompoundMemberByteifyerJavaEnumFactory());
         memberFactories.add(new HDF5CompoundMemberByteifyerEnumArrayFactory());
     }
 

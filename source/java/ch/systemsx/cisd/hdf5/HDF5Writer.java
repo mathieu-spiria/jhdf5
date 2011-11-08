@@ -98,7 +98,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         this.booleanWriter = new HDF5BooleanWriter(baseWriter);
         this.stringWriter = new HDF5StringWriter(baseWriter);
         this.enumWriter = new HDF5EnumWriter(baseWriter);
-        this.compoundWriter = new HDF5CompoundWriter(baseWriter);
+        this.compoundWriter = new HDF5CompoundWriter(baseWriter, enumWriter);
         this.dateTimeWriter = new HDF5DateTimeWriter(baseWriter);
         this.referenceWriter = new HDF5ReferenceWriter(baseWriter);
         this.opaqueWriter = new HDF5OpaqueWriter(baseWriter);
