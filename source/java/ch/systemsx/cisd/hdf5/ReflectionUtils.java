@@ -28,6 +28,8 @@ import org.apache.commons.lang.StringUtils;
 /**
  * Utility methods for reflection, used for inferring the mapping between a compound data type and
  * the fields of a Java class.
+ * <p>
+ * <i>This is an internal API that should not be expected to be stable between releases!</i>
  * 
  * @author Bernd Rinn
  */

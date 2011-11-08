@@ -444,14 +444,25 @@
 		<delete dir="${targets}/doc" />
 		<delete dir="${targets}/source-base" />
 		<unzip src="../libraries/cisd-base/cisd-base-src.zip" dest="${targets}/source-base" />
-		<javadoc sourcepath="source/java:${targets}/source-base"
-		         packagenames="ch.systemsx.cisd.hdf5,ch.systemsx.cisd.hdf5.io,ch.systemsx.cisd.hdf5.tools,ch.systemsx.cisd.base.mdarray"
-		         classpath="../base/targets/classes:../libraries/cisd-base/cisd-base.jar:../libraries/commons-lang/commons-lang.jar:../libraries/commons-io/commons-io.jar:../libraries/restrictionchecker/restrictions.jar:../libraries/cisd-args4j/cisd-args4j.jar"
+		<javadoc classpath="../base/targets/classes:../libraries/cisd-base/cisd-base.jar:../libraries/commons-lang/commons-lang.jar:../libraries/commons-io/commons-io.jar:../libraries/restrictionchecker/restrictions.jar:../libraries/cisd-args4j/cisd-args4j.jar"
 		         destdir="targets/doc"
 		         doctitle="JHDF5 11.09"
 		         author="false"
 		         overview="overview.html"
-		         access="public" />
+		         access="public">
+			<fileset dir="source/java" defaultexcludes="yes">
+			  <include name="ch/systemsx/cisd/hdf5/**/*.java"/>
+			  <include name="ncsa/hdf/hdf5lib/exceptions/**/*.java"/>
+				<exclude name="ch/systemsx/cisd/hdf5/hdf5lib/**/*.java" />
+			  <exclude name="ch/systemsx/cisd/hdf5/MatrixUtils.java"/>
+			  <exclude name="ch/systemsx/cisd/hdf5/StringUtils.java"/>
+			  <exclude name="ch/systemsx/cisd/hdf5/ReflectionUtils.java"/>
+			  <exclude name="ch/systemsx/cisd/hdf5/BitSetConversionUtils.java"/>
+			</fileset>
+			<fileset dir="${targets}/source-base" defaultexcludes="yes">
+			  <include name="ch/systemsx/cisd/base/mdarray/**/*.java"/>
+			</fileset>
+		</javadoc>
 		<copy todir="${targets}/doc">
 			<fileset dir="${sources.examples}"/>
 		</copy>

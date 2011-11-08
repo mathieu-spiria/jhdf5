@@ -25,10 +25,12 @@ import ch.rinn.restrictions.Private;
 
 /**
  * Methods for converting {@link BitSet}s to a storage form suitable for storing in an HDF5 file.
+ * <p>
+ * <i>This is an internal API that should not be expected to be stable between releases!</i>
  * 
  * @author Bernd Rinn
  */
-public class BitSetConversionUtils
+public final class BitSetConversionUtils
 {
     private final static int ADDRESS_BITS_PER_WORD = 6;
 
@@ -171,7 +173,7 @@ public class BitSetConversionUtils
         }
         return array;
     }
-    
+
     private static long[] trimEnforceLen(final long[] array, int len)
     {
         if (len != array.length)
@@ -183,7 +185,7 @@ public class BitSetConversionUtils
         }
         return array;
     }
-    
+
     private static int calcInUse(final long[] array, int len)
     {
         int result = Math.min(len, array.length);
@@ -193,7 +195,7 @@ public class BitSetConversionUtils
         }
         return result;
     }
-    
+
     /**
      * Given a bit index return the word index containing it.
      */

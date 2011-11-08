@@ -23,10 +23,12 @@ import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 
 /**
  * Utilities for working with primitive matrices.
+ * <p>
+ * <i>This is an internal API that should not be expected to be stable between releases!</i>
  *
  * @author Bernd Rinn
  */
-public class MatrixUtils
+final class MatrixUtils
 {
 
     static void checkMDArrayDimensions(final String name, final int[] dimensions,

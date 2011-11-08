@@ -20,6 +20,8 @@ import java.io.UnsupportedEncodingException;
 
 /**
  * Some auxiliary methods for String to Byte conversion.
+ * <p>
+ * <i>This is an internal API that should not be expected to be stable between releases!</i>
  * 
  * @author Bernd Rinn
  */
@@ -49,7 +51,7 @@ public final class StringUtils
      * Converts string array <var>in</var> to a byte array of a 0-terminated string, using
      * <var>encoding</var> and cutting it to <var>maxLength</var< if necessary.
      */
-    public static byte[] toBytes0Term(final String[] in, final int maxLength,
+    static byte[] toBytes0Term(final String[] in, final int maxLength,
             final CharacterEncoding encoding)
     {
         final int nelems = in.length;
@@ -68,7 +70,7 @@ public final class StringUtils
      * Converts byte array <var>data</var> containing a 0-terminated string using
      * <var>encoding</var> to a string.
      */
-    public static String fromBytes0Term(byte[] data, CharacterEncoding encoding)
+    static String fromBytes0Term(byte[] data, CharacterEncoding encoding)
     {
         return fromBytes0Term(data, 0, data.length, encoding);
     }
@@ -77,7 +79,7 @@ public final class StringUtils
      * Converts byte array <var>data</var> containing a 0-terminated string at <var>startIdx</var>
      * using <var>encoding</var> to a string. Does search further than <var>maxEndIdx</var>
      */
-    public static String fromBytes0Term(byte[] data, int startIdx, int maxEndIdx,
+    static String fromBytes0Term(byte[] data, int startIdx, int maxEndIdx,
             CharacterEncoding encoding)
     {
         int termIdx;
