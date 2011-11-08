@@ -33,7 +33,7 @@ public interface IHDF5StringReader
     // /////////////////////
 
     /**
-     * Reads a <code>String</code> attribute named <var>attributeName</var> from the data set
+     * Reads a string attribute named <var>attributeName</var> from the object
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -43,7 +43,7 @@ public interface IHDF5StringReader
     public String getStringAttribute(final String objectPath, final String attributeName);
 
     /**
-     * Reads a <code>String[]</code> attribute named <var>attributeName</var> from the data set
+     * Reads a string array attribute named <var>attributeName</var> from the object
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -53,8 +53,8 @@ public interface IHDF5StringReader
     public String[] getStringArrayAttribute(final String objectPath, final String attributeName);
 
     /**
-     * Reads a multi-dimensional String array attribute named <var>attributeName</var> from the data
-     * set <var>objectPath</var>.
+     * Reads a multi-dimensional string array attribute named <var>attributeName</var> from the
+     * object <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
@@ -68,8 +68,7 @@ public interface IHDF5StringReader
     // /////////////////////
 
     /**
-     * Reads a <code>String</code> from the data set <var>objectPath</var>. This needs to be a
-     * string type.
+     * Reads a string from the data set <var>objectPath</var>. This needs to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
@@ -78,7 +77,7 @@ public interface IHDF5StringReader
     public String readString(final String objectPath) throws HDF5JavaException;
 
     /**
-     * Reads a <code>String</code> array (of rank 1) from the data set <var>objectPath</var>. The
+     * Reads a string array (of rank 1) from the data set <var>objectPath</var>. The
      * elements of this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -88,7 +87,7 @@ public interface IHDF5StringReader
     public String[] readStringArray(final String objectPath) throws HDF5JavaException;
 
     /**
-     * Reads a block of a <code>String</code> array (of rank 1) from the data set
+     * Reads a block of a string array (of rank 1) from the data set
      * <var>objectPath</var>. The elements of this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -102,7 +101,7 @@ public interface IHDF5StringReader
             final long blockNumber);
 
     /**
-     * Reads a block of a <code>String</code> array (of rank 1) from the data set
+     * Reads a block of a string array (of rank 1) from the data set
      * <var>objectPath</var>. The elements of this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -115,7 +114,7 @@ public interface IHDF5StringReader
             final long offset);
 
     /**
-     * Reads a <code>String</code> array (of rank N) from the data set <var>objectPath</var>. The
+     * Reads a string array (of rank N) from the data set <var>objectPath</var>. The
      * elements of this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -125,7 +124,7 @@ public interface IHDF5StringReader
     public MDArray<String> readStringMDArray(final String objectPath);
 
     /**
-     * Reads a block of a <code>String</code> array (of rank N) from the data set
+     * Reads a block of a string array (of rank N) from the data set
      * <var>objectPath</var>. The elements of this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -140,7 +139,7 @@ public interface IHDF5StringReader
             final int[] blockDimensions, final long[] blockNumber);
 
     /**
-     * Reads a block of a <code>String</code> array (of rank N) from the data set
+     * Reads a block of a string array (of rank N) from the data set
      * <var>objectPath</var>. The elements of this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -154,7 +153,7 @@ public interface IHDF5StringReader
             final int[] blockDimensions, final long[] offset);
 
     /**
-     * Provides all natural blocks of this one-dimensional data set to iterate over.
+     * Provides all natural blocks of this one-dimensional string data set to iterate over.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @see HDF5DataBlock
@@ -164,7 +163,7 @@ public interface IHDF5StringReader
             throws HDF5JavaException;
 
     /**
-     * Provides all natural blocks of this multi-dimensional data set to iterate over.
+     * Provides all natural blocks of this multi-dimensional string data set to iterate over.
      * 
      * @see HDF5MDDataBlock
      */

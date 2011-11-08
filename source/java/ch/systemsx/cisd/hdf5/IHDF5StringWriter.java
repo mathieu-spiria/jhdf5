@@ -33,7 +33,7 @@ public interface IHDF5StringWriter
     // /////////////////////
 
     /**
-     * Sets a string attribute to the referenced object.
+     * Sets a string attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -45,7 +45,7 @@ public interface IHDF5StringWriter
     public void setStringAttribute(final String objectPath, final String name, final String value);
 
     /**
-     * Sets a string attribute to the referenced object.
+     * Sets a string attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -59,7 +59,7 @@ public interface IHDF5StringWriter
             final int maxLength);
 
     /**
-     * Sets a string array attribute to the referenced object. The length of the array is taken to
+     * Sets a string array attribute on the referenced object. The length of the array is taken to
      * be the longest string in <var>value</var>.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
@@ -73,7 +73,7 @@ public interface IHDF5StringWriter
             final String[] value);
 
     /**
-     * Sets a string array attribute to the referenced object.
+     * Sets a string array attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -87,7 +87,7 @@ public interface IHDF5StringWriter
             final String[] value, final int maxLength);
 
     /**
-     * Sets a multi-dimensional string array attribute to the referenced object. The length of the
+     * Sets a multi-dimensional string array attribute on the referenced object. The length of the
      * array is taken to be the longest string in <var>value</var>.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
@@ -101,7 +101,7 @@ public interface IHDF5StringWriter
             final MDArray<String> value);
 
     /**
-     * Sets a multi-dimensional string array attribute to the referenced object.
+     * Sets a multi-dimensional string array attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -115,7 +115,7 @@ public interface IHDF5StringWriter
             final MDArray<String> value, final int maxLength);
 
     /**
-     * Sets a string attribute with variable length to the referenced object.
+     * Sets a string attribute with variable length on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
