@@ -426,9 +426,14 @@ class HDF5FloatReader implements IHDF5FloatReader
             {
                 // Check whether it is an array data type.
                 final int dataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                if (baseReader.h5.getClassType(dataTypeId) == HDF5Constants.H5T_ARRAY)
+                final int classType = baseReader.h5.getClassType(dataTypeId);
+                if (classType == HDF5Constants.H5T_ARRAY)
                 {
                     return readFloatMDArrayFromArrayType(dataSetId, dataTypeId, registry);
+                }
+                if (classType == HDF5Constants.H5T_REFERENCE)
+                {
+                    System.out.println("REFERENCE found!");
                 }
             }
             throw ex;

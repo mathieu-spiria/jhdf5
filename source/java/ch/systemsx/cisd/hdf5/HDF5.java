@@ -77,8 +77,8 @@ import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
- * A wrapper around {@link ch.systemsx.cisd.hdf5.hdf5lib.H5General} that handles closing of resources 
- * automatically by means of registering clean-up {@link Runnable}s.
+ * A wrapper around {@link ch.systemsx.cisd.hdf5.hdf5lib.H5General} that handles closing of
+ * resources automatically by means of registering clean-up {@link Runnable}s.
  * 
  * @author Bernd Rinn
  */
@@ -99,11 +99,14 @@ class HDF5
 
     private final boolean useUTF8CharEncoding;
 
+    private final boolean autoDereference;
+
     public HDF5(final CleanUpRegistry fileRegistry, final boolean performNumericConversions,
-            final boolean useUTF8CharEncoding)
+            final boolean useUTF8CharEncoding, final boolean autoDereference)
     {
         this.runner = new CleanUpCallable();
         this.useUTF8CharEncoding = useUTF8CharEncoding;
+        this.autoDereference = autoDereference;
         this.dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc =
                 createDataSetCreationPropertyList(fileRegistry);
         H5Pset_layout(dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc, H5D_COMPACT);
@@ -214,15 +217,17 @@ class HDF5
     public int openObject(int fileId, String path, ICleanUpRegistry registry)
     {
         checkMaxLength(path);
-        final int groupId = H5Oopen(fileId, path, H5P_DEFAULT);
+        final int objectId =
+                isReference(path) ? H5Rdereference(fileId, Long.parseLong(path.substring(1)))
+                        : H5Oopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
                 {
-                    H5Oclose(groupId);
+                    H5Oclose(objectId);
                 }
             });
-        return groupId;
+        return objectId;
     }
 
     public int deleteObject(int fileId, String path)
@@ -302,7 +307,9 @@ class HDF5
     public int openGroup(int fileId, String path, ICleanUpRegistry registry)
     {
         checkMaxLength(path);
-        final int groupId = H5Gopen(fileId, path, H5P_DEFAULT);
+        final int groupId =
+                isReference(path) ? H5Rdereference(fileId, Long.parseLong(path.substring(1)))
+                        : H5Gopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -705,7 +712,9 @@ class HDF5
     public int openDataSet(int fileId, String path, ICleanUpRegistry registry)
     {
         checkMaxLength(path);
-        final int dataSetId = H5Dopen(fileId, path, H5P_DEFAULT);
+        final int dataSetId =
+                isReference(path) ? H5Rdereference(fileId, Long.parseLong(path.substring(1)))
+                        : H5Dopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -714,6 +723,11 @@ class HDF5
                 }
             });
         return dataSetId;
+    }
+
+    private boolean isReference(String path)
+    {
+        return autoDereference && (path.charAt(0) == '\0');
     }
 
     /**
@@ -725,7 +739,9 @@ class HDF5
     {
         checkMaxLength(path);
         final boolean overwriteMode = (storageDataTypeId > -1);
-        final int dataSetId = H5Dopen(fileId, path, H5P_DEFAULT);
+        final int dataSetId =
+                isReference(path) ? H5Rdereference(fileId, Long.parseLong(path.substring(1)))
+                        : H5Dopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -1448,7 +1464,9 @@ class HDF5
     public int openDataType(int fileId, String name, ICleanUpRegistry registry)
     {
         checkMaxLength(name);
-        final int dataTypeId = H5Topen(fileId, name, H5P_DEFAULT);
+        final int dataTypeId =
+                isReference(name) ? H5Rdereference(fileId, Long.parseLong(name.substring(1)))
+                        : H5Topen(fileId, name, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -1897,6 +1915,11 @@ class HDF5
     String getReferencedObjectName(int objectId, byte[] reference)
     {
         return H5Rget_name(objectId, H5R_OBJECT, reference);
+    }
+
+    String getReferencedObjectName(int objectId, long reference)
+    {
+        return H5Rget_name(objectId, reference);
     }
 
     String[] getReferencedObjectNames(int objectId, long[] reference)

@@ -32,7 +32,7 @@ class H5
     private final static int expectedMinnum = 8;
 
     /** Expected release number of the library. */
-    private final static int expectedRelnum = 7;
+    private final static int expectedRelnum = 8;
 
     static
     {
@@ -1972,7 +1972,7 @@ class H5
     /**
      * Given a reference to some object, H5Rdereference opens that object and return an identifier.
      * 
-     * @param dataset IN: Dataset containing reference object.
+     * @param loc_id IN: Location identifier used to locate the object being pointed to.
      * @param ref_type IN: The reference type of ref.
      * @param ref IN: reference to an object
      * @return valid identifier if successful
@@ -1980,7 +1980,20 @@ class H5
      * @exception NullPointerException - output array is null.
      * @exception IllegalArgumentException - output array is invalid.
      */
-    public static native int H5Rdereference(int dataset, int ref_type, byte[] ref)
+    public static native int H5Rdereference(int loc_id, int ref_type, byte[] ref)
+            throws HDF5LibraryException, NullPointerException, IllegalArgumentException;
+
+    /**
+     * Given a reference to some object, H5Rdereference opens that object and return an identifier.
+     * 
+     * @param loc_id IN: Location identifier used to locate the object being pointed to.
+     * @param ref IN: reference to an object
+     * @return valid identifier if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - output array is null.
+     * @exception IllegalArgumentException - output array is invalid.
+     */
+    public static native int H5Rdereference(int loc_id, long ref)
             throws HDF5LibraryException, NullPointerException, IllegalArgumentException;
 
     /**
@@ -2026,6 +2039,19 @@ class H5
      * @exception IllegalArgumentException - array is invalid.
      */
     public static native String H5Rget_name(int loc_id, int ref_type, byte[] ref);
+
+    /**
+     * Given a reference to an object, H5Rget_name returns the name (path) of the object pointed to.
+     * 
+     * @param loc_id Identifier of the reference object.
+     * @param ref The reference.
+     * @return The path of the object being pointed to, or an empty string, if the object being
+     *         pointed to has no name.
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - array is null.
+     * @exception IllegalArgumentException - array is invalid.
+     */
+    public static native String H5Rget_name(int loc_id, long ref);
 
     /**
      * Given an array of object references (ref), H5Rget_name returns the names (paths) of the

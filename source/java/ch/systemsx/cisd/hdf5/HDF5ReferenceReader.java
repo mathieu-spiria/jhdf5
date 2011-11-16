@@ -16,7 +16,6 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5BaseReader.REFERENCE_SIZE_IN_BYTES;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_REFERENCE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
@@ -49,10 +48,76 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
     }
 
     // /////////////////////
+    // Specific
+    // /////////////////////
+
+    public String resolvePath(String reference)
+    {
+        assert reference != null;
+
+        baseReader.checkOpen();
+        if (reference.charAt(0) != '\0')
+        {
+            throw new HDF5JavaException(String.format("'%s' is not a reference.", reference));
+        }
+        return baseReader.h5.getReferencedObjectName(baseReader.fileId,
+                Long.parseLong(reference.substring(1)));
+    }
+
+    private String refToStr(long reference)
+    {
+        return '\0' + Long.toString(reference);
+    }
+
+    private String[] refToStr(long[] references)
+    {
+        final String[] result = new String[references.length];
+        for (int i = 0; i < references.length; ++i)
+        {
+            result[i] = '\0' + Long.toString(references[i]);
+        }
+        return result;
+    }
+
+    private void checkReference(final int dataTypeId, final String objectPath)
+            throws HDF5JavaException
+    {
+        final boolean isReference = (baseReader.h5.getClassType(dataTypeId) == H5T_REFERENCE);
+        if (isReference == false)
+        {
+            throw new HDF5JavaException("Dataset " + objectPath + " is not a reference.");
+        }
+    }
+
+    private void checkRank1(final int[] arrayDimensions, final String objectPath)
+    {
+        if (arrayDimensions.length != 1)
+        {
+            throw new HDF5JavaException("Dataset " + objectPath
+                    + ": array needs to be of rank 1, but is of rank " + arrayDimensions.length);
+        }
+    }
+
+    private void checkRank1(final long[] arrayDimensions, final String objectPath)
+    {
+        if (arrayDimensions.length != 1)
+        {
+            throw new HDF5JavaException("Dataset " + objectPath
+                    + ": array needs to be of rank 1, but is of rank " + arrayDimensions.length);
+        }
+    }
+
+    // /////////////////////
     // Attributes
     // /////////////////////
 
     public String getObjectReferenceAttribute(final String objectPath, final String attributeName)
+    {
+        return getObjectReferenceAttribute(objectPath, attributeName, true);
+    }
+
+    public String getObjectReferenceAttribute(final String objectPath, final String attributeName,
+            final boolean resolveName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -69,10 +134,10 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                     final int dataTypeId =
                             baseReader.h5.getDataTypeForAttribute(attributeId, registry);
                     checkReference(dataTypeId, objectPath);
-                    final byte[] reference =
-                            baseReader.h5.readAttributeAsByteArray(attributeId, dataTypeId,
-                                    REFERENCE_SIZE_IN_BYTES);
-                    return baseReader.h5.getReferencedObjectName(attributeId, reference);
+                    final long[] reference =
+                            baseReader.h5.readAttributeAsLongArray(attributeId, dataTypeId, 1);
+                    return resolveName ? baseReader.h5.getReferencedObjectName(attributeId,
+                            reference[0]) : refToStr(reference[0]);
                 }
             };
         return baseReader.runner.call(readRunnable);
@@ -80,6 +145,12 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
 
     public String[] getObjectReferenceArrayAttribute(final String objectPath,
             final String attributeName)
+    {
+        return getObjectReferenceArrayAttribute(objectPath, attributeName, true);
+    }
+
+    public String[] getObjectReferenceArrayAttribute(final String objectPath,
+            final String attributeName, final boolean resolveName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -124,7 +195,8 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                             final long[] references =
                                     baseReader.h5.readAttributeAsLongArray(attributeId,
                                             memoryTypeId, len);
-                            return baseReader.h5.getReferencedObjectNames(attributeId, references);
+                            return resolveName ? baseReader.h5.getReferencedObjectNames(
+                                    attributeId, references) : refToStr(references);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
@@ -132,6 +204,12 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
 
     public MDArray<String> getObjectReferenceMDArrayAttribute(final String objectPath,
             final String attributeName)
+    {
+        return getObjectReferenceMDArrayAttribute(objectPath, attributeName, true);
+    }
+
+    public MDArray<String> getObjectReferenceMDArrayAttribute(final String objectPath,
+            final String attributeName, final boolean resolveName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -180,8 +258,10 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                 final long[] references =
                                         baseReader.h5.readAttributeAsLongArray(attributeId,
                                                 memoryTypeId, len);
-                                return new MDArray<String>(baseReader.h5.getReferencedObjectNames(
-                                        attributeId, references), arrayDimensions);
+                                return new MDArray<String>(
+                                        resolveName ? baseReader.h5.getReferencedObjectNames(
+                                                attributeId, references) : refToStr(references),
+                                        arrayDimensions);
                             } catch (IllegalArgumentException ex)
                             {
                                 throw new HDF5JavaException(ex.getMessage());
@@ -197,6 +277,11 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
 
     public String readObjectReference(final String objectPath)
     {
+        return readObjectReference(objectPath, true);
+    }
+
+    public String readObjectReference(final String objectPath, final boolean resolveName)
+    {
         assert objectPath != null;
 
         baseReader.checkOpen();
@@ -209,15 +294,21 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                     final int objectReferenceDataTypeId =
                             baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     checkReference(objectReferenceDataTypeId, objectPath);
-                    final byte[] reference = new byte[REFERENCE_SIZE_IN_BYTES];
+                    final long[] reference = new long[1];
                     baseReader.h5.readDataSet(dataSetId, objectReferenceDataTypeId, reference);
-                    return baseReader.h5.getReferencedObjectName(dataSetId, reference);
+                    return resolveName ? baseReader.h5.getReferencedObjectName(dataSetId,
+                            reference[0]) : refToStr(reference[0]);
                 }
             };
         return baseReader.runner.call(readRunnable);
     }
 
     public String[] readObjectReferenceArray(final String objectPath)
+    {
+        return readObjectReferenceArray(objectPath, true);
+    }
+
+    public String[] readObjectReferenceArray(final String objectPath, final boolean resolveName)
     {
         assert objectPath != null;
 
@@ -256,7 +347,8 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                         throw new HDF5JavaException("Dataset " + objectPath
                                 + " is not a reference.");
                     }
-                    return baseReader.h5.getReferencedObjectNames(baseReader.fileId, references);
+                    return resolveName ? baseReader.h5.getReferencedObjectNames(baseReader.fileId,
+                            references) : refToStr(references);
                 }
             };
         return baseReader.runner.call(readCallable);
@@ -266,11 +358,24 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
             final long blockNumber)
     {
         return readObjectReferenceArrayBlockWithOffset(objectPath, blockSize, blockNumber
-                * blockSize);
+                * blockSize, true);
+    }
+
+    public String[] readObjectReferenceArrayBlock(final String objectPath, final int blockSize,
+            final long blockNumber, final boolean resolveName)
+    {
+        return readObjectReferenceArrayBlockWithOffset(objectPath, blockSize, blockNumber
+                * blockSize, resolveName);
     }
 
     public String[] readObjectReferenceArrayBlockWithOffset(final String objectPath,
             final int blockSize, final long offset)
+    {
+        return readObjectReferenceArrayBlockWithOffset(objectPath, blockSize, offset, true);
+    }
+
+    public String[] readObjectReferenceArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset, final boolean resolveName)
     {
         assert objectPath != null;
 
@@ -286,13 +391,20 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                     final long[] references = new long[spaceParams.blockSize];
                     baseReader.h5.readDataSet(dataSetId, H5T_STD_REF_OBJ,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, references);
-                    return baseReader.h5.getReferencedObjectNames(baseReader.fileId, references);
+                    return resolveName ? baseReader.h5.getReferencedObjectNames(baseReader.fileId,
+                            references) : refToStr(references);
                 }
             };
         return baseReader.runner.call(readCallable);
     }
 
     public MDArray<String> readObjectReferenceMDArray(final String objectPath)
+    {
+        return readObjectReferenceMDArray(objectPath, true);
+    }
+
+    public MDArray<String> readObjectReferenceMDArray(final String objectPath,
+            final boolean resolveName)
     {
         assert objectPath != null;
 
@@ -337,55 +449,40 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                         + " is not a reference.");
                             }
                             final String[] referencedObjectNames =
-                                    baseReader.h5.getReferencedObjectNames(baseReader.fileId,
-                                            references);
+                                    resolveName ? baseReader.h5.getReferencedObjectNames(
+                                            baseReader.fileId, references) : refToStr(references);
                             return new MDArray<String>(referencedObjectNames, dimensions);
                         }
                     };
         return baseReader.runner.call(readCallable);
     }
 
-    private void checkReference(final int dataTypeId, final String objectPath)
-            throws HDF5JavaException
+    public MDArray<String> readObjectReferenceMDArrayBlock(final String objectPath,
+            final int[] blockDimensions, final long[] blockNumber)
     {
-        final boolean isReference = (baseReader.h5.getClassType(dataTypeId) == H5T_REFERENCE);
-        if (isReference == false)
-        {
-            throw new HDF5JavaException("Dataset " + objectPath + " is not a reference.");
-        }
-    }
-
-    private void checkRank1(final int[] arrayDimensions, final String objectPath)
-    {
-        if (arrayDimensions.length != 1)
-        {
-            throw new HDF5JavaException("Dataset " + objectPath
-                    + ": array needs to be of rank 1, but is of rank " + arrayDimensions.length);
-        }
-    }
-
-    private void checkRank1(final long[] arrayDimensions, final String objectPath)
-    {
-        if (arrayDimensions.length != 1)
-        {
-            throw new HDF5JavaException("Dataset " + objectPath
-                    + ": array needs to be of rank 1, but is of rank " + arrayDimensions.length);
-        }
+        return readObjectReferenceMDArrayBlock(objectPath, blockDimensions, blockNumber, true);
     }
 
     public MDArray<String> readObjectReferenceMDArrayBlock(final String objectPath,
-            final int[] blockDimensions, final long[] blockNumber)
+            final int[] blockDimensions, final long[] blockNumber, final boolean resolveName)
     {
         final long[] offset = new long[blockDimensions.length];
         for (int i = 0; i < offset.length; ++i)
         {
             offset[i] = blockNumber[i] * blockDimensions[i];
         }
-        return readObjectReferenceMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return readObjectReferenceMDArrayBlockWithOffset(objectPath, blockDimensions, offset,
+                resolveName);
     }
 
     public MDArray<String> readObjectReferenceMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
+    {
+        return readObjectReferenceMDArrayBlockWithOffset(objectPath, blockDimensions, offset, true);
+    }
+
+    public MDArray<String> readObjectReferenceMDArrayBlockWithOffset(final String objectPath,
+            final int[] blockDimensions, final long[] offset, final boolean resolveName)
     {
         assert objectPath != null;
         assert blockDimensions != null;
@@ -408,8 +505,9 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId,
                                     referencesBlock);
                             final String[] referencedObjectNamesBlock =
-                                    baseReader.h5.getReferencedObjectNames(baseReader.fileId,
-                                            referencesBlock);
+                                    resolveName ? baseReader.h5.getReferencedObjectNames(
+                                            baseReader.fileId, referencesBlock)
+                                            : refToStr(referencesBlock);
                             return new MDArray<String>(referencedObjectNamesBlock, blockDimensions);
                         }
                     };
@@ -418,6 +516,12 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
 
     public Iterable<HDF5DataBlock<String[]>> getObjectReferenceArrayNaturalBlocks(
             final String dataSetPath) throws HDF5JavaException
+    {
+        return getObjectReferenceArrayNaturalBlocks(dataSetPath, true);
+    }
+    
+    public Iterable<HDF5DataBlock<String[]>> getObjectReferenceArrayNaturalBlocks(
+            final String dataSetPath, final boolean resolveName) throws HDF5JavaException
     {
         baseReader.checkOpen();
         final HDF5NaturalBlock1DParameters params =
@@ -442,7 +546,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final String[] referencesBlock =
                                         readObjectReferenceArrayBlockWithOffset(dataSetPath,
-                                                index.getBlockSize(), offset);
+                                                index.getBlockSize(), offset, resolveName);
                                 return new HDF5DataBlock<String[]>(referencesBlock,
                                         index.getAndIncIndex(), offset);
                             }
@@ -458,6 +562,12 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
 
     public Iterable<HDF5MDDataBlock<MDArray<String>>> getObjectReferenceMDArrayNaturalBlocks(
             final String dataSetPath)
+    {
+        return getObjectReferenceMDArrayNaturalBlocks(dataSetPath, true);
+    }
+    
+    public Iterable<HDF5MDDataBlock<MDArray<String>>> getObjectReferenceMDArrayNaturalBlocks(
+            final String dataSetPath, final boolean resolveName)
     {
         baseReader.checkOpen();
         final HDF5NaturalBlockMDParameters params =
@@ -482,7 +592,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
                                 final MDArray<String> data =
                                         readObjectReferenceMDArrayBlockWithOffset(dataSetPath,
-                                                index.getBlockSize(), offset);
+                                                index.getBlockSize(), offset, resolveName);
                                 return new HDF5MDDataBlock<MDArray<String>>(data,
                                         index.getIndexClone(), offset);
                             }
@@ -495,4 +605,5 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                 }
             };
     }
+
 }

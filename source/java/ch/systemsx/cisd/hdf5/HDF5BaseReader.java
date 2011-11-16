@@ -104,7 +104,7 @@ class HDF5BaseReader
     final CharacterEncoding encoding;
 
     HDF5BaseReader(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
-            FileFormat fileFormat, boolean overwrite)
+            boolean autoDereference, FileFormat fileFormat, boolean overwrite)
     {
         assert hdf5File != null;
 
@@ -115,7 +115,7 @@ class HDF5BaseReader
         this.fileRegistry = CleanUpRegistry.createSynchonized();
         this.namedDataTypeMap = new HashMap<String, Integer>();
         this.namedDataTypeList = new ArrayList<DataTypeContainer>();
-        h5 = new HDF5(fileRegistry, performNumericConversions, useUTF8CharEncoding);
+        h5 = new HDF5(fileRegistry, performNumericConversions, useUTF8CharEncoding, autoDereference);
         fileId = openFile(fileFormat, overwrite);
         state = State.OPEN;
         readNamedDataTypes();

@@ -53,7 +53,7 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
         this.overwriteFile = true;
         return this;
     }
-    
+
     public HDF5WriterConfigurator keepDataSetsIfTheyExist()
     {
         this.keepDataSetIfExists = true;
@@ -90,14 +90,21 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
         return (HDF5WriterConfigurator) super.useUTF8CharacterEncoding();
     }
 
+    @Override
+    public HDF5WriterConfigurator noAutoDereference()
+    {
+        
+        return (HDF5WriterConfigurator) super.noAutoDereference();
+    }
+    
     public IHDF5Writer writer()
     {
         if (readerWriterOrNull == null)
         {
             readerWriterOrNull =
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
-                            useUTF8CharEncoding, fileFormat, useExtentableDataTypes, overwriteFile,
-                            keepDataSetIfExists, syncMode));
+                            useUTF8CharEncoding, autoDereference, fileFormat,
+                            useExtentableDataTypes, overwriteFile, keepDataSetIfExists, syncMode));
         }
         return (HDF5Writer) readerWriterOrNull;
     }

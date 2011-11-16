@@ -124,10 +124,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
     final int variableLengthStringDataTypeId;
 
     HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
-            FileFormat fileFormat, boolean useExtentableDataTypes, boolean overwriteFile,
-            boolean keepDataSetIfExists, SyncMode syncMode)
+            boolean autoDereference, FileFormat fileFormat, boolean useExtentableDataTypes,
+            boolean overwriteFile, boolean keepDataSetIfExists, SyncMode syncMode)
     {
-        super(hdf5File, performNumericConversions, useUTF8CharEncoding, fileFormat, overwriteFile);
+        super(hdf5File, performNumericConversions, useUTF8CharEncoding, autoDereference,
+                fileFormat, overwriteFile);
         try
         {
             this.fileForSyncing = new RandomAccessFile(hdf5File, "rw");

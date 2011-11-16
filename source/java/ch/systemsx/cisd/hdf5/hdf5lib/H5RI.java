@@ -83,7 +83,26 @@ public class H5RI
     /**
      * Given a reference to some object, H5Rdereference opens that object and return an identifier.
      * 
-     * @param dataset IN: Dataset containing reference object.
+     * @param loc_id IN: Location identifier used to locate the object being pointed to.
+     * @param ref IN: reference to an object
+     * @return valid identifier if successful
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - output array is null.
+     * @exception IllegalArgumentException - output array is invalid.
+     */
+    public static int H5Rdereference(int loc_id, long ref)
+            throws HDF5LibraryException, NullPointerException, IllegalArgumentException
+    {
+        synchronized (ncsa.hdf.hdf5lib.H5.class)
+        {
+            return H5.H5Rdereference(loc_id, ref);
+        }
+    }
+
+    /**
+     * Given a reference to some object, H5Rdereference opens that object and return an identifier.
+     * 
+     * @param loc_id IN: Location identifier used to locate the object being pointed to.
      * @param ref_type IN: The reference type of ref.
      * @param ref IN: reference to an object
      * @return valid identifier if successful
@@ -91,12 +110,12 @@ public class H5RI
      * @exception NullPointerException - output array is null.
      * @exception IllegalArgumentException - output array is invalid.
      */
-    public static int H5Rdereference(int dataset, int ref_type, byte[] ref)
+    public static int H5Rdereference(int loc_id, int ref_type, byte[] ref)
             throws HDF5LibraryException, NullPointerException, IllegalArgumentException
     {
         synchronized (ncsa.hdf.hdf5lib.H5.class)
         {
-            return H5.H5Rdereference(dataset, ref_type, ref);
+            return H5.H5Rdereference(loc_id, ref_type, ref);
         }
     }
 
@@ -159,6 +178,26 @@ public class H5RI
         synchronized (ncsa.hdf.hdf5lib.H5.class)
         {
             return H5.H5Rget_name(loc_id, ref_type, ref);
+        }
+    }
+
+    /**
+     * Given a reference to an object, H5Rget_name returns the name (path) of the object pointed to.
+     * 
+     * @param loc_id Identifier of the reference object.
+     * @param ref The reference.
+     * @return The path of the object being pointed to, or an empty string, if the object being
+     *         pointed to has no name.
+     * @exception HDF5LibraryException - Error from the HDF-5 Library.
+     * @exception NullPointerException - array is null.
+     * @exception IllegalArgumentException - array is invalid.
+     */
+    public static String H5Rget_name(int loc_id, long ref)
+            throws HDF5LibraryException, NullPointerException, IllegalArgumentException
+    {
+        synchronized (ncsa.hdf.hdf5lib.H5.class)
+        {
+            return H5.H5Rget_name(loc_id, ref);
         }
     }
 

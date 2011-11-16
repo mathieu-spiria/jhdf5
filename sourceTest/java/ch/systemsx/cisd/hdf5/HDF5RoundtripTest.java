@@ -395,10 +395,11 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        final IHDF5Writer writer = HDF5Factory.configure(file).noAutoDereference().writer();
         writer.writeInt("\0\255", 15);
         writer.close();
-        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final IHDF5Reader reader =
+                HDF5Factory.configureForReading(file).noAutoDereference().reader();
         assertEquals(15, reader.readInt("\0\255"));
         reader.close();
     }
@@ -7327,6 +7328,7 @@ public class HDF5RoundtripTest
         assertEquals("/a", writer.readObjectReference("/b"));
         writer.move("/a", "/C");
         assertEquals("/C", writer.readObjectReference("/b"));
+        assertEquals("TestA", writer.readString(writer.readObjectReference("/b", false)));
         writer.close();
     }
 
@@ -7339,8 +7341,8 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         writer.writeString("a1", "TestA");
-        writer.writeString("a2", "TestA");
-        writer.writeString("a3", "TestA");
+        writer.writeString("a2", "TestB");
+        writer.writeString("a3", "TestC");
         writer.writeObjectReferenceArray("b", new String[]
             { "a1", "a2", "a3" });
         assertTrue(ArrayUtils.isEquals(new String[]
@@ -7352,6 +7354,13 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         assertTrue(ArrayUtils.isEquals(new String[]
             { "/C", "/a2", "/a3" }, reader.readObjectReferenceArray("/b")));
+        final String[] refs = reader.readObjectReferenceArray("/b", false);
+        assertEquals("TestA", reader.readString(refs[0]));
+        assertEquals("/C", reader.resolvePath(refs[0]));
+        assertEquals("TestB", reader.readString(refs[1]));
+        assertEquals("/a2", reader.resolvePath(refs[1]));
+        assertEquals("TestC", reader.readString(refs[2]));
+        assertEquals("/a3", reader.resolvePath(refs[2]));
         reader.close();
     }
 

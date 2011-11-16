@@ -235,11 +235,28 @@ JNIEXPORT jlongArray JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_H5Rcreate__I_
 /*
  * Class:     ncsa_hdf_hdf5lib_H5
  * Method:    H5Rdereference
+ * Signature: (IIJ)I
+ */
+JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_H5Rdereference__IJ
+  (JNIEnv *env, jclass clss, jint dataset, jlong ref)
+{
+    hid_t id;
+
+    id = H5Rdereference((hid_t)dataset, H5R_OBJECT, &ref);
+
+    if (id < 0) {
+        h5libraryError(env);
+    }
+    return (jint) id;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    H5Rdereference
  * Signature: (II[B)I
  */
-JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_H5Rdereference
-  (JNIEnv *env, jclass clss, jint dataset, jint ref_type,
-  jbyteArray ref )
+JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_H5Rdereference__II_3B
+  (JNIEnv *env, jclass clss, jint dataset, jint ref_type, jbyteArray ref )
 {
     jboolean isCopy;
     jbyte *refP;
@@ -387,7 +404,7 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_H5Rget_1obj_1type
 
 /*
  * Class:     ncsa_hdf_hdf5lib_H5
- * Method:    String H5Rget_name(hid_t id, H5R_type_t ref_type, void *_ref)
+ * Method:    String H5Rget_name(hid_t id, H5R_type_t ref_type, void *ref)
  * Signature: (I[B)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_H5Rget_1name__II_3B
@@ -461,6 +478,59 @@ JNIEXPORT jstring JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_H5Rget_1name__II
 #else
     (*env)->ReleaseByteArrayElements(env,ref,refP,JNI_ABORT);
 #endif
+
+    /* successful return -- save the string; */
+#ifdef __cplusplus
+    str = env->NewStringUTF(rName);
+#else
+    str = (*env)->NewStringUTF(env,rName);
+#endif
+    free(rName);
+    if (str == NULL) {
+        return NULL;
+    }
+    return str;
+}
+
+/*
+ * Class:     ncsa_hdf_hdf5lib_H5
+ * Method:    String H5Rget_name(hid_t id, jlong ref)
+ * Signature: (I[B)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_H5Rget_1name__IJ
+  (JNIEnv *env, jclass clss, jint loc_id, jlong ref)
+{
+		ssize_t size;
+    H5O_type_t obj_type;
+    char *rName;
+    int rname_buf_size = 128;
+    jstring str;
+
+    rName = (char*) malloc(sizeof(char) * rname_buf_size);
+    if (rName == NULL) {
+        h5outOfMemory(env, "H5Rget_name:  malloc failed");
+        return NULL;
+    }
+
+    size = H5Rget_name((hid_t)loc_id, H5R_OBJECT, &ref, rName, rname_buf_size);
+
+    if (size < 0) {
+        free(rName);
+        h5libraryError(env);
+        return NULL;
+    }
+    if (size >= rname_buf_size) {
+    		free(rName);
+    		rname_buf_size = size + 1;
+		    rName = (char*) malloc(sizeof(char) * rname_buf_size);
+    		size = H5Rget_name((hid_t)loc_id, H5R_OBJECT, &ref, rName, rname_buf_size);
+        if (size < 0) {
+            free(rName);
+            h5libraryError(env);
+            return NULL;
+        }
+    }
+ 		rName[size] = '\0';
 
     /* successful return -- save the string; */
 #ifdef __cplusplus
