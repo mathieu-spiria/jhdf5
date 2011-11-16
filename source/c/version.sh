@@ -1,1 +1,1 @@
-VERSION=1.8.8-pre1
+VERSION=1.8.8
