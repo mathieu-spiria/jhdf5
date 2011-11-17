@@ -187,7 +187,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
     @Override
     int openFile(FileFormat fileFormatInit, boolean overwriteInit)
     {
-        final boolean enforce_1_8 = (fileFormat == FileFormat.STRICTLY_1_8);
+        final boolean enforce_1_8 = (fileFormatInit == FileFormat.STRICTLY_1_8);
         if (hdf5File.exists() && overwriteInit == false)
         {
             if (hdf5File.canWrite() == false)
