@@ -41,7 +41,7 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
 
     @Override
     public <T> HDF5CompoundType<T> getCompoundType(final String name, Class<T> pojoClass,
-            HDF5CompoundMemberMapping... members)
+            final boolean readDataTypePath, HDF5CompoundMemberMapping... members)
     {
         baseWriter.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectByteifyer =
@@ -58,7 +58,7 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                         public HDF5CompoundMemberInformation[] getCompoundMemberInformation()
                         {
                             return HDF5CompoundWriter.this.getCompoundMemberInformation(
-                                    storageDataTypeId, name);
+                                    storageDataTypeId, name, readDataTypePath);
                         }
                     });
     }

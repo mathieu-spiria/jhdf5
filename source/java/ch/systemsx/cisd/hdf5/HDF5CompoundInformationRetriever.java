@@ -59,6 +59,12 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
 
     public HDF5CompoundMemberInformation[] getCompoundMemberInformation(final String dataTypeName)
     {
+        return getCompoundMemberInformation(dataTypeName, true);
+    }
+
+    public HDF5CompoundMemberInformation[] getCompoundMemberInformation(final String dataTypeName,
+            final boolean readDataTypePath)
+    {
         baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5CompoundMemberInformation[]> writeRunnable =
                 new ICallableWithCleanUp<HDF5CompoundMemberInformation[]>()
@@ -73,7 +79,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                                             registry);
                             final CompoundTypeInformation compoundInformation =
                                     getCompoundTypeInformation(compoundDataTypeId, dataTypePath,
-                                            registry);
+                                            readDataTypePath, registry);
                             return compoundInformation.members;
                         }
                     };
@@ -83,18 +89,26 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath)
             throws HDF5JavaException
     {
-        return getCompoundDataSetInformation(dataSetPath, false);
+        return getCompoundDataSetInformation(dataSetPath, false, true);
     }
 
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath,
             final boolean sortAlphabetically) throws HDF5JavaException
+    {
+        return getCompoundDataSetInformation(dataSetPath, sortAlphabetically, true);
+    }
+
+    public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath,
+            final boolean sortAlphabetically, final boolean readDataTypePath)
+            throws HDF5JavaException
     {
         final ICallableWithCleanUp<HDF5CompoundMemberInformation[]> infoRunnable =
                 new ICallableWithCleanUp<HDF5CompoundMemberInformation[]>()
                     {
                         public HDF5CompoundMemberInformation[] call(final ICleanUpRegistry registry)
                         {
-                            return getFullCompoundDataSetInformation(dataSetPath, registry).members;
+                            return getFullCompoundDataSetInformation(dataSetPath, readDataTypePath,
+                                    registry).members;
                         }
                     };
         final HDF5CompoundMemberInformation[] compoundInformation =
@@ -107,7 +121,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     }
 
     private CompoundTypeInformation getFullCompoundAttributeInformation(final String objectPath,
-            final String attributeName, final ICleanUpRegistry registry) throws HDF5JavaException
+            final String attributeName, final boolean readDataTypePath,
+            final ICleanUpRegistry registry) throws HDF5JavaException
     {
         final int dataSetId = baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
         final int attributeId = baseReader.h5.openAttribute(dataSetId, attributeName, registry);
@@ -119,12 +134,14 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         }
         final String dataTypePathOrNull = baseReader.tryGetDataTypePath(compoundDataTypeId);
         final CompoundTypeInformation compoundInformation =
-                getCompoundTypeInformation(compoundDataTypeId, dataTypePathOrNull, registry);
+                getCompoundTypeInformation(compoundDataTypeId, dataTypePathOrNull,
+                        readDataTypePath, registry);
         return compoundInformation;
     }
 
     private CompoundTypeInformation getFullCompoundDataSetInformation(final String dataSetPath,
-            final ICleanUpRegistry registry) throws HDF5JavaException
+            final boolean readDataTypePath, final ICleanUpRegistry registry)
+            throws HDF5JavaException
     {
         final int dataSetId = baseReader.h5.openDataSet(baseReader.fileId, dataSetPath, registry);
         final int compoundDataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
@@ -134,12 +151,14 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         }
         final String dataTypePathOrNull = baseReader.tryGetDataTypePath(compoundDataTypeId);
         final CompoundTypeInformation compoundInformation =
-                getCompoundTypeInformation(compoundDataTypeId, dataTypePathOrNull, registry);
+                getCompoundTypeInformation(compoundDataTypeId, dataTypePathOrNull,
+                        readDataTypePath, registry);
         return compoundInformation;
     }
 
     private CompoundTypeInformation getFullCompoundDataTypeInformation(final String dataTypePath,
-            final ICleanUpRegistry registry) throws HDF5JavaException
+            final boolean readDataTypePath, final ICleanUpRegistry registry)
+            throws HDF5JavaException
     {
         final int compoundDataTypeId =
                 baseReader.h5.openDataType(baseReader.fileId, dataTypePath, registry);
@@ -148,7 +167,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             throw new HDF5JavaException("Data type '" + dataTypePath + "' is not a compound type.");
         }
         final CompoundTypeInformation compoundInformation =
-                getCompoundTypeInformation(compoundDataTypeId, dataTypePath, registry);
+                getCompoundTypeInformation(compoundDataTypeId, dataTypePath, readDataTypePath,
+                        registry);
         return compoundInformation;
     }
 
@@ -172,7 +192,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     }
 
     CompoundTypeInformation getCompoundTypeInformation(final int compoundDataTypeId,
-            final String dataTypePathOrNull, final ICleanUpRegistry registry)
+            final String dataTypePathOrNull, final boolean readDataTypePath,
+            final ICleanUpRegistry registry)
     {
         final String typeName =
                 HDF5Utils.getDataTypeNameFromPath(dataTypePathOrNull, HDF5DataClass.COMPOUND);
@@ -196,7 +217,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                     baseReader.h5.getDataTypeForIndex(compoundDataTypeId, i, registry);
             compoundInfo.dataTypeIds[i] = dataTypeId;
             final HDF5DataTypeInformation dataTypeInformation =
-                    baseReader.getDataTypeInformation(dataTypeId, registry);
+                    baseReader.getDataTypeInformation(dataTypeId, readDataTypePath, registry);
             if (memberTypeVariantsOrNull != null && memberTypeVariantsOrNull[i].isTypeVariant())
             {
                 dataTypeInformation.setTypeVariant(memberTypeVariantsOrNull[i]);
@@ -239,14 +260,21 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     public <T> HDF5CompoundType<T> getCompoundType(final String name, final Class<T> pojoClass,
             final HDF5CompoundMemberMapping... members)
     {
+        return getCompoundType(name, pojoClass, true, members);
+    }
+
+    public <T> HDF5CompoundType<T> getCompoundType(final String name, final Class<T> pojoClass,
+            final boolean readDataTypePath, final HDF5CompoundMemberMapping... members)
+    {
         baseReader.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectArrayifyer =
                 baseReader.createCompoundByteifyers(pojoClass, members);
-        return getCompoundType(name, -1, pojoClass, objectArrayifyer);
+        return getCompoundType(name, -1, pojoClass, objectArrayifyer, readDataTypePath);
     }
 
     private <T> HDF5CompoundType<T> getCompoundType(final String name, int committedDataTypeId,
-            final Class<T> compoundType, final HDF5ValueObjectByteifyer<T> objectArrayifyer)
+            final Class<T> compoundType, final HDF5ValueObjectByteifyer<T> objectArrayifyer,
+            final boolean readDataTypePath)
     {
         final int storageDataTypeId =
                 (committedDataTypeId < 0) ? baseReader
@@ -259,13 +287,14 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                         public HDF5CompoundMemberInformation[] getCompoundMemberInformation()
                         {
                             return HDF5CompoundInformationRetriever.this
-                                    .getCompoundMemberInformation(storageDataTypeId, name);
+                                    .getCompoundMemberInformation(storageDataTypeId, name,
+                                            readDataTypePath);
                         }
                     });
     }
 
     HDF5CompoundMemberInformation[] getCompoundMemberInformation(final int storageDataTypeId,
-            final String dataTypeNameOrNull)
+            final String dataTypeNameOrNull, final boolean readDataTypePath)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5CompoundMemberInformation[]> writeRunnable =
@@ -279,7 +308,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                                                     dataTypeNameOrNull);
                             final CompoundTypeInformation compoundInformation =
                                     getCompoundTypeInformation(storageDataTypeId, dataTypePath,
-                                            registry);
+                                            readDataTypePath, registry);
                             return compoundInformation.members;
                         }
                     };
@@ -408,11 +437,18 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> pojoClass,
             HDF5CompoundMappingHints hints)
     {
+        return getDataSetCompoundType(objectPath, pojoClass, hints, true);
+    }
+
+    public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> pojoClass,
+            HDF5CompoundMappingHints hints, boolean readDataTypePath)
+    {
         final CompoundTypeInformation cpdTypeInfo =
-                getFullCompoundDataSetInformation(objectPath, baseReader.fileRegistry);
+                getFullCompoundDataSetInformation(objectPath, readDataTypePath,
+                        baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
                 getCompoundType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
-                        createByteifyers(pojoClass, cpdTypeInfo, hints));
+                        createByteifyers(pojoClass, cpdTypeInfo, hints), readDataTypePath);
         return typeForClass;
     }
 
@@ -430,12 +466,19 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
             String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints)
     {
+        return getAttributeCompoundType(objectPath, attributeName, pojoClass, hints, true);
+    }
+
+    public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
+            String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints,
+            boolean readDataTypePath)
+    {
         final CompoundTypeInformation cpdTypeInfo =
-                getFullCompoundAttributeInformation(objectPath, attributeName,
+                getFullCompoundAttributeInformation(objectPath, attributeName, readDataTypePath,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
                 getCompoundType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
-                        createByteifyers(pojoClass, cpdTypeInfo, hints));
+                        createByteifyers(pojoClass, cpdTypeInfo, hints), readDataTypePath);
         return typeForClass;
     }
 
@@ -452,13 +495,20 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> pojoClass,
             HDF5CompoundMappingHints hints)
     {
+        return getNamedCompoundType(dataTypeName, pojoClass, hints, true);
+    }
+
+    public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> pojoClass,
+            HDF5CompoundMappingHints hints, boolean readDataTypePath)
+    {
         final String dataTypePath =
                 HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName);
         final CompoundTypeInformation cpdTypeInfo =
-                getFullCompoundDataTypeInformation(dataTypePath, baseReader.fileRegistry);
+                getFullCompoundDataTypeInformation(dataTypePath, readDataTypePath,
+                        baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
                 getCompoundType(dataTypeName, cpdTypeInfo.compoundDataTypeId, pojoClass,
-                        createByteifyers(pojoClass, cpdTypeInfo, hints));
+                        createByteifyers(pojoClass, cpdTypeInfo, hints), readDataTypePath);
         return typeForClass;
     }
 

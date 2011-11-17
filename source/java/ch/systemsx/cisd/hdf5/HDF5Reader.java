@@ -309,6 +309,12 @@ class HDF5Reader implements IHDF5Reader
     public HDF5DataTypeInformation getAttributeInformation(final String dataSetPath,
             final String attributeName)
     {
+        return getAttributeInformation(dataSetPath, attributeName, true);
+    }
+
+    public HDF5DataTypeInformation getAttributeInformation(final String dataSetPath,
+            final String attributeName, final boolean readDataTypePath)
+    {
         assert dataSetPath != null;
 
         baseReader.checkOpen();
@@ -329,7 +335,8 @@ class HDF5Reader implements IHDF5Reader
                                         baseReader.h5
                                                 .getDataTypeForAttribute(attributeId, registry);
                                 final HDF5DataTypeInformation dataTypeInformation =
-                                        baseReader.getDataTypeInformation(dataTypeId, registry);
+                                        baseReader.getDataTypeInformation(dataTypeId,
+                                                readDataTypePath, registry);
                                 if (dataTypeInformation.isArrayType() == false)
                                 {
                                     final int[] dimensions =
@@ -353,20 +360,26 @@ class HDF5Reader implements IHDF5Reader
 
     public HDF5DataSetInformation getDataSetInformation(final String dataSetPath)
     {
+        return getDataSetInformation(dataSetPath, true);
+    }
+
+    public HDF5DataSetInformation getDataSetInformation(final String dataSetPath,
+            final boolean readDataTypePath)
+    {
         assert dataSetPath != null;
 
         baseReader.checkOpen();
-        return baseReader.getDataSetInformation(dataSetPath);
+        return baseReader.getDataSetInformation(dataSetPath, readDataTypePath);
     }
 
     public long getSize(final String objectPath)
     {
-        return getDataSetInformation(objectPath).getSize();
+        return getDataSetInformation(objectPath, false).getSize();
     }
 
     public long getNumberOfElements(final String objectPath)
     {
-        return getDataSetInformation(objectPath).getNumberOfElements();
+        return getDataSetInformation(objectPath, false).getNumberOfElements();
     }
 
     // /////////////////////
