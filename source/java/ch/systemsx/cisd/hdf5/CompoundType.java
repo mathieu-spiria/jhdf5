@@ -25,8 +25,8 @@ import java.lang.annotation.Target;
 /**
  * A marker annotation for classes intended to be mapped to an HDF5 compound data type. This marker
  * interface is optional as inferring the field to member mapping works also when this annotation is
- * not present. However, this annotation is the only way to specify that not all fields should
- * be mapped to members but only those annotated with {@link CompoundElement}.
+ * not present. However, this annotation is the only way to specify that not all fields should be
+ * mapped to members but only those annotated with {@link CompoundElement}.
  * 
  * @author Bernd Rinn
  */
@@ -34,6 +34,12 @@ import java.lang.annotation.Target;
 @Target(TYPE)
 public @interface CompoundType
 {
+    /**
+     * The name this compound type should have in the HDF5 file. If left blank, the simple class
+     * name will be used.
+     */
+    String name() default "";
+
     /**
      * Whether all fields should be mapped to members of the compound type or only the fields
      * annotated with {@link CompoundElement} (default: <code>true</code>).

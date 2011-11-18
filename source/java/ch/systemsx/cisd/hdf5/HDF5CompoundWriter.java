@@ -46,7 +46,7 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
         baseWriter.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectByteifyer =
                 baseWriter.createCompoundByteifyers(pojoClass, members);
-        final String dataTypeName = (name != null) ? name : pojoClass.getSimpleName();
+        final String dataTypeName = (name != null) ? name : deriveCompoundNameFromClass(pojoClass);
         final int storageDataTypeId =
                 getOrCreateCompoundDataType(dataTypeName, pojoClass, objectByteifyer,
                         baseWriter.keepDataSetIfExists);
@@ -61,6 +61,13 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                                     storageDataTypeId, name, readDataTypePath);
                         }
                     });
+    }
+
+    private <T> String deriveCompoundNameFromClass(Class<T> pojoClass)
+    {
+        final CompoundType ct = pojoClass.getAnnotation(CompoundType.class);
+        final String name = (ct != null) ? ct.name() : "";
+        return name.length() == 0 ? pojoClass.getSimpleName() : name;
     }
 
     private <T> int getOrCreateCompoundDataType(final String dataTypeName,
