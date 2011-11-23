@@ -296,11 +296,23 @@ class HDF5BaseReader
         {
             return;
         }
-        for (String dataTypePath : getGroupMemberPaths(DATATYPE_GROUP))
+        readNamedDataTypes(DATATYPE_GROUP);
+    }
+
+    private void readNamedDataTypes(String dataTypePath)
+    {
+        for (String dataTypeSubPath : getGroupMemberPaths(dataTypePath))
         {
-            final int dataTypeId = h5.openDataType(fileId, dataTypePath, fileRegistry);
-            namedDataTypeMap.put(dataTypePath, dataTypeId);
-            namedDataTypeList.add(new DataTypeContainer(dataTypeId, dataTypePath));
+            final HDF5ObjectType type = h5.getObjectTypeInfo(fileId, dataTypeSubPath, false);
+            if (HDF5ObjectType.isGroup(type))
+            {
+                readNamedDataTypes(dataTypeSubPath);
+            } else if (HDF5ObjectType.isDataType(type))
+            {
+                final int dataTypeId = h5.openDataType(fileId, dataTypeSubPath, fileRegistry);
+                namedDataTypeMap.put(dataTypeSubPath, dataTypeId);
+                namedDataTypeList.add(new DataTypeContainer(dataTypeId, dataTypeSubPath));
+            }
         }
     }
 
