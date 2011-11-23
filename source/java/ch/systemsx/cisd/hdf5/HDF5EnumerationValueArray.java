@@ -16,7 +16,9 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
@@ -442,6 +444,20 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     public String getValue(int arrayIndex)
     {
         return type.getValues().get(getOrdinal(arrayIndex));
+    }
+
+    /**
+     * Returns the string values for all elements of this array.
+     */
+    public List<String> getValues()
+    {
+        final int len = getLength();
+        final String[] values = new String[len];
+        for (int i = 0; i < len; ++i)
+        {
+            values[i] = getValue(i);
+        }
+        return Arrays.asList(values);
     }
 
     byte[] toStorageForm()
