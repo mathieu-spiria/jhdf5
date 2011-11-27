@@ -18,6 +18,8 @@ package ch.systemsx.cisd.hdf5.tools;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.CRC32;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
@@ -66,6 +68,21 @@ public class HDF5ArchiveLister
     public void close()
     {
         hdf5Reader.close();
+    }
+
+    public List<ListEntry> list(String fileOrDir, String rootOrNull, boolean recursive,
+            boolean suppressDirectoryEntries, boolean verbose, boolean numeric, Check check)
+    {
+        final List<ListEntry> result = new ArrayList<ListEntry>(1000);
+        list(fileOrDir, rootOrNull, recursive, suppressDirectoryEntries, verbose,
+                numeric, check, new IListEntryVisitor()
+                    {
+                        public void visit(ListEntry entry)
+                        {
+                            result.add(entry);
+                        }
+                    });
+        return result;
     }
 
     public void list(String fileOrDir, String rootOrNull, boolean recursive,

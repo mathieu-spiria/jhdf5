@@ -31,6 +31,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
+import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
@@ -106,11 +107,47 @@ public class HDF5ArchiveUpdater
         return archive(absolutePath.getParentFile(), absolutePath, pathVisitorOrNull);
     }
 
+    public HDF5ArchiveUpdater archiveToFile(String directory, Link link, InputStream input,
+            IPathVisitor pathVisitorOrNull) throws IllegalStateException
+    {
+        boolean ok = true;
+        final long size = link.getSize();
+        int crc32 = 0;
+        final String hdf5ObjectPath = directory + "/" + link.getLinkName();
+        final boolean groupExists = hdf5Writer.isGroup(directory);
+        final HDF5GenericStorageFeatures compression = strategy.doCompress(hdf5ObjectPath);
+        try
+        {
+            crc32 = copyToHDF5(input, hdf5ObjectPath, size, compression);
+            link.setCrc32(crc32);
+            if (pathVisitorOrNull != null)
+            {
+                pathVisitorOrNull.visit(hdf5ObjectPath);
+            }
+        } catch (IOException ex)
+        {
+            ok = false;
+            errorStrategy.dealWithError(new ArchivingException(hdf5ObjectPath, ex));
+        } catch (HDF5Exception ex)
+        {
+            ok = false;
+            errorStrategy.dealWithError(new ArchivingException(hdf5ObjectPath, ex));
+        }
+        if (ok)
+        {
+            updateIndicesOnThePath(hdf5ObjectPath, link, groupExists);
+        }
+        return this;
+    }
+
     public HDF5ArchiveUpdater archive(File root, File path, IPathVisitor pathVisitorOrNull)
             throws IllegalStateException
     {
         final File absoluteRoot = root.getAbsoluteFile();
         final File absolutePath = path.getAbsoluteFile();
+        final String hdf5ObjectPath = getRelativePath(absoluteRoot, absolutePath);
+        final String hdf5GroupPath = FilenameUtils.getFullPathNoEndSeparator(hdf5ObjectPath);
+        final boolean groupExists = hdf5Writer.isGroup(hdf5GroupPath);
         final boolean ok;
         int crc32 = 0;
         final Link linkOrNull = Link.tryCreate(absolutePath, true, errorStrategy);
@@ -123,7 +160,9 @@ public class HDF5ArchiveUpdater
         } else if (absolutePath.isFile())
         {
             final Link pseudoLinkForChecksum = new Link();
-            ok = archiveFile(absoluteRoot, absolutePath, pseudoLinkForChecksum, pathVisitorOrNull);
+            ok =
+                    archiveFile(absolutePath, hdf5ObjectPath, pseudoLinkForChecksum,
+                            pathVisitorOrNull);
             crc32 = pseudoLinkForChecksum.getCrc32();
         } else
         {
@@ -133,12 +172,12 @@ public class HDF5ArchiveUpdater
         }
         if (ok)
         {
-            updateIndicesOnThePath(absoluteRoot, absolutePath, crc32);
+            updateIndicesOnThePath(absoluteRoot, absolutePath, crc32, groupExists);
         }
         return this;
     }
 
-    private void updateIndicesOnThePath(File root, File path, int crc32)
+    private void updateIndicesOnThePath(File root, File path, int crc32, boolean immediateGroupOnly)
     {
         final String rootAbsolute = root.getAbsolutePath();
         File pathProcessing = path;
@@ -166,6 +205,46 @@ public class HDF5ArchiveUpdater
                 index.writeIndexToArchive();
             }
             pathProcessing = dirProcessingOrNull;
+            if (immediateGroupOnly)
+            {
+                break;
+            }
+        }
+    }
+
+    private void updateIndicesOnThePath(String path, Link link, boolean immediateGroupOnly)
+    {
+        String pathProcessing = path.startsWith("/") ? path : ("/" + path);
+        if ("/".equals(pathProcessing))
+        {
+            return;
+        }
+        int crc32 = link.getCrc32();
+        long size = link.getSize();
+        long lastModified = link.getLastModified();
+        short permissions = link.getPermissions();
+        int uid = link.getUid();
+        int gid = link.getGid();
+        FileLinkType fileLinkType = link.getLinkType();
+        while (true)
+        {
+            final String hdf5GroupPath = FilenameUtils.getFullPathNoEndSeparator(pathProcessing);
+            final DirectoryIndex index =
+                    new DirectoryIndex(hdf5Writer, hdf5GroupPath, errorStrategy, false);
+            final String hdf5FileName = FilenameUtils.getName(pathProcessing);
+            final Link linkProcessing =
+                    new Link(hdf5FileName, null, fileLinkType, size, lastModified, uid, gid,
+                            permissions, crc32);
+            index.updateIndex(Collections.singletonList(linkProcessing));
+            index.writeIndexToArchive();
+            fileLinkType = FileLinkType.DIRECTORY;
+            crc32 = 0; // Directories don't have a checksum
+            size = Link.UNKNOWN; // Directories don't have a size
+            pathProcessing = hdf5GroupPath;
+            if (immediateGroupOnly || pathProcessing.length() == 0)
+            {
+                break;
+            }
         }
     }
 
@@ -242,7 +321,9 @@ public class HDF5ArchiveUpdater
                     }
                 } else if (linkOrNull.isRegularFile())
                 {
-                    final boolean ok = archiveFile(root, file, linkOrNull, pathVisitorOrNull);
+                    final String hdf5ObjectPath = getRelativePath(root, file);
+                    final boolean ok =
+                            archiveFile(file, hdf5ObjectPath, linkOrNull, pathVisitorOrNull);
                     if (ok == false)
                     {
                         linkIt.remove();
@@ -301,11 +382,10 @@ public class HDF5ArchiveUpdater
         return totalLength;
     }
 
-    private boolean archiveFile(File root, File file, Link link, IPathVisitor pathVisitorOrNull)
-            throws ArchivingException
+    private boolean archiveFile(File file, String hdf5ObjectPath, Link link,
+            IPathVisitor pathVisitorOrNull) throws ArchivingException
     {
         boolean ok = true;
-        final String hdf5ObjectPath = getRelativePath(root, file);
         final HDF5GenericStorageFeatures compression = strategy.doCompress(hdf5ObjectPath);
         try
         {
@@ -345,10 +425,22 @@ public class HDF5ArchiveUpdater
         }
     }
 
-    private int copyToHDF5(File source, final String objectPath, final long size,
+    private int copyToHDF5(final File source, final String objectPath, final long size,
             final HDF5GenericStorageFeatures compression) throws IOException
     {
         final InputStream input = FileUtils.openInputStream(source);
+        try
+        {
+            return copyToHDF5(input, objectPath, size, compression);
+        } finally
+        {
+            IOUtils.closeQuietly(input);
+        }
+    }
+
+    private int copyToHDF5(final InputStream input, final String objectPath, final long size,
+            final HDF5GenericStorageFeatures compression) throws IOException
+    {
         final int blockSize = (int) Math.min(size, buffer.length);
         final HDF5OpaqueType type;
         if (hdf5Writer.exists(objectPath, false))
@@ -367,19 +459,13 @@ public class HDF5ArchiveUpdater
 
         }
         final CRC32 crc32 = new CRC32();
-        try
+        long count = 0;
+        int n = 0;
+        while (-1 != (n = input.read(buffer)))
         {
-            long count = 0;
-            int n = 0;
-            while (-1 != (n = input.read(buffer)))
-            {
-                hdf5Writer.writeOpaqueByteArrayBlockWithOffset(objectPath, type, buffer, n, count);
-                count += n;
-                crc32.update(buffer, 0, n);
-            }
-        } finally
-        {
-            IOUtils.closeQuietly(input);
+            hdf5Writer.writeOpaqueByteArrayBlockWithOffset(objectPath, type, buffer, n, count);
+            count += n;
+            crc32.update(buffer, 0, n);
         }
         return (int) crc32.getValue();
     }

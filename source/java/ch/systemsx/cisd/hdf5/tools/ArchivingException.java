@@ -47,4 +47,9 @@ public class ArchivingException extends ArchiverException
         super(file, OPERATION_NAME, cause);
     }
 
+    public ArchivingException(String filePath, IOException cause)
+    {
+        super(filePath, OPERATION_NAME, cause);
+    }
+
 }

@@ -30,7 +30,7 @@ import ch.systemsx.cisd.hdf5.HDF5ObjectType;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 /**
- * A class containing all information we need have about a link either in the file sysstem or in an
+ * A class containing all information we need have about a link either in the file system or in an
  * HDF5 container.
  * 
  * @author Bernd Rinn
@@ -86,6 +86,14 @@ public final class Link implements Comparable<Link>
     }
 
     /**
+     * Returns a {@link Link} object for the given <var>hdf5FileName</var>.
+     */
+    public static Link createRegularFile(String hdf5FileName, long size)
+    {
+        return new Link(hdf5FileName, FileLinkType.REGULAR_FILE, size, 0);
+    }
+
+    /**
      * Returns the link target of <var>symbolicLink</var>, or <code>null</code>, if
      * <var>symbolicLink</var> is not a symbolic link or the link target could not be read.
      */
@@ -100,11 +108,49 @@ public final class Link implements Comparable<Link>
         }
     }
 
+    private static int getCurrentUid()
+    {
+        if (Unix.isOperational())
+        {
+            return Unix.getUid();
+        } else
+        {
+            return UNKNOWN;
+        }
+    }
+    
+    private static int getCurrentGid()
+    {
+        if (Unix.isOperational())
+        {
+            return Unix.getGid();
+        } else
+        {
+            return UNKNOWN;
+        }
+    }
+    
     /**
      * Used by the HDF5 library during reading.
      */
     public Link()
     {
+    }
+
+    /**
+     * Used for HDF5 files which are created on the fly.
+     */
+    public Link(String hdf5FileName, FileLinkType type, long size, int crc32)
+    {
+        this.linkName = hdf5FileName;
+        this.linkTargetOrNull = null;
+        this.linkType = type;
+        this.size = size;
+        this.crc32 = crc32;
+        this.lastModified = System.currentTimeMillis() / 1000;
+        this.uid = getCurrentUid();
+        this.gid = getCurrentGid();
+        this.permissions = 0755;
     }
 
     public Link(HDF5LinkInformation info, long size)
@@ -151,8 +197,6 @@ public final class Link implements Comparable<Link>
         }
     }
 
-    /** For unit tests only! */
-    @Private
     Link(String linkName, String linkTargetOrNull, FileLinkType linkType, long size,
             long lastModified, int uid, int gid, short permissions)
     {

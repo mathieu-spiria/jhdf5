@@ -58,11 +58,18 @@ public abstract class ArchiverException extends RuntimeException
     {
         this(file, operationName, cause.getCause());
     }
-    
+
     protected ArchiverException(File file, String operationName, IOException cause)
     {
         super("Error " + operationName + " file '" + file + "' [IO]: " + cause.getMessage(), cause);
         this.fileOrObjectPath = file.getAbsolutePath();
+    }
+
+    protected ArchiverException(String filePath, String operationName, IOException cause)
+    {
+        super("Error " + operationName + " on reading input stream for object  '" + filePath
+                + "' [IO]: " + cause.getMessage(), cause);
+        this.fileOrObjectPath = filePath;
     }
 
     public final String getFileOrObjectPath()

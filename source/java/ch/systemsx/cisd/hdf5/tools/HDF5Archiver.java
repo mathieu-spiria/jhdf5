@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
@@ -42,6 +43,17 @@ public class HDF5Archiver
 
     final static int BUFFER_SIZE = 10 * MB;
 
+    /**
+     * An error strategy that just re-throws the exception.
+     */
+    public static final IErrorStrategy RETHROWING_ERROR_STRATEGY = new IErrorStrategy()
+        {
+            public void dealWithError(ArchiverException ex) throws ArchiverException
+            {
+                throw ex;
+            }
+        };
+
     private final IHDF5Reader hdf5Reader;
 
     private final IErrorStrategy errorStrategy;
@@ -53,6 +65,12 @@ public class HDF5Archiver
     private final HDF5ArchiveUpdater updaterOrNull;
 
     private final HDF5ArchiveDeleter deleterOrNull;
+
+    public HDF5Archiver(File archiveFile, boolean readOnly)
+    {
+        this(archiveFile, new ArchivingStrategy(), readOnly, false, FileFormat.STRICTLY_1_6,
+                RETHROWING_ERROR_STRATEGY);
+    }
 
     public HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat,
             IErrorStrategy errorStrategyOrNull)
@@ -93,20 +111,77 @@ public class HDF5Archiver
         }
     }
 
+    public HDF5Archiver(IHDF5Reader reader, IErrorStrategy errorStrategyOrNull)
+    {
+        this(reader, new ArchivingStrategy(), errorStrategyOrNull);
+    }
+
+    public HDF5Archiver(IHDF5Reader reader, ArchivingStrategy strategy,
+            IErrorStrategy errorStrategyOrNull)
+    {
+        final byte[] buffer = new byte[BUFFER_SIZE];
+        final IHDF5Writer hdf5WriterOrNull =
+                (reader instanceof IHDF5Writer) ? (IHDF5Writer) reader : null;
+        hdf5Reader = reader;
+        this.lister = new HDF5ArchiveLister(hdf5Reader, strategy, errorStrategyOrNull, buffer);
+        this.extracter =
+                new HDF5ArchiveExtractor(hdf5Reader, strategy, errorStrategyOrNull, buffer);
+        if (hdf5WriterOrNull == null)
+        {
+            this.updaterOrNull = null;
+            this.deleterOrNull = null;
+        } else
+        {
+            this.updaterOrNull =
+                    new HDF5ArchiveUpdater(hdf5WriterOrNull, strategy, errorStrategyOrNull, buffer);
+            this.deleterOrNull = new HDF5ArchiveDeleter(hdf5WriterOrNull, errorStrategyOrNull);
+        }
+        if (errorStrategyOrNull == null)
+        {
+            this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
+        } else
+        {
+            this.errorStrategy = errorStrategyOrNull;
+        }
+    }
+
     public void close()
     {
         extracter.close();
     }
 
-    public void list(String fileOrDir, String rootOrNull, boolean recursive,
+    public HDF5Archiver list(String fileOrDir, String rootOrNull, boolean recursive,
             boolean suppressDirectoryEntries, boolean verbose, boolean numeric, Check check,
             IListEntryVisitor visitor)
     {
         lister.list(fileOrDir, rootOrNull, recursive, suppressDirectoryEntries, verbose, numeric,
                 check, visitor);
+        return this;
     }
 
+    public List<ListEntry> list(String fileOrDir, String rootOrNull, boolean recursive,
+            boolean suppressDirectoryEntries, boolean verbose, boolean numeric, Check check)
+    {
+
+        return lister.list(fileOrDir, rootOrNull, recursive, suppressDirectoryEntries,
+                verbose, numeric, check);
+    }
+
+    /**
+     * @deprecated Use {@link #cat(String)} instead.
+     */
+    @Deprecated
     public HDF5Archiver cat(File root, String path) throws IOExceptionUnchecked
+    {
+        return cat(path);
+    }
+
+    public HDF5Archiver cat(String path) throws IOExceptionUnchecked
+    {
+        return cat(path, new FileOutputStream(FileDescriptor.out));
+    }
+
+    public HDF5Archiver cat(String path, OutputStream out) throws IOExceptionUnchecked
     {
         if (hdf5Reader.isDataSet(path) == false)
         {
@@ -115,10 +190,9 @@ public class HDF5Archiver
         }
         try
         {
-            final OutputStream os = new FileOutputStream(FileDescriptor.out);
             for (HDF5DataBlock<byte[]> block : hdf5Reader.getAsByteArrayNaturalBlocks(path))
             {
-                os.write(block.getData());
+                out.write(block.getData());
             }
         } catch (IOException ex)
         {
@@ -147,6 +221,14 @@ public class HDF5Archiver
     {
         checkReadWrite();
         updaterOrNull.archive(root, path, pathVisitorOrNull);
+        return this;
+    }
+
+    public HDF5Archiver archiveToFile(String directory, Link link, InputStream input,
+            IPathVisitor pathVisitorOrNull) throws IllegalStateException
+    {
+        checkReadWrite();
+        updaterOrNull.archiveToFile(directory, link, input, pathVisitorOrNull);
         return this;
     }
 

@@ -402,7 +402,7 @@ public class HDF5ArchiverMain
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.cat(getFSRoot(), arguments.get(i));
+                            archiver.cat(arguments.get(i));
                         }
                     }
                     break;
