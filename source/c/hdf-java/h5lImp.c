@@ -34,16 +34,12 @@ extern "C" {
 #include "h5lImp.h"
 
 #ifdef __cplusplus
-#define ENVPTR (env)
-#define ENVPAR 
 #define CBENVPTR (cbenv)
 #define CBENVPAR 
 #define JVMPTR (jvm)
 #define JVMPAR 
 #define JVMPAR2 
 #else
-#define ENVPTR (*env)
-#define ENVPAR env,
 #define CBENVPTR (*cbenv)
 #define CBENVPAR cbenv,
 #define JVMPTR (*jvm)
@@ -880,7 +876,6 @@ extern "C" {
       (JNIEnv *env, jclass clss, jint grp_id, jint idx_type, jint order,
               jobject callback_op, jobject op_data)
     {
-        jboolean      isCopy;
         herr_t        status = -1;
         
         ENVPTR->GetJavaVM(ENVPAR &jvm);
@@ -923,13 +918,13 @@ extern "C" {
         
         if (name == NULL) {
             h5nullArgument(env, "H5Lvisit_by_name:  name is NULL");
-            return NULL;
+            return -1;
         }
         
         lName = (char*)ENVPTR->GetStringUTFChars(ENVPAR name, &isCopy);
         if (lName == NULL) {
             h5JNIFatalError(env, "H5Lvisit_by_name:  name not pinned");
-            return NULL;
+            return -1;
         }
 
         if (op_data == NULL) {
@@ -962,7 +957,6 @@ extern "C" {
       (JNIEnv *env, jclass clss, jint grp_id, jint idx_type, jint order,
               jlong idx, jobject callback_op, jobject op_data)
     {
-        jboolean      isCopy;
         hsize_t       start_idx = (hsize_t)idx;
         herr_t        status = -1;
         
@@ -1007,13 +1001,13 @@ extern "C" {
         
         if (name == NULL) {
             h5nullArgument(env, "H5Literate_by_name:  name is NULL");
-            return NULL;
+            return -1;
         }
         
         lName = (char*)ENVPTR->GetStringUTFChars(ENVPAR name, &isCopy);
         if (lName == NULL) {
             h5JNIFatalError(env, "H5Literate_by_name:  name not pinned");
-            return NULL;
+            return -1;
         }
 
         if (op_data == NULL) {

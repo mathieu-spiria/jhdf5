@@ -27,20 +27,7 @@ extern "C" {
 #include "hdf5.h"
 #include <jni.h>
 #include <stdlib.h>
-
-#ifdef __cplusplus
-#define ENVPTR (env)
-#define ENVPAR 
-#else
-#define ENVPTR (*env)
-#define ENVPAR env,
-#endif
-
-extern jboolean h5outOfMemory( JNIEnv *env, char *functName);
-extern jboolean h5JNIFatalError( JNIEnv *env, char *functName);
-extern jboolean h5nullArgument( JNIEnv *env, char *functName);
-extern jboolean h5libraryError( JNIEnv *env );
-extern jboolean h5badArgument( JNIEnv *env, char *functName);
+#include "h5jni.h"
 
 
 /*
@@ -238,7 +225,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Rget_1obj_1type2
     jboolean isCopy;
     jbyte *refP;
     jint *ref_objP;
-	int retVal;
+  int retVal;
 
 
     if (ref == NULL) {
@@ -285,10 +272,10 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Rget_1obj_1type2
 JNIEXPORT jlong JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Rget_1name
   (JNIEnv *env, jclass clss, jint loc_id, jint ref_type, jbyteArray ref, jobjectArray name, jlong size)
 {
-	jlong ret_val = -1;
+  jlong ret_val = -1;
     jbyte *refP;
-	jboolean isCopy;
-	char *aName=NULL;
+  jboolean isCopy;
+  char *aName=NULL;
     jstring str;
     size_t bs;
 
@@ -298,11 +285,11 @@ JNIEXPORT jlong JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Rget_1name
         return -1;
     }
 
-	if (ref == NULL) {
+  if (ref == NULL) {
         h5nullArgument( env, "H5Rget_name:  ref is NULL");
         return -1;
-	}
-	
+  }
+  
     if ((ref_type == H5R_OBJECT) && ENVPTR->GetArrayLength(ENVPAR ref) != H5R_OBJ_REF_BUF_SIZE) {
         h5badArgument( env, "H5Rdereference:  obj ref input array != H5R_OBJ_REF_BUF_SIZE");
         return -1;
@@ -318,8 +305,8 @@ JNIEXPORT jlong JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Rget_1name
         h5JNIFatalError(env,  "H5Rcreate:  ref not pinned");
         return -1;
     }
-	
-	aName = (char*)malloc(sizeof(char)*bs);
+  
+  aName = (char*)malloc(sizeof(char)*bs);
     if (aName == NULL) {
         ENVPTR->ReleaseByteArrayElements(ENVPAR ref,refP,JNI_ABORT);
         h5outOfMemory( env, "H5Aget_name:  malloc failed");
@@ -328,20 +315,20 @@ JNIEXPORT jlong JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Rget_1name
 
     ret_val = (jlong) H5Rget_name( (hid_t)loc_id, (H5R_type_t) ref_type, refP, aName, bs) ;
 
-	if (ret_val < 0) {
+  if (ret_val < 0) {
         ENVPTR->ReleaseByteArrayElements(ENVPAR ref,refP,JNI_ABORT);
-		free(aName);
+    free(aName);
         h5libraryError(env);
         return -1;
-	}
+  }
 
     str = ENVPTR->NewStringUTF(ENVPAR aName);
-	ENVPTR->SetObjectArrayElement(ENVPAR name,0,str);
+  ENVPTR->SetObjectArrayElement(ENVPAR name,0,str);
 
     ENVPTR->ReleaseByteArrayElements(ENVPAR ref,refP,0);
-	if (aName) free (aName);
+  if (aName) free (aName);
 
-	return ret_val;
+  return ret_val;
 }
 
 

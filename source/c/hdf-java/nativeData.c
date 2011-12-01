@@ -36,14 +36,6 @@ extern "C" {
 #include "hdf5.h"
 #include "h5jni.h"
 
-#ifdef __cplusplus
-#define ENVPTR (env)
-#define ENVPAR 
-#else
-#define ENVPTR (*env)
-#define ENVPAR env,
-#endif
-
 
 /* returns int [] */
 JNIEXPORT jintArray JNICALL Java_ncsa_hdf_hdf5lib_HDFNativeData_byteToInt___3B

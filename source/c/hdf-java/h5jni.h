@@ -20,9 +20,11 @@
 #ifdef __cplusplus
 #define ENVPTR (env)
 #define ENVPAR
+#define ENVONLY
 #else
 #define ENVPTR (*env)
 #define ENVPAR env,
+#define ENVONLY env
 #endif
 
 #ifdef __cplusplus
@@ -34,11 +36,12 @@ extern jboolean h5badArgument (JNIEnv *, char *);
 extern jboolean h5outOfMemory (JNIEnv *, char *);
 extern jboolean h5libraryError(JNIEnv *env );
 extern jboolean h5raiseException(JNIEnv *, char *, char *);
+extern jboolean h5unimplemented( JNIEnv *env, char *functName);
 
 /* implemented at H5.c */
 extern jint get_enum_value(JNIEnv *env, jobject enum_obj);
 extern jobject get_enum_object(JNIEnv *env, const char* enum_class_name,
-		jint enum_val, const char* enum_field_desc);
+    jint enum_val, const char* enum_field_desc);
 
 /* implemented at H5G.c */
 extern jobject create_H5G_info_t(JNIEnv *env, H5G_info_t group_info);

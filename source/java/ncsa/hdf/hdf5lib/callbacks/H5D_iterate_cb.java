@@ -11,19 +11,9 @@
  * access to the file, you may request a copy from help@hdfgroup.org.        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-package ncsa.hdf.hdf5lib.structs;
+package ncsa.hdf.hdf5lib.callbacks;
 
-import java.io.Serializable;
-
-//Information struct for group (for H5Gget_info/H5Gget_info_by_name/H5Gget_info_by_idx)
-public class H5_ih_info_t implements Serializable {
-    private static final long serialVersionUID = -142238015615462707L;
-    public long     index_size;     /* btree and/or list */
-    public long     heap_size;
-    
-    H5_ih_info_t (long index_size, long heap_size) 
-    {
-        this.index_size = index_size;
-        this.heap_size = heap_size;
-    }
+//Information class for link callback(for H5Diterate)
+public interface H5D_iterate_cb extends Callbacks {
+    int callback(byte[] elem, int elem_type, int ndim, long[] point, H5D_iterate_t op_data);
 }

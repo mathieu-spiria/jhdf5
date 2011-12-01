@@ -22,9 +22,9 @@ extern "C" {
 #include "hdf5.h"
 #include "h5util.h"
 #include "jni.h"
-    
+
     JavaVM *jvm;
-    jobject visit_callback;   
+    jobject visit_callback;
 
 int h5str_dump_region(h5str_t *str, hid_t region);
 static hbool_t h5tools_is_zero(const void *_mem, size_t size);
@@ -116,7 +116,7 @@ int h5str_sprintf(h5str_t *str, hid_t container, hid_t tid, void *ptr) {
     float tmp_float = 0;
     double tmp_double = 0.0;
 
-    size_t offset, size;
+    size_t offset, size, nll;
     char *cptr = (char*) ptr;
     unsigned char *ucptr = (unsigned char*) ptr;
     char *this_str;
@@ -164,17 +164,17 @@ int h5str_sprintf(h5str_t *str, hid_t container, hid_t tid, void *ptr) {
     else if (H5Tequal(tid, H5T_NATIVE_LONG)) {
         this_str = (char*) malloc(23);
         memcpy(&tmp_long, ptr, sizeof(long));
-        sprintf(this_str, "%d", tmp_long);
+        sprintf(this_str, "%ld", tmp_long);
     }
     else if (H5Tequal(tid, H5T_NATIVE_ULONG)) {
         this_str = (char*) malloc(23);
         memcpy(&tmp_ulong, ptr, sizeof(unsigned long));
-        sprintf(this_str, "%u", tmp_ulong);
+        sprintf(this_str, "%lu", tmp_ulong);
     }
     else if (H5Tequal(tid, H5T_STD_REF_OBJ)) {
         this_str = (char*) malloc(23);
         memcpy(&tmp_ulong, ptr, 8);
-        sprintf(this_str, "%u", tmp_ulong);
+        sprintf(this_str, "%lu", tmp_ulong);
     }
     else if (H5Tequal(tid, H5T_NATIVE_FLOAT)) {
         this_str = (char*) malloc(25);
@@ -207,8 +207,8 @@ int h5str_sprintf(h5str_t *str, hid_t container, hid_t tid, void *ptr) {
         }
 
         if (size > 0) {
-            this_str = (char *) malloc(size);
-            strcpy(this_str, tmp_str);
+            this_str = (char *) malloc(size+1);
+            strncpy(this_str, tmp_str, size);
         }
     }
     else if (tclass == H5T_COMPOUND) {
@@ -254,11 +254,11 @@ int h5str_sprintf(h5str_t *str, hid_t container, hid_t tid, void *ptr) {
 
         vlptr = (hvl_t *) cptr;
 
-        n = vlptr->len;
-        for (i = 0; i < n; i++) {
+        nll = vlptr->len;
+        for (i = 0; i < (int)nll; i++) {
             h5str_sprintf(str, container, mtid, ((char *) (vlptr->p)) + i
                     * size);
-            if (i < n - 1)
+            if (i < (int)nll - 1)
                 strcat(str->s, ", ");
         }
         H5Tclose(mtid);
@@ -291,14 +291,14 @@ int h5str_sprintf(h5str_t *str, hid_t container, hid_t tid, void *ptr) {
     }
     else /* All other types get printed as hexadecimal */
     {
-        n = H5Tget_size(tid);
-        this_str = (char*) malloc(4 * (n + 1));
+        nll = H5Tget_size(tid);
+        this_str = (char*) malloc(4 * (nll + 1));
 
-        if (1 == n) {
+        if (1 == nll) {
             sprintf(this_str, "0x%02x", ucptr[0]);
         }
         else {
-            for (i = 0; i < n; i++)
+            for (i = 0; i < (int)nll; i++)
                 sprintf(this_str, "%s%02x", i ? ":" : "", ucptr[i]);
         }
 

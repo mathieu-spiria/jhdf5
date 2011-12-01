@@ -28,22 +28,10 @@ extern "C" {
 
 #include "hdf5.h"
 #include <jni.h>
+#include "h5jni.h"
 /*
 #include <signal.h>
 */
-
-#ifdef __cplusplus
-#define ENVPTR (env)
-#define ENVPAR 
-#else
-#define ENVPTR (*env)
-#define ENVPAR env,
-#endif
-
-extern jboolean h5JNIFatalError( JNIEnv *env, char *functName);
-extern jboolean h5nullArgument( JNIEnv *env, char *functName);
-extern jboolean h5libraryError( JNIEnv *env );
-extern jboolean h5raiseException( JNIEnv *env, char *exception, char *message);
 
 /*
  * Class:     ncsa_hdf_hdf5lib_H5

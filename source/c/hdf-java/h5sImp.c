@@ -33,14 +33,6 @@ extern "C" {
 #include "h5jni.h"
 #include "h5sImp.h"
 
-#ifdef __cplusplus
-#define ENVPTR (env)
-#define ENVPAR 
-#else
-#define ENVPTR (*env)
-#define ENVPAR env,
-#endif
-
     /*
      * Class:     ncsa_hdf_hdf5lib_H5
      * Method:    H5Screate
@@ -373,8 +365,24 @@ extern "C" {
         if (retVal < 0) 
             h5libraryError(env);
 
-
         return (jlong) retVal;
+    }
+
+    /*
+     * Class:     ncsa_hdf_hdf5lib_H5
+     * Method:    H5Sget_select_type
+     * Signature: (I)I
+     */
+    JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sget_1select_1type(
+            JNIEnv *env, jclass clss, jint space_id) {
+        int retVal = -1;
+        
+        retVal = H5Sget_select_type(space_id);
+        
+        if (retVal < 0)
+            h5libraryError(env);
+
+        return (jint) retVal;
     }
 
     /*
@@ -390,7 +398,6 @@ extern "C" {
         
         if (retVal < 0)
             h5libraryError(env);
-
 
         return (jint) retVal;
     }
@@ -509,10 +516,10 @@ extern "C" {
     JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5Sget_1simple_1extent_1type(
             JNIEnv *env, jclass clss, jint space_id) {
         H5S_class_t retVal = H5S_NO_CLASS;
-        retVal = H5Sget_simple_extent_type(space_id);
         
-        if (retVal == H5S_NO_CLASS) 
+        if (space_id < 0)
             h5libraryError(env);
+        retVal = H5Sget_simple_extent_type(space_id);
 
         return (jint) retVal;
     }
@@ -960,6 +967,7 @@ extern "C" {
         jboolean isCopy;
         hsize_t *ba;
         int i;
+        int rank;
         long st;
         long nb;
 
@@ -970,12 +978,18 @@ extern "C" {
             h5nullArgument(env, "H5Sget_select_hyper_blocklist:  buf is NULL");
             return -1;
         }
+        rank = H5Sget_simple_extent_ndims(spaceid);
+        if(rank <= 0) rank = 1;
+        if (ENVPTR->GetArrayLength(ENVPAR buf) < (numblocks * rank)) {
+            h5badArgument(env, "H5Sget_select_hyper_blocklist:  buf input array too small");
+            return -1;
+        }
         bufP = ENVPTR->GetLongArrayElements(ENVPAR buf, &isCopy);
         if (bufP == NULL) {
             h5JNIFatalError( env, "H5Sget_select_hyper_blocklist:  buf not pinned");
             return -1;
         }
-        ba = (hsize_t *)malloc( nb * 2 * sizeof(hsize_t));
+        ba = (hsize_t *)malloc( nb * 2 * (long)rank * sizeof(hsize_t));
         if (ba == NULL) {
             ENVPTR->ReleaseLongArrayElements(ENVPAR buf, bufP,JNI_ABORT);
             h5JNIFatalError(env,  "H5Screate-simple:  buffer not converted to hsize_t");
@@ -986,17 +1000,17 @@ extern "C" {
                 (hsize_t)nb, (hsize_t *)ba);
 
         if (status < 0) {
-            ENVPTR->ReleaseLongArrayElements(ENVPAR buf,bufP,JNI_ABORT);
+            ENVPTR->ReleaseLongArrayElements(ENVPAR buf, bufP, JNI_ABORT);
             free (ba);
             h5libraryError(env);
             return -1;
         } 
 
-        for (i = 0; i < (numblocks*2); i++) {
+        for (i = 0; i < (numblocks*2*rank); i++) {
             bufP[i] = ba[i];
         }
         free (ba);
-        ENVPTR->ReleaseLongArrayElements(ENVPAR buf,bufP,0);
+        ENVPTR->ReleaseLongArrayElements(ENVPAR buf, bufP, 0);
 
         return (jint)status;
     }
@@ -1014,9 +1028,16 @@ extern "C" {
         jboolean isCopy;
         hsize_t *ba;
         int i;
+        int rank;
 
         if (buf == NULL) {
             h5nullArgument(env, "H5Sget_select_elem_pointlist:  buf is NULL");
+            return -1;
+        }
+        rank = H5Sget_simple_extent_ndims(spaceid);
+        if(rank <= 0) rank = 1;
+        if (ENVPTR->GetArrayLength(ENVPAR buf) < (numpoints * rank)) {
+            h5badArgument(env, "H5Sget_select_elem_pointlist:  buf input array too small");
             return -1;
         }
         bufP = ENVPTR->GetLongArrayElements(ENVPAR buf, &isCopy);
@@ -1024,7 +1045,7 @@ extern "C" {
             h5JNIFatalError( env, "H5Sget_select_elem_pointlist:  buf not pinned");
             return -1;
         }
-        ba = (hsize_t *)malloc( ((long)numpoints) * sizeof(hsize_t));
+        ba = (hsize_t *)malloc( ((long)numpoints * (long)rank) * sizeof(hsize_t));
         if (ba == NULL) {
             ENVPTR->ReleaseLongArrayElements(ENVPAR buf,bufP,JNI_ABORT);
             h5JNIFatalError(env,"H5Sget_select_elem_pointlist:  buf not converted to hsize_t");
@@ -1041,7 +1062,7 @@ extern "C" {
             return -1;
         } 
 
-        for (i = 0; i < numpoints; i++) {
+        for (i = 0; i < (numpoints*rank); i++) {
             bufP[i] = ba[i];
         }
         free (ba) ;
