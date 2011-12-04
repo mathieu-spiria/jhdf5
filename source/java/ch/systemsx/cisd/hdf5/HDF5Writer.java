@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createTypeVariantAttributeName;
 
+import java.io.Flushable;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
@@ -137,6 +138,11 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         baseWriter.checkOpen();
         baseWriter.flushSyncBlocking();
+    }
+
+    public void addFlushable(Flushable flushable)
+    {
+        baseWriter.addFlushable(flushable);
     }
 
     // /////////////////////

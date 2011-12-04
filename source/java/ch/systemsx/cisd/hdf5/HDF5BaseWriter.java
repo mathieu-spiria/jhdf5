@@ -30,9 +30,12 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_UNLIMITED;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.Flushable;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -69,7 +72,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     private final static EnumSet<SyncMode> SYNC_ON_CLOSE_MODES = EnumSet.of(SyncMode.SYNC_BLOCK,
             SyncMode.SYNC);
-
+    
     /**
      * The size threshold for the COMPACT storage layout.
      */
@@ -110,6 +113,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     private final BlockingQueue<Command> commandQueue;
+
+    private final List<Flushable> flushables = new ArrayList<Flushable>();
 
     final boolean useExtentableDataTypes;
 
@@ -242,6 +247,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             if (state == State.OPEN)
             {
+                flushExternals();
                 super.close();
                 if (SYNC_ON_CLOSE_MODES.contains(syncMode))
                 {
@@ -263,10 +269,31 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
     }
 
+    void addFlushable(Flushable flushable)
+    {
+        flushables.add(flushable);
+    }
+
+    void flushExternals()
+    {
+        for (Flushable f : flushables)
+        {
+            try
+            {
+                f.flush();
+            } catch (Exception ex)
+            {
+                System.err.println("External flushable throw an exception:");
+                ex.printStackTrace();
+            }
+        }
+    }
+    
     void flush()
     {
         synchronized (fileRegistry)
         {
+            flushExternals();
             h5.flushFile(fileId);
             if (NON_BLOCKING_SYNC_MODES.contains(syncMode))
             {
@@ -282,6 +309,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
     {
         synchronized (fileRegistry)
         {
+            flushExternals();
             h5.flushFile(fileId);
             syncNow();
         }
@@ -294,6 +322,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             if (state == State.OPEN)
             {
+                flushExternals();
                 super.close();
                 if (SyncMode.SYNC == syncMode)
                 {

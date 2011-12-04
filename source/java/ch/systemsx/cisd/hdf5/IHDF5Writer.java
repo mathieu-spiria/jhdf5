@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.io.Flushable;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 
@@ -79,6 +81,16 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * This method blocks until <code>fsync(2)</code> has returned.
      */
     public void flushSyncBlocking();
+
+    /**
+     * Adds a {@link Flushable} to the list of <i>external</i> flushables. This list is flushed
+     * when {@link #flush()} or {@link #flushSyncBlocking()} are called and before the writer is
+     * closed.
+     * <p>
+     * This function is supposed to be used for in-memory caching structures that need to make it
+     * into the HDF5 file.
+     */
+    public void addFlushable(Flushable flushable);
 
     // /////////////////////
     // Objects & Links
