@@ -116,6 +116,8 @@ public final class HDF5CompoundMemberMapping
 
     private Class<?> memberClassOrNull;
 
+    private String enumTypeName;
+
     private int memberTypeLength;
 
     private int[] memberTypeDimensions;
@@ -184,7 +186,7 @@ public final class HDF5CompoundMemberMapping
             Class<?> memberClass, int[] memberDimensions, int storageDataTypeId,
             HDF5DataTypeVariant typeVariantOrNull)
     {
-        return new HDF5CompoundMemberMapping(fieldName, memberClass, memberName, null,
+        return new HDF5CompoundMemberMapping(fieldName, memberClass, memberName, null, null,
                 memberDimensions, storageDataTypeId, typeVariantOrNull);
     }
 
@@ -342,7 +344,7 @@ public final class HDF5CompoundMemberMapping
     {
         assert enumType != null;
         return new HDF5CompoundMemberMapping(fieldName, HDF5EnumerationValueArray.class,
-                memberName, enumType, memberTypeDimensions, storageTypeId, null);
+                memberName, enumType, null, memberTypeDimensions, storageTypeId, null);
     }
 
     /**
@@ -361,7 +363,7 @@ public final class HDF5CompoundMemberMapping
     {
         assert enumType != null;
         return new HDF5CompoundMemberMapping(fieldName, HDF5EnumerationValueArray.class,
-                memberName, enumType, memberTypeDimensions, storageTypeId, typeVariantOrNull);
+                memberName, enumType, null, memberTypeDimensions, storageTypeId, typeVariantOrNull);
     }
 
     /**
@@ -377,7 +379,7 @@ public final class HDF5CompoundMemberMapping
             HDF5EnumerationType enumType, int[] memberTypeDimensions, int storageTypeId)
     {
         assert enumType != null;
-        return new HDF5CompoundMemberMapping(fieldName, memberClass, fieldName, enumType,
+        return new HDF5CompoundMemberMapping(fieldName, memberClass, fieldName, enumType, null,
                 memberTypeDimensions, storageTypeId, null);
     }
 
@@ -521,9 +523,10 @@ public final class HDF5CompoundMemberMapping
                 final CompoundElement e = f.getAnnotation(CompoundElement.class);
                 if (e != null)
                 {
-                    result.add(new HDF5CompoundMemberMapping(f.getName(), null, StringUtils
+                    result.add(new HDF5CompoundMemberMapping(f.getName(), f.getType(), StringUtils
                             .defaultIfEmpty(e.memberName(), f.getName()), enumTypeOrNull, e
-                            .dimensions(), HDF5DataTypeVariant.unmaskNone(e.typeVariant())));
+                            .typeName(), e.dimensions(), HDF5DataTypeVariant.unmaskNone(e
+                            .typeVariant())));
                 } else if (includeAllFields)
                 {
                     result.add(new HDF5CompoundMemberMapping(f.getName(), null, f.getName(),
@@ -771,18 +774,18 @@ public final class HDF5CompoundMemberMapping
                 {
                     final int leny = Array.getLength(Array.get(memberValue, 0));
                     result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
-                            null, new int[]
+                            null, null, new int[]
                                 { lenx, leny }, variantOrNull));
                 } else
                 {
                     result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
-                            null, new int[]
+                            null, null, new int[]
                                 { lenx }, variantOrNull));
                 }
             } else if (MDAbstractArray.class.isInstance(memberValue))
             {
                 result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName, null,
-                        ((MDAbstractArray<?>) memberValue).dimensions(), variantOrNull));
+                        null, ((MDAbstractArray<?>) memberValue).dimensions(), variantOrNull));
             } else
             {
                 HDF5EnumerationType enumTypeOrNull = null;
@@ -810,7 +813,7 @@ public final class HDF5CompoundMemberMapping
                     dimensions = new int[0];
                 }
                 result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
-                        enumTypeOrNull, dimensions, variantOrNull));
+                        enumTypeOrNull, null, dimensions, variantOrNull));
             }
         }
         return result;
@@ -885,8 +888,7 @@ public final class HDF5CompoundMemberMapping
                             resultOrNull = new HashMap<String, HDF5EnumerationType>();
                         }
                         resultOrNull.put(f.getName(), enumTypeRetriever.getEnumType(f.getType()
-                                .getSimpleName(), ReflectionUtils
-                                .getEnumOptions(asEnumClass(f))));
+                                .getSimpleName(), ReflectionUtils.getEnumOptions(asEnumClass(f))));
                     } catch (IllegalArgumentException ex)
                     {
                         throw new Error(ex);
@@ -945,8 +947,8 @@ public final class HDF5CompoundMemberMapping
     private HDF5CompoundMemberMapping(String fieldName, Class<?> memberClassOrNull,
             String memberName, HDF5EnumerationType enumTypeOrNull, int[] memberTypeDimensions)
     {
-        this(fieldName, memberClassOrNull, memberName, enumTypeOrNull, memberTypeDimensions, -1,
-                null);
+        this(fieldName, memberClassOrNull, memberName, enumTypeOrNull, null, memberTypeDimensions,
+                -1, null);
     }
 
     /**
@@ -956,16 +958,18 @@ public final class HDF5CompoundMemberMapping
      * @param fieldName The name of the field in the <var>clazz</var>
      * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
      * @param memberName The name of the member in the HDF5 compound data type.
+     * @param enumTypeOrNull The HDF5 enumeration type of this member.
+     * @param enumTypeName The name to be used for the HDF5 enumeration type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
      * @param typeVariantOrNull The data type variant of this mapping, or <code>null</code> if this
      *            mapping has no type variant.
      */
     private HDF5CompoundMemberMapping(String fieldName, Class<?> memberClassOrNull,
-            String memberName, HDF5EnumerationType enumTypeOrNull, int[] memberTypeDimensions,
-            HDF5DataTypeVariant typeVariantOrNull)
+            String memberName, HDF5EnumerationType enumTypeOrNull, String enumTypeName,
+            int[] memberTypeDimensions, HDF5DataTypeVariant typeVariantOrNull)
     {
-        this(fieldName, memberClassOrNull, memberName, enumTypeOrNull, memberTypeDimensions, -1,
-                typeVariantOrNull);
+        this(fieldName, memberClassOrNull, memberName, enumTypeOrNull, enumTypeName,
+                memberTypeDimensions, -1, typeVariantOrNull);
     }
 
     /**
@@ -975,17 +979,21 @@ public final class HDF5CompoundMemberMapping
      * @param fieldName The name of the field in the <var>clazz</var>
      * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
      * @param memberName The name of the member in the HDF5 compound data type.
+     * @param enumTypeOrNull The enumeation type (only for enumerations, obviously).
+     * @param enumTypeName The name of the committed HDF5 enum type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
      * @param storageMemberTypeId The storage data type id of member, or -1, if not available
      */
     private HDF5CompoundMemberMapping(String fieldName, Class<?> memberClassOrNull,
-            String memberName, HDF5EnumerationType enumTypeOrNull, int[] memberTypeDimensions,
-            int storageMemberTypeId, HDF5DataTypeVariant typeVariantOrNull)
+            String memberName, HDF5EnumerationType enumTypeOrNull, String enumTypeName,
+            int[] memberTypeDimensions, int storageMemberTypeId,
+            HDF5DataTypeVariant typeVariantOrNull)
     {
         this.fieldName = fieldName;
         this.memberClassOrNull = memberClassOrNull;
         this.memberName = memberName;
         this.enumTypeOrNull = enumTypeOrNull;
+        this.enumTypeName = enumTypeName;
         this.memberTypeDimensions = memberTypeDimensions;
         this.memberTypeLength = MDArray.getLength(memberTypeDimensions);
         this.storageDataTypeId = storageMemberTypeId;
@@ -1007,6 +1015,23 @@ public final class HDF5CompoundMemberMapping
     {
         this.fieldName = fieldName;
         return this;
+    }
+
+    /**
+     * Sets the name to be used for the comitted HDF5 datatype (for Java enum types only, overriding
+     * the simple class name which is used by default as the type name.
+     */
+    @SuppressWarnings("hiding")
+    public HDF5CompoundMemberMapping enumTypeName(String enumTypeName)
+    {
+        this.enumTypeName =
+                (enumTypeName != null && enumTypeName.length() == 0) ? null : enumTypeName;
+        return this;
+    }
+
+    String getEnumTypeName()
+    {
+        return enumTypeName;
     }
 
     Field tryGetField(Class<?> clazz) throws HDF5JavaException

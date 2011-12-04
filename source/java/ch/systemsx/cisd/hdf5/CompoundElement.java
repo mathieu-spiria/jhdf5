@@ -42,6 +42,12 @@ public @interface CompoundElement
     String memberName() default "";
 
     /**
+     * The name of the type (for Java enumeration types only). Leave empty to use the simple class
+     * name as the type name.
+     */
+    String typeName() default "";
+
+    /**
      * The length / dimensions of the compound member. Is required for compound members that have a
      * variable length, e.g. strings or primitive arrays. Ignored for compound members that have a
      * fixed length, e.g. a float field.

@@ -327,8 +327,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         return getCompoundType(
                 name,
                 pojoClass,
-                HDF5CompoundMemberMapping.addHints(
-                        HDF5CompoundMemberMapping.inferMapping(pojoClass), hints));
+                addEnumTypes(HDF5CompoundMemberMapping.addHints(
+                        HDF5CompoundMemberMapping.inferMapping(pojoClass), hints)));
     }
 
     public <T> HDF5CompoundType<T> getInferredCompoundType(final String name,
@@ -360,9 +360,10 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         } else
         {
             final Class<T> pojoClass = (Class<T>) pojo.getClass();
-            return getCompoundType(name, pojoClass, HDF5CompoundMemberMapping.addHints(
-                    HDF5CompoundMemberMapping.inferMapping(pojoClass, HDF5CompoundMemberMapping
-                            .inferEnumerationTypeMap(pojo, enumTypeRetriever)), hints));
+            return getCompoundType(name, pojoClass,
+                    addEnumTypes(HDF5CompoundMemberMapping.addHints(HDF5CompoundMemberMapping
+                            .inferMapping(pojoClass, HDF5CompoundMemberMapping
+                                    .inferEnumerationTypeMap(pojo, enumTypeRetriever)), hints)));
         }
     }
 
@@ -375,7 +376,10 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             {
                 @SuppressWarnings("unchecked")
                 final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) memberClass;
-                m.setEnumerationType(enumTypeRetriever.getEnumType(memberClass.getSimpleName(),
+                final String typeName =
+                        (m.getEnumTypeName() == null) ? memberClass.getSimpleName() : m
+                                .getEnumTypeName();
+                m.setEnumerationType(enumTypeRetriever.getEnumType(typeName,
                         ReflectionUtils.getEnumOptions(enumClass)));
             }
         }
