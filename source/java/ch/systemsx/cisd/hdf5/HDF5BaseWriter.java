@@ -283,7 +283,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 f.flush();
             } catch (Exception ex)
             {
-                System.err.println("External flushable throw an exception:");
+                System.err.println("External flushable throws an exception:");
                 ex.printStackTrace();
             }
         }
