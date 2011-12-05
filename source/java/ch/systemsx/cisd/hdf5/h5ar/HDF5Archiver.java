@@ -63,6 +63,11 @@ public class HDF5Archiver implements Closeable, Flushable
             {
                 throw ex;
             }
+
+            public void warning(String message)
+            {
+                System.err.println(message);
+            }
         };
 
     private final IHDF5Reader hdf5Reader;
@@ -71,17 +76,17 @@ public class HDF5Archiver implements Closeable, Flushable
 
     private final IErrorStrategy errorStrategy;
 
+    private final ArchivingStrategy archivingStrategy;
+
     private final DirectoryIndexProvider indexProvider;
 
     private final byte[] buffer;
-
-    private final HDF5ArchiveExtractor extracter;
 
     private final HDF5ArchiveUpdater updaterOrNull;
 
     private final HDF5ArchiveDeleter deleterOrNull;
 
-    private final HDF5ArchiveProcessor processor;
+    private final HDF5ArchiveTraverser processor;
 
     static IHDF5Reader createHDF5Reader(File archiveFile)
     {
@@ -128,9 +133,9 @@ public class HDF5Archiver implements Closeable, Flushable
         {
             this.errorStrategy = errorStrategyOrNull;
         }
+        this.archivingStrategy = strategy;
         this.indexProvider = new DirectoryIndexProvider(hdf5Reader, errorStrategy);
-        this.processor = new HDF5ArchiveProcessor(hdf5Reader, indexProvider);
-        this.extracter = new HDF5ArchiveExtractor(hdf5Reader, indexProvider, strategy, buffer);
+        this.processor = new HDF5ArchiveTraverser(hdf5Reader, indexProvider);
         if (hdf5WriterOrNull == null)
         {
             this.updaterOrNull = null;
@@ -160,10 +165,10 @@ public class HDF5Archiver implements Closeable, Flushable
         {
             this.errorStrategy = errorStrategyOrNull;
         }
+        this.archivingStrategy = strategy;
         hdf5Reader = reader;
         this.indexProvider = new DirectoryIndexProvider(hdf5Reader, errorStrategy);
-        this.processor = new HDF5ArchiveProcessor(hdf5Reader, indexProvider);
-        this.extracter = new HDF5ArchiveExtractor(hdf5Reader, indexProvider, strategy, buffer);
+        this.processor = new HDF5ArchiveTraverser(hdf5Reader, indexProvider);
         if (hdf5WriterOrNull == null)
         {
             this.updaterOrNull = null;
@@ -277,10 +282,13 @@ public class HDF5Archiver implements Closeable, Flushable
         return out.toByteArray();
     }
 
-    public HDF5Archiver extractToFilesystem(File root, String path, IPathVisitor pathVisitorOrNull)
+    public HDF5Archiver extractToFilesystem(File root, String path, IListEntryVisitor visitorOrNull)
             throws IllegalStateException
     {
-        extracter.extractToFilesystem(root, path, pathVisitorOrNull);
+        final IArchiveEntryProcessor extractor =
+                new ArchiveEntryExtractProcessor(visitorOrNull, archivingStrategy,
+                        root.getAbsolutePath(), buffer);
+        processor.process(path, true, true, extractor);
         return this;
     }
 

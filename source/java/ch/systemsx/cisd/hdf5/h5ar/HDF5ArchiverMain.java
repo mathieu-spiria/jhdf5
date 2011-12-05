@@ -20,6 +20,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
@@ -93,6 +95,10 @@ public class HDF5ArchiverMain
                 System.err.println(ex.getMessage());
             }
 
+            public void warning(String message)
+            {
+                System.err.println(message);
+            }
         };
 
     @Argument
@@ -451,13 +457,17 @@ public class HDF5ArchiverMain
                     if (arguments.size() == 2)
                     {
                         archiver.extractToFilesystem(getFSRoot(), "/",
-                                verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
+                                verbose ? IListEntryVisitor.DEFAULT_VISITOR : quiet ? null
+                                        : IListEntryVisitor.NONVERBOSE_VISITOR);
                     } else
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.extractToFilesystem(getFSRoot(), arguments.get(i),
-                                    verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
+                            final String unixPath =
+                                    FilenameUtils.separatorsToUnix(arguments.get(i));
+                            archiver.extractToFilesystem(getFSRoot(), unixPath,
+                                    verbose ? IListEntryVisitor.DEFAULT_VISITOR : quiet ? null
+                                            : IListEntryVisitor.NONVERBOSE_VISITOR);
                         }
                     }
                     break;
@@ -481,7 +491,8 @@ public class HDF5ArchiverMain
                         break;
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
-                    final ListingVisitor visitor = new ListingVisitor(true, quiet, verbose, numeric);
+                    final ListingVisitor visitor =
+                            new ListingVisitor(true, quiet, verbose, numeric);
                     archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot().getPath(), recursive,
                             verbose, numeric, verifyAttributes, visitor);
                     return visitor.isOK();

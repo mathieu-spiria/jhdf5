@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5.h5ar;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.zip.CRC32;
 
@@ -46,7 +47,7 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
     }
 
     public boolean process(String dir, String path, LinkRecord link, IHDF5Reader reader,
-            IdCache idCache) throws IOException
+            IdCache idCache, IErrorStrategy errorStrategy) throws IOException
     {
         String errorMessage = null;
         if (checkArchive)
@@ -71,6 +72,11 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
         return true;
     }
 
+    public void postProcessDirectory(String dir, String path, LinkRecord link, IHDF5Reader reader,
+            IdCache idCache, IErrorStrategy errorStrategy) throws IOException, HDF5Exception
+    {
+    }
+
     private int calcCRC32Archive(String objectPath, long size, IHDF5Reader hdf5Reader)
     {
         final CRC32 crc32Digest = new CRC32();
@@ -84,6 +90,26 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
             crc32Digest.update(buffer, 0, n);
         }
         return (int) crc32Digest.getValue();
+    }
+
+    public ArchiverException createException(String objectPath, String detailedMsg)
+    {
+        return new ListArchiveException(objectPath, detailedMsg);
+    }
+
+    public ArchiverException createException(String objectPath, HDF5Exception cause)
+    {
+        return new ListArchiveException(objectPath, cause);
+    }
+
+    public ArchiverException createException(String objectPath, RuntimeException cause)
+    {
+        return new ListArchiveException(objectPath, cause);
+    }
+
+    public ArchiverException createException(File file, IOException cause)
+    {
+        return new ListArchiveException(file, cause);
     }
 
 }

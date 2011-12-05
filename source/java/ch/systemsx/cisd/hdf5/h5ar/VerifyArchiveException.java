@@ -1,5 +1,5 @@
 /*
- * Copyright 2008 ETH Zuerich, CISD
+ * Copyright 2011 ETH Zuerich, CISD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,47 +19,36 @@ package ch.systemsx.cisd.hdf5.h5ar;
 import java.io.File;
 import java.io.IOException;
 
-import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 
 /**
- * Exception thrown when unarchiving a file / directory fails.
+ * Exception thrown when verifying a file / directory in an archive against the file system.
  *
  * @author Bernd Rinn
  */
-public class UnarchivingException extends ArchiverException
+public class VerifyArchiveException extends ArchiverException
 {
+
     private static final long serialVersionUID = 1L;
     
-    private static final String OPERATION_NAME = "unarchiving";
+    private static final String OPERATION_NAME = "verifying";
     
-    public UnarchivingException(String msg)
-    {
-        super("GENERAL", OPERATION_NAME, msg);
-    }
-    
-    public UnarchivingException(String objectPath, String detailedMsg)
+    public VerifyArchiveException(String objectPath, String detailedMsg)
     {
         super(objectPath, OPERATION_NAME, detailedMsg);
     }
     
-    public UnarchivingException(String objectPath, HDF5Exception cause)
+    public VerifyArchiveException(String objectPath, HDF5Exception cause)
     {
         super(objectPath, OPERATION_NAME, cause);
     }
     
-    public UnarchivingException(String objectPath, RuntimeException cause)
+    public VerifyArchiveException(String objectPath, RuntimeException cause)
     {
         super(objectPath, OPERATION_NAME, cause);
     }
     
-    public UnarchivingException(File file, IOException cause)
-    {
-        super(file, OPERATION_NAME, cause);
-    }
-
-    public UnarchivingException(File file, IOExceptionUnchecked cause)
+    public VerifyArchiveException(File file, IOException cause)
     {
         super(file, OPERATION_NAME, cause);
     }

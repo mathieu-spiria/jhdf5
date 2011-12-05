@@ -39,6 +39,11 @@ public interface IErrorStrategy
             }
             throw ex;
         }
+
+        public void warning(String message)
+        {
+            System.err.println(message);
+        }
     };
 
     /**
@@ -47,5 +52,10 @@ public interface IErrorStrategy
      * 
      * @throws ArchiverException if the operation should be aborted
      */
-    void dealWithError(final ArchiverException ex) throws ArchiverException;
+    public void dealWithError(final ArchiverException ex) throws ArchiverException;
+    
+    /**
+     * Called to issue a warning message.
+     */
+    public void warning(String message);
 }

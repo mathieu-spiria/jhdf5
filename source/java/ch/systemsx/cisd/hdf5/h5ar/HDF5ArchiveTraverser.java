@@ -24,11 +24,11 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 /**
- * A processor for <code>h5ar</code> archives.
+ * A traverser for <code>h5ar</code> archives.
  * 
  * @author Bernd Rinn
  */
-class HDF5ArchiveProcessor
+class HDF5ArchiveTraverser
 {
     private final IHDF5Reader hdf5Reader;
 
@@ -38,7 +38,7 @@ class HDF5ArchiveProcessor
 
     private final IdCache idCache;
 
-    public HDF5ArchiveProcessor(IHDF5Reader hdf5Reader, DirectoryIndexProvider indexProvider)
+    public HDF5ArchiveTraverser(IHDF5Reader hdf5Reader, DirectoryIndexProvider indexProvider)
     {
         this.hdf5Reader = hdf5Reader;
         this.indexProvider = indexProvider;
@@ -47,53 +47,76 @@ class HDF5ArchiveProcessor
     }
 
     public void process(String fileOrDir, boolean recursive, boolean readLinkTargets,
-            IArchiveEntryProcessor visitor)
+            IArchiveEntryProcessor processor)
     {
         final String normalizedPath = Utils.normalizePath(fileOrDir);
         final boolean isDirectory = hdf5Reader.isGroup(normalizedPath, false);
 
         final String parentPath = Utils.getParentPath(normalizedPath);
+        LinkRecord link = null;
         if (parentPath.length() > 0)
         {
-            final LinkRecord linkOrNull =
+            link =
                     indexProvider.get(parentPath, readLinkTargets).tryGetLink(
                             normalizedPath.substring(parentPath.length() + 1));
-            if (linkOrNull == null)
+            if (link == null)
             {
-                errorStrategy.dealWithError(new ListArchiveException(normalizedPath,
+                errorStrategy.dealWithError(processor.createException(normalizedPath,
                         "Object not found in archive."));
                 return;
             }
             try
             {
-                if (visitor.process(parentPath, normalizedPath, linkOrNull, hdf5Reader, idCache) == false)
+                if (processor.process(parentPath, normalizedPath, link, hdf5Reader, idCache,
+                        errorStrategy) == false)
                 {
                     return;
                 }
             } catch (IOException ex)
             {
                 final File f = new File(normalizedPath);
-                errorStrategy.dealWithError(new ListArchiveException(f, ex));
+                errorStrategy.dealWithError(processor.createException(f, ex));
             } catch (HDF5Exception ex)
             {
-                errorStrategy.dealWithError(new ListArchiveException(normalizedPath, ex));
+                errorStrategy.dealWithError(processor.createException(normalizedPath, ex));
             }
         }
         if (isDirectory)
         {
-            processDirectory(normalizedPath, recursive, readLinkTargets, visitor);
+            processDirectory(normalizedPath, recursive, readLinkTargets, processor);
+        }
+        postProcessDirectory(parentPath, normalizedPath, link, processor);
+    }
+
+    private void postProcessDirectory(final String parentPath, final String normalizedPath,
+            LinkRecord link, IArchiveEntryProcessor processor)
+    {
+        if (parentPath.length() > 0)
+        {
+            try
+            {
+                processor.postProcessDirectory(parentPath, normalizedPath, link, hdf5Reader,
+                        idCache, errorStrategy);
+            } catch (IOException ex)
+            {
+                final File f = new File(normalizedPath);
+                errorStrategy.dealWithError(processor.createException(f, ex));
+            } catch (HDF5Exception ex)
+            {
+                errorStrategy.dealWithError(processor.createException(normalizedPath, ex));
+            }
         }
     }
 
     /**
-     * Provide the entries of <var>dir</var> to <var>visitor</var>.
+     * Provide the entries of <var>dir</var> to <var>processor</var>.
      */
     private void processDirectory(String normalizedDir, boolean recursive, boolean readLinkTargets,
-            IArchiveEntryProcessor visitor)
+            IArchiveEntryProcessor processor)
     {
         if (hdf5Reader.exists(normalizedDir, false) == false)
         {
-            errorStrategy.dealWithError(new ListArchiveException(normalizedDir,
+            errorStrategy.dealWithError(processor.createException(normalizedDir,
                     "Directory not found in archive."));
             return;
         }
@@ -104,21 +127,23 @@ class HDF5ArchiveProcessor
                             + link.getLinkName();
             try
             {
-                if (visitor.process(normalizedDir, path, link, hdf5Reader, idCache) == false)
+                if (processor
+                        .process(normalizedDir, path, link, hdf5Reader, idCache, errorStrategy) == false)
                 {
                     continue;
                 }
                 if (recursive && link.isDirectory())
                 {
-                    processDirectory(path, recursive, readLinkTargets, visitor);
+                    processDirectory(path, recursive, readLinkTargets, processor);
+                    postProcessDirectory(normalizedDir, path, link, processor);
                 }
             } catch (IOException ex)
             {
                 final File f = new File(path);
-                errorStrategy.dealWithError(new ListArchiveException(f, ex));
+                errorStrategy.dealWithError(processor.createException(f, ex));
             } catch (HDF5Exception ex)
             {
-                errorStrategy.dealWithError(new ListArchiveException(path, ex));
+                errorStrategy.dealWithError(processor.createException(path, ex));
             }
         }
     }

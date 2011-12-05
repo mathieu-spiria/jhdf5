@@ -23,5 +23,21 @@ package ch.systemsx.cisd.hdf5.h5ar;
  */
 public interface IListEntryVisitor
 {
+    public final static IListEntryVisitor DEFAULT_VISITOR = new IListEntryVisitor()
+    {
+        public void visit(ArchiveEntry entry)
+        {
+            System.out.println(entry.describeLink());
+        }
+    };
+
+    public final static IListEntryVisitor NONVERBOSE_VISITOR = new IListEntryVisitor()
+    {
+        public void visit(ArchiveEntry entry)
+        {
+            System.out.println(entry.describeLink(false));
+        }
+    };
+
     public void visit(ArchiveEntry entry);
 }
