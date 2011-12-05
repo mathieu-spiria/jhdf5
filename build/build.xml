@@ -105,7 +105,7 @@
 				<exclude name="META-INF/NOTICE.txt" />
 			</zipfileset>
 			<manifest>
-				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
+				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain" />
 				<attribute name="Version" value="${version.number}" />
 				<attribute name="Build-Number"
 				           value="${version.number} (r${revision.number},${clean.flag})" />
@@ -139,7 +139,7 @@
 				<exclude name="META-INF/NOTICE.txt" />
 			</zipfileset>
 			<manifest>
-				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
+				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain" />
 				<attribute name="Version" value="${version.number}" />
 				<attribute name="Build-Number"
 				           value="${version.number} (r${revision.number},${clean.flag})" />
@@ -167,7 +167,7 @@
 				<exclude name="META-INF/NOTICE.txt" />
 			</zipfileset>
 			<manifest>
-				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
+				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain" />
 				<attribute name="Version" value="${version.number}" />
 				<attribute name="Build-Number"
 				           value="${version.number} (r${revision.number},${clean.flag})" />
@@ -252,7 +252,7 @@
 				<attribute name="Version" value="${version.number}" />
 				<attribute name="Build-Number"
 				           value="${version.number} (r${revision.number},${clean.flag})" />
-				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.tools.HDF5ArchiverMain" />
+				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain" />
 				<attribute name="Class-Path"
 				           value="commons-lang.jar commons-io.jar cisd-base.jar cisd-args4j.jar cisd-jhdf5-core.jar hdf5-linux-intel.jar hdf5-solaris-intel.jar hdf5-solaris-sparc.jar hdf5-macosx-intel.jar hdf5-windows-intel.jar" />
 			</manifest>

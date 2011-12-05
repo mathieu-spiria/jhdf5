@@ -14,14 +14,21 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 /**
- * An entry to visit {@link ListEntry}s.
+ * An enumeration for the checks to be performed while running {@link HDF5Archiver#list}.
  * 
  * @author Bernd Rinn
  */
-public interface IListEntryVisitor
+enum Verify
 {
-    public void visit(ListEntry entry);
+    /** Do not perform any verification. */
+    NO_VERIFY,
+    /** Verify CRC32 checksums against archive content. */
+    VERIFY_CRC_ARCHIVE,
+    /** Verify CRC32 checksums against the file system. */
+    VERIFY_CRC_FS,
+    /** Verify CRC32 checksums and attributes against the file system. */
+    VERIFY_CRC_ATTR_FS;
 }

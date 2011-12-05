@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,27 +25,23 @@ import java.util.List;
 import java.util.zip.CRC32;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import ch.systemsx.cisd.base.unix.FileLinkType;
-import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 
 /**
  * A class to create or update <code>h5ar</code> archives.
  * 
  * @author Bernd Rinn
  */
-public class HDF5ArchiveUpdater
+class HDF5ArchiveUpdater
 {
     private static final String OPAQUE_TAG_FILE = "FILE";
 
@@ -53,85 +49,111 @@ public class HDF5ArchiveUpdater
 
     private static final int MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT = 100;
 
+    private static final int SMALL_DATASET_LIMIT = 4096;
+
     private final IHDF5Writer hdf5Writer;
 
     private final ArchivingStrategy strategy;
+
+    private final DirectoryIndexProvider indexProvider;
 
     private final IErrorStrategy errorStrategy;
 
     private final byte[] buffer;
 
-    public HDF5ArchiveUpdater(File archiveFile, boolean noSync, FileFormat fileFormat,
-            IErrorStrategy errorStrategyOrNull)
+    private static class DataSetInfo
     {
-        this(createHDF5Writer(archiveFile, fileFormat, noSync), new ArchivingStrategy(),
-                errorStrategyOrNull, new byte[HDF5Archiver.BUFFER_SIZE]);
-    }
+        final long size;
 
-    static IHDF5Writer createHDF5Writer(File archiveFile, FileFormat fileFormat, boolean noSync)
-    {
-        final IHDF5WriterConfigurator config = HDF5FactoryProvider.get().configure(archiveFile);
-        config.fileFormat(fileFormat);
-        config.useUTF8CharacterEncoding();
-        if (noSync == false)
+        final int crc32;
+
+        DataSetInfo(long size, int crc32)
         {
-            config.syncMode(SyncMode.SYNC);
+            super();
+            this.size = size;
+            this.crc32 = crc32;
         }
-        return config.writer();
     }
 
-    public HDF5ArchiveUpdater(IHDF5Writer hdf5Writer, ArchivingStrategy strategy,
-            IErrorStrategy errorStrategyOrNull, byte[] buffer)
+    public HDF5ArchiveUpdater(IHDF5Writer hdf5Writer, DirectoryIndexProvider indexProvider,
+            ArchivingStrategy strategy, byte[] buffer)
     {
         this.hdf5Writer = hdf5Writer;
-        if (errorStrategyOrNull == null)
-        {
-            this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
-        } else
-        {
-            this.errorStrategy = errorStrategyOrNull;
-        }
+        this.indexProvider = indexProvider;
+        this.errorStrategy = indexProvider.getErrorStrategy();
         this.strategy = strategy;
         this.buffer = buffer;
     }
 
-    public void close()
-    {
-        hdf5Writer.close();
-    }
-
-    public HDF5ArchiveUpdater archiveAll(File path, IPathVisitor pathVisitorOrNull)
+    public HDF5ArchiveUpdater archive(File path, IPathVisitor pathVisitorOrNull)
             throws IllegalStateException
     {
         final File absolutePath = path.getAbsoluteFile();
         return archive(absolutePath.getParentFile(), absolutePath, pathVisitorOrNull);
     }
 
-    public HDF5ArchiveUpdater archiveToFile(String directory, Link link, InputStream input,
+    public HDF5ArchiveUpdater archive(String directory, LinkRecord link, InputStream inputOrNull,
             IPathVisitor pathVisitorOrNull) throws IllegalStateException
     {
         boolean ok = true;
-        final long size = link.getSize();
-        int crc32 = 0;
-        final String hdf5ObjectPath = directory + "/" + link.getLinkName();
-        final boolean groupExists = hdf5Writer.isGroup(directory);
-        final HDF5GenericStorageFeatures compression = strategy.doCompress(hdf5ObjectPath);
-        try
+        final String normalizedDir = Utils.normalizePath(directory);
+        final String hdf5ObjectPath =
+                ("/".equals(normalizedDir)) ? normalizedDir + link.getLinkName() : normalizedDir
+                        + "/" + link.getLinkName();
+        final boolean groupExists = hdf5Writer.isGroup(normalizedDir);
+        if (link.getLinkType() == FileLinkType.DIRECTORY)
         {
-            crc32 = copyToHDF5(input, hdf5ObjectPath, size, compression);
-            link.setCrc32(crc32);
-            if (pathVisitorOrNull != null)
+            if (inputOrNull == null)
             {
-                pathVisitorOrNull.visit(hdf5ObjectPath);
+                ok = archiveDirectory(normalizedDir, link, pathVisitorOrNull);
+            } else
+            {
+                errorStrategy.dealWithError(new ArchivingException(
+                        "Cannot take InputStream when archiving a directory."));
             }
-        } catch (IOException ex)
+        } else if (link.getLinkType() == FileLinkType.SYMLINK)
         {
-            ok = false;
-            errorStrategy.dealWithError(new ArchivingException(hdf5ObjectPath, ex));
-        } catch (HDF5Exception ex)
+            if (inputOrNull == null)
+            {
+                ok = archiveSymLink(normalizedDir, link, pathVisitorOrNull);
+            } else
+            {
+                errorStrategy.dealWithError(new ArchivingException(
+                        "Cannot take InputStream when archiving a symlink."));
+            }
+        } else if (link.getLinkType() == FileLinkType.REGULAR_FILE)
         {
+            if (inputOrNull != null)
+            {
+                final HDF5GenericStorageFeatures compression = strategy.doCompress(hdf5ObjectPath);
+                try
+                {
+                    final DataSetInfo info = copyToHDF5(inputOrNull, hdf5ObjectPath, compression);
+                    link.setCrc32(info.crc32);
+                    link.setSize(info.size);
+                    if (pathVisitorOrNull != null)
+                    {
+                        pathVisitorOrNull.visit(hdf5ObjectPath);
+                    }
+                } catch (IOException ex)
+                {
+                    ok = false;
+                    errorStrategy.dealWithError(new ArchivingException(hdf5ObjectPath, ex));
+                } catch (HDF5Exception ex)
+                {
+                    ok = false;
+                    errorStrategy.dealWithError(new ArchivingException(hdf5ObjectPath, ex));
+                }
+            } else
+            {
+                errorStrategy.dealWithError(new ArchivingException(
+                        "Need to have InputStream when archiving a regular file."));
+            }
+        } else
+        {
+            errorStrategy.dealWithError(new ArchivingException(
+                    "Don't know how to archive file link type " + link.getLinkType()));
             ok = false;
-            errorStrategy.dealWithError(new ArchivingException(hdf5ObjectPath, ex));
         }
         if (ok)
         {
@@ -147,10 +169,11 @@ public class HDF5ArchiveUpdater
         final File absolutePath = path.getAbsoluteFile();
         final String hdf5ObjectPath = getRelativePath(absoluteRoot, absolutePath);
         final String hdf5GroupPath = FilenameUtils.getFullPathNoEndSeparator(hdf5ObjectPath);
-        final boolean groupExists = hdf5Writer.isGroup(hdf5GroupPath);
+        final boolean groupExists =
+                hdf5GroupPath.length() == 0 ? true : hdf5Writer.isGroup(hdf5GroupPath);
         final boolean ok;
         int crc32 = 0;
-        final Link linkOrNull = Link.tryCreate(absolutePath, true, errorStrategy);
+        final LinkRecord linkOrNull = LinkRecord.tryCreate(absolutePath, true, errorStrategy);
         if (linkOrNull != null && linkOrNull.isSymLink())
         {
             ok = archiveSymLink("", linkOrNull, absolutePath, pathVisitorOrNull);
@@ -159,7 +182,7 @@ public class HDF5ArchiveUpdater
             ok = archiveDirectory(absoluteRoot, absolutePath, pathVisitorOrNull);
         } else if (absolutePath.isFile())
         {
-            final Link pseudoLinkForChecksum = new Link();
+            final LinkRecord pseudoLinkForChecksum = new LinkRecord();
             ok =
                     archiveFile(absolutePath, hdf5ObjectPath, pseudoLinkForChecksum,
                             pathVisitorOrNull);
@@ -192,17 +215,15 @@ public class HDF5ArchiveUpdater
                 break;
             }
             final String hdf5GroupPath = getRelativePath(rootAbsolute, dirAbsolute);
-            final DirectoryIndex index =
-                    new DirectoryIndex(hdf5Writer, hdf5GroupPath, errorStrategy, false);
-            final Link linkOrNull =
-                    Link.tryCreate(pathProcessing, strategy.doStoreOwnerAndPermissions(),
+            final DirectoryIndex index = indexProvider.get(hdf5GroupPath, false);
+            final LinkRecord linkOrNull =
+                    LinkRecord.tryCreate(pathProcessing, strategy.doStoreOwnerAndPermissions(),
                             errorStrategy);
             if (linkOrNull != null)
             {
                 linkOrNull.setCrc32(crc32Processing);
                 crc32Processing = 0; // Directories don't have a checksum
                 index.updateIndex(Collections.singletonList(linkOrNull));
-                index.writeIndexToArchive();
             }
             pathProcessing = dirProcessingOrNull;
             if (immediateGroupOnly)
@@ -212,7 +233,7 @@ public class HDF5ArchiveUpdater
         }
     }
 
-    private void updateIndicesOnThePath(String path, Link link, boolean immediateGroupOnly)
+    private void updateIndicesOnThePath(String path, LinkRecord link, boolean immediateGroupOnly)
     {
         String pathProcessing = path.startsWith("/") ? path : ("/" + path);
         if ("/".equals(pathProcessing))
@@ -229,22 +250,35 @@ public class HDF5ArchiveUpdater
         while (true)
         {
             final String hdf5GroupPath = FilenameUtils.getFullPathNoEndSeparator(pathProcessing);
-            final DirectoryIndex index =
-                    new DirectoryIndex(hdf5Writer, hdf5GroupPath, errorStrategy, false);
+            final DirectoryIndex index = indexProvider.get(hdf5GroupPath, false);
             final String hdf5FileName = FilenameUtils.getName(pathProcessing);
-            final Link linkProcessing =
-                    new Link(hdf5FileName, null, fileLinkType, size, lastModified, uid, gid,
+            final LinkRecord linkProcessing =
+                    new LinkRecord(hdf5FileName, null, fileLinkType, size, lastModified, uid, gid,
                             permissions, crc32);
             index.updateIndex(Collections.singletonList(linkProcessing));
-            index.writeIndexToArchive();
             fileLinkType = FileLinkType.DIRECTORY;
             crc32 = 0; // Directories don't have a checksum
-            size = Link.UNKNOWN; // Directories don't have a size
+            size = Utils.UNKNOWN; // Directories don't have a size
             pathProcessing = hdf5GroupPath;
             if (immediateGroupOnly || pathProcessing.length() == 0)
             {
                 break;
             }
+        }
+    }
+
+    private boolean archiveDirectory(String parentDirectory, LinkRecord link,
+            IPathVisitor pathVisitorOrNull) throws ArchivingException
+    {
+        final String GroupPath = parentDirectory + "/" + link.getLinkName();
+        try
+        {
+            hdf5Writer.createGroup(GroupPath);
+            return true;
+        } catch (HDF5Exception ex)
+        {
+            errorStrategy.dealWithError(new ArchivingException(GroupPath, ex));
+            return false;
         }
     }
 
@@ -273,7 +307,7 @@ public class HDF5ArchiveUpdater
                 errorStrategy.dealWithError(new ArchivingException(hdf5GroupPath, ex));
             }
         }
-        final List<Link> linkEntries =
+        final List<LinkRecord> linkEntries =
                 DirectoryIndex.convertFilesToLinks(fileEntries,
                         strategy.doStoreOwnerAndPermissions(), errorStrategy);
 
@@ -281,18 +315,18 @@ public class HDF5ArchiveUpdater
         {
             pathVisitorOrNull.visit(hdf5GroupPath);
         }
-        final Iterator<Link> linkIt = linkEntries.iterator();
+        final Iterator<LinkRecord> linkIt = linkEntries.iterator();
         for (int i = 0; i < fileEntries.length; ++i)
         {
             final File file = fileEntries[i];
-            final Link linkOrNull = linkIt.next();
-            if (linkOrNull == null)
+            final LinkRecord link = linkIt.next();
+            if (link == null)
             {
                 linkIt.remove();
                 continue;
             }
             final String absoluteEntry = file.getAbsolutePath();
-            if (linkOrNull.isDirectory())
+            if (link.isDirectory())
             {
                 if (strategy.doExclude(absoluteEntry, true))
                 {
@@ -311,19 +345,17 @@ public class HDF5ArchiveUpdater
                     linkIt.remove();
                     continue;
                 }
-                if (linkOrNull.isSymLink())
+                if (link.isSymLink())
                 {
-                    final boolean ok =
-                            archiveSymLink(hdf5GroupPath, linkOrNull, file, pathVisitorOrNull);
+                    final boolean ok = archiveSymLink(hdf5GroupPath, link, file, pathVisitorOrNull);
                     if (ok == false)
                     {
                         linkIt.remove();
                     }
-                } else if (linkOrNull.isRegularFile())
+                } else if (link.isRegularFile())
                 {
                     final String hdf5ObjectPath = getRelativePath(root, file);
-                    final boolean ok =
-                            archiveFile(file, hdf5ObjectPath, linkOrNull, pathVisitorOrNull);
+                    final boolean ok = archiveFile(file, hdf5ObjectPath, link, pathVisitorOrNull);
                     if (ok == false)
                     {
                         linkIt.remove();
@@ -337,27 +369,43 @@ public class HDF5ArchiveUpdater
         }
 
         final boolean verbose = (pathVisitorOrNull != null);
-        final DirectoryIndex index =
-                new DirectoryIndex(hdf5Writer, hdf5GroupPath, errorStrategy, verbose);
+        final DirectoryIndex index = indexProvider.get(hdf5GroupPath, verbose);
         index.updateIndex(linkEntries);
-        index.writeIndexToArchive();
         return true;
     }
 
-    private boolean archiveSymLink(String hdf5GroupPath, Link link, File file,
+    private boolean archiveSymLink(String hdf5GroupPath, LinkRecord link,
             IPathVisitor pathVisitorOrNull)
     {
-        final String linkTargetOrNull = Link.tryReadLinkTarget(file);
-        if (linkTargetOrNull == null)
+        if (link.tryGetLinkTarget() == null)
+        {
+            errorStrategy.dealWithError(new ArchivingException(link.getLinkName(), new IOException(
+                    "Link target not given for symbolic link.")));
+            return false;
+        }
+        return archiveSymLink(hdf5GroupPath, link, link.tryGetLinkTarget(), pathVisitorOrNull);
+    }
+
+    private boolean archiveSymLink(String hdf5GroupPath, LinkRecord link, File file,
+            IPathVisitor pathVisitorOrNull)
+    {
+        final String linkTarget = LinkRecord.tryReadLinkTarget(file);
+        if (linkTarget == null)
         {
             errorStrategy.dealWithError(new ArchivingException(file, new IOException(
                     "Cannot read link target of symbolic link.")));
             return false;
         }
+        return archiveSymLink(hdf5GroupPath, link, linkTarget, pathVisitorOrNull);
+    }
+
+    private boolean archiveSymLink(String hdf5GroupPath, LinkRecord link, String linkTarget,
+            IPathVisitor pathVisitorOrNull)
+    {
         try
         {
             final String hdf5LinkPath = hdf5GroupPath + "/" + link.getLinkName();
-            hdf5Writer.createSoftLink(linkTargetOrNull, hdf5LinkPath);
+            hdf5Writer.createSoftLink(linkTarget, hdf5LinkPath);
             if (pathVisitorOrNull != null)
             {
                 pathVisitorOrNull.visit(hdf5LinkPath);
@@ -382,16 +430,16 @@ public class HDF5ArchiveUpdater
         return totalLength;
     }
 
-    private boolean archiveFile(File file, String hdf5ObjectPath, Link link,
+    private boolean archiveFile(File file, String hdf5ObjectPath, LinkRecord link,
             IPathVisitor pathVisitorOrNull) throws ArchivingException
     {
         boolean ok = true;
         final HDF5GenericStorageFeatures compression = strategy.doCompress(hdf5ObjectPath);
         try
         {
-            final long size = file.length();
-            final int crc32 = copyToHDF5(file, hdf5ObjectPath, size, compression);
-            link.setCrc32(crc32);
+            final DataSetInfo info = copyToHDF5(file, hdf5ObjectPath, compression);
+            link.setSize(info.size);
+            link.setCrc32(info.crc32);
             if (pathVisitorOrNull != null)
             {
                 pathVisitorOrNull.visit(hdf5ObjectPath);
@@ -425,49 +473,67 @@ public class HDF5ArchiveUpdater
         }
     }
 
-    private int copyToHDF5(final File source, final String objectPath, final long size,
+    private DataSetInfo copyToHDF5(final File source, final String objectPath,
             final HDF5GenericStorageFeatures compression) throws IOException
     {
         final InputStream input = FileUtils.openInputStream(source);
         try
         {
-            return copyToHDF5(input, objectPath, size, compression);
+            return copyToHDF5(input, objectPath, compression);
         } finally
         {
             IOUtils.closeQuietly(input);
         }
     }
 
-    private int copyToHDF5(final InputStream input, final String objectPath, final long size,
+    private DataSetInfo copyToHDF5(final InputStream input, final String objectPath,
             final HDF5GenericStorageFeatures compression) throws IOException
     {
-        final int blockSize = (int) Math.min(size, buffer.length);
-        final HDF5OpaqueType type;
-        if (hdf5Writer.exists(objectPath, false))
-        {
-            type = hdf5Writer.tryGetOpaqueType(objectPath);
-            if (type == null || OPAQUE_TAG_FILE.equals(type.getTag()) == false)
-            {
-                throw new HDF5JavaException("Object " + objectPath + " is not an opaque type '"
-                        + OPAQUE_TAG_FILE + "'");
-            }
-        } else
-        {
-            type =
-                    hdf5Writer.createOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, size, blockSize,
-                            compression);
-
-        }
         final CRC32 crc32 = new CRC32();
+        HDF5GenericStorageFeatures features = compression;
+        int n = fillBuffer(input);
+        // Deal with small data sources separately to keep the file size smaller
+        if (n < buffer.length)
+        {
+            // For data sets roughly up to 4096 bytes the overhead of a chunked data set outweighs
+            // the saving of the compression.
+            if (n <= SMALL_DATASET_LIMIT || features.isDeflating() == false)
+            {
+                features = HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS;
+            }
+            final HDF5OpaqueType type =
+                    hdf5Writer.createOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, n, features);
+            hdf5Writer.writeOpaqueByteArrayBlockWithOffset(objectPath, type, buffer, n, 0);
+            crc32.update(buffer, 0, n);
+            return new DataSetInfo(n, (int) crc32.getValue());
+        }
+
+        final HDF5OpaqueType type =
+                hdf5Writer.createOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, 0, buffer.length,
+                        compression);
         long count = 0;
-        int n = 0;
-        while (-1 != (n = input.read(buffer)))
+        while (n != -1)
         {
             hdf5Writer.writeOpaqueByteArrayBlockWithOffset(objectPath, type, buffer, n, count);
             count += n;
             crc32.update(buffer, 0, n);
+            n = fillBuffer(input);
         }
-        return (int) crc32.getValue();
+        return new DataSetInfo(count, (int) crc32.getValue());
     }
 
+    private int fillBuffer(InputStream input) throws IOException
+    {
+        int ofs = 0;
+        int len = buffer.length;
+        int count = 0;
+        int n = 0;
+        while (len > 0 && -1 != (n = input.read(buffer, ofs, len)))
+        {
+            ofs += n;
+            len -= n;
+            count += n;
+        }
+        return count;
+    }
 }

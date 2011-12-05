@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.util.ArrayList;
 import java.util.List;

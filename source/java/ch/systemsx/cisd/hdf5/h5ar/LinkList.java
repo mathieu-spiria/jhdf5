@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,14 +22,14 @@ import java.util.Collections;
 import java.util.Iterator;
 
 /**
- * An immutable list of {@link Link}s in a fixed order. The order is to have all directories (in
+ * An immutable list of {@link LinkRecord}s in a fixed order. The order is to have all directories (in
  * alphabetical order) before all files (in alphabetical order).
  * 
  * @author Bernd Rinn
  */
-final class LinkList implements Iterable<Link>
+final class LinkList implements Iterable<LinkRecord>
 {
-    private final ArrayList<Link> internalList;
+    private final ArrayList<LinkRecord> internalList;
 
     /**
      * The index that points to the first file in {@link #links} (all smaller indices point to
@@ -44,7 +44,7 @@ final class LinkList implements Iterable<Link>
      * @param entries The internal list backing this link list. Note that this is the live object to
      *            avoid any copy operation!
      */
-    LinkList(ArrayList<Link> entries)
+    LinkList(ArrayList<LinkRecord> entries)
     {
         this(entries, false);
     }
@@ -56,7 +56,7 @@ final class LinkList implements Iterable<Link>
      *            avoid any copy operation!
      * @param forceSort if <code>true</code>, force a sort operation on <var>entries</var>.
      */
-    LinkList(ArrayList<Link> entries, boolean forceSort)
+    LinkList(ArrayList<LinkRecord> entries, boolean forceSort)
     {
         this.internalList = entries;
         sortIfNecessary(forceSort);
@@ -86,7 +86,7 @@ final class LinkList implements Iterable<Link>
         // We do it linearly from the start because we assume that the number of directories will be
         // considerably smaller than the number of files.
         int firstFile = 0;
-        for (Link link : internalList)
+        for (LinkRecord link : internalList)
         {
             if (link.isDirectory())
             {
@@ -99,18 +99,18 @@ final class LinkList implements Iterable<Link>
     /**
      * Returns an array of the links in this list.
      */
-    public Link[] toArray()
+    public LinkRecord[] toArray()
     {
-        return internalList.toArray(new Link[internalList.size()]);
+        return internalList.toArray(new LinkRecord[internalList.size()]);
     }
 
     /**
-     * Returns the link with {@link Link#getLinkName()} equal to <var>name</var>, or
+     * Returns the link with {@link LinkRecord#getLinkName()} equal to <var>name</var>, or
      * <code>null</code>, if there is no such link in the directory index.
      * <p>
      * Can work on the list or map data structure.
      */
-    public Link tryGetLink(String name)
+    public LinkRecord tryGetLink(String name)
     {
         int index = getLinkIndex(name);
         return (index >= 0) ? internalList.get(index) : null;
@@ -175,7 +175,7 @@ final class LinkList implements Iterable<Link>
     /**
      * Returns an iterator over all links in the list.
      */
-    public Iterator<Link> iterator()
+    public Iterator<LinkRecord> iterator()
     {
         return internalList.iterator();
     }
@@ -186,12 +186,12 @@ final class LinkList implements Iterable<Link>
      * updated. So, given the current links are unique on link names, the new <code>LinkList</code>
      * will be unique as well.
      */
-    public LinkList update(Collection<Link> entries)
+    public LinkList update(Collection<LinkRecord> entries)
     {
-        final ArrayList<Link> newEntries =
-                new ArrayList<Link>(internalList.size() + entries.size());
+        final ArrayList<LinkRecord> newEntries =
+                new ArrayList<LinkRecord>(internalList.size() + entries.size());
         newEntries.addAll(internalList);
-        for (Link entry : entries)
+        for (LinkRecord entry : entries)
         {
             int index = getLinkIndex(entry.getLinkName());
             if (index < 0)
@@ -208,10 +208,10 @@ final class LinkList implements Iterable<Link>
     /**
      * Creates a new link list containing all current links but remove all <var>entries</var>.
      */
-    public LinkList remove(Collection<Link> entries)
+    public LinkList remove(Collection<LinkRecord> entries)
     {
-        final ArrayList<Link> newEntries =
-                new ArrayList<Link>(internalList.size() + entries.size());
+        final ArrayList<LinkRecord> newEntries =
+                new ArrayList<LinkRecord>(internalList.size() + entries.size());
         newEntries.addAll(internalList);
         newEntries.removeAll(entries);
         return new LinkList(newEntries);

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +24,7 @@ import java.util.zip.CRC32;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.base.unix.Unix.Stat;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
@@ -34,90 +35,94 @@ import ch.systemsx.cisd.base.utilities.OSUtilities;
  * 
  * @author Bernd Rinn
  */
-class HDF5ArchiveLinkChecker
+class HDF5ArchiveLinkVersusFilesystemChecker
 {
 
-    static String checkLink(Link link, String path, ListParameters params, IdCache idCache,
-            byte[] buffer) throws IOException
+    static String checkLink(LinkRecord link, String path, String rootDirectory,
+            boolean checkFSAttributes, boolean numeric, IdCache idCache, byte[] buffer)
+            throws IOException
     {
-        final File f = new File(params.getFileOrDirectoryOnFileSystem(), path);
+        final File f = new File(rootDirectory, path);
         if (f.exists() == false)
         {
-            return "Object " + path + " does not exist on file system.";
+            link.setVerifiedType(FileLinkType.OTHER);
+            return "Object '" + path + "' does not exist on file system.";
         }
         final String symbolicLinkOrNull = tryGetSymbolicLink(f);
         if (symbolicLinkOrNull != null)
         {
+            link.setVerifiedType(FileLinkType.SYMLINK);
             if (link.isSymLink() == false)
             {
-                return "Object " + path + " is a " + link.getLinkType()
+                return "Object '" + path + "' is a " + link.getLinkType()
                         + " in archive, but a symlink on file system.";
             }
             if (symbolicLinkOrNull.equals(link.tryGetLinkTarget()) == false)
             {
-                return "Symlink " + path + " links to " + link.tryGetLinkTarget()
-                        + " in archive, but to " + symbolicLinkOrNull + " on file system";
+                return "Symlink '" + path + "' links to '" + link.tryGetLinkTarget()
+                        + "' in archive, but to '" + symbolicLinkOrNull + "' on file system";
             }
         } else if (f.isDirectory())
         {
+            link.setVerifiedType(FileLinkType.DIRECTORY);
             if (link.isDirectory() == false)
             {
                 if (Unix.isOperational() || OSUtilities.isWindows())
                 {
-                    return "Object " + path + " is a " + link.getLinkType()
+                    return "Object '" + path + "' is a " + link.getLinkType()
                             + " in archive, but a directory on file system.";
                 } else
                 {
-                    return "Object " + path + " is a " + link.getLinkType()
+                    return "Object '" + path + "' is a " + link.getLinkType()
                             + " in archive, but a directory on file system (error may be "
                             + "inaccurate because Unix system calls are not available.)";
                 }
             }
         } else
         {
+            link.setVerifiedType(FileLinkType.REGULAR_FILE);
             if (link.isDirectory())
             {
-                return "Object " + path + " is a directory in archive, but a file on file system.";
+                return "Object '" + path
+                        + "' is a directory in archive, but a file on file system.";
 
             }
             if (link.isSymLink())
             {
                 if (Unix.isOperational() || OSUtilities.isWindows())
                 {
-                    return "Object " + path
-                            + " is a symbolic link in archive, but a file on file system.";
+                    return "Object '" + path
+                            + "' is a symbolic link in archive, but a file on file system.";
                 } else
                 {
-                    return "Object "
+                    return "Object '"
                             + path
-                            + " is a symbolic link in archive, but a file on file system "
+                            + "' is a symbolic link in archive, but a file on file system "
                             + "(error may be inaccurate because Unix system calls are not available.).";
                 }
 
             }
             final long size = f.length();
+            link.setVerifiedSize(size);
             if (link.getSize() != size)
             {
-                return "File " + f.getAbsolutePath() + " failed size test, expected: "
+                return "File '" + f.getAbsolutePath() + "' failed size test, expected: "
                         + link.getSize() + ", found: " + size;
             }
             if (link.getSize() > 0 && link.getCrc32() == 0)
             {
-                return "File " + f.getAbsolutePath() + ": cannot verify (missing CRC checksum).";
+                return "File '" + f.getAbsolutePath() + "': cannot verify (missing CRC checksum).";
             }
-            final int crc32 = calcCRC32FileSystem(f, buffer);
+            final int crc32 = calcCRC32Filesystem(f, buffer);
+            link.setVerifiedCrc32(crc32);
             if (link.getCrc32() != crc32)
             {
-                return "File " + f.getAbsolutePath() + " failed CRC checksum test, expected: "
-                        + ListEntry.hashToString(link.getCrc32()) + ", found: "
-                        + ListEntry.hashToString(crc32) + ".";
+                return "File '" + f.getAbsolutePath() + "' failed CRC checksum test, expected: "
+                        + Utils.crc32ToString(link.getCrc32()) + ", found: "
+                        + Utils.crc32ToString(crc32) + ".";
             }
         }
-        if (Check.VERIFY_CRC_ATTR_FS == params.check)
-        {
-            return doFileSystemAttributeCheck(f, idCache, link, params.isNumeric());
-        }
-        return null;
+        return checkFSAttributes ? doFilesystemAttributeCheck(f, idCache, link, numeric) : null;
     }
 
     private static String tryGetSymbolicLink(File f)
@@ -131,7 +136,7 @@ class HDF5ArchiveLinkChecker
         }
     }
 
-    private static int calcCRC32FileSystem(File source, byte[] buffer) throws IOException
+    private static int calcCRC32Filesystem(File source, byte[] buffer) throws IOException
     {
         final InputStream input = FileUtils.openInputStream(source);
         final CRC32 crc32 = new CRC32();
@@ -149,7 +154,7 @@ class HDF5ArchiveLinkChecker
         return (int) crc32.getValue();
     }
 
-    private static String doFileSystemAttributeCheck(File file, IdCache idCache, Link link,
+    private static String doFilesystemAttributeCheck(File file, IdCache idCache, LinkRecord link,
             boolean numeric)
     {
         final StringBuilder sb = new StringBuilder();
@@ -161,18 +166,20 @@ class HDF5ArchiveLinkChecker
             {
                 sb.append(String.format("'last modified time': (expected: "
                         + "%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS, found: "
-                        + "%2$tY-%2$tm-%2$td %2$tH:%2$tM:%2$tS) ", link.getLastModified(),
+                        + "%2$tY-%2$tm-%2$td %2$tH:%2$tM:%2$tS) ", expectedLastModifiedMillis,
                         foundLastModifiedMillis));
             }
         }
         if (link.hasUnixPermissions() && Unix.isOperational())
         {
             final Stat info = Unix.getLinkInfo(file.getPath(), false);
-            if (link.getPermissions() != info.getPermissions())
+            if (link.getPermissions() != info.getPermissions()
+                    || link.getLinkType() != info.getLinkType())
             {
-                sb.append(String.format("'access permissions': (expected: %s, found: %s) ",
-                        ListEntry.getPermissionString(link, numeric),
-                        ListEntry.getPermissionString(link, numeric)));
+                sb.append(String.format("'access permissions': (expected: %s, found: %s) ", Utils
+                        .permissionsToString(link.getPermissions(), link.isDirectory(), numeric),
+                        Utils.permissionsToString(info.getPermissions(),
+                                info.getLinkType() == FileLinkType.DIRECTORY, numeric)));
             }
             if (link.getUid() != info.getUid() || link.getGid() != info.getGid())
             {
@@ -186,7 +193,7 @@ class HDF5ArchiveLinkChecker
             return null;
         } else
         {
-            return sb.toString();
+            return "File '" + file.getAbsolutePath() + "': " + sb.toString();
         }
     }
 

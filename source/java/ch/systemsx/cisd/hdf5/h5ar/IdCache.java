@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +38,7 @@ final class IdCache
     /**
      * Returns the name for the given <var>uid</var>.
      */
-    String getUser(Link link, boolean numeric)
+    String getUser(LinkRecord link, boolean numeric)
     {
         return getUser(link.getUid(), numeric);
     }
@@ -51,7 +51,7 @@ final class IdCache
         return getUser(link.getUid(), numeric);
     }
 
-    private String getUser(int uid, boolean numeric)
+    String getUser(int uid, boolean numeric)
     {
         String userNameOrNull = uidMap.get(uidMap);
         if (userNameOrNull == null)
@@ -71,7 +71,7 @@ final class IdCache
     /**
      * Returns the name for the given <var>gid</var>.
      */
-    String getGroup(Link link, boolean numeric)
+    String getGroup(LinkRecord link, boolean numeric)
     {
         return getGroup(link.getGid(), numeric);
     }
@@ -87,7 +87,7 @@ final class IdCache
     /**
      * Returns the name for the given <var>gid</var>.
      */
-    private String getGroup(int gid, boolean numeric)
+    String getGroup(int gid, boolean numeric)
     {
         String groupNameOrNull = gidMap.get(uidMap);
         if (groupNameOrNull == null)

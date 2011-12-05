@@ -14,42 +14,49 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
 import java.io.IOException;
 
+import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 
 /**
- * Exception thrown when archiving a file / directory fails.
+ * Exception thrown when unarchiving a file / directory fails.
  *
  * @author Bernd Rinn
  */
-public class ArchivingException extends ArchiverException
+public class UnarchivingException extends ArchiverException
 {
     private static final long serialVersionUID = 1L;
     
-    private static final String OPERATION_NAME = "archiving";
+    private static final String OPERATION_NAME = "unarchiving";
     
-    public ArchivingException(String msg)
+    public UnarchivingException(String msg)
     {
         super("GENERAL", OPERATION_NAME, msg);
     }
     
-    public ArchivingException(String objectPath, HDF5Exception cause)
+    public UnarchivingException(String objectPath, String detailedMsg)
+    {
+        super(objectPath, OPERATION_NAME, detailedMsg);
+    }
+    
+    public UnarchivingException(String objectPath, HDF5Exception cause)
     {
         super(objectPath, OPERATION_NAME, cause);
     }
     
-    public ArchivingException(File file, IOException cause)
+    public UnarchivingException(File file, IOException cause)
     {
         super(file, OPERATION_NAME, cause);
     }
 
-    public ArchivingException(String filePath, IOException cause)
+    public UnarchivingException(File file, IOExceptionUnchecked cause)
     {
-        super(filePath, OPERATION_NAME, cause);
+        super(file, OPERATION_NAME, cause);
     }
 
 }

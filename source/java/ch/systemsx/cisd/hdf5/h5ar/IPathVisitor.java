@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 /**
  * A visitor for paths in an HDF5 archive.
@@ -37,15 +37,15 @@ public interface IPathVisitor
                 if (checksumOK)
                 {
                     System.out
-                            .println(filePath + "\t" + ListEntry.hashToString(crc32) + "\tOK");
+                            .println(filePath + "\t" + Utils.crc32ToString(crc32) + "\tOK");
                 } else
                 {
-                    System.out.println(filePath + "\t" + ListEntry.hashToString(crc32)
+                    System.out.println(filePath + "\t" + Utils.crc32ToString(crc32)
                             + "\tFAILED");
                 }
             } else
             {
-                System.out.println(filePath + "\t" + ListEntry.hashToString(crc32)
+                System.out.println(filePath + "\t" + Utils.crc32ToString(crc32)
                         + "\t(NO CHECKSUM)");
             }
         }

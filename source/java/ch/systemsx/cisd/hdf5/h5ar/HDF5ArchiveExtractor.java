@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +30,6 @@ import org.apache.commons.io.IOUtils;
 
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.base.unix.Unix;
-import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 /**
@@ -38,12 +37,13 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
  * 
  * @author Bernd Rinn
  */
-public class HDF5ArchiveExtractor
+class HDF5ArchiveExtractor
 {
-
     private static final int ROOT_UID = 0;
 
     private final IHDF5Reader hdf5Reader;
+
+    private final DirectoryIndexProvider indexProvider;
 
     private final IErrorStrategy errorStrategy;
 
@@ -51,39 +51,17 @@ public class HDF5ArchiveExtractor
 
     private final byte[] buffer;
 
-    public HDF5ArchiveExtractor(File archiveFile, IErrorStrategy errorStrategyOrNull)
-    {
-        this(createHDF5Reader(archiveFile), new ArchivingStrategy(), errorStrategyOrNull,
-                new byte[HDF5Archiver.BUFFER_SIZE]);
-    }
-
-    static IHDF5Reader createHDF5Reader(File archiveFile)
-    {
-        return HDF5FactoryProvider.get().configureForReading(archiveFile)
-                .useUTF8CharacterEncoding().reader();
-    }
-
-    public HDF5ArchiveExtractor(IHDF5Reader hdf5Reader, ArchivingStrategy strategy,
-            IErrorStrategy errorStrategyOrNull, byte[] buffer)
+    public HDF5ArchiveExtractor(IHDF5Reader hdf5Reader, DirectoryIndexProvider indexProvider,
+            ArchivingStrategy strategy, byte[] buffer)
     {
         this.hdf5Reader = hdf5Reader;
-        if (errorStrategyOrNull == null)
-        {
-            this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
-        } else
-        {
-            this.errorStrategy = errorStrategyOrNull;
-        }
+        this.indexProvider = indexProvider;
+        this.errorStrategy = indexProvider.getErrorStrategy();
         this.strategy = strategy;
         this.buffer = buffer;
     }
 
-    public void close()
-    {
-        hdf5Reader.close();
-    }
-
-    public HDF5ArchiveExtractor extract(File root, String path, IPathVisitor pathVisitorOrNull)
+    public HDF5ArchiveExtractor extractToFilesystem(File root, String path, IPathVisitor pathVisitorOrNull)
             throws IllegalStateException
     {
         final String unixPath = FilenameUtils.separatorsToUnix(path);
@@ -92,7 +70,7 @@ public class HDF5ArchiveExtractor
             throw new UnarchivingException(unixPath, "Object does not exist in archive.");
         }
         final boolean isRoot = "/".equals(unixPath);
-        final Link linkOrNull = isRoot ? null : tryGetLink(hdf5Reader, unixPath);
+        final LinkRecord linkOrNull = isRoot ? null : tryGetLink(hdf5Reader, unixPath);
         final boolean isDir =
                 (linkOrNull != null && linkOrNull.isDirectory())
                         || ((linkOrNull == null && (isRoot || hdf5Reader.isGroup(unixPath, false))));
@@ -107,29 +85,29 @@ public class HDF5ArchiveExtractor
     }
 
     /**
-     * Returns the {@link Link} for <var>path</var> if that is stored in the directory index and
+     * Returns the {@link LinkRecord} for <var>path</var> if that is stored in the directory index and
      * <code>null</code> otherwise.
      * <p>
      * <em>Note that a return value of <code>null</code> does not necessarily mean that <var>path</var>
      * is not in the archive!<em>
      */
-    private Link tryGetLink(IHDF5Reader reader, String path)
+    private LinkRecord tryGetLink(IHDF5Reader reader, String path)
     {
         final DirectoryIndex index =
-                new DirectoryIndex(reader, FilenameUtils.separatorsToUnix(FilenameUtils
-                        .getFullPathNoEndSeparator(path)), errorStrategy, true);
+                indexProvider.get(FilenameUtils.separatorsToUnix(FilenameUtils
+                        .getFullPathNoEndSeparator(path)), true);
         return index.tryGetLink(FilenameUtils.getName(path));
     }
 
     private void extractDirectory(GroupCache groupCache, File root, String groupPath,
-            Link dirLinkOrNull, IPathVisitor pathVisitorOrNull) throws UnarchivingException
+            LinkRecord dirLinkOrNull, IPathVisitor pathVisitorOrNull) throws UnarchivingException
     {
         String objectPathOrNull = null;
         try
         {
             final File groupFile = new File(root, groupPath);
             groupFile.mkdir();
-            for (Link link : new DirectoryIndex(hdf5Reader, groupPath, errorStrategy, true))
+            for (LinkRecord link : indexProvider.get(groupPath, true))
             {
                 objectPathOrNull =
                         (groupPath.endsWith("/") ? groupPath : (groupPath + "/"))
@@ -179,7 +157,7 @@ public class HDF5ArchiveExtractor
     }
 
     private void extractFile(GroupCache groupCache, File root, String hdf5ObjectPath,
-            Link linkOrNull, IPathVisitor pathVisitorOrNull) throws UnarchivingException
+            LinkRecord linkOrNull, IPathVisitor pathVisitorOrNull) throws UnarchivingException
     {
         if (strategy.doExclude(hdf5ObjectPath, false))
         {
@@ -241,8 +219,8 @@ public class HDF5ArchiveExtractor
             if (checksumStored && checksumOK == false)
             {
                 errorStrategy.dealWithError(new UnarchivingException(hdf5ObjectPath,
-                        "CRC checksum mismatch. Expected: " + ListEntry.hashToString(storedCrc32)
-                                + ", found: " + ListEntry.hashToString(crc32)));
+                        "CRC checksum mismatch. Expected: " + Utils.crc32ToString(storedCrc32)
+                                + ", found: " + Utils.crc32ToString(crc32)));
             }
         } catch (IOException ex)
         {
@@ -278,7 +256,7 @@ public class HDF5ArchiveExtractor
         return (int) crc32.getValue();
     }
 
-    private void restoreAttributes(File file, Link linkInfoOrNull, GroupCache groupCache)
+    private void restoreAttributes(File file, LinkRecord linkInfoOrNull, GroupCache groupCache)
     {
         assert file != null;
 
@@ -286,7 +264,7 @@ public class HDF5ArchiveExtractor
         {
             if (linkInfoOrNull.hasLastModified())
             {
-                file.setLastModified(linkInfoOrNull.getLastModified() * ListEntry.MILLIS_PER_SECOND);
+                file.setLastModified(linkInfoOrNull.getLastModified() * Utils.MILLIS_PER_SECOND);
             }
             if (linkInfoOrNull.hasUnixPermissions() && Unix.isOperational())
             {

@@ -1,0 +1,282 @@
+/*
+ * Copyright 2011 ETH Zuerich, CISD
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package ch.systemsx.cisd.hdf5.h5ar;
+
+import ch.systemsx.cisd.base.unix.FileLinkType;
+
+/**
+ * A class to describe a new (yet to be created) archive entry.
+ * 
+ * @author Bernd Rinn
+ */
+public abstract class NewArchiveEntry
+{
+    private final String parentPath;
+
+    private final String name;
+
+    private final FileLinkType linkType;
+
+    private final String linkTarget;
+
+    private long lastModified;
+
+    private int uid;
+
+    private int gid;
+
+    private short permissions;
+
+    private long size;
+
+    private int crc32;
+
+    /**
+     * A class to describe a new regular file archive entry.
+     */
+    public static final class NewFileArchiveEntry extends NewArchiveEntry
+    {
+        private NewFileArchiveEntry(String parentPath, String name)
+        {
+            super(parentPath, name, FileLinkType.REGULAR_FILE, null);
+        }
+
+        @Override
+        public NewFileArchiveEntry lastModified(long lastModified)
+        {
+            super.lastModified(lastModified);
+            return this; 
+        }
+
+        @Override
+        public NewFileArchiveEntry uid(int uid)
+        {
+            super.uid(uid);
+            return this;
+        }
+
+        @Override
+        public NewFileArchiveEntry gid(int gid)
+        {
+            super.gid(gid);
+            return this; 
+        }
+
+        @Override
+        public NewFileArchiveEntry permissions(short permissions)
+        {
+            super.permissions(permissions);
+            return this; 
+        }
+    }
+    
+    /**
+     * A class to describe a new symlink archive entry.
+     */
+    public static final class NewSymLinkArchiveEntry extends NewArchiveEntry
+    {
+        private NewSymLinkArchiveEntry(String parentPath, String name, String linkTarget)
+        {
+            super(parentPath, name, FileLinkType.SYMLINK, linkTarget);
+        }
+        
+        @Override
+        public NewSymLinkArchiveEntry lastModified(long lastModified)
+        {
+            super.lastModified(lastModified);
+            return this; 
+        }
+
+        @Override
+        public NewSymLinkArchiveEntry uid(int uid)
+        {
+            super.uid(uid);
+            return this;
+        }
+
+        @Override
+        public NewSymLinkArchiveEntry gid(int gid)
+        {
+            super.gid(gid);
+            return this; 
+        }
+
+        @Override
+        public NewSymLinkArchiveEntry permissions(short permissions)
+        {
+            super.permissions(permissions);
+            return this; 
+        }
+    }
+    
+    /**
+     * A class to describe a new directory archive entry.
+     */
+    public static final class NewDirectoryArchiveEntry extends NewArchiveEntry
+    {
+        private NewDirectoryArchiveEntry(String parentPath, String name)
+        {
+            super(parentPath, name, FileLinkType.DIRECTORY, null);
+        }
+
+        @Override
+        public NewDirectoryArchiveEntry lastModified(long lastModified)
+        {
+            super.lastModified(lastModified);
+            return this; 
+        }
+
+        @Override
+        public NewDirectoryArchiveEntry uid(int uid)
+        {
+            super.uid(uid);
+            return this;
+        }
+
+        @Override
+        public NewDirectoryArchiveEntry gid(int gid)
+        {
+            super.gid(gid);
+            return this; 
+        }
+
+        @Override
+        public NewDirectoryArchiveEntry permissions(short permissions)
+        {
+            super.permissions(permissions);
+            return this; 
+        }
+    }
+    
+    public static NewFileArchiveEntry file(String parentPath, String name)
+    {
+        return new NewFileArchiveEntry(parentPath, name);
+    }
+
+    public static NewSymLinkArchiveEntry link(String parentPath, String name, String linkTarget)
+    {
+        return new NewSymLinkArchiveEntry(parentPath, name, linkTarget);
+    }
+
+    public static NewDirectoryArchiveEntry dir(String parentPath, String name)
+    {
+        return new NewDirectoryArchiveEntry(parentPath, name);
+    }
+
+    private NewArchiveEntry(String parentPath, String name, FileLinkType linkType,
+            String linkTarget)
+    {
+        this.parentPath = Utils.normalizePath(parentPath);
+        this.name = name;
+        this.linkType = linkType;
+        this.linkTarget = linkTarget;
+        this.size = Utils.UNKNOWN;
+        this.lastModified = System.currentTimeMillis() / 1000;
+        this.uid = Utils.getCurrentUid();
+        this.gid = Utils.getCurrentGid();
+        this.permissions = 0755;
+    }
+
+    public String getParentPath()
+    {
+        return parentPath;
+    }
+
+    public long getLastModified()
+    {
+        return lastModified;
+    }
+
+    public NewArchiveEntry lastModified(@SuppressWarnings("hiding")
+    long lastModified)
+    {
+        this.lastModified = lastModified;
+        return this;
+    }
+
+    public int getUid()
+    {
+        return uid;
+    }
+
+    public NewArchiveEntry uid(@SuppressWarnings("hiding")
+    int uid)
+    {
+        this.uid = uid;
+        return this;
+    }
+
+    public int getGid()
+    {
+        return gid;
+    }
+
+    public NewArchiveEntry gid(@SuppressWarnings("hiding")
+    int gid)
+    {
+        this.gid = gid;
+        return this;
+    }
+
+    public short getPermissions()
+    {
+        return permissions;
+    }
+
+    public NewArchiveEntry permissions(@SuppressWarnings("hiding")
+    short permissions)
+    {
+        this.permissions = permissions;
+        return this;
+    }
+
+    public int getCrc32()
+    {
+        return crc32;
+    }
+
+    void setCrc32(int crc32)
+    {
+        this.crc32 = crc32;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public FileLinkType getLinkType()
+    {
+        return linkType;
+    }
+
+    public String getLinkTarget()
+    {
+        return linkTarget;
+    }
+
+    public long getSize()
+    {
+        return size;
+    }
+    
+    void setSize(long size)
+    {
+        this.size = size;
+    }
+
+}

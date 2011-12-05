@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
 
@@ -23,74 +23,69 @@ import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.base.unix.Unix.Stat;
-import ch.systemsx.cisd.hdf5.HDF5EnumerationType;
-import ch.systemsx.cisd.hdf5.HDF5EnumerationValue;
+import ch.systemsx.cisd.hdf5.CompoundElement;
+import ch.systemsx.cisd.hdf5.CompoundType;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
-import ch.systemsx.cisd.hdf5.HDF5ObjectType;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 
 /**
- * A class containing all information we need have about a link either in the file system or in an
- * HDF5 container.
+ * A class containing all information we need to have about a link either in the file system or in
+ * an HDF5 container.
  * 
  * @author Bernd Rinn
  */
-public final class Link implements Comparable<Link>
+@CompoundType(name = "Link", mapAllFields = false)
+final class LinkRecord implements Comparable<LinkRecord>
 {
-    final static int UNKNOWN = -1;
-
-    final static short UNKNOWN_S = -1;
-
-    public enum Completeness
-    {
-        BASE, LAST_MODIFIED, FULL
-    }
-
+    @CompoundElement(memberName = "linkNameLength")
     private int linkNameLength;
+
+    @CompoundElement(memberName = "linkType", typeName = "linkType")
+    private FileLinkType linkType;
+
+    @CompoundElement(memberName = "size")
+    private long size;
+
+    @CompoundElement(memberName = "lastModified")
+    private long lastModified;
+
+    @CompoundElement(memberName = "uid")
+    private int uid;
+
+    @CompoundElement(memberName = "gid")
+    private int gid;
+
+    @CompoundElement(memberName = "permissions")
+    private short permissions;
+
+    @CompoundElement(memberName = "checksum")
+    private int crc32;
 
     private String linkName;
 
     private String linkTargetOrNull;
 
-    private HDF5EnumerationValue hdf5EncodedLinkType;
+    private FileLinkType verifiedType;
 
-    private FileLinkType linkType;
+    private long verifiedSize = -1;
 
-    private long size;
-
-    private long lastModified;
-
-    private int uid;
-
-    private int gid;
-
-    private short permissions;
-
-    private int crc32;
-
+    private int verifiedCrc32 = 0;
+    
     /**
-     * Returns a {@link Link} object for the given <var>link</var> {@link File}, or
+     * Returns a {@link LinkRecord} object for the given <var>link</var> {@link File}, or
      * <code>null</code> if a system call fails and <var>continueOnError</var> is <code>true</code>.
      */
-    public static Link tryCreate(File file, boolean includeOwnerAndPermissions,
+    public static LinkRecord tryCreate(File file, boolean includeOwnerAndPermissions,
             IErrorStrategy errorStrategy)
     {
         try
         {
-            return new Link(file, includeOwnerAndPermissions);
+            return new LinkRecord(file, includeOwnerAndPermissions);
         } catch (IOExceptionUnchecked ex)
         {
             errorStrategy.dealWithError(new ArchivingException(file, ex.getCause()));
             return null;
         }
-    }
-
-    /**
-     * Returns a {@link Link} object for the given <var>hdf5FileName</var>.
-     */
-    public static Link createRegularFile(String hdf5FileName, long size)
-    {
-        return new Link(hdf5FileName, FileLinkType.REGULAR_FILE, size, 0);
     }
 
     /**
@@ -108,72 +103,70 @@ public final class Link implements Comparable<Link>
         }
     }
 
-    private static int getCurrentUid()
-    {
-        if (Unix.isOperational())
-        {
-            return Unix.getUid();
-        } else
-        {
-            return UNKNOWN;
-        }
-    }
-    
-    private static int getCurrentGid()
-    {
-        if (Unix.isOperational())
-        {
-            return Unix.getGid();
-        } else
-        {
-            return UNKNOWN;
-        }
-    }
-    
     /**
      * Used by the HDF5 library during reading.
      */
-    public Link()
+    LinkRecord()
     {
     }
 
     /**
-     * Used for HDF5 files which are created on the fly.
+     * A link for user-created {@Link NewArchiveEntry}.
      */
-    public Link(String hdf5FileName, FileLinkType type, long size, int crc32)
+    LinkRecord(NewArchiveEntry entry)
     {
-        this.linkName = hdf5FileName;
-        this.linkTargetOrNull = null;
-        this.linkType = type;
-        this.size = size;
-        this.crc32 = crc32;
-        this.lastModified = System.currentTimeMillis() / 1000;
-        this.uid = getCurrentUid();
-        this.gid = getCurrentGid();
-        this.permissions = 0755;
+        this(entry.getName(), entry.getLinkTarget(), entry.getLinkType(), Utils.UNKNOWN, entry
+                .getLastModified(), entry.getUid(), entry.getGid(), entry.getPermissions(),
+                Utils.UNKNOWN);
     }
 
-    public Link(HDF5LinkInformation info, long size)
+    /**
+     * Creates a directory entry.
+     */
+    LinkRecord(String hdf5DirectoryPath)
+    {
+        this(hdf5DirectoryPath, System.currentTimeMillis() / 1000, Utils.getCurrentUid(), Utils
+                .getCurrentGid(), (short) 0755);
+    }
+
+    /**
+     * Creates a directory entry.
+     */
+    LinkRecord(String hdf5DirectoryPath, long lastModified, int uid, int gid, short permissions)
+    {
+        this.linkName = hdf5DirectoryPath;
+        this.linkTargetOrNull = null;
+        this.linkType = FileLinkType.DIRECTORY;
+        this.lastModified = lastModified;
+        this.uid = uid;
+        this.gid = gid;
+        this.permissions = permissions;
+    }
+
+    /**
+     * Used by {@link DirectoryIndex}.
+     */
+    LinkRecord(HDF5LinkInformation info, long size)
     {
         this.linkName = info.getName();
         this.linkTargetOrNull = info.tryGetSymbolicLinkTarget();
-        this.linkType = translateType(info.getType());
+        this.linkType = Utils.translateType(info.getType());
         this.size = size;
-        this.lastModified = UNKNOWN;
-        this.uid = UNKNOWN;
-        this.gid = UNKNOWN;
-        this.permissions = UNKNOWN_S;
+        this.lastModified = Utils.UNKNOWN;
+        this.uid = Utils.UNKNOWN;
+        this.gid = Utils.UNKNOWN;
+        this.permissions = Utils.UNKNOWN_S;
     }
 
     /**
-     * Returns a {@link Link} object for the given <var>link</var> {@link File}.
+     * Returns a {@link LinkRecord} object for the given <var>link</var> {@link File}.
      */
-    private Link(File link, boolean includeOwnerAndPermissions)
+    private LinkRecord(File file, boolean includeOwnerAndPermissions)
     {
-        this.linkName = link.getName();
+        this.linkName = file.getName();
         if (includeOwnerAndPermissions && Unix.isOperational())
         {
-            final Stat info = Unix.getLinkInfo(link.getPath(), false);
+            final Stat info = Unix.getLinkInfo(file.getPath(), false);
             this.linkType = info.getLinkType();
             this.size = info.getSize();
             this.lastModified = info.getLastModified();
@@ -183,36 +176,22 @@ public final class Link implements Comparable<Link>
         } else
         {
             this.linkType =
-                    (link.isDirectory()) ? FileLinkType.DIRECTORY
-                            : (link.isFile() ? FileLinkType.REGULAR_FILE : FileLinkType.OTHER);
-            this.size = link.length();
-            this.lastModified = link.lastModified() / 1000;
-            this.uid = UNKNOWN;
-            this.gid = UNKNOWN;
-            this.permissions = UNKNOWN_S;
+                    (file.isDirectory()) ? FileLinkType.DIRECTORY
+                            : (file.isFile() ? FileLinkType.REGULAR_FILE : FileLinkType.OTHER);
+            this.size = file.length();
+            this.lastModified = file.lastModified() / 1000;
+            this.uid = Utils.UNKNOWN;
+            this.gid = Utils.UNKNOWN;
+            this.permissions = Utils.UNKNOWN_S;
         }
         if (linkType == FileLinkType.SYMLINK)
         {
-            this.linkTargetOrNull = tryReadLinkTarget(link);
+            this.linkTargetOrNull = tryReadLinkTarget(file);
         }
     }
 
-    Link(String linkName, String linkTargetOrNull, FileLinkType linkType, long size,
-            long lastModified, int uid, int gid, short permissions)
-    {
-        this.linkName = linkName;
-        this.linkTargetOrNull = linkTargetOrNull;
-        this.linkType = linkType;
-        this.size = size;
-        this.lastModified = lastModified;
-        this.uid = uid;
-        this.gid = gid;
-        this.permissions = permissions;
-    }
-
-    /** For unit tests only! */
     @Private
-    Link(String linkName, String linkTargetOrNull, FileLinkType linkType, long size,
+    LinkRecord(String linkName, String linkTargetOrNull, FileLinkType linkType, long size,
             long lastModified, int uid, int gid, short permissions, int crc32)
     {
         this.linkName = linkName;
@@ -226,34 +205,12 @@ public final class Link implements Comparable<Link>
         this.crc32 = crc32;
     }
 
-    private static FileLinkType translateType(final HDF5ObjectType hdf5Type)
-    {
-        switch (hdf5Type)
-        {
-            case DATASET:
-                return FileLinkType.REGULAR_FILE;
-            case GROUP:
-                return FileLinkType.DIRECTORY;
-            case SOFT_LINK:
-                return FileLinkType.SYMLINK;
-            default:
-                return FileLinkType.OTHER;
-        }
-    }
-
     /**
      * Call this method after reading the link from the archive and before using it.
      */
     int initAfterReading(String concatenatedNames, int startPos, IHDF5Reader reader,
             String groupPath, boolean readLinkTarget)
     {
-        try
-        {
-            this.linkType = FileLinkType.valueOf(hdf5EncodedLinkType.getValue());
-        } catch (Exception ex)
-        {
-            this.linkType = FileLinkType.OTHER;
-        }
         final int endPos = startPos + linkNameLength;
         this.linkName = concatenatedNames.substring(startPos, endPos);
         if (readLinkTarget && linkType == FileLinkType.SYMLINK)
@@ -268,16 +225,10 @@ public final class Link implements Comparable<Link>
     /**
      * Call this method before writing the link to the archive.
      */
-    void prepareForWriting(HDF5EnumerationType hdf5LinkTypeEnumeration,
-            StringBuilder concatenatedNames)
+    void prepareForWriting(StringBuilder concatenatedNames)
     {
         this.linkNameLength = this.linkName.length();
         concatenatedNames.append(linkName);
-        if (this.hdf5EncodedLinkType == null)
-        {
-            this.hdf5EncodedLinkType =
-                    new HDF5EnumerationValue(hdf5LinkTypeEnumeration, linkType.name());
-        }
     }
 
     public String getLinkName()
@@ -308,6 +259,11 @@ public final class Link implements Comparable<Link>
     public FileLinkType getLinkType()
     {
         return linkType;
+    }
+
+    public void setSize(long size)
+    {
+        this.size = size;
     }
 
     public long getSize()
@@ -345,17 +301,17 @@ public final class Link implements Comparable<Link>
         return permissions;
     }
 
-    public Completeness getCompleteness()
+    public ArchiveEntryCompleteness getCompleteness()
     {
         if (hasUnixPermissions())
         {
-            return Completeness.FULL;
+            return ArchiveEntryCompleteness.FULL;
         } else if (hasLastModified())
         {
-            return Completeness.LAST_MODIFIED;
+            return ArchiveEntryCompleteness.LAST_MODIFIED;
         } else
         {
-            return Completeness.BASE;
+            return ArchiveEntryCompleteness.BASE;
         }
     }
 
@@ -369,11 +325,41 @@ public final class Link implements Comparable<Link>
         this.crc32 = crc32;
     }
 
+    public FileLinkType getVerifiedType()
+    {
+        return verifiedType;
+    }
+
+    public void setVerifiedType(FileLinkType verifiedType)
+    {
+        this.verifiedType = verifiedType;
+    }
+
+    public int getVerifiedCrc32()
+    {
+        return verifiedCrc32;
+    }
+
+    public void setVerifiedCrc32(int crc32)
+    {
+        this.verifiedCrc32 = crc32;
+    }
+
+    public long getVerifiedSize()
+    {
+        return verifiedSize;
+    }
+
+    public void setVerifiedSize(long size)
+    {
+        this.verifiedSize = size;
+    }
+
     //
     // Comparable
     //
 
-    public int compareTo(Link o)
+    public int compareTo(LinkRecord o)
     {
         // We put all directories before all files.
         if (isDirectory() && o.isDirectory() == false)
@@ -395,11 +381,11 @@ public final class Link implements Comparable<Link>
     @Override
     public boolean equals(Object obj)
     {
-        if (obj == null || obj instanceof Link == false)
+        if (obj == null || obj instanceof LinkRecord == false)
         {
             return false;
         }
-        final Link that = (Link) obj;
+        final LinkRecord that = (LinkRecord) obj;
         return this.linkName.equals(that.linkName);
     }
 

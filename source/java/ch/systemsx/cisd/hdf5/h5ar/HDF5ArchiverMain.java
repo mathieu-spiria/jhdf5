@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.systemsx.cisd.hdf5.tools;
+package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -134,6 +134,9 @@ public class HDF5ArchiverMain
     @Option(name = "v", longName = "verbose", usage = "Verbose output (all operations)")
     private boolean verbose = false;
 
+    @Option(name = "q", longName = "quiet", usage = "Quiet operation (only error output)")
+    private boolean quiet = false;
+
     @Option(name = "n", longName = "numeric", usage = "Use numeric values for mode, uid and gid for LIST and VERIFY")
     private boolean numeric = false;
 
@@ -203,6 +206,12 @@ public class HDF5ArchiverMain
         if (command.isReadOnly() && archiveFile.exists() == false)
         {
             System.err.println("Archive '" + archiveFile.getAbsolutePath() + "' does not exist.");
+            initializationOK = false;
+            return;
+        }
+        if (quiet && verbose)
+        {
+            System.err.println("Cannot be quiet and verbose at the same time.");
             initializationOK = false;
             return;
         }
@@ -315,28 +324,55 @@ public class HDF5ArchiverMain
     {
         private final boolean verifying;
 
+        private final boolean quiet;
+
+        private final boolean verbose;
+
+        private final boolean numeric;
+
+        private final boolean suppressDirectoryEntries;
+
         private int checkSumFailures;
 
-        ListingVisitor(boolean verifying)
+        ListingVisitor(boolean verifying, boolean quiet, boolean verbose, boolean numeric)
         {
-            this.verifying = verifying;
+            this(verifying, quiet, verbose, numeric, false);
         }
 
-        public void visit(ListEntry entry)
+        ListingVisitor(boolean verifying, boolean quiet, boolean verbose, boolean numeric,
+                boolean suppressDirectoryEntries)
         {
+            this.verifying = verifying;
+            this.quiet = quiet;
+            this.verbose = verbose;
+            this.numeric = numeric;
+            this.suppressDirectoryEntries = suppressDirectoryEntries;
+        }
+
+        public void visit(ArchiveEntry entry)
+        {
+            if (suppressDirectoryEntries && entry.isDirectory())
+            {
+                return;
+            }
             if (verifying)
             {
                 final boolean ok = entry.checkOK();
-                final String statusStr = ok ? "\tOK" : "\tFAILED";
-                System.out.printf("%s%s\n", entry.describeLink(), statusStr);
+                if (quiet == false)
+                {
+                    System.out.println(entry.describeLink(verbose, numeric, true));
+                }
                 if (ok == false)
                 {
-                    System.err.println(entry.getErrorLineOrNull());
+                    System.err.println(entry.getStatus(true));
                     ++checkSumFailures;
                 }
             } else
             {
-                System.out.println(entry.describeLink());
+                if (quiet == false)
+                {
+                    System.out.println(entry.describeLink(verbose, numeric, false));
+                }
             }
         }
 
@@ -344,7 +380,7 @@ public class HDF5ArchiverMain
         {
             if (verifying && checkSumFailures > 0)
             {
-                System.err.println(checkSumFailures + " file(s) failed the CRC checksum test.");
+                System.err.println(checkSumFailures + " file(s) failed the test.");
                 return false;
             } else
             {
@@ -377,14 +413,15 @@ public class HDF5ArchiverMain
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.archive(rootOrNull, new File(rootOrNull, arguments.get(i)),
-                                    verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
+                            archiver.archiveFromFilesystem(rootOrNull, new File(rootOrNull,
+                                    arguments.get(i)), verbose ? IPathVisitor.DEFAULT_PATH_VISITOR
+                                    : null);
                         }
                     } else
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.archiveAll(new File(arguments.get(i)),
+                            archiver.archiveFromFilesystem(new File(arguments.get(i)),
                                     verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                         }
                     }
@@ -402,7 +439,7 @@ public class HDF5ArchiverMain
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.cat(arguments.get(i));
+                            archiver.extractToStdout(arguments.get(i));
                         }
                     }
                     break;
@@ -413,13 +450,13 @@ public class HDF5ArchiverMain
                     }
                     if (arguments.size() == 2)
                     {
-                        archiver.extract(getFSRoot(), "/",
+                        archiver.extractToFilesystem(getFSRoot(), "/",
                                 verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                     } else
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.extract(getFSRoot(), arguments.get(i),
+                            archiver.extractToFilesystem(getFSRoot(), arguments.get(i),
                                     verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                         }
                     }
@@ -444,11 +481,9 @@ public class HDF5ArchiverMain
                         break;
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
-                    final ListingVisitor visitor = new ListingVisitor(true);
-                    archiver.list(fileOrDir, getFSRoot().getPath(), recursive,
-                            suppressDirectoryEntries, verbose, numeric,
-                            verifyAttributes ? Check.VERIFY_CRC_ATTR_FS : Check.VERIFY_CRC_FS,
-                            visitor);
+                    final ListingVisitor visitor = new ListingVisitor(true, quiet, verbose, numeric);
+                    archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot().getPath(), recursive,
+                            verbose, numeric, verifyAttributes, visitor);
                     return visitor.isOK();
                 }
                 case LIST:
@@ -458,11 +493,10 @@ public class HDF5ArchiverMain
                         break;
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
-                    final ListingVisitor visitor = new ListingVisitor(testAgainstChecksums);
-                    archiver.list(fileOrDir, getFSRoot().getPath(), recursive,
-                            suppressDirectoryEntries, verbose, numeric,
-                            testAgainstChecksums ? Check.CHECK_CRC_ARCHIVE : Check.NO_CHECK,
-                            visitor);
+                    final ListingVisitor visitor =
+                            new ListingVisitor(testAgainstChecksums, quiet, verbose, numeric,
+                                    suppressDirectoryEntries);
+                    archiver.list(fileOrDir, recursive, verbose, testAgainstChecksums, visitor);
                     return visitor.isOK();
                 }
                 case HELP: // Can't happen any more at this point
