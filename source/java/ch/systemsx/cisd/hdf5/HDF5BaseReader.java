@@ -154,11 +154,19 @@ class HDF5BaseReader
     {
         if (hdf5File.exists() == false)
         {
-            throw new HDF5FileNotFoundException(hdf5File, "File does not exit.");
+            throw new HDF5FileNotFoundException(hdf5File, "Path does not exit.");
         }
         if (hdf5File.canRead() == false)
         {
-            throw new HDF5FileNotFoundException(hdf5File, "File is not readable.");
+            throw new HDF5FileNotFoundException(hdf5File, "Path is not readable.");
+        }
+        if (hdf5File.isFile() == false)
+        {
+            throw new HDF5FileNotFoundException(hdf5File, "Path is not a file.");
+        }
+        if (HDF5Factory.isHDF5File(hdf5File) == false)
+        {
+            throw new HDF5FileNotFoundException(hdf5File, "Path is not a valid HDF5 file.");
         }
         return h5.openFileReadOnly(hdf5File.getPath(), fileRegistry);
     }
