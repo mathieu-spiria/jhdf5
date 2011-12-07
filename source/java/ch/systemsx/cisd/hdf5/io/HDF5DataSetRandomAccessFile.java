@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5.io;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.Flushable;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteOrder;
@@ -47,7 +48,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Writer;
  * 
  * @author Bernd Rinn
  */
-public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
+public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
 {
     private final static int MB = 1024 * 1024;
 
@@ -345,6 +346,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
             } else
             {
                 this.writerOrNull = (IHDF5Writer) reader;
+                this.writerOrNull.addFlushable(this);
                 this.reader = writerOrNull;
                 if (writerOrNull.exists(dataSetPath) == false)
                 {
@@ -411,13 +413,6 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile
     {
         return features.tryGetProposedLayout() != null
                 && features.tryGetProposedLayout() != HDF5StorageLayout.CHUNKED;
-    }
-
-    @Override
-    protected void finalize() throws Throwable
-    {
-        super.finalize();
-        close();
     }
 
     private void ensureInitalizedForWriting(int lenCurrentOp) throws IOExceptionUnchecked
