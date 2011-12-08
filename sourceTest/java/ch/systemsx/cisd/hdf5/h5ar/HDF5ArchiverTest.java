@@ -155,7 +155,7 @@ public class HDF5ArchiverTest
         return Unix.tryGetUserByUid(invalidUid) == null ? invalidUid : null;
     }
 
-    private void writeToArchive(final HDF5Archiver a, final String name, final String content)
+    private void writeToArchive(final IHDF5Archiver a, final String name, final String content)
     {
         final byte[] bytes = content.getBytes();
         a.archiveFile(NewArchiveEntry.file("/test", name).lastModified(1000000L).uid(100).gid(100),
@@ -168,11 +168,11 @@ public class HDF5ArchiverTest
         final File file = new File(workingDirectory, "testarchive.h5ar");
         file.delete();
         file.deleteOnExit();
-        final HDF5Archiver a = new HDF5Archiver(file, false);
+        final IHDF5Archiver a = HDF5ArchiverFactory.open(file);
         writeToArchive(a, "hello.txt", "Hello World\n");
         writeToArchive(a, "hello2.txt", "Yet another Hello World\n");
         a.close();
-        final HDF5Archiver aro = new HDF5Archiver(file, true);
+        final IHDF5ArchiveReader aro = HDF5ArchiverFactory.openForReading(file);
         final String content1 = new String(aro.extract("/test/hello.txt"));
         assertEquals("Hello World\n", content1);
         final String content2 = new String(aro.extract("/test/hello2.txt"));
@@ -183,7 +183,8 @@ public class HDF5ArchiverTest
         assertEquals("755\t100\t100\t       DIR\t1970-01-12 14:46:40\t        \t/test", list.get(0)
                 .describeLink(true, true));
         final List<ArchiveEntry> list2 =
-                aro.list("/test", ListParameters.build().checkArchive().get());
+                aro.list("/test", ListParameters.build().checkArchive().suppressDirectoryEntries()
+                        .get());
         assertEquals(2, list2.size());
         assertEquals(
                 "755\t100\t100\t        12\t1970-01-12 14:46:40\tb095e5e3\t/test/hello.txt\tOK",

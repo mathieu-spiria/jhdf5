@@ -21,8 +21,8 @@ import java.io.IOException;
 
 import org.apache.commons.lang.time.StopWatch;
 
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
-import ch.systemsx.cisd.hdf5.h5ar.HDF5Archiver;
+import ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverFactory;
+import ch.systemsx.cisd.hdf5.h5ar.IHDF5ArchiveReader;
 import ch.systemsx.cisd.hdf5.h5ar.IListEntryVisitor;
 
 /**
@@ -48,10 +48,9 @@ public class HDF52Dir
         }
         final StopWatch watch = new StopWatch();
         watch.start();
-        final HDF5Archiver archiver =
-                new HDF5Archiver(hdf5File, true, true, FileFormat.ALLOW_1_8, null);
-        archiver.extractToFilesystem(rootDir, pathInFile, IListEntryVisitor.NONVERBOSE_VISITOR);
-        archiver.close();
+        final IHDF5ArchiveReader reader = HDF5ArchiverFactory.openForReading(hdf5File);
+        reader.extractToFilesystem(rootDir, pathInFile, IListEntryVisitor.NONVERBOSE_VISITOR);
+        reader.close();
         watch.stop();
         System.out.println("Extracting hdf5 file took " + watch);
     }

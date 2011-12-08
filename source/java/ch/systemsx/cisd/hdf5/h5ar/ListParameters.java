@@ -17,8 +17,7 @@
 package ch.systemsx.cisd.hdf5.h5ar;
 
 /**
- * A class that represents parameters for
- * {@link HDF5Archiver#list(String, ListParameters)}.
+ * A class that represents parameters for {@link HDF5Archiver#list(String, ListParameters)}.
  * 
  * @author Bernd Rinn
  */
@@ -29,8 +28,10 @@ public final class ListParameters
     private final boolean readLinkTargets;
 
     private final boolean checkArchive;
-    
-    public static final ListParameters DEFAULT = new ListParameters(true, true, false);
+
+    private final boolean suppressDirectoryEntries;
+
+    public static final ListParameters DEFAULT = new ListParameters(true, true, false, false);
 
     public static final class ListParametersBuilder
     {
@@ -40,10 +41,12 @@ public final class ListParameters
 
         private boolean checkArchive = false;
 
+        private boolean suppressDirectoryEntries = false;
+
         private ListParametersBuilder()
         {
         }
-        
+
         public ListParametersBuilder nonRecursive()
         {
             this.recursive = false;
@@ -83,22 +86,38 @@ public final class ListParameters
             return this;
         }
 
+        public ListParametersBuilder suppressDirectoryEntries()
+        {
+            this.suppressDirectoryEntries = true;
+            return this;
+        }
+
+        public ListParametersBuilder suppressDirectoryEntries(@SuppressWarnings("hiding")
+        boolean suppressDirectoryEntries)
+        {
+            this.suppressDirectoryEntries = suppressDirectoryEntries;
+            return this;
+        }
+
         public ListParameters get()
         {
-            return new ListParameters(recursive, readLinkTargets, checkArchive);
+            return new ListParameters(recursive, readLinkTargets, checkArchive,
+                    suppressDirectoryEntries);
         }
     }
-    
+
     public static ListParametersBuilder build()
     {
         return new ListParametersBuilder();
     }
 
-    private ListParameters(boolean recursive, boolean readLinkTargets, boolean checkArchive)
+    private ListParameters(boolean recursive, boolean readLinkTargets, boolean checkArchive,
+            boolean suppressDirectoryEntries)
     {
         this.recursive = recursive;
         this.readLinkTargets = readLinkTargets;
         this.checkArchive = checkArchive;
+        this.suppressDirectoryEntries = suppressDirectoryEntries;
     }
 
     public boolean isRecursive()
@@ -114,5 +133,10 @@ public final class ListParameters
     public boolean isCheckArchive()
     {
         return checkArchive;
+    }
+
+    public boolean isSuppressDirectoryEntries()
+    {
+        return suppressDirectoryEntries;
     }
 }
