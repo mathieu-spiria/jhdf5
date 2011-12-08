@@ -402,6 +402,10 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
     public void close() throws IOExceptionUnchecked
     {
         flush();
+        if (hdf5WriterOrNull != null)
+        {
+            hdf5WriterOrNull.removeFlushable(this);
+        }
     }
 
 }
