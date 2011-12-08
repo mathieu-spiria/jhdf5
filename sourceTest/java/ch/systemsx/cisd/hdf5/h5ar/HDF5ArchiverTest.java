@@ -96,8 +96,8 @@ public class HDF5ArchiverTest
         assertEquals("dir/link_name", new ArchiveEntry("dir", "dir/link_name", new LinkRecord(null,
                 null, null, -1, -1, -1, -1, (short) -1, 0), idCache).describeLink(false, false));
         assertEquals("       100\t00000000\tdir/link_name", new ArchiveEntry("dir",
-                "dir/link_name", new LinkRecord(null, null, FileLinkType.REGULAR_FILE, 100, -1, -1, -1,
-                        (short) -1, 0), idCache).describeLink(true, false));
+                "dir/link_name", new LinkRecord(null, null, FileLinkType.REGULAR_FILE, 100, -1, -1,
+                        -1, (short) -1, 0), idCache).describeLink(true, false));
         assertEquals("-rwxr-xr-x\troot\t" + rootGroupName
                 + "\t       111\t2000-01-01 00:00:00\t00000000\tdir/link_name", new ArchiveEntry(
                 "dir", "dir/link_name", new LinkRecord(null, null, FileLinkType.REGULAR_FILE, 111L,
@@ -121,8 +121,8 @@ public class HDF5ArchiverTest
                         FileLinkType.REGULAR_FILE, 111L, 946681200491L / 1000L, -1, 0,
                         (short) 0755, 0), idCache).describeLink(true, false));
         assertEquals("       111\t00000000\tdir/link_name", new ArchiveEntry("dir",
-                "dir/link_name", new LinkRecord("link_name2", null, FileLinkType.REGULAR_FILE, 111L, -1L, -1,
-                        0, (short) 0755, 0), idCache).describeLink(true, false));
+                "dir/link_name", new LinkRecord("link_name2", null, FileLinkType.REGULAR_FILE,
+                        111L, -1L, -1, 0, (short) 0755, 0), idCache).describeLink(true, false));
     }
 
     @Test(groups =
@@ -158,8 +158,8 @@ public class HDF5ArchiverTest
     private void writeToArchive(final HDF5Archiver a, final String name, final String content)
     {
         final byte[] bytes = content.getBytes();
-        a.archive(NewArchiveEntry.file("/test", name).lastModified(1000000L).uid(100)
-                .gid(100), new ByteArrayInputStream(bytes), null);
+        a.archive(NewArchiveEntry.file("/test", name).lastModified(1000000L).uid(100).gid(100),
+                new ByteArrayInputStream(bytes), null);
     }
 
     @Test
@@ -177,15 +177,19 @@ public class HDF5ArchiverTest
         assertEquals("Hello World\n", content1);
         final String content2 = new String(aro.extract("/test/hello2.txt"));
         assertEquals("Yet another Hello World\n", content2);
-        final List<ArchiveEntry> list = aro.list("/", false, false, false);
+        final List<ArchiveEntry> list =
+                aro.list("/", ListParameters.build().nonRecursive().noReadLinkTarget().get());
         assertEquals(1, list.size());
         assertEquals("755\t100\t100\t       DIR\t1970-01-12 14:46:40\t        \t/test", list.get(0)
                 .describeLink(true, true));
-        final List<ArchiveEntry> list2 = aro.list("/test", true, false, true);
+        final List<ArchiveEntry> list2 =
+                aro.list("/test", ListParameters.build().checkArchive().get());
         assertEquals(2, list2.size());
-        assertEquals("755\t100\t100\t        12\t1970-01-12 14:46:40\tb095e5e3\t/test/hello.txt\tOK",
+        assertEquals(
+                "755\t100\t100\t        12\t1970-01-12 14:46:40\tb095e5e3\t/test/hello.txt\tOK",
                 list2.get(0).describeLink(true, true));
-        assertEquals("755\t100\t100\t        24\t1970-01-12 14:46:40\tee5f3107\t/test/hello2.txt\tOK",
+        assertEquals(
+                "755\t100\t100\t        24\t1970-01-12 14:46:40\tee5f3107\t/test/hello2.txt\tOK",
                 list2.get(1).describeLink(true, true));
         aro.close();
     }
