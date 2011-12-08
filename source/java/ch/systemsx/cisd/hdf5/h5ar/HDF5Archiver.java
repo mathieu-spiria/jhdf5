@@ -213,37 +213,44 @@ public class HDF5Archiver implements Closeable, Flushable
     public List<ArchiveEntry> list(String fileOrDir, ListParameters params)
     {
         final List<ArchiveEntry> result = new ArrayList<ArchiveEntry>(100);
-        list(fileOrDir, params, new IListEntryVisitor()
+        list(fileOrDir, new IListEntryVisitor()
             {
                 public void visit(ArchiveEntry entry)
                 {
                     result.add(entry);
                 }
-            });
+            }, params);
         return result;
     }
 
     public HDF5Archiver list(String fileOrDir, IListEntryVisitor visitor)
     {
-        return list(fileOrDir, ListParameters.DEFAULT, visitor);
+        return list(fileOrDir, visitor, ListParameters.DEFAULT);
     }
 
-    public HDF5Archiver list(String fileOrDir, ListParameters params, IListEntryVisitor visitor)
+    public HDF5Archiver list(String fileOrDir, IListEntryVisitor visitor, ListParameters params)
     {
         final ArchiveEntryListProcessor listProcessor =
                 new ArchiveEntryListProcessor(visitor, buffer, params.isCheckArchive());
-        processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(), listProcessor);
+        processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(),
+                listProcessor);
         return this;
     }
 
     public HDF5Archiver verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
-            boolean recursive, boolean readLinkTargets, boolean numeric, boolean verifyAttributes,
             IListEntryVisitor visitor)
     {
+        return verifyAgainstFilesystem(fileOrDir, rootDirectory, visitor, VerifyParameters.DEFAULT);
+    }
+
+    public HDF5Archiver verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
+            IListEntryVisitor visitor, VerifyParameters params)
+    {
         final ArchiveEntryVerifyProcessor verifyProcessor =
-                new ArchiveEntryVerifyProcessor(visitor, rootDirectory, buffer, verifyAttributes,
-                        numeric);
-        processor.process(fileOrDir, recursive, readLinkTargets, verifyProcessor);
+                new ArchiveEntryVerifyProcessor(visitor, rootDirectory, buffer,
+                        params.isVerifyAttributes(), params.isNumeric());
+        processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(),
+                verifyProcessor);
         return this;
     }
 
@@ -310,14 +317,12 @@ public class HDF5Archiver implements Closeable, Flushable
         return this;
     }
 
-    public HDF5Archiver archiveFile(String path, byte[] data)
-            throws IllegalStateException
+    public HDF5Archiver archiveFile(String path, byte[] data) throws IllegalStateException
     {
         return archive(NewArchiveEntry.file(path), new ByteArrayInputStream(data), null);
     }
 
-    public HDF5Archiver archiveFile(String path, InputStream input)
-            throws IllegalStateException
+    public HDF5Archiver archiveFile(String path, InputStream input) throws IllegalStateException
     {
         return archive(NewArchiveEntry.file(path), input, null);
     }
@@ -365,8 +370,8 @@ public class HDF5Archiver implements Closeable, Flushable
         return this;
     }
 
-    public HDF5Archiver archiveDirectory(String path)
-            throws IllegalStateException, IllegalArgumentException
+    public HDF5Archiver archiveDirectory(String path) throws IllegalStateException,
+            IllegalArgumentException
     {
         return archive(NewArchiveEntry.directory(path), null);
     }
@@ -390,7 +395,7 @@ public class HDF5Archiver implements Closeable, Flushable
     {
         return delete(Collections.singletonList(hdf5ObjectPath), null);
     }
-    
+
     public HDF5Archiver delete(List<String> hdf5ObjectPaths)
     {
         return delete(hdf5ObjectPaths, null);

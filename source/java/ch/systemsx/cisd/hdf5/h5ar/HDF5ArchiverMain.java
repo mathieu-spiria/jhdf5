@@ -496,8 +496,10 @@ public class HDF5ArchiverMain
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final ListingVisitor visitor =
                             new ListingVisitor(true, quiet, verbose, numeric);
-                    archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot().getPath(), recursive,
-                            verbose, numeric, verifyAttributes, visitor);
+                    archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot().getPath(),
+                            visitor,
+                            VerifyParameters.build().recursive(recursive).readLinkTargets(verbose)
+                                    .numeric(numeric).verifyAttributes(verifyAttributes).get());
                     return visitor.isOK();
                 }
                 case LIST:
@@ -510,9 +512,9 @@ public class HDF5ArchiverMain
                     final ListingVisitor visitor =
                             new ListingVisitor(testAgainstChecksums, quiet, verbose, numeric,
                                     suppressDirectoryEntries);
-                    archiver.list(fileOrDir, ListParameters.build().recursive(recursive)
-                            .readLinkTargets(verbose).checkArchive(testAgainstChecksums).get(),
-                            visitor);
+                    archiver.list(fileOrDir, visitor,
+                            ListParameters.build().recursive(recursive)
+                                    .readLinkTargets(verbose).checkArchive(testAgainstChecksums).get());
                     return visitor.isOK();
                 }
                 case HELP: // Can't happen any more at this point
