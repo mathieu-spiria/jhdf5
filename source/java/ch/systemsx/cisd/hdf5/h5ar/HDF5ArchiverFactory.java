@@ -18,6 +18,8 @@ package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
 
+import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 
 /**
@@ -36,6 +38,20 @@ public class HDF5ArchiverFactory
     public static IHDF5Archiver open(File file)
     {
         return new HDF5Archiver(file, false);
+    }
+
+    /**
+     * Opens an HDF5 archive <var>file</var> for writing and reading.
+     * 
+     * @param file The archive file to open. If the archive file does not yet exist, it will be
+     *            created.
+     * @param errorStrategyOrNull The {@link IErrorStrategy} to use on errors when accessing the
+     *            archive. May be <code>null</code>, in which case every error just causes an
+     *            exception.
+     */
+    public static IHDF5Archiver open(File file, IErrorStrategy errorStrategyOrNull)
+    {
+        return new HDF5Archiver(file, false, false, FileFormat.STRICTLY_1_6, errorStrategyOrNull);
     }
 
     /**
@@ -72,6 +88,21 @@ public class HDF5ArchiverFactory
      * 
      * @param filePath The path of the archive file to open. If the archive file does not yet exist,
      *            it will be created.
+     * @param errorStrategyOrNull The {@link IErrorStrategy} to use on errors when accessing the
+     *            archive. May be <code>null</code>, in which case every error just causes an
+     *            exception.
+     */
+    public static IHDF5Archiver open(String filePath, IErrorStrategy errorStrategyOrNull)
+    {
+        return new HDF5Archiver(new File(filePath), false, false, FileFormat.STRICTLY_1_6,
+                errorStrategyOrNull);
+    }
+
+    /**
+     * Opens an HDF5 archive file named <var>filePath</var> for writing and reading.
+     * 
+     * @param filePath The path of the archive file to open. If the archive file does not yet exist,
+     *            it will be created.
      * @param noSync if <code>true</code>, no <code>sync</code> call will be performed on closing
      *            the file.
      * @param fileFormat The HDF5 file format to use for the archive.
@@ -83,6 +114,29 @@ public class HDF5ArchiverFactory
             IErrorStrategy errorStrategyOrNull)
     {
         return new HDF5Archiver(new File(filePath), false, noSync, fileFormat, errorStrategyOrNull);
+    }
+
+    /**
+     * Opens an HDF5 archive file based on an HDF writer for writing and reading.
+     * 
+     * @param writer The HDF5 writer to base the archive file on. Closing the archive writer will
+     *            not close the HDF5 <var>writer</var>.
+     */
+    public static HDF5Archiver open(IHDF5Writer writer)
+    {
+        return new HDF5Archiver(writer, false, null);
+    }
+
+    /**
+     * Opens an HDF5 archive file based on an HDF writer for writing and reading.
+     * 
+     * @param writer The HDF5 writer to base the archive file on. Closing the archive writer will
+     *            not close the HDF5 <var>writer</var>.
+     * @param errorStrategy The {@link IErrorStrategy} to use on errors when accessing the archive.
+     */
+    public static HDF5Archiver open(IHDF5Writer writer, IErrorStrategy errorStrategy)
+    {
+        return new HDF5Archiver(writer, false, errorStrategy);
     }
 
     /**
@@ -103,7 +157,7 @@ public class HDF5ArchiverFactory
      */
     public static IHDF5ArchiveReader openForReading(File file, IErrorStrategy errorStrategy)
     {
-        return new HDF5Archiver(file, true, true, FileFormat.ALLOW_1_8, errorStrategy);
+        return new HDF5Archiver(file, true, true, FileFormat.STRICTLY_1_6, errorStrategy);
     }
 
     /**
@@ -126,7 +180,31 @@ public class HDF5ArchiverFactory
      */
     public static IHDF5ArchiveReader openForReading(String filePath, IErrorStrategy errorStrategy)
     {
-        return new HDF5Archiver(new File(filePath), true, true, FileFormat.ALLOW_1_8, errorStrategy);
+        return new HDF5Archiver(new File(filePath), true, true, FileFormat.STRICTLY_1_6,
+                errorStrategy);
+    }
+
+    /**
+     * Opens an HDF5 archive file based on an HDF5 reader.
+     * 
+     * @param reader The HDF5 reader to use as the source of the archive. Closing the archive reader
+     *            will not close the HDF5 <var>reader</var>.
+     * @param errorStrategy The {@link IErrorStrategy} to use on errors when accessing the archive.
+     */
+    public static IHDF5ArchiveReader openForReading(IHDF5Reader reader, IErrorStrategy errorStrategy)
+    {
+        return new HDF5Archiver(reader, true, errorStrategy);
+    }
+
+    /**
+     * Opens an HDF5 archive file based on an HDF5 reader.
+     * 
+     * @param reader The HDF5 reader to use as the source of the archive. Closing the archive reader
+     *            will not close the HDF5 <var>reader</var>.
+     */
+    public static IHDF5ArchiveReader openForReading(IHDF5Reader reader)
+    {
+        return new HDF5Archiver(reader, true, null);
     }
 
 }

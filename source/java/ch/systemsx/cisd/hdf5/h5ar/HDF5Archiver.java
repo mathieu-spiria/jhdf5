@@ -73,6 +73,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
 
     private final IHDF5Writer hdf5WriterOrNull;
 
+    private final boolean closeReaderOnCloseFile;
+    
     private final IErrorStrategy errorStrategy;
 
     private final DirectoryIndexProvider indexProvider;
@@ -103,15 +105,16 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         return config.writer();
     }
 
-    public HDF5Archiver(File archiveFile, boolean readOnly)
+    HDF5Archiver(File archiveFile, boolean readOnly)
     {
         this(archiveFile, readOnly, false, FileFormat.STRICTLY_1_6, RETHROWING_ERROR_STRATEGY);
     }
 
-    public HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat,
+    HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat,
             IErrorStrategy errorStrategyOrNull)
     {
         this.buffer = new byte[BUFFER_SIZE];
+        this.closeReaderOnCloseFile = true;
         this.hdf5WriterOrNull = readOnly ? null : createHDF5Writer(archiveFile, fileFormat, noSync);
         this.hdf5Reader =
                 (hdf5WriterOrNull != null) ? hdf5WriterOrNull : createHDF5Reader(archiveFile);
@@ -135,10 +138,13 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         }
     }
 
-    public HDF5Archiver(IHDF5Reader reader, IErrorStrategy errorStrategyOrNull)
+    HDF5Archiver(IHDF5Reader reader, boolean enforceReadOnly, IErrorStrategy errorStrategyOrNull)
     {
         this.buffer = new byte[BUFFER_SIZE];
-        this.hdf5WriterOrNull = (reader instanceof IHDF5Writer) ? (IHDF5Writer) reader : null;
+        this.closeReaderOnCloseFile = false;
+        this.hdf5WriterOrNull =
+                (enforceReadOnly == false && reader instanceof IHDF5Writer) ? (IHDF5Writer) reader
+                        : null;
         if (errorStrategyOrNull == null)
         {
             this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
@@ -166,14 +172,21 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
 
     public void close()
     {
-        hdf5Reader.close();
+        flush();
+        if (closeReaderOnCloseFile)
+        {
+            hdf5Reader.close();
+        } else
+        {
+            indexProvider.close();
+        }
     }
 
     //
     // Flusheable
     //
 
-    public void flush() throws IOException
+    public void flush()
     {
         if (hdf5WriterOrNull != null)
         {
@@ -215,15 +228,16 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
     {
         final ArchiveEntryListProcessor listProcessor =
                 new ArchiveEntryListProcessor(
-                        params.isSuppressDirectoryEntries() ? new IListEntryVisitor() {
-                    public void visit(ArchiveEntry entry)
-                    {
-                        if (entry.isDirectory() == false)
-                        {
-                            visitor.visit(entry);
-                        }
-                    }
-                } : visitor, buffer, params.isCheckArchive());
+                        params.isSuppressDirectoryEntries() ? new IListEntryVisitor()
+                            {
+                                public void visit(ArchiveEntry entry)
+                                {
+                                    if (entry.isDirectory() == false)
+                                    {
+                                        visitor.visit(entry);
+                                    }
+                                }
+                            } : visitor, buffer, params.isCheckArchive());
         processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(),
                 listProcessor);
         return this;
