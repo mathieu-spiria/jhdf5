@@ -83,14 +83,27 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void flushSyncBlocking();
 
     /**
-     * Adds a {@link Flushable} to the list of <i>external</i> flushables. This list is flushed
-     * when {@link #flush()} or {@link #flushSyncBlocking()} are called and before the writer is
-     * closed.
+     * Adds a {@link Flushable} to the set of flushables. This set is flushed when {@link #flush()}
+     * or {@link #flushSyncBlocking()} are called and before the writer is closed.
      * <p>
      * This function is supposed to be used for in-memory caching structures that need to make it
      * into the HDF5 file.
+     * 
+     * @param flushable The {@link Flushable} to add. Needs to fulfill the {@link Object#hashCode()}
+     *            contract.
+     * @return <code>true</code> if the set of flushables did not already contain the specified
+     *         element.
      */
-    public void addFlushable(Flushable flushable);
+    public boolean addFlushable(Flushable flushable);
+
+    /**
+     * Removes a {@link Flushable} from the set of flushables.
+     * 
+     * @param flushable The {@link Flushable} to remove. Needs to fulfill the
+     *            {@link Object#hashCode()} contract.
+     * @return <code>true</code> if the set of flushables contained the specified element.
+     */
+    public boolean removeFlushable(Flushable flushable);
 
     // /////////////////////
     // Objects & Links

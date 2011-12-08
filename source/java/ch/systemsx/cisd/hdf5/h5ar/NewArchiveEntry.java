@@ -162,17 +162,53 @@ public abstract class NewArchiveEntry
         }
     }
     
+    public static NewFileArchiveEntry file(String path)
+    {
+        final String normalizedPath = Utils.normalizePath(path);
+        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String name = normalizedPath.substring(parentPath.length() + 1);
+        if (name.length() == 0)
+        {
+            throw new ArchivingException(path, "Path does not contain a name.");
+        }
+        return new NewFileArchiveEntry(parentPath, name);
+    }
+
     public static NewFileArchiveEntry file(String parentPath, String name)
     {
         return new NewFileArchiveEntry(parentPath, name);
     }
 
-    public static NewSymLinkArchiveEntry link(String parentPath, String name, String linkTarget)
+    public static NewSymLinkArchiveEntry symlink(String path, String linkTarget)
+    {
+        final String normalizedPath = Utils.normalizePath(path);
+        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String name = normalizedPath.substring(parentPath.length() + 1);
+        if (name.length() == 0)
+        {
+            throw new ArchivingException(path, "Path does not contain a name.");
+        }
+        return new NewSymLinkArchiveEntry(parentPath, name, linkTarget);
+    }
+
+    public static NewSymLinkArchiveEntry symlink(String parentPath, String name, String linkTarget)
     {
         return new NewSymLinkArchiveEntry(parentPath, name, linkTarget);
     }
 
-    public static NewDirectoryArchiveEntry dir(String parentPath, String name)
+    public static NewDirectoryArchiveEntry directory(String path)
+    {
+        final String normalizedPath = Utils.normalizePath(path);
+        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String name = normalizedPath.substring(parentPath.length() + 1);
+        if (name.length() == 0)
+        {
+            throw new ArchivingException(path, "Path does not contain a name.");
+        }
+        return new NewDirectoryArchiveEntry(parentPath, name);
+    }
+
+    public static NewDirectoryArchiveEntry directory(String parentPath, String name)
     {
         return new NewDirectoryArchiveEntry(parentPath, name);
     }

@@ -17,6 +17,8 @@
 package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -445,7 +447,8 @@ public class HDF5ArchiverMain
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.extractToStdout(arguments.get(i));
+                            archiver.extract(arguments.get(i), new FileOutputStream(
+                                    FileDescriptor.out));
                         }
                     }
                     break;

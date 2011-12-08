@@ -140,9 +140,14 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         baseWriter.flushSyncBlocking();
     }
 
-    public void addFlushable(Flushable flushable)
+    public boolean addFlushable(Flushable flushable)
     {
-        baseWriter.addFlushable(flushable);
+        return baseWriter.addFlushable(flushable);
+    }
+
+    public boolean removeFlushable(Flushable flushable)
+    {
+        return baseWriter.removeFlushable(flushable);
     }
 
     // /////////////////////

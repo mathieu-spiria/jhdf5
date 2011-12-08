@@ -33,9 +33,9 @@ import java.io.FileNotFoundException;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -114,7 +114,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     private final BlockingQueue<Command> commandQueue;
 
-    private final List<Flushable> flushables = new ArrayList<Flushable>();
+    private final Set<Flushable> flushables = new LinkedHashSet<Flushable>();
 
     final boolean useExtentableDataTypes;
 
@@ -269,9 +269,14 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
     }
 
-    void addFlushable(Flushable flushable)
+    boolean addFlushable(Flushable flushable)
     {
-        flushables.add(flushable);
+        return flushables.add(flushable);
+    }
+
+    boolean  removeFlushable(Flushable flushable)
+    {
+        return flushables.remove(flushable);
     }
 
     void flushExternals()

@@ -52,4 +52,9 @@ public class ArchivingException extends ArchiverException
         super(filePath, OPERATION_NAME, cause);
     }
 
+    public ArchivingException(String objectPath, String detailedMsg)
+    {
+        super(objectPath, OPERATION_NAME, detailedMsg);
+    }
+
 }
