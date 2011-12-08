@@ -54,7 +54,7 @@ class HDF5ArchiveTraverser
 
         final String parentPath = Utils.getParentPath(normalizedPath);
         LinkRecord link = null;
-        if (parentPath.length() > 0)
+        if ("/".equals(normalizedPath) == false)
         {
             link =
                     indexProvider.get(parentPath, readLinkTargets).tryGetLink(
@@ -84,18 +84,18 @@ class HDF5ArchiveTraverser
         if (isDirectory)
         {
             processDirectory(normalizedPath, recursive, readLinkTargets, processor);
+            postProcessDirectory(parentPath, normalizedPath, link, processor);
         }
-        postProcessDirectory(parentPath, normalizedPath, link, processor);
     }
 
     private void postProcessDirectory(final String parentPath, final String normalizedPath,
-            LinkRecord link, IArchiveEntryProcessor processor)
+            LinkRecord linkOrNull, IArchiveEntryProcessor processor)
     {
-        if (parentPath.length() > 0)
+        if (linkOrNull != null)
         {
             try
             {
-                processor.postProcessDirectory(parentPath, normalizedPath, link, hdf5Reader,
+                processor.postProcessDirectory(parentPath, normalizedPath, linkOrNull, hdf5Reader,
                         idCache, errorStrategy);
             } catch (IOException ex)
             {
@@ -109,7 +109,7 @@ class HDF5ArchiveTraverser
     }
 
     /**
-     * Provide the entries of <var>dir</var> to <var>processor</var>.
+     * Provide the entries of <var>normalizedDir</var> to <var>processor</var>.
      */
     private void processDirectory(String normalizedDir, boolean recursive, boolean readLinkTargets,
             IArchiveEntryProcessor processor)
