@@ -651,6 +651,9 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
             {
                 throw new IOExceptionUnchecked(ex);
             }
+        } else if (writerOrNull != null)
+        {
+            writerOrNull.removeFlushable(this);
         }
     }
 
