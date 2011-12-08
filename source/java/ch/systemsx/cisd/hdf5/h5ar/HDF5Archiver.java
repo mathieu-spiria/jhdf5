@@ -319,27 +319,27 @@ public class HDF5Archiver implements Closeable, Flushable
 
     public HDF5Archiver archiveFile(String path, byte[] data) throws IllegalStateException
     {
-        return archive(NewArchiveEntry.file(path), new ByteArrayInputStream(data), null);
+        return archiveFile(NewArchiveEntry.file(path), new ByteArrayInputStream(data), null);
     }
 
     public HDF5Archiver archiveFile(String path, InputStream input) throws IllegalStateException
     {
-        return archive(NewArchiveEntry.file(path), input, null);
+        return archiveFile(NewArchiveEntry.file(path), input, null);
     }
 
-    public HDF5Archiver archive(NewFileArchiveEntry entry, InputStream input)
+    public HDF5Archiver archiveFile(NewFileArchiveEntry entry, InputStream input)
             throws IllegalStateException, IllegalArgumentException
     {
-        return archive(entry, input, null);
+        return archiveFile(entry, input, null);
     }
 
-    public HDF5Archiver archive(NewFileArchiveEntry entry, byte[] data)
+    public HDF5Archiver archiveFile(NewFileArchiveEntry entry, byte[] data)
             throws IllegalStateException, IllegalArgumentException
     {
-        return archive(entry, new ByteArrayInputStream(data), null);
+        return archiveFile(entry, new ByteArrayInputStream(data), null);
     }
 
-    public HDF5Archiver archive(NewFileArchiveEntry entry, InputStream input,
+    public HDF5Archiver archiveFile(NewFileArchiveEntry entry, InputStream input,
             IPathVisitor pathVisitorOrNull) throws IllegalStateException, IllegalArgumentException
     {
         checkReadWrite();
@@ -349,19 +349,19 @@ public class HDF5Archiver implements Closeable, Flushable
         return this;
     }
 
-    public HDF5Archiver archive(NewSymLinkArchiveEntry entry) throws IllegalStateException,
+    public HDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry) throws IllegalStateException,
             IllegalArgumentException
     {
-        return archive(entry, null);
+        return archiveSymlink(entry, null);
     }
 
     public HDF5Archiver archiveSymlink(String path, String linkTarget)
             throws IllegalStateException, IllegalArgumentException
     {
-        return archive(NewArchiveEntry.symlink(path, linkTarget), null);
+        return archiveSymlink(NewArchiveEntry.symlink(path, linkTarget), null);
     }
 
-    public HDF5Archiver archive(NewSymLinkArchiveEntry entry, IPathVisitor pathVisitorOrNull)
+    public HDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry, IPathVisitor pathVisitorOrNull)
             throws IllegalStateException, IllegalArgumentException
     {
         checkReadWrite();
@@ -373,17 +373,17 @@ public class HDF5Archiver implements Closeable, Flushable
     public HDF5Archiver archiveDirectory(String path) throws IllegalStateException,
             IllegalArgumentException
     {
-        return archive(NewArchiveEntry.directory(path), null);
+        return archiveDirectory(NewArchiveEntry.directory(path), null);
     }
 
-    public HDF5Archiver archive(NewDirectoryArchiveEntry entry) throws IllegalStateException,
-            IllegalArgumentException
-    {
-        return archive(entry, null);
-    }
-
-    public HDF5Archiver archive(NewDirectoryArchiveEntry entry, IPathVisitor pathVisitorOrNull)
+    public HDF5Archiver archiveDirectory(NewDirectoryArchiveEntry entry)
             throws IllegalStateException, IllegalArgumentException
+    {
+        return archiveDirectory(entry, null);
+    }
+
+    public HDF5Archiver archiveDirectory(NewDirectoryArchiveEntry entry,
+            IPathVisitor pathVisitorOrNull) throws IllegalStateException, IllegalArgumentException
     {
         checkReadWrite();
         final LinkRecord link = new LinkRecord(entry);

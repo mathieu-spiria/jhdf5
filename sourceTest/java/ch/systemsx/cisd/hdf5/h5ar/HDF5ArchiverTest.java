@@ -158,7 +158,7 @@ public class HDF5ArchiverTest
     private void writeToArchive(final HDF5Archiver a, final String name, final String content)
     {
         final byte[] bytes = content.getBytes();
-        a.archive(NewArchiveEntry.file("/test", name).lastModified(1000000L).uid(100).gid(100),
+        a.archiveFile(NewArchiveEntry.file("/test", name).lastModified(1000000L).uid(100).gid(100),
                 new ByteArrayInputStream(bytes), null);
     }
 
