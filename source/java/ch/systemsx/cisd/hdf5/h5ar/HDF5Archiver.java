@@ -75,8 +75,6 @@ public class HDF5Archiver implements Closeable, Flushable
 
     private final IErrorStrategy errorStrategy;
 
-    private final ArchivingStrategy archivingStrategy;
-
     private final DirectoryIndexProvider indexProvider;
 
     private final byte[] buffer;
@@ -107,19 +105,11 @@ public class HDF5Archiver implements Closeable, Flushable
 
     public HDF5Archiver(File archiveFile, boolean readOnly)
     {
-        this(archiveFile, new ArchivingStrategy(), readOnly, false, FileFormat.STRICTLY_1_6,
-                RETHROWING_ERROR_STRATEGY);
+        this(archiveFile, readOnly, false, FileFormat.STRICTLY_1_6, RETHROWING_ERROR_STRATEGY);
     }
 
     public HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat,
             IErrorStrategy errorStrategyOrNull)
-    {
-        this(archiveFile, new ArchivingStrategy(), readOnly, noSync, fileFormat,
-                errorStrategyOrNull);
-    }
-
-    public HDF5Archiver(File archiveFile, ArchivingStrategy strategy, boolean readOnly,
-            boolean noSync, FileFormat fileFormat, IErrorStrategy errorStrategyOrNull)
     {
         this.buffer = new byte[BUFFER_SIZE];
         this.hdf5WriterOrNull = readOnly ? null : createHDF5Writer(archiveFile, fileFormat, noSync);
@@ -132,7 +122,6 @@ public class HDF5Archiver implements Closeable, Flushable
         {
             this.errorStrategy = errorStrategyOrNull;
         }
-        this.archivingStrategy = strategy;
         this.indexProvider = new DirectoryIndexProvider(hdf5Reader, errorStrategy);
         this.processor = new HDF5ArchiveTraverser(hdf5Reader, indexProvider);
         if (hdf5WriterOrNull == null)
@@ -141,19 +130,12 @@ public class HDF5Archiver implements Closeable, Flushable
             this.deleterOrNull = null;
         } else
         {
-            this.updaterOrNull =
-                    new HDF5ArchiveUpdater(hdf5WriterOrNull, indexProvider, strategy, buffer);
+            this.updaterOrNull = new HDF5ArchiveUpdater(hdf5WriterOrNull, indexProvider, buffer);
             this.deleterOrNull = new HDF5ArchiveDeleter(hdf5WriterOrNull, indexProvider);
         }
     }
 
     public HDF5Archiver(IHDF5Reader reader, IErrorStrategy errorStrategyOrNull)
-    {
-        this(reader, new ArchivingStrategy(), errorStrategyOrNull);
-    }
-
-    public HDF5Archiver(IHDF5Reader reader, ArchivingStrategy strategy,
-            IErrorStrategy errorStrategyOrNull)
     {
         this.buffer = new byte[BUFFER_SIZE];
         this.hdf5WriterOrNull = (reader instanceof IHDF5Writer) ? (IHDF5Writer) reader : null;
@@ -164,7 +146,6 @@ public class HDF5Archiver implements Closeable, Flushable
         {
             this.errorStrategy = errorStrategyOrNull;
         }
-        this.archivingStrategy = strategy;
         this.hdf5Reader = reader;
         this.indexProvider = new DirectoryIndexProvider(hdf5Reader, errorStrategy);
         this.processor = new HDF5ArchiveTraverser(hdf5Reader, indexProvider);
@@ -174,8 +155,7 @@ public class HDF5Archiver implements Closeable, Flushable
             this.deleterOrNull = null;
         } else
         {
-            this.updaterOrNull =
-                    new HDF5ArchiveUpdater(hdf5WriterOrNull, indexProvider, strategy, buffer);
+            this.updaterOrNull = new HDF5ArchiveUpdater(hdf5WriterOrNull, indexProvider, buffer);
             this.deleterOrNull = new HDF5ArchiveDeleter(hdf5WriterOrNull, indexProvider);
         }
     }
@@ -281,39 +261,64 @@ public class HDF5Archiver implements Closeable, Flushable
         return out.toByteArray();
     }
 
+    public HDF5Archiver extractToFilesystem(File root, String path)
+            throws IllegalStateException
+    {
+        return extractToFilesystem(root, path, ArchivingStrategy.DEFAULT, null);
+    }
+
     public HDF5Archiver extractToFilesystem(File root, String path, IListEntryVisitor visitorOrNull)
             throws IllegalStateException
     {
+        return extractToFilesystem(root, path, ArchivingStrategy.DEFAULT, visitorOrNull);
+    }
+
+    public HDF5Archiver extractToFilesystem(File root, String path, ArchivingStrategy strategy,
+            IListEntryVisitor visitorOrNull) throws IllegalStateException
+    {
         final IArchiveEntryProcessor extractor =
-                new ArchiveEntryExtractProcessor(visitorOrNull, archivingStrategy,
-                        root.getAbsolutePath(), buffer);
+                new ArchiveEntryExtractProcessor(visitorOrNull, strategy, root.getAbsolutePath(),
+                        buffer);
         processor.process(path, true, true, extractor);
         return this;
     }
 
-    public HDF5Archiver archiveFromFilesystem(File path) throws IllegalStateException
+    public HDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy)
+            throws IllegalStateException
     {
-        return archiveFromFilesystem(path, (IPathVisitor) null);
+        return archiveFromFilesystem(path, strategy, (IPathVisitor) null);
     }
 
     public HDF5Archiver archiveFromFilesystem(File path, IPathVisitor pathVisitorOrNull)
             throws IllegalStateException
     {
+        return archiveFromFilesystem(path, ArchivingStrategy.DEFAULT, pathVisitorOrNull);
+    }
+
+    public HDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy,
+            IPathVisitor pathVisitorOrNull) throws IllegalStateException
+    {
         checkReadWrite();
-        updaterOrNull.archive(path, pathVisitorOrNull);
+        updaterOrNull.archive(path, strategy, pathVisitorOrNull);
         return this;
     }
 
     public HDF5Archiver archiveFromFilesystem(File root, File path) throws IllegalStateException
     {
-        return archiveFromFilesystem(root, path, null);
+        return archiveFromFilesystem(root, path, ArchivingStrategy.DEFAULT);
     }
 
-    public HDF5Archiver archiveFromFilesystem(File root, File path, IPathVisitor pathVisitorOrNull)
+    public HDF5Archiver archiveFromFilesystem(File root, File path, ArchivingStrategy strategy)
             throws IllegalStateException
     {
+        return archiveFromFilesystem(root, path, strategy, null);
+    }
+
+    public HDF5Archiver archiveFromFilesystem(File root, File path, ArchivingStrategy strategy,
+            IPathVisitor pathVisitorOrNull) throws IllegalStateException
+    {
         checkReadWrite();
-        updaterOrNull.archive(root, path, pathVisitorOrNull);
+        updaterOrNull.archive(root, path, strategy, pathVisitorOrNull);
         return this;
     }
 
@@ -344,7 +349,8 @@ public class HDF5Archiver implements Closeable, Flushable
     {
         checkReadWrite();
         final LinkRecord link = new LinkRecord(entry);
-        updaterOrNull.archive(entry.getParentPath(), link, input, pathVisitorOrNull);
+        updaterOrNull.archive(entry.getParentPath(), link, input, entry.isCompress(),
+                pathVisitorOrNull);
         entry.setCrc32(link.getCrc32());
         return this;
     }
@@ -366,7 +372,7 @@ public class HDF5Archiver implements Closeable, Flushable
     {
         checkReadWrite();
         final LinkRecord link = new LinkRecord(entry);
-        updaterOrNull.archive(entry.getParentPath(), link, null, pathVisitorOrNull);
+        updaterOrNull.archive(entry.getParentPath(), link, null, false, pathVisitorOrNull);
         return this;
     }
 
@@ -387,7 +393,7 @@ public class HDF5Archiver implements Closeable, Flushable
     {
         checkReadWrite();
         final LinkRecord link = new LinkRecord(entry);
-        updaterOrNull.archive(entry.getParentPath(), link, null, pathVisitorOrNull);
+        updaterOrNull.archive(entry.getParentPath(), link, null, false, pathVisitorOrNull);
         return this;
     }
 

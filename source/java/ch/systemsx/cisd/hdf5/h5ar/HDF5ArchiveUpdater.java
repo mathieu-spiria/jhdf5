@@ -53,8 +53,6 @@ class HDF5ArchiveUpdater
 
     private final IHDF5Writer hdf5Writer;
 
-    private final ArchivingStrategy strategy;
-
     private final DirectoryIndexProvider indexProvider;
 
     private final IErrorStrategy errorStrategy;
@@ -76,24 +74,23 @@ class HDF5ArchiveUpdater
     }
 
     public HDF5ArchiveUpdater(IHDF5Writer hdf5Writer, DirectoryIndexProvider indexProvider,
-            ArchivingStrategy strategy, byte[] buffer)
+            byte[] buffer)
     {
         this.hdf5Writer = hdf5Writer;
         this.indexProvider = indexProvider;
         this.errorStrategy = indexProvider.getErrorStrategy();
-        this.strategy = strategy;
         this.buffer = buffer;
     }
 
-    public HDF5ArchiveUpdater archive(File path, IPathVisitor pathVisitorOrNull)
-            throws IllegalStateException
+    public HDF5ArchiveUpdater archive(File path, ArchivingStrategy strategy,
+            IPathVisitor pathVisitorOrNull) throws IllegalStateException
     {
         final File absolutePath = path.getAbsoluteFile();
-        return archive(absolutePath.getParentFile(), absolutePath, pathVisitorOrNull);
+        return archive(absolutePath.getParentFile(), absolutePath, strategy, pathVisitorOrNull);
     }
 
     public HDF5ArchiveUpdater archive(String directory, LinkRecord link, InputStream inputOrNull,
-            IPathVisitor pathVisitorOrNull) throws IllegalStateException
+            boolean compress, IPathVisitor pathVisitorOrNull) throws IllegalStateException
     {
         boolean ok = true;
         final String normalizedDir = Utils.normalizePath(directory);
@@ -125,7 +122,9 @@ class HDF5ArchiveUpdater
         {
             if (inputOrNull != null)
             {
-                final HDF5GenericStorageFeatures compression = strategy.doCompress(hdf5ObjectPath);
+                final HDF5GenericStorageFeatures compression =
+                        compress ? HDF5GenericStorageFeatures.GENERIC_DEFLATE
+                                : HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
                 try
                 {
                     final DataSetInfo info = copyToHDF5(inputOrNull, hdf5ObjectPath, compression);
@@ -162,8 +161,8 @@ class HDF5ArchiveUpdater
         return this;
     }
 
-    public HDF5ArchiveUpdater archive(File root, File path, IPathVisitor pathVisitorOrNull)
-            throws IllegalStateException
+    public HDF5ArchiveUpdater archive(File root, File path, ArchivingStrategy strategy,
+            IPathVisitor pathVisitorOrNull) throws IllegalStateException
     {
         final File absoluteRoot = root.getAbsoluteFile();
         final File absolutePath = path.getAbsoluteFile();
@@ -179,13 +178,13 @@ class HDF5ArchiveUpdater
             ok = archiveSymLink("", linkOrNull, absolutePath, pathVisitorOrNull);
         } else if (absolutePath.isDirectory())
         {
-            ok = archiveDirectory(absoluteRoot, absolutePath, pathVisitorOrNull);
+            ok = archiveDirectory(absoluteRoot, absolutePath, strategy, pathVisitorOrNull);
         } else if (absolutePath.isFile())
         {
             final LinkRecord pseudoLinkForChecksum = new LinkRecord();
             ok =
                     archiveFile(absolutePath, hdf5ObjectPath, pseudoLinkForChecksum,
-                            pathVisitorOrNull);
+                            strategy.doCompress(hdf5ObjectPath), pathVisitorOrNull);
             crc32 = pseudoLinkForChecksum.getCrc32();
         } else
         {
@@ -195,12 +194,14 @@ class HDF5ArchiveUpdater
         }
         if (ok)
         {
-            updateIndicesOnThePath(absoluteRoot, absolutePath, crc32, groupExists);
+            updateIndicesOnThePath(absoluteRoot, absolutePath, crc32, groupExists,
+                    strategy.doStoreOwnerAndPermissions());
         }
         return this;
     }
 
-    private void updateIndicesOnThePath(File root, File path, int crc32, boolean immediateGroupOnly)
+    private void updateIndicesOnThePath(File root, File path, int crc32,
+            boolean immediateGroupOnly, boolean storeOwnerAndPermissions)
     {
         final String rootAbsolute = root.getAbsolutePath();
         File pathProcessing = path;
@@ -217,8 +218,7 @@ class HDF5ArchiveUpdater
             final String hdf5GroupPath = getRelativePath(rootAbsolute, dirAbsolute);
             final DirectoryIndex index = indexProvider.get(hdf5GroupPath, false);
             final LinkRecord linkOrNull =
-                    LinkRecord.tryCreate(pathProcessing, strategy.doStoreOwnerAndPermissions(),
-                            errorStrategy);
+                    LinkRecord.tryCreate(pathProcessing, storeOwnerAndPermissions, errorStrategy);
             if (linkOrNull != null)
             {
                 linkOrNull.setCrc32(crc32Processing);
@@ -282,8 +282,8 @@ class HDF5ArchiveUpdater
         }
     }
 
-    private boolean archiveDirectory(File root, File dir, IPathVisitor pathVisitorOrNull)
-            throws ArchivingException
+    private boolean archiveDirectory(File root, File dir, ArchivingStrategy strategy,
+            IPathVisitor pathVisitorOrNull) throws ArchivingException
     {
         final File[] fileEntries = dir.listFiles();
         if (fileEntries == null)
@@ -333,7 +333,7 @@ class HDF5ArchiveUpdater
                     linkIt.remove();
                     continue;
                 }
-                final boolean ok = archiveDirectory(root, file, pathVisitorOrNull);
+                final boolean ok = archiveDirectory(root, file, strategy, pathVisitorOrNull);
                 if (ok == false)
                 {
                     linkIt.remove();
@@ -355,7 +355,9 @@ class HDF5ArchiveUpdater
                 } else if (link.isRegularFile())
                 {
                     final String hdf5ObjectPath = getRelativePath(root, file);
-                    final boolean ok = archiveFile(file, hdf5ObjectPath, link, pathVisitorOrNull);
+                    final boolean ok =
+                            archiveFile(file, hdf5ObjectPath, link,
+                                    strategy.doCompress(hdf5ObjectPath), pathVisitorOrNull);
                     if (ok == false)
                     {
                         linkIt.remove();
@@ -431,13 +433,13 @@ class HDF5ArchiveUpdater
     }
 
     private boolean archiveFile(File file, String hdf5ObjectPath, LinkRecord link,
-            IPathVisitor pathVisitorOrNull) throws ArchivingException
+            HDF5GenericStorageFeatures features, IPathVisitor pathVisitorOrNull)
+            throws ArchivingException
     {
         boolean ok = true;
-        final HDF5GenericStorageFeatures compression = strategy.doCompress(hdf5ObjectPath);
         try
         {
-            final DataSetInfo info = copyToHDF5(file, hdf5ObjectPath, compression);
+            final DataSetInfo info = copyToHDF5(file, hdf5ObjectPath, features);
             link.setSize(info.size);
             link.setCrc32(info.crc32);
             if (pathVisitorOrNull != null)

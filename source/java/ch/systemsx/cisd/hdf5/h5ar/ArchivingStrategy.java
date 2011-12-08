@@ -41,6 +41,8 @@ public class ArchivingStrategy
     private List<Pattern> compressionWhiteListOrNull;
 
     private boolean compressAll;
+    
+    public static final ArchivingStrategy DEFAULT = new ArchivingStrategy();
 
     public final void setCompressAll(boolean compressAll)
     {

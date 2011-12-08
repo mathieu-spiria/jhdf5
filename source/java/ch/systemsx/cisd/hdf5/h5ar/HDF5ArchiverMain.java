@@ -270,12 +270,11 @@ public class HDF5ArchiverMain
     {
         final FileFormat fileFormatEnum =
                 (fileFormat == 1) ? FileFormat.STRICTLY_1_6 : FileFormat.STRICTLY_1_8;
-        final ArchivingStrategy strategy = createArchivingStrategy();
         try
         {
             archiver =
-                    new HDF5Archiver(archiveFile, strategy, command.isReadOnly(), noSync,
-                            fileFormatEnum, stopOnError ? IErrorStrategy.DEFAULT_ERROR_STRATEGY
+                    new HDF5Archiver(archiveFile, command.isReadOnly(), noSync, fileFormatEnum,
+                            stopOnError ? IErrorStrategy.DEFAULT_ERROR_STRATEGY
                                     : ERROR_STRATEGY_CONTINUE);
         } catch (HDF5JavaException ex)
         {
@@ -408,6 +407,7 @@ public class HDF5ArchiverMain
             switch (command)
             {
                 case ARCHIVE:
+                {
                     if (arguments.size() == 2)
                     {
                         System.err.println("Nothing to archive.");
@@ -417,24 +417,27 @@ public class HDF5ArchiverMain
                     {
                         break;
                     }
+                    final ArchivingStrategy strategy = createArchivingStrategy();
                     if (rootOrNull != null)
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
                             archiver.archiveFromFilesystem(rootOrNull, new File(rootOrNull,
-                                    arguments.get(i)), verbose ? IPathVisitor.DEFAULT_PATH_VISITOR
-                                    : null);
+                                    arguments.get(i)), strategy,
+                                    verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                         }
                     } else
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.archiveFromFilesystem(new File(arguments.get(i)),
+                            archiver.archiveFromFilesystem(new File(arguments.get(i)), strategy,
                                     verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                         }
                     }
                     break;
+                }
                 case CAT:
+                {
                     if (createArchiver() == false)
                     {
                         break;
@@ -452,14 +455,17 @@ public class HDF5ArchiverMain
                         }
                     }
                     break;
+                }
                 case EXTRACT:
+                {
                     if (createArchiver() == false)
                     {
                         break;
                     }
+                    final ArchivingStrategy strategy = createArchivingStrategy();
                     if (arguments.size() == 2)
                     {
-                        archiver.extractToFilesystem(getFSRoot(), "/",
+                        archiver.extractToFilesystem(getFSRoot(), "/", strategy,
                                 verbose ? IListEntryVisitor.DEFAULT_VISITOR : quiet ? null
                                         : IListEntryVisitor.NONVERBOSE_VISITOR);
                     } else
@@ -468,13 +474,15 @@ public class HDF5ArchiverMain
                         {
                             final String unixPath =
                                     FilenameUtils.separatorsToUnix(arguments.get(i));
-                            archiver.extractToFilesystem(getFSRoot(), unixPath,
+                            archiver.extractToFilesystem(getFSRoot(), unixPath, strategy,
                                     verbose ? IListEntryVisitor.DEFAULT_VISITOR : quiet ? null
                                             : IListEntryVisitor.NONVERBOSE_VISITOR);
                         }
                     }
                     break;
+                }
                 case DELETE:
+                {
                     if (arguments.size() == 2)
                     {
                         System.err.println("Nothing to delete.");
@@ -487,6 +495,7 @@ public class HDF5ArchiverMain
                     archiver.delete(arguments.subList(2, arguments.size()),
                             verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                     break;
+                }
                 case VERIFY:
                 {
                     if (createArchiver() == false)
@@ -496,8 +505,7 @@ public class HDF5ArchiverMain
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final ListingVisitor visitor =
                             new ListingVisitor(true, quiet, verbose, numeric);
-                    archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot().getPath(),
-                            visitor,
+                    archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot().getPath(), visitor,
                             VerifyParameters.build().recursive(recursive).readLinkTargets(verbose)
                                     .numeric(numeric).verifyAttributes(verifyAttributes).get());
                     return visitor.isOK();
@@ -512,9 +520,8 @@ public class HDF5ArchiverMain
                     final ListingVisitor visitor =
                             new ListingVisitor(testAgainstChecksums, quiet, verbose, numeric,
                                     suppressDirectoryEntries);
-                    archiver.list(fileOrDir, visitor,
-                            ListParameters.build().recursive(recursive)
-                                    .readLinkTargets(verbose).checkArchive(testAgainstChecksums).get());
+                    archiver.list(fileOrDir, visitor, ListParameters.build().recursive(recursive)
+                            .readLinkTargets(verbose).checkArchive(testAgainstChecksums).get());
                     return visitor.isOK();
                 }
                 case HELP: // Can't happen any more at this point

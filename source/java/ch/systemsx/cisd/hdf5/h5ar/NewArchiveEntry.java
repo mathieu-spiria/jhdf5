@@ -28,10 +28,12 @@ public abstract class NewArchiveEntry
     private final String parentPath;
 
     private final String name;
-
+    
     private final FileLinkType linkType;
 
     private final String linkTarget;
+
+    private final boolean compress;
 
     private long lastModified;
 
@@ -50,9 +52,9 @@ public abstract class NewArchiveEntry
      */
     public static final class NewFileArchiveEntry extends NewArchiveEntry
     {
-        private NewFileArchiveEntry(String parentPath, String name)
+        private NewFileArchiveEntry(String parentPath, String name, boolean compress)
         {
-            super(parentPath, name, FileLinkType.REGULAR_FILE, null);
+            super(parentPath, name, compress, FileLinkType.REGULAR_FILE, null);
         }
 
         @Override
@@ -91,7 +93,7 @@ public abstract class NewArchiveEntry
     {
         private NewSymLinkArchiveEntry(String parentPath, String name, String linkTarget)
         {
-            super(parentPath, name, FileLinkType.SYMLINK, linkTarget);
+            super(parentPath, name, false, FileLinkType.SYMLINK, linkTarget);
         }
         
         @Override
@@ -130,7 +132,7 @@ public abstract class NewArchiveEntry
     {
         private NewDirectoryArchiveEntry(String parentPath, String name)
         {
-            super(parentPath, name, FileLinkType.DIRECTORY, null);
+            super(parentPath, name, false, FileLinkType.DIRECTORY, null);
         }
 
         @Override
@@ -164,6 +166,11 @@ public abstract class NewArchiveEntry
     
     public static NewFileArchiveEntry file(String path)
     {
+        return file(path, false);
+    }
+    
+    public static NewFileArchiveEntry file(String path, boolean compress)
+    {
         final String normalizedPath = Utils.normalizePath(path);
         final String parentPath = Utils.getParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
@@ -171,12 +178,17 @@ public abstract class NewArchiveEntry
         {
             throw new ArchivingException(path, "Path does not contain a name.");
         }
-        return new NewFileArchiveEntry(parentPath, name);
+        return new NewFileArchiveEntry(parentPath, name, compress);
     }
 
     public static NewFileArchiveEntry file(String parentPath, String name)
     {
-        return new NewFileArchiveEntry(parentPath, name);
+        return file(parentPath, name, false);
+    }
+    
+    public static NewFileArchiveEntry file(String parentPath, String name, boolean compress)
+    {
+        return new NewFileArchiveEntry(parentPath, name, compress);
     }
 
     public static NewSymLinkArchiveEntry symlink(String path, String linkTarget)
@@ -213,11 +225,12 @@ public abstract class NewArchiveEntry
         return new NewDirectoryArchiveEntry(parentPath, name);
     }
 
-    private NewArchiveEntry(String parentPath, String name, FileLinkType linkType,
+    private NewArchiveEntry(String parentPath, String name, boolean compress, FileLinkType linkType,
             String linkTarget)
     {
         this.parentPath = Utils.normalizePath(parentPath);
         this.name = name;
+        this.compress = compress;
         this.linkType = linkType;
         this.linkTarget = linkTarget;
         this.size = Utils.UNKNOWN;
@@ -313,6 +326,11 @@ public abstract class NewArchiveEntry
     void setSize(long size)
     {
         this.size = size;
+    }
+
+    public boolean isCompress()
+    {
+        return compress;
     }
 
 }
