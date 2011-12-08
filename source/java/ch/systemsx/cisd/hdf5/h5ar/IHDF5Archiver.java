@@ -19,8 +19,10 @@ package ch.systemsx.cisd.hdf5.h5ar;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.List;
 
+import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewDirectoryArchiveEntry;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewFileArchiveEntry;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewSymLinkArchiveEntry;
@@ -35,58 +37,79 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
 
     public void flush() throws IOException;
 
-    public IHDF5ArchiveReader archiveFromFilesystem(File path, ArchivingStrategy strategy)
-            throws IllegalStateException;
+    public IHDF5Archiver archiveFromFilesystem(File path) throws IllegalStateException;
+    
+    public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy);
 
-    public IHDF5ArchiveReader archiveFromFilesystem(File path, IPathVisitor pathVisitorOrNull)
-            throws IllegalStateException;
+    public IHDF5Archiver archiveFromFilesystem(File path, IPathVisitor pathVisitorOrNull);
 
-    public IHDF5ArchiveReader archiveFromFilesystem(File path, ArchivingStrategy strategy,
-            IPathVisitor pathVisitorOrNull) throws IllegalStateException;
+    public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy,
+            IPathVisitor pathVisitorOrNull);
 
-    public IHDF5ArchiveReader archiveFromFilesystem(File root, File path) throws IllegalStateException;
+    public IHDF5Archiver archiveFromFilesystem(File root, File path);
 
-    public IHDF5ArchiveReader archiveFromFilesystem(File root, File path, ArchivingStrategy strategy)
-            throws IllegalStateException;
+    public IHDF5Archiver archiveFromFilesystem(File root, File path, ArchivingStrategy strategy);
 
-    public IHDF5ArchiveReader archiveFromFilesystem(File root, File path, ArchivingStrategy strategy,
-            IPathVisitor pathVisitorOrNull) throws IllegalStateException;
+    public IHDF5Archiver archiveFromFilesystem(File root, File path, ArchivingStrategy strategy,
+            IPathVisitor pathVisitorOrNull);
 
-    public IHDF5ArchiveReader archiveFile(String path, byte[] data) throws IllegalStateException;
+    public IHDF5Archiver archiveFile(String path, byte[] data);
 
-    public IHDF5ArchiveReader archiveFile(String path, InputStream input) throws IllegalStateException;
+    public IHDF5Archiver archiveFile(String path, InputStream input);
 
-    public IHDF5ArchiveReader archiveFile(NewFileArchiveEntry entry, InputStream input)
+    public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, InputStream input)
             throws IllegalStateException, IllegalArgumentException;
 
-    public IHDF5ArchiveReader archiveFile(NewFileArchiveEntry entry, byte[] data)
+    public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, byte[] data)
             throws IllegalStateException, IllegalArgumentException;
 
-    public IHDF5ArchiveReader archiveFile(NewFileArchiveEntry entry, InputStream input,
+    public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, InputStream input,
             IPathVisitor pathVisitorOrNull) throws IllegalStateException, IllegalArgumentException;
 
-    public IHDF5ArchiveReader archiveSymlink(NewSymLinkArchiveEntry entry) throws IllegalStateException,
+    public IHDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry) throws IllegalStateException,
             IllegalArgumentException;
 
-    public IHDF5ArchiveReader archiveSymlink(String path, String linkTarget)
+    public IHDF5Archiver archiveSymlink(String path, String linkTarget)
             throws IllegalStateException, IllegalArgumentException;
 
-    public IHDF5ArchiveReader archiveSymlink(NewSymLinkArchiveEntry entry, IPathVisitor pathVisitorOrNull)
+    public IHDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry, IPathVisitor pathVisitorOrNull)
             throws IllegalStateException, IllegalArgumentException;
 
-    public IHDF5ArchiveReader archiveDirectory(String path) throws IllegalStateException,
+    public IHDF5Archiver archiveDirectory(String path) throws IllegalStateException,
             IllegalArgumentException;
 
-    public IHDF5ArchiveReader archiveDirectory(NewDirectoryArchiveEntry entry)
+    public IHDF5Archiver archiveDirectory(NewDirectoryArchiveEntry entry)
             throws IllegalStateException, IllegalArgumentException;
 
-    public IHDF5ArchiveReader archiveDirectory(NewDirectoryArchiveEntry entry,
+    public IHDF5Archiver archiveDirectory(NewDirectoryArchiveEntry entry,
             IPathVisitor pathVisitorOrNull) throws IllegalStateException, IllegalArgumentException;
 
-    public IHDF5ArchiveReader delete(String hdf5ObjectPath);
+    public IHDF5Archiver delete(String hdf5ObjectPath);
 
-    public IHDF5ArchiveReader delete(List<String> hdf5ObjectPaths);
+    public IHDF5Archiver delete(List<String> hdf5ObjectPaths);
 
-    public IHDF5ArchiveReader delete(List<String> hdf5ObjectPaths, IPathVisitor pathVisitorOrNull);
+    public IHDF5Archiver delete(List<String> hdf5ObjectPaths, IPathVisitor pathVisitorOrNull);
+
+    // Method overridden from IHDF5ArchiveReader
+    
+    public IHDF5Archiver list(String fileOrDir, IListEntryVisitor visitor);
+
+    public IHDF5Archiver list(String fileOrDir, IListEntryVisitor visitor, ListParameters params);
+
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
+            IListEntryVisitor visitor);
+
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
+            IListEntryVisitor visitor, VerifyParameters params);
+
+    public IHDF5Archiver extract(String path, OutputStream out) throws IOExceptionUnchecked;
+
+    public IHDF5Archiver extractToFilesystem(File root, String path) throws IllegalStateException;
+
+    public IHDF5Archiver extractToFilesystem(File root, String path, IListEntryVisitor visitorOrNull)
+            throws IllegalStateException;
+
+    public IHDF5Archiver extractToFilesystem(File root, String path, ArchivingStrategy strategy,
+            IListEntryVisitor visitorOrNull) throws IllegalStateException;
 
 }

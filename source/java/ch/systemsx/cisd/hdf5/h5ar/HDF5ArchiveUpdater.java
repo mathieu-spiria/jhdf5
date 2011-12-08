@@ -83,14 +83,14 @@ class HDF5ArchiveUpdater
     }
 
     public HDF5ArchiveUpdater archive(File path, ArchivingStrategy strategy,
-            IPathVisitor pathVisitorOrNull) throws IllegalStateException
+            IPathVisitor pathVisitorOrNull)
     {
         final File absolutePath = path.getAbsoluteFile();
         return archive(absolutePath.getParentFile(), absolutePath, strategy, pathVisitorOrNull);
     }
 
     public HDF5ArchiveUpdater archive(String directory, LinkRecord link, InputStream inputOrNull,
-            boolean compress, IPathVisitor pathVisitorOrNull) throws IllegalStateException
+            boolean compress, IPathVisitor pathVisitorOrNull)
     {
         boolean ok = true;
         final String normalizedDir = Utils.normalizePath(directory);
@@ -162,7 +162,7 @@ class HDF5ArchiveUpdater
     }
 
     public HDF5ArchiveUpdater archive(File root, File path, ArchivingStrategy strategy,
-            IPathVisitor pathVisitorOrNull) throws IllegalStateException
+            IPathVisitor pathVisitorOrNull)
     {
         final File absoluteRoot = root.getAbsoluteFile();
         final File absolutePath = path.getAbsoluteFile();
@@ -268,7 +268,7 @@ class HDF5ArchiveUpdater
     }
 
     private boolean archiveDirectory(String parentDirectory, LinkRecord link,
-            IPathVisitor pathVisitorOrNull) throws ArchivingException
+            IPathVisitor pathVisitorOrNull)
     {
         final String GroupPath = parentDirectory + "/" + link.getLinkName();
         try
@@ -283,7 +283,7 @@ class HDF5ArchiveUpdater
     }
 
     private boolean archiveDirectory(File root, File dir, ArchivingStrategy strategy,
-            IPathVisitor pathVisitorOrNull) throws ArchivingException
+            IPathVisitor pathVisitorOrNull)
     {
         final File[] fileEntries = dir.listFiles();
         if (fileEntries == null)
