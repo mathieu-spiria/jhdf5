@@ -242,7 +242,8 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
      */
     public LinkRecord tryGetLink(String name)
     {
-        return tryGetLinks().tryGetLink(name);
+        final LinkList list = tryGetLinks();
+        return (list == null) ? null : list.tryGetLink(name);
     }
 
     /**
