@@ -104,7 +104,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
      * Creates a new directory (group) index. Note that <var>hdf5Reader</var> needs to be an
      * instance of {@link IHDF5Writer} if you intend to write the index to the archive.
      */
-    DirectoryIndex(IHDF5Reader hdf5Reader, String groupPath, IErrorStrategy errorStrategyOrNull,
+    DirectoryIndex(IHDF5Reader hdf5Reader, String groupPath, IErrorStrategy errorStrategy,
             boolean readLinkTargets)
     {
         assert hdf5Reader != null;
@@ -118,13 +118,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
             hdf5WriterOrNull.addFlushable(this);
         }
         this.groupPath = (groupPath.length() == 0) ? "/" : groupPath;
-        if (errorStrategyOrNull == null)
-        {
-            this.errorStrategy = IErrorStrategy.DEFAULT_ERROR_STRATEGY;
-        } else
-        {
-            this.errorStrategy = errorStrategyOrNull;
-        }
+        this.errorStrategy = errorStrategy;
         readIndex(readLinkTargets);
     }
 

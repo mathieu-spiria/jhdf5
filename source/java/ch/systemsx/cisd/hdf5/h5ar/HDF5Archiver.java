@@ -53,22 +53,6 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
 
     final static int BUFFER_SIZE = 10 * MB;
 
-    /**
-     * An error strategy that just re-throws the exception.
-     */
-    public static final IErrorStrategy RETHROWING_ERROR_STRATEGY = new IErrorStrategy()
-        {
-            public void dealWithError(ArchiverException ex) throws ArchiverException
-            {
-                throw ex;
-            }
-
-            public void warning(String message)
-            {
-                System.err.println(message);
-            }
-        };
-
     private final IHDF5Reader hdf5Reader;
 
     private final IHDF5Writer hdf5WriterOrNull;
@@ -107,7 +91,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
 
     HDF5Archiver(File archiveFile, boolean readOnly)
     {
-        this(archiveFile, readOnly, false, FileFormat.STRICTLY_1_6, RETHROWING_ERROR_STRATEGY);
+        this(archiveFile, readOnly, false, FileFormat.STRICTLY_1_6, null);
     }
 
     HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat,

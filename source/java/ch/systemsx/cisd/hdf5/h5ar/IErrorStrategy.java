@@ -26,25 +26,42 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 public interface IErrorStrategy
 {
     /**
-     * The default error strategy, re-throws the exception.
+     * The default error strategy, just re-throws the exception.
      */
     public static final IErrorStrategy DEFAULT_ERROR_STRATEGY = new IErrorStrategy()
-    {
-        public void dealWithError(ArchiverException ex) throws ArchiverException
         {
-            if (ex.getCause() instanceof HDF5LibraryException)
+            public void dealWithError(ArchiverException ex) throws ArchiverException
             {
-                System.err.println(((HDF5LibraryException) ex.getCause())
-                        .getHDF5ErrorStackAsString());
+                throw ex;
             }
-            throw ex;
-        }
 
-        public void warning(String message)
+            public void warning(String message)
+            {
+                System.err.println(message);
+            }
+        };
+
+    /**
+     * An error strategy that prints out the HDF5 error stack on an {@link HDF5LibraryException},
+     * otherwise the same as {@link #DEFAULT_ERROR_STRATEGY}.
+     */
+    public static final IErrorStrategy DEBUG_ERROR_STRATEGY = new IErrorStrategy()
         {
-            System.err.println(message);
-        }
-    };
+            public void dealWithError(ArchiverException ex) throws ArchiverException
+            {
+                if (ex.getCause() instanceof HDF5LibraryException)
+                {
+                    System.err.println(((HDF5LibraryException) ex.getCause())
+                            .getHDF5ErrorStackAsString());
+                }
+                throw ex;
+            }
+
+            public void warning(String message)
+            {
+                System.err.println(message);
+            }
+        };
 
     /**
      * Called when an exception <var>ex</var> has occurred. Can, but doesn't have to, abort the
@@ -53,7 +70,7 @@ public interface IErrorStrategy
      * @throws ArchiverException if the operation should be aborted
      */
     public void dealWithError(final ArchiverException ex) throws ArchiverException;
-    
+
     /**
      * Called to issue a warning message.
      */
