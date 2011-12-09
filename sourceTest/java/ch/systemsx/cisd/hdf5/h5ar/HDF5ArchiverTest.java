@@ -184,7 +184,7 @@ public class HDF5ArchiverTest
         assertEquals("755\t100\t100\t       DIR\t1970-01-12 14:46:40\t        \t/test", list.get(0)
                 .describeLink(true, true));
         final List<ArchiveEntry> list2 =
-                aro.list("/test", ListParameters.build().checkArchive().suppressDirectoryEntries()
+                aro.list("/test", ListParameters.build().testArchive().suppressDirectoryEntries()
                         .get());
         assertEquals(2, list2.size());
         assertEquals(
@@ -211,7 +211,7 @@ public class HDF5ArchiverTest
         // The flushables take care of things getting written correctly anyway. 
         a.close();
         final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(file);
-        final List<ArchiveEntry> entries = ar.list("", ListParameters.build().checkArchive().get());
+        final List<ArchiveEntry> entries = ar.list("", ListParameters.build().testArchive().get());
         assertEquals(1, entries.size());
         assertEquals("test1", entries.get(0).getName());
         assertTrue(entries.get(0).checkOK());

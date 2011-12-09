@@ -27,7 +27,7 @@ public final class ListParameters
 
     private final boolean readLinkTargets;
 
-    private final boolean checkArchive;
+    private final boolean testArchive;
 
     private final boolean suppressDirectoryEntries;
 
@@ -39,7 +39,7 @@ public final class ListParameters
 
         private boolean readLinkTargets = true;
 
-        private boolean checkArchive = false;
+        private boolean testArchive = false;
 
         private boolean suppressDirectoryEntries = false;
 
@@ -73,16 +73,16 @@ public final class ListParameters
             return this;
         }
 
-        public ListParametersBuilder checkArchive()
+        public ListParametersBuilder testArchive()
         {
-            this.checkArchive = true;
+            this.testArchive = true;
             return this;
         }
 
-        public ListParametersBuilder checkArchive(@SuppressWarnings("hiding")
-        boolean checkArchive)
+        public ListParametersBuilder testArchive(@SuppressWarnings("hiding")
+        boolean testArchive)
         {
-            this.checkArchive = checkArchive;
+            this.testArchive = testArchive;
             return this;
         }
 
@@ -101,7 +101,7 @@ public final class ListParameters
 
         public ListParameters get()
         {
-            return new ListParameters(recursive, readLinkTargets, checkArchive,
+            return new ListParameters(recursive, readLinkTargets, testArchive,
                     suppressDirectoryEntries);
         }
     }
@@ -111,12 +111,12 @@ public final class ListParameters
         return new ListParametersBuilder();
     }
 
-    private ListParameters(boolean recursive, boolean readLinkTargets, boolean checkArchive,
+    private ListParameters(boolean recursive, boolean readLinkTargets, boolean testArchive,
             boolean suppressDirectoryEntries)
     {
         this.recursive = recursive;
         this.readLinkTargets = readLinkTargets;
-        this.checkArchive = checkArchive;
+        this.testArchive = testArchive;
         this.suppressDirectoryEntries = suppressDirectoryEntries;
     }
 
@@ -130,9 +130,9 @@ public final class ListParameters
         return readLinkTargets;
     }
 
-    public boolean isCheckArchive()
+    public boolean isTestArchive()
     {
-        return checkArchive;
+        return testArchive;
     }
 
     public boolean isSuppressDirectoryEntries()

@@ -521,7 +521,7 @@ public class HDF5ArchiverMain
                             new ListingVisitor(testAgainstChecksums, quiet, verbose, numeric,
                                     suppressDirectoryEntries);
                     archiver.list(fileOrDir, visitor, ListParameters.build().recursive(recursive)
-                            .readLinkTargets(verbose).checkArchive(testAgainstChecksums).get());
+                            .readLinkTargets(verbose).testArchive(testAgainstChecksums).get());
                     return visitor.isOK();
                 }
                 case HELP: // Can't happen any more at this point

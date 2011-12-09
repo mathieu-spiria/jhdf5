@@ -224,7 +224,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
                                         visitor.visit(entry);
                                     }
                                 }
-                            } : visitor, buffer, params.isCheckArchive());
+                            } : visitor, buffer, params.isTestArchive());
         processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(),
                 listProcessor);
         return this;
