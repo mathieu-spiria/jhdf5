@@ -29,6 +29,8 @@ import java.util.Collections;
 import java.util.List;
 
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
+import ch.systemsx.cisd.base.io.AdapterIOutputStreamToOutputStream;
+import ch.systemsx.cisd.base.io.IOutputStream;
 import ch.systemsx.cisd.hdf5.HDF5DataBlock;
 import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
@@ -48,6 +50,7 @@ import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewSymLinkArchiveEntry;
  */
 final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
 {
+    public static final int CHUNK_SIZE_AUTO = -1;
 
     private final static int MB = 1024 * 1024;
 
@@ -58,7 +61,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
     private final IHDF5Writer hdf5WriterOrNull;
 
     private final boolean closeReaderOnCloseFile;
-    
+
     private final IErrorStrategy errorStrategy;
 
     private final DirectoryIndexProvider indexProvider;
@@ -271,21 +274,19 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         return out.toByteArray();
     }
 
-    public IHDF5Archiver extractToFilesystem(File root, String path)
-            throws IllegalStateException
+    public IHDF5Archiver extractToFilesystem(File root, String path) throws IllegalStateException
     {
         return extractToFilesystem(root, path, ArchivingStrategy.DEFAULT, null);
     }
 
-    public IHDF5Archiver extractToFilesystem(File root, String path,
-            IListEntryVisitor visitorOrNull) throws IllegalStateException
+    public IHDF5Archiver extractToFilesystem(File root, String path, IListEntryVisitor visitorOrNull)
+            throws IllegalStateException
     {
         return extractToFilesystem(root, path, ArchivingStrategy.DEFAULT, visitorOrNull);
     }
 
-    public IHDF5Archiver extractToFilesystem(File root, String path,
-            ArchivingStrategy strategy, IListEntryVisitor visitorOrNull)
-            throws IllegalStateException
+    public IHDF5Archiver extractToFilesystem(File root, String path, ArchivingStrategy strategy,
+            IListEntryVisitor visitorOrNull) throws IllegalStateException
     {
         final IArchiveEntryProcessor extractor =
                 new ArchiveEntryExtractProcessor(visitorOrNull, strategy, root.getAbsolutePath(),
@@ -315,12 +316,11 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
             IPathVisitor pathVisitorOrNull) throws IllegalStateException
     {
         checkReadWrite();
-        updaterOrNull.archive(path, strategy, pathVisitorOrNull);
+        updaterOrNull.archive(path, strategy, CHUNK_SIZE_AUTO, pathVisitorOrNull);
         return this;
     }
 
-    public IHDF5Archiver archiveFromFilesystem(File root, File path)
-            throws IllegalStateException
+    public IHDF5Archiver archiveFromFilesystem(File root, File path) throws IllegalStateException
     {
         return archiveFromFilesystem(root, path, ArchivingStrategy.DEFAULT);
     }
@@ -331,12 +331,11 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         return archiveFromFilesystem(root, path, strategy, null);
     }
 
-    public IHDF5Archiver archiveFromFilesystem(File root, File path,
-            ArchivingStrategy strategy, IPathVisitor pathVisitorOrNull)
-            throws IllegalStateException
+    public IHDF5Archiver archiveFromFilesystem(File root, File path, ArchivingStrategy strategy,
+            IPathVisitor pathVisitorOrNull) throws IllegalStateException
     {
         checkReadWrite();
-        updaterOrNull.archive(root, path, strategy, pathVisitorOrNull);
+        updaterOrNull.archive(root, path, strategy, CHUNK_SIZE_AUTO, pathVisitorOrNull);
         return this;
     }
 
@@ -346,21 +345,33 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
     }
 
     public IHDF5Archiver archiveFile(String path, InputStream input)
-            throws IllegalStateException
     {
         return archiveFile(NewArchiveEntry.file(path), input, null);
     }
 
     public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, InputStream input)
-            throws IllegalStateException, IllegalArgumentException
     {
         return archiveFile(entry, input, null);
     }
 
     public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, byte[] data)
-            throws IllegalStateException, IllegalArgumentException
     {
         return archiveFile(entry, new ByteArrayInputStream(data), null);
+    }
+
+    public OutputStream archiveFileAsOutputStream(NewFileArchiveEntry entry)
+    {
+        return new AdapterIOutputStreamToOutputStream(archiveFileAsIOutputStream(entry));
+    }
+
+    public IOutputStream archiveFileAsIOutputStream(NewFileArchiveEntry entry)
+    {
+        checkReadWrite();
+        final LinkRecord link = new LinkRecord(entry);
+        final IOutputStream stream =
+                updaterOrNull.archiveFile(entry.getParentPath(), link, entry.isCompress(),
+                        entry.getChunkSize());
+        return stream;
     }
 
     public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, InputStream input,
@@ -369,7 +380,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         checkReadWrite();
         final LinkRecord link = new LinkRecord(entry);
         updaterOrNull.archive(entry.getParentPath(), link, input, entry.isCompress(),
-                pathVisitorOrNull);
+                entry.getChunkSize(), pathVisitorOrNull);
         entry.setCrc32(link.getCrc32());
         return this;
     }
@@ -384,12 +395,12 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         return archiveSymlink(NewArchiveEntry.symlink(path, linkTarget), null);
     }
 
-    public IHDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry,
-            IPathVisitor pathVisitorOrNull)
+    public IHDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry, IPathVisitor pathVisitorOrNull)
     {
         checkReadWrite();
         final LinkRecord link = new LinkRecord(entry);
-        updaterOrNull.archive(entry.getParentPath(), link, null, false, pathVisitorOrNull);
+        updaterOrNull.archive(entry.getParentPath(), link, null, false, CHUNK_SIZE_AUTO,
+                pathVisitorOrNull);
         return this;
     }
 
@@ -408,7 +419,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
     {
         checkReadWrite();
         final LinkRecord link = new LinkRecord(entry);
-        updaterOrNull.archive(entry.getParentPath(), link, null, false, pathVisitorOrNull);
+        updaterOrNull.archive(entry.getParentPath(), link, null, false, CHUNK_SIZE_AUTO,
+                pathVisitorOrNull);
         return this;
     }
 

@@ -23,8 +23,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.CRC32;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
@@ -44,8 +46,6 @@ import ch.systemsx.cisd.hdf5.StringUtils;
  * Can operate in read-only or read-write mode. The mode is automatically determined by the
  * <var>hdf5Reader</var> provided the constructor: If this is an instance of {@link IHDF5Writer},
  * the directory index will be read-write, otherwise read-only.
- * <p>
- * This class is thread-safe.
  * 
  * @author Bernd Rinn
  */
@@ -60,6 +60,8 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
     private final String groupPath;
 
     private final IErrorStrategy errorStrategy;
+    
+    private final Set<Flushable> flushables;
 
     /**
      * The list of all links in this directory.
@@ -119,9 +121,35 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
         }
         this.groupPath = (groupPath.length() == 0) ? "/" : groupPath;
         this.errorStrategy = errorStrategy;
+        this.flushables = new LinkedHashSet<Flushable>();
         readIndex(readLinkTargets);
     }
 
+    boolean addFlushable(Flushable flushable)
+    {
+        return flushables.add(flushable);
+    }
+
+    boolean  removeFlushable(Flushable flushable)
+    {
+        return flushables.remove(flushable);
+    }
+
+    void flushExternals()
+    {
+        for (Flushable f : flushables)
+        {
+            try
+            {
+                f.flush();
+            } catch (Exception ex)
+            {
+                System.err.println("External flushable throws an exception:");
+                ex.printStackTrace();
+            }
+        }
+    }
+    
     /**
      * Amend the index with link targets. If the links targets have already been read, this method
      * is a noop.
@@ -274,6 +302,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
      */
     public void flush()
     {
+        flushExternals();
         if (dirty == false)
         {
             return;
@@ -401,6 +430,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
         {
             hdf5WriterOrNull.removeFlushable(this);
         }
+        flushables.clear();
     }
 
 }

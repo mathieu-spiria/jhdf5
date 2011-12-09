@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
+import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -30,11 +31,14 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
+import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
+import ch.systemsx.cisd.base.io.IOutputStream;
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.io.HDF5IOAdapterFactory;
 
 /**
  * A class to create or update <code>h5ar</code> archives.
@@ -73,6 +77,80 @@ class HDF5ArchiveUpdater
         }
     }
 
+    private final class H5ARIOutputStream implements IOutputStream, Flushable
+    {
+        private final IOutputStream delegate;
+
+        private final String directory;
+
+        private final String path;
+
+        private final LinkRecord link;
+
+        private final CRC32 crc32 = new CRC32();
+
+        private long size = 0;
+        
+        public H5ARIOutputStream(String directory, LinkRecord link, int chunkSize, boolean compress)
+        {
+            this.directory = Utils.normalizePath(directory);
+            this.path =
+                    ("/".equals(this.directory)) ? this.directory + link.getLinkName()
+                            : this.directory + "/" + link.getLinkName();
+            this.link = link;
+            final HDF5GenericStorageFeatures creationStorageFeature =
+                    compress ? HDF5GenericStorageFeatures.GENERIC_DEFLATE
+                            : HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
+            this.delegate =
+                    HDF5IOAdapterFactory.asIOutputStream(hdf5Writer, path, creationStorageFeature,
+                            getEffectiveChunkSize(chunkSize), OPAQUE_TAG_FILE);
+            indexProvider.get(directory, false).addFlushable(this);
+        }
+
+        public void write(int b) throws IOExceptionUnchecked
+        {
+            crc32.update(b);
+            ++size;
+            delegate.write(b);
+        }
+
+        public void write(byte[] b) throws IOExceptionUnchecked
+        {
+            crc32.update(b);
+            size += b.length;
+            delegate.write(b);
+        }
+
+        public void write(byte[] b, int off, int len) throws IOExceptionUnchecked
+        {
+            crc32.update(b, off, len);
+            size += len;
+            delegate.write(b, off, len);
+        }
+
+        public void flush() throws IOExceptionUnchecked
+        {
+            link.setCrc32((int) crc32.getValue());
+            link.setSize(size);
+            final boolean updateImmediateGroupOnly = hdf5Writer.isGroup(directory);
+            updateIndicesOnThePath(path, link, updateImmediateGroupOnly);
+            delegate.flush();
+        }
+
+        public void synchronize() throws IOExceptionUnchecked
+        {
+            delegate.synchronize();
+        }
+
+        public void close() throws IOExceptionUnchecked
+        {
+            flush();
+            delegate.close();
+            indexProvider.get(path, false).removeFlushable(this);
+        }
+
+    }
+
     public HDF5ArchiveUpdater(IHDF5Writer hdf5Writer, DirectoryIndexProvider indexProvider,
             byte[] buffer)
     {
@@ -82,15 +160,26 @@ class HDF5ArchiveUpdater
         this.buffer = buffer;
     }
 
-    public HDF5ArchiveUpdater archive(File path, ArchivingStrategy strategy,
+    public HDF5ArchiveUpdater archive(File path, ArchivingStrategy strategy, int chunkSize,
             IPathVisitor pathVisitorOrNull)
     {
         final File absolutePath = path.getAbsoluteFile();
-        return archive(absolutePath.getParentFile(), absolutePath, strategy, pathVisitorOrNull);
+        return archive(absolutePath.getParentFile(), absolutePath, strategy, chunkSize,
+                pathVisitorOrNull);
+    }
+
+    public IOutputStream archiveFile(String directory, LinkRecord link, boolean compress,
+            int chunkSize)
+    {
+        if (link.getLinkType() != FileLinkType.REGULAR_FILE)
+        {
+            errorStrategy.dealWithError(new ArchivingException("A regular file is expected here."));
+        }
+        return new H5ARIOutputStream(directory, link, chunkSize, compress);
     }
 
     public HDF5ArchiveUpdater archive(String directory, LinkRecord link, InputStream inputOrNull,
-            boolean compress, IPathVisitor pathVisitorOrNull)
+            boolean compress, int chunkSize, IPathVisitor pathVisitorOrNull)
     {
         boolean ok = true;
         final String normalizedDir = Utils.normalizePath(directory);
@@ -127,7 +216,8 @@ class HDF5ArchiveUpdater
                                 : HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
                 try
                 {
-                    final DataSetInfo info = copyToHDF5(inputOrNull, hdf5ObjectPath, compression);
+                    final DataSetInfo info =
+                            copyToHDF5(inputOrNull, hdf5ObjectPath, compression, chunkSize);
                     link.setCrc32(info.crc32);
                     link.setSize(info.size);
                     if (pathVisitorOrNull != null)
@@ -162,7 +252,7 @@ class HDF5ArchiveUpdater
     }
 
     public HDF5ArchiveUpdater archive(File root, File path, ArchivingStrategy strategy,
-            IPathVisitor pathVisitorOrNull)
+            int chunkSize, IPathVisitor pathVisitorOrNull)
     {
         final File absoluteRoot = root.getAbsoluteFile();
         final File absolutePath = path.getAbsoluteFile();
@@ -178,13 +268,15 @@ class HDF5ArchiveUpdater
             ok = archiveSymLink("", linkOrNull, absolutePath, pathVisitorOrNull);
         } else if (absolutePath.isDirectory())
         {
-            ok = archiveDirectory(absoluteRoot, absolutePath, strategy, pathVisitorOrNull);
+            ok =
+                    archiveDirectory(absoluteRoot, absolutePath, strategy, chunkSize,
+                            pathVisitorOrNull);
         } else if (absolutePath.isFile())
         {
             final LinkRecord pseudoLinkForChecksum = new LinkRecord();
             ok =
                     archiveFile(absolutePath, hdf5ObjectPath, pseudoLinkForChecksum,
-                            strategy.doCompress(hdf5ObjectPath), pathVisitorOrNull);
+                            strategy.doCompress(hdf5ObjectPath), chunkSize, pathVisitorOrNull);
             crc32 = pseudoLinkForChecksum.getCrc32();
         } else
         {
@@ -283,7 +375,7 @@ class HDF5ArchiveUpdater
     }
 
     private boolean archiveDirectory(File root, File dir, ArchivingStrategy strategy,
-            IPathVisitor pathVisitorOrNull)
+            int chunkSize, IPathVisitor pathVisitorOrNull)
     {
         final File[] fileEntries = dir.listFiles();
         if (fileEntries == null)
@@ -333,7 +425,8 @@ class HDF5ArchiveUpdater
                     linkIt.remove();
                     continue;
                 }
-                final boolean ok = archiveDirectory(root, file, strategy, pathVisitorOrNull);
+                final boolean ok =
+                        archiveDirectory(root, file, strategy, chunkSize, pathVisitorOrNull);
                 if (ok == false)
                 {
                     linkIt.remove();
@@ -357,7 +450,8 @@ class HDF5ArchiveUpdater
                     final String hdf5ObjectPath = getRelativePath(root, file);
                     final boolean ok =
                             archiveFile(file, hdf5ObjectPath, link,
-                                    strategy.doCompress(hdf5ObjectPath), pathVisitorOrNull);
+                                    strategy.doCompress(hdf5ObjectPath), chunkSize,
+                                    pathVisitorOrNull);
                     if (ok == false)
                     {
                         linkIt.remove();
@@ -433,13 +527,13 @@ class HDF5ArchiveUpdater
     }
 
     private boolean archiveFile(File file, String hdf5ObjectPath, LinkRecord link,
-            HDF5GenericStorageFeatures features, IPathVisitor pathVisitorOrNull)
+            HDF5GenericStorageFeatures features, int chunkSize, IPathVisitor pathVisitorOrNull)
             throws ArchivingException
     {
         boolean ok = true;
         try
         {
-            final DataSetInfo info = copyToHDF5(file, hdf5ObjectPath, features);
+            final DataSetInfo info = copyToHDF5(file, hdf5ObjectPath, features, chunkSize);
             link.setSize(info.size);
             link.setCrc32(info.crc32);
             if (pathVisitorOrNull != null)
@@ -476,26 +570,32 @@ class HDF5ArchiveUpdater
     }
 
     private DataSetInfo copyToHDF5(final File source, final String objectPath,
-            final HDF5GenericStorageFeatures compression) throws IOException
+            final HDF5GenericStorageFeatures compression, int chunkSize) throws IOException
     {
         final InputStream input = FileUtils.openInputStream(source);
         try
         {
-            return copyToHDF5(input, objectPath, compression);
+            return copyToHDF5(input, objectPath, compression, chunkSize);
         } finally
         {
             IOUtils.closeQuietly(input);
         }
     }
 
-    private DataSetInfo copyToHDF5(final InputStream input, final String objectPath,
-            final HDF5GenericStorageFeatures compression) throws IOException
+    private int getEffectiveChunkSize(int chunkSize)
     {
+        return (chunkSize <= 0 || chunkSize > buffer.length) ? buffer.length : chunkSize;
+    }
+    
+    private DataSetInfo copyToHDF5(final InputStream input, final String objectPath,
+            final HDF5GenericStorageFeatures compression, int chunkSize) throws IOException
+    {
+        final int effectiveBufferLength = getEffectiveChunkSize(chunkSize);
         final CRC32 crc32 = new CRC32();
         HDF5GenericStorageFeatures features = compression;
-        int n = fillBuffer(input);
+        int n = fillBuffer(input, effectiveBufferLength);
         // Deal with small data sources separately to keep the file size smaller
-        if (n < buffer.length)
+        if (n < effectiveBufferLength)
         {
             // For data sets roughly up to 4096 bytes the overhead of a chunked data set outweighs
             // the saving of the compression.
@@ -511,23 +611,23 @@ class HDF5ArchiveUpdater
         }
 
         final HDF5OpaqueType type =
-                hdf5Writer.createOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, 0, buffer.length,
-                        compression);
+                hdf5Writer.createOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, 0,
+                        effectiveBufferLength, compression);
         long count = 0;
         while (n != -1)
         {
             hdf5Writer.writeOpaqueByteArrayBlockWithOffset(objectPath, type, buffer, n, count);
             count += n;
             crc32.update(buffer, 0, n);
-            n = fillBuffer(input);
+            n = fillBuffer(input, effectiveBufferLength);
         }
         return new DataSetInfo(count, (int) crc32.getValue());
     }
 
-    private int fillBuffer(InputStream input) throws IOException
+    private int fillBuffer(InputStream input, int bufferLength) throws IOException
     {
         int ofs = 0;
-        int len = buffer.length;
+        int len = bufferLength;
         int count = 0;
         int n = 0;
         while (len > 0 && -1 != (n = input.read(buffer, ofs, len)))

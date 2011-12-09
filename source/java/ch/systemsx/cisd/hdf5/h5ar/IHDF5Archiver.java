@@ -23,6 +23,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
+import ch.systemsx.cisd.base.io.IOutputStream;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewDirectoryArchiveEntry;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewFileArchiveEntry;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewSymLinkArchiveEntry;
@@ -57,32 +58,29 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
 
     public IHDF5Archiver archiveFile(String path, InputStream input);
 
-    public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, InputStream input)
-            throws IllegalStateException, IllegalArgumentException;
+    public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, InputStream input);
 
-    public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, byte[] data)
-            throws IllegalStateException, IllegalArgumentException;
+    public IOutputStream archiveFileAsIOutputStream(NewFileArchiveEntry entry);
+
+    public OutputStream archiveFileAsOutputStream(NewFileArchiveEntry entry);
+
+    public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, byte[] data);
 
     public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, InputStream input,
-            IPathVisitor pathVisitorOrNull) throws IllegalStateException, IllegalArgumentException;
+            IPathVisitor pathVisitorOrNull);
 
-    public IHDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry) throws IllegalStateException,
-            IllegalArgumentException;
+    public IHDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry);
 
-    public IHDF5Archiver archiveSymlink(String path, String linkTarget)
-            throws IllegalStateException, IllegalArgumentException;
+    public IHDF5Archiver archiveSymlink(String path, String linkTarget);
 
-    public IHDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry, IPathVisitor pathVisitorOrNull)
-            throws IllegalStateException, IllegalArgumentException;
+    public IHDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry, IPathVisitor pathVisitorOrNull);
 
-    public IHDF5Archiver archiveDirectory(String path) throws IllegalStateException,
-            IllegalArgumentException;
+    public IHDF5Archiver archiveDirectory(String path);
 
-    public IHDF5Archiver archiveDirectory(NewDirectoryArchiveEntry entry)
-            throws IllegalStateException, IllegalArgumentException;
+    public IHDF5Archiver archiveDirectory(NewDirectoryArchiveEntry entry);
 
     public IHDF5Archiver archiveDirectory(NewDirectoryArchiveEntry entry,
-            IPathVisitor pathVisitorOrNull) throws IllegalStateException, IllegalArgumentException;
+            IPathVisitor pathVisitorOrNull);
 
     public IHDF5Archiver delete(String hdf5ObjectPath);
 

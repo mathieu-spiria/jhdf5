@@ -28,12 +28,10 @@ public abstract class NewArchiveEntry
     private final String parentPath;
 
     private final String name;
-    
+
     private final FileLinkType linkType;
 
     private final String linkTarget;
-
-    private final boolean compress;
 
     private long lastModified;
 
@@ -52,16 +50,20 @@ public abstract class NewArchiveEntry
      */
     public static final class NewFileArchiveEntry extends NewArchiveEntry
     {
-        private NewFileArchiveEntry(String parentPath, String name, boolean compress)
+        private boolean compress;
+
+        private int chunkSize;
+
+        private NewFileArchiveEntry(String parentPath, String name)
         {
-            super(parentPath, name, compress, FileLinkType.REGULAR_FILE, null);
+            super(parentPath, name, FileLinkType.REGULAR_FILE, null);
         }
 
         @Override
         public NewFileArchiveEntry lastModified(long lastModified)
         {
             super.lastModified(lastModified);
-            return this; 
+            return this;
         }
 
         @Override
@@ -75,17 +77,51 @@ public abstract class NewArchiveEntry
         public NewFileArchiveEntry gid(int gid)
         {
             super.gid(gid);
-            return this; 
+            return this;
         }
 
         @Override
         public NewFileArchiveEntry permissions(short permissions)
         {
             super.permissions(permissions);
-            return this; 
+            return this;
         }
+
+        public NewFileArchiveEntry compress()
+        {
+            this.compress = true;
+            return this;
+        }
+
+        public NewFileArchiveEntry compress(@SuppressWarnings("hiding")
+        boolean compress)
+        {
+            this.compress = compress;
+            return this;
+        }
+
+        public boolean isCompress()
+        {
+            return compress;
+        }
+
+        /**
+         * @param chunkSize The chunk size of the file in the archive. Will be capped to 10MB.
+         */
+        public NewFileArchiveEntry chunkSize(@SuppressWarnings("hiding")
+        int chunkSize)
+        {
+            this.chunkSize = chunkSize;
+            return this;
+        }
+
+        public int getChunkSize()
+        {
+            return chunkSize;
+        }
+
     }
-    
+
     /**
      * A class to describe a new symlink archive entry.
      */
@@ -93,14 +129,14 @@ public abstract class NewArchiveEntry
     {
         private NewSymLinkArchiveEntry(String parentPath, String name, String linkTarget)
         {
-            super(parentPath, name, false, FileLinkType.SYMLINK, linkTarget);
+            super(parentPath, name, FileLinkType.SYMLINK, linkTarget);
         }
-        
+
         @Override
         public NewSymLinkArchiveEntry lastModified(long lastModified)
         {
             super.lastModified(lastModified);
-            return this; 
+            return this;
         }
 
         @Override
@@ -114,17 +150,17 @@ public abstract class NewArchiveEntry
         public NewSymLinkArchiveEntry gid(int gid)
         {
             super.gid(gid);
-            return this; 
+            return this;
         }
 
         @Override
         public NewSymLinkArchiveEntry permissions(short permissions)
         {
             super.permissions(permissions);
-            return this; 
+            return this;
         }
     }
-    
+
     /**
      * A class to describe a new directory archive entry.
      */
@@ -132,14 +168,14 @@ public abstract class NewArchiveEntry
     {
         private NewDirectoryArchiveEntry(String parentPath, String name)
         {
-            super(parentPath, name, false, FileLinkType.DIRECTORY, null);
+            super(parentPath, name, FileLinkType.DIRECTORY, null);
         }
 
         @Override
         public NewDirectoryArchiveEntry lastModified(long lastModified)
         {
             super.lastModified(lastModified);
-            return this; 
+            return this;
         }
 
         @Override
@@ -153,23 +189,21 @@ public abstract class NewArchiveEntry
         public NewDirectoryArchiveEntry gid(int gid)
         {
             super.gid(gid);
-            return this; 
+            return this;
         }
 
         @Override
         public NewDirectoryArchiveEntry permissions(short permissions)
         {
             super.permissions(permissions);
-            return this; 
+            return this;
         }
     }
-    
+
+    /**
+     * @param path The path of the file in the archive.
+     */
     public static NewFileArchiveEntry file(String path)
-    {
-        return file(path, false);
-    }
-    
-    public static NewFileArchiveEntry file(String path, boolean compress)
     {
         final String normalizedPath = Utils.normalizePath(path);
         final String parentPath = Utils.getParentPath(normalizedPath);
@@ -178,17 +212,16 @@ public abstract class NewArchiveEntry
         {
             throw new ArchivingException(path, "Path does not contain a name.");
         }
-        return new NewFileArchiveEntry(parentPath, name, compress);
+        return new NewFileArchiveEntry(parentPath, name);
     }
 
+    /**
+     * @param parentPath The parent path of the file in the archive.
+     * @param name The name of the file in the archive.
+     */
     public static NewFileArchiveEntry file(String parentPath, String name)
     {
-        return file(parentPath, name, false);
-    }
-    
-    public static NewFileArchiveEntry file(String parentPath, String name, boolean compress)
-    {
-        return new NewFileArchiveEntry(parentPath, name, compress);
+        return new NewFileArchiveEntry(parentPath, name);
     }
 
     public static NewSymLinkArchiveEntry symlink(String path, String linkTarget)
@@ -225,12 +258,10 @@ public abstract class NewArchiveEntry
         return new NewDirectoryArchiveEntry(parentPath, name);
     }
 
-    private NewArchiveEntry(String parentPath, String name, boolean compress, FileLinkType linkType,
-            String linkTarget)
+    private NewArchiveEntry(String parentPath, String name, FileLinkType linkType, String linkTarget)
     {
         this.parentPath = Utils.normalizePath(parentPath);
         this.name = name;
-        this.compress = compress;
         this.linkType = linkType;
         this.linkTarget = linkTarget;
         this.size = Utils.UNKNOWN;
@@ -322,15 +353,10 @@ public abstract class NewArchiveEntry
     {
         return size;
     }
-    
+
     void setSize(long size)
     {
         this.size = size;
-    }
-
-    public boolean isCompress()
-    {
-        return compress;
     }
 
 }

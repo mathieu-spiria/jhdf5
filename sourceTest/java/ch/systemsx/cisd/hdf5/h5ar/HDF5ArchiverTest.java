@@ -21,6 +21,7 @@ import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.PrintStream;
 import java.util.List;
 
 import org.testng.annotations.BeforeSuite;
@@ -163,9 +164,9 @@ public class HDF5ArchiverTest
     }
 
     @Test
-    public void testWriteToFile()
+    public void testWriteByteArrayToArchive()
     {
-        final File file = new File(workingDirectory, "testarchive.h5ar");
+        final File file = new File(workingDirectory, "writeByteArrayToArchive.h5ar");
         file.delete();
         file.deleteOnExit();
         final IHDF5Archiver a = HDF5ArchiverFactory.open(file);
@@ -195,4 +196,26 @@ public class HDF5ArchiverTest
         aro.close();
     }
 
+    @Test
+    public void testWriteFileAsOutputStream() throws InterruptedException
+    {
+        final File file = new File(workingDirectory, "writeFileAsOutputStream.h5ar");
+        file.delete();
+        file.deleteOnExit();
+        final IHDF5Archiver a = HDF5ArchiverFactory.open(file);
+        final PrintStream ps =
+                new PrintStream(a.archiveFileAsOutputStream(NewArchiveEntry.file("test1")
+                        .chunkSize(128)));
+        ps.printf("Some %s stuff: %d\n", "more", 17);
+        // Note: we don't close the PrintStream or the underlying OutputStream explicitly.
+        // The flushables take care of things getting written correctly anyway. 
+        a.close();
+        final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(file);
+        final List<ArchiveEntry> entries = ar.list("", ListParameters.build().checkArchive().get());
+        assertEquals(1, entries.size());
+        assertEquals("test1", entries.get(0).getName());
+        assertTrue(entries.get(0).checkOK());
+        assertEquals("Some more stuff: 17\n", new String(ar.extract("test1")));
+        ar.close();
+    }
 }
