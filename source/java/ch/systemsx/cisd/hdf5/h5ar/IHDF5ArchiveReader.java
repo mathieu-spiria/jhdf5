@@ -17,14 +17,15 @@
 package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
-import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
+import ch.systemsx.cisd.base.io.IInputStream;
 
 /**
  * An interface for an HDF5 archive reader.
- *
+ * 
  * @author Bernd Rinn
  */
 public interface IHDF5ArchiveReader
@@ -37,7 +38,8 @@ public interface IHDF5ArchiveReader
 
     public IHDF5ArchiveReader list(String fileOrDir, IListEntryVisitor visitor);
 
-    public IHDF5ArchiveReader list(String fileOrDir, IListEntryVisitor visitor, ListParameters params);
+    public IHDF5ArchiveReader list(String fileOrDir, IListEntryVisitor visitor,
+            ListParameters params);
 
     public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
             IListEntryVisitor visitor);
@@ -45,16 +47,28 @@ public interface IHDF5ArchiveReader
     public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
             IListEntryVisitor visitor, VerifyParameters params);
 
-    public IHDF5ArchiveReader extract(String path, OutputStream out) throws IOExceptionUnchecked;
+    public IHDF5ArchiveReader extractFile(String path, OutputStream out);
 
-    public byte[] extract(String path) throws IOExceptionUnchecked;
+    public byte[] extractFileAsByteArray(String path);
 
-    public IHDF5ArchiveReader extractToFilesystem(File root, String path) throws IllegalStateException;
+    /**
+     * @return If the {@link IErrorStrategy} of the archive reader does not re-throw exceptions, the
+     *         return value will be <code>null</code> on errors.
+     */
+    public IInputStream extractFileAsIInputStream(String path);
 
-    public IHDF5ArchiveReader extractToFilesystem(File root, String path, IListEntryVisitor visitorOrNull)
-            throws IllegalStateException;
+    /**
+     * @return If the {@link IErrorStrategy} of the archive reader does not re-throw exceptions, the
+     *         return value will be <code>null</code> on errors.
+     */
+    public InputStream extractFileAsInputStream(String path);
 
-    public IHDF5ArchiveReader extractToFilesystem(File root, String path, ArchivingStrategy strategy,
-            IListEntryVisitor visitorOrNull) throws IllegalStateException;
+    public IHDF5ArchiveReader extractToFilesystem(File root, String path);
+
+    public IHDF5ArchiveReader extractToFilesystem(File root, String path,
+            IListEntryVisitor visitorOrNull);
+
+    public IHDF5ArchiveReader extractToFilesystem(File root, String path,
+            ArchivingStrategy strategy, IListEntryVisitor visitorOrNull);
 
 }

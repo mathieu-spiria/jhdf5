@@ -29,7 +29,9 @@ import java.util.Collections;
 import java.util.List;
 
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
+import ch.systemsx.cisd.base.io.AdapterIInputStreamToInputStream;
 import ch.systemsx.cisd.base.io.AdapterIOutputStreamToOutputStream;
+import ch.systemsx.cisd.base.io.IInputStream;
 import ch.systemsx.cisd.base.io.IOutputStream;
 import ch.systemsx.cisd.hdf5.HDF5DataBlock;
 import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
@@ -41,6 +43,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewDirectoryArchiveEntry;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewFileArchiveEntry;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewSymLinkArchiveEntry;
+import ch.systemsx.cisd.hdf5.io.HDF5IOAdapterFactory;
 
 /**
  * An archiver based on HDF5 as archive format for directory with fast random access to particular
@@ -247,7 +250,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         return this;
     }
 
-    public IHDF5Archiver extract(String path, OutputStream out) throws IOExceptionUnchecked
+    public IHDF5Archiver extractFile(String path, OutputStream out) throws IOExceptionUnchecked
     {
         if (hdf5Reader.isDataSet(path) == false)
         {
@@ -267,11 +270,26 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         return this;
     }
 
-    public byte[] extract(String path) throws IOExceptionUnchecked
+    public byte[] extractFileAsByteArray(String path) throws IOExceptionUnchecked
     {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        extract(path, out);
+        extractFile(path, out);
         return out.toByteArray();
+    }
+
+    public IInputStream extractFileAsIInputStream(String path)
+    {
+        if (hdf5Reader.isDataSet(path) == false)
+        {
+            errorStrategy.dealWithError(new UnarchivingException(path, "not found in archive"));
+            return null;
+        }
+        return HDF5IOAdapterFactory.asIInputStream(hdf5Reader, path);
+    }
+    
+    public InputStream extractFileAsInputStream(String path)
+    {
+        return new AdapterIInputStreamToInputStream(extractFileAsIInputStream(path));
     }
 
     public IHDF5Archiver extractToFilesystem(File root, String path) throws IllegalStateException

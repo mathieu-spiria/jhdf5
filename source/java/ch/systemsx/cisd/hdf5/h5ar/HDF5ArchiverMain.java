@@ -450,7 +450,7 @@ public class HDF5ArchiverMain
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
-                            archiver.extract(arguments.get(i), new FileOutputStream(
+                            archiver.extractFile(arguments.get(i), new FileOutputStream(
                                     FileDescriptor.out));
                         }
                     }

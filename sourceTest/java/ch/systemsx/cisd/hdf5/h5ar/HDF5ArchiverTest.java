@@ -17,10 +17,13 @@
 package ch.systemsx.cisd.hdf5.h5ar;
 
 import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.List;
 
@@ -174,9 +177,9 @@ public class HDF5ArchiverTest
         writeToArchive(a, "hello2.txt", "Yet another Hello World\n");
         a.close();
         final IHDF5ArchiveReader aro = HDF5ArchiverFactory.openForReading(file);
-        final String content1 = new String(aro.extract("/test/hello.txt"));
+        final String content1 = new String(aro.extractFileAsByteArray("/test/hello.txt"));
         assertEquals("Hello World\n", content1);
-        final String content2 = new String(aro.extract("/test/hello2.txt"));
+        final String content2 = new String(aro.extractFileAsByteArray("/test/hello2.txt"));
         assertEquals("Yet another Hello World\n", content2);
         final List<ArchiveEntry> list =
                 aro.list("/", ListParameters.build().nonRecursive().noReadLinkTarget().get());
@@ -197,7 +200,7 @@ public class HDF5ArchiverTest
     }
 
     @Test
-    public void testWriteFileAsOutputStream() throws InterruptedException
+    public void testWriteFileAsOutputStream() throws Exception
     {
         final File file = new File(workingDirectory, "writeFileAsOutputStream.h5ar");
         file.delete();
@@ -208,14 +211,17 @@ public class HDF5ArchiverTest
                         .chunkSize(128)));
         ps.printf("Some %s stuff: %d\n", "more", 17);
         // Note: we don't close the PrintStream or the underlying OutputStream explicitly.
-        // The flushables take care of things getting written correctly anyway. 
+        // The flushables take care of things getting written correctly anyway.
         a.close();
         final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(file);
         final List<ArchiveEntry> entries = ar.list("", ListParameters.build().testArchive().get());
         assertEquals(1, entries.size());
         assertEquals("test1", entries.get(0).getName());
         assertTrue(entries.get(0).checkOK());
-        assertEquals("Some more stuff: 17\n", new String(ar.extract("test1")));
+        final BufferedReader r =
+                new BufferedReader(new InputStreamReader(ar.extractFileAsInputStream("test1")));
+        assertEquals("Some more stuff: 17", r.readLine());
+        assertNull(r.readLine());
         ar.close();
     }
 }

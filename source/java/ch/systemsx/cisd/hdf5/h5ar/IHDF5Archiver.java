@@ -100,7 +100,7 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
             IListEntryVisitor visitor, VerifyParameters params);
 
-    public IHDF5Archiver extract(String path, OutputStream out) throws IOExceptionUnchecked;
+    public IHDF5Archiver extractFile(String path, OutputStream out) throws IOExceptionUnchecked;
 
     public IHDF5Archiver extractToFilesystem(File root, String path) throws IllegalStateException;
 
