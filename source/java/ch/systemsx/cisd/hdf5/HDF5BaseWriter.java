@@ -248,6 +248,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (state == State.OPEN)
             {
                 flushExternals();
+                flushables.clear();
                 super.close();
                 if (SYNC_ON_CLOSE_MODES.contains(syncMode))
                 {
@@ -328,6 +329,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (state == State.OPEN)
             {
                 flushExternals();
+                flushables.clear();
                 super.close();
                 if (SyncMode.SYNC == syncMode)
                 {
