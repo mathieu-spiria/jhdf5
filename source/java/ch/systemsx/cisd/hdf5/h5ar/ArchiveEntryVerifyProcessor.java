@@ -136,7 +136,8 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
 
             }
             final long size = f.length();
-            link.setVerifiedSize(size);
+            final int crc32 = calcCRC32Filesystem(f, buffer);
+            link.setFileVerification(size, crc32);
             if (link.getSize() != size)
             {
                 return "File '" + f.getAbsolutePath() + "' failed size test, expected: "
@@ -146,8 +147,6 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
             {
                 return "File '" + f.getAbsolutePath() + "': cannot verify (missing CRC checksum).";
             }
-            final int crc32 = calcCRC32Filesystem(f, buffer);
-            link.setVerifiedCrc32(crc32);
             if (link.getCrc32() != crc32)
             {
                 return "File '" + f.getAbsolutePath() + "' failed CRC checksum test, expected: "

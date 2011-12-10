@@ -58,14 +58,15 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
             if (verifiedType == FileLinkType.REGULAR_FILE)
             {
                 final long verifiedSize = reader.getSize(path);
-                link.setVerifiedSize(verifiedSize);
+                int verifiedCrc32 = 0; 
                 try
                 {
-                    link.setVerifiedCrc32(calcCRC32Archive(path, verifiedSize, reader));
+                    verifiedCrc32 = calcCRC32Archive(path, verifiedSize, reader);
                 } catch (HDF5Exception ex)
                 {
                     errorMessage = ex.getClass().getSimpleName() + ": " + ex.getMessage();
                 }
+                link.setFileVerification(verifiedSize, verifiedCrc32);
             }
         }
         visitor.visit(new ArchiveEntry(dir, path, link, idCache, errorMessage));

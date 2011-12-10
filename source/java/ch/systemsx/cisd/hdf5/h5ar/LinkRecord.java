@@ -223,6 +223,19 @@ final class LinkRecord implements Comparable<LinkRecord>
     }
 
     /**
+     * Call this method to read additionally the link target of a symlink.
+     */
+    void addLinkTarget(IHDF5Reader reader, String groupPath)
+    {
+        if (linkType == FileLinkType.SYMLINK && linkTargetOrNull == null)
+        {
+            this.linkTargetOrNull =
+                    reader.getLinkInformation(groupPath + "/" + linkName)
+                            .tryGetSymbolicLinkTarget();
+        }
+    }
+
+    /**
      * Call this method before writing the link to the archive.
      */
     void prepareForWriting(StringBuilder concatenatedNames)
@@ -334,15 +347,10 @@ final class LinkRecord implements Comparable<LinkRecord>
     {
         this.verifiedType = verifiedType;
     }
-
+    
     public int getVerifiedCrc32()
     {
         return verifiedCrc32;
-    }
-
-    public void setVerifiedCrc32(int crc32)
-    {
-        this.verifiedCrc32 = crc32;
     }
 
     public long getVerifiedSize()
@@ -350,9 +358,17 @@ final class LinkRecord implements Comparable<LinkRecord>
         return verifiedSize;
     }
 
-    public void setVerifiedSize(long size)
+    public void setFileVerification(long size, int crc32)
     {
         this.verifiedSize = size;
+        this.verifiedCrc32 = crc32;
+    }
+
+    public void resetVerification()
+    {
+        verifiedType = null;
+        verifiedSize = -1;
+        verifiedCrc32 = 0;
     }
 
     //

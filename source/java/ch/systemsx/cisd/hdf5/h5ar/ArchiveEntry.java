@@ -33,6 +33,8 @@ public final class ArchiveEntry
 
     private final ArchiveEntryCompleteness completeness;
 
+    private final boolean hasLinkTarget;
+    
     private final String linkTarget;
 
     private final FileLinkType linkType;
@@ -71,7 +73,8 @@ public final class ArchiveEntry
         this.name = link.getLinkName();
         this.idCache = idCache;
         this.completeness = link.getCompleteness();
-        this.linkTarget = (link.tryGetLinkTarget() == null) ? "?" : link.tryGetLinkTarget();
+        this.hasLinkTarget = (link.tryGetLinkTarget() != null);
+        this.linkTarget = hasLinkTarget ? link.tryGetLinkTarget() : "?";
         this.linkType = link.getLinkType();
         this.verifiedLinkType = link.getVerifiedType();
         this.size = link.getSize();
@@ -94,6 +97,7 @@ public final class ArchiveEntry
         this.idCache = null;
         this.completeness = null;
         this.linkTarget = null;
+        this.hasLinkTarget = false;
         this.linkType = null;
         this.verifiedLinkType = null;
         this.size = -1;
@@ -129,6 +133,11 @@ public final class ArchiveEntry
     public String getLinkTarget()
     {
         return linkTarget;
+    }
+
+    public boolean hasLinkTarget()
+    {
+        return hasLinkTarget;
     }
 
     public FileLinkType getLinkType()
@@ -248,7 +257,7 @@ public final class ArchiveEntry
 
     public boolean checksumOK()
     {
-        return (crc32 == 0) || (verifiedCrc32 == 0) || (crc32 == verifiedCrc32);
+        return (verifiedSize == -1) || (crc32 == verifiedCrc32);
     }
 
     public String getStatus(boolean verbose)
