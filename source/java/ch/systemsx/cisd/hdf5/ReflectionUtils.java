@@ -86,6 +86,20 @@ final class ReflectionUtils
      * Creates an object of <var>clazz</var> using the default constructor, making the default
      * constructor accessible if necessary.
      */
+    public static <T> Constructor<T> getDefaultConstructor(final Class<T> clazz) throws SecurityException,
+            NoSuchMethodException, IllegalArgumentException, InstantiationException,
+            IllegalAccessException, InvocationTargetException
+    {
+        final Constructor<T> defaultConstructor = clazz.getDeclaredConstructor();
+        ensureAccessible(defaultConstructor);
+        return defaultConstructor;
+
+    }
+
+    /**
+     * Creates an object of <var>clazz</var> using the default constructor, making the default
+     * constructor accessible if necessary.
+     */
     public static <T> T newInstance(final Class<T> clazz) throws SecurityException,
             NoSuchMethodException, IllegalArgumentException, InstantiationException,
             IllegalAccessException, InvocationTargetException

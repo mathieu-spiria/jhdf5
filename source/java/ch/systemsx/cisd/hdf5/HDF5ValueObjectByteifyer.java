@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -38,6 +39,10 @@ class HDF5ValueObjectByteifyer<T>
     private final HDF5MemberByteifyer[] byteifyers;
 
     private final int recordSize;
+
+    private Class<?> cachedRecordClass;
+    
+    private Constructor<?> cachedDefaultConstructor;
 
     @SuppressWarnings("unchecked")
     private static <T> T newMap(int size)
@@ -209,7 +214,7 @@ class HDF5ValueObjectByteifyer<T>
         }
         return result;
     }
-
+    
     @SuppressWarnings("unchecked")
     private T newInstance(Class<?> recordClass) throws HDF5JavaException
     {
@@ -227,7 +232,12 @@ class HDF5ValueObjectByteifyer<T>
         }
         try
         {
-            return (T) ReflectionUtils.newInstance(recordClass);
+            if (recordClass != cachedRecordClass)
+            {
+                cachedRecordClass = recordClass;
+                cachedDefaultConstructor = ReflectionUtils.getDefaultConstructor(recordClass);
+            }
+            return (T) cachedDefaultConstructor.newInstance();
         } catch (Exception ex)
         {
             throw new HDF5JavaException("Creation of new object of class "

@@ -17,7 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import java.lang.reflect.Field;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +33,7 @@ class HDF5CompoundByteifyerFactory
 {
 
     private static List<IHDF5CompoundMemberBytifyerFactory> memberFactories =
-            new LinkedList<IHDF5CompoundMemberBytifyerFactory>();
+            new ArrayList<IHDF5CompoundMemberBytifyerFactory>(14);
 
     static
     {
