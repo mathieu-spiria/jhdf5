@@ -21,9 +21,8 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
 import java.io.Closeable;
 import java.io.File;
 import java.io.Flushable;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -74,7 +73,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
      * The order is to have all directories (in alphabetical order) before all files (in
      * alphabetical order).
      */
-    private LinkList links;
+    private LinkStore links;
 
     private boolean readLinkTargets;
 
@@ -132,12 +131,9 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
     private static HDF5CompoundMemberMapping[] getMapping(HDF5EnumerationType linkEnumerationType)
     {
         return new HDF5CompoundMemberMapping[]
-            {
-                    mapping("linkNameLength"),
-                    mapping("linkType").enumType(
-                            linkEnumerationType), mapping("size"), mapping("lastModified"),
-                    mapping("uid"), mapping("gid"), mapping("permissions"),
-                    mapping("checksum").fieldName("crc32") };
+            { mapping("linkNameLength"), mapping("linkType").enumType(linkEnumerationType),
+                    mapping("size"), mapping("lastModified"), mapping("uid"), mapping("gid"),
+                    mapping("permissions"), mapping("checksum").fieldName("crc32") };
     }
 
     /**
@@ -198,8 +194,8 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
         {
             return;
         }
-        flush();
-        readIndex(true);
+        links.amendLinkTargets(hdf5Reader, groupPath);
+        readLinkTargets = true;
     }
 
     private String getIndexDataSetName()
@@ -227,16 +223,15 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
                         getHDF5LinkCompoundType(hdf5Reader);
                 final CRC32 crc32Digester = new CRC32();
                 final String indexDataSetName = getIndexDataSetName();
-                final ArrayList<LinkRecord> work =
-                        new ArrayList<LinkRecord>(Arrays.asList(hdf5Reader.readCompoundArray(
-                                indexDataSetName, linkCompoundType,
+                final LinkRecord[] work =
+                        hdf5Reader.readCompoundArray(indexDataSetName, linkCompoundType,
                                 new IHDF5Reader.IByteArrayInspector()
                                     {
                                         public void inspect(byte[] byteArray)
                                         {
                                             crc32Digester.update(byteArray);
                                         }
-                                    })));
+                                    });
                 int crc32 = (int) crc32Digester.getValue();
                 int crc32Stored =
                         hdf5Reader.getIntAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME);
@@ -260,7 +255,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
                                     + Utils.crc32ToString(crc32));
                 }
                 initLinks(work, concatenatedNames, withLinkTargets);
-                links = new LinkList(work);
+                links = new LinkStore(work);
                 readingH5ArIndexWorked = true;
             }
         } catch (RuntimeException ex)
@@ -274,25 +269,26 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
             {
                 final List<HDF5LinkInformation> hdf5LinkInfos =
                         hdf5Reader.getGroupMemberInformation(groupPath, withLinkTargets);
-                final ArrayList<LinkRecord> work = new ArrayList<LinkRecord>(hdf5LinkInfos.size());
+                final LinkRecord[] work = new LinkRecord[hdf5LinkInfos.size()];
+                int idx = 0;
                 for (HDF5LinkInformation linfo : hdf5LinkInfos)
                 {
                     final long size =
-                            linfo.isDataSet() ? hdf5Reader.getDataSetInformation(linfo.getPath())
-                                    .getSize() : Utils.UNKNOWN;
-                    work.add(new LinkRecord(linfo, size));
+                            linfo.isDataSet() ? hdf5Reader.getSize(linfo.getPath()) : Utils.UNKNOWN;
+                    work[idx++] = new LinkRecord(linfo, size);
                 }
-                links = new LinkList(work, true);
+                Arrays.sort(work);
+                links = new LinkStore(work);
             } else
             {
-                links = new LinkList();
+                links = new LinkStore();
             }
         }
         readLinkTargets = withLinkTargets;
         dirty = false;
     }
 
-    private void initLinks(final List<LinkRecord> work, final String concatenatedNames,
+    private void initLinks(final LinkRecord[] work, final String concatenatedNames,
             boolean withLinkTargets)
     {
         int namePos = 0;
@@ -311,7 +307,8 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
 
     public boolean isDirectory(String name)
     {
-        return links.isDirectory(name);
+        final LinkRecord link = links.tryGetLink(name);
+        return (link != null) && link.isDirectory();
     }
 
     /**
@@ -320,27 +317,12 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
      */
     public LinkRecord tryGetLink(String name)
     {
-        return links.tryGetLink(name);
-    }
-
-    /**
-     * Returns the directory link with {@link LinkRecord#getLinkName()} equal to <var>name</var>, or
-     * <code>null</code>, if there is no such link in the directory index or if the link is no
-     * directory.
-     */
-    public LinkRecord tryGetDirectoryLink(String name)
-    {
-        return links.tryGetDirectoryLink(name);
-    }
-
-    /**
-     * Returns the file / symlink link with {@link LinkRecord#getLinkName()} equal to
-     * <var>name</var>, or <code>null</code>, if there is no such link in the directory index or if
-     * the link is no file or symlink.
-     */
-    public LinkRecord tryGetFileLink(String name)
-    {
-        return links.tryGetFileLink(name);
+        final LinkRecord linkOrNull = links.tryGetLink(name);
+        if (linkOrNull != null)
+        {
+            linkOrNull.resetVerification();
+        }
+        return linkOrNull;
     }
 
     /**
@@ -386,14 +368,13 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
             }
             final String indexNamesDataSetName = getIndexNamesDataSetName();
             final String concatenatedNamesStr = concatenatedNames.toString();
-            hdf5WriterOrNull.writeStringVariableLength(indexNamesDataSetName,
-                    concatenatedNamesStr);
+            hdf5WriterOrNull.writeStringVariableLength(indexNamesDataSetName, concatenatedNamesStr);
             hdf5WriterOrNull.setIntAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME,
                     calcCrc32(concatenatedNamesStr));
             final String indexDataSetName = getIndexDataSetName();
             final CRC32 crc32 = new CRC32();
             hdf5WriterOrNull.writeCompoundArray(indexDataSetName,
-                    getHDF5LinkCompoundType(hdf5WriterOrNull), links.toArray(),
+                    getHDF5LinkCompoundType(hdf5WriterOrNull), links.getLinkArray(),
                     HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                     new IHDF5Reader.IByteArrayInspector()
                         {
@@ -415,7 +396,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
      * Add <var>entries</var> to the index. Any link that already exists in the index will be
      * replaced.
      */
-    public void updateIndex(List<LinkRecord> entries)
+    public void updateIndex(LinkRecord[] entries)
     {
         ensureWriteMode();
         links.update(entries);
@@ -423,21 +404,38 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
     }
 
     /**
-     * Removes <var>name</var> from the index, if it exists.
-     * 
-     * @return <code>true</code>, if <var>name</var> was removed.
+     * Add <var>entries</var> to the index. Any link that already exists in the index will be
+     * replaced.
      */
-    public boolean remove(String name)
+    public void updateIndex(Collection<LinkRecord> entries)
     {
         ensureWriteMode();
-        final LinkRecord linkOrNull = links.tryGetLink(name);
-        if (linkOrNull != null)
-        {
-            links.remove(Collections.singleton(linkOrNull));
-            dirty = true;
-            return true;
-        }
-        return false;
+        links.update(entries);
+        dirty = true;
+    }
+
+    /**
+     * Add <var>entry</var> to the index. If it already exists in the index, it will be
+     * replaced.
+     */
+    public void updateIndex(LinkRecord entry)
+    {
+        ensureWriteMode();
+        links.update(entry);
+        dirty = true;
+    }
+
+    /**
+     * Removes <var>linkName</var> from the index, if it is in.
+     * 
+     * @return <code>true</code>, if <var>linkName</var> was removed.
+     */
+    public boolean remove(String linkName)
+    {
+        ensureWriteMode();
+        final boolean storeChanged = links.remove(linkName);
+        dirty |= storeChanged;
+        return storeChanged;
     }
 
     private void ensureWriteMode()

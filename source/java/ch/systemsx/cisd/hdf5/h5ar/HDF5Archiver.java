@@ -210,12 +210,12 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
 
     public boolean isRegularFile(String path)
     {
-        return isRegularFile(tryGetFileLink(path, false));
+        return isRegularFile(tryGetLink(path, false));
     }
 
     public boolean isSymLink(String path)
     {
-        return isSymLink(tryGetFileLink(path, false));
+        return isSymLink(tryGetLink(path, false));
     }
 
     public ArchiveEntry tryGetEntry(String path, boolean readLinkTarget)
@@ -227,12 +227,12 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
                 indexProvider.get(parentPath, readLinkTarget).tryGetLink(name), idCache);
     }
 
-    private LinkRecord tryGetFileLink(String path, boolean readLinkTargets)
+    private LinkRecord tryGetLink(String path, boolean readLinkTargets)
     {
         final String normalizedPath = Utils.normalizePath(path);
         final String parentPath = Utils.getParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
-        return indexProvider.get(parentPath, readLinkTargets).tryGetFileLink(name);
+        return indexProvider.get(parentPath, readLinkTargets).tryGetLink(name);
     }
 
     private static boolean isRegularFile(LinkRecord linkOrNull)

@@ -20,7 +20,6 @@ import java.io.File;
 import java.io.Flushable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.CRC32;
@@ -315,7 +314,7 @@ class HDF5ArchiveUpdater
             {
                 linkOrNull.setCrc32(crc32Processing);
                 crc32Processing = 0; // Directories don't have a checksum
-                index.updateIndex(Collections.singletonList(linkOrNull));
+                index.updateIndex(linkOrNull);
             }
             pathProcessing = dirProcessingOrNull;
             if (immediateGroupOnly)
@@ -339,18 +338,20 @@ class HDF5ArchiveUpdater
         int uid = link.getUid();
         int gid = link.getGid();
         FileLinkType fileLinkType = link.getLinkType();
+        String linkTargetOrNull = link.tryGetLinkTarget();
         while (true)
         {
             final String hdf5GroupPath = Utils.getParentPath(Utils.normalizePath(pathProcessing));
             final DirectoryIndex index = indexProvider.get(hdf5GroupPath, false);
             final String hdf5FileName = FilenameUtils.getName(pathProcessing);
             final LinkRecord linkProcessing =
-                    new LinkRecord(hdf5FileName, null, fileLinkType, size, lastModified, uid, gid,
-                            permissions, crc32);
-            index.updateIndex(Collections.singletonList(linkProcessing));
+                    new LinkRecord(hdf5FileName, linkTargetOrNull, fileLinkType, size,
+                            lastModified, uid, gid, permissions, crc32);
+            index.updateIndex(linkProcessing);
             fileLinkType = FileLinkType.DIRECTORY;
             crc32 = 0; // Directories don't have a checksum
             size = Utils.UNKNOWN; // Directories don't have a size
+            linkTargetOrNull = null; // Directories don't have a link target
             pathProcessing = hdf5GroupPath;
             if (immediateGroupOnly || pathProcessing.length() == 0)
             {
@@ -385,19 +386,22 @@ class HDF5ArchiveUpdater
             return false;
         }
         final String hdf5GroupPath = getRelativePath(root, dir);
-        if (hdf5Writer.getFileFormat() != FileFormat.STRICTLY_1_8
-                && fileEntries.length > MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT
-                && "/.".equals(hdf5GroupPath) == false)
+        if ("/".equals(hdf5GroupPath) == false)
+        try
         {
-            try
+            if (hdf5Writer.getFileFormat() != FileFormat.STRICTLY_1_8
+                    && fileEntries.length > MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT)
             {
                 // Compute size hint and pre-create group in order to improve performance.
                 int totalLength = computeSizeHint(fileEntries);
                 hdf5Writer.createGroup(hdf5GroupPath, totalLength * SIZEHINT_FACTOR);
-            } catch (HDF5Exception ex)
+            } else
             {
-                errorStrategy.dealWithError(new ArchivingException(hdf5GroupPath, ex));
+                hdf5Writer.createGroup(hdf5GroupPath);
             }
+        } catch (HDF5Exception ex)
+        {
+            errorStrategy.dealWithError(new ArchivingException(hdf5GroupPath, ex));
         }
         final List<LinkRecord> linkEntries =
                 DirectoryIndex.convertFilesToLinks(fileEntries,
