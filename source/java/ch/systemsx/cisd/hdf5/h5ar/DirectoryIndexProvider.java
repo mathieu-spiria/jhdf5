@@ -44,11 +44,13 @@ class DirectoryIndexProvider implements Closeable
 
     public DirectoryIndex get(String normalizedGroupPath, boolean withLinkTargets)
     {
-        DirectoryIndex index = cacheMap.get(normalizedGroupPath);
+        final String nonEmptyGroupPath =
+                (normalizedGroupPath.length() == 0) ? "/" : normalizedGroupPath;
+        DirectoryIndex index = cacheMap.get(nonEmptyGroupPath);
         if (index == null)
         {
-            index = new DirectoryIndex(reader, normalizedGroupPath, errorStrategy, withLinkTargets);
-            cacheMap.put(normalizedGroupPath, index);
+            index = new DirectoryIndex(reader, nonEmptyGroupPath, errorStrategy, withLinkTargets);
+            cacheMap.put(nonEmptyGroupPath, index);
         } else if (withLinkTargets)
         {
             index.amendLinkTargets();
