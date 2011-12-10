@@ -30,7 +30,7 @@ import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewSymLinkArchiveEntry;
 
 /**
  * An interface for the HDF5 archiver.
- *
+ * 
  * @author Bernd Rinn
  */
 public interface IHDF5Archiver extends IHDF5ArchiveReader
@@ -39,13 +39,13 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
     public void flush() throws IOException;
 
     public IHDF5Archiver archiveFromFilesystem(File path) throws IllegalStateException;
-    
+
     public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy);
 
     public IHDF5Archiver archiveFromFilesystem(File path, IPathVisitor pathVisitorOrNull);
 
     public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy,
-            IPathVisitor pathVisitorOrNull);
+            boolean keepNameFromPath, IPathVisitor pathVisitorOrNull);
 
     public IHDF5Archiver archiveFromFilesystem(File root, File path);
 
@@ -89,7 +89,7 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
     public IHDF5Archiver delete(List<String> hdf5ObjectPaths, IPathVisitor pathVisitorOrNull);
 
     // Method overridden from IHDF5ArchiveReader
-    
+
     public IHDF5Archiver list(String fileOrDir, IListEntryVisitor visitor);
 
     public IHDF5Archiver list(String fileOrDir, IListEntryVisitor visitor, ListParameters params);

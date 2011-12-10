@@ -90,7 +90,7 @@ class HDF5ArchiveUpdater
         private final CRC32 crc32 = new CRC32();
 
         private long size = 0;
-        
+
         public H5ARIOutputStream(String directory, LinkRecord link, int chunkSize, boolean compress)
         {
             this.directory = Utils.normalizePath(directory);
@@ -161,11 +161,11 @@ class HDF5ArchiveUpdater
     }
 
     public HDF5ArchiveUpdater archive(File path, ArchivingStrategy strategy, int chunkSize,
-            IPathVisitor pathVisitorOrNull)
+            boolean keepNameFromPath, IPathVisitor pathVisitorOrNull)
     {
         final File absolutePath = path.getAbsoluteFile();
-        return archive(absolutePath.getParentFile(), absolutePath, strategy, chunkSize,
-                pathVisitorOrNull);
+        return archive(keepNameFromPath ? absolutePath.getParentFile() : absolutePath,
+                absolutePath, strategy, chunkSize, pathVisitorOrNull);
     }
 
     public IOutputStream archiveFile(String directory, LinkRecord link, boolean compress,
@@ -341,7 +341,7 @@ class HDF5ArchiveUpdater
         FileLinkType fileLinkType = link.getLinkType();
         while (true)
         {
-            final String hdf5GroupPath = FilenameUtils.getFullPathNoEndSeparator(pathProcessing);
+            final String hdf5GroupPath = Utils.getParentPath(Utils.normalizePath(pathProcessing));
             final DirectoryIndex index = indexProvider.get(hdf5GroupPath, false);
             final String hdf5FileName = FilenameUtils.getName(pathProcessing);
             final LinkRecord linkProcessing =
@@ -586,7 +586,7 @@ class HDF5ArchiveUpdater
     {
         return (chunkSize <= 0 || chunkSize > buffer.length) ? buffer.length : chunkSize;
     }
-    
+
     private DataSetInfo copyToHDF5(final InputStream input, final String objectPath,
             final HDF5GenericStorageFeatures compression, int chunkSize) throws IOException
     {

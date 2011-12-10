@@ -231,7 +231,7 @@ public final class ArchiveEntry
         return (verifiedLinkType != null || verifiedSize != -1 || verifiedCrc32 != 0 || errorLineOrNull != null);
     }
 
-    public boolean checkOK()
+    public boolean isOK()
     {
         return (errorLineOrNull == null) && linkTypeOK() && sizeOK() && checksumOK();
     }
@@ -253,7 +253,7 @@ public final class ArchiveEntry
 
     public String getStatus(boolean verbose)
     {
-        if (checkOK() == false)
+        if (isOK() == false)
         {
             if (errorLineOrNull != null)
             {

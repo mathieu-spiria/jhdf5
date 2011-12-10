@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.Iterator;
 
 /**
- * An immutable list of {@link LinkRecord}s in a fixed order. The order is to have all directories (in
- * alphabetical order) before all files (in alphabetical order).
+ * An immutable list of {@link LinkRecord}s in a fixed order. The order is to have all directories
+ * (in alphabetical order) before all files (in alphabetical order).
  * 
  * @author Bernd Rinn
  */
@@ -36,6 +36,14 @@ final class LinkList implements Iterable<LinkRecord>
      * directories).
      */
     private final int firstFileIndex;
+
+    /**
+     * Creates a new empty link list.
+     */
+    LinkList()
+    {
+        this(new ArrayList<LinkRecord>(100), false);
+    }
 
     /**
      * Creates a new link list, using <var>entries</var> as internal list. The <var>entries</var>
@@ -107,16 +115,53 @@ final class LinkList implements Iterable<LinkRecord>
     /**
      * Returns the link with {@link LinkRecord#getLinkName()} equal to <var>name</var>, or
      * <code>null</code>, if there is no such link in the directory index.
-     * <p>
-     * Can work on the list or map data structure.
      */
     public LinkRecord tryGetLink(String name)
     {
-        int index = getLinkIndex(name);
+        int index = getDirectoryLinkIndex(name);
+        if (index >= 0)
+        {
+            return internalList.get(index);
+        } else
+        {
+            index = getFileLinkIndex(name);
+            return (index >= 0) ? internalList.get(index) : null;
+        }
+    }
+
+    public boolean exists(String name)
+    {
+        return (getDirectoryLinkIndex(name) >= 0) ? true : (getFileLinkIndex(name) >= 0);
+    }
+
+    /**
+     * Returns the directory link with {@link LinkRecord#getLinkName()} equal to <var>name</var>, or
+     * <code>null</code>, if there is no such link in the directory index or if it is not a
+     * directory.
+     */
+    public LinkRecord tryGetDirectoryLink(String name)
+    {
+        int index = getDirectoryLinkIndex(name);
         return (index >= 0) ? internalList.get(index) : null;
     }
 
-    private int getLinkIndex(String name)
+    public boolean isDirectory(String name)
+    {
+        return (getDirectoryLinkIndex(name) >= 0);
+    }
+
+    /**
+     * Returns the file/symlink link with {@link LinkRecord#getLinkName()} equal to <var>name</var>,
+     * or <code>null</code>, if there is no such link in the directory index or if it is not a file
+     * or symlink.
+     */
+    public LinkRecord tryGetFileLink(String name)
+    {
+        int index = getFileLinkIndex(name);
+        return (index >= 0) ? internalList.get(index) : null;
+    }
+
+    private int getLinkIndex(String name, int size)
     {
         // Try directory
         int index = binarySearch(name, 0, firstFileIndex);
@@ -125,7 +170,33 @@ final class LinkList implements Iterable<LinkRecord>
             return index;
         }
         // Try file / symlink
-        index = binarySearch(name, firstFileIndex, internalList.size());
+        index = binarySearch(name, firstFileIndex, size);
+        if (index >= 0)
+        {
+            return index;
+        } else
+        {
+            return -1;
+        }
+    }
+
+    private int getDirectoryLinkIndex(String name)
+    {
+        // Try directory
+        final int index = binarySearch(name, 0, firstFileIndex);
+        if (index >= 0)
+        {
+            return index;
+        } else
+        {
+            return -1;
+        }
+    }
+
+    private int getFileLinkIndex(String name)
+    {
+        // Try file / symlink
+        final int index = binarySearch(name, firstFileIndex, internalList.size());
         if (index >= 0)
         {
             return index;
@@ -181,40 +252,36 @@ final class LinkList implements Iterable<LinkRecord>
     }
 
     /**
-     * Creates a new link list containing all current links and the <var>entries</var>. Each entry
-     * in <var>entries</var> is checked on whether it already exists in the list, and, if yes,
-     * updated. So, given the current links are unique on link names, the new <code>LinkList</code>
-     * will be unique as well.
+     * Updates the <var>entries</var>. Each entry in <var>entries</var> is checked on whether it
+     * already exists in the list, and, if yes, updated. So, given the current links are unique on
+     * link names, the new <code>LinkList</code> will be unique as well.
      */
-    public LinkList update(Collection<LinkRecord> entries)
+    public void update(Collection<LinkRecord> entries)
     {
-        final ArrayList<LinkRecord> newEntries =
-                new ArrayList<LinkRecord>(internalList.size() + entries.size());
-        newEntries.addAll(internalList);
+        final int oldSize = internalList.size();
         for (LinkRecord entry : entries)
         {
-            int index = getLinkIndex(entry.getLinkName());
+            int index = getLinkIndex(entry.getLinkName(), oldSize);
             if (index < 0)
             {
-                newEntries.add(entry);
+                internalList.add(entry);
             } else
             {
-                newEntries.set(index, entry);
+                internalList.set(index, entry);
             }
         }
-        return new LinkList(newEntries, true);
+        if (internalList.size() != oldSize)
+        {
+            sortIfNecessary(true);
+        }
     }
 
     /**
-     * Creates a new link list containing all current links but remove all <var>entries</var>.
+     * Removes the <var>entries</var> from the list.
      */
-    public LinkList remove(Collection<LinkRecord> entries)
+    public void remove(Collection<LinkRecord> entries)
     {
-        final ArrayList<LinkRecord> newEntries =
-                new ArrayList<LinkRecord>(internalList.size() + entries.size());
-        newEntries.addAll(internalList);
-        newEntries.removeAll(entries);
-        return new LinkList(newEntries);
+        internalList.removeAll(entries);
     }
 
 }

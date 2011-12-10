@@ -33,6 +33,8 @@ public final class ListParameters
 
     public static final ListParameters DEFAULT = new ListParameters(true, true, false, false);
 
+    public static final ListParameters TEST = new ListParameters(true, true, false, false);
+
     public static final class ListParametersBuilder
     {
         private boolean recursive = true;

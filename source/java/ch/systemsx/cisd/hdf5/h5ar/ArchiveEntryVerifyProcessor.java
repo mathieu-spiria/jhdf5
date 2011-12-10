@@ -162,7 +162,7 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
     {
         if (Unix.isOperational())
         {
-            return Unix.getFileInfo(f.getPath()).tryGetSymbolicLink();
+            return Unix.getLinkInfo(f.getPath()).tryGetSymbolicLink();
         } else
         {
             return null;

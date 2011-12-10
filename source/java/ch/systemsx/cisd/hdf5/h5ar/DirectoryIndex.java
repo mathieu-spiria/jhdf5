@@ -60,7 +60,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
     private final String groupPath;
 
     private final IErrorStrategy errorStrategy;
-    
+
     private final Set<Flushable> flushables;
 
     /**
@@ -76,8 +76,8 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
     private boolean dirty;
 
     /**
-     * Converts an array of {@link File}s into a list of {@link LinkRecord}s. The list is optimized for
-     * iterating through it and removing single entries during the iteration.
+     * Converts an array of {@link File}s into a list of {@link LinkRecord}s. The list is optimized
+     * for iterating through it and removing single entries during the iteration.
      * <p>
      * Note that the length of the list will always be the same as the length of <var>entries</var>.
      * If some <code>stat</code> call failed on an entry, this entry will be <code>null</code>, so
@@ -86,8 +86,8 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
      * 
      * @return A list of {@link LinkRecord}s in the same order as <var>entries</var>.
      */
-    public static List<LinkRecord> convertFilesToLinks(File[] files, boolean storeOwnerAndPermissions,
-            IErrorStrategy errorStrategy)
+    public static List<LinkRecord> convertFilesToLinks(File[] files,
+            boolean storeOwnerAndPermissions, IErrorStrategy errorStrategy)
     {
         final List<LinkRecord> list = new LinkedList<LinkRecord>();
         for (File file : files)
@@ -130,7 +130,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
         return flushables.add(flushable);
     }
 
-    boolean  removeFlushable(Flushable flushable)
+    boolean removeFlushable(Flushable flushable)
     {
         return flushables.remove(flushable);
     }
@@ -149,7 +149,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
             }
         }
     }
-    
+
     /**
      * Amend the index with link targets. If the links targets have already been read, this method
      * is a noop.
@@ -185,7 +185,8 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
             if (hdf5Reader.exists(getIndexDataSetName())
                     && hdf5Reader.exists(getIndexNamesDataSetName()))
             {
-                final HDF5CompoundType<LinkRecord> linkCompoundType = getHDF5LinkCompoundType(hdf5Reader);
+                final HDF5CompoundType<LinkRecord> linkCompoundType =
+                        getHDF5LinkCompoundType(hdf5Reader);
                 final CRC32 crc32Digester = new CRC32();
                 final String indexDataSetName = getIndexDataSetName();
                 final ArrayList<LinkRecord> work =
@@ -221,7 +222,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
                                     + Utils.crc32ToString(crc32));
                 }
                 initLinks(work, concatenatedNames, withLinkTargets);
-                setLinks(new LinkList(work));
+                links = new LinkList(work);
                 readingH5ArIndexWorked = true;
             }
         } catch (RuntimeException ex)
@@ -243,7 +244,10 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
                                     .getSize() : Utils.UNKNOWN;
                     work.add(new LinkRecord(linfo, size));
                 }
-                setLinks(new LinkList(work, true));
+                links = new LinkList(work, true);
+            } else
+            {
+                links = new LinkList();
             }
         }
         readLinkTargets = withLinkTargets;
@@ -262,16 +266,43 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
         }
     }
 
+    public boolean exists(String name)
+    {
+        return links.exists(name);
+    }
+
+    public boolean isDirectory(String name)
+    {
+        return links.isDirectory(name);
+    }
+
     /**
      * Returns the link with {@link LinkRecord#getLinkName()} equal to <var>name</var>, or
      * <code>null</code>, if there is no such link in the directory index.
-     * <p>
-     * Can work on the list or map data structure.
      */
     public LinkRecord tryGetLink(String name)
     {
-        final LinkList list = tryGetLinks();
-        return (list == null) ? null : list.tryGetLink(name);
+        return links.tryGetLink(name);
+    }
+
+    /**
+     * Returns the directory link with {@link LinkRecord#getLinkName()} equal to <var>name</var>, or
+     * <code>null</code>, if there is no such link in the directory index or if the link is no
+     * directory.
+     */
+    public LinkRecord tryGetDirectoryLink(String name)
+    {
+        return links.tryGetDirectoryLink(name);
+    }
+
+    /**
+     * Returns the file / symlink link with {@link LinkRecord#getLinkName()} equal to
+     * <var>name</var>, or <code>null</code>, if there is no such link in the directory index or if
+     * the link is no file or symlink.
+     */
+    public LinkRecord tryGetFileLink(String name)
+    {
+        return links.tryGetFileLink(name);
     }
 
     /**
@@ -288,7 +319,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
 
     public Iterator<LinkRecord> iterator()
     {
-        return tryGetLinks().iterator();
+        return links.iterator();
     }
 
     //
@@ -313,7 +344,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
             try
             {
                 final StringBuilder concatenatedNames = new StringBuilder();
-                for (LinkRecord link : tryGetLinks())
+                for (LinkRecord link : links)
                 {
                     link.prepareForWriting(concatenatedNames);
                 }
@@ -326,8 +357,8 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
                 final String indexDataSetName = getIndexDataSetName();
                 final CRC32 crc32 = new CRC32();
                 hdf5WriterOrNull.writeCompoundArray(indexDataSetName,
-                        getHDF5LinkCompoundType(hdf5WriterOrNull),
-                        tryGetLinks().toArray(), HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
+                        getHDF5LinkCompoundType(hdf5WriterOrNull), links.toArray(),
+                        HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                         new IHDF5Reader.IByteArrayInspector()
                             {
                                 public void inspect(byte[] byteArray)
@@ -354,20 +385,8 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
         ensureWriteMode();
         synchronized (this)
         {
-            final LinkList linkListOrNull = tryGetLinks();
-            setLinks((linkListOrNull == null) ? new LinkList(toArrayList(entries)) : linkListOrNull
-                    .update(entries));
-        }
-    }
-
-    private ArrayList<LinkRecord> toArrayList(List<LinkRecord> entries)
-    {
-        if (entries instanceof ArrayList<?>)
-        {
-            return (ArrayList<LinkRecord>) entries;
-        } else
-        {
-            return new ArrayList<LinkRecord>(entries);
+            links.update(entries);
+            dirty = true;
         }
     }
 
@@ -381,27 +400,15 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
         ensureWriteMode();
         synchronized (this)
         {
-            final LinkList linkListOrNull = tryGetLinks();
-            final LinkRecord linkOrNull =
-                    (linkListOrNull == null) ? null : linkListOrNull.tryGetLink(name);
+            final LinkRecord linkOrNull = links.tryGetLink(name);
             if (linkOrNull != null)
             {
-                setLinks(tryGetLinks().remove(Collections.singleton(linkOrNull)));
+                links.remove(Collections.singleton(linkOrNull));
+                dirty = true;
                 return true;
             }
             return false;
         }
-    }
-
-    private LinkList tryGetLinks()
-    {
-        return links;
-    }
-
-    private void setLinks(LinkList newLinks)
-    {
-        links = newLinks;
-        dirty = true;
     }
 
     private void ensureWriteMode()

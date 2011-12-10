@@ -364,7 +364,7 @@ public class HDF5ArchiverMain
             }
             if (verifying)
             {
-                final boolean ok = entry.checkOK();
+                final boolean ok = entry.isOK();
                 if (quiet == false)
                 {
                     System.out.println(entry.describeLink(verbose, numeric, true));
@@ -431,7 +431,7 @@ public class HDF5ArchiverMain
                         for (int i = 2; i < arguments.size(); ++i)
                         {
                             archiver.archiveFromFilesystem(new File(arguments.get(i)), strategy,
-                                    verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
+                                    true, verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                         }
                     }
                     break;

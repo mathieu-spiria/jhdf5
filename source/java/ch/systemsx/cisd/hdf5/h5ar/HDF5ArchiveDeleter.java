@@ -44,14 +44,12 @@ class HDF5ArchiveDeleter
         for (String path : hdf5ObjectPaths)
         {
             final String normalizedPath = Utils.normalizePath(path);
-            int groupDelimIndex = normalizedPath.lastIndexOf('/');
-            final String group =
-                    (groupDelimIndex < 2) ? "/" : normalizedPath.substring(0, groupDelimIndex);
+            final String group = Utils.getParentPath(normalizedPath);
             final DirectoryIndex index = indexProvider.get(group, false);
             try
             {
                 hdf5Writer.delete(normalizedPath);
-                final String name = normalizedPath.substring(groupDelimIndex + 1);
+                final String name = normalizedPath.substring(group.length() + 1);
                 index.remove(name);
                 if (pathVisitorOrNull != null)
                 {

@@ -38,12 +38,13 @@ class HDF5ArchiveTraverser
 
     private final IdCache idCache;
 
-    public HDF5ArchiveTraverser(IHDF5Reader hdf5Reader, DirectoryIndexProvider indexProvider)
+    public HDF5ArchiveTraverser(IHDF5Reader hdf5Reader, DirectoryIndexProvider indexProvider,
+            IdCache idCache)
     {
         this.hdf5Reader = hdf5Reader;
         this.indexProvider = indexProvider;
         this.errorStrategy = indexProvider.getErrorStrategy();
-        this.idCache = new IdCache();
+        this.idCache = idCache;
     }
 
     public void process(String fileOrDir, boolean recursive, boolean readLinkTargets,
@@ -54,7 +55,7 @@ class HDF5ArchiveTraverser
 
         final String parentPath = Utils.getParentPath(normalizedPath);
         LinkRecord link = null;
-        if ("/".equals(normalizedPath) == false)
+        if (parentPath.length() > 0)
         {
             link =
                     indexProvider.get(parentPath, readLinkTargets).tryGetLink(
@@ -123,8 +124,7 @@ class HDF5ArchiveTraverser
         for (LinkRecord link : indexProvider.get(normalizedDir, readLinkTargets))
         {
             final String path =
-                    (normalizedDir.endsWith("/") ? normalizedDir : normalizedDir + "/")
-                            + link.getLinkName();
+                    ("/".equals(normalizedDir) ? "/" : normalizedDir + "/") + link.getLinkName();
             try
             {
                 if (processor

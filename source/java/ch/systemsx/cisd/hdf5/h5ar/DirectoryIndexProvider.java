@@ -42,14 +42,13 @@ class DirectoryIndexProvider implements Closeable
         this.errorStrategy = errorStrategy;
     }
 
-    public DirectoryIndex get(String groupPath, boolean withLinkTargets)
+    public DirectoryIndex get(String normalizedGroupPath, boolean withLinkTargets)
     {
-        final String canonicalPath = Utils.normalizePath(groupPath);
-        DirectoryIndex index = cacheMap.get(canonicalPath);
+        DirectoryIndex index = cacheMap.get(normalizedGroupPath);
         if (index == null)
         {
-            index = new DirectoryIndex(reader, canonicalPath, errorStrategy, withLinkTargets);
-            cacheMap.put(canonicalPath, index);
+            index = new DirectoryIndex(reader, normalizedGroupPath, errorStrategy, withLinkTargets);
+            cacheMap.put(normalizedGroupPath, index);
         } else if (withLinkTargets)
         {
             index.amendLinkTargets();

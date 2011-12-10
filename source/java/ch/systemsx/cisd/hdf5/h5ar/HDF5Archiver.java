@@ -51,7 +51,7 @@ import ch.systemsx.cisd.hdf5.io.HDF5IOAdapterFactory;
  * 
  * @author Bernd Rinn
  */
-final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
+final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5ArchiveInfoProvider
 {
     public static final int CHUNK_SIZE_AUTO = -1;
 
@@ -76,6 +76,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
     private final HDF5ArchiveDeleter deleterOrNull;
 
     private final HDF5ArchiveTraverser processor;
+
+    private final IdCache idCache;
 
     static IHDF5Reader createHDF5Reader(File archiveFile)
     {
@@ -116,7 +118,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
             this.errorStrategy = errorStrategyOrNull;
         }
         this.indexProvider = new DirectoryIndexProvider(hdf5Reader, errorStrategy);
-        this.processor = new HDF5ArchiveTraverser(hdf5Reader, indexProvider);
+        this.idCache = new IdCache();
+        this.processor = new HDF5ArchiveTraverser(hdf5Reader, indexProvider, idCache);
         if (hdf5WriterOrNull == null)
         {
             this.updaterOrNull = null;
@@ -144,7 +147,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         }
         this.hdf5Reader = reader;
         this.indexProvider = new DirectoryIndexProvider(hdf5Reader, errorStrategy);
-        this.processor = new HDF5ArchiveTraverser(hdf5Reader, indexProvider);
+        this.idCache = new IdCache();
+        this.processor = new HDF5ArchiveTraverser(hdf5Reader, indexProvider, idCache);
         if (hdf5WriterOrNull == null)
         {
             this.updaterOrNull = null;
@@ -185,7 +189,70 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
     }
 
     //
-    // IHDF5Archiver
+    // IHDF5ArchiveInfo
+    //
+
+    public boolean exists(String path)
+    {
+        final String normalizedPath = Utils.normalizePath(path);
+        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String name = normalizedPath.substring(parentPath.length() + 1);
+        return indexProvider.get(parentPath, false).exists(name);
+    }
+
+    public boolean isDirectory(String path)
+    {
+        final String normalizedPath = Utils.normalizePath(path);
+        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String name = normalizedPath.substring(parentPath.length() + 1);
+        return indexProvider.get(parentPath, false).isDirectory(name);
+    }
+
+    public boolean isRegularFile(String path)
+    {
+        return isRegularFile(tryGetFileLink(path, false));
+    }
+
+    public boolean isSymLink(String path)
+    {
+        return isSymLink(tryGetFileLink(path, false));
+    }
+
+    public ArchiveEntry tryGetEntry(String path, boolean readLinkTarget)
+    {
+        final String normalizedPath = Utils.normalizePath(path);
+        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String name = normalizedPath.substring(parentPath.length() + 1);
+        return trytoArchiveEntry(parentPath, normalizedPath,
+                indexProvider.get(parentPath, readLinkTarget).tryGetLink(name), idCache);
+    }
+
+    private LinkRecord tryGetFileLink(String path, boolean readLinkTargets)
+    {
+        final String normalizedPath = Utils.normalizePath(path);
+        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String name = normalizedPath.substring(parentPath.length() + 1);
+        return indexProvider.get(parentPath, readLinkTargets).tryGetFileLink(name);
+    }
+
+    private static boolean isRegularFile(LinkRecord linkOrNull)
+    {
+        return linkOrNull != null && linkOrNull.isRegularFile();
+    }
+
+    private static boolean isSymLink(LinkRecord linkOrNull)
+    {
+        return linkOrNull != null && linkOrNull.isSymLink();
+    }
+
+    private static ArchiveEntry trytoArchiveEntry(String dir, String path, LinkRecord linkOrNull,
+            IdCache idCache)
+    {
+        return linkOrNull != null ? new ArchiveEntry(dir, path, linkOrNull, idCache) : null;
+    }
+
+    //
+    // IHDF5ArchiveReader
     //
 
     public List<ArchiveEntry> list(String fileOrDir)
@@ -206,6 +273,22 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
                 }
             }, params);
         return result;
+    }
+
+    public List<ArchiveEntry> test()
+    {
+        final List<ArchiveEntry> result = new ArrayList<ArchiveEntry>(100);
+        list("/", new IListEntryVisitor()
+        {
+            public void visit(ArchiveEntry entry)
+            {
+                if (entry.isOK() == false)
+                {
+                    result.add(entry);
+                }
+            }
+        }, ListParameters.TEST);
+    return result;
     }
 
     public IHDF5Archiver list(String fileOrDir, IListEntryVisitor visitor)
@@ -231,6 +314,31 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(),
                 listProcessor);
         return this;
+    }
+
+    public List<ArchiveEntry> verifyAgainstFilesystem(String rootDirectory)
+    {
+        return verifyAgainstFilesystem("/", rootDirectory, VerifyParameters.DEFAULT);
+    }
+
+    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectory)
+    {
+        return verifyAgainstFilesystem(fileOrDir, rootDirectory, VerifyParameters.DEFAULT);
+    }
+
+    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
+            VerifyParameters params)
+    {
+        final List<ArchiveEntry> verifyErrors = new ArrayList<ArchiveEntry>();
+        verifyAgainstFilesystem(fileOrDir, rootDirectory, new IListEntryVisitor()
+            {
+                public void visit(ArchiveEntry entry)
+                {
+                    if (entry.isOK() == false)
+                        verifyErrors.add(entry);
+                }
+            }, params);
+        return verifyErrors;
     }
 
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
@@ -286,7 +394,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         }
         return HDF5IOAdapterFactory.asIInputStream(hdf5Reader, path);
     }
-    
+
     public InputStream extractFileAsInputStream(String path)
     {
         return new AdapterIInputStreamToInputStream(extractFileAsIInputStream(path));
@@ -313,28 +421,32 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver
         return this;
     }
 
+    //
+    // IHDF5Archiver
+    //
+
     public IHDF5Archiver archiveFromFilesystem(File path) throws IllegalStateException
     {
-        return archiveFromFilesystem(path, ArchivingStrategy.DEFAULT, (IPathVisitor) null);
+        return archiveFromFilesystem(path, ArchivingStrategy.DEFAULT, false, (IPathVisitor) null);
     }
 
     public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy)
             throws IllegalStateException
     {
-        return archiveFromFilesystem(path, strategy, (IPathVisitor) null);
+        return archiveFromFilesystem(path, strategy, false, (IPathVisitor) null);
     }
 
     public IHDF5Archiver archiveFromFilesystem(File path, IPathVisitor pathVisitorOrNull)
             throws IllegalStateException
     {
-        return archiveFromFilesystem(path, ArchivingStrategy.DEFAULT, pathVisitorOrNull);
+        return archiveFromFilesystem(path, ArchivingStrategy.DEFAULT, false, pathVisitorOrNull);
     }
 
     public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy,
-            IPathVisitor pathVisitorOrNull) throws IllegalStateException
+            boolean keepNameFromPath, IPathVisitor pathVisitorOrNull) throws IllegalStateException
     {
         checkReadWrite();
-        updaterOrNull.archive(path, strategy, CHUNK_SIZE_AUTO, pathVisitorOrNull);
+        updaterOrNull.archive(path, strategy, CHUNK_SIZE_AUTO, keepNameFromPath, pathVisitorOrNull);
         return this;
     }
 

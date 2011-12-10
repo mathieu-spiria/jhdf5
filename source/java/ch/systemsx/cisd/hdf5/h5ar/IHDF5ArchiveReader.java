@@ -28,7 +28,7 @@ import ch.systemsx.cisd.base.io.IInputStream;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5ArchiveReader
+public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
 {
     public void close();
 
@@ -41,12 +41,21 @@ public interface IHDF5ArchiveReader
     public IHDF5ArchiveReader list(String fileOrDir, IListEntryVisitor visitor,
             ListParameters params);
 
+    public List<ArchiveEntry> test();
+
     public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
             IListEntryVisitor visitor);
 
     public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
             IListEntryVisitor visitor, VerifyParameters params);
 
+    public List<ArchiveEntry> verifyAgainstFilesystem(String rootDirectory);
+    
+    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectory);
+    
+    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
+            VerifyParameters params);
+    
     public IHDF5ArchiveReader extractFile(String path, OutputStream out);
 
     public byte[] extractFileAsByteArray(String path);

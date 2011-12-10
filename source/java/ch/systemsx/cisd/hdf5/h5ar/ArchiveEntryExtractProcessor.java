@@ -126,7 +126,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
                     {
                         visitorOrNull.visit(entry);
                     }
-                    if (entry.checkOK() == false)
+                    if (entry.isOK() == false)
                     {
                         errorStrategy.dealWithError(new UnarchivingException(path, entry
                                 .getStatus(true)));
