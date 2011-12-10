@@ -179,14 +179,14 @@ class HDF5Reader implements IHDF5Reader
 
     public boolean exists(final String objectPath, boolean followLink)
     {
-        baseReader.checkOpen();
-        if ("/".equals(objectPath))
-        {
-            return true;
-        }
         if (followLink == false)
         {
             // Optimization
+            baseReader.checkOpen();
+            if ("/".equals(objectPath))
+            {
+                return true;
+            }
             return baseReader.h5.exists(baseReader.fileId, objectPath);
         } else
         {
@@ -197,6 +197,10 @@ class HDF5Reader implements IHDF5Reader
     public boolean exists(final String objectPath)
     {
         baseReader.checkOpen();
+        if ("/".equals(objectPath))
+        {
+            return true;
+        }
         return baseReader.h5.getObjectTypeId(baseReader.fileId, objectPath, false) >= 0;
     }
 
