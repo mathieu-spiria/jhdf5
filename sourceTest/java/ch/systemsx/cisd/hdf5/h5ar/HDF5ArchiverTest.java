@@ -17,16 +17,21 @@
 package ch.systemsx.cisd.hdf5.h5ar;
 
 import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
@@ -217,11 +222,134 @@ public class HDF5ArchiverTest
         final List<ArchiveEntry> entries = ar.list("", ListParameters.build().testArchive().get());
         assertEquals(1, entries.size());
         assertEquals("test1", entries.get(0).getName());
-        assertTrue(entries.get(0).checkOK());
+        assertTrue(entries.get(0).isOK());
         final BufferedReader r =
                 new BufferedReader(new InputStreamReader(ar.extractFileAsInputStream("test1")));
         assertEquals("Some more stuff: 17", r.readLine());
         assertNull(r.readLine());
         ar.close();
+    }
+
+    private File createTestDirectory() throws IOException
+    {
+        final File dir = new File(workingDirectory, "test");
+        dir.delete();
+        dir.deleteOnExit();
+        dir.mkdirs();
+        final File f1 = new File(dir, "file_test1.txt");
+        f1.delete();
+        f1.deleteOnExit();
+        FileUtils.writeLines(f1, Arrays.asList("Line 1", "Line 2", "Line 3"));
+        final File dir2 = new File(dir, "dir_somedir");
+        dir2.delete();
+        dir2.mkdir();
+        dir2.deleteOnExit();
+        final File dir3 = new File(dir, "dir_someotherdir");
+        dir3.delete();
+        dir3.mkdir();
+        dir3.deleteOnExit();
+        if (Unix.isOperational())
+        {
+            final File l1 = new File(dir2, "link_todir3");
+            l1.delete();
+            l1.deleteOnExit();
+            Unix.createSymbolicLink("../" + dir3.getName(), l1.getAbsolutePath());
+        }
+        return dir;
+    }
+
+    @Test
+    public void testCreateVerifyRoundtripOK() throws IOException
+    {
+        final File dir = createTestDirectory();
+        final File h5arfile = new File(workingDirectory, "testRoundtrip.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        HDF5ArchiverFactory.open(h5arfile).archiveFromFilesystem(dir).close();
+        final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
+        assertTrue(ar.test().isEmpty());
+        for (ArchiveEntry e : ar.verifyAgainstFilesystem(dir.getAbsolutePath()))
+        {
+            System.err.println(e);
+        }
+        assertTrue(ar.verifyAgainstFilesystem(dir.getAbsolutePath()).isEmpty());
+        ar.close();
+    }
+
+    @Test
+    public void testGetInfo() throws IOException
+    {
+        final File dir = createTestDirectory();
+        final File h5arfile = new File(workingDirectory, "testGetInfo.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        HDF5ArchiverFactory.open(h5arfile).archiveFromFilesystem(dir).close();
+        final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
+        assertTrue(ar.exists("file_test1.txt"));
+        assertTrue(ar.isRegularFile("file_test1.txt"));
+        assertFalse(ar.isDirectory("file_test1.txt"));
+        assertFalse(ar.isSymLink("file_test1.txt"));
+        assertTrue(ar.exists("dir_somedir"));
+        assertFalse(ar.isRegularFile("dir_somedir"));
+        assertFalse(ar.isSymLink("dir_somedir"));
+        assertTrue(ar.isDirectory("dir_somedir"));
+        assertTrue(ar.exists("dir_somedir/link_todir3"));
+        assertFalse(ar.isRegularFile("dir_somedir/link_todir3"));
+        assertFalse(ar.isDirectory("dir_somedir/link_todir3"));
+        assertTrue(ar.isSymLink("dir_somedir/link_todir3"));
+        assertEquals("../dir_someotherdir", ar.tryGetEntry("dir_somedir/link_todir3", true)
+                .getLinkTarget());
+        ar.close();
+    }
+
+    private void checkSorted(List<ArchiveEntry> entries)
+    {
+        for (int i = 1; i < entries.size(); ++i)
+        {
+            assertTrue(entries.get(i - 1).getName().compareTo(entries.get(i).getName()) < 0);
+        }
+    }
+
+    @Test
+    public void testManyFiles()
+    {
+        workingDirectory.mkdirs();
+        final File h5arfile = new File(workingDirectory, "testManyFiles.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        final IHDF5Archiver a = HDF5ArchiverFactory.open(h5arfile);
+        for (int i = 999; i >= 0; --i)
+        {
+            a.archiveFile(Integer.toString(i), new byte[0]);
+        }
+        a.archiveSymlink("symlink", "500");
+        final List<ArchiveEntry> entries = a.list("/");
+        assertEquals(1001, entries.size());
+        final ArchiveEntry symLinkEntry = a.tryGetEntry("symlink", true);
+        assertNotNull(symLinkEntry);
+        assertTrue(symLinkEntry.isSymLink());
+        assertTrue(symLinkEntry.hasLinkTarget());
+        assertEquals("500", symLinkEntry.getLinkTarget());
+        a.close();
+        final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
+        final List<ArchiveEntry> entriesRead = ra.list("/");
+        assertEquals(1001, entriesRead.size());
+        checkSorted(entriesRead);
+        for (int i = 0; i < entriesRead.size() - 1; ++i)
+        {
+            assertTrue(entriesRead.get(i).isRegularFile());
+        }
+        assertTrue(entriesRead.get(entriesRead.size() - 1).isSymLink());
+        for (int i = 0; i < 1000; ++i)
+        {
+            assertTrue(ra.isRegularFile(Integer.toString(i)));
+            assertFalse(ra.isDirectory(Integer.toString(i)));
+            assertFalse(ra.isSymLink(Integer.toString(i)));
+        }
+        assertTrue(ra.isSymLink("symlink"));
+        assertFalse(ra.isDirectory("symlink"));
+        assertFalse(ra.isRegularFile("symlink"));
+        assertEquals("500", ra.tryGetEntry("symlink", true).getLinkTarget());
+        ra.close();
     }
 }
