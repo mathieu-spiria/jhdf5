@@ -83,6 +83,20 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
             throws HDF5JavaException;
 
     /**
+     * Reads an <code>enum</code> attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @param enumClass the {@link Enum} class to represent the values of.
+     * @return The attribute value read from the data set.
+     * @throws HDF5JavaException If the attribute is not an enum type or if <var>enumClass</var> is
+     *             incompatible with the HDF5 enumeration type of <var>objectPath</var>.
+     */
+    public <T extends Enum<T>> T getEnumAttribute(final String objectPath,
+            final String attributeName, Class<T> enumClass) throws HDF5JavaException;
+
+    /**
      * Reads an <code>enum</code> array attribute named <var>attributeName</var> from the data set
      * <var>objectPath</var>.
      * 
@@ -105,6 +119,20 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      */
     public HDF5EnumerationValueArray getEnumArrayAttribute(final String objectPath,
             final String attributeName) throws HDF5JavaException;
+
+    /**
+     * Reads an <code>enum</code> array attribute named <var>attributeName</var> from the data set
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @param enumClass the {@link Enum} class to represent the values of.
+     * @return The attribute values as read from the data set.
+     * @throws HDF5JavaException If the attribute is not an enum type or if <var>enumClass</var> is
+     *             incompatible with the HDF5 enumeration type of <var>objectPath</var>.
+     */
+    public <T extends Enum<T>> T[] getEnumArrayAttribute(final String objectPath,
+            final String attributeName, Class<T> enumClass) throws HDF5JavaException;
 
     // /////////////////////
     // Data Sets

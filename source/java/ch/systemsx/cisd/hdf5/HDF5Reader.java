@@ -533,6 +533,18 @@ class HDF5Reader implements IHDF5Reader
         return enumReader.getEnumAttribute(objectPath, attributeName);
     }
 
+    public <T extends Enum<T>> T getEnumAttribute(String objectPath, String attributeName,
+            Class<T> enumClass) throws HDF5JavaException
+    {
+        return enumReader.getEnumAttribute(objectPath, attributeName, enumClass);
+    }
+
+    public <T extends Enum<T>> T[] getEnumArrayAttribute(String objectPath, String attributeName,
+            Class<T> enumClass) throws HDF5JavaException
+    {
+        return enumReader.getEnumArrayAttribute(objectPath, attributeName, enumClass);
+    }
+
     public String[] getEnumArrayAttributeAsString(final String objectPath,
             final String attributeName) throws HDF5JavaException
     {

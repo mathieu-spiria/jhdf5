@@ -20,7 +20,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * An interface that provides methods for writing enumeration values from HDF5 files.
- *
+ * 
  * @author Bernd Rinn
  */
 public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
@@ -44,6 +44,20 @@ public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
             final HDF5EnumerationValue value);
 
     /**
+     * Sets an enum attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
+     */
+    public void setEnumAttribute(final String objectPath, final String name, final Enum<?> value)
+            throws HDF5JavaException;
+
+    /**
      * Sets an enum array attribute to the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
@@ -55,7 +69,21 @@ public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
      */
     public void setEnumArrayAttribute(final String objectPath, final String name,
             final HDF5EnumerationValueArray value);
-    
+
+    /**
+     * Sets an enum array attribute to the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param data The data to write.
+     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
+     */
+    public <T extends Enum<T>> void setEnumArrayAttribute(final String objectPath,
+            final String name, Class<T> enumClass, final Enum<T>[] data) throws HDF5JavaException;
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -77,8 +105,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
      * @param value The value of the data set.
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
-    public void writeEnum(final String objectPath, final Enum<?> value)
-            throws HDF5JavaException;
+    public void writeEnum(final String objectPath, final Enum<?> value) throws HDF5JavaException;
 
     /**
      * Writes out an array of enum values.
@@ -99,7 +126,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
      */
     public <T extends Enum<T>> void writeEnumArray(final String objectPath, Class<T> enumClass,
             final Enum<T>[] data) throws HDF5JavaException;
-    
+
     /**
      * Writes out an array of enum values.
      * 
@@ -125,7 +152,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
      */
     public <T extends Enum<T>> void writeEnumArray(final String objectPath, Class<T> enumClass,
             final Enum<T>[] data, final HDF5IntStorageFeatures features) throws HDF5JavaException;
-    
+
     /**
      * Creates am enum array (of rank 1).
      * 

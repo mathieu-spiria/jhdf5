@@ -200,6 +200,20 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
+    public <T extends Enum<T>> T getEnumAttribute(String objectPath, String attributeName,
+            Class<T> enumClass) throws HDF5JavaException
+    {
+        final String value = getEnumAttributeAsString(objectPath, attributeName);
+        try
+        {
+            return Enum.valueOf(enumClass, value);
+        } catch (IllegalArgumentException ex)
+        {
+            throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
+                    + " has no value '" + value + "'.");
+        }
+    }
+
     public HDF5EnumerationValue getEnumAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
@@ -280,6 +294,13 @@ class HDF5EnumReader implements IHDF5EnumReader
             result[i] = array.getValue(i);
         }
         return result;
+    }
+
+    public <T extends Enum<T>> T[] getEnumArrayAttribute(String objectPath, String attributeName,
+            Class<T> enumClass) throws HDF5JavaException
+    {
+        final HDF5EnumerationValueArray array = getEnumArrayAttribute(objectPath, attributeName);
+        return toEnumArray(enumClass, array);
     }
 
     // /////////////////////
@@ -428,24 +449,6 @@ class HDF5EnumReader implements IHDF5EnumReader
     {
         final String[] values = readEnumArrayAsString(objectPath);
         return toEnumArray(enumClass, values);
-    }
-    
-    private static <T extends Enum<T>> T[] toEnumArray(Class<T> enumClass, String[] values)
-    {
-        @SuppressWarnings("unchecked")
-        final T[] result = (T[]) Array.newInstance(enumClass, values.length);
-        for (int i = 0; i < values.length; ++i)
-        {
-            try
-            {
-                result[i] = Enum.valueOf(enumClass, values[i]);
-            } catch (IllegalArgumentException ex)
-            {
-                throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
-                        + " has no value '" + values[i] + "'.");
-            }
-        }
-        return result;
     }
 
     public HDF5EnumerationValueArray readEnumArray(final String objectPath)
@@ -629,6 +632,43 @@ class HDF5EnumReader implements IHDF5EnumReader
             final String objectPath) throws HDF5JavaException
     {
         return getEnumArrayNaturalBlocks(objectPath, null);
+    }
+
+    private static <T extends Enum<T>> T[] toEnumArray(Class<T> enumClass, String[] values)
+    {
+        @SuppressWarnings("unchecked")
+        final T[] result = (T[]) Array.newInstance(enumClass, values.length);
+        for (int i = 0; i < values.length; ++i)
+        {
+            try
+            {
+                result[i] = Enum.valueOf(enumClass, values[i]);
+            } catch (IllegalArgumentException ex)
+            {
+                throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
+                        + " has no value '" + values[i] + "'.");
+            }
+        }
+        return result;
+    }
+
+    private static <T extends Enum<T>> T[] toEnumArray(Class<T> enumClass,
+            HDF5EnumerationValueArray array)
+    {
+        @SuppressWarnings("unchecked")
+        final T[] result = (T[]) Array.newInstance(enumClass, array.getLength());
+        for (int i = 0; i < array.getLength(); ++i)
+        {
+            try
+            {
+                result[i] = Enum.valueOf(enumClass, array.getValue(i));
+            } catch (IllegalArgumentException ex)
+            {
+                throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
+                        + " has no value '" + array.getValue(i) + "'.");
+            }
+        }
+        return result;
     }
 
 }

@@ -4391,9 +4391,11 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5Factory.configure(file).keepDataSetsIfTheyExist().writer();
         writer.writeEnum(dsName, JavaEnum.THREE);
+        writer.setEnumAttribute(dsName, "attr", JavaEnum.TWO);
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         assertEquals(JavaEnum.THREE, reader.readEnum(dsName, JavaEnum.class));
+        assertEquals(JavaEnum.TWO, reader.getEnumAttribute(dsName, "attr", JavaEnum.class));
         final String valueStr = reader.readEnumAsString(dsName);
         assertEquals("THREE", valueStr);
         final HDF5EnumerationValue value = reader.readEnum(dsName);
@@ -4574,14 +4576,24 @@ public class HDF5RoundtripTest
         final JavaEnum[] arrayWritten = new JavaEnum[]
             { JavaEnum.TWO, JavaEnum.ONE, JavaEnum.THREE, JavaEnum.ONE };
         writer.writeEnumArray("/testEnum", JavaEnum.class, arrayWritten);
+        final JavaEnum[] attributeArrayWritten = new JavaEnum[]
+            { JavaEnum.THREE, JavaEnum.ONE, JavaEnum.TWO };
+        writer.setEnumArrayAttribute("/testEnum", "attr", JavaEnum.class, attributeArrayWritten);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final JavaEnum[] arrayRead = reader.readEnumArray("/testEnum", JavaEnum.class);
+        final JavaEnum[] attributeArrayRead =
+                reader.getEnumArrayAttribute("/testEnum", "attr", JavaEnum.class);
         reader.close();
         assertEquals(arrayWritten.length, arrayRead.length);
         for (int i = 0; i < arrayWritten.length; ++i)
         {
             assertEquals(arrayWritten[i], arrayRead[i]);
+        }
+        assertEquals(attributeArrayWritten.length, attributeArrayRead.length);
+        for (int i = 0; i < attributeArrayWritten.length; ++i)
+        {
+            assertEquals(attributeArrayWritten[i], attributeArrayRead[i]);
         }
     }
 

@@ -146,10 +146,25 @@ class HDF5EnumWriter implements IHDF5EnumWriter
                 value.toStorageForm());
     }
 
+    public void setEnumAttribute(String objectPath, String name, Enum<?> value)
+            throws HDF5JavaException
+    {
+        @SuppressWarnings("unchecked")
+        final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) value.getClass();
+        setEnumAttribute(objectPath, name, new HDF5EnumerationValue(getEnumType(enumClass), value));
+    }
+
     public void setEnumArrayAttribute(final String objectPath, final String name,
             final HDF5EnumerationValueArray value)
     {
         baseWriter.setEnumArrayAttribute(objectPath, name, value);
+    }
+
+    public <T extends Enum<T>> void setEnumArrayAttribute(String objectPath, String name,
+            Class<T> enumClass, Enum<T>[] data) throws HDF5JavaException
+    {
+        setEnumArrayAttribute(objectPath, name, new HDF5EnumerationValueArray(
+                getEnumType(enumClass), data));
     }
 
     // /////////////////////
