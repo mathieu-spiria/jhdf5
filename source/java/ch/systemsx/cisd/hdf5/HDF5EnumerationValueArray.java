@@ -123,6 +123,31 @@ public class HDF5EnumerationValueArray implements Iterable<String>
      * Creates an enumeration value array.
      * 
      * @param type The enumeration type of this value.
+     * @param valueArray The array of enum values (each one needs to be one of the values of
+     *            <var>type</var>).
+     * @throws IllegalArgumentException If any of the values in the <var>valueArray</var> is not one
+     *             of the values of <var>type</var>.
+     */
+    public HDF5EnumerationValueArray(HDF5EnumerationType type, Enum<?>[] valueArray)
+            throws IllegalArgumentException
+    {
+        this(type, toString(valueArray));
+    }
+
+    private static String[] toString(Enum<?>[] valueArray)
+    {
+        final String[] result = new String[valueArray.length];
+        for (int i = 0; i < valueArray.length; ++i)
+        {
+            result[i] = valueArray[i].name();
+        }
+        return result;
+    }
+    
+    /**
+     * Creates an enumeration value array.
+     * 
+     * @param type The enumeration type of this value.
      * @param valueArray The array of string values (each one needs to be one of the values of
      *            <var>type</var>).
      * @throws IllegalArgumentException If any of the values in the <var>valueArray</var> is not one

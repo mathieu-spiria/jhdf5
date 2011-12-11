@@ -1086,6 +1086,34 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         return enumWriter.getEnumType(name, values, check);
     }
 
+    @Override
+    public HDF5EnumerationType getEnumType(String dataTypeName, Class<? extends Enum<?>> enumClass)
+            throws HDF5JavaException
+    {
+        return enumWriter.getEnumType(dataTypeName, enumClass);
+    }
+
+    @Override
+    public HDF5EnumerationType getEnumType(String dataTypeName, Class<? extends Enum<?>> enumClass,
+            boolean check) throws HDF5JavaException
+    {
+        return enumWriter.getEnumType(dataTypeName, enumClass, check);
+    }
+
+    @Override
+    public HDF5EnumerationType getEnumType(Class<? extends Enum<?>> enumClass)
+            throws HDF5JavaException
+    {
+        return enumWriter.getEnumType(enumClass);
+    }
+
+    @Override
+    public HDF5EnumerationType getEnumType(Class<? extends Enum<?>> enumClass, boolean check)
+            throws HDF5JavaException
+    {
+        return enumWriter.getEnumType(enumClass, check);
+    }
+
     public void createEnumArray(String objectPath, HDF5EnumerationType enumType, int size)
     {
         enumWriter.createEnumArray(objectPath, enumType, size);
@@ -1135,6 +1163,23 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             throws HDF5JavaException
     {
         enumWriter.writeEnumArray(objectPath, data);
+    }
+
+    public void writeEnum(String objectPath, Enum<?> value) throws HDF5JavaException
+    {
+        enumWriter.writeEnum(objectPath, value);
+    }
+
+    public <T extends Enum<T>> void writeEnumArray(String objectPath, Class<T> enumClass,
+            Enum<T>[] data) throws HDF5JavaException
+    {
+        enumWriter.writeEnumArray(objectPath, enumClass, data);
+    }
+
+    public <T extends Enum<T>> void writeEnumArray(String objectPath, Class<T> enumClass,
+            Enum<T>[] data, HDF5IntStorageFeatures features) throws HDF5JavaException
+    {
+        enumWriter.writeEnumArray(objectPath, enumClass, data, features);
     }
 
     public void writeEnumArrayBlock(String objectPath, HDF5EnumerationValueArray data,

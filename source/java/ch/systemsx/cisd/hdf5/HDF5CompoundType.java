@@ -29,6 +29,8 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import org.apache.commons.lang.ArrayUtils;
 
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
+
 /**
  * The definition of a HDF5 compound type. For information on how to create and work with compound
  * types, have a look at {@link IHDF5CompoundInformationRetriever}. The simplest way of creating a
@@ -45,7 +47,8 @@ public class HDF5CompoundType<T> extends HDF5DataType
 {
     interface IHDF5InternalCompoundMemberInformationRetriever
     {
-        HDF5CompoundMemberInformation[] getCompoundMemberInformation();
+        HDF5CompoundMemberInformation[] getCompoundMemberInformation(
+                final DataTypeInfoOptions dataTypeInfoOptions);
     }
 
     private final String nameOrNull;
@@ -91,7 +94,7 @@ public class HDF5CompoundType<T> extends HDF5DataType
     {
         return compoundType;
     }
-    
+
     /**
      * Returns the size of the record on disk (in bytes).
      */
@@ -105,7 +108,16 @@ public class HDF5CompoundType<T> extends HDF5DataType
      */
     public HDF5CompoundMemberInformation[] getCompoundMemberInformation()
     {
-        return informationRetriever.getCompoundMemberInformation();
+        return getCompoundMemberInformation(DataTypeInfoOptions.DEFAULT);
+    }
+
+    /**
+     * Returns an array with the {@link HDF5CompoundMemberInformation} of all compound members.
+     */
+    public HDF5CompoundMemberInformation[] getCompoundMemberInformation(
+            final DataTypeInfoOptions options)
+    {
+        return informationRetriever.getCompoundMemberInformation(options);
     }
 
     /**

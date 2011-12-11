@@ -21,6 +21,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
 
+import java.lang.reflect.Array;
 import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
@@ -67,6 +68,41 @@ class HDF5EnumReader implements IHDF5EnumReader
         return getEnumType(name, values, true);
     }
 
+    public HDF5EnumerationType getEnumType(final Class<? extends Enum<?>> enumClass)
+            throws HDF5JavaException
+    {
+        return getEnumType(enumClass.getSimpleName(), getEnumOptions(enumClass), true);
+    }
+
+    public HDF5EnumerationType getEnumType(final Class<? extends Enum<?>> enumClass,
+            final boolean check) throws HDF5JavaException
+    {
+        return getEnumType(enumClass.getSimpleName(), getEnumOptions(enumClass), check);
+    }
+
+    public HDF5EnumerationType getEnumType(final String name,
+            final Class<? extends Enum<?>> enumClass) throws HDF5JavaException
+    {
+        return getEnumType(name, getEnumOptions(enumClass), true);
+    }
+
+    public HDF5EnumerationType getEnumType(final String name,
+            final Class<? extends Enum<?>> enumClass, final boolean check) throws HDF5JavaException
+    {
+        return getEnumType(name, getEnumOptions(enumClass), check);
+    }
+
+    static String[] getEnumOptions(Class<? extends Enum<?>> enumClass)
+    {
+        final Enum<?>[] constants = enumClass.getEnumConstants();
+        final String[] options = new String[constants.length];
+        for (int i = 0; i < options.length; ++i)
+        {
+            options[i] = constants[i].name();
+        }
+        return options;
+    }
+
     public HDF5EnumerationType getEnumType(final String name, final String[] values,
             final boolean check) throws HDF5JavaException
     {
@@ -83,7 +119,7 @@ class HDF5EnumReader implements IHDF5EnumReader
     {
         return getDataSetEnumType(dataSetPath);
     }
-    
+
     public HDF5EnumerationType getDataSetEnumType(final String dataSetPath)
     {
         baseReader.checkOpen();
@@ -281,6 +317,20 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(writeRunnable);
     }
 
+    public <T extends Enum<T>> T readEnum(String objectPath, Class<T> enumClass)
+            throws HDF5JavaException
+    {
+        final String value = readEnumAsString(objectPath);
+        try
+        {
+            return Enum.valueOf(enumClass, value);
+        } catch (IllegalArgumentException ex)
+        {
+            throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
+                    + " has no value '" + value + "'.");
+        }
+    }
+
     public HDF5EnumerationValue readEnum(final String objectPath) throws HDF5JavaException
     {
         assert objectPath != null;
@@ -373,10 +423,35 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
+    public <T extends Enum<T>> T[] readEnumArray(String objectPath, Class<T> enumClass)
+            throws HDF5JavaException
+    {
+        final String[] values = readEnumArrayAsString(objectPath);
+        return toEnumArray(enumClass, values);
+    }
+    
+    private static <T extends Enum<T>> T[] toEnumArray(Class<T> enumClass, String[] values)
+    {
+        @SuppressWarnings("unchecked")
+        final T[] result = (T[]) Array.newInstance(enumClass, values.length);
+        for (int i = 0; i < values.length; ++i)
+        {
+            try
+            {
+                result[i] = Enum.valueOf(enumClass, values[i]);
+            } catch (IllegalArgumentException ex)
+            {
+                throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
+                        + " has no value '" + values[i] + "'.");
+            }
+        }
+        return result;
+    }
+
     public HDF5EnumerationValueArray readEnumArray(final String objectPath)
             throws HDF5JavaException
     {
-        return readEnumArray(objectPath, null);
+        return readEnumArray(objectPath, (HDF5EnumerationType) null);
     }
 
     public String[] readEnumArrayAsString(final String objectPath) throws HDF5JavaException

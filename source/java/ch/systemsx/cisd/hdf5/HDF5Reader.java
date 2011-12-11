@@ -33,6 +33,7 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
@@ -313,11 +314,11 @@ class HDF5Reader implements IHDF5Reader
     public HDF5DataTypeInformation getAttributeInformation(final String dataSetPath,
             final String attributeName)
     {
-        return getAttributeInformation(dataSetPath, attributeName, true);
+        return getAttributeInformation(dataSetPath, attributeName, DataTypeInfoOptions.DEFAULT);
     }
 
     public HDF5DataTypeInformation getAttributeInformation(final String dataSetPath,
-            final String attributeName, final boolean readDataTypePath)
+            final String attributeName, final DataTypeInfoOptions dataTypeInfoOptions)
     {
         assert dataSetPath != null;
 
@@ -340,7 +341,7 @@ class HDF5Reader implements IHDF5Reader
                                                 .getDataTypeForAttribute(attributeId, registry);
                                 final HDF5DataTypeInformation dataTypeInformation =
                                         baseReader.getDataTypeInformation(dataTypeId,
-                                                readDataTypePath, registry);
+                                                dataTypeInfoOptions, registry);
                                 if (dataTypeInformation.isArrayType() == false)
                                 {
                                     final int[] dimensions =
@@ -364,26 +365,26 @@ class HDF5Reader implements IHDF5Reader
 
     public HDF5DataSetInformation getDataSetInformation(final String dataSetPath)
     {
-        return getDataSetInformation(dataSetPath, true);
+        return getDataSetInformation(dataSetPath, DataTypeInfoOptions.DEFAULT);
     }
 
     public HDF5DataSetInformation getDataSetInformation(final String dataSetPath,
-            final boolean readDataTypePath)
+            final DataTypeInfoOptions dataTypeInfoOptions)
     {
         assert dataSetPath != null;
 
         baseReader.checkOpen();
-        return baseReader.getDataSetInformation(dataSetPath, readDataTypePath);
+        return baseReader.getDataSetInformation(dataSetPath, dataTypeInfoOptions);
     }
 
     public long getSize(final String objectPath)
     {
-        return getDataSetInformation(objectPath, false).getSize();
+        return getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL).getSize();
     }
 
     public long getNumberOfElements(final String objectPath)
     {
-        return getDataSetInformation(objectPath, false).getNumberOfElements();
+        return getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL).getNumberOfElements();
     }
 
     // /////////////////////
@@ -559,6 +560,30 @@ class HDF5Reader implements IHDF5Reader
             throws HDF5JavaException
     {
         return enumReader.getEnumType(dataTypeName, values, check);
+    }
+
+    public HDF5EnumerationType getEnumType(String dataTypeName, Class<? extends Enum<?>> enumClass)
+            throws HDF5JavaException
+    {
+        return enumReader.getEnumType(dataTypeName, enumClass);
+    }
+
+    public HDF5EnumerationType getEnumType(String dataTypeName, Class<? extends Enum<?>> enumClass,
+            boolean check) throws HDF5JavaException
+    {
+        return enumReader.getEnumType(dataTypeName, enumClass, check);
+    }
+
+    public HDF5EnumerationType getEnumType(Class<? extends Enum<?>> enumClass)
+            throws HDF5JavaException
+    {
+        return enumReader.getEnumType(enumClass);
+    }
+
+    public HDF5EnumerationType getEnumType(Class<? extends Enum<?>> enumClass, boolean check)
+            throws HDF5JavaException
+    {
+        return enumReader.getEnumType(enumClass, check);
     }
 
     public HDF5EnumerationType getDataSetEnumType(String dataSetPath)
@@ -1092,6 +1117,18 @@ class HDF5Reader implements IHDF5Reader
         return enumReader.readEnum(objectPath);
     }
 
+    public <T extends Enum<T>> T readEnum(String objectPath, Class<T> enumClass)
+            throws HDF5JavaException
+    {
+        return enumReader.readEnum(objectPath, enumClass);
+    }
+
+    public <T extends Enum<T>> T[] readEnumArray(String objectPath, Class<T> enumClass)
+            throws HDF5JavaException
+    {
+        return enumReader.readEnumArray(objectPath, enumClass);
+    }
+
     public HDF5EnumerationValueArray readEnumArray(String objectPath, HDF5EnumerationType enumType)
             throws HDF5JavaException
     {
@@ -1203,6 +1240,12 @@ class HDF5Reader implements IHDF5Reader
         return compoundReader.getCompoundDataSetInformation(dataSetPath);
     }
 
+    public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(String dataSetPath,
+            DataTypeInfoOptions dataTypeInfoOptions) throws HDF5JavaException
+    {
+        return compoundReader.getCompoundDataSetInformation(dataSetPath, dataTypeInfoOptions);
+    }
+
     public <T> HDF5CompoundMemberInformation[] getCompoundMemberInformation(Class<T> compoundClass)
     {
         return compoundReader.getCompoundMemberInformation(compoundClass);
@@ -1211,6 +1254,12 @@ class HDF5Reader implements IHDF5Reader
     public HDF5CompoundMemberInformation[] getCompoundMemberInformation(String dataTypeName)
     {
         return compoundReader.getCompoundMemberInformation(dataTypeName);
+    }
+
+    public HDF5CompoundMemberInformation[] getCompoundMemberInformation(String dataTypeName,
+            DataTypeInfoOptions dataTypeInfoOptions)
+    {
+        return compoundReader.getCompoundMemberInformation(dataTypeName, dataTypeInfoOptions);
     }
 
     public <T> HDF5CompoundType<T> getCompoundType(Class<T> pojoClass,
@@ -1229,6 +1278,12 @@ class HDF5Reader implements IHDF5Reader
             HDF5CompoundMappingHints hints)
     {
         return compoundReader.getDataSetCompoundType(objectPath, pojoClass, hints);
+    }
+
+    public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> pojoClass,
+            DataTypeInfoOptions dataTypeInfoOptions)
+    {
+        return compoundReader.getNamedCompoundType(dataTypeName, pojoClass, dataTypeInfoOptions);
     }
 
     public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> compoundClass)
@@ -1324,6 +1379,21 @@ class HDF5Reader implements IHDF5Reader
             HDF5CompoundMappingHints hints)
     {
         return compoundReader.getNamedCompoundType(dataTypeName, pojoClass, hints);
+    }
+
+    public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
+            String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints,
+            DataTypeInfoOptions dataTypeInfoOptions)
+    {
+        return compoundReader.getAttributeCompoundType(objectPath, attributeName, pojoClass, hints,
+                dataTypeInfoOptions);
+    }
+
+    public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> pojoClass,
+            HDF5CompoundMappingHints hints, DataTypeInfoOptions dataTypeInfoOptions)
+    {
+        return compoundReader.getNamedCompoundType(dataTypeName, pojoClass, hints,
+                dataTypeInfoOptions);
     }
 
     public <T> T readCompound(String objectPath, HDF5CompoundType<T> type,

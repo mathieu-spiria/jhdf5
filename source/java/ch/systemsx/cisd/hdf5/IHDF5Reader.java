@@ -19,6 +19,8 @@ package ch.systemsx.cisd.hdf5;
 import java.io.File;
 import java.util.List;
 
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
+
 /**
  * An interface for reading HDF5 files (HDF5 1.8.x and older).
  * <p>
@@ -230,13 +232,12 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * @param objectPath The name (including path information) of the object that has the attribute
      *            to return information about.
      * @param attributeName The name of the attribute to get information about.
-     * @param readDataTypePath If <code>true</code>, reads the data type path of a committed data
-     *            type, if any. This is a slow operation, so switch it off if you don't need this
-     *            information.
+     * @param dataTypeInfoOptions The options on which information to get about the member data
+     *            types.
      */
     public HDF5DataTypeInformation getAttributeInformation(final String objectPath,
-            final String attributeName, final boolean readDataTypePath);
-
+            final String attributeName, final DataTypeInfoOptions dataTypeInfoOptions);
+    
     /**
      * Returns the information about a data set as a {@link HDF5DataSetInformation} object. It is a
      * failure condition if the <var>dataSetPath</var> does not exist or does not identify a data
@@ -254,13 +255,12 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * 
      * @param dataSetPath The name (including path information) of the data set to return
      *            information about.
-     * @param readDataTypePath If <code>true</code>, reads the data type path of a committed data
-     *            type, if any. This is a slow operation, so switch it off if you don't need this
-     *            information.
+     * @param dataTypeInfoOptions The options on which information to get about the member data
+     *            types.
      */
     public HDF5DataSetInformation getDataSetInformation(final String dataSetPath,
-            final boolean readDataTypePath);
-
+            final DataTypeInfoOptions dataTypeInfoOptions);
+    
     /**
      * Returns the total size (in bytes) of <var>objectPath</var>. It is a failure condition if the
      * <var>dataSetPath</var> does not exist or does not identify a data set. This method follows

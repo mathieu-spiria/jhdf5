@@ -59,4 +59,57 @@ public interface IHDF5EnumTypeRetriever
     public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values,
             final boolean check) throws HDF5JavaException;
 
+    /**
+     * Returns the enumeration type <var>name</var> for this HDF5 file. Will check the type in the
+     * file with the <var>values</var>. If the <var>dataTypeName</var> starts with '/', it will be
+     * considered a data type path instead of a data type name.
+     * 
+     * @param dataTypeName The name of the enumeration in the HDF5 file.
+     * @param enumClass The enumeration class to get the values from.
+     * @throws HDF5JavaException If the data type exists and is not compatible with the
+     *             <var>enumClass</var> provided.
+     */
+    public HDF5EnumerationType getEnumType(final String dataTypeName,
+            final Class<? extends Enum<?>> enumClass) throws HDF5JavaException;
+
+    /**
+     * Returns the enumeration type <var>name</var> for this HDF5 file. Will check the type in the
+     * file with the <var>values</var>. If the <var>dataTypeName</var> starts with '/', it will be
+     * considered a data type path instead of a data type name.
+     * 
+     * @param dataTypeName The name of the enumeration in the HDF5 file.
+     * @param enumClass The enumeration class to get the values from.
+     * @param check If <code>true</code> and if the data type already exists, check whether it is
+     *            compatible with the <var>enumClass</var> provided.
+     * @throws HDF5JavaException If the data type exists and is not compatible with the
+     *             <var>values</var> provided.
+     */
+    public HDF5EnumerationType getEnumType(final String dataTypeName,
+            final Class<? extends Enum<?>> enumClass, final boolean check) throws HDF5JavaException;
+    
+    /**
+     * Returns the enumeration type <var>name</var> for this HDF5 file. Will check the type in the
+     * file with the <var>values</var>. Will use the simple class name of <var>enumClass</var> as 
+     * the data type name.
+     * 
+     * @param enumClass The enumeration class to get the values from.
+     * @throws HDF5JavaException If the data type exists and is not compatible with the
+     *             <var>values</var> provided.
+     */
+    public HDF5EnumerationType getEnumType(
+            final Class<? extends Enum<?>> enumClass) throws HDF5JavaException;
+
+    /**
+     * Returns the enumeration type <var>name</var> for this HDF5 file. Will check the type in the
+     * file with the <var>values</var>. Will use the simple class name of <var>enumClass</var> as 
+     * the data type name.
+     * 
+     * @param enumClass The enumeration class to get the values from.
+     * @param check If <code>true</code> and if the data type already exists, check whether it is
+     *            compatible with the <var>enumClass</var> provided.
+     * @throws HDF5JavaException If the data type exists and is not compatible with the
+     *             <var>values</var> provided.
+     */
+    public HDF5EnumerationType getEnumType(
+            final Class<? extends Enum<?>> enumClass, final boolean check) throws HDF5JavaException;
 }

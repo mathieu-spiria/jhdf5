@@ -21,6 +21,7 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
@@ -41,7 +42,7 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
 
     @Override
     public <T> HDF5CompoundType<T> getCompoundType(final String name, Class<T> pojoClass,
-            final boolean readDataTypePath, HDF5CompoundMemberMapping... members)
+            HDF5CompoundMemberMapping... members)
     {
         baseWriter.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectByteifyer =
@@ -55,10 +56,11 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                 dataTypeName, pojoClass, objectByteifyer,
                 new HDF5CompoundType.IHDF5InternalCompoundMemberInformationRetriever()
                     {
-                        public HDF5CompoundMemberInformation[] getCompoundMemberInformation()
+                        public HDF5CompoundMemberInformation[] getCompoundMemberInformation(
+                                final DataTypeInfoOptions dataTypeOptions)
                         {
                             return HDF5CompoundWriter.this.getCompoundMemberInformation(
-                                    storageDataTypeId, name, readDataTypePath);
+                                    storageDataTypeId, name, dataTypeOptions);
                         }
                     });
     }

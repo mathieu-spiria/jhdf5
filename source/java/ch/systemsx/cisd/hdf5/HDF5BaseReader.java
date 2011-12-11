@@ -41,6 +41,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5FileNotFoundException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
@@ -610,8 +611,7 @@ class HDF5BaseReader
     /**
      * Returns the information about a data set as a {@link HDF5DataTypeInformation} object. It is a
      * failure condition if the <var>dataSetPath</var> does not exist or does not identify a data
-     * set.
-     * <br>
+     * set. <br>
      * <i>Does not read the data type path of a committed data type.</i>
      * 
      * @param dataSetPath The name (including path information) of the data set to return
@@ -619,7 +619,7 @@ class HDF5BaseReader
      */
     HDF5DataSetInformation getDataSetInformation(final String dataSetPath)
     {
-        return getDataSetInformation(dataSetPath, false);
+        return getDataSetInformation(dataSetPath, DataTypeInfoOptions.DEFAULT);
     }
 
     /**
@@ -629,11 +629,10 @@ class HDF5BaseReader
      * 
      * @param dataSetPath The name (including path information) of the data set to return
      *            information about.
-     * @param readDataTypePath If <code>true</code>, reads also the path of the data type. This
-     *            operation may be expensive.
+     * @param options What information to obtain about the data type.
      */
     HDF5DataSetInformation getDataSetInformation(final String dataSetPath,
-            final boolean readDataTypePath)
+            final DataTypeInfoOptions options)
     {
         assert dataSetPath != null;
 
@@ -645,10 +644,12 @@ class HDF5BaseReader
                             final int dataSetId = h5.openDataSet(fileId, dataSetPath, registry);
                             final int dataTypeId = h5.getDataTypeForDataSet(dataSetId, registry);
                             final HDF5DataTypeInformation dataTypeInfo =
-                                    getDataTypeInformation(dataTypeId, readDataTypePath, registry);
+                                    getDataTypeInformation(dataTypeId, options, registry);
+                            final HDF5DataTypeVariant variantOrNull =
+                                    options.knowsDataTypeVariant() ? tryGetTypeVariant(dataSetId,
+                                            registry) : null;
                             final HDF5DataSetInformation dataSetInfo =
-                                    new HDF5DataSetInformation(dataTypeInfo, tryGetTypeVariant(
-                                            dataSetId, registry));
+                                    new HDF5DataSetInformation(dataTypeInfo, variantOrNull);
                             // Is it a variable-length string?
                             final boolean vlString =
                                     (dataTypeInfo.getDataClass() == HDF5DataClass.STRING && h5
@@ -845,8 +846,8 @@ class HDF5BaseReader
         return HDF5EnumerationType.fromStorageForm(data);
     }
 
-    HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId,
-            final boolean readDataTypePath, final ICleanUpRegistry registry)
+    HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId, final DataTypeInfoOptions options,
+            final ICleanUpRegistry registry)
     {
         final int classTypeId = h5.getClassType(dataTypeId);
         final HDF5DataClass dataClass;
@@ -859,8 +860,8 @@ class HDF5BaseReader
             final int size = totalSize / numberOfElements;
             final int baseTypeId = h5.getBaseDataType(dataTypeId, registry);
             final String dataTypePathOrNull =
-                    readDataTypePath ? tryGetDataTypePath(baseTypeId) : null;
-            return new HDF5DataTypeInformation(dataTypePathOrNull, dataClass, size,
+                    options.knowsDataTypePath() ? tryGetDataTypePath(baseTypeId) : null;
+            return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass, size,
                     arrayDimensions, true);
         } else
         {
@@ -874,9 +875,9 @@ class HDF5BaseReader
                 opaqueTagOrNull = null;
             }
             final String dataTypePathOrNull =
-                    readDataTypePath ? tryGetDataTypePath(dataTypeId) : null;
-            return new HDF5DataTypeInformation(dataTypePathOrNull, dataClass, totalSize, 1,
-                    opaqueTagOrNull);
+                    options.knowsDataTypePath() ? tryGetDataTypePath(dataTypeId) : null;
+            return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass, totalSize,
+                    1, opaqueTagOrNull);
         }
     }
 

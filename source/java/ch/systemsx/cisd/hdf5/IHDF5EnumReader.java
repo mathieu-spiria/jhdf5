@@ -39,34 +39,6 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
     public HDF5EnumerationType getEnumType(final String dataTypeName);
 
     /**
-     * Returns the enumeration type <var>name</var> for this HDF5 file. Will check the type in the
-     * file with the <var>values</var>. If the <var>dataTypeName</var> starts with '/', it will be
-     * considered a data type path instead of a data type name.
-     * 
-     * @param dataTypeName The name of the enumeration in the HDF5 file.
-     * @param values The values of the enumeration.
-     * @throws HDF5JavaException If the data type exists and is not compatible with the
-     *             <var>values</var> provided.
-     */
-    public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values)
-            throws HDF5JavaException;
-
-    /**
-     * Returns the enumeration type <var>name</var> for this HDF5 file. If the
-     * <var>dataTypeName</var> starts with '/', it will be considered a data type path instead of a
-     * data type name.
-     * 
-     * @param dataTypeName The name of the enumeration in the HDF5 file.
-     * @param values The values of the enumeration.
-     * @param check If <code>true</code> and if the data type already exists, check whether it is
-     *            compatible with the <var>values</var> provided.
-     * @throws HDF5JavaException If <code>check = true</code>, the data type exists and is not
-     *             compatible with the <var>values</var> provided.
-     */
-    public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values,
-            final boolean check) throws HDF5JavaException;
-
-    /**
      * Returns the enumeration type for the data set <var>dataSetPath</var>.
      * 
      * @param dataSetPath The name of data set to get the enumeration type for.
@@ -81,7 +53,7 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      * @param dataSetPath The name of data set to get the enumeration type for.
      */
     public HDF5EnumerationType getDataSetEnumType(final String dataSetPath);
-    
+
     // /////////////////////
     // Attributes
     // /////////////////////
@@ -133,7 +105,7 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      */
     public HDF5EnumerationValueArray getEnumArrayAttribute(final String objectPath,
             final String attributeName) throws HDF5JavaException;
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -155,6 +127,19 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var>.
      */
     public HDF5EnumerationValue readEnum(final String objectPath) throws HDF5JavaException;
+
+    /**
+     * Reads an <code>Enum</code> value from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumClass the {@link Enum} class to represent the values of.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var> or if
+     *             <var>enumClass</var> is incompatible with the HDF5 enumeration type of
+     *             <var>objectPath</var>.
+     */
+    public <T extends Enum<T>> T readEnum(final String objectPath, Class<T> enumClass)
+            throws HDF5JavaException;
 
     /**
      * Reads an <code>Enum</code> value from the data set <var>objectPath</var>.
@@ -189,6 +174,19 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var>.
      */
     public HDF5EnumerationValueArray readEnumArray(final String objectPath)
+            throws HDF5JavaException;
+
+    /**
+     * Reads an <code>Enum</code> value array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumClass the {@link Enum} class to represent the values of.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var> or if
+     *             <var>enumClass</var> is incompatible with the HDF5 enumeration type of
+     *             <var>objectPath</var>.
+     */
+    public <T extends Enum<T>> T[] readEnumArray(final String objectPath, Class<T> enumClass)
             throws HDF5JavaException;
 
     /**

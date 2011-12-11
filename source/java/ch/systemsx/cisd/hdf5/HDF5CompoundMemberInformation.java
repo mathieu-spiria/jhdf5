@@ -27,6 +27,7 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 
 /**
  * Contains information about one member of an HDF5 compound data type.
@@ -143,8 +144,8 @@ public final class HDF5CompoundMemberInformation implements
                 || fieldTypeOrNull == short[][].class || fieldTypeOrNull == MDShortArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 2);
-        } else if (fieldTypeOrNull == int.class || fieldTypeOrNull == int[].class || fieldTypeOrNull == int[][].class
-                || fieldTypeOrNull == MDIntArray.class)
+        } else if (fieldTypeOrNull == int.class || fieldTypeOrNull == int[].class
+                || fieldTypeOrNull == int[][].class || fieldTypeOrNull == MDIntArray.class)
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 4);
         } else if (fieldTypeOrNull == long.class || fieldTypeOrNull == long[].class
@@ -171,15 +172,25 @@ public final class HDF5CompoundMemberInformation implements
                     new HDF5DataTypeInformation(HDF5DataClass.STRING, member.getMemberTypeLength());
         } else if (fieldTypeOrNull == HDF5EnumerationValue.class)
         {
+            final DataTypeInfoOptions options =
+                    new DataTypeInfoOptions("UNKNOWN".equals(member.tryGetEnumerationType()
+                            .getName()) == false, member.tryGetTypeVariant() != null);
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX,
-                            member.tryGetEnumerationType().getName()), HDF5DataClass.ENUM, member
-                            .tryGetEnumerationType().getStorageForm().getStorageSize());
+                    new HDF5DataTypeInformation(
+                            options.knowsDataTypePath() ? HDF5Utils.createDataTypePath(
+                                    HDF5Utils.ENUM_PREFIX, member.tryGetEnumerationType().getName())
+                                    : null, options, HDF5DataClass.ENUM, member
+                                    .tryGetEnumerationType().getStorageForm().getStorageSize());
+            if (options.knowsDataTypeVariant())
+            {
+                typeInfo.setTypeVariant(member.tryGetTypeVariant());
+            }
         } else
         {
             typeInfo = new HDF5DataTypeInformation(HDF5DataClass.OTHER, -1);
         }
-        if (fieldTypeOrNull != null && (fieldTypeOrNull.isArray() && fieldTypeOrNull != char[].class)
+        if (fieldTypeOrNull != null
+                && (fieldTypeOrNull.isArray() && fieldTypeOrNull != char[].class)
                 || MDAbstractArray.class.isAssignableFrom(fieldTypeOrNull))
         {
             typeInfo.setDimensions(member.getMemberTypeDimensions());

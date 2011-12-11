@@ -31,6 +31,20 @@ public final class HDF5EnumerationValue
      * Creates an enumeration value.
      * 
      * @param type The enumeration type of this value.
+     * @param value The value in the <var>type</var>.
+     * @throws IllegalArgumentException If the <var>ordinal</var> is outside of the range of allowed
+     *             values of the <var>type</var>.
+     */
+    public HDF5EnumerationValue(HDF5EnumerationType type, Enum<?> value)
+            throws IllegalArgumentException
+    {
+        this(type, value.name());
+    }
+
+    /**
+     * Creates an enumeration value.
+     * 
+     * @param type The enumeration type of this value.
      * @param ordinal The ordinal value of the value in the <var>type</var>.
      * @throws IllegalArgumentException If the <var>ordinal</var> is outside of the range of allowed
      *             values of the <var>type</var>.

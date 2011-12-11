@@ -27,6 +27,92 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
  */
 public final class HDF5DataTypeInformation
 {
+    /**
+     * An object that represents the options for a data type information object.
+     * 
+     * @author Bernd Rinn
+     */
+    public static final class DataTypeInfoOptions
+    {
+        static final DataTypeInfoOptions MINIMAL = new DataTypeInfoOptions(false, false);
+
+        static final DataTypeInfoOptions ALL = new DataTypeInfoOptions(true, true);
+
+        static final DataTypeInfoOptions DEFAULT = new DataTypeInfoOptions(false, true);
+
+        private boolean knowsDataTypePath;
+
+        private boolean knowsDataTypeVariant;
+
+        DataTypeInfoOptions(boolean knowsDataTypePath, boolean knowsDataTypeVariant)
+        {
+            this.knowsDataTypePath = knowsDataTypePath;
+            this.knowsDataTypeVariant = knowsDataTypeVariant;
+        }
+
+        DataTypeInfoOptions()
+        {
+            knowsDataTypePath = false;
+            knowsDataTypeVariant = true;
+        }
+
+        public DataTypeInfoOptions path(boolean readDataTypePath)
+        {
+            this.knowsDataTypePath = readDataTypePath;
+            return this;
+        }
+
+        public DataTypeInfoOptions path()
+        {
+            this.knowsDataTypePath = true;
+            return this;
+        }
+
+        public DataTypeInfoOptions variant(boolean readDataTypeVariant)
+        {
+            this.knowsDataTypeVariant = readDataTypeVariant;
+            return this;
+        }
+
+        public DataTypeInfoOptions noVariant()
+        {
+            this.knowsDataTypeVariant = false;
+            return this;
+        }
+
+        public DataTypeInfoOptions all()
+        {
+            this.knowsDataTypePath = true;
+            this.knowsDataTypeVariant = true;
+            return this;
+        }
+
+        public DataTypeInfoOptions nothing()
+        {
+            this.knowsDataTypePath = false;
+            this.knowsDataTypeVariant = false;
+            return this;
+        }
+
+        public boolean knowsDataTypePath()
+        {
+            return knowsDataTypePath;
+        }
+
+        public boolean knowsDataTypeVariant()
+        {
+            return knowsDataTypeVariant;
+        }
+
+    }
+
+    /**
+     * Returns a new {@link DataTypeInfoOptions} object.
+     */
+    public static DataTypeInfoOptions options()
+    {
+        return new DataTypeInfoOptions();
+    }
 
     private final HDF5DataClass dataClass;
 
@@ -44,43 +130,47 @@ public final class HDF5DataTypeInformation
 
     private String opaqueTagOrNull;
 
+    private final DataTypeInfoOptions options;
+
     private HDF5DataTypeVariant typeVariantOrNull;
 
-    HDF5DataTypeInformation(String dataTypePathOrNull, HDF5DataClass dataClass, int elementSize)
+    HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
+            HDF5DataClass dataClass, int elementSize)
     {
-        this(dataTypePathOrNull, dataClass, elementSize, new int[]
+        this(dataTypePathOrNull, options, dataClass, elementSize, new int[]
             { 1 }, false, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize)
     {
-        this(null, dataClass, elementSize, new int[]
+        this(null, DataTypeInfoOptions.ALL, dataClass, elementSize, new int[]
             { 1 }, false, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int numberOfElements)
     {
-        this(null, dataClass, elementSize, new int[]
+        this(null, DataTypeInfoOptions.ALL, dataClass, elementSize, new int[]
             { numberOfElements }, false, null);
 
     }
 
-    HDF5DataTypeInformation(String dataTypePathOrNull, HDF5DataClass dataClass, int elementSize,
-            int numberOfElements, String opaqueTagOrNull)
+    HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
+            HDF5DataClass dataClass, int elementSize, int numberOfElements, String opaqueTagOrNull)
     {
-        this(dataTypePathOrNull, dataClass, elementSize, new int[]
+        this(dataTypePathOrNull, options, dataClass, elementSize, new int[]
             { numberOfElements }, false, opaqueTagOrNull);
     }
 
-    HDF5DataTypeInformation(String dataTypePathOrNull, HDF5DataClass dataClass, int elementSize,
-            int[] dimensions, boolean arrayType)
+    HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
+            HDF5DataClass dataClass, int elementSize, int[] dimensions, boolean arrayType)
     {
-        this(dataTypePathOrNull, dataClass, elementSize, dimensions, arrayType, null);
+        this(dataTypePathOrNull, options, dataClass, elementSize, dimensions, arrayType, null);
 
     }
 
-    HDF5DataTypeInformation(String dataTypePathOrNull, HDF5DataClass dataClass, int elementSize,
-            int[] dimensions, boolean arrayType, String opaqueTagOrNull)
+    HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
+            HDF5DataClass dataClass, int elementSize, int[] dimensions, boolean arrayType,
+            String opaqueTagOrNull)
     {
         if (dataClass == HDF5DataClass.BOOLEAN || dataClass == HDF5DataClass.STRING)
         {
@@ -97,6 +187,7 @@ public final class HDF5DataTypeInformation
         this.dimensions = dimensions;
         this.numberOfElements = MDArray.getLength(dimensions);
         this.opaqueTagOrNull = opaqueTagOrNull;
+        this.options = options;
     }
 
     /**
@@ -152,24 +243,46 @@ public final class HDF5DataTypeInformation
         this.numberOfElements = MDArray.getLength(dimensions);
     }
 
+    /**
+     * Returns <code>true</code> if this type is an HDF5 array type.
+     */
     public boolean isArrayType()
     {
         return arrayType;
     }
 
+    /**
+     * Returns <code>true</code> if this type is an HDF5 VL (variable-length) type.
+     */
     public boolean isVariableLengthType()
     {
         return elementSize < 0;
     }
 
+    /**
+     * Returns the tag of an opaque data type, or <code>null</code>, if this data type is not
+     * opaque.
+     */
     public String tryGetOpaqueTag()
     {
         return opaqueTagOrNull;
     }
 
     /**
-     * If this is a committed (named) data type, return the path of the data type. Otherwise
-     * <code>null</code> is returned.
+     * Returns whether the data type path has been determined.
+     * <p>
+     * A return value of <code>true</code> does <i>not necessarily</i> mean that
+     * {@link #tryGetDataTypePath()} will return a value other than <code>null</code>, but a return
+     * value of <code>false</code> means that this method will always return <code>null</code>.
+     */
+    public boolean knowsDataTypePath()
+    {
+        return options.knowsDataTypePath();
+    }
+
+    /**
+     * If this is a committed (named) data type and {@link #knowsDataTypePath()} ==
+     * <code>true</code>, return the path of the data type. Otherwise <code>null</code> is returned.
      */
     public String tryGetDataTypePath()
     {
@@ -185,11 +298,35 @@ public final class HDF5DataTypeInformation
     }
 
     /**
-     * The {@link HDF5DataTypeVariant}, or <code>null</code>, if this type has no variant.
+     * Returns whether the data type variant has been determined.
+     * <p>
+     * A return value of <code>true</code> does <i>not necessarily</i> mean that
+     * {@link #tryGetTypeVariant()} will return a value other than <code>null</code>, but a return
+     * value of <code>false</code> means that this method will always return <code>null</code>.
+     */
+    public boolean knowsDataTypeVariant()
+    {
+        return options.knowsDataTypeVariant;
+    }
+
+    /**
+     * Returns the {@link HDF5DataTypeVariant}, or <code>null</code>, if this type has no variant or
+     * {@link #knowsDataTypeVariant()} == <code>false</code>.
      */
     public HDF5DataTypeVariant tryGetTypeVariant()
     {
-        return typeVariantOrNull;
+        if (typeVariantOrNull == null && options.knowsDataTypeVariant())
+        {
+            return HDF5DataTypeVariant.NONE;
+        } else
+        {
+            return typeVariantOrNull;
+        }
+    }
+
+    private HDF5DataTypeVariant tryGetTypeVariantReplaceNoneWithNull()
+    {
+        return (typeVariantOrNull == HDF5DataTypeVariant.NONE) ? null : typeVariantOrNull;
     }
 
     void setTypeVariant(HDF5DataTypeVariant typeVariant)
@@ -255,19 +392,22 @@ public final class HDF5DataTypeInformation
             return false;
         }
         final HDF5DataTypeInformation that = (HDF5DataTypeInformation) obj;
+        final HDF5DataTypeVariant thisTypeVariant = tryGetTypeVariant();
+        final HDF5DataTypeVariant thatTypeVariant = that.tryGetTypeVariant();
         return dataClass.equals(that.dataClass) && elementSize == that.elementSize
                 && numberOfElements == that.numberOfElements
                 && ObjectUtils.equals(nameOrNull, that.nameOrNull)
                 && ObjectUtils.equals(dataTypePathOrNull, that.dataTypePathOrNull)
-                && ObjectUtils.equals(typeVariantOrNull, that.typeVariantOrNull);
+                && ObjectUtils.equals(thisTypeVariant, thatTypeVariant);
     }
 
     @Override
     public int hashCode()
     {
+        final HDF5DataTypeVariant typeVariant = tryGetTypeVariant();
         return (((((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + numberOfElements) * 59 + ObjectUtils
                 .hashCode(nameOrNull)) * 59 + ObjectUtils.hashCode(dataTypePathOrNull) * 59)
-                + ObjectUtils.hashCode(typeVariantOrNull);
+                + ObjectUtils.hashCode(typeVariant);
     }
 
     @Override
@@ -281,21 +421,22 @@ public final class HDF5DataTypeInformation
         {
             name = "";
         }
+        final HDF5DataTypeVariant variantOrNull = tryGetTypeVariantReplaceNoneWithNull();
         if (numberOfElements == 1)
         {
-            if (typeVariantOrNull != null)
+            if (variantOrNull != null)
             {
-                return name + dataClass + "(" + elementSize + ")/" + typeVariantOrNull.toString();
+                return name + dataClass + "(" + elementSize + ")/" + variantOrNull.toString();
             } else
             {
                 return name + dataClass + "(" + elementSize + ")";
             }
         } else if (dimensions.length == 1)
         {
-            if (typeVariantOrNull != null)
+            if (variantOrNull != null)
             {
                 return name + dataClass + "(" + elementSize + ", #" + numberOfElements + ")/"
-                        + typeVariantOrNull.toString();
+                        + variantOrNull.toString();
             } else
             {
                 return name + dataClass + "(" + elementSize + ", #" + numberOfElements + ")";
