@@ -4575,10 +4575,10 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         final JavaEnum[] arrayWritten = new JavaEnum[]
             { JavaEnum.TWO, JavaEnum.ONE, JavaEnum.THREE, JavaEnum.ONE };
-        writer.writeEnumArray("/testEnum", JavaEnum.class, arrayWritten);
+        writer.writeEnumArray("/testEnum", arrayWritten);
         final JavaEnum[] attributeArrayWritten = new JavaEnum[]
             { JavaEnum.THREE, JavaEnum.ONE, JavaEnum.TWO };
-        writer.setEnumArrayAttribute("/testEnum", "attr", JavaEnum.class, attributeArrayWritten);
+        writer.setEnumArrayAttribute("/testEnum", "attr", attributeArrayWritten);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final JavaEnum[] arrayRead = reader.readEnumArray("/testEnum", JavaEnum.class);

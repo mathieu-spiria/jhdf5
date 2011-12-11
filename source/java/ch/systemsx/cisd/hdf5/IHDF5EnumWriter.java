@@ -82,7 +82,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
     public <T extends Enum<T>> void setEnumArrayAttribute(final String objectPath,
-            final String name, Class<T> enumClass, final Enum<T>[] data) throws HDF5JavaException;
+            final String name, final Enum<T>[] data) throws HDF5JavaException;
 
     // /////////////////////
     // Data Sets
@@ -122,16 +122,6 @@ public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
-     */
-    public <T extends Enum<T>> void writeEnumArray(final String objectPath, Class<T> enumClass,
-            final Enum<T>[] data) throws HDF5JavaException;
-
-    /**
-     * Writes out an array of enum values.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write.
      * @param features The storage features of the data set. Note that for scaling compression the
      *            compression factor is ignored. Instead, the scaling factor is computed from the
      *            number of entries in the enumeration.
@@ -145,13 +135,22 @@ public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
+     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
+     */
+    public <T extends Enum<T>> void writeEnumArray(final String objectPath, final Enum<T>[] data) throws HDF5JavaException;
+
+    /**
+     * Writes out an array of enum values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
      * @param features The storage features of the data set. Note that for scaling compression the
      *            compression factor is ignored. Instead, the scaling factor is computed from the
      *            number of entries in the enumeration.
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
-    public <T extends Enum<T>> void writeEnumArray(final String objectPath, Class<T> enumClass,
-            final Enum<T>[] data, final HDF5IntStorageFeatures features) throws HDF5JavaException;
+    public <T extends Enum<T>> void writeEnumArray(final String objectPath, final Enum<T>[] data,
+            final HDF5IntStorageFeatures features) throws HDF5JavaException;
 
     /**
      * Creates am enum array (of rank 1).
