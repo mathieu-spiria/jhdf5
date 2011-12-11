@@ -67,6 +67,7 @@ import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.EnumReturnType;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 import ch.systemsx.cisd.hdf5.hdf5lib.H5General;
@@ -133,6 +134,7 @@ public class HDF5RoundtripTest
         test.testOverwriteScalar();
         test.testOverwriteScalarKeepDataSet();
         test.testDataSets();
+        test.testDataTypeInfoOptions();
         test.testCompactDataset();
         test.testMaxPathLength();
         test.testExceedMaxPathLength();
@@ -272,6 +274,7 @@ public class HDF5RoundtripTest
         test.testUpdateSoftLink();
         test.testExternalLink();
         test.testEnum();
+        test.testJavaEnum();
         test.testEnum16();
         try
         {
@@ -284,6 +287,7 @@ public class HDF5RoundtripTest
         }
         test.testReplaceConfusedEnum();
         test.testEnumArray();
+        test.testJavaEnumArray();
         test.testEnumArrayBlock();
         test.testEnumArrayBlockScalingCompression();
         test.testEnumArrayFromIntArray();
@@ -4310,6 +4314,103 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testDataTypeInfoOptions()
+    {
+        final File file = new File(workingDirectory, "dataTypeInfoOptions.h5");
+        final String enumDsName = "/testEnum";
+        final String dateDsName = "/testDate";
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.configure(file).writer();
+        writer.writeEnum(enumDsName, JavaEnum.TWO);
+        writer.writeDate(dateDsName, new Date(10000L));
+        writer.close();
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5DataTypeInformation minimalEnumInfo =
+                reader.getDataSetInformation(enumDsName, DataTypeInfoOptions.MINIMAL)
+                        .getTypeInformation();
+        assertFalse(minimalEnumInfo.knowsDataTypePath());
+        assertFalse(minimalEnumInfo.knowsDataTypeVariant());
+        assertNull(minimalEnumInfo.tryGetName());
+        assertNull(minimalEnumInfo.tryGetTypeVariant());
+        final HDF5DataTypeInformation defaultInfo =
+                reader.getDataSetInformation(enumDsName).getTypeInformation();
+        assertFalse(defaultInfo.knowsDataTypePath());
+        assertTrue(defaultInfo.knowsDataTypeVariant());
+        assertNull(defaultInfo.tryGetName());
+        assertEquals(HDF5DataTypeVariant.NONE, defaultInfo.tryGetTypeVariant());
+        final HDF5DataTypeInformation allInfo =
+                reader.getDataSetInformation(enumDsName, DataTypeInfoOptions.ALL)
+                        .getTypeInformation();
+        assertTrue(allInfo.knowsDataTypePath());
+        assertTrue(allInfo.knowsDataTypeVariant());
+        assertEquals(JavaEnum.class.getSimpleName(), allInfo.tryGetName());
+
+        final HDF5DataTypeInformation minimalDateInfo =
+                reader.getDataSetInformation(dateDsName, DataTypeInfoOptions.MINIMAL)
+                        .getTypeInformation();
+        assertFalse(minimalDateInfo.knowsDataTypePath());
+        assertFalse(minimalDateInfo.knowsDataTypeVariant());
+        assertNull(minimalDateInfo.tryGetName());
+        assertNull(minimalDateInfo.tryGetTypeVariant());
+
+        final HDF5DataTypeInformation defaultDateInfo =
+                reader.getDataSetInformation(dateDsName, DataTypeInfoOptions.DEFAULT)
+                        .getTypeInformation();
+        assertFalse(defaultDateInfo.knowsDataTypePath());
+        assertTrue(defaultDateInfo.knowsDataTypeVariant());
+        assertNull(defaultDateInfo.tryGetName());
+        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                defaultDateInfo.tryGetTypeVariant());
+
+        final HDF5DataTypeInformation allDateInfo =
+                reader.getDataSetInformation(dateDsName, DataTypeInfoOptions.ALL)
+                        .getTypeInformation();
+        assertTrue(allDateInfo.knowsDataTypePath());
+        assertTrue(allDateInfo.knowsDataTypeVariant());
+        assertNull(allDateInfo.tryGetName());
+        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                allDateInfo.tryGetTypeVariant());
+
+        reader.close();
+    }
+
+    enum JavaEnum
+    {
+        ONE, TWO, THREE
+    }
+
+    @Test
+    public void testJavaEnum()
+    {
+        final File file = new File(workingDirectory, "javaEnum.h5");
+        final String dsName = "/testEnum";
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.configure(file).keepDataSetsIfTheyExist().writer();
+        writer.writeEnum(dsName, JavaEnum.THREE);
+        writer.close();
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        assertEquals(JavaEnum.THREE, reader.readEnum(dsName, JavaEnum.class));
+        final String valueStr = reader.readEnumAsString(dsName);
+        assertEquals("THREE", valueStr);
+        final HDF5EnumerationValue value = reader.readEnum(dsName);
+        assertEquals("THREE", value.getValue());
+        final String expectedDataTypePath =
+                HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, JavaEnum.class.getSimpleName());
+        assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(value.getType()));
+        assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(dsName));
+        final HDF5EnumerationType type = reader.getDataSetEnumType(dsName);
+        assertEquals(3, type.getValues().size());
+        assertEquals("ONE", type.getValues().get(0));
+        assertEquals("TWO", type.getValues().get(1));
+        assertEquals("THREE", type.getValues().get(2));
+        reader.close();
+    }
+
+    @Test
     public void testEnum()
     {
         final File file = new File(workingDirectory, "enum.h5");
@@ -4330,7 +4431,7 @@ public class HDF5RoundtripTest
         type = reader.getEnumType(enumTypeName);
         assertEquals(enumTypeName, type.tryGetName());
         final HDF5DataTypeInformation typeInfo =
-                reader.getDataSetInformation(dsName).getTypeInformation();
+                reader.getDataSetInformation(dsName, DataTypeInfoOptions.ALL).getTypeInformation();
         assertEquals(enumTypeName, typeInfo.tryGetName());
         assertEquals(HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, enumTypeName),
                 typeInfo.tryGetDataTypePath());
@@ -4460,6 +4561,28 @@ public class HDF5RoundtripTest
             assertEquals("Index " + i, arrayWritten.getValue(i), stringArrayRead[i]);
         }
         reader.close();
+    }
+
+    @Test
+    public void testJavaEnumArray()
+    {
+        final File file = new File(workingDirectory, "javaEnumArray.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        final JavaEnum[] arrayWritten = new JavaEnum[]
+            { JavaEnum.TWO, JavaEnum.ONE, JavaEnum.THREE, JavaEnum.ONE };
+        writer.writeEnumArray("/testEnum", JavaEnum.class, arrayWritten);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final JavaEnum[] arrayRead = reader.readEnumArray("/testEnum", JavaEnum.class);
+        reader.close();
+        assertEquals(arrayWritten.length, arrayRead.length);
+        for (int i = 0; i < arrayWritten.length; ++i)
+        {
+            assertEquals(arrayWritten[i], arrayRead[i]);
+        }
     }
 
     @Test
@@ -5210,7 +5333,7 @@ public class HDF5RoundtripTest
         final HDF5CompoundType<HDF5CompoundDataMap> typeRead =
                 reader.getDataSetCompoundType("cpd", HDF5CompoundDataMap.class);
         assertEquals("a:b:c:d:e:f:g:h:i", typeRead.getName());
-        final HDF5CompoundDataMap mapRead = reader.readCompound("cpd", HDF5CompoundDataMap.class);
+        final HDF5CompoundDataMap mapRead = reader.readCompound("cpd", typeRead);
         assertEquals(9, mapRead.size());
         assertEquals(a, mapRead.get("a"));
         assertTrue(ArrayUtils.toString(mapRead.get("b")), ArrayUtils.isEquals(b, mapRead.get("b")));
@@ -5423,7 +5546,7 @@ public class HDF5RoundtripTest
         final HDF5CompoundMemberInformation[] memMemberInfo =
                 Record.getMemberInfo(reader.getEnumType("someEnumType"));
         final HDF5CompoundMemberInformation[] diskMemberInfo =
-                reader.getCompoundDataSetInformation("/testCompound");
+                reader.getCompoundDataSetInformation("/testCompound", DataTypeInfoOptions.ALL);
         assertEquals(memMemberInfo.length, diskMemberInfo.length);
         Arrays.sort(memMemberInfo);
         Arrays.sort(diskMemberInfo);
