@@ -451,6 +451,20 @@ class HDF5EnumReader implements IHDF5EnumReader
         return toEnumArray(enumClass, values);
     }
 
+    public <T extends Enum<T>> T[] readEnumArrayBlock(String objectPath, Class<T> enumClass,
+            int blockSize, long blockNumber)
+    {
+        final String[] values = readEnumArrayBlockAsString(objectPath, blockSize, blockNumber);
+        return toEnumArray(enumClass, values);
+    }
+
+    public <T extends Enum<T>> T[] readEnumArrayBlockWithOffset(String objectPath,
+            Class<T> enumClass, int blockSize, long offset)
+    {
+        final String[] values = readEnumArrayBlockWithOffsetAsString(objectPath, blockSize, offset);
+        return toEnumArray(enumClass, values);
+    }
+
     public HDF5EnumerationValueArray readEnumArray(final String objectPath)
             throws HDF5JavaException
     {
@@ -504,6 +518,64 @@ class HDF5EnumReader implements IHDF5EnumReader
                 }
             };
         return baseReader.runner.call(writeRunnable);
+    }
+
+    public String[] readEnumArrayBlockAsString(final String objectPath, final int blockSize,
+            final long blockNumber)
+    {
+        return readEnumArrayBlockWithOffsetAsString(objectPath, blockSize, blockNumber * blockSize);
+    }
+
+    public String[] readEnumArrayBlockWithOffsetAsString(final String objectPath,
+            final int blockSize, final long offset)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<String[]> readRunnable = new ICallableWithCleanUp<String[]>()
+            {
+                public String[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
+                    final int storageDataTypeId =
+                            baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
+                    final int nativeDataTypeId =
+                            baseReader.h5.getNativeDataType(storageDataTypeId, registry);
+                    final HDF5EnumerationType enumTypeOrNull =
+                            tryGetEnumTypeForResolution(dataSetId, objectPath, nativeDataTypeId,
+                                    blockSize, registry);
+                    final int size = baseReader.h5.getDataTypeSize(nativeDataTypeId);
+
+                    final String[] values = new String[blockSize];
+                    final byte[] data = new byte[blockSize * size];
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                    if (enumTypeOrNull != null)
+                    {
+                        for (int i = 0; i < blockSize; ++i)
+                        {
+                            values[i] =
+                                    enumTypeOrNull.getValueArray()[HDF5EnumerationType
+                                            .fromStorageForm(data, i, size)];
+                        }
+                    } else
+                    {
+                        for (int i = 0; i < blockSize; ++i)
+                        {
+                            values[i] =
+                                    baseReader.h5.getNameForEnumOrCompoundMemberIndex(
+                                            storageDataTypeId,
+                                            HDF5EnumerationType.fromStorageForm(data, i, size));
+                        }
+                    }
+                    return values;
+                }
+            };
+
+        return baseReader.runner.call(readRunnable);
     }
 
     private HDF5EnumerationType tryGetEnumTypeForResolution(final int dataSetId,
@@ -571,13 +643,15 @@ class HDF5EnumReader implements IHDF5EnumReader
     public HDF5EnumerationValueArray readEnumArrayBlockWithOffset(final String objectPath,
             final int blockSize, final long offset)
     {
-        return readEnumArrayBlockWithOffset(objectPath, null, blockSize, offset);
+        return readEnumArrayBlockWithOffset(objectPath, (HDF5EnumerationType) null, blockSize,
+                offset);
     }
 
     public HDF5EnumerationValueArray readEnumArrayBlock(final String objectPath,
             final int blockSize, final long blockNumber)
     {
-        return readEnumArrayBlockWithOffset(objectPath, null, blockSize, blockNumber * blockSize);
+        return readEnumArrayBlockWithOffset(objectPath, (HDF5EnumerationType) null, blockSize,
+                blockNumber * blockSize);
     }
 
     public HDF5EnumerationValueArray readEnumArrayBlock(final String objectPath,

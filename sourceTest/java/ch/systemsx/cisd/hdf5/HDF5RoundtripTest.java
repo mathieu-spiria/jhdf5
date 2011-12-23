@@ -4575,7 +4575,17 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         final JavaEnum[] arrayWritten = new JavaEnum[]
             { JavaEnum.TWO, JavaEnum.ONE, JavaEnum.THREE, JavaEnum.ONE };
+        final JavaEnum[] arrayBlockTwoWritten = new JavaEnum[]
+            { JavaEnum.THREE, JavaEnum.ONE, JavaEnum.TWO, JavaEnum.THREE };
         writer.writeEnumArray("/testEnum", arrayWritten);
+        final HDF5EnumerationType type =
+                writer.createEnumArray("/testEnumBlockwise", JavaEnum.class, 16);
+        writer.writeEnumArrayBlock("/testEnumBlockwise", type, arrayWritten, 0);
+        writer.writeEnumArrayBlock("/testEnumBlockwise", arrayBlockTwoWritten, 1);
+        writer.writeEnumArrayBlockWithOffset("/testEnumBlockwise", type, arrayBlockTwoWritten,
+                arrayBlockTwoWritten.length, 8);
+        writer.writeEnumArrayBlockWithOffset("/testEnumBlockwise", arrayWritten,
+                arrayWritten.length, 12);
         final JavaEnum[] attributeArrayWritten = new JavaEnum[]
             { JavaEnum.THREE, JavaEnum.ONE, JavaEnum.TWO };
         writer.setEnumArrayAttribute("/testEnum", "attr", attributeArrayWritten);
@@ -4584,6 +4594,14 @@ public class HDF5RoundtripTest
         final JavaEnum[] arrayRead = reader.readEnumArray("/testEnum", JavaEnum.class);
         final JavaEnum[] attributeArrayRead =
                 reader.getEnumArrayAttribute("/testEnum", "attr", JavaEnum.class);
+        final JavaEnum[] arrayBlockRead0 =
+                reader.readEnumArrayBlock("/testEnumBlockwise", JavaEnum.class, 4, 0);
+        final JavaEnum[] arrayBlockRead1 =
+                reader.readEnumArrayBlock("/testEnumBlockwise", JavaEnum.class, 4, 1);
+        final JavaEnum[] arrayBlockRead2 =
+                reader.readEnumArrayBlock("/testEnumBlockwise", JavaEnum.class, 4, 2);
+        final JavaEnum[] arrayBlockRead3 =
+                reader.readEnumArrayBlock("/testEnumBlockwise", JavaEnum.class, 4, 3);
         reader.close();
         assertEquals(arrayWritten.length, arrayRead.length);
         for (int i = 0; i < arrayWritten.length; ++i)
@@ -4594,6 +4612,17 @@ public class HDF5RoundtripTest
         for (int i = 0; i < attributeArrayWritten.length; ++i)
         {
             assertEquals(attributeArrayWritten[i], attributeArrayRead[i]);
+        }
+        assertEquals(arrayWritten.length, arrayBlockRead0.length);
+        assertEquals(arrayWritten.length, arrayBlockRead1.length);
+        assertEquals(arrayWritten.length, arrayBlockRead2.length);
+        assertEquals(arrayWritten.length, arrayBlockRead3.length);
+        for (int i = 0; i < arrayWritten.length; ++i)
+        {
+            assertEquals(arrayWritten[i], arrayBlockRead0[i]);
+            assertEquals(arrayBlockTwoWritten[i], arrayBlockRead1[i]);
+            assertEquals(arrayBlockTwoWritten[i], arrayBlockRead2[i]);
+            assertEquals(arrayWritten[i], arrayBlockRead3[i]);
         }
     }
 

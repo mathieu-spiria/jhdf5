@@ -1181,6 +1181,18 @@ class HDF5Reader implements IHDF5Reader
         return enumReader.readEnumArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
+    public <T extends Enum<T>> T[] readEnumArrayBlock(String objectPath, Class<T> enumClass,
+            int blockSize, long blockNumber)
+    {
+        return enumReader.readEnumArrayBlock(objectPath, enumClass, blockSize, blockNumber);
+    }
+
+    public <T extends Enum<T>> T[] readEnumArrayBlockWithOffset(String objectPath,
+            Class<T> enumClass, int blockSize, long offset)
+    {
+        return enumReader.readEnumArrayBlockWithOffset(objectPath, enumClass, blockSize, offset);
+    }
+
     public String readEnumAsString(String objectPath) throws HDF5JavaException
     {
         return enumReader.readEnumAsString(objectPath);
@@ -1189,6 +1201,17 @@ class HDF5Reader implements IHDF5Reader
     //
     // Compounds
     //
+
+    public String[] readEnumArrayBlockAsString(String objectPath, int blockSize, long blockNumber)
+    {
+        return enumReader.readEnumArrayBlockAsString(objectPath, blockSize, blockNumber);
+    }
+
+    public String[] readEnumArrayBlockWithOffsetAsString(String objectPath, int blockSize,
+            long offset)
+    {
+        return enumReader.readEnumArrayBlockWithOffsetAsString(objectPath, blockSize, offset);
+    }
 
     public <T> T getCompoundAttribute(String objectPath, String attributeName,
             HDF5CompoundType<T> type) throws HDF5JavaException

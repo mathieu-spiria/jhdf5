@@ -227,6 +227,36 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
     public String[] readEnumArrayAsString(final String objectPath) throws HDF5JavaException;
 
     /**
+     * Reads an <code>Enum</code> array block (of rank 1) from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The block size (this will be the return value of the
+     *            {@link HDF5EnumerationValueArray#getLength()} returned if the data set is long
+     *            enough).
+     * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
+     *            <var>blockSize</var>).
+     * @return The data read from the data set as an array of Strings.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public String[] readEnumArrayBlockAsString(final String objectPath,
+            final int blockSize, final long blockNumber);
+    
+    /**
+     * Reads an <code>Enum</code> array block (of rank 1) from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The block size (this will be the return value of the
+     *            {@link HDF5EnumerationValueArray#getLength()} returned if the data set is long
+     *            enough).
+     * @param offset The offset of the block in the data set to start reading from (starting with
+     *            0).
+     * @return The data read from the data set as an array of Strings.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public String[] readEnumArrayBlockWithOffsetAsString(final String objectPath,
+            final int blockSize, final long offset);
+    
+    /**
      * Reads an <code>Enum</code> value array from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -261,6 +291,22 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      * Reads an <code>Enum</code> value array from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumClass the {@link Enum} class to represent the values of.
+     * @param blockSize The block size (this will be the return value of the
+     *            {@link HDF5EnumerationValueArray#getLength()} returned if the data set is long
+     *            enough).
+     * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
+     *            <var>blockSize</var>).
+     * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
+     *         blockSize).
+     */
+    public <T extends Enum<T>> T[] readEnumArrayBlock(final String objectPath, Class<T> enumClass,
+            final int blockSize, final long blockNumber);
+
+    /**
+     * Reads an <code>Enum</code> value array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSize The block size (this will be the return value of the
      *            {@link HDF5EnumerationValueArray#getLength()} returned if the data set is long
      *            enough).
@@ -287,6 +333,22 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      */
     public HDF5EnumerationValueArray readEnumArrayBlockWithOffset(final String objectPath,
             final HDF5EnumerationType enumType, final int blockSize, final long offset);
+
+    /**
+     * Reads an <code>Enum</code> value array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumClass the {@link Enum} class to represent the values of.
+     * @param blockSize The block size (this will be the return value of the
+     *            {@link HDF5EnumerationValueArray#getLength()} returned if the data set is long
+     *            enough).
+     * @param offset The offset of the block in the data set to start reading from (starting with
+     *            0).
+     * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
+     *         blockSize).
+     */
+    public <T extends Enum<T>> T[] readEnumArrayBlockWithOffset(final String objectPath,
+            Class<T> enumClass, final int blockSize, final long offset);
 
     /**
      * Provides all natural blocks of this one-dimensional data set to iterate over.
