@@ -51,7 +51,8 @@ class HDF5CompoundMemberByteifyerJavaEnumFactory implements IHDF5CompoundMemberB
         final HDF5EnumerationType enumType = member.tryGetEnumerationType();
         if (enumType == null)
         {
-            throw new NullPointerException("Enumeration type not set for member byteifyer.");
+            throw new NullPointerException(
+                    "Enumeration type not set for member byteifyer of field '" + memberName + "'.");
         }
         switch (accessType)
         {

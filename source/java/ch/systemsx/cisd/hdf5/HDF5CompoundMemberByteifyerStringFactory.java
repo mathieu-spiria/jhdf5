@@ -141,7 +141,14 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                     public byte[] byteify(int compoundDataTypeId, Object obj)
                             throws IllegalAccessException
                     {
-                        final String s = field.get(obj).toString();
+                        Object o = field.get(obj);
+                        if (o == null)
+                        {
+                            throw new NullPointerException("Field '" + field.getName()
+                                    + "' is null");
+
+                        }
+                        final String s = o.toString();
                         return StringUtils.toBytes0Term(s, getSize(), encoding);
                     }
 
