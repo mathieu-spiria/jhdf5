@@ -529,7 +529,7 @@ public final class HDF5CompoundMemberMapping
                             .typeVariant())));
                 } else if (includeAllFields)
                 {
-                    result.add(new HDF5CompoundMemberMapping(f.getName(), null, f.getName(),
+                    result.add(new HDF5CompoundMemberMapping(f.getName(), f.getType(), f.getName(),
                             enumTypeOrNull, new int[0]));
                 }
             }
