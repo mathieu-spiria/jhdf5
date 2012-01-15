@@ -88,6 +88,12 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * <p>
      * This function is supposed to be used for in-memory caching structures that need to make it
      * into the HDF5 file.
+     * <p>
+     * If the <var>flushable</var> implements
+     * {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy}, in case of an exception in
+     * {@link Flushable#flush()}, the method
+     * {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy#dealWithError(Throwable)} will be
+     * called to decide how do deal with the exception.
      * 
      * @param flushable The {@link Flushable} to add. Needs to fulfill the {@link Object#hashCode()}
      *            contract.

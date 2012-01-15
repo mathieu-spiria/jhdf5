@@ -45,6 +45,8 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5DatasetInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5FileNotFoundException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.exceptions.CheckedExceptionTunnel;
+import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.namedthread.NamingThreadPoolExecutor;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
@@ -72,7 +74,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     private final static EnumSet<SyncMode> SYNC_ON_CLOSE_MODES = EnumSet.of(SyncMode.SYNC_BLOCK,
             SyncMode.SYNC);
-    
+
     /**
      * The size threshold for the COMPACT storage layout.
      */
@@ -275,7 +277,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         return flushables.add(flushable);
     }
 
-    boolean  removeFlushable(Flushable flushable)
+    boolean removeFlushable(Flushable flushable)
     {
         return flushables.remove(flushable);
     }
@@ -287,14 +289,19 @@ final class HDF5BaseWriter extends HDF5BaseReader
             try
             {
                 f.flush();
-            } catch (Exception ex)
+            } catch (Throwable ex)
             {
-                System.err.println("External flushable throws an exception:");
-                ex.printStackTrace();
+                if (f instanceof IErrorStrategy)
+                {
+                    ((IErrorStrategy) f).dealWithError(ex);
+                } else
+                {
+                    throw CheckedExceptionTunnel.wrapIfNecessary(ex);
+                }
             }
         }
     }
-    
+
     void flush()
     {
         synchronized (fileRegistry)
