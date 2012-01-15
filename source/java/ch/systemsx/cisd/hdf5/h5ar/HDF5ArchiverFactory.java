@@ -18,6 +18,7 @@ package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
 
+import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;

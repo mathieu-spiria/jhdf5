@@ -20,6 +20,7 @@ import java.io.Closeable;
 import java.util.HashMap;
 import java.util.Map;
 
+import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 

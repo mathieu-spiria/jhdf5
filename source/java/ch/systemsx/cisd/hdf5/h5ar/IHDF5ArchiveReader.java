@@ -50,25 +50,25 @@ public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
             IListEntryVisitor visitor, VerifyParameters params);
 
     public List<ArchiveEntry> verifyAgainstFilesystem(String rootDirectory);
-    
+
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectory);
-    
+
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
             VerifyParameters params);
-    
+
     public IHDF5ArchiveReader extractFile(String path, OutputStream out);
 
     public byte[] extractFileAsByteArray(String path);
 
     /**
-     * @return If the {@link IErrorStrategy} of the archive reader does not re-throw exceptions, the
-     *         return value will be <code>null</code> on errors.
+     * @return If the {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy} of the archive reader
+     *         does not re-throw exceptions, the return value will be <code>null</code> on errors.
      */
     public IInputStream extractFileAsIInputStream(String path);
 
     /**
-     * @return If the {@link IErrorStrategy} of the archive reader does not re-throw exceptions, the
-     *         return value will be <code>null</code> on errors.
+     * @return If the {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy} of the archive reader
+     *         does not re-throw exceptions, the return value will be <code>null</code> on errors.
      */
     public InputStream extractFileAsInputStream(String path);
 

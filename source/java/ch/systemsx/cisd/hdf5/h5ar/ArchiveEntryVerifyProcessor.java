@@ -26,6 +26,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
+import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.base.unix.Unix.Stat;

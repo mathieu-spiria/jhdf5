@@ -32,6 +32,7 @@ import ch.systemsx.cisd.args4j.CmdLineException;
 import ch.systemsx.cisd.args4j.CmdLineParser;
 import ch.systemsx.cisd.args4j.ExampleMode;
 import ch.systemsx.cisd.args4j.Option;
+import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 
@@ -92,9 +93,9 @@ public class HDF5ArchiverMain
 
     private final static IErrorStrategy ERROR_STRATEGY_CONTINUE = new IErrorStrategy()
         {
-            public void dealWithError(ArchiverException ex) throws ArchiverException
+            public void dealWithError(Throwable th) throws ArchiverException
             {
-                System.err.println(ex.getMessage());
+                System.err.println(th.getMessage());
             }
 
             public void warning(String message)

@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5.h5ar;
 import java.io.File;
 
 import ch.rinn.restrictions.Private;
+import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.base.unix.Unix;
