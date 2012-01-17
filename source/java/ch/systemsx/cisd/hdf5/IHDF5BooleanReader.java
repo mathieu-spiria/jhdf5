@@ -104,6 +104,9 @@ public interface IHDF5BooleanReader
     /**
      * Returns <code>true</code> if the <var>bitIndex</var> of the bit field dataset
      * <var>objectPath</var> is set, <code>false</code> otherwise.
+     * <p>
+     * Will also return <code>false</code>, if <var>bitIndex</var> is outside of the bitfield
+     * dataset.
      */
     public boolean isBitSetInBitField(final String objectPath, final int bitIndex);
 

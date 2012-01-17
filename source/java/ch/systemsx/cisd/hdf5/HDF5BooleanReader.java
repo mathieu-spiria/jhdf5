@@ -145,7 +145,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
     }
 
     private long[] readBitFieldStorageForm(final String objectPath, final int blockSize,
-            final long offset)
+            final long offset, final boolean nullWhenOutside)
     {
         assert objectPath != null;
 
@@ -156,11 +156,16 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
                 {
                     final int dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_B64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
+                    final DataSpaceParameters spaceParamsOrNull =
+                            baseReader.tryGetSpaceParameters(dataSetId, offset, blockSize,
+                                    nullWhenOutside, registry);
+                    if (spaceParamsOrNull == null)
+                    {
+                        return null;
+                    }
+                    final long[] data = new long[spaceParamsOrNull.blockSize];
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_B64,
+                            spaceParamsOrNull.memorySpaceId, spaceParamsOrNull.dataSpaceId, data);
                     return data;
                 }
             };
@@ -171,13 +176,19 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
     {
         baseReader.checkOpen();
         return BitSetConversionUtils.fromStorageForm(readBitFieldStorageForm(objectPath, blockSize,
-                offset));
+                offset, false));
     }
 
     public boolean isBitSetInBitField(String objectPath, int bitIndex)
     {
         final int wordIndex = BitSetConversionUtils.getWordIndex(bitIndex);
-        final long word = readBitFieldStorageForm(objectPath, 1, wordIndex)[0];
+        final long[] storageFormOrNull = readBitFieldStorageForm(objectPath, 1, wordIndex, true);
+        // If the bitIndex is outside of the bit field, we return false
+        if (storageFormOrNull == null)
+        {
+            return false;
+        }
+        final long word = storageFormOrNull[0];
         return (word & BitSetConversionUtils.getBitMaskInWord(bitIndex)) != 0;
     }
 

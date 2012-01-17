@@ -368,19 +368,31 @@ class HDF5BaseReader
     }
 
     /**
+     * Returns the {@link DataSpaceParameters} for a 1d block of the given <var>dataSetId</var>, or
+     * <code>null</code>, if the offset is outside of the dataset and
+     * <code>nullWhenOutside == true</code>.
+     */
+    DataSpaceParameters tryGetSpaceParameters(final int dataSetId, final long offset,
+            final int blockSize, boolean nullWhenOutside, ICleanUpRegistry registry)
+    {
+        return getSpaceParameters(dataSetId, 0, offset, blockSize, nullWhenOutside, registry);
+    }
+
+    /**
      * Returns the {@link DataSpaceParameters} for a 1d block of the given <var>dataSetId</var>.
      */
     DataSpaceParameters getSpaceParameters(final int dataSetId, final long offset,
             final int blockSize, ICleanUpRegistry registry)
     {
-        return getSpaceParameters(dataSetId, 0, offset, blockSize, registry);
+        return getSpaceParameters(dataSetId, 0, offset, blockSize, false, registry);
     }
 
     /**
      * Returns the {@link DataSpaceParameters} for a 1d block of the given <var>dataSetId</var>.
      */
     DataSpaceParameters getSpaceParameters(final int dataSetId, final long memoryOffset,
-            final long offset, final int blockSize, ICleanUpRegistry registry)
+            final long offset, final int blockSize, boolean nullWhenOutside,
+            ICleanUpRegistry registry)
     {
         final int memorySpaceId;
         final int dataSpaceId;
@@ -399,11 +411,19 @@ class HDF5BaseReader
             final long maxFileBlockSize = size - offset;
             if (maxFileBlockSize <= 0)
             {
+                if (nullWhenOutside)
+                {
+                    return null;
+                }
                 throw new HDF5JavaException("Offset " + offset + " >= Size " + size);
             }
             final long maxMemoryBlockSize = size - memoryOffset;
             if (maxMemoryBlockSize <= 0)
             {
+                if (nullWhenOutside)
+                {
+                    return null;
+                }
                 throw new HDF5JavaException("Memory offset " + memoryOffset + " >= Size " + size);
             }
             effectiveBlockSize =
@@ -846,8 +866,8 @@ class HDF5BaseReader
         return HDF5EnumerationType.fromStorageForm(data);
     }
 
-    HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId, final DataTypeInfoOptions options,
-            final ICleanUpRegistry registry)
+    HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId,
+            final DataTypeInfoOptions options, final ICleanUpRegistry registry)
     {
         final int classTypeId = h5.getClassType(dataTypeId);
         final HDF5DataClass dataClass;

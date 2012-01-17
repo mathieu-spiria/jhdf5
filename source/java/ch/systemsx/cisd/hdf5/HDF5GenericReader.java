@@ -176,7 +176,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, memoryOffset, offset,
-                                    blockSize, registry);
+                                    blockSize, false, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);

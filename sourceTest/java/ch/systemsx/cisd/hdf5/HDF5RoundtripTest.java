@@ -619,6 +619,8 @@ public class HDF5RoundtripTest
         assertTrue(reader.isBitSetInBitField(booleanDatasetName, 128));
         assertFalse(reader.isBitSetInBitField(booleanDatasetName, 33));
         assertFalse(reader.isBitSetInBitField(booleanDatasetName, 64));
+        assertFalse(reader.isBitSetInBitField(booleanDatasetName, 256));
+        assertFalse(reader.isBitSetInBitField(booleanDatasetName, 512));
         reader.close();
     }
 
