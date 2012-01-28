@@ -165,6 +165,7 @@ public class HDF5RoundtripTest
         test.testStringMDArrayVL();
         test.testStringMDArrayVLBlocks();
         test.testMDIntArrayDifferentSizesElementType();
+        test.testMDIntArrayDifferentSizesElementTypeUnsignedByte();
         test.testReadMDFloatArray();
         test.testReadToFloatMDArray();
         test.testFloatArrayTypeDataSet();
@@ -1357,7 +1358,8 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        final MDIntArray arr = new MDIntArray(new int[] { 2, 2 });
+        final MDIntArray arr = new MDIntArray(new int[]
+            { 2, 2 });
         arr.set(1, 0, 0);
         arr.set(2, 0, 1);
         arr.set(3, 1, 0);
@@ -1365,8 +1367,38 @@ public class HDF5RoundtripTest
         arr.incNumberOfHyperRows(1);
         arr.set(5, 2, 0);
         arr.set(6, 2, 1);
-        writer.createShortMDArray("array", new int[] { 3, 2 });
-        writer.writeIntMDArrayBlock("array", arr, new long[] { 0, 0 });
+        writer.createShortMDArray("array", new int[]
+            { 3, 2 });
+        writer.writeIntMDArrayBlock("array", arr, new long[]
+            { 0, 0 });
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        assertEquals(arr, reader.readIntMDArray("array"));
+    }
+
+    @Test
+    public void testMDIntArrayDifferentSizesElementTypeUnsignedByte()
+    {
+        final File datasetFile =
+                new File(workingDirectory, "testMDIntArrayDifferentSizesElementTypeUnsignedByte.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final MDIntArray arr = new MDIntArray(new int[]
+            { 2, 2 });
+        arr.set(1, 0, 0);
+        arr.set(2, 0, 1);
+        arr.set(3, 1, 0);
+        arr.set(4, 1, 1);
+        arr.incNumberOfHyperRows(1);
+        arr.set(5, 2, 0);
+        arr.set(255, 2, 1);
+        writer.createByteMDArray("array", new int[]
+            { 3, 2 }, HDF5IntStorageFeatures.INT_NO_COMPRESSION_UNSIGNED);
+        writer.writeIntMDArrayBlock("array", arr, new long[]
+            { 0, 0 });
         writer.close();
 
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);

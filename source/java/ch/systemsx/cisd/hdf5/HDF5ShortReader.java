@@ -16,20 +16,20 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
 
 import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
+import ncsa.hdf.hdf5lib.HDF5Constants;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
-import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
+import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 
 /**
  * The implementation of {@link IHDF5ShortReader}.
@@ -66,8 +66,8 @@ class HDF5ShortReader implements IHDF5ShortReader
                     final int attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final short[] data =
-                            baseReader.h5.readAttributeAsShortArray(attributeId, H5T_NATIVE_INT16,
-                                    1);
+                            baseReader.h5
+                                    .readAttributeAsShortArray(attributeId, H5T_NATIVE_INT16, 1);
                     return data[0];
                 }
             };
@@ -125,7 +125,8 @@ class HDF5ShortReader implements IHDF5ShortReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
-    public MDShortArray getShortMDArrayAttribute(final String objectPath, final String attributeName)
+    public MDShortArray getShortMDArrayAttribute(final String objectPath,
+            final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -142,26 +143,22 @@ class HDF5ShortReader implements IHDF5ShortReader
                                         baseReader.h5.openObject(baseReader.fileId, objectPath,
                                                 registry);
                                 final int attributeId =
-                                        baseReader.h5.openAttribute(objectId, attributeName,
-                                                registry);
+                                        baseReader.h5.openAttribute(objectId, attributeName, registry);
                                 final int attributeTypeId =
-                                        baseReader.h5
-                                                .getDataTypeForAttribute(attributeId, registry);
+                                        baseReader.h5.getDataTypeForAttribute(attributeId, registry);
                                 final int memoryTypeId;
                                 final int[] arrayDimensions;
                                 if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
                                 {
-                                    arrayDimensions =
-                                            baseReader.h5.getArrayDimensions(attributeTypeId);
+                                    arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
                                     memoryTypeId =
                                             baseReader.h5.createArrayType(H5T_NATIVE_INT16,
                                                     arrayDimensions, registry);
                                 } else
                                 {
                                     arrayDimensions =
-                                            MDArray.toInt(baseReader.h5
-                                                    .getDataDimensionsForAttribute(attributeId,
-                                                            registry));
+                                            MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                                                    attributeId, registry));
                                     memoryTypeId = H5T_NATIVE_INT16;
                                 }
                                 final int len = MDArray.getLength(arrayDimensions);
@@ -203,7 +200,7 @@ class HDF5ShortReader implements IHDF5ShortReader
             {
                 public Short call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final int dataSetId = 
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final short[] data = new short[1];
                     baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, data);
@@ -222,7 +219,7 @@ class HDF5ShortReader implements IHDF5ShortReader
             {
                 public short[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final int dataSetId = 
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     return readShortArray(dataSetId, registry);
                 }
@@ -278,16 +275,16 @@ class HDF5ShortReader implements IHDF5ShortReader
             {
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final int dataSetId = 
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset,
-                                    array.dimensions(), registry);
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId,
-                            array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array.
+                            getAsFlatArray());
                     return MDArray.toInt(spaceParams.dimensions);
                 }
             };
@@ -305,16 +302,16 @@ class HDF5ShortReader implements IHDF5ShortReader
             {
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final int dataSetId = 
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
-                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset,
-                                    array.dimensions(), offset, blockDimensions, registry);
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
+                                    .dimensions(), offset, blockDimensions, registry);
                     final int nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT16, registry);
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId,
-                            array.getAsFlatArray());
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
+                            .getAsFlatArray());
                     return MDArray.toInt(spaceParams.dimensions);
                 }
             };
@@ -337,13 +334,13 @@ class HDF5ShortReader implements IHDF5ShortReader
             {
                 public short[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final int dataSetId = 
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final short[] data = new short[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
                     return data;
                 }
             };
@@ -362,7 +359,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     public short[][] readShortMatrixBlock(final String objectPath, final int blockSizeX,
-            final int blockSizeY, final long blockNumberX, final long blockNumberY)
+            final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException
     {
         final MDShortArray array = readShortMDArrayBlock(objectPath, new int[]
@@ -395,17 +392,15 @@ class HDF5ShortReader implements IHDF5ShortReader
         assert objectPath != null;
 
         baseReader.checkOpen();
-        final ICallableWithCleanUp<MDShortArray> readCallable =
-                new ICallableWithCleanUp<MDShortArray>()
-                    {
-                        public MDShortArray call(ICleanUpRegistry registry)
-                        {
-                            final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
-                                            registry);
-                            return readShortMDArray(dataSetId, registry);
-                        }
-                    };
+        final ICallableWithCleanUp<MDShortArray> readCallable = new ICallableWithCleanUp<MDShortArray>()
+            {
+                public MDShortArray call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    return readShortMDArray(dataSetId, registry);
+                }
+            };
         return baseReader.runner.call(readCallable);
     }
 
@@ -466,26 +461,24 @@ class HDF5ShortReader implements IHDF5ShortReader
         assert offset != null;
 
         baseReader.checkOpen();
-        final ICallableWithCleanUp<MDShortArray> readCallable =
-                new ICallableWithCleanUp<MDShortArray>()
-                    {
-                        public MDShortArray call(ICleanUpRegistry registry)
-                        {
-                            final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
-                                            registry);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offset,
-                                            blockDimensions, registry);
-                            final short[] dataBlock = new short[spaceParams.blockSize];
-                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
-                                    spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
-                            return new MDShortArray(dataBlock, blockDimensions);
-                        }
-                    };
+        final ICallableWithCleanUp<MDShortArray> readCallable = new ICallableWithCleanUp<MDShortArray>()
+            {
+                public MDShortArray call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getSpaceParameters(dataSetId, offset, blockDimensions, 
+                                    registry);
+                    final short[] dataBlock = new short[spaceParams.blockSize];
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, dataBlock);
+                    return new MDShortArray(dataBlock, blockDimensions);
+                }
+            };
         return baseReader.runner.call(readCallable);
     }
-
+    
     public Iterable<HDF5DataBlock<short[]>> getShortArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
@@ -511,9 +504,9 @@ class HDF5ShortReader implements IHDF5ShortReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final short[] block =
-                                        readShortArrayBlockWithOffset(dataSetPath,
-                                                index.getBlockSize(), offset);
-                                return new HDF5DataBlock<short[]>(block, index.getAndIncIndex(),
+                                        readShortArrayBlockWithOffset(dataSetPath, index
+                                                .getBlockSize(), offset);
+                                return new HDF5DataBlock<short[]>(block, index.getAndIncIndex(), 
                                         offset);
                             }
 
@@ -526,8 +519,7 @@ class HDF5ShortReader implements IHDF5ShortReader
             };
     }
 
-    public Iterable<HDF5MDDataBlock<MDShortArray>> getShortMDArrayNaturalBlocks(
-            final String dataSetPath)
+    public Iterable<HDF5MDDataBlock<MDShortArray>> getShortMDArrayNaturalBlocks(final String dataSetPath)
     {
         baseReader.checkOpen();
         final HDF5NaturalBlockMDParameters params =
@@ -551,10 +543,10 @@ class HDF5ShortReader implements IHDF5ShortReader
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
                                 final MDShortArray data =
-                                        readShortMDArrayBlockWithOffset(dataSetPath,
-                                                index.getBlockSize(), offset);
-                                return new HDF5MDDataBlock<MDShortArray>(data,
-                                        index.getIndexClone(), offset);
+                                        readShortMDArrayBlockWithOffset(dataSetPath, index
+                                                .getBlockSize(), offset);
+                                return new HDF5MDDataBlock<MDShortArray>(data, index
+                                        .getIndexClone(), offset);
                             }
 
                             public void remove()

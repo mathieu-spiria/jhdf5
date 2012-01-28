@@ -17,11 +17,12 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
+import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_U64LE;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
@@ -140,8 +141,9 @@ class HDF5LongWriter implements IHDF5LongWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE, new long[]
-                                { data.length }, 8, features, registry);
+                            baseWriter.getOrCreateDataSetId(objectPath,
+                                    features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE, new long[]
+                                        { data.length }, 8, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
@@ -172,13 +174,15 @@ class HDF5LongWriter implements IHDF5LongWriter
                 {
                     if (features.requiresChunking())
                     {
-                        baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features, new long[]
+                        baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I64LE
+                                : H5T_STD_U64LE, features, new long[]
                             { 0 }, new long[]
                             { size }, 8, registry);
 
                     } else
                     {
-                        baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features, new long[]
+                        baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I64LE
+                                : H5T_STD_U64LE, features, new long[]
                             { size }, null, 8, registry);
                     }
                     return null; // Nothing to return.
@@ -199,7 +203,8 @@ class HDF5LongWriter implements IHDF5LongWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features, new long[]
+                    baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I64LE
+                            : H5T_STD_U64LE, features, new long[]
                         { size }, new long[]
                         { blockSize }, 8, registry);
                     return null; // Nothing to return.
@@ -297,8 +302,8 @@ class HDF5LongWriter implements IHDF5LongWriter
                         { sizeX, sizeY };
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
-                    baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features, dimensions,
-                            blockDimensions, 8, registry);
+                    baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I64LE
+                            : H5T_STD_U64LE, features, dimensions, blockDimensions, 8, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -354,7 +359,8 @@ class HDF5LongWriter implements IHDF5LongWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE,
+                            baseWriter.getOrCreateDataSetId(objectPath,
+                                    features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE,
                                     data.longDimensions(), 8, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             data.getAsFlatArray());
@@ -389,12 +395,14 @@ class HDF5LongWriter implements IHDF5LongWriter
                     if (features.requiresChunking())
                     {
                         final long[] nullDimensions = new long[dimensions.length];
-                        baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
-                                nullDimensions, MDArray.toLong(dimensions), 8, registry);
+                        baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I64LE
+                                : H5T_STD_U64LE, features, nullDimensions, MDArray
+                                .toLong(dimensions), 8, registry);
                     } else
                     {
-                        baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
-                                MDArray.toLong(dimensions), null, 8, registry);
+                        baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I64LE
+                                : H5T_STD_U64LE, features, MDArray.toLong(dimensions), null, 8,
+                                registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -414,8 +422,9 @@ class HDF5LongWriter implements IHDF5LongWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features, dimensions,
-                            MDArray.toLong(blockDimensions), 8, registry);
+                    baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I64LE
+                            : H5T_STD_U64LE, features, dimensions, MDArray.toLong(blockDimensions),
+                            8, registry);
                     return null; // Nothing to return.
                 }
             };

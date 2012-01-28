@@ -51,8 +51,7 @@ public class HDF5CodeGenerator
         final String elementSize;
 
         TemplateParameters(String name, String capitalizedName, String capitalizedClassName,
-                String wrapperName, String storageType, String memoryType,
-                String elementSize)
+                String wrapperName, String storageType, String memoryType, String elementSize)
         {
             this.name = name;
             this.capitalizedName = capitalizedName;
@@ -73,24 +72,28 @@ public class HDF5CodeGenerator
                 storageType, memoryType, elementSize);
     }
 
-    static final TemplateParameters PLACEHOLDERS =
-            tp("__name__", "__Name__", "__Classname__", "__Wrappername__", "__Storagetype__",
-                    "__Memorytype__", "__elementsize__");
+    static final TemplateParameters PLACEHOLDERS = tp("__name__", "__Name__", "__Classname__",
+            "__Wrappername__", "__Storagetype__", "__Memorytype__", "__elementsize__");
 
     static final TemplateParameters[] NUMERICAL_TYPES =
             new TemplateParameters[]
                 {
-                        tp("byte", "Byte", "Int", "Byte", "H5T_STD_I8LE", "H5T_NATIVE_INT8", "1"),
-                        tp("short", "Short", "Int", "Short", "H5T_STD_I16LE", "H5T_NATIVE_INT16",
-                                "2"),
-                        tp("int", "Int", "Int", "Integer", "H5T_STD_I32LE", "H5T_NATIVE_INT32",
-                                "4"),
-                        tp("long", "Long", "Int", "Long", "H5T_STD_I64LE", "H5T_NATIVE_INT64",
-                                "8"),
-                        tp("float", "Float", "Float", "Float", "H5T_IEEE_F32LE", "H5T_NATIVE_FLOAT",
-                                "4"),
-                        tp("double", "Double", "Float", "Double", "H5T_IEEE_F64LE", "H5T_NATIVE_DOUBLE",
-                                "8") };
+                        tp("byte", "Byte", "Int", "Byte",
+                                "features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE",
+                                "H5T_NATIVE_INT8", "1"),
+                        tp("short", "Short", "Int", "Short",
+                                "features.isSigned() ? H5T_STD_I16LE : H5T_STD_U16LE",
+                                "H5T_NATIVE_INT16", "2"),
+                        tp("int", "Int", "Int", "Integer",
+                                "features.isSigned() ? H5T_STD_I32LE : H5T_STD_U32LE",
+                                "H5T_NATIVE_INT32", "4"),
+                        tp("long", "Long", "Int", "Long",
+                                "features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE",
+                                "H5T_NATIVE_INT64", "8"),
+                        tp("float", "Float", "Float", "Float", "H5T_IEEE_F32LE",
+                                "H5T_NATIVE_FLOAT", "4"),
+                        tp("double", "Double", "Float", "Double", "H5T_IEEE_F64LE",
+                                "H5T_NATIVE_DOUBLE", "8") };
 
     /**
      * Generate the code for all numerical types from <var>codeTemplate</var> and write it to
@@ -130,7 +133,7 @@ public class HDF5CodeGenerator
             final String interfaceTemplateReader =
                     FileUtils
                             .readFileToString(new File(
-                                    "sourceTest/java/ch/systemsx/cisd/hdf5/IHDF5PrimitiveReader.java.templ"));
+                                    "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5PrimitiveReader.java.templ"));
             final PrintStream outInterfaceReader =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/IHDF5"
                             + t.capitalizedName + "Reader.java"));
@@ -139,7 +142,7 @@ public class HDF5CodeGenerator
             final String classTemplateReader =
                     FileUtils
                             .readFileToString(new File(
-                                    "sourceTest/java/ch/systemsx/cisd/hdf5/HDF5PrimitiveReader.java.templ"));
+                                    "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveReader.java.templ"));
             final PrintStream outclassReader =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
                             + t.capitalizedName + "Reader.java"));
@@ -148,7 +151,7 @@ public class HDF5CodeGenerator
             final String interfaceTemplateWriter =
                     FileUtils
                             .readFileToString(new File(
-                                    "sourceTest/java/ch/systemsx/cisd/hdf5/IHDF5PrimitiveWriter.java.templ"));
+                                    "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5PrimitiveWriter.java.templ"));
             final PrintStream outInterfaceWriter =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/IHDF5"
                             + t.capitalizedName + "Writer.java"));
@@ -157,7 +160,7 @@ public class HDF5CodeGenerator
             final String classTemplateWriter =
                     FileUtils
                             .readFileToString(new File(
-                                    "sourceTest/java/ch/systemsx/cisd/hdf5/HDF5PrimitiveWriter.java.templ"));
+                                    "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveWriter.java.templ"));
             final PrintStream outclassWriter =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
                             + t.capitalizedName + "Writer.java"));
