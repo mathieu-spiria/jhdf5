@@ -23,8 +23,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
-
 /**
  * Utility methods for reflection, used for inferring the mapping between a compound data type and
  * the fields of a Java class.
@@ -46,29 +44,24 @@ final class ReflectionUtils
      */
     public static Map<String, Field> getFieldMap(final Class<?> clazz)
     {
-        final Map<String, Field> fields = new HashMap<String, Field>();
-        addFieldsToMap(clazz, fields);
-        return fields;
-    }
-
-    private static void addFieldsToMap(final Class<?> clazz, final Map<String, Field> fields)
-    {
-        for (final Field field : clazz.getDeclaredFields())
+        final Map<String, Field> map = new HashMap<String, Field>();
+        final CompoundType ct = clazz.getAnnotation(CompoundType.class);
+        final boolean includeAllFields = (ct != null) ? ct.mapAllFields() : true;
+        for (Class<?> c = clazz; c != null; c = c.getSuperclass())
         {
-            CompoundElement e = field.getAnnotation(CompoundElement.class);
-            if (e != null && StringUtils.isNotEmpty(e.memberName()))
+            for (Field f : c.getDeclaredFields())
             {
-                fields.put(e.memberName(), field);
-            } else
-            {
-                fields.put(field.getName(), field);
+                final CompoundElement e = f.getAnnotation(CompoundElement.class);
+                if (e != null && org.apache.commons.lang.StringUtils.isNotEmpty(e.memberName()))
+                {
+                    map.put(e.memberName(), f);
+                } else if (includeAllFields)
+                {
+                    map.put(f.getName(), f);
+                }
             }
         }
-        final Class<?> superClass = clazz.getSuperclass();
-        if (superClass != null)
-        {
-            addFieldsToMap(superClass, fields);
-        }
+        return map;
     }
 
     /**
