@@ -560,8 +560,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                             && (fieldOrNull.getType() != HDF5EnumerationValue.class)
                             && fieldOrNull.getType().isEnum() == false)
                     {
-                        throw new HDF5JavaException(
-                                "Field of enum type does not correspond to enumeration value");
+                        throw new HDF5JavaException("Field of enum type '" + fieldOrNull.getName()
+                                + "' does not correspond to enumeration value.");
 
                     }
                     mapping.add(HDF5CompoundMemberMapping
@@ -582,8 +582,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                     if (fieldOrNull != null
                             && (fieldOrNull.getType() != HDF5EnumerationValueArray.class))
                     {
-                        throw new HDF5JavaException(
-                                "Field of enum type does not correspond to enumeration array value");
+                        throw new HDF5JavaException("Field of enum type '" + fieldOrNull.getName()
+                                + "' does not correspond to enumeration value.");
 
                     }
                     mapping.add(HDF5CompoundMemberMapping.mappingWithStorageTypeId(
