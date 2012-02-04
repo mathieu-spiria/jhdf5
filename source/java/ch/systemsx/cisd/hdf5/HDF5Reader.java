@@ -1213,6 +1213,28 @@ class HDF5Reader implements IHDF5Reader
         return enumReader.readEnumArrayBlockWithOffsetAsString(objectPath, blockSize, offset);
     }
 
+    public HDF5EnumerationValueMDArray readEnumMDArray(String objectPath) throws HDF5JavaException
+    {
+        return enumReader.readEnumMDArray(objectPath);
+    }
+
+    public HDF5EnumerationValueMDArray readEnumMDArray(String objectPath,
+            HDF5EnumerationType enumType) throws HDF5JavaException
+    {
+        return enumReader.readEnumMDArray(objectPath, enumType);
+    }
+
+    public <T extends Enum<T>> MDArray<T> readEnumMDArray(String objectPath, Class<T> enumClass)
+            throws HDF5JavaException
+    {
+        return enumReader.readEnumMDArray(objectPath, enumClass);
+    }
+
+    public MDArray<String> readEnumMDArrayAsString(String objectPath) throws HDF5JavaException
+    {
+        return enumReader.readEnumMDArrayAsString(objectPath);
+    }
+
     public <T> T getCompoundAttribute(String objectPath, String attributeName,
             HDF5CompoundType<T> type) throws HDF5JavaException
     {

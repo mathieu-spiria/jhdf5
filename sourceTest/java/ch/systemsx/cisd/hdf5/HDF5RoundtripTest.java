@@ -289,6 +289,7 @@ public class HDF5RoundtripTest
         }
         test.testReplaceConfusedEnum();
         test.testEnumArray();
+        test.testEnumMDArray();
         test.testJavaEnumArray();
         test.testEnumArrayBlock();
         test.testEnumArrayBlockScalingCompression();
@@ -4621,6 +4622,42 @@ public class HDF5RoundtripTest
             assertEquals("Index " + i, arrayWritten.getValue(i), arrayRead.getValue(i));
             assertEquals("Index " + i, arrayWritten.getValue(i), arrayRead2.getValue(i));
             assertEquals("Index " + i, arrayWritten.getValue(i), stringArrayRead[i]);
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testEnumMDArray()
+    {
+        final File file = new File(workingDirectory, "enumMDArray.h5");
+        final String enumTypeName = "testEnum";
+        file.delete();
+        assertFalse(file.exists());
+        //file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
+            { "ONE", "TWO", "THREE" }, false);
+        HDF5EnumerationValueMDArray arrayWritten =
+                new HDF5EnumerationValueMDArray(enumType, new MDArray<String>(new String[]
+                    { "TWO", "ONE", "THREE", "TWO", "ONE", "THREE", "TWO", "ONE", "THREE", "TWO",
+                            "ONE", "THREE", "TWO", "ONE", "THREE", "TWO", "ONE", "THREE", "TWO",
+                            "ONE", "THREE", "TWO", "ONE", "THREE" }, new int[]
+                    { 2, 3, 4 }));
+        writer.writeEnumMDArray("/testEnum", arrayWritten);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final HDF5EnumerationValueMDArray arrayRead = reader.readEnumMDArray("/testEnum");
+        enumType = reader.getDataSetEnumType("/testEnum");
+        final HDF5EnumerationValueMDArray arrayRead2 = reader.readEnumMDArray("/testEnum", enumType);
+        final MDArray<String> stringArrayRead = reader.readEnumMDArrayAsString("/testEnum");
+        assertTrue(Arrays.equals(arrayWritten.dimensions(), stringArrayRead.dimensions()));
+        assertTrue(Arrays.equals(arrayWritten.dimensions(), arrayRead.dimensions()));
+        assertTrue(Arrays.equals(arrayWritten.dimensions(), arrayRead2.dimensions()));
+        for (int i = 0; i < stringArrayRead.size(); ++i)
+        {
+            assertEquals("Index " + i, arrayWritten.getValue(i), arrayRead.getValue(i));
+            assertEquals("Index " + i, arrayWritten.getValue(i), arrayRead2.getValue(i));
+            assertEquals("Index " + i, arrayWritten.getValue(i), stringArrayRead.get(i));
         }
         reader.close();
     }

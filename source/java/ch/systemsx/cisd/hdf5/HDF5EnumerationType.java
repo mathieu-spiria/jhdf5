@@ -34,6 +34,10 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.base.mdarray.MDByteArray;
+import ch.systemsx.cisd.base.mdarray.MDIntArray;
+import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
@@ -70,7 +74,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         {
             return intNativeType;
         }
-        
+
         int getIntStorageTypeId()
         {
             return intStorageType;
@@ -80,6 +84,8 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     private final String nameOrNull;
 
     private final String[] values;
+
+    private final List<String> unmodifiableValues;
 
     private Map<String, Integer> nameToIndexMap;
 
@@ -108,6 +114,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
 
         this.nameOrNull = nameOrNull;
         this.values = values;
+        this.unmodifiableValues = Collections.unmodifiableList(Arrays.asList(values));
     }
 
     private Map<String, Integer> getMap()
@@ -165,7 +172,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
      */
     public List<String> getValues()
     {
-        return Collections.unmodifiableList(Arrays.asList(values));
+        return unmodifiableValues;
     }
 
     StorageFormEnum getStorageForm()
@@ -228,8 +235,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         {
             return NativeData.byteToInt(data, ByteOrder.NATIVE)[0];
         }
-        throw new HDF5JavaException("Unexpected size for Enum data type ("
-                + data.length + ")");
+        throw new HDF5JavaException("Unexpected size for Enum data type (" + data.length + ")");
     }
 
     static int fromStorageForm(byte[] data, int index, int size)
@@ -244,8 +250,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         {
             return NativeData.byteToInt(data, ByteOrder.NATIVE, index, 1)[0];
         }
-        throw new HDF5JavaException("Unexpected size for Enum data type ("
-                + size + ")");
+        throw new HDF5JavaException("Unexpected size for Enum data type (" + size + ")");
     }
 
     static Object fromStorageForm(byte[] data, StorageFormEnum storageForm)
@@ -258,6 +263,21 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
                 return NativeData.byteToShort(data, ByteOrder.NATIVE);
             case INT:
                 return NativeData.byteToInt(data, ByteOrder.NATIVE);
+        }
+        throw new Error("Illegal storage size.");
+    }
+
+    static MDAbstractArray<?> fromStorageForm(byte[] data, long[] dimensions,
+            StorageFormEnum storageForm)
+    {
+        switch (storageForm)
+        {
+            case BYTE:
+                return new MDByteArray(data, dimensions);
+            case SHORT:
+                return new MDShortArray(NativeData.byteToShort(data, ByteOrder.NATIVE), dimensions);
+            case INT:
+                return new MDIntArray(NativeData.byteToInt(data, ByteOrder.NATIVE), dimensions);
         }
         throw new Error("Illegal storage size.");
     }

@@ -1179,8 +1179,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         enumWriter.setEnumAttribute(objectPath, name, value);
     }
 
-    public void setEnumArrayAttribute(String objectPath, String name,
-            Enum<?>[] data) throws HDF5JavaException
+    public void setEnumArrayAttribute(String objectPath, String name, Enum<?>[] data)
+            throws HDF5JavaException
     {
         enumWriter.setEnumArrayAttribute(objectPath, name, data);
     }
@@ -1256,6 +1256,30 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             long offset)
     {
         enumWriter.writeEnumArrayBlockWithOffset(objectPath, data, dataSize, offset);
+    }
+
+    public <T extends Enum<T>> void writeEnumMDArray(final String objectPath,
+            final MDArray<Enum<T>> data)
+    {
+        enumWriter.writeEnumMDArray(objectPath, data);
+    }
+
+    public void writeEnumMDArray(String objectPath, HDF5EnumerationValueMDArray data,
+            HDF5IntStorageFeatures features) throws HDF5JavaException
+    {
+        enumWriter.writeEnumMDArray(objectPath, data, features);
+    }
+
+    public void writeEnumMDArray(String objectPath, HDF5EnumerationValueMDArray data)
+            throws HDF5JavaException
+    {
+        enumWriter.writeEnumMDArray(objectPath, data);
+    }
+
+    public <T extends Enum<T>> void writeEnumMDArray(String objectPath, MDArray<Enum<T>> data,
+            HDF5IntStorageFeatures features) throws HDF5JavaException
+    {
+        enumWriter.writeEnumMDArray(objectPath, data, features);
     }
 
     @Override

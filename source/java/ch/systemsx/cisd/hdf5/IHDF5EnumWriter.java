@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
@@ -391,5 +393,23 @@ public interface IHDF5EnumWriter extends IHDF5EnumTypeRetriever
      */
     public void writeEnumArrayBlockWithOffset(final String objectPath, Enum<?>[] data,
             final int dataSize, final long offset);
+
+    public void writeEnumMDArray(final String objectPath, final HDF5EnumerationValueMDArray data,
+            final HDF5IntStorageFeatures features) throws HDF5JavaException;
+    
+    public void writeEnumMDArray(final String objectPath, final HDF5EnumerationValueMDArray data)
+            throws HDF5JavaException;
+    
+    public <T extends Enum<T>> void writeEnumMDArray(final String objectPath,
+            final MDArray<Enum<T>> data, HDF5IntStorageFeatures features) throws HDF5JavaException;
+    
+    /**
+     * Writes out an array (of rank N) of compound values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
+     */
+    public <T extends Enum<T>> void writeEnumMDArray(final String objectPath,
+            final MDArray<Enum<T>> data);
 
 }

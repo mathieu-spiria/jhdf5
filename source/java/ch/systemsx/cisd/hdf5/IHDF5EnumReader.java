@@ -18,6 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
+
 /**
  * An interface that provides methods for reading enumeration values from HDF5 files.
  * 
@@ -238,9 +240,9 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      * @return The data read from the data set as an array of Strings.
      * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
      */
-    public String[] readEnumArrayBlockAsString(final String objectPath,
-            final int blockSize, final long blockNumber);
-    
+    public String[] readEnumArrayBlockAsString(final String objectPath, final int blockSize,
+            final long blockNumber);
+
     /**
      * Reads an <code>Enum</code> array block (of rank 1) from the data set <var>objectPath</var>.
      * 
@@ -255,7 +257,7 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      */
     public String[] readEnumArrayBlockWithOffsetAsString(final String objectPath,
             final int blockSize, final long offset);
-    
+
     /**
      * Reads an <code>Enum</code> value array from the data set <var>objectPath</var>.
      * 
@@ -349,6 +351,50 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      */
     public <T extends Enum<T>> T[] readEnumArrayBlockWithOffset(final String objectPath,
             Class<T> enumClass, final int blockSize, final long offset);
+
+    /**
+     * Reads an <code>Enum</code> multi-dimensional array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var>.
+     */
+    public HDF5EnumerationValueMDArray readEnumMDArray(final String objectPath)
+            throws HDF5JavaException;
+
+    /**
+     * Reads an <code>Enum</code> multi-dimensional array from the data set <var>objectPath</var>.
+     * <p>
+     * This method is faster than {@link #readEnum(String)} if the {@link HDF5EnumerationType} is
+     * already available.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumType The enum type in the HDF5 file.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var>.
+     */
+    public HDF5EnumerationValueMDArray readEnumMDArray(final String objectPath,
+            final HDF5EnumerationType enumType) throws HDF5JavaException;
+
+    /**
+     * Reads an <code>Enum</code> multi-dimensional array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumClass The enum type in the HDF5 file.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var>.
+     */
+    public <T extends Enum<T>> MDArray<T> readEnumMDArray(String objectPath, Class<T> enumClass)
+            throws HDF5JavaException;
+
+    /**
+     * Reads an <code>Enum</code> multi-dimensional array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The data read from the data set as an array of Strings.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public MDArray<String> readEnumMDArrayAsString(String objectPath) throws HDF5JavaException;
 
     /**
      * Provides all natural blocks of this one-dimensional data set to iterate over.

@@ -26,6 +26,7 @@ import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType.StorageFormEnum;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -449,6 +450,64 @@ class HDF5EnumReader implements IHDF5EnumReader
     {
         final String[] values = readEnumArrayAsString(objectPath);
         return toEnumArray(enumClass, values);
+    }
+
+    public HDF5EnumerationValueMDArray readEnumMDArray(final String objectPath)
+            throws HDF5JavaException
+    {
+        return readEnumMDArray(objectPath, (HDF5EnumerationType) null);
+    }
+
+    public HDF5EnumerationValueMDArray readEnumMDArray(final String objectPath,
+            final HDF5EnumerationType enumTypeOrNull) throws HDF5JavaException
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5EnumerationValueMDArray> readRunnable =
+                new ICallableWithCleanUp<HDF5EnumerationValueMDArray>()
+                    {
+                        public HDF5EnumerationValueMDArray call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final boolean scaledEnum = baseReader.isScaledEnum(dataSetId, registry);
+                            final HDF5EnumerationType actualEnumType =
+                                    (enumTypeOrNull == null) ? getEnumTypeForDataSetId(dataSetId,
+                                            objectPath, scaledEnum, registry) : enumTypeOrNull;
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, registry);
+                            final StorageFormEnum storageForm = actualEnumType.getStorageForm();
+                            final byte[] data =
+                                    new byte[spaceParams.blockSize * storageForm.getStorageSize()];
+                            if (scaledEnum)
+                            {
+                                baseReader.h5.readDataSet(dataSetId, actualEnumType
+                                        .getStorageForm().getIntNativeTypeId(), data);
+                            } else
+                            {
+                                baseReader.h5.readDataSet(dataSetId,
+                                        actualEnumType.getNativeTypeId(), data);
+                            }
+                            return new HDF5EnumerationValueMDArray(actualEnumType,
+                                    HDF5EnumerationType.fromStorageForm(data,
+                                            spaceParams.dimensions, storageForm));
+                        }
+                    };
+
+        return baseReader.runner.call(readRunnable);
+    }
+
+    public <T extends Enum<T>> MDArray<T> readEnumMDArray(String objectPath, Class<T> enumClass)
+            throws HDF5JavaException
+    {
+        return readEnumMDArray(objectPath).getValues(enumClass);
+    }
+
+    public MDArray<String> readEnumMDArrayAsString(String objectPath) throws HDF5JavaException
+    {
+        return readEnumMDArray(objectPath).getValues();
     }
 
     public <T extends Enum<T>> T[] readEnumArrayBlock(String objectPath, Class<T> enumClass,
