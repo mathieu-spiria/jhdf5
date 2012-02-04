@@ -4633,7 +4633,7 @@ public class HDF5RoundtripTest
         final String enumTypeName = "testEnum";
         file.delete();
         assertFalse(file.exists());
-        //file.deleteOnExit();
+        file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
             { "ONE", "TWO", "THREE" }, false);
