@@ -97,17 +97,17 @@ final class HDF5NaturalBlockMDParameters
     HDF5NaturalBlockMDParameters(final HDF5DataSetInformation info)
     {
         rank = info.getRank();
-        final int[] size = MDArray.toInt(info.getDimensions());
+        final long[] dimensions = info.getDimensions();
         naturalBlockSize =
                 (info.getStorageLayout() == HDF5StorageLayout.CHUNKED) ? info.tryGetChunkSizes()
-                        : size;
+                        : MDArray.toInt(dimensions);
         numberOfBlocks = new long[rank];
         lastBlockSize = new int[rank];
-        for (int i = 0; i < size.length; ++i)
+        for (int i = 0; i < dimensions.length; ++i)
         {
-            final int sizeModNaturalBlockSize = size[i] % naturalBlockSize[i];
+            final int sizeModNaturalBlockSize = (int) (dimensions[i] % naturalBlockSize[i]);
             numberOfBlocks[i] =
-                    (size[i] / naturalBlockSize[i]) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
+                    (dimensions[i] / naturalBlockSize[i]) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
             lastBlockSize[i] =
                     (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize[i];
         }

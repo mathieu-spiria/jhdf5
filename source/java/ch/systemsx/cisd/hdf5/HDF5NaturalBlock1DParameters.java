@@ -75,17 +75,11 @@ final class HDF5NaturalBlock1DParameters
             throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
                     + info.getRank() + ")");
         }
-        final long longSize = info.getDimensions()[0];
-        final int size = (int) longSize;
-        if (size != longSize)
-        {
-            throw new HDF5JavaException("Data set dimension is too large to fit in memory ("
-                    + longSize + ")");
-        }
+        final long size = info.getDimensions()[0];
         naturalBlockSize =
                 (info.getStorageLayout() == HDF5StorageLayout.CHUNKED) ? info.tryGetChunkSizes()[0]
-                        : size;
-        final int sizeModNaturalBlockSize = size % naturalBlockSize;
+                        : (int) size;
+        final int sizeModNaturalBlockSize = (int) (size % naturalBlockSize);
         numberOfBlocks = (size / naturalBlockSize) + (sizeModNaturalBlockSize != 0 ? 1 : 0);
         lastBlockSize = (sizeModNaturalBlockSize != 0) ? sizeModNaturalBlockSize : naturalBlockSize;
     }
