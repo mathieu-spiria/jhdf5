@@ -302,4 +302,46 @@ public interface IHDF5SimpleReader
     public <T> T[] readCompoundArray(final String objectPath, final Class<T> pojoClass)
             throws HDF5JavaException;
 
+    /**
+     * Reads an <code>Enum</code> value from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumClass the {@link Enum} class to represent the values of.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var> or if
+     *             <var>enumClass</var> is incompatible with the HDF5 enumeration type of
+     *             <var>objectPath</var>.
+     */
+    public <T extends Enum<T>> T readEnum(final String objectPath, Class<T> enumClass)
+            throws HDF5JavaException;
+
+    /**
+     * Reads an <code>Enum</code> value from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The data read from the data set as a String.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public String readEnumAsString(final String objectPath) throws HDF5JavaException;
+
+    /**
+     * Reads an <code>Enum</code> value array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param enumClass the {@link Enum} class to represent the values of.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var>.
+     */
+    public <T extends Enum<T>> T[] readEnumArray(final String objectPath, Class<T> enumClass)
+            throws HDF5JavaException;
+
+    /**
+     * Reads an <code>Enum</code> array (of rank 1) from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The data read from the data set as an array of Strings.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not an enum type.
+     */
+    public String[] readEnumArrayAsString(final String objectPath) throws HDF5JavaException;
+
 }

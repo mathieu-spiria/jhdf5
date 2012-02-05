@@ -39,8 +39,10 @@ public interface IHDF5EnumBasicWriter
      * @param values The values of the enumeration.
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>values</var> provided.
+     * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
-    public HDF5EnumerationType getType(final String dataTypeName, final String[] values)
+    @Deprecated
+    public HDF5EnumerationType getEnumType(String dataTypeName, String[] values)
             throws HDF5JavaException;
 
     /**
@@ -54,9 +56,11 @@ public interface IHDF5EnumBasicWriter
      *            compatible with the <var>values</var> provided.
      * @throws HDF5JavaException If <code>check = true</code>, the data type exists and is not
      *             compatible with the <var>values</var> provided.
+     * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
-    public HDF5EnumerationType getType(final String dataTypeName, final String[] values,
-            final boolean check) throws HDF5JavaException;
+    @Deprecated
+    public HDF5EnumerationType getEnumType(String dataTypeName, String[] values,
+            boolean check) throws HDF5JavaException;
 
     // /////////////////////
     // Attributes
@@ -71,9 +75,11 @@ public interface IHDF5EnumBasicWriter
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
-    public void setEnumAttribute(final String objectPath, final String name,
-            final HDF5EnumerationValue value);
+    @Deprecated
+    public void setEnumAttribute(String objectPath, String name,
+            HDF5EnumerationValue value);
 
     /**
      * Sets an enum attribute to the referenced object.
@@ -84,10 +90,10 @@ public interface IHDF5EnumBasicWriter
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
+     * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
-    public void setEnumAttribute(final String objectPath, final String name, final Enum<?> value)
-            throws HDF5JavaException;
+    @Deprecated
+    public void setEnumAttribute(String objectPath, String name, Enum<?> value);
 
     /**
      * Sets an enum array attribute to the referenced object.
@@ -98,9 +104,11 @@ public interface IHDF5EnumBasicWriter
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
-    public void setEnumArrayAttribute(final String objectPath, final String name,
-            final HDF5EnumerationValueArray value);
+    @Deprecated
+    public void setEnumArrayAttribute(String objectPath, String name,
+            HDF5EnumerationValueArray value);
 
     // /////////////////////
     // Data Sets
@@ -111,29 +119,54 @@ public interface IHDF5EnumBasicWriter
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param value The value of the data set.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
+     * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
-    public void writeEnum(final String objectPath, final HDF5EnumerationValue value)
-            throws HDF5JavaException;
+    @Deprecated
+    public void writeEnum(String objectPath, HDF5EnumerationValue value);
 
     /**
      * Writes out an enum value.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param value The value of the data set.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
-    public void writeEnum(final String objectPath, final Enum<?> value) throws HDF5JavaException;
+    public <T extends Enum<T>> void writeEnum(String objectPath, Enum<T> value);
+
+    /**
+     * Writes out an enum value.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param options The allowed values of the enumeration type.
+     * @param value The value of the data set.
+     */
+    public void writeEnum(String objectPath, String[] options, String value);
 
     /**
      * Writes out an array of enum values.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
+     * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
-    public void writeEnumArray(final String objectPath, final HDF5EnumerationValueArray data)
-            throws HDF5JavaException;
+    @Deprecated
+    public void writeEnumArray(String objectPath, HDF5EnumerationValueArray data);
+
+    /**
+     * Writes out an array of enum values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
+     */
+    public <T extends Enum<T>> void writeEnumArray(String objectPath, Enum<T>[] data);
+
+    /**
+     * Writes out an array of enum values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param options The allowed values of the enumeration type.
+     * @param data The data to write.
+     */
+    public void writeEnumArray(String objectPath, String[] options, String[] data);
 
     /**
      * Writes out an array of enum values.
@@ -143,10 +176,11 @@ public interface IHDF5EnumBasicWriter
      * @param features The storage features of the data set. Note that for scaling compression the
      *            compression factor is ignored. Instead, the scaling factor is computed from the
      *            number of entries in the enumeration.
-     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
+     * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
-    public void writeEnumArray(final String objectPath, final HDF5EnumerationValueArray data,
-            final HDF5IntStorageFeatures features) throws HDF5JavaException;
+    @Deprecated
+    public void writeEnumArray(String objectPath, HDF5EnumerationValueArray data,
+            HDF5IntStorageFeatures features);
 
     /**
      * Creates am enum array (of rank 1).
@@ -160,8 +194,8 @@ public interface IHDF5EnumBasicWriter
      * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
     @Deprecated
-    public HDF5EnumerationType createEnumArray(final String objectPath,
-            final HDF5EnumerationType enumType, final int size);
+    public HDF5EnumerationType createEnumArray(String objectPath,
+            HDF5EnumerationType enumType, int size);
 
     /**
      * Creates am enum array (of rank 1). The initial size of the array is 0.
@@ -176,8 +210,8 @@ public interface IHDF5EnumBasicWriter
      * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
     @Deprecated
-    public HDF5EnumerationType createEnumArray(final String objectPath,
-            final HDF5EnumerationType enumType, final long size, final int blockSize);
+    public HDF5EnumerationType createEnumArray(String objectPath,
+            HDF5EnumerationType enumType, long size, int blockSize);
 
     /**
      * Creates am enum array (of rank 1). The initial size of the array is 0.
@@ -193,9 +227,9 @@ public interface IHDF5EnumBasicWriter
      * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
     @Deprecated
-    public HDF5EnumerationType createEnumArray(final String objectPath,
-            final HDF5EnumerationType enumType, final long size, final int blockSize,
-            final HDF5IntStorageFeatures features);
+    public HDF5EnumerationType createEnumArray(String objectPath,
+            HDF5EnumerationType enumType, long size, int blockSize,
+            HDF5IntStorageFeatures features);
 
     /**
      * Creates am enum array (of rank 1). The initial size of the array is 0.
@@ -210,9 +244,9 @@ public interface IHDF5EnumBasicWriter
      * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
     @Deprecated
-    public HDF5EnumerationType createEnumArray(final String objectPath,
-            final HDF5EnumerationType enumType, final long size,
-            final HDF5IntStorageFeatures features);
+    public HDF5EnumerationType createEnumArray(String objectPath,
+            HDF5EnumerationType enumType, long size,
+            HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of an enum array (of rank 1). The data set needs to have been created by
@@ -232,8 +266,8 @@ public interface IHDF5EnumBasicWriter
      * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
     @Deprecated
-    public void writeEnumArrayBlock(final String objectPath, final HDF5EnumerationValueArray data,
-            final long blockNumber);
+    public void writeEnumArrayBlock(String objectPath, HDF5EnumerationValueArray data,
+            long blockNumber);
 
     /**
      * Writes out a block of an enum array (of rank 1). The data set needs to have been created by
@@ -255,7 +289,7 @@ public interface IHDF5EnumBasicWriter
      * @deprecated Use method in {@link IHDF5Writer#enums()} instead.
      */
     @Deprecated
-    public void writeEnumArrayBlockWithOffset(final String objectPath,
-            final HDF5EnumerationValueArray data, final int dataSize, final long offset);
+    public void writeEnumArrayBlockWithOffset(String objectPath,
+            HDF5EnumerationValueArray data, int dataSize, long offset);
 
 }

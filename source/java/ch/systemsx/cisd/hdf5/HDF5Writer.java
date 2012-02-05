@@ -58,9 +58,6 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  */
 final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 {
-    interface IHDF5EnumCompleteWriter extends IHDF5EnumWriter, IHDF5EnumBasicWriter
-    {
-    }
     private final HDF5BaseWriter baseWriter;
 
     private final IHDF5ByteWriter byteWriter;
@@ -1082,38 +1079,39 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
-    public HDF5EnumerationType getType(final String name, final String[] values)
+    public HDF5EnumerationType getEnumType(final String name, final String[] values)
             throws HDF5JavaException
     {
         return enumWriter.getType(name, values);
     }
 
     @Override
-    public HDF5EnumerationType getType(final String name, final String[] values,
+    public HDF5EnumerationType getEnumType(final String name, final String[] values,
             final boolean check) throws HDF5JavaException
     {
         return enumWriter.getType(name, values, check);
     }
 
-    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType, int size)
+    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType,
+            int size)
     {
         return enumWriter.createArray(objectPath, enumType, size);
     }
 
-    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
-            HDF5IntStorageFeatures features)
+    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType,
+            long size, HDF5IntStorageFeatures features)
     {
         return enumWriter.createArray(objectPath, enumType, size, features);
     }
 
-    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
-            int blockSize, HDF5IntStorageFeatures features)
+    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType,
+            long size, int blockSize, HDF5IntStorageFeatures features)
     {
         return enumWriter.createArray(objectPath, enumType, size, blockSize, features);
     }
 
-    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
-            int blockSize)
+    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType,
+            long size, int blockSize)
     {
         return enumWriter.createArray(objectPath, enumType, size, blockSize);
     }
@@ -1129,9 +1127,25 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         enumWriter.setAttr(objectPath, name, value);
     }
 
-    public void writeEnum(String objectPath, Enum<?> value) throws HDF5JavaException
+    public <T extends Enum<T>> void writeEnum(String objectPath, Enum<T> value)
+            throws HDF5JavaException
     {
         enumWriter.write(objectPath, value);
+    }
+
+    public void writeEnum(String objectPath, String[] options, String value)
+    {
+        enumWriter.write(objectPath, enumWriter.newAnonVal(options, value));
+    }
+
+    public <T extends Enum<T>> void writeEnumArray(String objectPath, Enum<T>[] data)
+    {
+        enumWriter.writeArray(objectPath, enumWriter.newAnonArray(data));
+    }
+
+    public void writeEnumArray(String objectPath, String[] options, String[] data)
+    {
+        enumWriter.writeArray(objectPath, enumWriter.newAnonArray(options, data));
     }
 
     public void setEnumArrayAttribute(String objectPath, String name,

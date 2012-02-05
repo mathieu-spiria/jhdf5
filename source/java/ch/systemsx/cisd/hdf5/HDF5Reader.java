@@ -57,10 +57,6 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  */
 class HDF5Reader implements IHDF5Reader
 {
-    interface IHDF5EnumCompleteReader extends IHDF5EnumReader, IHDF5EnumBasicReader
-    {
-    }
-
     private final HDF5BaseReader baseReader;
 
     private final IHDF5ByteReader byteReader;
@@ -560,13 +556,13 @@ class HDF5Reader implements IHDF5Reader
         return enumReader.getType(dataTypeName);
     }
 
-    public HDF5EnumerationType getType(String dataTypeName, String[] values)
+    public HDF5EnumerationType getEnumType(String dataTypeName, String[] values)
             throws HDF5JavaException
     {
         return enumReader.getType(dataTypeName, values);
     }
 
-    public HDF5EnumerationType getType(String dataTypeName, String[] values, boolean check)
+    public HDF5EnumerationType getEnumType(String dataTypeName, String[] values, boolean check)
             throws HDF5JavaException
     {
         return enumReader.getType(dataTypeName, values, check);
@@ -1122,6 +1118,12 @@ class HDF5Reader implements IHDF5Reader
     public HDF5EnumerationValueArray readEnumArray(String objectPath) throws HDF5JavaException
     {
         return enumReader.readArray(objectPath);
+    }
+
+    public <T extends Enum<T>> T[] readEnumArray(String objectPath, Class<T> enumClass)
+            throws HDF5JavaException
+    {
+        return readEnumArray(objectPath).toEnumArray(enumClass);
     }
 
     public String[] readEnumArrayAsString(String objectPath) throws HDF5JavaException

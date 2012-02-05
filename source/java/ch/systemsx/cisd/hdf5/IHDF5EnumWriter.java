@@ -38,7 +38,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>values</var> provided.
      */
-    public HDF5EnumerationType getAnonType(final String[] options)
+    public HDF5EnumerationType getAnonType(String[] options)
             throws HDF5JavaException;
 
     /**
@@ -49,7 +49,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>enumClass</var> provided.
      */
-    public HDF5EnumerationType getAnonType(final Class<? extends Enum<?>> enumClass)
+    public HDF5EnumerationType getAnonType(Class<? extends Enum<?>> enumClass)
             throws HDF5JavaException;
 
     // /////////////////////
@@ -66,8 +66,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setAttr(final String objectPath, final String name,
-            final HDF5EnumerationValue value);
+    public void setAttr(String objectPath, String name,
+            HDF5EnumerationValue value);
 
     /**
      * Sets an enum attribute to the referenced object.
@@ -80,7 +80,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param value The value of the attribute.
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
-    public void setAttr(final String objectPath, final String name, final Enum<?> value)
+    public void setAttr(String objectPath, String name, Enum<?> value)
             throws HDF5JavaException;
 
     /**
@@ -93,8 +93,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setArrayAttr(final String objectPath, final String name,
-            final HDF5EnumerationValueArray value);
+    public void setArrayAttr(String objectPath, String name,
+            HDF5EnumerationValueArray value);
 
     /**
      * Sets an enum array (of rank N) attribute to the referenced object.
@@ -106,8 +106,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
-            final HDF5EnumerationValueMDArray value);
+    public void setMDArrayAttr(String objectPath, String name,
+            HDF5EnumerationValueMDArray value);
 
     // /////////////////////
     // Data Sets
@@ -120,7 +120,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param value The value of the data set.
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
-    public void write(final String objectPath, final HDF5EnumerationValue value)
+    public void write(String objectPath, HDF5EnumerationValue value)
             throws HDF5JavaException;
 
     /**
@@ -130,7 +130,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param value The value of the data set.
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
-    public void write(final String objectPath, final Enum<?> value) throws HDF5JavaException;
+    public void write(String objectPath, Enum<?> value) throws HDF5JavaException;
 
     /**
      * Writes out an array of enum values.
@@ -139,7 +139,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param data The data to write.
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
-    public void writeArray(final String objectPath, final HDF5EnumerationValueArray data)
+    public void writeArray(String objectPath, HDF5EnumerationValueArray data)
             throws HDF5JavaException;
 
     /**
@@ -152,8 +152,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      *            number of entries in the enumeration.
      * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
      */
-    public void writeArray(final String objectPath, final HDF5EnumerationValueArray data,
-            final HDF5IntStorageFeatures features) throws HDF5JavaException;
+    public void writeArray(String objectPath, HDF5EnumerationValueArray data,
+            HDF5IntStorageFeatures features) throws HDF5JavaException;
 
     /**
      * Creates am enum array (of rank 1).
@@ -166,8 +166,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @return <var>enumType</var>
      */
-    public HDF5EnumerationType createArray(final String objectPath,
-            final HDF5EnumerationType enumType, final int size);
+    public HDF5EnumerationType createArray(String objectPath,
+            HDF5EnumerationType enumType, int size);
 
     /**
      * Creates am enum array (of rank 1). The initial size of the array is 0.
@@ -181,8 +181,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      * @return <var>enumType</var>
      */
-    public HDF5EnumerationType createArray(final String objectPath,
-            final HDF5EnumerationType enumType, final long size, final int blockSize);
+    public HDF5EnumerationType createArray(String objectPath,
+            HDF5EnumerationType enumType, long size, int blockSize);
 
     /**
      * Creates am enum array (of rank 1). The initial size of the array is 0.
@@ -196,9 +196,9 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param features The storage features of the data set.
      * @return <var>enumType</var>
      */
-    public HDF5EnumerationType createArray(final String objectPath,
-            final HDF5EnumerationType enumType, final long size,
-            final HDF5IntStorageFeatures features);
+    public HDF5EnumerationType createArray(String objectPath,
+            HDF5EnumerationType enumType, long size,
+            HDF5IntStorageFeatures features);
 
     /**
      * Creates am enum array (of rank 1). The initial size of the array is 0.
@@ -213,9 +213,9 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param features The storage features of the data set.
      * @return <var>enumType</var>
      */
-    public HDF5EnumerationType createArray(final String objectPath,
-            final HDF5EnumerationType enumType, final long size, final int blockSize,
-            final HDF5IntStorageFeatures features);
+    public HDF5EnumerationType createArray(String objectPath,
+            HDF5EnumerationType enumType, long size, int blockSize,
+            HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of an enum array (of rank 1). The data set needs to have been created by
@@ -233,8 +233,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      *            defines the block size. Must not be <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
      */
-    public void writeArrayBlock(final String objectPath, final HDF5EnumerationValueArray data,
-            final long blockNumber);
+    public void writeArrayBlock(String objectPath, HDF5EnumerationValueArray data,
+            long blockNumber);
 
     /**
      * Writes out a block of an enum array (of rank 1). The data set needs to have been created by
@@ -254,8 +254,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      *            <code><= data.getLength()</code> )
      * @param offset The offset in the data set to start writing to.
      */
-    public void writeArrayBlockWithOffset(final String objectPath,
-            final HDF5EnumerationValueArray data, final int dataSize, final long offset);
+    public void writeArrayBlockWithOffset(String objectPath,
+            HDF5EnumerationValueArray data, int dataSize, long offset);
 
     /**
      * Writes out an array (of rank N) of Enum values.
@@ -264,8 +264,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param data The data to write.
      * @param features The storage features of the data set.
      */
-    public void writeMDArray(final String objectPath, final HDF5EnumerationValueMDArray data,
-            final HDF5IntStorageFeatures features);
+    public void writeMDArray(String objectPath, HDF5EnumerationValueMDArray data,
+            HDF5IntStorageFeatures features);
 
     /**
      * Writes out an array (of rank N) of Enum values.
@@ -273,7 +273,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
      */
-    public void writeMDArray(final String objectPath, final HDF5EnumerationValueMDArray data);
+    public void writeMDArray(String objectPath, HDF5EnumerationValueMDArray data);
 
     /**
      * Creates an array (of rank N) of Enum values.
@@ -287,8 +287,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @return <var>enumType</var>
      */
-    public HDF5EnumerationType createMDArray(final String objectPath,
-            final HDF5EnumerationType type, final int[] dimensions);
+    public HDF5EnumerationType createMDArray(String objectPath,
+            HDF5EnumerationType type, int[] dimensions);
 
     /**
      * Creates an array (of rank N) of Enum values.
@@ -302,8 +302,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      *            <code>deflate == false</code>.
      * @return <var>enumType</var>
      */
-    public HDF5EnumerationType createMDArray(final String objectPath,
-            final HDF5EnumerationType type, final long[] dimensions, final int[] blockDimensions);
+    public HDF5EnumerationType createMDArray(String objectPath,
+            HDF5EnumerationType type, long[] dimensions, int[] blockDimensions);
 
     /**
      * Creates an array (of rank N) of Enum values.
@@ -318,9 +318,9 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param features The storage features of the data set.
      * @return <var>enumType</var>
      */
-    public HDF5EnumerationType createMDArray(final String objectPath,
-            final HDF5EnumerationType type, final long[] dimensions, final int[] blockDimensions,
-            final HDF5IntStorageFeatures features);
+    public HDF5EnumerationType createMDArray(String objectPath,
+            HDF5EnumerationType type, long[] dimensions, int[] blockDimensions,
+            HDF5IntStorageFeatures features);
 
     /**
      * Creates an array (of rank N) of Enum values.
@@ -335,9 +335,9 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param features The storage features of the data set.
      * @return <var>enumType</var>
      */
-    public HDF5EnumerationType createMDArray(final String objectPath,
-            final HDF5EnumerationType type, final int[] dimensions,
-            final HDF5IntStorageFeatures features);
+    public HDF5EnumerationType createMDArray(String objectPath,
+            HDF5EnumerationType type, int[] dimensions,
+            HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of an array (of rank N) of Enum values give a given <var>offset</var>.
@@ -347,8 +347,8 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param blockNumber The block number in each dimension (offset: multiply with the extend in
      *            the according dimension).
      */
-    public void writeMDArrayBlock(final String objectPath,
-            final HDF5EnumerationValueMDArray data, final long[] blockNumber);
+    public void writeMDArrayBlock(String objectPath,
+            HDF5EnumerationValueMDArray data, long[] blockNumber);
 
     /**
      * Writes out a block of an array (of rank N) of Enum values give a given <var>offset</var>.
@@ -357,7 +357,7 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * @param data The data to write.
      * @param offset The offset of the block in the data set to start writing to in each dimension.
      */
-    public void writeMDArrayBlockWithOffset(final String objectPath,
-            final HDF5EnumerationValueMDArray data, final long[] offset);
+    public void writeMDArrayBlockWithOffset(String objectPath,
+            HDF5EnumerationValueMDArray data, long[] offset);
 
 }

@@ -19,6 +19,8 @@ package ch.systemsx.cisd.hdf5;
 import java.util.BitSet;
 import java.util.Date;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
 /**
  * A HDF5 writer which contains only the basic methods. If you feel overwhelmed with all the methods
  * of {@link IHDF5Writer}, then assign the writer to a {@link IHDF5SimpleWriter} variable and let
@@ -280,5 +282,31 @@ public interface IHDF5SimpleWriter extends IHDF5SimpleReader
      * @see CompoundElement
      */
     public <T> void writeCompoundArray(final String objectPath, final T[] data);
+
+    /**
+     * Writes out an enum value.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param value The value of the data set.
+     * @throws HDF5JavaException If the enum type of <var>value</var> is not a type of this file.
+     */
+    public <T extends Enum<T>> void writeEnum(final String objectPath, final Enum<T> value) throws HDF5JavaException;
+
+    /**
+     * Writes out an array of enum values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write.
+     */
+    public <T extends Enum<T>> void writeEnumArray(String objectPath, Enum<T>[] data);
+
+    /**
+     * Writes out an array of enum values.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param options The allowed values of the enumeration type.
+     * @param data The data to write.
+     */
+    public void writeEnumArray(String objectPath, String[] options, String[] data);
 
 }
