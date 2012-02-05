@@ -1082,17 +1082,17 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
-    public HDF5EnumerationType getEnumType(final String name, final String[] values)
+    public HDF5EnumerationType getType(final String name, final String[] values)
             throws HDF5JavaException
     {
-        return enumWriter.getEnumType(name, values);
+        return enumWriter.getType(name, values);
     }
 
     @Override
-    public HDF5EnumerationType getEnumType(final String name, final String[] values,
+    public HDF5EnumerationType getType(final String name, final String[] values,
             final boolean check) throws HDF5JavaException
     {
-        return enumWriter.getEnumType(name, values, check);
+        return enumWriter.getType(name, values, check);
     }
 
     public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType, int size)

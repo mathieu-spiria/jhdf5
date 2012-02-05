@@ -388,7 +388,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 final String typeName =
                         (m.getEnumTypeName() == null) ? memberClass.getSimpleName() : m
                                 .getEnumTypeName();
-                m.setEnumerationType(enumTypeRetriever.getEnumType(typeName,
+                m.setEnumerationType(enumTypeRetriever.getType(typeName,
                         ReflectionUtils.getEnumOptions(enumClass)));
             }
         }

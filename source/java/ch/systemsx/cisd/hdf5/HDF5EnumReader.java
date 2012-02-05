@@ -62,34 +62,34 @@ class HDF5EnumReader implements IHDF5EnumReader
                 baseReader.fileRegistry);
     }
 
-    public HDF5EnumerationType getEnumType(final String name, final String[] values)
+    public HDF5EnumerationType getType(final String name, final String[] values)
             throws HDF5JavaException
     {
-        return getEnumType(name, values, true);
+        return getType(name, values, true);
     }
 
-    public <T extends Enum<?>> HDF5EnumerationType getEnumType(final Class<T> enumClass)
+    public <T extends Enum<?>> HDF5EnumerationType getType(final Class<T> enumClass)
             throws HDF5JavaException
     {
-        return getEnumType(enumClass.getSimpleName(), getEnumOptions(enumClass), true);
+        return getType(enumClass.getSimpleName(), getEnumOptions(enumClass), true);
     }
 
-    public HDF5EnumerationType getEnumType(final Class<? extends Enum<?>> enumClass,
+    public HDF5EnumerationType getType(final Class<? extends Enum<?>> enumClass,
             final boolean check) throws HDF5JavaException
     {
-        return getEnumType(enumClass.getSimpleName(), getEnumOptions(enumClass), check);
+        return getType(enumClass.getSimpleName(), getEnumOptions(enumClass), check);
     }
 
-    public HDF5EnumerationType getEnumType(final String name,
+    public HDF5EnumerationType getType(final String name,
             final Class<? extends Enum<?>> enumClass) throws HDF5JavaException
     {
-        return getEnumType(name, getEnumOptions(enumClass), true);
+        return getType(name, getEnumOptions(enumClass), true);
     }
 
-    public <T extends Enum<?>> HDF5EnumerationType getEnumType(final String name,
+    public <T extends Enum<?>> HDF5EnumerationType getType(final String name,
             final Class<T> enumClass, final boolean check) throws HDF5JavaException
     {
-        return getEnumType(name, getEnumOptions(enumClass), check);
+        return getType(name, getEnumOptions(enumClass), check);
     }
 
     static String[] getEnumOptions(Class<? extends Enum<?>> enumClass)
@@ -103,7 +103,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return options;
     }
 
-    public HDF5EnumerationType getEnumType(final String name, final String[] values,
+    public HDF5EnumerationType getType(final String name, final String[] values,
             final boolean check) throws HDF5JavaException
     {
         baseReader.checkOpen();

@@ -887,7 +887,7 @@ public final class HDF5CompoundMemberMapping
                         {
                             resultOrNull = new HashMap<String, HDF5EnumerationType>();
                         }
-                        resultOrNull.put(f.getName(), enumTypeRetriever.getEnumType(f.getType()
+                        resultOrNull.put(f.getName(), enumTypeRetriever.getType(f.getType()
                                 .getSimpleName(), ReflectionUtils.getEnumOptions(asEnumClass(f))));
                     } catch (IllegalArgumentException ex)
                     {

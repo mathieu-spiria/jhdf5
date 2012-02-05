@@ -560,16 +560,16 @@ class HDF5Reader implements IHDF5Reader
         return enumReader.getType(dataTypeName);
     }
 
-    public HDF5EnumerationType getEnumType(String dataTypeName, String[] values)
+    public HDF5EnumerationType getType(String dataTypeName, String[] values)
             throws HDF5JavaException
     {
-        return enumReader.getEnumType(dataTypeName, values);
+        return enumReader.getType(dataTypeName, values);
     }
 
-    public HDF5EnumerationType getEnumType(String dataTypeName, String[] values, boolean check)
+    public HDF5EnumerationType getType(String dataTypeName, String[] values, boolean check)
             throws HDF5JavaException
     {
-        return enumReader.getEnumType(dataTypeName, values, check);
+        return enumReader.getType(dataTypeName, values, check);
     }
 
     public HDF5EnumerationType getDataSetEnumType(String dataSetPath)

@@ -50,7 +50,7 @@ public interface IHDF5EnumBasicReader
      * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
      */
     @Deprecated
-    public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values)
+    public HDF5EnumerationType getType(final String dataTypeName, final String[] values)
             throws HDF5JavaException;
 
     /**
@@ -67,7 +67,7 @@ public interface IHDF5EnumBasicReader
      * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
      */
     @Deprecated
-    public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values,
+    public HDF5EnumerationType getType(final String dataTypeName, final String[] values,
             final boolean check) throws HDF5JavaException;
 
     /**

@@ -40,7 +40,7 @@ public interface IHDF5EnumBasicWriter
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>values</var> provided.
      */
-    public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values)
+    public HDF5EnumerationType getType(final String dataTypeName, final String[] values)
             throws HDF5JavaException;
 
     /**
@@ -55,7 +55,7 @@ public interface IHDF5EnumBasicWriter
      * @throws HDF5JavaException If <code>check = true</code>, the data type exists and is not
      *             compatible with the <var>values</var> provided.
      */
-    public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values,
+    public HDF5EnumerationType getType(final String dataTypeName, final String[] values,
             final boolean check) throws HDF5JavaException;
 
     // /////////////////////

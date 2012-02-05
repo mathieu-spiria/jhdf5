@@ -49,80 +49,80 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
 
     public HDF5EnumerationValue newVal(String typeName, String[] options, String value)
     {
-        return new HDF5EnumerationValue(getEnumType(typeName, options), value);
+        return new HDF5EnumerationValue(getType(typeName, options), value);
     }
 
     public HDF5EnumerationValue newVal(String typeName, String[] options, int value)
     {
-        return new HDF5EnumerationValue(getEnumType(typeName, options), value);
+        return new HDF5EnumerationValue(getType(typeName, options), value);
     }
 
     public HDF5EnumerationValue newVal(String typeName, String[] options, short value)
     {
-        return new HDF5EnumerationValue(getEnumType(typeName, options), value);
+        return new HDF5EnumerationValue(getType(typeName, options), value);
     }
 
     public HDF5EnumerationValue newVal(String typeName, String[] options, byte value)
     {
-        return new HDF5EnumerationValue(getEnumType(typeName, options), value);
+        return new HDF5EnumerationValue(getType(typeName, options), value);
     }
 
     public <T extends Enum<T>> HDF5EnumerationValue newVal(String typeName, Enum<T> value)
     {
-        return new HDF5EnumerationValue(getEnumType(typeName, getEnumClass(value)), value);
+        return new HDF5EnumerationValue(getType(typeName, getEnumClass(value)), value);
     }
 
     public HDF5EnumerationValueArray newArray(String typeName, String[] options, String[] values)
     {
-        return new HDF5EnumerationValueArray(getEnumType(typeName, options), values);
+        return new HDF5EnumerationValueArray(getType(typeName, options), values);
     }
 
     public HDF5EnumerationValueArray newArray(String typeName, String[] options, int[] values)
     {
-        return new HDF5EnumerationValueArray(getEnumType(typeName, options), values);
+        return new HDF5EnumerationValueArray(getType(typeName, options), values);
     }
 
     public HDF5EnumerationValueArray newArray(String typeName, String[] options, short[] values)
     {
-        return new HDF5EnumerationValueArray(getEnumType(typeName, options), values);
+        return new HDF5EnumerationValueArray(getType(typeName, options), values);
     }
 
     public HDF5EnumerationValueArray newArray(String typeName, String[] options, byte[] values)
     {
-        return new HDF5EnumerationValueArray(getEnumType(typeName, options), values);
+        return new HDF5EnumerationValueArray(getType(typeName, options), values);
     }
 
     public <T extends Enum<T>> HDF5EnumerationValueArray newArray(String typeName, Enum<T>[] values)
     {
-        return new HDF5EnumerationValueArray(getEnumType(typeName, getEnumClass(values)), values);
+        return new HDF5EnumerationValueArray(getType(typeName, getEnumClass(values)), values);
     }
 
     public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options,
             MDArray<String> values)
     {
-        return new HDF5EnumerationValueMDArray(getEnumType(typeName, options), values);
+        return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
 
     public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options, MDIntArray values)
     {
-        return new HDF5EnumerationValueMDArray(getEnumType(typeName, options), values);
+        return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
 
     public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options,
             MDShortArray values)
     {
-        return new HDF5EnumerationValueMDArray(getEnumType(typeName, options), values);
+        return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
 
     public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options, MDByteArray values)
     {
-        return new HDF5EnumerationValueMDArray(getEnumType(typeName, options), values);
+        return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
 
     public <T extends Enum<T>> HDF5EnumerationValueMDArray newMDArray(String typeName,
             MDArray<Enum<T>> values)
     {
-        return new HDF5EnumerationValueMDArray(getEnumType(typeName, getEnumClass(values)), values);
+        return new HDF5EnumerationValueMDArray(getType(typeName, getEnumClass(values)), values);
     }
 
     public HDF5EnumerationValue newAnonVal(String[] options, String value)
@@ -152,7 +152,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
 
     public <T extends Enum<T>> HDF5EnumerationValue newVal(Enum<T> value)
     {
-        return new HDF5EnumerationValue(getEnumType(getEnumClass(value)), value);
+        return new HDF5EnumerationValue(getType(getEnumClass(value)), value);
     }
 
     public HDF5EnumerationValueArray newAnonArray(String[] options, String[] values)
@@ -182,7 +182,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
 
     public <T extends Enum<T>> HDF5EnumerationValueArray newArray(Enum<T>[] values)
     {
-        return new HDF5EnumerationValueArray(getEnumType(getEnumClass(values)), values);
+        return new HDF5EnumerationValueArray(getType(getEnumClass(values)), values);
     }
 
     public HDF5EnumerationValueMDArray newAnonMDArray(String[] options, MDArray<String> values)
@@ -212,7 +212,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
 
     public <T extends Enum<T>> HDF5EnumerationValueMDArray newMDArray(MDArray<Enum<T>> values)
     {
-        return new HDF5EnumerationValueMDArray(getEnumType(getEnumClass(values)), values);
+        return new HDF5EnumerationValueMDArray(getType(getEnumClass(values)), values);
     }
 
     @SuppressWarnings("unchecked")
@@ -239,24 +239,24 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
 
     public HDF5EnumerationType getAnonType(String[] values) throws HDF5JavaException
     {
-        return getEnumType(null, values, false);
+        return getType(null, values, false);
     }
 
     public HDF5EnumerationType getAnonType(final Class<? extends Enum<?>> enumClass)
             throws HDF5JavaException
     {
-        return getEnumType(null, HDF5EnumReader.getEnumOptions(enumClass));
+        return getType(null, HDF5EnumReader.getEnumOptions(enumClass));
     }
 
     @Override
-    public HDF5EnumerationType getEnumType(final String name, final String[] values)
+    public HDF5EnumerationType getType(final String name, final String[] values)
             throws HDF5JavaException
     {
-        return getEnumType(name, values, true);
+        return getType(name, values, true);
     }
 
     @Override
-    public HDF5EnumerationType getEnumType(final String nameOrNull, final String[] values,
+    public HDF5EnumerationType getType(final String nameOrNull, final String[] values,
             final boolean check) throws HDF5JavaException
     {
         baseWriter.checkOpen();
@@ -269,32 +269,32 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     }
 
     @Override
-    public HDF5EnumerationType getEnumType(final String name,
+    public HDF5EnumerationType getType(final String name,
             final Class<? extends Enum<?>> enumClass) throws HDF5JavaException
     {
-        return getEnumType(name, HDF5EnumReader.getEnumOptions(enumClass), true);
+        return getType(name, HDF5EnumReader.getEnumOptions(enumClass), true);
     }
 
     @Override
-    public <T extends Enum<?>> HDF5EnumerationType getEnumType(final String name,
+    public <T extends Enum<?>> HDF5EnumerationType getType(final String name,
             final Class<T> enumClass, final boolean check) throws HDF5JavaException
     {
-        return getEnumType(name, HDF5EnumReader.getEnumOptions(enumClass), check);
+        return getType(name, HDF5EnumReader.getEnumOptions(enumClass), check);
     }
 
     @Override
-    public <T extends Enum<?>> HDF5EnumerationType getEnumType(final Class<T> enumClass)
+    public <T extends Enum<?>> HDF5EnumerationType getType(final Class<T> enumClass)
             throws HDF5JavaException
     {
-        return getEnumType(enumClass.getSimpleName(), HDF5EnumReader.getEnumOptions(enumClass),
+        return getType(enumClass.getSimpleName(), HDF5EnumReader.getEnumOptions(enumClass),
                 true);
     }
 
     @Override
-    public HDF5EnumerationType getEnumType(final Class<? extends Enum<?>> enumClass,
+    public HDF5EnumerationType getType(final Class<? extends Enum<?>> enumClass,
             final boolean check) throws HDF5JavaException
     {
-        return getEnumType(enumClass.getSimpleName(), HDF5EnumReader.getEnumOptions(enumClass),
+        return getType(enumClass.getSimpleName(), HDF5EnumReader.getEnumOptions(enumClass),
                 check);
     }
 
@@ -367,7 +367,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
             throws HDF5JavaException
     {
         setAttr(objectPath, name, new HDF5EnumerationValue(
-                getEnumType(getEnumClass(value)), value));
+                getType(getEnumClass(value)), value));
     }
 
     public void setArrayAttr(final String objectPath, final String name,
@@ -402,7 +402,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
 
     public void write(final String objectPath, final Enum<?> value) throws HDF5JavaException
     {
-        write(objectPath, new HDF5EnumerationValue(getEnumType(getEnumClass(value)), value));
+        write(objectPath, new HDF5EnumerationValue(getType(getEnumClass(value)), value));
     }
 
     public void writeArray(final String objectPath, final HDF5EnumerationValueArray data)
