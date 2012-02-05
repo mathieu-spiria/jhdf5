@@ -1651,27 +1651,6 @@ class HDF5
         return dataTypeId;
     }
 
-    public long[] getDataDimensions(final int dataSetId)
-    {
-        ICallableWithCleanUp<long[]> dataDimensionRunnable = new ICallableWithCleanUp<long[]>()
-            {
-                public long[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSpaceId = H5Dget_space(dataSetId);
-                    registry.registerCleanUp(new Runnable()
-                        {
-                            public void run()
-                            {
-                                H5Sclose(dataSpaceId);
-                            }
-                        });
-                    final long[] dimensions = getDataSpaceDimensions(dataSpaceId);
-                    return dimensions;
-                }
-            };
-        return runner.call(dataDimensionRunnable);
-    }
-
     public long[] getDataDimensionsForAttribute(final int attributeId, ICleanUpRegistry registry)
     {
         final int dataSpaceId = H5Aget_space(attributeId);
@@ -1696,7 +1675,13 @@ class HDF5
                     H5Sclose(dataSpaceId);
                 }
             });
-        final long[] dimensions = getDataSpaceDimensions(dataSpaceId);
+        long[] dimensions = getDataSpaceDimensions(dataSpaceId);
+        // Ensure backward compatibility with 8.10
+        if (HDF5Utils.mightBeEmptyInStorage(dimensions)
+                && existsAttribute(dataSetId, HDF5Utils.DATASET_IS_EMPTY_LEGACY_ATTRIBUTE))
+        {
+            dimensions = new long[dimensions.length];
+        }
         return dimensions;
     }
 

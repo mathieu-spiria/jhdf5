@@ -19,9 +19,9 @@ package ch.systemsx.cisd.hdf5;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U32LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U8LE;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,8 +49,8 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
 {
     enum StorageFormEnum
     {
-        BYTE(1, H5T_NATIVE_INT8, H5T_STD_I8LE), SHORT(2, H5T_NATIVE_INT16, H5T_STD_I16LE), INT(4,
-                H5T_NATIVE_INT32, H5T_STD_I32LE);
+        BYTE(1, H5T_NATIVE_INT8, H5T_STD_U8LE), SHORT(2, H5T_NATIVE_INT16, H5T_STD_U16LE), INT(4,
+                H5T_NATIVE_INT32, H5T_STD_U32LE);
 
         private final byte storageSize;
 
@@ -268,6 +268,21 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     }
 
     static MDAbstractArray<?> fromStorageForm(byte[] data, long[] dimensions,
+            StorageFormEnum storageForm)
+    {
+        switch (storageForm)
+        {
+            case BYTE:
+                return new MDByteArray(data, dimensions);
+            case SHORT:
+                return new MDShortArray(NativeData.byteToShort(data, ByteOrder.NATIVE), dimensions);
+            case INT:
+                return new MDIntArray(NativeData.byteToInt(data, ByteOrder.NATIVE), dimensions);
+        }
+        throw new Error("Illegal storage size.");
+    }
+
+    static MDAbstractArray<?> fromStorageForm(byte[] data, int[] dimensions,
             StorageFormEnum storageForm)
     {
         switch (storageForm)

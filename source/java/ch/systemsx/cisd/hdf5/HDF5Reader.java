@@ -57,6 +57,10 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  */
 class HDF5Reader implements IHDF5Reader
 {
+    interface IHDF5EnumCompleteReader extends IHDF5EnumReader, IHDF5EnumBasicReader
+    {
+    }
+
     private final HDF5BaseReader baseReader;
 
     private final IHDF5ByteReader byteReader;
@@ -524,42 +528,36 @@ class HDF5Reader implements IHDF5Reader
     public String getEnumAttributeAsString(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
-        return enumReader.getEnumAttributeAsString(objectPath, attributeName);
+        return enumReader.getAttrAsString(objectPath, attributeName);
     }
 
     public HDF5EnumerationValue getEnumAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
-        return enumReader.getEnumAttribute(objectPath, attributeName);
+        return enumReader.getAttr(objectPath, attributeName);
     }
 
     public <T extends Enum<T>> T getEnumAttribute(String objectPath, String attributeName,
             Class<T> enumClass) throws HDF5JavaException
     {
-        return enumReader.getEnumAttribute(objectPath, attributeName, enumClass);
-    }
-
-    public <T extends Enum<T>> T[] getEnumArrayAttribute(String objectPath, String attributeName,
-            Class<T> enumClass) throws HDF5JavaException
-    {
-        return enumReader.getEnumArrayAttribute(objectPath, attributeName, enumClass);
+        return enumReader.getAttr(objectPath, attributeName, enumClass);
     }
 
     public String[] getEnumArrayAttributeAsString(final String objectPath,
             final String attributeName) throws HDF5JavaException
     {
-        return enumReader.getEnumArrayAttributeAsString(objectPath, attributeName);
+        return enumReader.getArrayAttr(objectPath, attributeName).toStringArray();
     }
 
     public HDF5EnumerationValueArray getEnumArrayAttribute(final String objectPath,
             final String attributeName) throws HDF5JavaException
     {
-        return enumReader.getEnumArrayAttribute(objectPath, attributeName);
+        return enumReader.getArrayAttr(objectPath, attributeName);
     }
 
     public HDF5EnumerationType getEnumType(String dataTypeName)
     {
-        return enumReader.getEnumType(dataTypeName);
+        return enumReader.getType(dataTypeName);
     }
 
     public HDF5EnumerationType getEnumType(String dataTypeName, String[] values)
@@ -574,39 +572,14 @@ class HDF5Reader implements IHDF5Reader
         return enumReader.getEnumType(dataTypeName, values, check);
     }
 
-    public HDF5EnumerationType getEnumType(String dataTypeName, Class<? extends Enum<?>> enumClass)
-            throws HDF5JavaException
-    {
-        return enumReader.getEnumType(dataTypeName, enumClass);
-    }
-
-    public HDF5EnumerationType getEnumType(String dataTypeName, Class<? extends Enum<?>> enumClass,
-            boolean check) throws HDF5JavaException
-    {
-        return enumReader.getEnumType(dataTypeName, enumClass, check);
-    }
-
-    public HDF5EnumerationType getEnumType(Class<? extends Enum<?>> enumClass)
-            throws HDF5JavaException
-    {
-        return enumReader.getEnumType(enumClass);
-    }
-
-    public HDF5EnumerationType getEnumType(Class<? extends Enum<?>> enumClass, boolean check)
-            throws HDF5JavaException
-    {
-        return enumReader.getEnumType(enumClass, check);
-    }
-
     public HDF5EnumerationType getDataSetEnumType(String dataSetPath)
     {
-        return enumReader.getDataSetEnumType(dataSetPath);
+        return enumReader.getDataSetType(dataSetPath);
     }
 
-    @SuppressWarnings("deprecation")
     public HDF5EnumerationType getEnumTypeForObject(String dataSetPath)
     {
-        return enumReader.getEnumTypeForObject(dataSetPath);
+        return enumReader.getDataSetType(dataSetPath);
     }
 
     // /////////////////////
@@ -1106,134 +1079,88 @@ class HDF5Reader implements IHDF5Reader
     // Enums
     //
 
+    public IHDF5EnumReader enums()
+    {
+        return enumReader;
+    }
+
     public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getEnumArrayNaturalBlocks(
             String objectPath, HDF5EnumerationType enumType) throws HDF5JavaException
     {
-        return enumReader.getEnumArrayNaturalBlocks(objectPath, enumType);
+        return enumReader.getArrayNaturalBlocks(objectPath, enumType);
     }
 
     public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getEnumArrayNaturalBlocks(
             String objectPath) throws HDF5JavaException
     {
-        return enumReader.getEnumArrayNaturalBlocks(objectPath);
+        return enumReader.getArrayNaturalBlocks(objectPath);
     }
 
     public HDF5EnumerationValue readEnum(String objectPath, HDF5EnumerationType enumType)
             throws HDF5JavaException
     {
-        return enumReader.readEnum(objectPath, enumType);
+        return enumReader.read(objectPath, enumType);
     }
 
     public HDF5EnumerationValue readEnum(String objectPath) throws HDF5JavaException
     {
-        return enumReader.readEnum(objectPath);
+        return enumReader.read(objectPath);
     }
 
     public <T extends Enum<T>> T readEnum(String objectPath, Class<T> enumClass)
             throws HDF5JavaException
     {
-        return enumReader.readEnum(objectPath, enumClass);
-    }
-
-    public <T extends Enum<T>> T[] readEnumArray(String objectPath, Class<T> enumClass)
-            throws HDF5JavaException
-    {
-        return enumReader.readEnumArray(objectPath, enumClass);
+        return enumReader.read(objectPath, enumClass);
     }
 
     public HDF5EnumerationValueArray readEnumArray(String objectPath, HDF5EnumerationType enumType)
             throws HDF5JavaException
     {
-        return enumReader.readEnumArray(objectPath, enumType);
+        return enumReader.readArray(objectPath, enumType);
     }
 
     public HDF5EnumerationValueArray readEnumArray(String objectPath) throws HDF5JavaException
     {
-        return enumReader.readEnumArray(objectPath);
+        return enumReader.readArray(objectPath);
     }
 
     public String[] readEnumArrayAsString(String objectPath) throws HDF5JavaException
     {
-        return enumReader.readEnumArrayAsString(objectPath);
+        return enumReader.readArray(objectPath).toStringArray();
     }
 
     public HDF5EnumerationValueArray readEnumArrayBlock(String objectPath,
             HDF5EnumerationType enumType, int blockSize, long blockNumber)
     {
-        return enumReader.readEnumArrayBlock(objectPath, enumType, blockSize, blockNumber);
+        return enumReader.readArrayBlock(objectPath, enumType, blockSize, blockNumber);
     }
 
     public HDF5EnumerationValueArray readEnumArrayBlock(String objectPath, int blockSize,
             long blockNumber)
     {
-        return enumReader.readEnumArrayBlock(objectPath, blockSize, blockNumber);
+        return enumReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     public HDF5EnumerationValueArray readEnumArrayBlockWithOffset(String objectPath,
             HDF5EnumerationType enumType, int blockSize, long offset)
     {
-        return enumReader.readEnumArrayBlockWithOffset(objectPath, enumType, blockSize, offset);
+        return enumReader.readArrayBlockWithOffset(objectPath, enumType, blockSize, offset);
     }
 
     public HDF5EnumerationValueArray readEnumArrayBlockWithOffset(String objectPath, int blockSize,
             long offset)
     {
-        return enumReader.readEnumArrayBlockWithOffset(objectPath, blockSize, offset);
-    }
-
-    public <T extends Enum<T>> T[] readEnumArrayBlock(String objectPath, Class<T> enumClass,
-            int blockSize, long blockNumber)
-    {
-        return enumReader.readEnumArrayBlock(objectPath, enumClass, blockSize, blockNumber);
-    }
-
-    public <T extends Enum<T>> T[] readEnumArrayBlockWithOffset(String objectPath,
-            Class<T> enumClass, int blockSize, long offset)
-    {
-        return enumReader.readEnumArrayBlockWithOffset(objectPath, enumClass, blockSize, offset);
+        return enumReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     public String readEnumAsString(String objectPath) throws HDF5JavaException
     {
-        return enumReader.readEnumAsString(objectPath);
+        return enumReader.readAsString(objectPath);
     }
 
     //
     // Compounds
     //
-
-    public String[] readEnumArrayBlockAsString(String objectPath, int blockSize, long blockNumber)
-    {
-        return enumReader.readEnumArrayBlockAsString(objectPath, blockSize, blockNumber);
-    }
-
-    public String[] readEnumArrayBlockWithOffsetAsString(String objectPath, int blockSize,
-            long offset)
-    {
-        return enumReader.readEnumArrayBlockWithOffsetAsString(objectPath, blockSize, offset);
-    }
-
-    public HDF5EnumerationValueMDArray readEnumMDArray(String objectPath) throws HDF5JavaException
-    {
-        return enumReader.readEnumMDArray(objectPath);
-    }
-
-    public HDF5EnumerationValueMDArray readEnumMDArray(String objectPath,
-            HDF5EnumerationType enumType) throws HDF5JavaException
-    {
-        return enumReader.readEnumMDArray(objectPath, enumType);
-    }
-
-    public <T extends Enum<T>> MDArray<T> readEnumMDArray(String objectPath, Class<T> enumClass)
-            throws HDF5JavaException
-    {
-        return enumReader.readEnumMDArray(objectPath, enumClass);
-    }
-
-    public MDArray<String> readEnumMDArrayAsString(String objectPath) throws HDF5JavaException
-    {
-        return enumReader.readEnumMDArrayAsString(objectPath);
-    }
 
     public <T> T getCompoundAttribute(String objectPath, String attributeName,
             HDF5CompoundType<T> type) throws HDF5JavaException

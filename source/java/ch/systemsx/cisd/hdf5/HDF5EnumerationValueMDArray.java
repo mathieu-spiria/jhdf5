@@ -541,9 +541,20 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
     }
 
     /**
+     * Returns the value as Enum of type <var>enumClass</var>.
+     * 
+     * @param enumClass The class to return the value as.
+     * @param arrayIndices The indices in the array to get the value for.
+     */
+    public <T extends Enum<T>> T getValue(Class<T> enumClass, int... arrayIndices)
+    {
+        return Enum.valueOf(enumClass, getValue(arrayIndices));
+    }
+
+    /**
      * Returns the string values for all elements of this array.
      */
-    public MDArray<String> getValues()
+    public MDArray<String> toStringArray()
     {
         final int len = size();
         final MDArray<String> values = new MDArray<String>(String.class, dimensions());
@@ -559,7 +570,7 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
      * Returns the values for all elements of this array as an enum array with enums of type
      * <var>enumClass</var>.
      */
-    public <T extends Enum<T>> MDArray<T> getValues(Class<T> enumClass)
+    public <T extends Enum<T>> MDArray<T> toEnumArray(Class<T> enumClass)
     {
         final int len = size();
         final MDArray<T> values = new MDArray<T>(enumClass, dimensions());
@@ -628,13 +639,98 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
 
     public Iterator<MDArray<String>.ArrayEntry> iterator()
     {
-        return getValues().iterator();
+        return toStringArray().iterator();
     }
+
+    //
+    // Object
+    //
 
     @Override
     public String toString()
     {
-        return getValues().toString();
+        return toStringArray().toString();
+    }
+
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((bArrayOrNull == null) ? 0 : bArrayOrNull.hashCode());
+        result = prime * result + ((iArrayOrNull == null) ? 0 : iArrayOrNull.hashCode());
+        result = prime * result + ((sArrayOrNull == null) ? 0 : sArrayOrNull.hashCode());
+        result = prime * result + size;
+        result = prime * result + ((storageForm == null) ? 0 : storageForm.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null)
+        {
+            return false;
+        }
+        if (getClass() != obj.getClass())
+        {
+            return false;
+        }
+        HDF5EnumerationValueMDArray other = (HDF5EnumerationValueMDArray) obj;
+        if (bArrayOrNull == null)
+        {
+            if (other.bArrayOrNull != null)
+            {
+                return false;
+            }
+        } else if (false == bArrayOrNull.equals(other.bArrayOrNull))
+        {
+            return false;
+        }
+        if (iArrayOrNull == null)
+        {
+            if (other.iArrayOrNull != null)
+            {
+                return false;
+            }
+        } else if (false == iArrayOrNull.equals(other.iArrayOrNull))
+        {
+            return false;
+        }
+        if (sArrayOrNull == null)
+        {
+            if (other.sArrayOrNull != null)
+            {
+                return false;
+            }
+        } else if (false == sArrayOrNull.equals(other.sArrayOrNull))
+        {
+            return false;
+        }
+        if (size != other.size)
+        {
+            return false;
+        }
+        if (storageForm != other.storageForm)
+        {
+            return false;
+        }
+        if (type == null)
+        {
+            if (other.type != null)
+            {
+                return false;
+            }
+        } else if (false == type.equals(other.type))
+        {
+            return false;
+        }
+        return true;
     }
 
 }

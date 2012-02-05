@@ -33,19 +33,19 @@ public class EnumExample
     {
         // Write an enum and an enum array
         IHDF5Writer writer = HDF5Factory.configure("enum.h5").writer();
-        HDF5EnumerationType enumType = writer.getEnumType("colors", new String[]
+        HDF5EnumerationType enumType = writer.enums().getEnumType("colors", new String[]
             { "RED", "GREEN", "BLUE", "YELLOW", "ORANGE", "MAGENTA", "BLACK" });
         // That is equivalent to 
         // writer.writeEnum("some color", new HDF5EnumerationValue(enumType, 2));
-        writer.writeEnum("some color", new HDF5EnumerationValue(enumType, "BLUE"));
-        writer.writeEnumArray("colors", new HDF5EnumerationValueArray(enumType, new String[]
+        writer.enums().write("some color", new HDF5EnumerationValue(enumType, "BLUE"));
+        writer.enums().writeArray("colors", new HDF5EnumerationValueArray(enumType, new String[]
             { "YELLOW", "MAGENTA", "GREEN" }));
         writer.close();
 
         // Read an enum and an enum array
         IHDF5Reader reader = HDF5Factory.openForReading("enum.h5");
-        System.out.println(reader.readEnumAsString("some color"));
-        for (String color : reader.readEnumArray("colors"))
+        System.out.println(reader.enums().readAsString("some color"));
+        for (String color : reader.enums().readArray("colors"))
         {
             System.out.println(color);
         }

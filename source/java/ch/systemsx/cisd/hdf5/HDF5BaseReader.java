@@ -358,12 +358,6 @@ class HDF5BaseReader
     DataSpaceParameters getSpaceParameters(final int dataSetId, ICleanUpRegistry registry)
     {
         long[] dimensions = h5.getDataDimensions(dataSetId, registry);
-        // Ensure backward compatibility with 8.10
-        if (HDF5Utils.mightBeEmptyInStorage(dimensions)
-                && h5.existsAttribute(dataSetId, HDF5Utils.DATASET_IS_EMPTY_LEGACY_ATTRIBUTE))
-        {
-            dimensions = new long[dimensions.length];
-        }
         return new DataSpaceParameters(H5S_ALL, H5S_ALL, MDArray.getLength(dimensions), dimensions);
     }
 
@@ -439,7 +433,7 @@ class HDF5BaseReader
         {
             memorySpaceId = HDF5Constants.H5S_ALL;
             dataSpaceId = HDF5Constants.H5S_ALL;
-            dimensions = h5.getDataDimensions(dataSetId);
+            dimensions = h5.getDataDimensions(dataSetId, registry);
             effectiveBlockSize = getOneDimensionalArraySize(dimensions);
         }
         return new DataSpaceParameters(memorySpaceId, dataSpaceId, effectiveBlockSize, dimensions);
@@ -483,7 +477,7 @@ class HDF5BaseReader
         {
             memorySpaceId = H5S_ALL;
             dataSpaceId = H5S_ALL;
-            effectiveBlockDimensions = h5.getDataDimensions(dataSetId);
+            effectiveBlockDimensions = h5.getDataDimensions(dataSetId, registry);
         }
         return new DataSpaceParameters(memorySpaceId, dataSpaceId,
                 MDArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
@@ -500,7 +494,7 @@ class HDF5BaseReader
         assert memoryDimensions != null;
         assert memoryDimensions.length == memoryOffset.length;
 
-        final long[] dimensions = h5.getDataDimensions(dataSetId);
+        final long[] dimensions = h5.getDataDimensions(dataSetId, registry);
         final int memorySpaceId =
                 h5.createSimpleDataSpace(MDArray.toLong(memoryDimensions), registry);
         for (int i = 0; i < dimensions.length; ++i)
@@ -757,6 +751,44 @@ class HDF5BaseReader
         final HDF5EnumerationValueArray value =
                 new HDF5EnumerationValueArray(enumType, HDF5EnumerationType.fromStorageForm(data,
                         enumType.getStorageForm()));
+        return value;
+    }
+
+    HDF5EnumerationValueMDArray getEnumValueMDArray(final int attributeId, ICleanUpRegistry registry)
+    {
+        final int storageDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+        final int nativeDataTypeId = h5.getNativeDataType(storageDataTypeId, registry);
+        final int len;
+        final int enumTypeId;
+        final int[] arrayDimensions;
+        if (h5.getClassType(storageDataTypeId) == H5T_ARRAY)
+        {
+            arrayDimensions = h5.getArrayDimensions(storageDataTypeId);
+            len = MDArray.getLength(arrayDimensions);
+            enumTypeId = h5.getBaseDataType(storageDataTypeId, registry);
+            if (h5.getClassType(enumTypeId) != H5T_ENUM)
+            {
+                throw new HDF5JavaException("Attribute is not of type Enumeration array.");
+            }
+        } else
+        {
+            if (h5.getClassType(storageDataTypeId) != H5T_ENUM)
+            {
+                throw new HDF5JavaException("Attribute is not of type Enumeration array.");
+            }
+            enumTypeId = storageDataTypeId;
+            arrayDimensions =
+                    MDArray.toInt(h5.getDataDimensionsForAttribute(attributeId, registry));
+            len = MDArray.getLength(arrayDimensions);
+        }
+        final HDF5EnumerationType enumType =
+                getEnumTypeForStorageDataType(null, enumTypeId, fileRegistry);
+        final byte[] data =
+                h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, len
+                        * enumType.getStorageForm().getStorageSize());
+        final HDF5EnumerationValueMDArray value =
+                new HDF5EnumerationValueMDArray(enumType, HDF5EnumerationType.fromStorageForm(data,
+                        arrayDimensions, enumType.getStorageForm()));
         return value;
     }
 

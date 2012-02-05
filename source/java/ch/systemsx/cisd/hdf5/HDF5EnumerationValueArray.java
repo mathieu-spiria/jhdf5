@@ -16,9 +16,10 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import java.util.Arrays;
+import java.lang.reflect.Array;
 import java.util.Iterator;
-import java.util.List;
+
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
@@ -472,9 +473,20 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     }
 
     /**
+     * Returns the value as Enum of type <var>enumClass</var>.
+     * 
+     * @param enumClass The class to return the value as.
+     * @param arrayIndex The index in the array to get the value for.
+     */
+    public <T extends Enum<T>> T getValue(Class<T> enumClass, int arrayIndex)
+    {
+        return Enum.valueOf(enumClass, getValue(arrayIndex));
+    }
+
+    /**
      * Returns the string values for all elements of this array.
      */
-    public List<String> getValues()
+    public String[] toStringArray()
     {
         final int len = getLength();
         final String[] values = new String[len];
@@ -482,7 +494,29 @@ public class HDF5EnumerationValueArray implements Iterable<String>
         {
             values[i] = getValue(i);
         }
-        return Arrays.asList(values);
+        return values;
+    }
+
+    /**
+     * Returns the values for all elements of this array as Enums of type <var>enumClass</var>.
+     */
+    public <T extends Enum<T>> T[] toEnumArray(Class<T> enumClass)
+    {
+        final int len = getLength();
+        @SuppressWarnings("unchecked")
+        final T[] result = (T[]) Array.newInstance(enumClass, len);
+        for (int i = 0; i < len; ++i)
+        {
+            try
+            {
+                result[i] = Enum.valueOf(enumClass, getValue(i));
+            } catch (IllegalArgumentException ex)
+            {
+                throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
+                        + " has no value '" + getValue(i) + "'.");
+            }
+        }
+        return result;
     }
 
     byte[] toStorageForm()

@@ -24,6 +24,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
@@ -317,28 +318,23 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
     public <T> MDArray<T> readCompoundMDArray(final String objectPath,
             final HDF5CompoundType<T> type) throws HDF5JavaException
     {
-        baseReader.checkOpen();
-        type.check(baseReader.fileId);
-        return primReadCompoundArrayRankN(objectPath, type, null, null, null);
+        return readCompoundMDArrayBlockWithOffset(objectPath, type, null, null, null);
     }
 
     public <T> MDArray<T> readCompoundMDArray(final String objectPath,
             final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException
     {
-        baseReader.checkOpen();
-        type.check(baseReader.fileId);
-        return primReadCompoundArrayRankN(objectPath, type, null, null, inspectorOrNull);
+        return readCompoundMDArrayBlockWithOffset(objectPath, type, null, null, inspectorOrNull);
     }
 
     public <T> MDArray<T> readCompoundMDArray(String objectPath, Class<T> pojoClass)
             throws HDF5JavaException
     {
-        baseReader.checkOpen();
         final HDF5CompoundType<T> dataSetCompoundType =
                 getDataSetCompoundType(objectPath, pojoClass);
         dataSetCompoundType.checkMappingComplete();
-        return primReadCompoundArrayRankN(objectPath, dataSetCompoundType, null, null, null);
+        return readCompoundMDArrayBlockWithOffset(objectPath, dataSetCompoundType, null, null, null);
     }
 
     public <T> MDArray<T> readCompoundMDArrayBlock(final String objectPath,
@@ -352,14 +348,12 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
             final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] blockNumber,
             final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
-        baseReader.checkOpen();
-        type.check(baseReader.fileId);
         final long[] offset = new long[blockDimensions.length];
         for (int i = 0; i < offset.length; ++i)
         {
             offset[i] = blockDimensions[i] * blockNumber[i];
         }
-        return primReadCompoundArrayRankN(objectPath, type, blockDimensions, offset,
+        return readCompoundMDArrayBlockWithOffset(objectPath, type, blockDimensions, offset,
                 inspectorOrNull);
     }
 
@@ -371,13 +365,42 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
     }
 
     public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] offset,
-            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
+            final HDF5CompoundType<T> type, final int[] dimensionsOrNull,
+            final long[] offsetOrNull, final IByteArrayInspector inspectorOrNull)
+            throws HDF5JavaException
     {
         baseReader.checkOpen();
         type.check(baseReader.fileId);
-        return primReadCompoundArrayRankN(objectPath, type, blockDimensions, offset,
-                inspectorOrNull);
+        final ICallableWithCleanUp<MDArray<T>> writeRunnable =
+                new ICallableWithCleanUp<MDArray<T>>()
+                    {
+                        public MDArray<T> call(final ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final int storageDataTypeId =
+                                    baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
+                            checkCompoundType(storageDataTypeId, objectPath, type);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offsetOrNull,
+                                            dimensionsOrNull, registry);
+                            final int nativeDataTypeId = type.getNativeTypeId();
+                            final byte[] byteArr =
+                                    new byte[spaceParams.blockSize
+                                            * type.getObjectByteifyer().getRecordSize()];
+                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                                    spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
+                            if (inspectorOrNull != null)
+                            {
+                                inspectorOrNull.inspect(byteArr);
+                            }
+                            return new MDArray<T>(type.getObjectByteifyer().arrayify(
+                                    storageDataTypeId, byteArr, type.getCompoundType()),
+                                    spaceParams.dimensions);
+                        }
+                    };
+        return baseReader.runner.call(writeRunnable);
     }
 
     public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
@@ -393,12 +416,13 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
         baseReader.checkOpen();
         type.check(baseReader.fileId);
         final HDF5NaturalBlockMDParameters params =
-                new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(objectPath));
+                new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(objectPath,
+                        DataTypeInfoOptions.MINIMAL));
 
         return primGetCompoundMDArrayNaturalBlocks(objectPath, type, params, inspectorOrNull);
     }
 
-    public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> primGetCompoundMDArrayNaturalBlocks(
+    private <T> Iterable<HDF5MDDataBlock<MDArray<T>>> primGetCompoundMDArrayNaturalBlocks(
             final String objectPath, final HDF5CompoundType<T> type,
             final HDF5NaturalBlockMDParameters params, final IByteArrayInspector inspectorOrNull)
     {
@@ -433,43 +457,6 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                         };
                 }
             };
-    }
-
-    private <T> MDArray<T> primReadCompoundArrayRankN(final String objectPath,
-            final HDF5CompoundType<T> type, final int[] dimensionsOrNull,
-            final long[] offsetOrNull, final IByteArrayInspector inspectorOrNull)
-            throws HDF5JavaException
-    {
-        final ICallableWithCleanUp<MDArray<T>> writeRunnable =
-                new ICallableWithCleanUp<MDArray<T>>()
-                    {
-                        public MDArray<T> call(final ICleanUpRegistry registry)
-                        {
-                            final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
-                                            registry);
-                            final int storageDataTypeId =
-                                    baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                            checkCompoundType(storageDataTypeId, objectPath, type);
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, offsetOrNull,
-                                            dimensionsOrNull, registry);
-                            final int nativeDataTypeId = type.getNativeTypeId();
-                            final byte[] byteArr =
-                                    new byte[spaceParams.blockSize
-                                            * type.getObjectByteifyer().getRecordSize()];
-                            baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
-                                    spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
-                            if (inspectorOrNull != null)
-                            {
-                                inspectorOrNull.inspect(byteArr);
-                            }
-                            return new MDArray<T>(type.getObjectByteifyer().arrayify(
-                                    storageDataTypeId, byteArr, type.getCompoundType()),
-                                    spaceParams.dimensions);
-                        }
-                    };
-        return baseReader.runner.call(writeRunnable);
     }
 
     public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(

@@ -104,7 +104,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
 
     private static HDF5EnumerationType getHDF5LinkTypeEnumeration(IHDF5Reader reader)
     {
-        return reader.getEnumType("linkType", getFileLinkTypeValues());
+        return reader.enums().getEnumType("linkType", getFileLinkTypeValues());
     }
 
     private static HDF5CompoundType<LinkRecord> getHDF5LinkCompoundType(IHDF5Reader reader)

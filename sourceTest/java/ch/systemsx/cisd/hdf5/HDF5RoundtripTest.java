@@ -62,6 +62,7 @@ import org.testng.annotations.Test;
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
@@ -276,6 +277,7 @@ public class HDF5RoundtripTest
         test.testUpdateSoftLink();
         test.testExternalLink();
         test.testEnum();
+        test.testAnonymousEnum();
         test.testJavaEnum();
         test.testEnum16();
         try
@@ -290,6 +292,7 @@ public class HDF5RoundtripTest
         test.testReplaceConfusedEnum();
         test.testEnumArray();
         test.testEnumMDArray();
+        test.testEnumMDArrayBlockWise();
         test.testJavaEnumArray();
         test.testEnumArrayBlock();
         test.testEnumArrayBlockScalingCompression();
@@ -2353,12 +2356,12 @@ public class HDF5RoundtripTest
         assertTrue(info.getTypeInformation().isVariableLengthType());
         assertEquals("STRING(-1)", info.getTypeInformation().toString());
         assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
-        assertTrue(Arrays.equals(new long[]
+        assertTrue(Arrays.toString(info.getDimensions()), Arrays.equals(new long[]
             { 2, 2 }, info.getDimensions()));
-        assertTrue(Arrays.equals(new long[]
+        assertTrue(Arrays.toString(info.getMaxDimensions()), Arrays.equals(new long[]
             { -1, -1 }, info.getMaxDimensions()));
-        assertTrue(Arrays.equals(new int[]
-            { 4, 4 }, info.tryGetChunkSizes()));
+        assertTrue(Arrays.toString(info.tryGetChunkSizes()),
+                Arrays.equals(MDArray.toInt(info.getDimensions()), info.tryGetChunkSizes()));
     }
 
     @Test
@@ -3648,13 +3651,20 @@ public class HDF5RoundtripTest
         final String enumAttributeName = "Enum Attribute";
         final HDF5EnumerationValue enumAttributeValueWritten =
                 new HDF5EnumerationValue(enumType, "TWO");
-        writer.setEnumAttribute(datasetName, enumAttributeName, enumAttributeValueWritten);
+        writer.enums().setAttr(datasetName, enumAttributeName, enumAttributeValueWritten);
         final String enumArrayAttributeName = "Enum Array Attribute";
         final HDF5EnumerationValueArray enumArrayAttributeValueWritten =
                 new HDF5EnumerationValueArray(enumType, new String[]
                     { "TWO", "THREE", "ONE" });
-        writer.setEnumArrayAttribute(datasetName, enumArrayAttributeName,
+        writer.enums().setArrayAttr(datasetName, enumArrayAttributeName,
                 enumArrayAttributeValueWritten);
+        final String enumMDArrayAttributeName = "Enum Array MD Attribute";
+        final HDF5EnumerationValueMDArray enumMDArrayAttributeValueWritten =
+                new HDF5EnumerationValueMDArray(enumType, new MDArray<String>(new String[]
+                    { "TWO", "THREE", "ONE", "ONE" }, new int[]
+                    { 2, 2 }));
+        writer.enums().setMDArrayAttr(datasetName, enumMDArrayAttributeName,
+                enumMDArrayAttributeValueWritten);
         final String volatileAttributeName = "Some Volatile Attribute";
         writer.setIntAttribute(datasetName, volatileAttributeName, 21);
         writer.deleteAttribute(datasetName, volatileAttributeName);
@@ -3716,13 +3726,13 @@ public class HDF5RoundtripTest
                 reader.getStringAttribute(datasetName, stringAttributeNameVL);
         assertEquals(stringAttributeValueVLWritten2, stringAttributeValueVLRead);
         final HDF5EnumerationValue enumAttributeValueRead =
-                reader.getEnumAttribute(datasetName, enumAttributeName);
+                reader.enums().getAttr(datasetName, enumAttributeName);
         final String enumAttributeStringValueRead =
-                reader.getEnumAttributeAsString(datasetName, enumAttributeName);
+                reader.enums().getAttrAsString(datasetName, enumAttributeName);
         assertEquals(enumAttributeValueWritten.getValue(), enumAttributeValueRead.getValue());
         assertEquals(enumAttributeValueWritten.getValue(), enumAttributeStringValueRead);
         final String[] enumArrayAttributeReadAsString =
-                reader.getEnumArrayAttributeAsString(datasetName, enumArrayAttributeName);
+                reader.enums().getArrayAttr(datasetName, enumArrayAttributeName).toStringArray();
         assertEquals(enumArrayAttributeValueWritten.getLength(),
                 enumArrayAttributeReadAsString.length);
         for (int i = 0; i < enumArrayAttributeReadAsString.length; ++i)
@@ -3731,7 +3741,7 @@ public class HDF5RoundtripTest
                     enumArrayAttributeReadAsString[i]);
         }
         final HDF5EnumerationValueArray enumArrayAttributeRead =
-                reader.getEnumArrayAttribute(datasetName, enumArrayAttributeName);
+                reader.enums().getArrayAttr(datasetName, enumArrayAttributeName);
         assertEquals(enumArrayAttributeValueWritten.getLength(), enumArrayAttributeRead.getLength());
         for (int i = 0; i < enumArrayAttributeRead.getLength(); ++i)
         {
@@ -3740,11 +3750,21 @@ public class HDF5RoundtripTest
         }
         // Let's try to read the first element of the array using getEnumAttributeAsString
         assertEquals(enumArrayAttributeValueWritten.getValue(0),
-                reader.getEnumAttributeAsString(datasetName, enumArrayAttributeName));
+                reader.enums().getAttrAsString(datasetName, enumArrayAttributeName));
         // Let's try to read the first element of the array using getEnumAttribute
         assertEquals(enumArrayAttributeValueWritten.getValue(0),
-                reader.getEnumAttribute(datasetName, enumArrayAttributeName).getValue());
+                reader.enums().getAttr(datasetName, enumArrayAttributeName).getValue());
         assertFalse(reader.hasAttribute(datasetName, volatileAttributeName));
+        final HDF5EnumerationValueMDArray enumMDArrayAttributeRead =
+                reader.enums().getMDArrayAttr(datasetName, enumMDArrayAttributeName);
+        assertEquals(enumMDArrayAttributeValueWritten.toStringArray(),
+                enumMDArrayAttributeRead.toStringArray());
+        assertEquals(enumArrayAttributeValueWritten.getLength(), enumArrayAttributeRead.getLength());
+        for (int i = 0; i < enumArrayAttributeRead.getLength(); ++i)
+        {
+            assertEquals(enumArrayAttributeValueWritten.getValue(i),
+                    enumArrayAttributeRead.getValue(i));
+        }
         assertTrue(Arrays.equals(floatArrayAttribute,
                 reader.getFloatArrayAttribute(datasetName, floatArrayAttributeName)));
         assertTrue(floatMatrixAttribute2.equals(reader.getFloatMDArrayAttribute(datasetName,
@@ -4100,7 +4120,7 @@ public class HDF5RoundtripTest
         assertFalse(info.isScalar());
         assertEquals(2, info.getDimensions()[0]);
         assertEquals(3, info.getDimensions()[1]);
-        assertChunkSizes(info, HDF5Utils.MIN_CHUNK_SIZE, HDF5Utils.MIN_CHUNK_SIZE);
+        assertChunkSizes(info, 2, 3);
         final HDF5DataSetInformation stringInfo = reader.getDataSetInformation("stringDS");
         assertEquals(HDF5DataClass.STRING, stringInfo.getTypeInformation().getDataClass());
         assertEquals(s.length() + 1, stringInfo.getTypeInformation().getElementSize());
@@ -4456,7 +4476,7 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         assertEquals(JavaEnum.THREE, reader.readEnum(dsName, JavaEnum.class));
-        assertEquals(JavaEnum.TWO, reader.getEnumAttribute(dsName, "attr", JavaEnum.class));
+        assertEquals(JavaEnum.TWO, reader.getEnumAttribute(dsName, "attr").getValue(JavaEnum.class));
         final String valueStr = reader.readEnumAsString(dsName);
         assertEquals("THREE", valueStr);
         final HDF5EnumerationValue value = reader.readEnum(dsName);
@@ -4507,13 +4527,43 @@ public class HDF5RoundtripTest
         assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(value.getType()));
         assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(dsName));
         type = reader.getDataSetEnumType(dsName);
-        assertEquals("THREE", reader.readEnum(dsName, type).getValue());
+        assertEquals("THREE", reader.enums().read(dsName, type).getValue());
         reader.close();
         final IHDF5Writer writer2 = HDF5FactoryProvider.get().open(file);
         type = writer2.getEnumType(enumTypeName, new String[]
             { "ONE", "TWO", "THREE" }, true);
-        assertEquals("THREE", writer2.readEnum(dsName, type).getValue());
+        assertEquals("THREE", writer2.enums().read(dsName, type).getValue());
         writer2.close();
+    }
+
+    enum NumberEnum
+    {
+        ONE, TWO, THREE, FOUR, FIVE
+    }
+
+    @Test
+    public void testAnonymousEnum()
+    {
+        final File file = new File(workingDirectory, "anonymousEnum.h5");
+        final String dsName = "/testEnum";
+        final String dsName2 = "/testEnum2";
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.configure(file).keepDataSetsIfTheyExist().writer();
+        HDF5EnumerationType type = writer.enums().getAnonType(new String[]
+            { "ONE", "TWO", "THREE", "FOUR", "INFINITY" });
+        writer.writeEnum(dsName, new HDF5EnumerationValue(type, "INFINITY"));
+        HDF5EnumerationType type2 = writer.enums().getAnonType(NumberEnum.class);
+        writer.writeEnum(dsName2, new HDF5EnumerationValue(type2, NumberEnum.FIVE));
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        assertEquals("INFINITY", reader.readEnumAsString(dsName));
+        assertEquals("INFINITY", reader.readEnum(dsName).getValue());
+        assertEquals("FIVE", reader.readEnumAsString(dsName2));
+        assertEquals(NumberEnum.FIVE, reader.readEnum(dsName2).getValue(NumberEnum.class));
+        reader.close();
     }
 
     @Test
@@ -4541,11 +4591,11 @@ public class HDF5RoundtripTest
         final HDF5EnumerationValue value = reader.readEnum(dsName);
         assertEquals("17", value.getValue());
         type = reader.getDataSetEnumType(dsName);
-        assertEquals("17", reader.readEnum(dsName, type).getValue());
+        assertEquals("17", reader.enums().read(dsName, type).getValue());
         reader.close();
         final IHDF5Writer writer2 = HDF5FactoryProvider.get().open(file);
         type = writer2.getEnumType(enumTypeName, type.getValueArray(), true);
-        assertEquals("17", writer2.readEnum(dsName, type).getValue());
+        assertEquals("17", writer2.enums().read(dsName, type).getValue());
         // That is wrong, but we disable the check, so no exception should be thrown.
         writer2.close();
     }
@@ -4612,8 +4662,9 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final HDF5EnumerationValueArray arrayRead = reader.readEnumArray("/testEnum");
         enumType = reader.getDataSetEnumType("/testEnum");
-        final HDF5EnumerationValueArray arrayRead2 = reader.readEnumArray("/testEnum", enumType);
-        final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
+        final HDF5EnumerationValueArray arrayRead2 =
+                reader.enums().readArray("/testEnum", enumType);
+        final String[] stringArrayRead = reader.readEnumArray("/testEnum").toStringArray();
         assertEquals(arrayWritten.getLength(), stringArrayRead.length);
         assertEquals(arrayWritten.getLength(), arrayRead.getLength());
         assertEquals(arrayWritten.getLength(), arrayRead2.getLength());
@@ -4635,21 +4686,20 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
-        HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
-            { "ONE", "TWO", "THREE" }, false);
-        HDF5EnumerationValueMDArray arrayWritten =
-                new HDF5EnumerationValueMDArray(enumType, new MDArray<String>(new String[]
-                    { "TWO", "ONE", "THREE", "TWO", "ONE", "THREE", "TWO", "ONE", "THREE", "TWO",
-                            "ONE", "THREE", "TWO", "ONE", "THREE", "TWO", "ONE", "THREE", "TWO",
-                            "ONE", "THREE", "TWO", "ONE", "THREE" }, new int[]
-                    { 2, 3, 4 }));
-        writer.writeEnumMDArray("/testEnum", arrayWritten);
+        HDF5EnumerationValueMDArray arrayWritten = writer.enums().newMDArray(enumTypeName, new String[]
+                { "ONE", "TWO", "THREE" }, new MDArray<String>(new String[]
+                        { "TWO", "ONE", "THREE", "TWO", "ONE", "THREE", "TWO", "ONE", "THREE", "TWO",
+                        "ONE", "THREE", "TWO", "ONE", "THREE", "TWO", "ONE", "THREE", "TWO",
+                        "ONE", "THREE", "TWO", "ONE", "THREE" }, new int[]
+                { 2, 3, 4 }));
+        writer.enums().writeMDArray("/testEnum", arrayWritten);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
-        final HDF5EnumerationValueMDArray arrayRead = reader.readEnumMDArray("/testEnum");
-        enumType = reader.getDataSetEnumType("/testEnum");
-        final HDF5EnumerationValueMDArray arrayRead2 = reader.readEnumMDArray("/testEnum", enumType);
-        final MDArray<String> stringArrayRead = reader.readEnumMDArrayAsString("/testEnum");
+        final HDF5EnumerationValueMDArray arrayRead = reader.enums().readMDArray("/testEnum");
+        final HDF5EnumerationType enumType = reader.getDataSetEnumType("/testEnum");
+        final HDF5EnumerationValueMDArray arrayRead2 =
+                reader.enums().readMDArray("/testEnum", enumType);
+        final MDArray<String> stringArrayRead = arrayRead2.toStringArray();
         assertTrue(Arrays.equals(arrayWritten.dimensions(), stringArrayRead.dimensions()));
         assertTrue(Arrays.equals(arrayWritten.dimensions(), arrayRead.dimensions()));
         assertTrue(Arrays.equals(arrayWritten.dimensions(), arrayRead2.dimensions()));
@@ -4658,6 +4708,105 @@ public class HDF5RoundtripTest
             assertEquals("Index " + i, arrayWritten.getValue(i), arrayRead.getValue(i));
             assertEquals("Index " + i, arrayWritten.getValue(i), arrayRead2.getValue(i));
             assertEquals("Index " + i, arrayWritten.getValue(i), stringArrayRead.get(i));
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testEnumMDArrayBlockWise()
+    {
+        final File file = new File(workingDirectory, "enumMDArrayBlockWise.h5");
+        final String enumTypeName = "testEnum";
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
+            { "ONE", "TWO", "THREE" }, false);
+        HDF5EnumerationValueMDArray arrayBlockWritten1 =
+                new HDF5EnumerationValueMDArray(enumType, new MDArray<String>(new String[]
+                    { "TWO", "ONE", "THREE", "THREE", "TWO", "ONE", }, new int[]
+                    { 2, 3, 1 }));
+        HDF5EnumerationValueMDArray arrayBlockWritten2 =
+                new HDF5EnumerationValueMDArray(enumType, new MDArray<String>(new String[]
+                    { "ONE", "TWO", "THREE", "THREE", "TWO", "ONE", }, new int[]
+                    { 2, 3, 1 }));
+        HDF5EnumerationValueMDArray arrayBlockWritten3 =
+                new HDF5EnumerationValueMDArray(enumType, new MDArray<String>(new String[]
+                    { "THREE", "TWO", "ONE", "ONE", "TWO", "THREE", }, new int[]
+                    { 2, 3, 1 }));
+        writer.enums().createMDArray("/testEnum", enumType, new int[]
+            { 2, 3, 1 });
+        for (int i = 0; i < 4; ++i)
+        {
+            writer.enums().writeMDArrayBlock("/testEnum", arrayBlockWritten1, new long[]
+                { 0, 0, i });
+            writer.enums().writeMDArrayBlock("/testEnum", arrayBlockWritten2, new long[]
+                { 1, 0, i });
+            writer.enums().writeMDArrayBlock("/testEnum", arrayBlockWritten3, new long[]
+                { 0, 1, i });
+        }
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        assertTrue(Arrays.equals(new long[]
+            { 4, 6, 4 }, reader.getDataSetInformation("/testEnum").getDimensions()));
+        for (int i = 0; i < 4; ++i)
+        {
+            assertEquals(arrayBlockWritten1,
+                    reader.enums().readMDArrayBlock("/testEnum", new int[]
+                        { 2, 3, 1 }, new long[]
+                        { 0, 0, i }));
+            assertEquals(arrayBlockWritten2,
+                    reader.enums().readMDArrayBlock("/testEnum", new int[]
+                        { 2, 3, 1 }, new long[]
+                        { 1, 0, i }));
+            assertEquals(arrayBlockWritten3,
+                    reader.enums().readMDArrayBlock("/testEnum", new int[]
+                        { 2, 3, 1 }, new long[]
+                        { 0, 1, i }));
+        }
+
+        enumType = reader.getDataSetEnumType("/testEnum");
+        for (int i = 0; i < 4; ++i)
+        {
+            assertEquals(arrayBlockWritten1,
+                    reader.enums().readMDArrayBlock("/testEnum", enumType, new int[]
+                        { 2, 3, 1 }, new long[]
+                        { 0, 0, i }));
+            assertEquals(arrayBlockWritten2,
+                    reader.enums().readMDArrayBlock("/testEnum", enumType, new int[]
+                        { 2, 3, 1 }, new long[]
+                        { 1, 0, i }));
+            assertEquals(arrayBlockWritten3,
+                    reader.enums().readMDArrayBlock("/testEnum", enumType, new int[]
+                        { 2, 3, 1 }, new long[]
+                        { 0, 1, i }));
+        }
+        for (HDF5MDEnumBlock block : reader.enums().getMDArrayNaturalBlocks("/testEnum",
+                enumType))
+        {
+            assertTrue(Long.toString(block.getIndex()[2]),
+                    block.getIndex()[2] >= 0 && block.getIndex()[2] < 4);
+            if (block.getIndex()[0] == 0 && block.getIndex()[1] == 0)
+            {
+                assertEquals(arrayBlockWritten1, block.getData());
+            } else if (block.getIndex()[0] == 0 && block.getIndex()[1] == 1)
+            {
+                assertEquals(arrayBlockWritten3, block.getData());
+            } else if (block.getIndex()[0] == 1 && block.getIndex()[1] == 0)
+            {
+                assertEquals(arrayBlockWritten2, block.getData());
+            } else if (block.getIndex()[0] == 1 && block.getIndex()[1] == 1)
+            {
+                assertTrue(Arrays.equals(new int[]
+                    { 2, 3, 1 }, block.getData().dimensions()));
+                assertTrue(Arrays.equals(new byte[6], ((MDByteArray) block.getData()
+                        .getOrdinalValues()).getAsFlatArray()));
+            } else
+            {
+                fail("Unexpected index " + Arrays.toString(block.getIndex()));
+            }
         }
         reader.close();
     }
@@ -4674,31 +4823,40 @@ public class HDF5RoundtripTest
             { JavaEnum.TWO, JavaEnum.ONE, JavaEnum.THREE, JavaEnum.ONE };
         final JavaEnum[] arrayBlockTwoWritten = new JavaEnum[]
             { JavaEnum.THREE, JavaEnum.ONE, JavaEnum.TWO, JavaEnum.THREE };
-        writer.writeEnumArray("/testEnum", arrayWritten);
+        writer.writeEnumArray("/testEnum", writer.enums().newArray(arrayWritten));
         final HDF5EnumerationType type =
-                writer.createEnumArray("/testEnumBlockwise", JavaEnum.class, 16);
-        writer.writeEnumArrayBlock("/testEnumBlockwise", type, arrayWritten, 0);
-        writer.writeEnumArrayBlock("/testEnumBlockwise", arrayBlockTwoWritten, 1);
-        writer.writeEnumArrayBlockWithOffset("/testEnumBlockwise", type, arrayBlockTwoWritten,
+                writer.enums().createArray("/testEnumBlockwise",
+                        writer.enums().getEnumType(JavaEnum.class), 16);
+        writer.enums().writeArrayBlock("/testEnumBlockwise",
+                new HDF5EnumerationValueArray(type, arrayWritten), 0);
+        writer.enums().writeArrayBlock("/testEnumBlockwise",
+                writer.enums().newArray(arrayBlockTwoWritten), 1);
+        writer.enums().writeArrayBlockWithOffset("/testEnumBlockwise",
+                new HDF5EnumerationValueArray(type, arrayBlockTwoWritten),
                 arrayBlockTwoWritten.length, 8);
-        writer.writeEnumArrayBlockWithOffset("/testEnumBlockwise", arrayWritten,
-                arrayWritten.length, 12);
+        writer.enums().writeArrayBlockWithOffset("/testEnumBlockwise",
+                writer.enums().newArray(arrayWritten), arrayWritten.length, 12);
         final JavaEnum[] attributeArrayWritten = new JavaEnum[]
             { JavaEnum.THREE, JavaEnum.ONE, JavaEnum.TWO };
-        writer.setEnumArrayAttribute("/testEnum", "attr", attributeArrayWritten);
+        writer.enums().setArrayAttr("/testEnum", "attr",
+                writer.enums().newArray(attributeArrayWritten));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
-        final JavaEnum[] arrayRead = reader.readEnumArray("/testEnum", JavaEnum.class);
+        final JavaEnum[] arrayRead = reader.enums().readArray("/testEnum").toEnumArray(JavaEnum.class);
         final JavaEnum[] attributeArrayRead =
-                reader.getEnumArrayAttribute("/testEnum", "attr", JavaEnum.class);
+                reader.enums().getArrayAttr("/testEnum", "attr").toEnumArray(JavaEnum.class);
         final JavaEnum[] arrayBlockRead0 =
-                reader.readEnumArrayBlock("/testEnumBlockwise", JavaEnum.class, 4, 0);
+                reader.enums().readArrayBlock("/testEnumBlockwise", 4, 0)
+                        .toEnumArray(JavaEnum.class);
         final JavaEnum[] arrayBlockRead1 =
-                reader.readEnumArrayBlock("/testEnumBlockwise", JavaEnum.class, 4, 1);
+                reader.enums().readArrayBlock("/testEnumBlockwise", 4, 1)
+                        .toEnumArray(JavaEnum.class);
         final JavaEnum[] arrayBlockRead2 =
-                reader.readEnumArrayBlock("/testEnumBlockwise", JavaEnum.class, 4, 2);
+                reader.enums().readArrayBlock("/testEnumBlockwise", 4, 2)
+                        .toEnumArray(JavaEnum.class);
         final JavaEnum[] arrayBlockRead3 =
-                reader.readEnumArrayBlock("/testEnumBlockwise", JavaEnum.class, 4, 3);
+                reader.enums().readArrayBlock("/testEnumBlockwise", 4, 3)
+                        .toEnumArray(JavaEnum.class);
         reader.close();
         assertEquals(arrayWritten.length, arrayRead.length);
         for (int i = 0; i < arrayWritten.length; ++i)
@@ -4735,19 +4893,19 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
             { "ONE", "TWO", "THREE" }, false);
-        writer.createEnumArray("/testEnum", enumType, chunkSize);
+        writer.enums().createArray("/testEnum", enumType, chunkSize);
         HDF5EnumerationValueArray arrayWritten =
                 new HDF5EnumerationValueArray(enumType, new String[]
                     { "TWO", "ONE", "THREE", "TWO" });
-        writer.writeEnumArrayBlock("/testEnum", arrayWritten, 1);
+        writer.enums().writeArrayBlock("/testEnum", arrayWritten, 1);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final HDF5EnumerationValueArray arrayReadBlock0 =
-                reader.readEnumArrayBlock(enumTypeName, chunkSize, 0);
+                reader.enums().readArrayBlock(enumTypeName, chunkSize, 0);
         enumType = reader.getDataSetEnumType(enumTypeName);
         final HDF5EnumerationValueArray arrayReadBlock1 =
-                reader.readEnumArrayBlock(enumTypeName, enumType, chunkSize, 1);
-        final String[] stringArrayRead = reader.readEnumArrayAsString(enumTypeName);
+                reader.enums().readArrayBlock(enumTypeName, enumType, chunkSize, 1);
+        final String[] stringArrayRead = reader.readEnumArray(enumTypeName).toStringArray();
         assertEquals(arrayWritten.getLength() * 2, stringArrayRead.length);
         assertEquals(arrayWritten.getLength(), arrayReadBlock0.getLength());
         assertEquals(arrayWritten.getLength(), arrayReadBlock1.getLength());
@@ -4764,8 +4922,8 @@ public class HDF5RoundtripTest
         final HDF5EnumerationValueArray[] dataBlocksExpected = new HDF5EnumerationValueArray[]
             { arrayReadBlock0, arrayReadBlock1 };
         int blockIndex = 0;
-        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.getEnumArrayNaturalBlocks(
-                enumTypeName, enumType))
+        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.enums()
+                .getArrayNaturalBlocks(enumTypeName, enumType))
         {
             final HDF5EnumerationValueArray blockExpected = dataBlocksExpected[blockIndex++];
             final HDF5EnumerationValueArray blockRead = block.getData();
@@ -4790,20 +4948,20 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         HDF5EnumerationType enumType = writer.getEnumType(enumTypeName, new String[]
             { "ONE", "TWO", "THREE" }, false);
-        writer.createEnumArray("/testEnum", enumType, 0, chunkSize,
+        writer.enums().createArray("/testEnum", enumType, 0, chunkSize,
                 HDF5IntStorageFeatures.INT_AUTO_SCALING);
         HDF5EnumerationValueArray arrayWritten =
                 new HDF5EnumerationValueArray(enumType, new String[]
                     { "TWO", "ONE", "THREE", "ONE" });
-        writer.writeEnumArrayBlock("/testEnum", arrayWritten, 1);
+        writer.enums().writeArrayBlock("/testEnum", arrayWritten, 1);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final HDF5EnumerationValueArray arrayReadBlock0 =
-                reader.readEnumArrayBlock(enumTypeName, chunkSize, 0);
+                reader.enums().readArrayBlock(enumTypeName, chunkSize, 0);
         enumType = reader.getDataSetEnumType(enumTypeName);
         final HDF5EnumerationValueArray arrayReadBlock1 =
-                reader.readEnumArrayBlock(enumTypeName, enumType, chunkSize, 1);
-        final String[] stringArrayRead = reader.readEnumArrayAsString(enumTypeName);
+                reader.enums().readArrayBlock(enumTypeName, enumType, chunkSize, 1);
+        final String[] stringArrayRead = reader.readEnumArray(enumTypeName).toStringArray();
         assertEquals(arrayWritten.getLength() * 2, stringArrayRead.length);
         assertEquals(arrayWritten.getLength(), arrayReadBlock0.getLength());
         assertEquals(arrayWritten.getLength(), arrayReadBlock1.getLength());
@@ -4820,8 +4978,8 @@ public class HDF5RoundtripTest
         final HDF5EnumerationValueArray[] dataBlocksExpected = new HDF5EnumerationValueArray[]
             { arrayReadBlock0, arrayReadBlock1 };
         int blockIndex = 0;
-        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.getEnumArrayNaturalBlocks(
-                enumTypeName, enumType))
+        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.enums()
+                .getArrayNaturalBlocks(enumTypeName, enumType))
         {
             final HDF5EnumerationValueArray blockExpected = dataBlocksExpected[blockIndex++];
             final HDF5EnumerationValueArray blockRead = block.getData();
@@ -4849,7 +5007,7 @@ public class HDF5RoundtripTest
         writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
-        final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
+        final String[] stringArrayRead = reader.readEnumArray("/testEnum").toStringArray();
         assertEquals(arrayWritten.length, stringArrayRead.length);
         for (int i = 0; i < stringArrayRead.length; ++i)
         {
@@ -4882,7 +5040,7 @@ public class HDF5RoundtripTest
                 HDF5IntStorageFeatures.INT_AUTO_SCALING);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
-        final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
+        final String[] stringArrayRead = reader.readEnumArray("/testEnum").toStringArray();
         assertEquals(arrayWritten.length, stringArrayRead.length);
         for (int i = 0; i < stringArrayRead.length; ++i)
         {
@@ -4917,7 +5075,7 @@ public class HDF5RoundtripTest
         writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
-        final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
+        final String[] stringArrayRead = reader.readEnumArray("/testEnum").toStringArray();
         assertEquals(arrayWritten.length, stringArrayRead.length);
         for (int i = 0; i < stringArrayRead.length; ++i)
         {
@@ -4938,19 +5096,19 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         HDF5EnumerationType enumType = createEnum16Bit(writer, enumTypeName);
-        writer.createEnumArray("/testEnum", enumType, chunkSize);
+        writer.enums().createArray("/testEnum", enumType, chunkSize);
         final HDF5EnumerationValueArray arrayWritten =
                 new HDF5EnumerationValueArray(enumType, new int[]
                     { 8, 16, 722, 913 });
-        writer.writeEnumArrayBlock("/testEnum", arrayWritten, 1);
+        writer.enums().writeArrayBlock("/testEnum", arrayWritten, 1);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final HDF5EnumerationValueArray arrayReadBlock0 =
-                reader.readEnumArrayBlock(enumTypeName, chunkSize, 0);
+                reader.enums().readArrayBlock(enumTypeName, chunkSize, 0);
         enumType = reader.getDataSetEnumType(enumTypeName);
         final HDF5EnumerationValueArray arrayReadBlock1 =
-                reader.readEnumArrayBlock(enumTypeName, enumType, chunkSize, 1);
-        final String[] stringArrayRead = reader.readEnumArrayAsString(enumTypeName);
+                reader.enums().readArrayBlock(enumTypeName, enumType, chunkSize, 1);
+        final String[] stringArrayRead = reader.readEnumArray(enumTypeName).toStringArray();
         assertEquals(arrayWritten.getLength() * 2, stringArrayRead.length);
         assertEquals(arrayWritten.getLength(), arrayReadBlock0.getLength());
         assertEquals(arrayWritten.getLength(), arrayReadBlock1.getLength());
@@ -4967,8 +5125,8 @@ public class HDF5RoundtripTest
         final HDF5EnumerationValueArray[] dataBlocksExpected = new HDF5EnumerationValueArray[]
             { arrayReadBlock0, arrayReadBlock1 };
         int blockIndex = 0;
-        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.getEnumArrayNaturalBlocks(
-                enumTypeName, enumType))
+        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.enums()
+                .getArrayNaturalBlocks(enumTypeName, enumType))
         {
             final HDF5EnumerationValueArray blockExpected = dataBlocksExpected[blockIndex++];
             final HDF5EnumerationValueArray blockRead = block.getData();
@@ -5005,8 +5163,9 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final HDF5EnumerationValueArray arrayRead = reader.readEnumArray("/testEnum");
         enumType = reader.getDataSetEnumType("/testEnum");
-        final HDF5EnumerationValueArray arrayRead2 = reader.readEnumArray("/testEnum", enumType);
-        final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
+        final HDF5EnumerationValueArray arrayRead2 =
+                reader.enums().readArray("/testEnum", enumType);
+        final String[] stringArrayRead = reader.readEnumArray("/testEnum").toStringArray();
         assertEquals(arrayWritten.getLength(), stringArrayRead.length);
         assertEquals(arrayWritten.getLength(), arrayRead.getLength());
         assertEquals(arrayWritten.getLength(), arrayRead2.getLength());
@@ -5106,7 +5265,7 @@ public class HDF5RoundtripTest
         writer.writeEnumArray("/testEnum", new HDF5EnumerationValueArray(enumType, arrayWritten));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
-        final String[] stringArrayRead = reader.readEnumArrayAsString("/testEnum");
+        final String[] stringArrayRead = reader.readEnumArray("/testEnum").toStringArray();
         assertEquals(arrayWritten.length, stringArrayRead.length);
         for (int i = 0; i < stringArrayRead.length; ++i)
         {
@@ -5183,8 +5342,9 @@ public class HDF5RoundtripTest
 
         static HDF5CompoundType<Record> getHDF5Type(IHDF5Reader reader)
         {
-            final HDF5EnumerationType enumType = reader.getEnumType("someEnumType", new String[]
-                { "1", "Two", "THREE" });
+            final HDF5EnumerationType enumType =
+                    reader.enums().getEnumType("someEnumType", new String[]
+                        { "1", "Two", "THREE" });
             return reader.getCompoundType(null, Record.class, getMapping(enumType));
         }
 
@@ -6540,7 +6700,7 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         HDF5CompoundType<Record> compoundType = Record.getHDF5Type(writer);
-        HDF5EnumerationType enumType = writer.getEnumType("someEnumType");
+        HDF5EnumerationType enumType = writer.enums().getType("someEnumType");
         final Record[] arrayWritten =
                 new Record[]
                     {
@@ -6613,7 +6773,7 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         HDF5CompoundType<Record> compoundType = Record.getHDF5Type(writer);
-        HDF5EnumerationType enumType = writer.getEnumType("someEnumType");
+        HDF5EnumerationType enumType = writer.enums().getType("someEnumType");
         writer.createCompoundMDArray("/testCompound", compoundType, new long[]
             { 2, 2 }, new int[]
             { 2, 1 });
@@ -6855,6 +7015,7 @@ public class HDF5RoundtripTest
                     { 2, 2 }), new long[]
             { 1, 1 });
         writer.close();
+
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         int i = 0;
         int j = 0;
@@ -6883,6 +7044,29 @@ public class HDF5RoundtripTest
         }
         assertEquals(2, i);
         assertEquals(0, j);
+        i = 0;
+        j = 0;
+        for (HDF5MDDataBlock<MDArray<MatrixElementRecord>> block : reader
+                .getCompoundMDArrayNaturalBlocks(dsName, MatrixElementRecord.class))
+        {
+            final String ij = new MatrixElementRecord(i, j).toString() + ": ";
+            assertTrue(ij + Arrays.toString(block.getIndex()), Arrays.equals(new long[]
+                { i, j }, block.getIndex()));
+            assertTrue(ij + Arrays.toString(block.getData().dimensions()), Arrays.equals(new int[]
+                { 2, 2 }, block.getData().dimensions()));
+            assertTrue(ij + Arrays.toString(block.getData().getAsFlatArray()), Arrays.equals(
+                    new MatrixElementRecord[]
+                        { new MatrixElementRecord(1 + i * 2, 1 + j * 2),
+                                new MatrixElementRecord(1 + i * 2, 2 + j * 2),
+                                new MatrixElementRecord(2 + i * 2, 1 + j * 2),
+                                new MatrixElementRecord(2 + i * 2, 2 + j * 2) }, block.getData()
+                            .getAsFlatArray()));
+            if (++j > 1)
+            {
+                j = 0;
+                ++i;
+            }
+        }
         reader.close();
     }
 

@@ -157,7 +157,7 @@ public class HDF5StringReader implements IHDF5StringReader
                 {
                     final int dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId);
+                    final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId, registry);
                     final String[] data = new String[getOneDimensionalArraySize(dimensions)];
                     final int dataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);

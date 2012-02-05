@@ -331,8 +331,8 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @param data The data to write.
-     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
-     *            the according dimension).
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend
+     *            in the according dimension).
      */
     public <T> void writeCompoundMDArrayBlock(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockNumber);
@@ -343,12 +343,12 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @param data The data to write.
-     * @param blockDimensions The extent of the block to write on each axis.
+     * @param blockNumber The extent of the block to write on each axis.
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5.
      */
     public <T> void writeCompoundMDArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockDimensions,
+            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockNumber,
             final IByteArrayInspector inspectorOrNull);
 
     /**
@@ -411,7 +411,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundInformationRetriever
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
-     * @param dimensions The dimensions of the byte array to create. This will be the total
+     * @param dimensions The dimensions of the compound array to create. This will be the total
      *            dimensions for non-extendable data sets and the dimensions of one chunk (along
      *            each axis) for extendable (chunked) data sets. For extendable data sets the
      *            initial size of the array (along each axis) will be 0, see

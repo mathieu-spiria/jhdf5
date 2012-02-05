@@ -58,6 +58,9 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  */
 final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 {
+    interface IHDF5EnumCompleteWriter extends IHDF5EnumWriter, IHDF5EnumBasicWriter
+    {
+    }
     private final HDF5BaseWriter baseWriter;
 
     private final IHDF5ByteWriter byteWriter;
@@ -1073,6 +1076,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     //
 
     @Override
+    public IHDF5EnumWriter enums()
+    {
+        return enumWriter;
+    }
+
+    @Override
     public HDF5EnumerationType getEnumType(final String name, final String[] values)
             throws HDF5JavaException
     {
@@ -1086,201 +1095,83 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         return enumWriter.getEnumType(name, values, check);
     }
 
-    @Override
-    public HDF5EnumerationType getEnumType(String dataTypeName, Class<? extends Enum<?>> enumClass)
-            throws HDF5JavaException
+    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType, int size)
     {
-        return enumWriter.getEnumType(dataTypeName, enumClass);
+        return enumWriter.createArray(objectPath, enumType, size);
     }
 
-    @Override
-    public HDF5EnumerationType getEnumType(String dataTypeName, Class<? extends Enum<?>> enumClass,
-            boolean check) throws HDF5JavaException
-    {
-        return enumWriter.getEnumType(dataTypeName, enumClass, check);
-    }
-
-    @Override
-    public HDF5EnumerationType getEnumType(Class<? extends Enum<?>> enumClass)
-            throws HDF5JavaException
-    {
-        return enumWriter.getEnumType(enumClass);
-    }
-
-    @Override
-    public HDF5EnumerationType getEnumType(Class<? extends Enum<?>> enumClass, boolean check)
-            throws HDF5JavaException
-    {
-        return enumWriter.getEnumType(enumClass, check);
-    }
-
-    public void createEnumArray(String objectPath, HDF5EnumerationType enumType, long size)
-    {
-        enumWriter.createEnumArray(objectPath, enumType, size);
-    }
-
-    public void createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
+    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
             HDF5IntStorageFeatures features)
     {
-        enumWriter.createEnumArray(objectPath, enumType, size, features);
+        return enumWriter.createArray(objectPath, enumType, size, features);
     }
 
-    public void createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
+    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
             int blockSize, HDF5IntStorageFeatures features)
     {
-        enumWriter.createEnumArray(objectPath, enumType, size, blockSize, features);
+        return enumWriter.createArray(objectPath, enumType, size, blockSize, features);
     }
 
-    public void createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
+    public HDF5EnumerationType createEnumArray(String objectPath, HDF5EnumerationType enumType, long size,
             int blockSize)
     {
-        enumWriter.createEnumArray(objectPath, enumType, size, blockSize);
-    }
-
-    public HDF5EnumerationType createEnumArray(String objectPath,
-            Class<? extends Enum<?>> enumType, long size)
-    {
-        return enumWriter.createEnumArray(objectPath, enumType, size);
-    }
-
-    public HDF5EnumerationType createEnumArray(String objectPath,
-            Class<? extends Enum<?>> enumType, long size, int blockSize)
-    {
-        return enumWriter.createEnumArray(objectPath, enumType, size, blockSize);
-    }
-
-    public HDF5EnumerationType createEnumArray(String objectPath,
-            Class<? extends Enum<?>> enumType, long size, HDF5IntStorageFeatures features)
-    {
-        return enumWriter.createEnumArray(objectPath, enumType, size, features);
-    }
-
-    public HDF5EnumerationType createEnumArray(String objectPath,
-            Class<? extends Enum<?>> enumType, long size, int blockSize,
-            HDF5IntStorageFeatures features)
-    {
-        return enumWriter.createEnumArray(objectPath, enumType, size, blockSize, features);
+        return enumWriter.createArray(objectPath, enumType, size, blockSize);
     }
 
     public void setEnumAttribute(String objectPath, String name, HDF5EnumerationValue value)
     {
-        enumWriter.setEnumAttribute(objectPath, name, value);
-    }
-
-    public void setEnumArrayAttribute(String objectPath, String name,
-            HDF5EnumerationValueArray value)
-    {
-        enumWriter.setEnumArrayAttribute(objectPath, name, value);
+        enumWriter.setAttr(objectPath, name, value);
     }
 
     public void setEnumAttribute(String objectPath, String name, Enum<?> value)
             throws HDF5JavaException
     {
-        enumWriter.setEnumAttribute(objectPath, name, value);
+        enumWriter.setAttr(objectPath, name, value);
     }
 
-    public void setEnumArrayAttribute(String objectPath, String name, Enum<?>[] data)
-            throws HDF5JavaException
+    public void writeEnum(String objectPath, Enum<?> value) throws HDF5JavaException
     {
-        enumWriter.setEnumArrayAttribute(objectPath, name, data);
+        enumWriter.write(objectPath, value);
+    }
+
+    public void setEnumArrayAttribute(String objectPath, String name,
+            HDF5EnumerationValueArray value)
+    {
+        enumWriter.setArrayAttr(objectPath, name, value);
     }
 
     public void writeEnum(String objectPath, HDF5EnumerationValue value) throws HDF5JavaException
     {
-        enumWriter.writeEnum(objectPath, value);
+        enumWriter.write(objectPath, value);
     }
 
     public void writeEnumArray(String objectPath, HDF5EnumerationValueArray data,
             HDF5IntStorageFeatures features) throws HDF5JavaException
     {
-        enumWriter.writeEnumArray(objectPath, data, features);
+        enumWriter.writeArray(objectPath, data, features);
     }
 
     public void writeEnumArray(String objectPath, HDF5EnumerationValueArray data)
             throws HDF5JavaException
     {
-        enumWriter.writeEnumArray(objectPath, data);
-    }
-
-    public void writeEnum(String objectPath, Enum<?> value) throws HDF5JavaException
-    {
-        enumWriter.writeEnum(objectPath, value);
-    }
-
-    public <T extends Enum<T>> void writeEnumArray(String objectPath, Enum<T>[] data)
-            throws HDF5JavaException
-    {
-        enumWriter.writeEnumArray(objectPath, data);
-    }
-
-    public <T extends Enum<T>> void writeEnumArray(String objectPath, Enum<T>[] data,
-            HDF5IntStorageFeatures features) throws HDF5JavaException
-    {
-        enumWriter.writeEnumArray(objectPath, data, features);
+        enumWriter.writeArray(objectPath, data);
     }
 
     public void writeEnumArrayBlock(String objectPath, HDF5EnumerationValueArray data,
             long blockNumber)
     {
-        enumWriter.writeEnumArrayBlock(objectPath, data, blockNumber);
+        enumWriter.writeArrayBlock(objectPath, data, blockNumber);
     }
 
     public void writeEnumArrayBlockWithOffset(String objectPath, HDF5EnumerationValueArray data,
             int dataSize, long offset)
     {
-        enumWriter.writeEnumArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        enumWriter.writeArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     //
     // Compound
     //
-
-    public void writeEnumArrayBlock(String objectPath, HDF5EnumerationType enumType,
-            Enum<?>[] data, long blockNumber)
-    {
-        enumWriter.writeEnumArrayBlock(objectPath, enumType, data, blockNumber);
-    }
-
-    public void writeEnumArrayBlock(String objectPath, Enum<?>[] data, long blockNumber)
-    {
-        enumWriter.writeEnumArrayBlock(objectPath, data, blockNumber);
-    }
-
-    public void writeEnumArrayBlockWithOffset(String objectPath, HDF5EnumerationType enumType,
-            Enum<?>[] data, int dataSize, long offset)
-    {
-        enumWriter.writeEnumArrayBlockWithOffset(objectPath, enumType, data, dataSize, offset);
-    }
-
-    public void writeEnumArrayBlockWithOffset(String objectPath, Enum<?>[] data, int dataSize,
-            long offset)
-    {
-        enumWriter.writeEnumArrayBlockWithOffset(objectPath, data, dataSize, offset);
-    }
-
-    public <T extends Enum<T>> void writeEnumMDArray(final String objectPath,
-            final MDArray<Enum<T>> data)
-    {
-        enumWriter.writeEnumMDArray(objectPath, data);
-    }
-
-    public void writeEnumMDArray(String objectPath, HDF5EnumerationValueMDArray data,
-            HDF5IntStorageFeatures features) throws HDF5JavaException
-    {
-        enumWriter.writeEnumMDArray(objectPath, data, features);
-    }
-
-    public void writeEnumMDArray(String objectPath, HDF5EnumerationValueMDArray data)
-            throws HDF5JavaException
-    {
-        enumWriter.writeEnumMDArray(objectPath, data);
-    }
-
-    public <T extends Enum<T>> void writeEnumMDArray(String objectPath, MDArray<Enum<T>> data,
-            HDF5IntStorageFeatures features) throws HDF5JavaException
-    {
-        enumWriter.writeEnumMDArray(objectPath, data, features);
-    }
 
     @Override
     public <T> HDF5CompoundType<T> getCompoundType(final String name, Class<T> pojoClass,

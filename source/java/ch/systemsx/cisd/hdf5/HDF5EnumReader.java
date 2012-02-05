@@ -21,13 +21,12 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
 
-import java.lang.reflect.Array;
 import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType.StorageFormEnum;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -42,7 +41,7 @@ class HDF5EnumReader implements IHDF5EnumReader
     private static final int MIN_ENUM_SIZE_FOR_UPFRONT_LOADING = 10;
 
     protected final HDF5BaseReader baseReader;
-
+    
     HDF5EnumReader(HDF5BaseReader baseReader)
     {
         assert baseReader != null;
@@ -54,7 +53,7 @@ class HDF5EnumReader implements IHDF5EnumReader
     // Types
     // /////////////////////
 
-    public HDF5EnumerationType getEnumType(final String name)
+    public HDF5EnumerationType getType(final String name)
     {
         baseReader.checkOpen();
         final String dataTypePath = createDataTypePath(ENUM_PREFIX, name);
@@ -69,7 +68,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return getEnumType(name, values, true);
     }
 
-    public HDF5EnumerationType getEnumType(final Class<? extends Enum<?>> enumClass)
+    public <T extends Enum<?>> HDF5EnumerationType getEnumType(final Class<T> enumClass)
             throws HDF5JavaException
     {
         return getEnumType(enumClass.getSimpleName(), getEnumOptions(enumClass), true);
@@ -87,8 +86,8 @@ class HDF5EnumReader implements IHDF5EnumReader
         return getEnumType(name, getEnumOptions(enumClass), true);
     }
 
-    public HDF5EnumerationType getEnumType(final String name,
-            final Class<? extends Enum<?>> enumClass, final boolean check) throws HDF5JavaException
+    public <T extends Enum<?>> HDF5EnumerationType getEnumType(final String name,
+            final Class<T> enumClass, final boolean check) throws HDF5JavaException
     {
         return getEnumType(name, getEnumOptions(enumClass), check);
     }
@@ -108,7 +107,7 @@ class HDF5EnumReader implements IHDF5EnumReader
             final boolean check) throws HDF5JavaException
     {
         baseReader.checkOpen();
-        final HDF5EnumerationType dataType = getEnumType(name);
+        final HDF5EnumerationType dataType = getType(name);
         if (check)
         {
             baseReader.checkEnumValues(dataType.getStorageTypeId(), values, name);
@@ -118,10 +117,10 @@ class HDF5EnumReader implements IHDF5EnumReader
 
     public HDF5EnumerationType getEnumTypeForObject(final String dataSetPath)
     {
-        return getDataSetEnumType(dataSetPath);
+        return getDataSetType(dataSetPath);
     }
 
-    public HDF5EnumerationType getDataSetEnumType(final String dataSetPath)
+    public HDF5EnumerationType getDataSetType(final String dataSetPath)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5EnumerationType> readEnumTypeCallable =
@@ -147,7 +146,7 @@ class HDF5EnumReader implements IHDF5EnumReader
             final String enumTypeName =
                     baseReader.getStringAttribute(objectId, objectName,
                             HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, registry);
-            return getEnumType(enumTypeName);
+            return getType(enumTypeName);
         } else
         {
             final int storageDataTypeId =
@@ -161,7 +160,7 @@ class HDF5EnumReader implements IHDF5EnumReader
     // Attributes
     // /////////////////////
 
-    public String getEnumAttributeAsString(final String objectPath, final String attributeName)
+    public String getAttrAsString(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
         assert objectPath != null;
@@ -201,21 +200,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
-    public <T extends Enum<T>> T getEnumAttribute(String objectPath, String attributeName,
-            Class<T> enumClass) throws HDF5JavaException
-    {
-        final String value = getEnumAttributeAsString(objectPath, attributeName);
-        try
-        {
-            return Enum.valueOf(enumClass, value);
-        } catch (IllegalArgumentException ex)
-        {
-            throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
-                    + " has no value '" + value + "'.");
-        }
-    }
-
-    public HDF5EnumerationValue getEnumAttribute(final String objectPath, final String attributeName)
+    public HDF5EnumerationValue getAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
         assert objectPath != null;
@@ -261,7 +246,21 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
-    public HDF5EnumerationValueArray getEnumArrayAttribute(final String objectPath,
+    public <T extends Enum<T>> T getAttr(String objectPath, String attributeName,
+            Class<T> enumClass) throws HDF5JavaException
+    {
+        final String value = getAttrAsString(objectPath, attributeName);
+        try
+        {
+            return Enum.valueOf(enumClass, value);
+        } catch (IllegalArgumentException ex)
+        {
+            throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
+                    + " has no value '" + value + "'.");
+        }
+    }
+
+    public HDF5EnumerationValueArray getArrayAttr(final String objectPath,
             final String attributeName) throws HDF5JavaException
     {
         assert objectPath != null;
@@ -288,27 +287,39 @@ class HDF5EnumReader implements IHDF5EnumReader
     public String[] getEnumArrayAttributeAsString(final String objectPath,
             final String attributeName) throws HDF5JavaException
     {
-        final HDF5EnumerationValueArray array = getEnumArrayAttribute(objectPath, attributeName);
-        final String[] result = new String[array.getLength()];
-        for (int i = 0; i < result.length; ++i)
-        {
-            result[i] = array.getValue(i);
-        }
-        return result;
+        final HDF5EnumerationValueArray array = getArrayAttr(objectPath, attributeName);
+        return array.toStringArray();
     }
 
-    public <T extends Enum<T>> T[] getEnumArrayAttribute(String objectPath, String attributeName,
-            Class<T> enumClass) throws HDF5JavaException
+    public HDF5EnumerationValueMDArray getMDArrayAttr(final String objectPath,
+            final String attributeName) throws HDF5JavaException
     {
-        final HDF5EnumerationValueArray array = getEnumArrayAttribute(objectPath, attributeName);
-        return toEnumArray(enumClass, array);
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5EnumerationValueMDArray> readRunnable =
+                new ICallableWithCleanUp<HDF5EnumerationValueMDArray>()
+                    {
+                        public HDF5EnumerationValueMDArray call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            final int attributeId =
+                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
+                            return baseReader.getEnumValueMDArray(attributeId, registry);
+                        }
+
+                    };
+        return baseReader.runner.call(readRunnable);
     }
 
     // /////////////////////
     // Data Sets
     // /////////////////////
 
-    public String readEnumAsString(final String objectPath) throws HDF5JavaException
+    public String readAsString(final String objectPath) throws HDF5JavaException
     {
         assert objectPath != null;
 
@@ -339,10 +350,10 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(writeRunnable);
     }
 
-    public <T extends Enum<T>> T readEnum(String objectPath, Class<T> enumClass)
+    public <T extends Enum<T>> T read(String objectPath, Class<T> enumClass)
             throws HDF5JavaException
     {
-        final String value = readEnumAsString(objectPath);
+        final String value = readAsString(objectPath);
         try
         {
             return Enum.valueOf(enumClass, value);
@@ -353,7 +364,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         }
     }
 
-    public HDF5EnumerationValue readEnum(final String objectPath) throws HDF5JavaException
+    public HDF5EnumerationValue read(final String objectPath) throws HDF5JavaException
     {
         assert objectPath != null;
 
@@ -375,7 +386,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
-    public HDF5EnumerationValue readEnum(final String objectPath, final HDF5EnumerationType enumType)
+    public HDF5EnumerationValue read(final String objectPath, final HDF5EnumerationType enumType)
             throws HDF5JavaException
     {
         assert objectPath != null;
@@ -406,12 +417,16 @@ class HDF5EnumReader implements IHDF5EnumReader
         return new HDF5EnumerationValue(enumType, HDF5EnumerationType.fromStorageForm(data));
     }
 
-    public HDF5EnumerationValueArray readEnumArray(final String objectPath,
+    public HDF5EnumerationValueArray readArray(final String objectPath,
             final HDF5EnumerationType enumTypeOrNull) throws HDF5JavaException
     {
         assert objectPath != null;
 
         baseReader.checkOpen();
+        if (enumTypeOrNull != null)
+        {
+            enumTypeOrNull.check(baseReader.fileId);
+        }
         final ICallableWithCleanUp<HDF5EnumerationValueArray> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValueArray>()
                     {
@@ -420,7 +435,8 @@ class HDF5EnumReader implements IHDF5EnumReader
                             final int dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
-                            final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId);
+                            final long[] dimensions =
+                                    baseReader.h5.getDataDimensions(dataSetId, registry);
                             final boolean scaledEnum = baseReader.isScaledEnum(dataSetId, registry);
                             final HDF5EnumerationType actualEnumType =
                                     (enumTypeOrNull == null) ? getEnumTypeForDataSetId(dataSetId,
@@ -445,89 +461,10 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
-    public <T extends Enum<T>> T[] readEnumArray(String objectPath, Class<T> enumClass)
+    public HDF5EnumerationValueArray readArray(final String objectPath)
             throws HDF5JavaException
     {
-        final String[] values = readEnumArrayAsString(objectPath);
-        return toEnumArray(enumClass, values);
-    }
-
-    public HDF5EnumerationValueMDArray readEnumMDArray(final String objectPath)
-            throws HDF5JavaException
-    {
-        return readEnumMDArray(objectPath, (HDF5EnumerationType) null);
-    }
-
-    public HDF5EnumerationValueMDArray readEnumMDArray(final String objectPath,
-            final HDF5EnumerationType enumTypeOrNull) throws HDF5JavaException
-    {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<HDF5EnumerationValueMDArray> readRunnable =
-                new ICallableWithCleanUp<HDF5EnumerationValueMDArray>()
-                    {
-                        public HDF5EnumerationValueMDArray call(ICleanUpRegistry registry)
-                        {
-                            final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
-                                            registry);
-                            final boolean scaledEnum = baseReader.isScaledEnum(dataSetId, registry);
-                            final HDF5EnumerationType actualEnumType =
-                                    (enumTypeOrNull == null) ? getEnumTypeForDataSetId(dataSetId,
-                                            objectPath, scaledEnum, registry) : enumTypeOrNull;
-                            final DataSpaceParameters spaceParams =
-                                    baseReader.getSpaceParameters(dataSetId, registry);
-                            final StorageFormEnum storageForm = actualEnumType.getStorageForm();
-                            final byte[] data =
-                                    new byte[spaceParams.blockSize * storageForm.getStorageSize()];
-                            if (scaledEnum)
-                            {
-                                baseReader.h5.readDataSet(dataSetId, actualEnumType
-                                        .getStorageForm().getIntNativeTypeId(), data);
-                            } else
-                            {
-                                baseReader.h5.readDataSet(dataSetId,
-                                        actualEnumType.getNativeTypeId(), data);
-                            }
-                            return new HDF5EnumerationValueMDArray(actualEnumType,
-                                    HDF5EnumerationType.fromStorageForm(data,
-                                            spaceParams.dimensions, storageForm));
-                        }
-                    };
-
-        return baseReader.runner.call(readRunnable);
-    }
-
-    public <T extends Enum<T>> MDArray<T> readEnumMDArray(String objectPath, Class<T> enumClass)
-            throws HDF5JavaException
-    {
-        return readEnumMDArray(objectPath).getValues(enumClass);
-    }
-
-    public MDArray<String> readEnumMDArrayAsString(String objectPath) throws HDF5JavaException
-    {
-        return readEnumMDArray(objectPath).getValues();
-    }
-
-    public <T extends Enum<T>> T[] readEnumArrayBlock(String objectPath, Class<T> enumClass,
-            int blockSize, long blockNumber)
-    {
-        final String[] values = readEnumArrayBlockAsString(objectPath, blockSize, blockNumber);
-        return toEnumArray(enumClass, values);
-    }
-
-    public <T extends Enum<T>> T[] readEnumArrayBlockWithOffset(String objectPath,
-            Class<T> enumClass, int blockSize, long offset)
-    {
-        final String[] values = readEnumArrayBlockWithOffsetAsString(objectPath, blockSize, offset);
-        return toEnumArray(enumClass, values);
-    }
-
-    public HDF5EnumerationValueArray readEnumArray(final String objectPath)
-            throws HDF5JavaException
-    {
-        return readEnumArray(objectPath, (HDF5EnumerationType) null);
+        return readArray(objectPath, (HDF5EnumerationType) null);
     }
 
     public String[] readEnumArrayAsString(final String objectPath) throws HDF5JavaException
@@ -541,7 +478,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                 {
                     final int dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId);
+                    final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId, registry);
                     final int vectorLength = getOneDimensionalArraySize(dimensions);
                     final int storageDataTypeId =
                             baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
@@ -579,64 +516,6 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(writeRunnable);
     }
 
-    public String[] readEnumArrayBlockAsString(final String objectPath, final int blockSize,
-            final long blockNumber)
-    {
-        return readEnumArrayBlockWithOffsetAsString(objectPath, blockSize, blockNumber * blockSize);
-    }
-
-    public String[] readEnumArrayBlockWithOffsetAsString(final String objectPath,
-            final int blockSize, final long offset)
-    {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<String[]> readRunnable = new ICallableWithCleanUp<String[]>()
-            {
-                public String[] call(ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
-                    final int storageDataTypeId =
-                            baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                    final int nativeDataTypeId =
-                            baseReader.h5.getNativeDataType(storageDataTypeId, registry);
-                    final HDF5EnumerationType enumTypeOrNull =
-                            tryGetEnumTypeForResolution(dataSetId, objectPath, nativeDataTypeId,
-                                    blockSize, registry);
-                    final int size = baseReader.h5.getDataTypeSize(nativeDataTypeId);
-
-                    final String[] values = new String[blockSize];
-                    final byte[] data = new byte[blockSize * size];
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
-                    if (enumTypeOrNull != null)
-                    {
-                        for (int i = 0; i < blockSize; ++i)
-                        {
-                            values[i] =
-                                    enumTypeOrNull.getValueArray()[HDF5EnumerationType
-                                            .fromStorageForm(data, i, size)];
-                        }
-                    } else
-                    {
-                        for (int i = 0; i < blockSize; ++i)
-                        {
-                            values[i] =
-                                    baseReader.h5.getNameForEnumOrCompoundMemberIndex(
-                                            storageDataTypeId,
-                                            HDF5EnumerationType.fromStorageForm(data, i, size));
-                        }
-                    }
-                    return values;
-                }
-            };
-
-        return baseReader.runner.call(readRunnable);
-    }
-
     private HDF5EnumerationType tryGetEnumTypeForResolution(final int dataSetId,
             final String objectPath, final int nativeDataTypeId,
             final int numberOfEntriesToResolve, ICleanUpRegistry registry)
@@ -655,12 +534,16 @@ class HDF5EnumReader implements IHDF5EnumReader
         return null;
     }
 
-    public HDF5EnumerationValueArray readEnumArrayBlockWithOffset(final String objectPath,
+    public HDF5EnumerationValueArray readArrayBlockWithOffset(final String objectPath,
             final HDF5EnumerationType enumTypeOrNull, final int blockSize, final long offset)
     {
         assert objectPath != null;
 
         baseReader.checkOpen();
+        if (enumTypeOrNull != null)
+        {
+            enumTypeOrNull.check(baseReader.fileId);
+        }
         final ICallableWithCleanUp<HDF5EnumerationValueArray> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValueArray>()
                     {
@@ -699,28 +582,114 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
-    public HDF5EnumerationValueArray readEnumArrayBlockWithOffset(final String objectPath,
+    public HDF5EnumerationValueArray readArrayBlockWithOffset(final String objectPath,
             final int blockSize, final long offset)
     {
-        return readEnumArrayBlockWithOffset(objectPath, (HDF5EnumerationType) null, blockSize,
+        return readArrayBlockWithOffset(objectPath, (HDF5EnumerationType) null, blockSize,
                 offset);
     }
 
-    public HDF5EnumerationValueArray readEnumArrayBlock(final String objectPath,
+    public HDF5EnumerationValueArray readArrayBlock(final String objectPath,
             final int blockSize, final long blockNumber)
     {
-        return readEnumArrayBlockWithOffset(objectPath, (HDF5EnumerationType) null, blockSize,
+        return readArrayBlockWithOffset(objectPath, (HDF5EnumerationType) null, blockSize,
                 blockNumber * blockSize);
     }
 
-    public HDF5EnumerationValueArray readEnumArrayBlock(final String objectPath,
+    public HDF5EnumerationValueArray readArrayBlock(final String objectPath,
             final HDF5EnumerationType enumType, final int blockSize, final long blockNumber)
     {
-        return readEnumArrayBlockWithOffset(objectPath, enumType, blockSize, blockNumber
+        return readArrayBlockWithOffset(objectPath, enumType, blockSize, blockNumber
                 * blockSize);
     }
 
-    public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getEnumArrayNaturalBlocks(
+    public HDF5EnumerationValueMDArray readMDArray(final String objectPath)
+            throws HDF5JavaException
+    {
+        return readMDArray(objectPath, (HDF5EnumerationType) null);
+    }
+
+    public HDF5EnumerationValueMDArray readMDArray(final String objectPath,
+            final HDF5EnumerationType enumTypeOrNull) throws HDF5JavaException
+    {
+        return readMDArrayBlockWithOffset(objectPath, enumTypeOrNull, null, null);
+    }
+
+    public HDF5EnumerationValueMDArray readMDArrayBlockWithOffset(final String objectPath,
+            final HDF5EnumerationType enumTypeOrNull, final int[] blockDimensionsOrNull,
+            final long[] offsetOrNull)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        if (enumTypeOrNull != null)
+        {
+            enumTypeOrNull.check(baseReader.fileId);
+        }
+        final ICallableWithCleanUp<HDF5EnumerationValueMDArray> writeRunnable =
+                new ICallableWithCleanUp<HDF5EnumerationValueMDArray>()
+                    {
+                        public HDF5EnumerationValueMDArray call(final ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final boolean scaledEnum = baseReader.isScaledEnum(dataSetId, registry);
+                            final HDF5EnumerationType actualEnumType =
+                                    (enumTypeOrNull == null) ? getEnumTypeForDataSetId(dataSetId,
+                                            objectPath, scaledEnum, registry) : enumTypeOrNull;
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offsetOrNull,
+                                            blockDimensionsOrNull, registry);
+                            final StorageFormEnum storageForm = actualEnumType.getStorageForm();
+                            final byte[] byteArr =
+                                    new byte[spaceParams.blockSize * storageForm.getStorageSize()];
+                            if (scaledEnum)
+                            {
+                                baseReader.h5
+                                        .readDataSet(dataSetId, storageForm.getIntNativeTypeId(),
+                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                                byteArr);
+                            } else
+                            {
+                                baseReader.h5
+                                        .readDataSet(dataSetId, actualEnumType.getNativeTypeId(),
+                                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                                byteArr);
+                            }
+                            return new HDF5EnumerationValueMDArray(actualEnumType,
+                                    HDF5EnumerationType.fromStorageForm(byteArr,
+                                            spaceParams.dimensions, storageForm));
+                        }
+                    };
+        return baseReader.runner.call(writeRunnable);
+    }
+
+    public HDF5EnumerationValueMDArray readMDArrayBlock(String objectPath,
+            HDF5EnumerationType type, int[] blockDimensions, long[] blockNumber)
+            throws HDF5JavaException
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockDimensions[i] * blockNumber[i];
+        }
+        return readMDArrayBlockWithOffset(objectPath, type, blockDimensions, offset);
+    }
+
+    public HDF5EnumerationValueMDArray readMDArrayBlock(String objectPath,
+            int[] blockDimensions, long[] blockNumber) throws HDF5JavaException
+    {
+        return readMDArrayBlock(objectPath, null, blockDimensions, blockNumber);
+    }
+
+    public HDF5EnumerationValueMDArray readMDArrayBlockWithOffset(String objectPath,
+            int[] blockDimensions, long[] offset) throws HDF5JavaException
+    {
+        return readMDArrayBlockWithOffset(objectPath, null, blockDimensions, offset);
+    }
+
+    public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getArrayNaturalBlocks(
             final String objectPath, final HDF5EnumerationType enumTypeOrNull)
             throws HDF5JavaException
     {
@@ -746,7 +715,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final HDF5EnumerationValueArray block =
-                                        readEnumArrayBlockWithOffset(objectPath, enumTypeOrNull,
+                                        readArrayBlockWithOffset(objectPath, enumTypeOrNull,
                                                 index.getBlockSize(), offset);
                                 return new HDF5DataBlock<HDF5EnumerationValueArray>(block,
                                         index.getAndIncIndex(), offset);
@@ -761,47 +730,54 @@ class HDF5EnumReader implements IHDF5EnumReader
             };
     }
 
-    public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getEnumArrayNaturalBlocks(
+    public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getArrayNaturalBlocks(
             final String objectPath) throws HDF5JavaException
     {
-        return getEnumArrayNaturalBlocks(objectPath, null);
+        return getArrayNaturalBlocks(objectPath, (HDF5EnumerationType) null);
     }
 
-    private static <T extends Enum<T>> T[] toEnumArray(Class<T> enumClass, String[] values)
+    public Iterable<HDF5MDEnumBlock> getMDArrayNaturalBlocks(final String objectPath,
+            final HDF5EnumerationType enumTypeOrNull) throws HDF5JavaException
     {
-        @SuppressWarnings("unchecked")
-        final T[] result = (T[]) Array.newInstance(enumClass, values.length);
-        for (int i = 0; i < values.length; ++i)
-        {
-            try
+        final HDF5NaturalBlockMDParameters params =
+                new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(objectPath,
+                        DataTypeInfoOptions.MINIMAL));
+        return new Iterable<HDF5MDEnumBlock>()
             {
-                result[i] = Enum.valueOf(enumClass, values[i]);
-            } catch (IllegalArgumentException ex)
-            {
-                throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
-                        + " has no value '" + values[i] + "'.");
-            }
-        }
-        return result;
+                public Iterator<HDF5MDEnumBlock> iterator()
+                {
+                    return new Iterator<HDF5MDEnumBlock>()
+                        {
+                            final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
+                                    params.getNaturalBlockIndex();
+
+                            public boolean hasNext()
+                            {
+                                return index.hasNext();
+                            }
+
+                            public HDF5MDEnumBlock next()
+                            {
+                                final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
+                                final HDF5EnumerationValueMDArray block =
+                                        readMDArrayBlockWithOffset(objectPath, enumTypeOrNull,
+                                                index.getBlockSize(), offset);
+                                return new HDF5MDEnumBlock(block, index.getIndexClone(), offset);
+                            }
+
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
     }
 
-    private static <T extends Enum<T>> T[] toEnumArray(Class<T> enumClass,
-            HDF5EnumerationValueArray array)
+    public Iterable<HDF5MDEnumBlock> getMDArrayNaturalBlocks(String objectPath)
+            throws HDF5JavaException
     {
-        @SuppressWarnings("unchecked")
-        final T[] result = (T[]) Array.newInstance(enumClass, array.getLength());
-        for (int i = 0; i < array.getLength(); ++i)
-        {
-            try
-            {
-                result[i] = Enum.valueOf(enumClass, array.getValue(i));
-            } catch (IllegalArgumentException ex)
-            {
-                throw new HDF5JavaException("The Java enum class " + enumClass.getCanonicalName()
-                        + " has no value '" + array.getValue(i) + "'.");
-            }
-        }
-        return result;
+        return getMDArrayNaturalBlocks(objectPath, null);
     }
 
 }

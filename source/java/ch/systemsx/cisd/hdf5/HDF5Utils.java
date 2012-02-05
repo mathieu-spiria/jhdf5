@@ -34,7 +34,7 @@ final class HDF5Utils
 
     /** The minimal size of a chunk. */
     @Private
-    static final int MIN_CHUNK_SIZE = 4;
+    static final int MIN_CHUNK_SIZE = 1;
 
     /** The minimal size of a data set in order to allow for chunking. */
     private static final long MIN_TOTAL_SIZE_FOR_CHUNKING = 128L;

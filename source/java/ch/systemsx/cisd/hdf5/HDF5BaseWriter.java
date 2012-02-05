@@ -417,6 +417,32 @@ final class HDF5BaseWriter extends HDF5BaseReader
         runner.call(setAttributeRunnable);
     }
 
+    void setEnumMDArrayAttribute(final String objectPath, final String name,
+            final HDF5EnumerationValueMDArray value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        checkOpen();
+        final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int baseMemoryTypeId = value.getType().getNativeTypeId();
+                    final int memoryTypeId =
+                            h5.createArrayType(baseMemoryTypeId, value.dimensions(), registry);
+                    final int baseStorageTypeId = value.getType().getStorageTypeId();
+                    final int storageTypeId =
+                            h5.createArrayType(baseStorageTypeId, value.dimensions(), registry);
+                    setAttribute(objectPath, name, storageTypeId, memoryTypeId,
+                            value.toStorageForm());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(setAttributeRunnable);
+    }
+
     private String findFirstUnusedTypeVariantPath(final HDF5Reader reader)
     {
         int number = 0;

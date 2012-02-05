@@ -40,7 +40,7 @@ import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
  * @author Bernd Rinn
  */
 public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IHDF5StringReader,
-        IHDF5EnumReader, IHDF5CompoundReader, IHDF5BooleanReader, IHDF5GenericReader,
+        IHDF5EnumBasicReader, IHDF5CompoundReader, IHDF5BooleanReader, IHDF5GenericReader,
         IHDF5DateTimeReader, IHDF5ReferenceReader
 {
 
@@ -237,7 +237,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      */
     public HDF5DataTypeInformation getAttributeInformation(final String objectPath,
             final String attributeName, final DataTypeInfoOptions dataTypeInfoOptions);
-    
+
     /**
      * Returns the information about a data set as a {@link HDF5DataSetInformation} object. It is a
      * failure condition if the <var>dataSetPath</var> does not exist or does not identify a data
@@ -260,7 +260,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      */
     public HDF5DataSetInformation getDataSetInformation(final String dataSetPath,
             final DataTypeInfoOptions dataTypeInfoOptions);
-    
+
     /**
      * Returns the total size (in bytes) of <var>objectPath</var>. It is a failure condition if the
      * <var>dataSetPath</var> does not exist or does not identify a data set. This method follows
@@ -386,5 +386,14 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * @return <code>true</code>, if the attribute exists for the object.
      */
     public boolean hasAttribute(final String objectPath, final String attributeName);
+
+    // /////////////////////
+    // Enums
+    // /////////////////////
+
+    /**
+     * Returns the full reader for enums.
+     */
+    public IHDF5EnumReader enums();
 
 }

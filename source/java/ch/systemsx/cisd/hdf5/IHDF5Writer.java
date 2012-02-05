@@ -43,7 +43,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  * @author Bernd Rinn
  */
 public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5PrimitiveWriter,
-        IHDF5StringWriter, IHDF5EnumWriter, IHDF5CompoundWriter, IHDF5BooleanWriter,
+        IHDF5StringWriter, IHDF5EnumBasicWriter, IHDF5CompoundWriter, IHDF5BooleanWriter,
         IHDF5OpaqueWriter, IHDF5DateTimeWriter, IHDF5ReferenceWriter
 {
 
@@ -316,5 +316,14 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param name The name of the attribute to delete.
      */
     public void deleteAttribute(final String objectPath, final String name);
+    
+    // /////////////////////
+    // Enums
+    // /////////////////////
+    
+    /**
+     * Returns the full writer for enums.
+     */
+    public IHDF5EnumWriter enums();
 
 }

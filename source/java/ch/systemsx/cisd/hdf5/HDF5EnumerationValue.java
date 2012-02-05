@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+
 /**
  * A class the represents an HDF enumeration value.
  * 
@@ -110,6 +111,14 @@ public final class HDF5EnumerationValue
     public int getOrdinal()
     {
         return ordinal;
+    }
+
+    /**
+     * Returns the value as Enum of type <var>enumClass</var>.
+     */
+    public <T extends Enum<T>> T getValue(Class<T> enumClass)
+    {
+        return Enum.valueOf(enumClass, getValue());
     }
 
     /**

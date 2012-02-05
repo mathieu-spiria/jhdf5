@@ -544,13 +544,6 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
             final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockNumber,
             final IByteArrayInspector inspectorOrNull)
     {
-        assert objectPath != null;
-        assert type != null;
-        assert data != null;
-        assert blockNumber != null;
-
-        baseWriter.checkOpen();
-        type.check(baseWriter.fileId);
         final long[] dimensions = data.longDimensions();
         final long[] offset = new long[dimensions.length];
         final long[] dataSetDimensions = new long[dimensions.length];
@@ -559,31 +552,8 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
             offset[i] = blockNumber[i] * dimensions[i];
             dataSetDimensions[i] = offset[i] + dimensions[i];
         }
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                public Void call(final ICleanUpRegistry registry)
-                {
-                    final int dataSetId =
-                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
-                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
-                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
-                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    final byte[] byteArray =
-                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
-                                    data.getAsFlatArray());
-                    if (inspectorOrNull != null)
-                    {
-                        inspectorOrNull.inspect(byteArray);
-                    }
-                    H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
-                            H5P_DEFAULT, byteArray);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
+        writeCompoundMDArrayBlockWithOffset(objectPath, type, data.getAsFlatArray(), dimensions,
+                offset, dataSetDimensions, inspectorOrNull);
     }
 
     public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
@@ -594,6 +564,21 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
 
     public <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
             final HDF5CompoundType<T> type, final MDArray<T> data, final long[] offset,
+            final IByteArrayInspector inspectorOrNull)
+    {
+        final long[] dimensions = data.longDimensions();
+        final long[] dataSetDimensions = new long[dimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            dataSetDimensions[i] = offset[i] + dimensions[i];
+        }
+        writeCompoundMDArrayBlockWithOffset(objectPath, type, data.getAsFlatArray(), dimensions,
+                offset, dataSetDimensions, inspectorOrNull);
+    }
+
+    private <T> void writeCompoundMDArrayBlockWithOffset(final String objectPath,
+            final HDF5CompoundType<T> type, final T[] data, final long[] dimensions,
+            final long[] offset, final long[] dataSetDimensions,
             final IByteArrayInspector inspectorOrNull)
     {
         assert objectPath != null;
@@ -607,12 +592,6 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
             {
                 public Void call(final ICleanUpRegistry registry)
                 {
-                    final long[] dimensions = data.longDimensions();
-                    final long[] dataSetDimensions = new long[dimensions.length];
-                    for (int i = 0; i < offset.length; ++i)
-                    {
-                        dataSetDimensions[i] = offset[i] + dimensions[i];
-                    }
                     final int dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
@@ -622,8 +601,7 @@ class HDF5CompoundWriter extends HDF5CompoundInformationRetriever implements IHD
                     final int memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     final byte[] byteArray =
-                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
-                                    data.getAsFlatArray());
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
                     if (inspectorOrNull != null)
                     {
                         inspectorOrNull.inspect(byteArray);

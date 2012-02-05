@@ -450,6 +450,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> pojoClass,
             HDF5CompoundMappingHints hints)
     {
+        baseReader.checkOpen();
         // We need to get ALL information for the type as otherwise the mapping might be wrong (due
         // to a missing data type variant).
         final CompoundTypeInformation cpdTypeInfo =
