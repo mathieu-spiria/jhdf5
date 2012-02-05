@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
@@ -34,6 +35,7 @@ import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
+import ch.systemsx.cisd.hdf5.IHDF5CompoundInformationRetriever.IByteArrayInspector;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
@@ -1164,316 +1166,252 @@ class HDF5Reader implements IHDF5Reader
     // Compounds
     //
 
-    public <T> T getCompoundAttribute(String objectPath, String attributeName,
-            HDF5CompoundType<T> type) throws HDF5JavaException
+    public IHDF5CompoundReader compounds()
     {
-        return compoundReader.getCompoundAttribute(objectPath, attributeName, type);
-    }
-
-    public <T> T getCompoundAttribute(String objectPath, String attributeName, Class<T> pojoClass)
-            throws HDF5JavaException
-    {
-        return compoundReader.getCompoundAttribute(objectPath, attributeName, pojoClass);
+        return compoundReader;
     }
 
     public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(String objectPath,
             HDF5CompoundType<T> type, IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
-        return compoundReader.getCompoundArrayNaturalBlocks(objectPath, type, inspectorOrNull);
+        return compoundReader.getArrayBlocks(objectPath, type, inspectorOrNull);
     }
 
     public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(String objectPath,
             HDF5CompoundType<T> type) throws HDF5JavaException
     {
-        return compoundReader.getCompoundArrayNaturalBlocks(objectPath, type);
+        return compoundReader.getArrayBlocks(objectPath, type);
     }
 
     public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
             String objectPath, HDF5CompoundType<T> type, IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException
     {
-        return compoundReader.getCompoundMDArrayNaturalBlocks(objectPath, type, inspectorOrNull);
+        return compoundReader.getMDArrayBlocks(objectPath, type, inspectorOrNull);
     }
 
     public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
             String objectPath, HDF5CompoundType<T> type) throws HDF5JavaException
     {
-        return compoundReader.getCompoundMDArrayNaturalBlocks(objectPath, type);
+        return compoundReader.getMDArrayBlocks(objectPath, type);
     }
 
     public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(String objectPath,
             Class<T> pojoClass) throws HDF5JavaException
     {
-        return compoundReader.getCompoundArrayNaturalBlocks(objectPath, pojoClass);
+        return compoundReader.getArrayBlocks(objectPath, pojoClass);
     }
 
     public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
             String objectPath, Class<T> pojoClass) throws HDF5JavaException
     {
-        return compoundReader.getCompoundMDArrayNaturalBlocks(objectPath, pojoClass);
+        return compoundReader.getMDArrayBlocks(objectPath, pojoClass);
     }
 
-    @SuppressWarnings("deprecation")
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(String dataSetPath,
             boolean sortAlphabetically) throws HDF5JavaException
     {
-        return compoundReader.getCompoundDataSetInformation(dataSetPath, sortAlphabetically);
+        final HDF5CompoundMemberInformation[] compoundInformation =
+                compoundReader.getDataSetInfo(dataSetPath,
+                        DataTypeInfoOptions.DEFAULT);
+        if (sortAlphabetically)
+        {
+            Arrays.sort(compoundInformation);
+        }
+        return compoundInformation;
     }
 
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(String dataSetPath)
             throws HDF5JavaException
     {
-        return compoundReader.getCompoundDataSetInformation(dataSetPath);
-    }
-
-    public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(String dataSetPath,
-            DataTypeInfoOptions dataTypeInfoOptions) throws HDF5JavaException
-    {
-        return compoundReader.getCompoundDataSetInformation(dataSetPath, dataTypeInfoOptions);
+        return compoundReader.getDataSetInfo(dataSetPath);
     }
 
     public <T> HDF5CompoundMemberInformation[] getCompoundMemberInformation(Class<T> compoundClass)
     {
-        return compoundReader.getCompoundMemberInformation(compoundClass);
+        return compoundReader.getMemberInfo(compoundClass);
     }
 
     public HDF5CompoundMemberInformation[] getCompoundMemberInformation(String dataTypeName)
     {
-        return compoundReader.getCompoundMemberInformation(dataTypeName);
-    }
-
-    public HDF5CompoundMemberInformation[] getCompoundMemberInformation(String dataTypeName,
-            DataTypeInfoOptions dataTypeInfoOptions)
-    {
-        return compoundReader.getCompoundMemberInformation(dataTypeName, dataTypeInfoOptions);
+        return compoundReader.getMemberInfo(dataTypeName);
     }
 
     public <T> HDF5CompoundType<T> getCompoundType(Class<T> pojoClass,
             HDF5CompoundMemberMapping... members)
     {
-        return compoundReader.getCompoundType(pojoClass, members);
+        return compoundReader.getType(pojoClass, members);
     }
 
     public <T> HDF5CompoundType<T> getCompoundType(String name, Class<T> compoundType,
             HDF5CompoundMemberMapping... members)
     {
-        return compoundReader.getCompoundType(name, compoundType, members);
-    }
-
-    public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> pojoClass,
-            HDF5CompoundMappingHints hints)
-    {
-        return compoundReader.getDataSetCompoundType(objectPath, pojoClass, hints);
-    }
-
-    public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> pojoClass,
-            DataTypeInfoOptions dataTypeInfoOptions)
-    {
-        return compoundReader.getNamedCompoundType(dataTypeName, pojoClass, dataTypeInfoOptions);
+        return compoundReader.getType(name, compoundType, members);
     }
 
     public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> compoundClass)
     {
-        return compoundReader.getDataSetCompoundType(objectPath, compoundClass);
+        return compoundReader.getDataSetType(objectPath, compoundClass);
     }
 
     public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
             String attributeName, Class<T> pojoClass)
     {
-        return compoundReader.getAttributeCompoundType(objectPath, attributeName, pojoClass);
-    }
-
-    public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
-            String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints)
-    {
-        return compoundReader.getAttributeCompoundType(objectPath, attributeName, pojoClass, hints);
+        return compoundReader.getAttributeType(objectPath, attributeName, pojoClass);
     }
 
     public <T> HDF5CompoundType<T> getInferredCompoundType(Class<T> pojoClass)
     {
-        return compoundReader.getInferredCompoundType(pojoClass);
+        return compoundReader.getInferredType(pojoClass);
     }
 
     public <T> HDF5CompoundType<T> getInferredCompoundType(String name, Class<T> compoundType)
     {
-        return compoundReader.getInferredCompoundType(name, compoundType);
+        return compoundReader.getInferredType(name, compoundType);
     }
 
     public <T> HDF5CompoundType<T> getInferredCompoundType(String name, T template)
     {
-        return compoundReader.getInferredCompoundType(name, template);
+        return compoundReader.getInferredType(name, template);
     }
 
     public <T> HDF5CompoundType<T> getInferredCompoundType(T template)
     {
-        return compoundReader.getInferredCompoundType(template);
-    }
-
-    public <T> HDF5CompoundType<T> getInferredCompoundType(String name, Class<T> pojoClass,
-            HDF5CompoundMappingHints hints)
-    {
-        return compoundReader.getInferredCompoundType(name, pojoClass, hints);
+        return compoundReader.getInferredType(template);
     }
 
     public <T> HDF5CompoundType<T> getInferredCompoundType(String name, T template,
             HDF5CompoundMappingHints hints)
     {
-        return compoundReader.getInferredCompoundType(name, template, hints);
-    }
-
-    public HDF5CompoundType<List<?>> getInferredCompoundType(String name, List<String> memberNames,
-            List<?> template, HDF5CompoundMappingHints hints)
-    {
-        return compoundReader.getInferredCompoundType(name, memberNames, template, hints);
+        return compoundReader.getInferredType(name, template, hints);
     }
 
     public HDF5CompoundType<List<?>> getInferredCompoundType(String name, List<String> memberNames,
             List<?> template)
     {
-        return compoundReader.getInferredCompoundType(name, memberNames, template);
+        return compoundReader.getInferredType(name, memberNames, template);
     }
 
     public HDF5CompoundType<Object[]> getInferredCompoundType(String name, String[] memberNames,
             Object[] template)
     {
-        return compoundReader.getInferredCompoundType(name, memberNames, template);
+        return compoundReader.getInferredType(name, memberNames, template);
     }
 
     public HDF5CompoundType<List<?>> getInferredCompoundType(List<String> memberNames,
             List<?> template)
     {
-        return compoundReader.getInferredCompoundType(memberNames, template);
+        return compoundReader.getInferredType(memberNames, template);
     }
 
     public HDF5CompoundType<Object[]> getInferredCompoundType(String[] memberNames,
             Object[] template)
     {
-        return compoundReader.getInferredCompoundType(memberNames, template);
+        return compoundReader.getInferredType(memberNames, template);
     }
 
     public <T> HDF5CompoundType<T> getNamedCompoundType(Class<T> compoundClass)
     {
-        return compoundReader.getNamedCompoundType(compoundClass);
+        return compoundReader.getNamedType(compoundClass);
     }
 
     public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> compoundClass)
     {
-        return compoundReader.getNamedCompoundType(dataTypeName, compoundClass);
-    }
-
-    public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> pojoClass,
-            HDF5CompoundMappingHints hints)
-    {
-        return compoundReader.getNamedCompoundType(dataTypeName, pojoClass, hints);
-    }
-
-    public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
-            String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints,
-            DataTypeInfoOptions dataTypeInfoOptions)
-    {
-        return compoundReader.getAttributeCompoundType(objectPath, attributeName, pojoClass, hints,
-                dataTypeInfoOptions);
-    }
-
-    public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> pojoClass,
-            HDF5CompoundMappingHints hints, DataTypeInfoOptions dataTypeInfoOptions)
-    {
-        return compoundReader.getNamedCompoundType(dataTypeName, pojoClass, hints,
-                dataTypeInfoOptions);
+        return compoundReader.getNamedType(dataTypeName, compoundClass);
     }
 
     public <T> T readCompound(String objectPath, HDF5CompoundType<T> type,
             IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
-        return compoundReader.readCompound(objectPath, type, inspectorOrNull);
+        return compoundReader.read(objectPath, type, inspectorOrNull);
     }
 
     public <T> T readCompound(String objectPath, HDF5CompoundType<T> type) throws HDF5JavaException
     {
-        return compoundReader.readCompound(objectPath, type);
+        return compoundReader.read(objectPath, type);
     }
 
     public <T> T readCompound(String objectPath, Class<T> pojoClass) throws HDF5JavaException
     {
-        return compoundReader.readCompound(objectPath, pojoClass);
+        return compoundReader.read(objectPath, pojoClass);
     }
 
     public <T> T[] readCompoundArray(String objectPath, HDF5CompoundType<T> type,
             IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
-        return compoundReader.readCompoundArray(objectPath, type, inspectorOrNull);
+        return compoundReader.readArray(objectPath, type, inspectorOrNull);
     }
 
     public <T> T[] readCompoundArray(String objectPath, HDF5CompoundType<T> type)
             throws HDF5JavaException
     {
-        return compoundReader.readCompoundArray(objectPath, type);
+        return compoundReader.readArray(objectPath, type);
     }
 
     public <T> T[] readCompoundArray(String objectPath, Class<T> pojoClass)
             throws HDF5JavaException
     {
-        return compoundReader.readCompoundArray(objectPath, pojoClass);
+        return compoundReader.readArray(objectPath, pojoClass);
     }
 
     public <T> T[] readCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type,
             int blockSize, long blockNumber, IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException
     {
-        return compoundReader.readCompoundArrayBlock(objectPath, type, blockSize, blockNumber,
+        return compoundReader.readArrayBlock(objectPath, type, blockSize, blockNumber,
                 inspectorOrNull);
     }
 
     public <T> T[] readCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type,
             int blockSize, long blockNumber) throws HDF5JavaException
     {
-        return compoundReader.readCompoundArrayBlock(objectPath, type, blockSize, blockNumber);
+        return compoundReader.readArrayBlock(objectPath, type, blockSize, blockNumber);
     }
 
     public <T> T[] readCompoundArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
             int blockSize, long offset, IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException
     {
-        return compoundReader.readCompoundArrayBlockWithOffset(objectPath, type, blockSize, offset,
+        return compoundReader.readArrayBlockWithOffset(objectPath, type, blockSize, offset,
                 inspectorOrNull);
     }
 
     public <T> T[] readCompoundArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
             int blockSize, long offset) throws HDF5JavaException
     {
-        return compoundReader.readCompoundArrayBlockWithOffset(objectPath, type, blockSize, offset);
+        return compoundReader.readArrayBlockWithOffset(objectPath, type, blockSize, offset);
     }
 
     public <T> MDArray<T> readCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
             IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
-        return compoundReader.readCompoundMDArray(objectPath, type, inspectorOrNull);
+        return compoundReader.readMDArray(objectPath, type, inspectorOrNull);
     }
 
     public <T> MDArray<T> readCompoundMDArray(String objectPath, HDF5CompoundType<T> type)
             throws HDF5JavaException
     {
-        return compoundReader.readCompoundMDArray(objectPath, type);
+        return compoundReader.readMDArray(objectPath, type);
     }
 
     public <T> MDArray<T> readCompoundMDArray(String objectPath, Class<T> pojoClass)
             throws HDF5JavaException
     {
-        return compoundReader.readCompoundMDArray(objectPath, pojoClass);
+        return compoundReader.readMDArray(objectPath, pojoClass);
     }
 
     public <T> MDArray<T> readCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
             int[] blockDimensions, long[] blockNumber, IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException
     {
-        return compoundReader.readCompoundMDArrayBlock(objectPath, type, blockDimensions,
+        return compoundReader.readMDArrayBlock(objectPath, type, blockDimensions,
                 blockNumber, inspectorOrNull);
     }
 
     public <T> MDArray<T> readCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
             int[] blockDimensions, long[] blockNumber) throws HDF5JavaException
     {
-        return compoundReader.readCompoundMDArrayBlock(objectPath, type, blockDimensions,
+        return compoundReader.readMDArrayBlock(objectPath, type, blockDimensions,
                 blockNumber);
     }
 
@@ -1481,7 +1419,7 @@ class HDF5Reader implements IHDF5Reader
             HDF5CompoundType<T> type, int[] blockDimensions, long[] offset,
             IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
-        return compoundReader.readCompoundMDArrayBlockWithOffset(objectPath, type, blockDimensions,
+        return compoundReader.readMDArrayBlockWithOffset(objectPath, type, blockDimensions,
                 offset, inspectorOrNull);
     }
 
@@ -1489,7 +1427,7 @@ class HDF5Reader implements IHDF5Reader
             HDF5CompoundType<T> type, int[] blockDimensions, long[] offset)
             throws HDF5JavaException
     {
-        return compoundReader.readCompoundMDArrayBlockWithOffset(objectPath, type, blockDimensions,
+        return compoundReader.readMDArrayBlockWithOffset(objectPath, type, blockDimensions,
                 offset);
     }
 

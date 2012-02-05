@@ -1,5 +1,5 @@
 /*
- * Copyright 2010 ETH Zuerich, CISD
+ * Copyright 2012 ETH Zuerich, CISD
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,49 +17,15 @@
 package ch.systemsx.cisd.hdf5;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.hdf5.IHDF5CompoundInformationRetriever.IByteArrayInspector;
 
 /**
- * An interface that provides methods for writing compound values to HDF5 files.
+ * An interface that provides basic methods for writing compound values to HDF5 files.
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5CompoundWriter extends IHDF5CompoundReader
+public interface IHDF5CompoundBasicWriter extends IHDF5CompoundBasicReader
 {
-
-    // /////////////////////
-    // Attributes
-    // /////////////////////
-
-    /**
-     * Sets a compound attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param attributeName The name of the attribute.
-     * @param type The type definition of this compound type.
-     * @param value The value of the attribute. May be a pojo (Data Transfer Object), a
-     *            {@link HDF5CompoundDataMap}, {@link HDF5CompoundDataList} or <code>Object[]</code>
-     *            .
-     */
-    public <T> void setAttr(String objectPath, String attributeName,
-            HDF5CompoundType<T> type, T value);
-
-    /**
-     * Sets a compound attribute to the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param attributeName The name of the attribute.
-     * @param value The value of the attribute. May be a pojo (Data Transfer Object), a
-     *            {@link HDF5CompoundDataMap}, {@link HDF5CompoundDataList} or <code>Object[]</code>
-     *            .
-     */
-    public <T> void setAttr(String objectPath, String attributeName, T value);
-
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -71,7 +37,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param type The type definition of this compound type.
      * @param data The value of the data set.
      */
-    public <T> void write(String objectPath, HDF5CompoundType<T> type, T data);
+    public <T> void writeCompound(String objectPath, HDF5CompoundType<T> type, T data);
 
     /**
      * Writes out a compound value. The type is inferred based on the values.
@@ -83,7 +49,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @see CompoundType
      * @see CompoundElement
      */
-    public <T> void write(String objectPath, T data);
+    public <T> void writeCompound(String objectPath, T data);
 
     /**
      * Writes out an array (of rank 1) of compound values. Uses a compact storage layout. Must only
@@ -95,7 +61,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5 file.
      */
-    public <T> void write(String objectPath, HDF5CompoundType<T> type, T data,
+    public <T> void writeCompound(String objectPath, HDF5CompoundType<T> type, T data,
             IByteArrayInspector inspectorOrNull);
 
     /**
@@ -105,7 +71,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param type The type definition of this compound type.
      * @param data The value of the data set.
      */
-    public <T> void writeArray(String objectPath, HDF5CompoundType<T> type, T[] data);
+    public <T> void writeCompoundArray(String objectPath, HDF5CompoundType<T> type, T[] data);
 
     /**
      * Writes out an array (of rank 1) of compound values.
@@ -115,7 +81,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param data The value of the data set.
      * @param features The storage features of the data set.
      */
-    public <T> void writeArray(String objectPath, HDF5CompoundType<T> type, T[] data,
+    public <T> void writeCompoundArray(String objectPath, HDF5CompoundType<T> type, T[] data,
             HDF5GenericStorageFeatures features);
 
     /**
@@ -128,7 +94,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5 file.
      */
-    public <T> void writeArray(String objectPath, HDF5CompoundType<T> type, T[] data,
+    public <T> void writeCompoundArray(String objectPath, HDF5CompoundType<T> type, T[] data,
             HDF5GenericStorageFeatures features, IByteArrayInspector inspectorOrNull);
 
     /**
@@ -141,7 +107,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @see CompoundType
      * @see CompoundElement
      */
-    public <T> void writeArray(String objectPath, T[] data);
+    public <T> void writeCompoundArray(String objectPath, T[] data);
 
     /**
      * Writes out an array (of rank 1) of compound values. The type is inferred based on the values.
@@ -153,7 +119,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @see CompoundType
      * @see CompoundElement
      */
-    public <T> void writeArray(String objectPath, T[] data,
+    public <T> void writeCompoundArray(String objectPath, T[] data,
             HDF5GenericStorageFeatures features);
 
     /**
@@ -164,7 +130,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param data The value of the data set.
      * @param blockNumber The number of the block to write.
      */
-    public <T> void writeArrayBlock(String objectPath, HDF5CompoundType<T> type, T[] data,
+    public <T> void writeCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type, T[] data,
             long blockNumber);
 
     /**
@@ -177,7 +143,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5 file.
      */
-    public <T> void writeArrayBlock(String objectPath, HDF5CompoundType<T> type, T[] data,
+    public <T> void writeCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type, T[] data,
             long blockNumber, IByteArrayInspector inspectorOrNull);
 
     /**
@@ -188,7 +154,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param data The value of the data set.
      * @param offset The offset of the block in the data set.
      */
-    public <T> void writeArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
+    public <T> void writeCompoundArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
             T[] data, long offset);
 
     /**
@@ -201,7 +167,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5 file.
      */
-    public <T> void writeArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
+    public <T> void writeCompoundArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
             T[] data, long offset, IByteArrayInspector inspectorOrNull);
 
     /**
@@ -214,7 +180,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      *            extendable data sets the initial size of the array will be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
-    public <T> void createArray(String objectPath, HDF5CompoundType<T> type, int size);
+    public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, int size);
 
     /**
      * Creates an array (of rank 1) of compound values.
@@ -226,7 +192,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      */
-    public <T> void createArray(String objectPath, HDF5CompoundType<T> type, long size,
+    public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, long size,
             int blockSize);
 
     /**
@@ -240,7 +206,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      *            and <code>deflate == false</code>.
      * @param features The storage features of the data set.
      */
-    public <T> void createArray(String objectPath, HDF5CompoundType<T> type, long size,
+    public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, long size,
             int blockSize, HDF5GenericStorageFeatures features);
 
     /**
@@ -254,7 +220,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      *            {@link HDF5GenericStorageFeatures}.
      * @param features The storage features of the data set.
      */
-    public <T> void createArray(String objectPath, HDF5CompoundType<T> type, long size,
+    public <T> void createCompoundArray(String objectPath, HDF5CompoundType<T> type, long size,
             HDF5GenericStorageFeatures features);
 
     /**
@@ -264,7 +230,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param type The type definition of this compound type.
      * @param data The data to write.
      */
-    public <T> void writeMDArray(String objectPath, HDF5CompoundType<T> type,
+    public <T> void writeCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
             MDArray<T> data);
 
     /**
@@ -275,7 +241,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param data The data to write.
      * @param features The storage features of the data set.
      */
-    public <T> void writeMDArray(String objectPath, HDF5CompoundType<T> type,
+    public <T> void writeCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
             MDArray<T> data, HDF5GenericStorageFeatures features);
 
     /**
@@ -288,7 +254,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5.
      */
-    public <T> void writeMDArray(String objectPath, HDF5CompoundType<T> type,
+    public <T> void writeCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
             MDArray<T> data, HDF5GenericStorageFeatures features,
             IByteArrayInspector inspectorOrNull);
 
@@ -302,7 +268,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @see CompoundType
      * @see CompoundElement
      */
-    public <T> void writeMDArray(String objectPath, MDArray<T> data);
+    public <T> void writeCompoundMDArray(String objectPath, MDArray<T> data);
 
     /**
      * Writes out an array (of rank N) of compound values. The type is inferred based on the values.
@@ -315,7 +281,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @see CompoundType
      * @see CompoundElement
      */
-    public <T> void writeMDArray(String objectPath, MDArray<T> data,
+    public <T> void writeCompoundMDArray(String objectPath, MDArray<T> data,
             HDF5GenericStorageFeatures features);
 
     /**
@@ -327,7 +293,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param blockNumber The block number in each dimension (offset: multiply with the extend in
      *            the according dimension).
      */
-    public <T> void writeMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
+    public <T> void writeCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
             MDArray<T> data, long[] blockNumber);
 
     /**
@@ -340,7 +306,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5.
      */
-    public <T> void writeMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
+    public <T> void writeCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
             MDArray<T> data, long[] blockNumber, IByteArrayInspector inspectorOrNull);
 
     /**
@@ -351,7 +317,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param data The data to write.
      * @param offset The offset of the block to write on each axis.
      */
-    public <T> void writeMDArrayBlockWithOffset(String objectPath,
+    public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,
             HDF5CompoundType<T> type, MDArray<T> data, long[] offset);
 
     /**
@@ -364,7 +330,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5.
      */
-    public <T> void writeMDArrayBlockWithOffset(String objectPath,
+    public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,
             HDF5CompoundType<T> type, MDArray<T> data, long[] offset,
             IByteArrayInspector inspectorOrNull);
 
@@ -378,7 +344,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param offset The offset of the block in the data set to start writing to in each dimension.
      * @param memoryOffset The offset of the block in the <var>data</var> array.
      */
-    public <T> void writeMDArrayBlockWithOffset(String objectPath,
+    public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,
             HDF5CompoundType<T> type, MDArray<T> data, int[] blockDimensions, long[] offset,
             int[] memoryOffset);
 
@@ -394,7 +360,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param inspectorOrNull The inspector to be called after translating the Java objects to a
      *            byte array and before writing the byte array to the HDF5.
      */
-    public <T> void writeMDArrayBlockWithOffset(String objectPath,
+    public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,
             HDF5CompoundType<T> type, MDArray<T> data, int[] blockDimensions, long[] offset,
             int[] memoryOffset, IByteArrayInspector inspectorOrNull);
 
@@ -409,7 +375,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      *            initial size of the array (along each axis) will be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
-    public <T> void createMDArray(String objectPath, HDF5CompoundType<T> type,
+    public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
             int[] dimensions);
 
     /**
@@ -423,7 +389,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
      *            <code>deflate == false</code>.
      */
-    public <T> void createMDArray(String objectPath, HDF5CompoundType<T> type,
+    public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
             long[] dimensions, int[] blockDimensions);
 
     /**
@@ -438,7 +404,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      *            <code>deflate == false</code>.
      * @param features The storage features of the data set.
      */
-    public <T> void createMDArray(String objectPath, HDF5CompoundType<T> type,
+    public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
             long[] dimensions, int[] blockDimensions, HDF5GenericStorageFeatures features);
 
     /**
@@ -453,7 +419,7 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      *            {@link HDF5GenericStorageFeatures}.
      * @param features The storage features of the data set.
      */
-    public <T> void createMDArray(String objectPath, HDF5CompoundType<T> type,
+    public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
             int[] dimensions, HDF5GenericStorageFeatures features);
 
 }

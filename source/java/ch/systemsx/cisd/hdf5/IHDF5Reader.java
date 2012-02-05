@@ -40,7 +40,7 @@ import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
  * @author Bernd Rinn
  */
 public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IHDF5StringReader,
-        IHDF5EnumBasicReader, IHDF5CompoundReader, IHDF5BooleanReader, IHDF5GenericReader,
+        IHDF5EnumBasicReader, IHDF5CompoundBasicReader, IHDF5BooleanReader, IHDF5GenericReader,
         IHDF5DateTimeReader, IHDF5ReferenceReader
 {
 
@@ -395,5 +395,14 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * Returns the full reader for enums.
      */
     public IHDF5EnumReader enums();
+
+    // /////////////////////
+    // Compounds
+    // /////////////////////
+
+    /**
+     * Returns the full reader for compounds.
+     */
+    public IHDF5CompoundReader compounds();
 
 }

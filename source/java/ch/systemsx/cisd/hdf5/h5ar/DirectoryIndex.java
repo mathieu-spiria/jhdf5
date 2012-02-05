@@ -41,6 +41,7 @@ import ch.systemsx.cisd.hdf5.HDF5CompoundType;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
+import ch.systemsx.cisd.hdf5.IHDF5CompoundInformationRetriever;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.StringUtils;
@@ -115,7 +116,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
     private static HDF5CompoundType<LinkRecord> getHDF5LinkCompoundType(IHDF5Reader reader,
             HDF5EnumerationType hdf5LinkTypeEnumeration)
     {
-        return reader.getCompoundType(null, LinkRecord.class, getMapping(hdf5LinkTypeEnumeration));
+        return reader.compounds().getType(LinkRecord.class, getMapping(hdf5LinkTypeEnumeration));
     }
 
     private static String[] getFileLinkTypeValues()
@@ -225,8 +226,8 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
                 final CRC32 crc32Digester = new CRC32();
                 final String indexDataSetName = getIndexDataSetName();
                 final LinkRecord[] work =
-                        hdf5Reader.readCompoundArray(indexDataSetName, linkCompoundType,
-                                new IHDF5Reader.IByteArrayInspector()
+                        hdf5Reader.compounds().readArray(indexDataSetName, linkCompoundType,
+                                new IHDF5CompoundInformationRetriever.IByteArrayInspector()
                                     {
                                         public void inspect(byte[] byteArray)
                                         {
@@ -377,7 +378,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
             hdf5WriterOrNull.writeCompoundArray(indexDataSetName,
                     getHDF5LinkCompoundType(hdf5WriterOrNull), links.getLinkArray(),
                     HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
-                    new IHDF5Reader.IByteArrayInspector()
+                    new IHDF5CompoundInformationRetriever.IByteArrayInspector()
                         {
                             public void inspect(byte[] byteArray)
                             {
@@ -416,8 +417,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
     }
 
     /**
-     * Add <var>entry</var> to the index. If it already exists in the index, it will be
-     * replaced.
+     * Add <var>entry</var> to the index. If it already exists in the index, it will be replaced.
      */
     public void updateIndex(LinkRecord entry)
     {

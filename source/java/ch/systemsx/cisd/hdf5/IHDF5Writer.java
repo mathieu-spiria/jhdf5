@@ -43,7 +43,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  * @author Bernd Rinn
  */
 public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5PrimitiveWriter,
-        IHDF5StringWriter, IHDF5EnumBasicWriter, IHDF5CompoundWriter, IHDF5BooleanWriter,
+        IHDF5StringWriter, IHDF5EnumBasicWriter, IHDF5CompoundBasicWriter, IHDF5BooleanWriter,
         IHDF5OpaqueWriter, IHDF5DateTimeWriter, IHDF5ReferenceWriter
 {
 
@@ -325,5 +325,14 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * Returns the full writer for enums.
      */
     public IHDF5EnumWriter enums();
+
+    // /////////////////////
+    // Compounds
+    // /////////////////////
+
+    /**
+     * Returns the full writes for compounds.
+     */
+    public IHDF5CompoundWriter compounds();
 
 }

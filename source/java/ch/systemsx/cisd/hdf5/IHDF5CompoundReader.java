@@ -41,9 +41,9 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the attribute.
      * @throws HDF5JavaException If the <var>attributeName</var> is not a compound attribute.
      */
-    public <T> T getCompoundAttribute(final String objectPath, final String attributeName,
-            final HDF5CompoundType<T> type) throws HDF5JavaException;
-    
+    public <T> T getAttr(String objectPath, String attributeName, HDF5CompoundType<T> type)
+            throws HDF5JavaException;
+
     /**
      * Reads a compound attribute named <var>attributeName</var> from the object
      * <var>objectPath</var>.
@@ -56,9 +56,9 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the attribute.
      * @throws HDF5JavaException If the <var>attributeName</var> is not a compound attribute.
      */
-    public <T> T getCompoundAttribute(final String objectPath, final String attributeName,
-            final Class<T> pojoClass) throws HDF5JavaException;
-    
+    public <T> T getAttr(String objectPath, String attributeName, Class<T> pojoClass)
+            throws HDF5JavaException;
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -71,8 +71,7 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> T readCompound(final String objectPath, final HDF5CompoundType<T> type)
-            throws HDF5JavaException;
+    public <T> T read(String objectPath, HDF5CompoundType<T> type) throws HDF5JavaException;
 
     /**
      * Reads a compound from the data set <var>objectPath</var>.
@@ -88,8 +87,7 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @see CompoundType
      * @see CompoundElement
      */
-    public <T> T readCompound(final String objectPath, final Class<T> pojoClass)
-            throws HDF5JavaException;
+    public <T> T read(String objectPath, Class<T> pojoClass) throws HDF5JavaException;
 
     /**
      * Reads a compound from the data set <var>objectPath</var>.
@@ -101,8 +99,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> T readCompound(final String objectPath, final HDF5CompoundType<T> type,
-            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
+    public <T> T read(String objectPath, HDF5CompoundType<T> type,
+            IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
 
     /**
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
@@ -112,8 +110,7 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> T[] readCompoundArray(final String objectPath, final HDF5CompoundType<T> type)
-            throws HDF5JavaException;
+    public <T> T[] readArray(String objectPath, HDF5CompoundType<T> type) throws HDF5JavaException;
 
     /**
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
@@ -125,8 +122,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> T[] readCompoundArray(final String objectPath, final HDF5CompoundType<T> type,
-            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
+    public <T> T[] readArray(String objectPath, HDF5CompoundType<T> type,
+            IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
 
     /**
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
@@ -142,8 +139,7 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @see CompoundType
      * @see CompoundElement
      */
-    public <T> T[] readCompoundArray(final String objectPath, final Class<T> pojoClass)
-            throws HDF5JavaException;
+    public <T> T[] readArray(String objectPath, Class<T> pojoClass) throws HDF5JavaException;
 
     /**
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
@@ -157,8 +153,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> T[] readCompoundArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
-            final int blockSize, final long blockNumber) throws HDF5JavaException;
+    public <T> T[] readArrayBlock(String objectPath, HDF5CompoundType<T> type, int blockSize,
+            long blockNumber) throws HDF5JavaException;
 
     /**
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
@@ -174,9 +170,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> T[] readCompoundArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
-            final int blockSize, final long blockNumber, final IByteArrayInspector inspectorOrNull)
-            throws HDF5JavaException;
+    public <T> T[] readArrayBlock(String objectPath, HDF5CompoundType<T> type, int blockSize,
+            long blockNumber, IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
 
     /**
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
@@ -189,9 +184,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> T[] readCompoundArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final int blockSize, final long offset)
-            throws HDF5JavaException;
+    public <T> T[] readArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
+            int blockSize, long offset) throws HDF5JavaException;
 
     /**
      * Reads a compound array (of rank 1) from the data set <var>objectPath</var>.
@@ -206,9 +200,9 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> T[] readCompoundArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final int blockSize, final long offset,
-            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
+    public <T> T[] readArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
+            int blockSize, long offset, IByteArrayInspector inspectorOrNull)
+            throws HDF5JavaException;
 
     /**
      * Provides all natural blocks of this one-dimensional data set of compounds to iterate over.
@@ -218,8 +212,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
      */
-    public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String objectPath,
-            final HDF5CompoundType<T> type) throws HDF5JavaException;
+    public <T> Iterable<HDF5DataBlock<T[]>> getArrayBlocks(String objectPath,
+            HDF5CompoundType<T> type) throws HDF5JavaException;
 
     /**
      * Provides all natural blocks of this one-dimensional data set of compounds to iterate over.
@@ -231,9 +225,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
      */
-    public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String objectPath,
-            final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
-            throws HDF5JavaException;
+    public <T> Iterable<HDF5DataBlock<T[]>> getArrayBlocks(String objectPath,
+            HDF5CompoundType<T> type, IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
 
     /**
      * Provides all natural blocks of this one-dimensional data set of compounds to iterate over.
@@ -248,8 +241,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @throws HDF5JavaException If the data set is not of rank 1, not a compound data set or if the
      *             mapping between the compound type and the POJO is not complete.
      */
-    public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(final String objectPath,
-            final Class<T> pojoClass) throws HDF5JavaException;
+    public <T> Iterable<HDF5DataBlock<T[]>> getArrayBlocks(String objectPath, Class<T> pojoClass)
+            throws HDF5JavaException;
 
     /**
      * Reads a compound array from the data set <var>objectPath</var>.
@@ -259,8 +252,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> MDArray<T> readCompoundMDArray(final String objectPath,
-            final HDF5CompoundType<T> type) throws HDF5JavaException;
+    public <T> MDArray<T> readMDArray(String objectPath, HDF5CompoundType<T> type)
+            throws HDF5JavaException;
 
     /**
      * Reads a compound array from the data set <var>objectPath</var>.
@@ -276,7 +269,7 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @see CompoundType
      * @see CompoundElement
      */
-    public <T> MDArray<T> readCompoundMDArray(final String objectPath, final Class<T> pojoClass)
+    public <T> MDArray<T> readMDArray(String objectPath, Class<T> pojoClass)
             throws HDF5JavaException;
 
     /**
@@ -289,9 +282,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> MDArray<T> readCompoundMDArray(final String objectPath,
-            final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
-            throws HDF5JavaException;
+    public <T> MDArray<T> readMDArray(String objectPath, HDF5CompoundType<T> type,
+            IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
 
     /**
      * Reads a block from a compound array from the data set <var>objectPath</var>.
@@ -303,9 +295,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> MDArray<T> readCompoundMDArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] blockNumber)
-            throws HDF5JavaException;
+    public <T> MDArray<T> readMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
+            int[] blockDimensions, long[] blockNumber) throws HDF5JavaException;
 
     /**
      * Reads a block from a compound array from the data set <var>objectPath</var>.
@@ -319,22 +310,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
      */
-    public <T> MDArray<T> readCompoundMDArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] blockNumber,
-            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
-
-    /**
-     * Reads a block from a compound array from the data set <var>objectPath</var>.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param type The type definition of this compound type.
-     * @param blockDimensions The extent of the block to write along each axis.
-     * @param offset The offset of the block to write in the data set along each axis.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     */
-    public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] offset)
+    public <T> MDArray<T> readMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
+            int[] blockDimensions, long[] blockNumber, IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException;
 
     /**
@@ -344,14 +321,27 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @param type The type definition of this compound type.
      * @param blockDimensions The extent of the block to write along each axis.
      * @param offset The offset of the block to write in the data set along each axis.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
+     */
+    public <T> MDArray<T> readMDArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
+            int[] blockDimensions, long[] offset) throws HDF5JavaException;
+
+    /**
+     * Reads a block from a compound array from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param type The type definition of this compound type.
+     * @param blockDimensions The extent of the block to write along each axis.
+     * @param offset The offset of the block to write in the data set along each axis.
      * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
      *            file is translated back into Java objects.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
      */
-    public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(final String objectPath,
-            final HDF5CompoundType<T> type, final int[] blockDimensions, final long[] offset,
-            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
+    public <T> MDArray<T> readMDArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
+            int[] blockDimensions, long[] offset, IByteArrayInspector inspectorOrNull)
+            throws HDF5JavaException;
 
     /**
      * Provides all natural blocks of this multi-dimensional data set to iterate over.
@@ -360,8 +350,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @param type The type definition of this compound type.
      * @see HDF5MDDataBlock
      */
-    public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
-            final String objectPath, final HDF5CompoundType<T> type) throws HDF5JavaException;
+    public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getMDArrayBlocks(String objectPath,
+            HDF5CompoundType<T> type) throws HDF5JavaException;
 
     /**
      * Provides all natural blocks of this multi-dimensional data set to iterate over.
@@ -372,9 +362,8 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      *            file is translated back into Java objects.
      * @see HDF5MDDataBlock
      */
-    public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
-            final String objectPath, final HDF5CompoundType<T> type,
-            final IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
+    public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getMDArrayBlocks(String objectPath,
+            HDF5CompoundType<T> type, IByteArrayInspector inspectorOrNull) throws HDF5JavaException;
 
     /**
      * Provides all natural blocks of this multi-dimensional data set of compounds to iterate over.
@@ -386,10 +375,10 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
      * @see HDF5DataBlock
      * @see CompoundType
      * @see CompoundElement
-     * @throws HDF5JavaException If the data set is not a compound data set or if the
-     *             mapping between the compound type and the POJO is not complete.
+     * @throws HDF5JavaException If the data set is not a compound data set or if the mapping
+     *             between the compound type and the POJO is not complete.
      */
-    public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
-            final String objectPath, final Class<T> pojoClass) throws HDF5JavaException;
+    public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getMDArrayBlocks(String objectPath,
+            Class<T> pojoClass) throws HDF5JavaException;
 
 }
