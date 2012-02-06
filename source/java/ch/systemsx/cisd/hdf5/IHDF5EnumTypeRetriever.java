@@ -27,9 +27,29 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  */
 public interface IHDF5EnumTypeRetriever
 {
-    // /////////////////////
-    // Types
-    // /////////////////////
+    /**
+     * Returns the enumeration type <var>name</var> for this HDF5 file. Use this method only when
+     * you know that the type exists. If the <var>dataTypeName</var> starts with '/', it will be
+     * considered a data type path instead of a data type name.
+     * 
+     * @param dataTypeName The name of the enumeration in the HDF5 file.
+     */
+    public HDF5EnumerationType getType(String dataTypeName);
+
+    /**
+     * Returns the enumeration type for the data set <var>dataSetPath</var>.
+     * 
+     * @param dataSetPath The name of data set to get the enumeration type for.
+     */
+    public HDF5EnumerationType getDataSetType(String dataSetPath);
+
+    /**
+     * Returns the enumeration type for the data set <var>dataSetPath</var>.
+     * 
+     * @param dataSetPath The name of data set.
+     * @param attributeName The name of the attribute to get the type for.
+     */
+    public HDF5EnumerationType getAttributeType(String dataSetPath, String attributeName);
 
     /**
      * Returns the enumeration type <var>name</var> for this HDF5 file. If the type is read from the
@@ -42,7 +62,7 @@ public interface IHDF5EnumTypeRetriever
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>values</var> provided.
      */
-    public HDF5EnumerationType getType(final String dataTypeName, final String[] values)
+    public HDF5EnumerationType getType(String dataTypeName, String[] values)
             throws HDF5JavaException;
 
     /**
@@ -57,8 +77,8 @@ public interface IHDF5EnumTypeRetriever
      * @throws HDF5JavaException If <code>check = true</code>, the data type exists and is not
      *             compatible with the <var>values</var> provided.
      */
-    public HDF5EnumerationType getType(final String dataTypeName, final String[] values,
-            final boolean check) throws HDF5JavaException;
+    public HDF5EnumerationType getType(String dataTypeName, String[] values, boolean check)
+            throws HDF5JavaException;
 
     /**
      * Returns the enumeration type <var>name</var> for this HDF5 file. Will check the type in the
@@ -70,8 +90,8 @@ public interface IHDF5EnumTypeRetriever
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>enumClass</var> provided.
      */
-    public HDF5EnumerationType getType(final String dataTypeName,
-            final Class<? extends Enum<?>> enumClass) throws HDF5JavaException;
+    public HDF5EnumerationType getType(String dataTypeName, Class<? extends Enum<?>> enumClass)
+            throws HDF5JavaException;
 
     /**
      * Returns the enumeration type <var>name</var> for this HDF5 file. Will check the type in the
@@ -85,8 +105,8 @@ public interface IHDF5EnumTypeRetriever
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>values</var> provided.
      */
-    public <T extends Enum<?>> HDF5EnumerationType getType(final String dataTypeName,
-            final Class<T> enumClass, final boolean check) throws HDF5JavaException;
+    public <T extends Enum<?>> HDF5EnumerationType getType(String dataTypeName, Class<T> enumClass,
+            boolean check) throws HDF5JavaException;
 
     /**
      * Returns the enumeration type <var>name</var> for this HDF5 file. Will check the type in the
@@ -97,7 +117,7 @@ public interface IHDF5EnumTypeRetriever
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>values</var> provided.
      */
-    public <T extends Enum<?>> HDF5EnumerationType getType(final Class<T> enumClass)
+    public <T extends Enum<?>> HDF5EnumerationType getType(Class<T> enumClass)
             throws HDF5JavaException;
 
     /**
@@ -111,6 +131,6 @@ public interface IHDF5EnumTypeRetriever
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>values</var> provided.
      */
-    public HDF5EnumerationType getType(final Class<? extends Enum<?>> enumClass,
-            final boolean check) throws HDF5JavaException;
+    public HDF5EnumerationType getType(Class<? extends Enum<?>> enumClass, boolean check)
+            throws HDF5JavaException;
 }

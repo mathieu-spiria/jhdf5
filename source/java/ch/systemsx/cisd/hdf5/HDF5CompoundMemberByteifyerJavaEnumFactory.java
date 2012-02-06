@@ -44,8 +44,9 @@ class HDF5CompoundMemberByteifyerJavaEnumFactory implements IHDF5CompoundMemberB
     }
 
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
-            final HDF5CompoundMemberMapping member, Class<?> memberClazz, final int index,
-            final int offset, final FileInfoProvider fileInfoProvider)
+            final HDF5CompoundMemberMapping member,
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
+            final int index, final int offset, final FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final HDF5EnumerationType enumType = member.tryGetEnumerationType();

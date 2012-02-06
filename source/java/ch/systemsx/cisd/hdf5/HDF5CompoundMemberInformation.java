@@ -120,7 +120,8 @@ public final class HDF5CompoundMemberInformation implements
         {
             info[i] =
                     new HDF5CompoundMemberInformation(members[i].getMemberName(),
-                            getTypeInformation(compoundClass, members[i]), offset);
+                            getTypeInformation(compoundClass, CharacterEncoding.ASCII, members[i]),
+                            offset);
             offset += info[i].getType().getSize();
         }
         Arrays.sort(info);
@@ -128,7 +129,7 @@ public final class HDF5CompoundMemberInformation implements
     }
 
     private static HDF5DataTypeInformation getTypeInformation(Class<?> compoundClass,
-            final HDF5CompoundMemberMapping member)
+            CharacterEncoding encoding, final HDF5CompoundMemberMapping member)
     {
         final Field fieldOrNull = member.tryGetField(compoundClass);
         final Class<?> fieldTypeOrNull = (fieldOrNull == null) ? null : fieldOrNull.getType();
@@ -169,7 +170,8 @@ public final class HDF5CompoundMemberInformation implements
         } else if (fieldTypeOrNull == String.class || fieldTypeOrNull == char[].class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.STRING, member.getMemberTypeLength());
+                    new HDF5DataTypeInformation(HDF5DataClass.STRING, encoding,
+                            member.getMemberTypeLength() + 1);
         } else if (fieldTypeOrNull == HDF5EnumerationValue.class)
         {
             final DataTypeInfoOptions options =

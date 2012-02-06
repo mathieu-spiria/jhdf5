@@ -43,16 +43,18 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
     }
 
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
-            HDF5CompoundMemberMapping member, Class<?> memberClazz, int index, int offset,
-            FileInfoProvider fileInfoProvider)
+            HDF5CompoundMemberMapping member,
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
+            int index, int offset, FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         // May be -1 if not known
         final int memberTypeId = member.getStorageDataTypeId();
         final int maxLengthChars = member.getMemberTypeLength();
         final int maxLengthBytes =
-                (fileInfoProvider.getCharacterEncoding() == CharacterEncoding.UTF8 ? 2 : 1)
-                        * maxLengthChars;
+                (compoundMemberInfoOrNull != null) ? compoundMemberInfoOrNull.getType().getSize()
+                        : (fileInfoProvider.getCharacterEncoding() == CharacterEncoding.UTF8 ? 2
+                                : 1) * ((memberTypeId < 0) ? maxLengthChars + 1 : maxLengthChars);
         final int stringDataTypeId =
                 (memberTypeId < 0) ? fileInfoProvider.getStringDataTypeId(maxLengthBytes)
                         : memberTypeId;
@@ -86,8 +88,8 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
         ReflectionUtils.ensureAccessible(field);
         if (isCharArray)
         {
-            return new HDF5MemberByteifyer(field, memberName, maxLength, maxLengthInBytes + 1,
-                    offset, encoding)
+            return new HDF5MemberByteifyer(field, memberName, maxLength, maxLengthInBytes, offset,
+                    encoding)
                 {
                     @Override
                     protected int getMemberStorageTypeId()
@@ -122,8 +124,8 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                 };
         } else
         {
-            return new HDF5MemberByteifyer(field, memberName, maxLength, maxLengthInBytes + 1,
-                    offset, encoding)
+            return new HDF5MemberByteifyer(field, memberName, maxLength, maxLengthInBytes, offset,
+                    encoding)
                 {
                     @Override
                     protected int getMemberStorageTypeId()
@@ -169,7 +171,7 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
             final int stringDataTypeId, final int maxLength, final int maxLengthInBytes,
             final CharacterEncoding encoding, final boolean isCharArray)
     {
-        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes + 1, offset,
+        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes, offset,
                 encoding)
             {
                 @Override
@@ -223,7 +225,7 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
             final int offset, final int stringDataTypeId, final int maxLength,
             final int maxLengthInBytes, final CharacterEncoding encoding, final boolean isCharArray)
     {
-        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes + 1, offset,
+        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes, offset,
                 encoding)
             {
                 @Override
@@ -277,7 +279,7 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
             final int offset, final int stringDataTypeId, final int maxLength,
             final int maxLengthInBytes, final CharacterEncoding encoding, final boolean isCharArray)
     {
-        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes + 1, offset,
+        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes, offset,
                 encoding)
             {
                 @Override

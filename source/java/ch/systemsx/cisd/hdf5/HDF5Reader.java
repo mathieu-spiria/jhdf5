@@ -599,6 +599,11 @@ class HDF5Reader implements IHDF5Reader
         return genericReader.readAsByteArray(objectPath);
     }
 
+    public byte[] getAttributeAsByteArray(String objectPath, String attributeName)
+    {
+        return genericReader.getAttributeAsByteArray(objectPath, attributeName);
+    }
+
     public byte[] readAsByteArrayBlock(String objectPath, int blockSize, long blockNumber)
             throws HDF5JavaException
     {
@@ -1085,13 +1090,13 @@ class HDF5Reader implements IHDF5Reader
     public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getEnumArrayNaturalBlocks(
             String objectPath, HDF5EnumerationType enumType) throws HDF5JavaException
     {
-        return enumReader.getArrayNaturalBlocks(objectPath, enumType);
+        return enumReader.getArrayBlocks(objectPath, enumType);
     }
 
     public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getEnumArrayNaturalBlocks(
             String objectPath) throws HDF5JavaException
     {
-        return enumReader.getArrayNaturalBlocks(objectPath);
+        return enumReader.getArrayBlocks(objectPath);
     }
 
     public HDF5EnumerationValue readEnum(String objectPath, HDF5EnumerationType enumType)

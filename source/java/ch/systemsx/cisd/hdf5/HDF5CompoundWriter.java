@@ -46,10 +46,10 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
     {
         baseWriter.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectByteifyer =
-                baseWriter.createCompoundByteifyers(pojoClass, members);
+                baseWriter.createCompoundByteifyers(pojoClass, members, null);
         final String dataTypeName = (name != null) ? name : deriveCompoundNameFromClass(pojoClass);
         final int storageDataTypeId =
-                getOrCreateCompoundDataType(dataTypeName, pojoClass, objectByteifyer,
+                getOrCreateCompoundDataType(dataTypeName, objectByteifyer,
                         baseWriter.keepDataSetIfExists);
         final int nativeDataTypeId = baseWriter.createNativeCompoundDataType(objectByteifyer);
         return new HDF5CompoundType<T>(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
@@ -73,7 +73,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
     }
 
     private <T> int getOrCreateCompoundDataType(final String dataTypeName,
-            final Class<T> compoundClass, final HDF5ValueObjectByteifyer<T> objectByteifyer,
+            final HDF5ValueObjectByteifyer<T> objectByteifyer,
             boolean committedDataTypeHasPreference)
     {
         final String dataTypePath =
@@ -183,12 +183,43 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         primSetCompoundAttribute(objectPath, attributeName, type, data, null);
     }
 
-    public <T> void setAttr(final String objectPath, final String attributeName,
-            final T data)
+    public <T> void setAttr(final String objectPath, final String attributeName, final T data)
     {
         final HDF5CompoundType<T> inferredCompoundType = getInferredType(data);
         inferredCompoundType.checkMappingComplete();
         primSetCompoundAttribute(objectPath, attributeName, inferredCompoundType, data, null);
+    }
+
+    public <T> void setArrayAttr(String objectPath, String attributeName, HDF5CompoundType<T> type,
+            T[] value)
+    {
+        baseWriter.setCompoundArrayAttribute(objectPath, attributeName, type, value, null);
+    }
+
+    public <T> void setArrayAttr(String objectPath, String attributeName, T[] value)
+    {
+        @SuppressWarnings("unchecked")
+        final HDF5CompoundType<T> inferredCompoundType =
+                getInferredType((Class<T>) value.getClass().getComponentType());
+        inferredCompoundType.checkMappingComplete();
+        baseWriter.setCompoundArrayAttribute(objectPath, attributeName, inferredCompoundType,
+                value, null);
+    }
+
+    public <T> void setMDArrayAttr(String objectPath, String attributeName,
+            HDF5CompoundType<T> type, MDArray<T> value)
+    {
+        baseWriter.setCompoundMDArrayAttribute(objectPath, attributeName, type, value, null);
+    }
+
+    public <T> void setMDArrayAttr(String objectPath, String attributeName, MDArray<T> value)
+    {
+        @SuppressWarnings("unchecked")
+        final HDF5CompoundType<T> inferredCompoundType =
+                getInferredType((Class<T>) value.getAsFlatArray().getClass().getComponentType());
+        inferredCompoundType.checkMappingComplete();
+        baseWriter.setCompoundMDArrayAttribute(objectPath, attributeName, inferredCompoundType,
+                value, null);
     }
 
     private <T> void primSetCompoundAttribute(final String objectPath, final String attributeName,
@@ -208,14 +239,13 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 type.getNativeTypeId(), byteArray);
     }
 
-    public <T> void write(final String objectPath, final HDF5CompoundType<T> type,
-            final T data)
+    public <T> void write(final String objectPath, final HDF5CompoundType<T> type, final T data)
     {
         primWriteCompound(objectPath, type, data, null);
     }
 
-    public <T> void write(final String objectPath, final HDF5CompoundType<T> type,
-            final T data, final IByteArrayInspector inspectorOrNull)
+    public <T> void write(final String objectPath, final HDF5CompoundType<T> type, final T data,
+            final IByteArrayInspector inspectorOrNull)
     {
         primWriteCompound(objectPath, type, data, inspectorOrNull);
     }
@@ -304,8 +334,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         writeArray(objectPath, data, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
-    public <T> void writeArray(String objectPath, T[] data,
-            HDF5GenericStorageFeatures features)
+    public <T> void writeArray(String objectPath, T[] data, HDF5GenericStorageFeatures features)
     {
         assert data != null && data.length > 0;
 
@@ -314,15 +343,14 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         primWriteCompoundArray(objectPath, inferredCompoundType, data, features, null);
     }
 
-    public <T> void writeArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final T[] data, final long blockNumber)
+    public <T> void writeArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
+            final T[] data, final long blockNumber)
     {
         writeArrayBlock(objectPath, type, data, blockNumber, null);
     }
 
-    public <T> void writeArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final T[] data, final long blockNumber,
-            final IByteArrayInspector inspectorOrNull)
+    public <T> void writeArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
+            final T[] data, final long blockNumber, final IByteArrayInspector inspectorOrNull)
     {
         assert objectPath != null;
         assert type != null;
@@ -414,8 +442,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
 
     public <T> void createArray(String objectPath, HDF5CompoundType<T> type, int size)
     {
-        createArray(objectPath, type, size,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        createArray(objectPath, type, size, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     public <T> void createArray(final String objectPath, final HDF5CompoundType<T> type,
@@ -484,8 +511,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
     public <T> void writeMDArray(final String objectPath, final HDF5CompoundType<T> type,
             final MDArray<T> data)
     {
-        writeMDArray(objectPath, type, data,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        writeMDArray(objectPath, type, data, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     public <T> void writeMDArray(final String objectPath, final HDF5CompoundType<T> type,
@@ -534,14 +560,14 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         baseWriter.runner.call(writeRunnable);
     }
 
-    public <T> void writeMDArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockNumber)
+    public <T> void writeMDArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
+            final MDArray<T> data, final long[] blockNumber)
     {
         writeMDArrayBlock(objectPath, type, data, blockNumber, null);
     }
 
-    public <T> void writeMDArrayBlock(final String objectPath,
-            final HDF5CompoundType<T> type, final MDArray<T> data, final long[] blockNumber,
+    public <T> void writeMDArrayBlock(final String objectPath, final HDF5CompoundType<T> type,
+            final MDArray<T> data, final long[] blockNumber,
             final IByteArrayInspector inspectorOrNull)
     {
         final long[] dimensions = data.longDimensions();
@@ -618,8 +644,8 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
             final HDF5CompoundType<T> type, final MDArray<T> data, final int[] blockDimensions,
             final long[] offset, final int[] memoryOffset)
     {
-        writeMDArrayBlockWithOffset(objectPath, type, data, blockDimensions, offset,
-                memoryOffset, null);
+        writeMDArrayBlockWithOffset(objectPath, type, data, blockDimensions, offset, memoryOffset,
+                null);
     }
 
     public <T> void writeMDArrayBlockWithOffset(final String objectPath,
@@ -669,8 +695,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         baseWriter.runner.call(writeRunnable);
     }
 
-    public <T> void createMDArray(String objectPath, HDF5CompoundType<T> type,
-            int[] dimensions)
+    public <T> void createMDArray(String objectPath, HDF5CompoundType<T> type, int[] dimensions)
     {
         createMDArray(objectPath, type, dimensions,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
@@ -750,8 +775,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         assert data != null && data.size() > 0;
 
         baseWriter.checkOpen();
-        final HDF5CompoundType<T> inferredCompoundType =
-                getInferredType(data.getAsFlatArray()[0]);
+        final HDF5CompoundType<T> inferredCompoundType = getInferredType(data.getAsFlatArray()[0]);
         inferredCompoundType.checkMappingComplete();
         primWriteCompoundMDArray(objectPath, inferredCompoundType, data, features, null);
     }

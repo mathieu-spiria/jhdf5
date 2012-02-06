@@ -92,12 +92,14 @@ class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMemberByt
     }
 
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
-            HDF5CompoundMemberMapping member, Class<?> memberClazz, int index, int offset,
-            FileInfoProvider fileInfoProvider)
+            HDF5CompoundMemberMapping member,
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
+            int index, int offset, FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final Rank rank = classToRankMap.get(memberClazz);
-        final int len = rank.isScalar() ? 1 : member.getMemberTypeLength();
+        final int len = (compoundMemberInfoOrNull != null) ? compoundMemberInfoOrNull.getType()
+                .getNumberOfElements() : rank.isScalar() ? 1 : member.getMemberTypeLength();
         final int[] dimensions = rank.isScalar() ? new int[]
             { 1 } : member.getMemberTypeDimensions();
         final int storageTypeId = member.getStorageDataTypeId();

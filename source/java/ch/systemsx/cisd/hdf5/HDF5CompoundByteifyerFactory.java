@@ -75,8 +75,9 @@ class HDF5CompoundByteifyerFactory
          * Creates a byteifyer.
          */
         HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
-                final HDF5CompoundMemberMapping member, Class<?> memberClazz, final int index,
-                final int offset, final FileInfoProvider fileInfoProvider);
+                final HDF5CompoundMemberMapping member,
+                HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
+                final int index, final int offset, final FileInfoProvider fileInfoProvider);
 
         /**
          * Returns a suitable Java type, if this factory has one, or <code>null</code> otherwise.
@@ -105,7 +106,8 @@ class HDF5CompoundByteifyerFactory
     }
 
     static HDF5MemberByteifyer[] createMemberByteifyers(Class<?> clazz,
-            FileInfoProvider fileInfoProvider, HDF5CompoundMemberMapping[] members)
+            FileInfoProvider fileInfoProvider, CompoundTypeInformation compoundTypeInfoOrNull,
+            HDF5CompoundMemberMapping[] members)
     {
         final HDF5MemberByteifyer[] result = new HDF5MemberByteifyer[members.length];
         int offset = 0;
@@ -118,17 +120,20 @@ class HDF5CompoundByteifyerFactory
                     (fieldOrNull != null) ? fieldOrNull.getType() : members[i].tryGetMemberClass();
             final IHDF5CompoundMemberBytifyerFactory factory =
                     findFactory(memberClazzOrNull, members[i].getMemberName());
+            final HDF5CompoundMemberInformation compoundMemberInfoOrNull =
+                    (compoundTypeInfoOrNull == null) ? null : compoundTypeInfoOrNull.members[i];
             if (isDummy(accessType, fieldOrNull))
             {
                 result[i] =
                         new HDF5DummyMemberByteifyer(factory.createBytifyer(accessType,
-                                fieldOrNull, members[i], memberClazzOrNull, i, offset,
-                                fileInfoProvider));
+                                fieldOrNull, members[i], compoundMemberInfoOrNull,
+                                memberClazzOrNull, i, offset, fileInfoProvider));
             } else
             {
                 result[i] =
                         factory.createBytifyer(accessType, fieldOrNull, members[i],
-                                memberClazzOrNull, i, offset, fileInfoProvider);
+                                compoundMemberInfoOrNull, memberClazzOrNull, i, offset,
+                                fileInfoProvider);
             }
             offset += result[i].getSizeInBytes();
         }
@@ -138,7 +143,7 @@ class HDF5CompoundByteifyerFactory
     //
     // Dummy helpers
     //
-    
+
     private static boolean isDummy(AccessType accessType, Field fieldOrNull)
     {
         return (accessType == AccessType.FIELD) && (fieldOrNull == null);

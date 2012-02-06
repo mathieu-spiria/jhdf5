@@ -27,7 +27,6 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 
 import java.lang.reflect.Field;
 
-
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
@@ -62,8 +61,9 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
     }
 
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
-            HDF5CompoundMemberMapping member, Class<?> memberClazz, int index, int offset,
-            FileInfoProvider fileInfoProvider)
+            HDF5CompoundMemberMapping member,
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
+            int index, int offset, FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final HDF5DataTypeVariant typeVariant =

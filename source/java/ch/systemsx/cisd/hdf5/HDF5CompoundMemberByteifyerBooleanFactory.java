@@ -23,7 +23,6 @@ import java.lang.reflect.Field;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
-
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for
  * <code>boolean</code>.
@@ -45,8 +44,9 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
     }
 
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
-            final HDF5CompoundMemberMapping member, Class<?> memberClazz, final int index,
-            final int offset, final FileInfoProvider fileInfoProvider)
+            final HDF5CompoundMemberMapping member,
+            final HDF5CompoundMemberInformation compoundMemberInfoOrNull, final Class<?> memberClazz,
+            final int index, final int offset, final FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         // May be -1 if not known

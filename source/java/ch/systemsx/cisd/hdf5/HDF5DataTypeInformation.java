@@ -126,6 +126,8 @@ public final class HDF5DataTypeInformation
 
     private int numberOfElements;
 
+    private CharacterEncoding encoding;
+
     private int[] dimensions;
 
     private String opaqueTagOrNull;
@@ -137,40 +139,67 @@ public final class HDF5DataTypeInformation
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
             HDF5DataClass dataClass, int elementSize)
     {
-        this(dataTypePathOrNull, options, dataClass, elementSize, new int[]
+        this(dataTypePathOrNull, options, dataClass, CharacterEncoding.ASCII, elementSize,
+                new int[]
+                    { 1 }, false, null);
+    }
+
+    HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
+            HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize)
+    {
+        this(dataTypePathOrNull, options, dataClass, encoding, elementSize, new int[]
             { 1 }, false, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize)
     {
-        this(null, DataTypeInfoOptions.ALL, dataClass, elementSize, new int[]
+        this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII, elementSize,
+                new int[]
+                    { 1 }, false, null);
+    }
+
+    HDF5DataTypeInformation(HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize)
+    {
+        this(null, DataTypeInfoOptions.ALL, dataClass, encoding, elementSize, new int[]
             { 1 }, false, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int numberOfElements)
     {
-        this(null, DataTypeInfoOptions.ALL, dataClass, elementSize, new int[]
+        this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII, elementSize,
+                new int[]
+                    { numberOfElements }, false, null);
+
+    }
+
+    HDF5DataTypeInformation(HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize,
+            int numberOfElements)
+    {
+        this(null, DataTypeInfoOptions.ALL, dataClass, encoding, elementSize, new int[]
             { numberOfElements }, false, null);
 
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, int elementSize, int numberOfElements, String opaqueTagOrNull)
+            HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize,
+            int numberOfElements, String opaqueTagOrNull)
     {
-        this(dataTypePathOrNull, options, dataClass, elementSize, new int[]
+        this(dataTypePathOrNull, options, dataClass, encoding, elementSize, new int[]
             { numberOfElements }, false, opaqueTagOrNull);
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, int elementSize, int[] dimensions, boolean arrayType)
+            HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize, int[] dimensions,
+            boolean arrayType)
     {
-        this(dataTypePathOrNull, options, dataClass, elementSize, dimensions, arrayType, null);
+        this(dataTypePathOrNull, options, dataClass, encoding, elementSize, dimensions, arrayType,
+                null);
 
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, int elementSize, int[] dimensions, boolean arrayType,
-            String opaqueTagOrNull)
+            HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize, int[] dimensions,
+            boolean arrayType, String opaqueTagOrNull)
     {
         if (dataClass == HDF5DataClass.BOOLEAN || dataClass == HDF5DataClass.STRING)
         {
@@ -186,6 +215,7 @@ public final class HDF5DataTypeInformation
         this.elementSize = elementSize;
         this.dimensions = dimensions;
         this.numberOfElements = MDArray.getLength(dimensions);
+        this.encoding = encoding;
         this.opaqueTagOrNull = opaqueTagOrNull;
         this.options = options;
     }
@@ -204,6 +234,22 @@ public final class HDF5DataTypeInformation
     public int getElementSize()
     {
         return elementSize;
+    }
+
+    /**
+     * The length that is usable. Usually equals to {@link #getElementSize()}, except for Strings,
+     * where it takes into account the terminating '\0' and the character encoding.
+     */
+    public int getUsableLength()
+    {
+        if (dataClass == HDF5DataClass.STRING && elementSize > 0)
+        {
+            return (encoding == CharacterEncoding.UTF8) ? ((elementSize - 1) / 2)
+                    : (elementSize - 1);
+        } else
+        {
+            return elementSize;
+        }
     }
 
     void setElementSize(int elementSize)
@@ -395,7 +441,7 @@ public final class HDF5DataTypeInformation
         final HDF5DataTypeVariant thisTypeVariant = tryGetTypeVariant();
         final HDF5DataTypeVariant thatTypeVariant = that.tryGetTypeVariant();
         return dataClass.equals(that.dataClass) && elementSize == that.elementSize
-                && numberOfElements == that.numberOfElements
+                && encoding == that.encoding && numberOfElements == that.numberOfElements
                 && ObjectUtils.equals(nameOrNull, that.nameOrNull)
                 && ObjectUtils.equals(dataTypePathOrNull, that.dataTypePathOrNull)
                 && ObjectUtils.equals(thisTypeVariant, thatTypeVariant);
@@ -405,7 +451,7 @@ public final class HDF5DataTypeInformation
     public int hashCode()
     {
         final HDF5DataTypeVariant typeVariant = tryGetTypeVariant();
-        return (((((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + numberOfElements) * 59 + ObjectUtils
+        return ((((((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + encoding.ordinal()) * 59 + numberOfElements) * 59 + ObjectUtils
                 .hashCode(nameOrNull)) * 59 + ObjectUtils.hashCode(dataTypePathOrNull) * 59)
                 + ObjectUtils.hashCode(typeVariant);
     }
@@ -426,20 +472,20 @@ public final class HDF5DataTypeInformation
         {
             if (variantOrNull != null)
             {
-                return name + dataClass + "(" + elementSize + ")/" + variantOrNull.toString();
+                return name + dataClass + "(" + getUsableLength() + ")/" + variantOrNull.toString();
             } else
             {
-                return name + dataClass + "(" + elementSize + ")";
+                return name + dataClass + "(" + getUsableLength() + ")";
             }
         } else if (dimensions.length == 1)
         {
             if (variantOrNull != null)
             {
-                return name + dataClass + "(" + elementSize + ", #" + numberOfElements + ")/"
+                return name + dataClass + "(" + getUsableLength() + ", #" + numberOfElements + ")/"
                         + variantOrNull.toString();
             } else
             {
-                return name + dataClass + "(" + elementSize + ", #" + numberOfElements + ")";
+                return name + dataClass + "(" + getUsableLength() + ", #" + numberOfElements + ")";
             }
         } else
         {
@@ -447,7 +493,7 @@ public final class HDF5DataTypeInformation
             builder.append(name);
             builder.append(dataClass.toString());
             builder.append('(');
-            builder.append(elementSize);
+            builder.append(getUsableLength());
             builder.append(", [");
             for (int d : dimensions)
             {

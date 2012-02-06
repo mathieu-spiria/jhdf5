@@ -41,7 +41,7 @@ class HDF5ValueObjectByteifyer<T>
     private final int recordSize;
 
     private Class<?> cachedRecordClass;
-    
+
     private Constructor<?> cachedDefaultConstructor;
 
     @SuppressWarnings("unchecked")
@@ -76,13 +76,16 @@ class HDF5ValueObjectByteifyer<T>
         public CharacterEncoding getCharacterEncoding();
     }
 
-    public HDF5ValueObjectByteifyer(Class<T> clazz, FileInfoProvider fileInfoProvider,
-            HDF5CompoundMemberMapping... members)
+    HDF5ValueObjectByteifyer(Class<T> clazz, FileInfoProvider fileInfoProvider,
+            CompoundTypeInformation compoundTypeInfoOrNull, HDF5CompoundMemberMapping... members)
     {
         byteifyers =
                 HDF5CompoundByteifyerFactory.createMemberByteifyers(clazz, fileInfoProvider,
-                        members);
-        if (byteifyers.length > 0)
+                        compoundTypeInfoOrNull, members);
+        if (compoundTypeInfoOrNull != null)
+        {
+            recordSize = compoundTypeInfoOrNull.recordSize;
+        } else if (byteifyers.length > 0)
         {
             recordSize = byteifyers[byteifyers.length - 1].getTotalSize();
         } else
@@ -214,7 +217,7 @@ class HDF5ValueObjectByteifyer<T>
         }
         return result;
     }
-    
+
     @SuppressWarnings("unchecked")
     private T newInstance(Class<?> recordClass) throws HDF5JavaException
     {

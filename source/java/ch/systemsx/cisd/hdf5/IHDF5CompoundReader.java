@@ -59,6 +59,60 @@ public interface IHDF5CompoundReader extends IHDF5CompoundInformationRetriever
     public <T> T getAttr(String objectPath, String attributeName, Class<T> pojoClass)
             throws HDF5JavaException;
 
+    /**
+     * Reads a compound array (of rank 1) attribute named <var>attributeName</var> from the object
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the object in the file.
+     * @param type The type definition of this compound type.
+     * @return The data read from the attribute.
+     * @throws HDF5JavaException If the <var>attributeName</var> is not a compound attribute.
+     */
+    public <T> T[] getArrayAttr(String objectPath, String attributeName, HDF5CompoundType<T> type)
+            throws HDF5JavaException;
+
+    /**
+     * Reads a compound array (of rank 1) attribute named <var>attributeName</var> from the object
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the object in the file.
+     * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
+     *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
+     *            <code>Object[]</code> to get it in an array, or use a pojo (Data Transfer Object),
+     *            in which case the compound members will be mapped to Java fields.
+     * @return The data read from the attribute.
+     * @throws HDF5JavaException If the <var>attributeName</var> is not a compound attribute.
+     */
+    public <T> T[] getArrayAttr(String objectPath, String attributeName, Class<T> pojoClass)
+            throws HDF5JavaException;
+
+    /**
+     * Reads a compound array (of rank N) attribute named <var>attributeName</var> from the object
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the object in the file.
+     * @param type The type definition of this compound type.
+     * @return The data read from the attribute.
+     * @throws HDF5JavaException If the <var>attributeName</var> is not a compound attribute.
+     */
+    public <T> MDArray<T> getMDArrayAttr(String objectPath, String attributeName,
+            HDF5CompoundType<T> type) throws HDF5JavaException;
+
+    /**
+     * Reads a compound array (of rank N) attribute named <var>attributeName</var> from the object
+     * <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the object in the file.
+     * @param pojoClass The class to return the result in. Use {@link HDF5CompoundDataMap} to get it
+     *            in a map, {@link HDF5CompoundDataList} to get it in a list, and
+     *            <code>Object[]</code> to get it in an array, or use a pojo (Data Transfer Object),
+     *            in which case the compound members will be mapped to Java fields.
+     * @return The data read from the attribute.
+     * @throws HDF5JavaException If the <var>attributeName</var> is not a compound attribute.
+     */
+    public <T> MDArray<T> getMDArrayAttr(String objectPath, String attributeName, Class<T> pojoClass)
+            throws HDF5JavaException;
+
     // /////////////////////
     // Data Sets
     // /////////////////////

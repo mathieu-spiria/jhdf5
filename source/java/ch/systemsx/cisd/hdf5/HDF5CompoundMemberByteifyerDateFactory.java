@@ -28,7 +28,6 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 import java.lang.reflect.Field;
 import java.util.Date;
 
-
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
@@ -63,8 +62,9 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
     }
 
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
-            HDF5CompoundMemberMapping member, Class<?> memberClazz, int index, int offset,
-            FileInfoProvider fileInfoProvider)
+            HDF5CompoundMemberMapping member,
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
+            int index, int offset, FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final HDF5DataTypeVariant typeVariant =
@@ -147,8 +147,7 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                     final Object dateObj = getMap(obj, memberName);
                     if (dateObj instanceof java.util.Date)
                     {
-                        return HDFNativeData.longToByte(((java.util.Date) dateObj)
-                                .getTime());
+                        return HDFNativeData.longToByte(((java.util.Date) dateObj).getTime());
                     } else
                     {
                         return HDFNativeData.longToByte(((Long) dateObj));
@@ -191,8 +190,7 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                     final Object dateObj = getList(obj, index);
                     if (dateObj instanceof java.util.Date)
                     {
-                        return HDFNativeData.longToByte(((java.util.Date) dateObj)
-                                .getTime());
+                        return HDFNativeData.longToByte(((java.util.Date) dateObj).getTime());
                     } else
                     {
                         return HDFNativeData.longToByte(((Long) dateObj));
@@ -235,8 +233,7 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                     final Object dateObj = getArray(obj, index);
                     if (dateObj instanceof java.util.Date)
                     {
-                        return HDFNativeData.longToByte(((java.util.Date) dateObj)
-                                .getTime());
+                        return HDFNativeData.longToByte(((java.util.Date) dateObj).getTime());
                     } else
                     {
                         return HDFNativeData.longToByte(((Long) dateObj));

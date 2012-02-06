@@ -26,7 +26,6 @@ import java.util.BitSet;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
-
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>BitSet</code>
  * 
@@ -47,13 +46,21 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
     }
 
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
-            final HDF5CompoundMemberMapping member, Class<?> memberClazz, final int index,
-            final int offset, final FileInfoProvider fileInfoProvider)
+            final HDF5CompoundMemberMapping member,
+            final HDF5CompoundMemberInformation compoundMemberInfoOrNull, final Class<?> memberClazz,
+            final int index, final int offset, final FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
-        final int memberTypeLengthInBits = member.getMemberTypeLength();
-        final int memberTypeLengthInLongs =
-                memberTypeLengthInBits / 64 + (memberTypeLengthInBits % 64 != 0 ? 1 : 0);
+        final int memberTypeLengthInLongs;
+        if (compoundMemberInfoOrNull == null)
+        {
+            final int memberTypeLengthInBits = member.getMemberTypeLength();
+            memberTypeLengthInLongs =
+                      memberTypeLengthInBits / 64 + (memberTypeLengthInBits % 64 != 0 ? 1 : 0);
+        } else
+        {
+            memberTypeLengthInLongs = compoundMemberInfoOrNull.getType().getNumberOfElements();
+        }
 
         if (memberTypeLengthInLongs <= 0)
         {

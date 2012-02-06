@@ -49,6 +49,7 @@ import ch.systemsx.cisd.base.exceptions.CheckedExceptionTunnel;
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.namedthread.NamingThreadPoolExecutor;
+import ch.systemsx.cisd.hdf5.IHDF5CompoundInformationRetriever.IByteArrayInspector;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -437,6 +438,73 @@ final class HDF5BaseWriter extends HDF5BaseReader
                             h5.createArrayType(baseStorageTypeId, value.dimensions(), registry);
                     setAttribute(objectPath, name, storageTypeId, memoryTypeId,
                             value.toStorageForm());
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(setAttributeRunnable);
+    }
+
+    <T> void setCompoundArrayAttribute(final String objectPath, final String attributeName,
+            final HDF5CompoundType<T> type, final T[] data,
+            final IByteArrayInspector inspectorOrNull)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+        assert data != null;
+
+        checkOpen();
+        type.check(fileId);
+        final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final byte[] byteArray =
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArray);
+                    }
+                    final int baseMemoryTypeId = type.getNativeTypeId();
+                    final int memoryTypeId =
+                            h5.createArrayType(baseMemoryTypeId, data.length, registry);
+                    final int baseStorageTypeId = type.getStorageTypeId();
+                    final int storageTypeId =
+                            h5.createArrayType(baseStorageTypeId, data.length, registry);
+                    setAttribute(objectPath, attributeName, storageTypeId, memoryTypeId, byteArray);
+                    return null; // Nothing to return.
+                }
+            };
+        runner.call(setAttributeRunnable);
+    }
+
+    <T> void setCompoundMDArrayAttribute(final String objectPath, final String attributeName,
+            final HDF5CompoundType<T> type, final MDArray<T> data,
+            final IByteArrayInspector inspectorOrNull)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+        assert data != null;
+
+        checkOpen();
+        type.check(fileId);
+        final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final byte[] byteArray =
+                            type.getObjectByteifyer().byteify(type.getStorageTypeId(),
+                                    data.getAsFlatArray());
+                    if (inspectorOrNull != null)
+                    {
+                        inspectorOrNull.inspect(byteArray);
+                    }
+                    final int baseMemoryTypeId = type.getNativeTypeId();
+                    final int memoryTypeId =
+                            h5.createArrayType(baseMemoryTypeId, data.dimensions(), registry);
+                    final int baseStorageTypeId = type.getStorageTypeId();
+                    final int storageTypeId =
+                            h5.createArrayType(baseStorageTypeId, data.dimensions(), registry);
+                    setAttribute(objectPath, attributeName, storageTypeId, memoryTypeId, byteArray);
                     return null; // Nothing to return.
                 }
             };

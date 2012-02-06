@@ -3652,6 +3652,8 @@ public class HDF5RoundtripTest
         final HDF5EnumerationValue enumAttributeValueWritten =
                 new HDF5EnumerationValue(enumType, "TWO");
         writer.enums().setAttr(datasetName, enumAttributeName, enumAttributeValueWritten);
+        assertEquals(enumAttributeValueWritten.getType(),
+                writer.enums().getAttributeType(datasetName, enumAttributeName));
         final String enumArrayAttributeName = "Enum Array Attribute";
         final HDF5EnumerationValueArray enumArrayAttributeValueWritten =
                 new HDF5EnumerationValueArray(enumType, new String[]
@@ -3731,6 +3733,12 @@ public class HDF5RoundtripTest
                 reader.enums().getAttrAsString(datasetName, enumAttributeName);
         assertEquals(enumAttributeValueWritten.getValue(), enumAttributeValueRead.getValue());
         assertEquals(enumAttributeValueWritten.getValue(), enumAttributeStringValueRead);
+        final HDF5EnumerationType enumAttributeType =
+                reader.enums().getAttributeType(datasetName, enumAttributeName);
+        assertEquals(enumAttributeValueWritten.getType(), enumAttributeType);
+        assertEquals("MyEnum", enumAttributeType.getName());
+        System.err.println(reader.enums().getAttributeType(datasetName, enumAttributeName)
+                .getName());
         final String[] enumArrayAttributeReadAsString =
                 reader.enums().getArrayAttr(datasetName, enumArrayAttributeName).toStringArray();
         assertEquals(enumArrayAttributeValueWritten.getLength(),
@@ -3742,6 +3750,10 @@ public class HDF5RoundtripTest
         }
         final HDF5EnumerationValueArray enumArrayAttributeRead =
                 reader.enums().getArrayAttr(datasetName, enumArrayAttributeName);
+        final HDF5EnumerationType enumAttributeArrayType =
+                reader.enums().getAttributeType(datasetName, enumArrayAttributeName);
+        assertEquals(enumArrayAttributeRead.getType(), enumAttributeArrayType);
+        assertEquals("MyEnum", enumAttributeArrayType.getName());
         assertEquals(enumArrayAttributeValueWritten.getLength(), enumArrayAttributeRead.getLength());
         for (int i = 0; i < enumArrayAttributeRead.getLength(); ++i)
         {
@@ -4785,7 +4797,7 @@ public class HDF5RoundtripTest
                         { 2, 3, 1 }, new long[]
                         { 0, 1, i }));
         }
-        for (HDF5MDEnumBlock block : reader.enums().getMDArrayNaturalBlocks("/testEnum", enumType))
+        for (HDF5MDEnumBlock block : reader.enums().getMDArrayBlocks("/testEnum", enumType))
         {
             assertTrue(Long.toString(block.getIndex()[2]),
                     block.getIndex()[2] >= 0 && block.getIndex()[2] < 4);
@@ -4924,7 +4936,7 @@ public class HDF5RoundtripTest
         final HDF5EnumerationValueArray[] dataBlocksExpected = new HDF5EnumerationValueArray[]
             { arrayReadBlock0, arrayReadBlock1 };
         int blockIndex = 0;
-        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.enums().getArrayNaturalBlocks(
+        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.enums().getArrayBlocks(
                 enumTypeName, enumType))
         {
             final HDF5EnumerationValueArray blockExpected = dataBlocksExpected[blockIndex++];
@@ -4980,7 +4992,7 @@ public class HDF5RoundtripTest
         final HDF5EnumerationValueArray[] dataBlocksExpected = new HDF5EnumerationValueArray[]
             { arrayReadBlock0, arrayReadBlock1 };
         int blockIndex = 0;
-        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.enums().getArrayNaturalBlocks(
+        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.enums().getArrayBlocks(
                 enumTypeName, enumType))
         {
             final HDF5EnumerationValueArray blockExpected = dataBlocksExpected[blockIndex++];
@@ -5130,7 +5142,7 @@ public class HDF5RoundtripTest
         final HDF5EnumerationValueArray[] dataBlocksExpected = new HDF5EnumerationValueArray[]
             { arrayReadBlock0, arrayReadBlock1 };
         int blockIndex = 0;
-        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.enums().getArrayNaturalBlocks(
+        for (HDF5DataBlock<HDF5EnumerationValueArray> block : reader.enums().getArrayBlocks(
                 enumTypeName, enumType))
         {
             final HDF5EnumerationValueArray blockExpected = dataBlocksExpected[blockIndex++];
@@ -5460,12 +5472,50 @@ public class HDF5RoundtripTest
                         { 1, 2, 3 },
                         { 4, 5, 6 } });
         writer.compounds().setAttr("/", "cpd", recordWritten);
+        final SimpleInheretingRecord[] recordArrWritten =
+                new SimpleInheretingRecord[]
+                    {
+                            new SimpleInheretingRecord(3.14159f, 100, (short) 1, "abc",
+                                    new long[][]
+                                        {
+                                            { 10, 20, 30 },
+                                            { 40, 50, 60 } }),
+                            new SimpleInheretingRecord(3.14159f, 1000, (short) 2, "def",
+                                    new long[][]
+                                        {
+                                            { 70, 80, 90 },
+                                            { 100, 110, 120 } }), };
+        writer.compounds().setArrayAttr("/", "cpdArray", recordArrWritten);
+        writer.compounds().setArrayAttr("/", "cpdArray", recordArrWritten);
+        final MDArray<SimpleInheretingRecord> recordMDArrWritten =
+                new MDArray<SimpleInheretingRecord>(new SimpleInheretingRecord[]
+                    {
+                            new SimpleInheretingRecord(3.14159f, 100, (short) 1, "abc",
+                                    new long[][]
+                                        {
+                                            { 10, 20, 30 },
+                                            { 40, 50, 60 } }),
+                            new SimpleInheretingRecord(3.14159f, 1000, (short) 2, "def",
+                                    new long[][]
+                                        {
+                                            { 70, 80, 90 },
+                                            { 100, 110, 120 } }),
+                            new SimpleInheretingRecord(-1f, 10000, (short) 1, "ghi", new long[][]
+                                {
+                                    { 10, 20, 30 },
+                                    { 40, 50, 60 } }),
+                            new SimpleInheretingRecord(11.111111f, 100000, (short) 2, "jkl",
+                                    new long[][]
+                                        {
+                                            { 70, 80, 90 },
+                                            { 100, 110, 120 } }), }, new int[]
+                    { 2, 2 });
+        writer.compounds().setMDArrayAttr("/", "cpdMDArray", recordMDArrWritten);
         writer.close();
 
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         final HDF5CompoundType<SimpleInheretingRecord> type =
-                reader.compounds().getAttributeType("/", "cpd",
-                        SimpleInheretingRecord.class);
+                reader.compounds().getAttributeType("/", "cpd", SimpleInheretingRecord.class);
         assertFalse(type.isMappingIncomplete());
         assertFalse(type.isDiskRepresentationIncomplete());
         assertFalse(type.isMemoryRepresentationIncomplete());
@@ -5473,6 +5523,12 @@ public class HDF5RoundtripTest
         final SimpleInheretingRecord recordRead =
                 reader.compounds().getAttr("/", "cpd", SimpleInheretingRecord.class);
         assertEquals(recordWritten, recordRead);
+        final SimpleInheretingRecord[] recordArrRead =
+                reader.compounds().getArrayAttr("/", "cpdArray", SimpleInheretingRecord.class);
+        assertTrue(Arrays.equals(recordArrWritten, recordArrRead));
+        final MDArray<SimpleInheretingRecord> recordMDArrRead =
+                reader.compounds().getMDArrayAttr("/", "cpdMDArray", SimpleInheretingRecord.class);
+        assertEquals(recordMDArrWritten, recordMDArrRead);
         reader.close();
     }
 
@@ -5997,9 +6053,8 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         HDF5CompoundType<DateRecord> compoundType =
-                writer.compounds().getType(DateRecord.class,
-                        new HDF5CompoundMemberMapping[]
-                            { mapping("d") });
+                writer.compounds().getType(DateRecord.class, new HDF5CompoundMemberMapping[]
+                    { mapping("d") });
         final DateRecord recordWritten = new DateRecord(new Date());
         final String objectPath = "/testDateCompound";
         writer.compounds().write(objectPath, compoundType, recordWritten);
@@ -6016,10 +6071,8 @@ public class HDF5RoundtripTest
         {
             assertEquals(memMemberInfo[i], diskMemberInfo[i]);
         }
-        compoundType =
-                reader.compounds().getType(DateRecord.class,
-                        new HDF5CompoundMemberMapping[]
-                            { mapping("d") });
+        compoundType = reader.compounds().getType(DateRecord.class, new HDF5CompoundMemberMapping[]
+            { mapping("d") });
         assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                 compoundType.getObjectByteifyer().getByteifyers()[0].getTypeVariant());
         final DateRecord recordRead =
@@ -6140,13 +6193,10 @@ public class HDF5RoundtripTest
         {
             assertEquals(memMemberInfo[i], diskMemberInfo[i]);
         }
-        compoundType =
-                reader.compounds().getType(MatrixRecord.class, MatrixRecord.getMapping());
+        compoundType = reader.compounds().getType(MatrixRecord.class, MatrixRecord.getMapping());
         final MatrixRecord recordRead =
-                reader.compounds().read(
-                        name,
-                        reader.compounds().getType(MatrixRecord.class,
-                                MatrixRecord.getMapping()));
+                reader.compounds().read(name,
+                        reader.compounds().getType(MatrixRecord.class, MatrixRecord.getMapping()));
         assertEquals(recordWritten, recordRead);
         reader.close();
     }
@@ -6460,8 +6510,7 @@ public class HDF5RoundtripTest
 
         static HDF5CompoundType<BitFieldRecord> getHDF5Type(IHDF5Reader reader)
         {
-            return reader.compounds().getType(BitFieldRecord.class,
-                    mapping("bs").length(100));
+            return reader.compounds().getType(BitFieldRecord.class, mapping("bs").length(100));
         }
 
         @Override
@@ -6552,8 +6601,7 @@ public class HDF5RoundtripTest
                                         { 'A', 'b', 'C' }), };
         writer.writeCompoundArray("/testCompound", compoundType, arrayWritten,
                 HDF5GenericStorageFeatures.GENERIC_COMPACT);
-        HDF5CompoundType<Record> inferredType =
-                writer.compounds().getNamedType(Record.class);
+        HDF5CompoundType<Record> inferredType = writer.compounds().getNamedType(Record.class);
         // Write again, this time with inferred type.
         writer.writeCompoundArray("/testCompound", inferredType, arrayWritten,
                 HDF5GenericStorageFeatures.GENERIC_COMPACT);
@@ -7487,8 +7535,7 @@ public class HDF5RoundtripTest
         final HDF5EnumerationType enumType = writer.enums().getType("type", alternatives);
         final SimpleRecordWithEnum r =
                 new SimpleRecordWithEnum(new HDF5EnumerationValue(enumType, "3"));
-        final HDF5CompoundType<SimpleRecordWithEnum> typeW =
-                writer.compounds().getInferredType(r);
+        final HDF5CompoundType<SimpleRecordWithEnum> typeW = writer.compounds().getInferredType(r);
         writer.compounds().write("sce", typeW, r);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().configureForReading(file).reader();

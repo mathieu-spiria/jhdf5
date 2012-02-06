@@ -28,9 +28,14 @@ public interface IHDF5GenericReader
 {
 
     /**
+     * Gets the (unchanged) byte array values of an attribute <var>attributeName</var> of object
+     * </var>objectPath</var>.
+     */
+    public byte[] getAttributeAsByteArray(final String objectPath, final String attributeName);
+
+    /**
      * Returns the tag of the opaque data type associated with <var>objectPath</var>, or
      * <code>null</code>, if <var>objectPath</var> is not of an opaque data type (i.e. if
-     * 
      * <code>reader.getDataSetInformation(objectPath).getTypeInformation().getDataClass() != HDF5DataClass.OPAQUE</code>
      * ).
      * 

@@ -45,8 +45,9 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
     }
 
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
-            final HDF5CompoundMemberMapping member, Class<?> memberClazz, final int index,
-            final int offset, final FileInfoProvider fileInfoProvider)
+            final HDF5CompoundMemberMapping member,
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
+            final int index, final int offset, final FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final HDF5EnumerationType enumType = member.tryGetEnumerationType();
@@ -54,7 +55,9 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
         {
             throw new NullPointerException("Enumeration type not set for member byteifyer.");
         }
-        final int memberTypeLength = member.getMemberTypeLength();
+        final int memberTypeLength =
+                (compoundMemberInfoOrNull != null) ? compoundMemberInfoOrNull.getType()
+                        .getNumberOfElements() : member.getMemberTypeLength();
         final int storageTypeId = member.getStorageDataTypeId();
         final int memberStorageTypeId =
                 (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(enumType.getStorageTypeId(),

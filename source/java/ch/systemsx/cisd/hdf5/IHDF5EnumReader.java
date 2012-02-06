@@ -26,26 +26,6 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
 {
     // /////////////////////
-    // Types
-    // /////////////////////
-
-    /**
-     * Returns the enumeration type <var>name</var> for this HDF5 file. Use this method only when
-     * you know that the type exists. If the <var>dataTypeName</var> starts with '/', it will be
-     * considered a data type path instead of a data type name.
-     * 
-     * @param dataTypeName The name of the enumeration in the HDF5 file.
-     */
-    public HDF5EnumerationType getType(final String dataTypeName);
-
-    /**
-     * Returns the enumeration type for the data set <var>dataSetPath</var>.
-     * 
-     * @param dataSetPath The name of data set to get the enumeration type for.
-     */
-    public HDF5EnumerationType getDataSetType(final String dataSetPath);
-
-    // /////////////////////
     // Attributes
     // /////////////////////
 
@@ -329,7 +309,7 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
-    public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getArrayNaturalBlocks(
+    public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getArrayBlocks(
             final String objectPath) throws HDF5JavaException;
 
     /**
@@ -340,7 +320,7 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
-    public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getArrayNaturalBlocks(
+    public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getArrayBlocks(
             final String objectPath, final HDF5EnumerationType enumType) throws HDF5JavaException;
 
     /**
@@ -351,7 +331,7 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      * @see HDF5MDDataBlock
      * @throws HDF5JavaException If the data set is not an enum data set.
      */
-    public Iterable<HDF5MDEnumBlock> getMDArrayNaturalBlocks(final String objectPath,
+    public Iterable<HDF5MDEnumBlock> getMDArrayBlocks(final String objectPath,
             final HDF5EnumerationType type) throws HDF5JavaException;
 
     /**
@@ -361,7 +341,7 @@ public interface IHDF5EnumReader extends IHDF5EnumTypeRetriever
      * @see HDF5MDDataBlock
      * @throws HDF5JavaException If the data set is not an enum data set.
      */
-    public Iterable<HDF5MDEnumBlock> getMDArrayNaturalBlocks(final String objectPath)
+    public Iterable<HDF5MDEnumBlock> getMDArrayBlocks(final String objectPath)
             throws HDF5JavaException;
 
 }

@@ -204,7 +204,7 @@ public interface IHDF5CompoundInformationRetriever
      * @param hints The hints to provide to the mapping procedure.
      * @see HDF5CompoundMemberMapping#inferMapping
      */
-    public HDF5CompoundType<List<?>> getInferred(String name, List<String> memberNames,
+    public HDF5CompoundType<List<?>> getInferredType(String name, List<String> memberNames,
             List<?> template, HDF5CompoundMappingHints hints);
 
     /**
@@ -281,7 +281,8 @@ public interface IHDF5CompoundInformationRetriever
      * Returns the compound type for the given compound attribute in <var>attributeName</var> of
      * <var>objectPath</var>, mapping it to <var>pojoClass</var>.
      * 
-     * @param objectPath The path of the compound dataset to get the type from.
+     * @param objectPath The path of the compound dataset.
+     * @param attributeName The name of the attribute to get the type for.
      * @param pojoClass The class to use for the mapping.
      */
     public <T> HDF5CompoundType<T> getAttributeType(String objectPath,
@@ -291,7 +292,8 @@ public interface IHDF5CompoundInformationRetriever
      * Returns the compound type for the given compound attribute in <var>attributeName</var> of
      * <var>objectPath</var>, mapping it to <var>pojoClass</var>.
      * 
-     * @param objectPath The path of the compound dataset to get the type from.
+     * @param objectPath The path of the compound dataset.
+     * @param attributeName The name of the attribute to get the type for.
      * @param pojoClass The class to use for the mapping.
      * @param hints The hints to provide to the mapping procedure.
      */
@@ -302,7 +304,8 @@ public interface IHDF5CompoundInformationRetriever
      * Returns the compound type for the given compound attribute in <var>attributeName</var> of
      * <var>objectPath</var>, mapping it to <var>pojoClass</var>.
      * 
-     * @param objectPath The path of the compound dataset to get the type from.
+     * @param objectPath The path of the compound dataset.
+     * @param attributeName The name of the attribute to get the type for.
      * @param pojoClass The class to use for the mapping.
      * @param hints The hints to provide to the mapping procedure.
      * @param dataTypeInfoOptions The options on which information to get about the member data
