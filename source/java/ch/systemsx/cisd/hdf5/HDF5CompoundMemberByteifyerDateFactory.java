@@ -41,9 +41,16 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
-    public boolean canHandle(Class<?> clazz)
+    public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
-        return (clazz == Date.class);
+        if (memberInfoOrNull != null)
+        {
+            return (clazz == Date.class || Long.class.isAssignableFrom(clazz))
+                    && memberInfoOrNull.getType().isTimeStamp();
+        } else
+        {
+            return (clazz == Date.class);
+        }
     }
 
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
@@ -63,8 +70,9 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
 
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
             HDF5CompoundMemberMapping member,
-            HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
-            int index, int offset, FileInfoProvider fileInfoProvider)
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull,
+            HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
+            FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final HDF5DataTypeVariant typeVariant =

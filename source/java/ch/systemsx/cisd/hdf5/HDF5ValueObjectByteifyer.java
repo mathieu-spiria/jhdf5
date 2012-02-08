@@ -72,6 +72,8 @@ class HDF5ValueObjectByteifyer<T>
         public int getArrayTypeId(int baseTypeId, int length);
 
         public int getArrayTypeId(int baseTypeId, int[] dimensions);
+        
+        public HDF5EnumerationType getEnumType(String[] options);
 
         public CharacterEncoding getCharacterEncoding();
     }

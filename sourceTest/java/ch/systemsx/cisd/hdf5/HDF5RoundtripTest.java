@@ -305,6 +305,7 @@ public class HDF5RoundtripTest
         test.testOpaqueType();
         test.testCompound();
         test.testCompoundJavaEnum();
+        test.testCompoundJavaEnumArray();
         test.testCompoundJavaEnumMap();
         test.testCompoundAttribute();
         test.testCompoundIncompleteJavaPojo();
@@ -3737,8 +3738,6 @@ public class HDF5RoundtripTest
                 reader.enums().getAttributeType(datasetName, enumAttributeName);
         assertEquals(enumAttributeValueWritten.getType(), enumAttributeType);
         assertEquals("MyEnum", enumAttributeType.getName());
-        System.err.println(reader.enums().getAttributeType(datasetName, enumAttributeName)
-                .getName());
         final String[] enumArrayAttributeReadAsString =
                 reader.enums().getArrayAttr(datasetName, enumArrayAttributeName).toStringArray();
         assertEquals(enumArrayAttributeValueWritten.getLength(),
@@ -5560,6 +5559,34 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
+    static class StringEnumCompoundType
+    {
+        String fruit;
+
+        StringEnumCompoundType()
+        {
+        }
+
+        StringEnumCompoundType(String fruit)
+        {
+            this.fruit = fruit;
+        }
+    }
+
+    static class OrdinalEnumCompoundType
+    {
+        int fruit;
+
+        OrdinalEnumCompoundType()
+        {
+        }
+
+        OrdinalEnumCompoundType(int fruit)
+        {
+            this.fruit = fruit;
+        }
+    }
+
     @Test
     public void testCompoundJavaEnum()
     {
@@ -5581,6 +5608,127 @@ public class HDF5RoundtripTest
         type.checkMappingComplete();
         final JavaEnumCompoundType recordRead = reader.compounds().read("cpd", type);
         assertEquals(recordWritten, recordRead);
+        final StringEnumCompoundType stringRecordRead =
+                reader.readCompound("cpd", StringEnumCompoundType.class);
+        assertEquals(TestEnum.CHERRY.name(), stringRecordRead.fruit);
+        final OrdinalEnumCompoundType ordinalRecordRead =
+                reader.readCompound("cpd", OrdinalEnumCompoundType.class);
+        assertEquals(TestEnum.CHERRY.ordinal(), ordinalRecordRead.fruit);
+        reader.close();
+    }
+
+    static class JavaEnumArrayCompoundType
+    {
+        @CompoundElement(dimensions = 3)
+        TestEnum[] fruits;
+
+        JavaEnumArrayCompoundType()
+        {
+        }
+
+        JavaEnumArrayCompoundType(TestEnum[] fruits)
+        {
+            this.fruits = fruits;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + Arrays.hashCode(fruits);
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            JavaEnumArrayCompoundType other = (JavaEnumArrayCompoundType) obj;
+            if (!Arrays.equals(fruits, other.fruits))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "JavaEnumArrayCompoundType [fruits=" + Arrays.toString(fruits) + "]";
+        }
+    }
+
+    static class StringEnumArrayCompoundType
+    {
+        String[] fruits;
+
+        StringEnumArrayCompoundType()
+        {
+        }
+
+        StringEnumArrayCompoundType(String[] fruits)
+        {
+            this.fruits = fruits;
+        }
+    }
+
+    static class OrdinalEnumArrayCompoundType
+    {
+        int[] fruits;
+
+        OrdinalEnumArrayCompoundType()
+        {
+        }
+
+        OrdinalEnumArrayCompoundType(int[] fruits)
+        {
+            this.fruits = fruits;
+        }
+    }
+
+    @Test
+    public void testCompoundJavaEnumArray()
+    {
+        final File file = new File(workingDirectory, "compoundJavaEnumArray.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        final JavaEnumArrayCompoundType recordWritten =
+                new JavaEnumArrayCompoundType(new TestEnum[]
+                    { TestEnum.CHERRY, TestEnum.APPLE, TestEnum.ORANGE });
+        writer.compounds().write("cpd", recordWritten);
+        writer.close();
+
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<JavaEnumArrayCompoundType> type =
+                reader.compounds().getDataSetType("cpd", JavaEnumArrayCompoundType.class);
+        assertFalse(type.isMappingIncomplete());
+        assertFalse(type.isDiskRepresentationIncomplete());
+        assertFalse(type.isMemoryRepresentationIncomplete());
+        type.checkMappingComplete();
+        final JavaEnumArrayCompoundType recordRead = reader.compounds().read("cpd", type);
+        assertEquals(recordWritten, recordRead);
+        final StringEnumArrayCompoundType stringRecordRead =
+                reader.readCompound("cpd", StringEnumArrayCompoundType.class);
+        assertTrue(Arrays.toString(stringRecordRead.fruits), Arrays.equals(new String[]
+            { "CHERRY", "APPLE", "ORANGE" }, stringRecordRead.fruits));
+        final OrdinalEnumArrayCompoundType ordinalRecordRead =
+                reader.readCompound("cpd", OrdinalEnumArrayCompoundType.class);
+        assertTrue(Arrays.toString(ordinalRecordRead.fruits), Arrays.equals(new int[]
+            { 2, 0, 1 }, ordinalRecordRead.fruits));
         reader.close();
     }
 

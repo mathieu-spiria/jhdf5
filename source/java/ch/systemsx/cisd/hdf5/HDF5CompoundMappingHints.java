@@ -25,7 +25,7 @@ public class HDF5CompoundMappingHints
 {
     public enum EnumReturnType
     {
-        ORDINAL, STRING, HDF5ENUMERATIONVALUE
+        ORDINAL, STRING, JAVAENUMERATION, HDF5ENUMERATIONVALUE
     }
 
     private EnumReturnType enumReturnType = EnumReturnType.HDF5ENUMERATIONVALUE;

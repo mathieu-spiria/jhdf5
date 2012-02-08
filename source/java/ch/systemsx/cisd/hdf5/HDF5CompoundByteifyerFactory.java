@@ -49,7 +49,6 @@ class HDF5CompoundByteifyerFactory
         memberFactories.add(new HDF5CompoundMemberByteifyerDateFactory());
         memberFactories.add(new HDF5CompoundMemberByteifyerHDF5TimeDurationFactory());
         memberFactories.add(new HDF5CompoundMemberByteifyerEnumFactory());
-        memberFactories.add(new HDF5CompoundMemberByteifyerJavaEnumFactory());
         memberFactories.add(new HDF5CompoundMemberByteifyerEnumArrayFactory());
     }
 
@@ -69,20 +68,21 @@ class HDF5CompoundByteifyerFactory
         /**
          * Returns <code>true</code> if this factory can handle a member of type <code>clazz</code>.
          */
-        boolean canHandle(Class<?> clazz);
+        boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull);
 
         /**
          * Creates a byteifyer.
          */
-        HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
-                final HDF5CompoundMemberMapping member,
-                HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
-                final int index, final int offset, final FileInfoProvider fileInfoProvider);
+        HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
+                HDF5CompoundMemberMapping member,
+                HDF5CompoundMemberInformation compoundMemberInfoOrNull,
+                HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
+                FileInfoProvider fileInfoProvider);
 
         /**
          * Returns a suitable Java type, if this factory has one, or <code>null</code> otherwise.
          */
-        public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
+        Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
                 HDF5DataTypeVariant typeVariantOrNull);
     }
 
@@ -114,26 +114,31 @@ class HDF5CompoundByteifyerFactory
         for (int i = 0; i < result.length; ++i)
         {
             final AccessType accessType = getAccessType(clazz);
+            final HDF5CompoundMemberInformation compoundMemberInfoOrNull =
+                    (compoundTypeInfoOrNull == null) ? null : compoundTypeInfoOrNull.members[i];
             final Field fieldOrNull =
-                    (accessType == AccessType.FIELD) ? members[i].tryGetField(clazz) : null;
+                    (accessType == AccessType.FIELD) ? members[i].tryGetField(clazz,
+                            (compoundMemberInfoOrNull != null)) : null;
             final Class<?> memberClazzOrNull =
                     (fieldOrNull != null) ? fieldOrNull.getType() : members[i].tryGetMemberClass();
             final IHDF5CompoundMemberBytifyerFactory factory =
-                    findFactory(memberClazzOrNull, members[i].getMemberName());
-            final HDF5CompoundMemberInformation compoundMemberInfoOrNull =
-                    (compoundTypeInfoOrNull == null) ? null : compoundTypeInfoOrNull.members[i];
+                    findFactory(memberClazzOrNull, compoundMemberInfoOrNull,
+                            members[i].getMemberName());
+            final HDF5EnumerationType enumTypeOrNullOrNull =
+                    (compoundTypeInfoOrNull == null) ? null : compoundTypeInfoOrNull.enumTypes[i];
             if (isDummy(accessType, fieldOrNull))
             {
                 result[i] =
                         new HDF5DummyMemberByteifyer(factory.createBytifyer(accessType,
                                 fieldOrNull, members[i], compoundMemberInfoOrNull,
-                                memberClazzOrNull, i, offset, fileInfoProvider));
+                                enumTypeOrNullOrNull, memberClazzOrNull, i, offset,
+                                fileInfoProvider));
             } else
             {
                 result[i] =
                         factory.createBytifyer(accessType, fieldOrNull, members[i],
-                                compoundMemberInfoOrNull, memberClazzOrNull, i, offset,
-                                fileInfoProvider);
+                                compoundMemberInfoOrNull, enumTypeOrNullOrNull, memberClazzOrNull,
+                                i, offset, fileInfoProvider);
             }
             offset += result[i].getSizeInBytes();
         }
@@ -258,7 +263,7 @@ class HDF5CompoundByteifyerFactory
     //
 
     private static IHDF5CompoundMemberBytifyerFactory findFactory(Class<?> memberClazz,
-            String memberName)
+            HDF5CompoundMemberInformation memberInfoOrNull, String memberName)
     {
         if (memberClazz == null)
         {
@@ -266,7 +271,7 @@ class HDF5CompoundByteifyerFactory
         }
         for (IHDF5CompoundMemberBytifyerFactory factory : memberFactories)
         {
-            if (factory.canHandle(memberClazz))
+            if (factory.canHandle(memberClazz, memberInfoOrNull))
             {
                 return factory;
             }

@@ -1012,6 +1012,16 @@ class HDF5BaseReader
                                 {
                                     return encoding;
                                 }
+
+                                public HDF5EnumerationType getEnumType(String[] options)
+                                {
+                                    final int storageDataTypeId =
+                                            h5.createDataTypeEnum(options, fileRegistry);
+                                    final int nativeDataTypeId =
+                                            h5.getNativeDataType(storageDataTypeId, fileRegistry);
+                                    return new HDF5EnumerationType(fileId, storageDataTypeId,
+                                            nativeDataTypeId, null, options);
+                                }
                             }, compoundTypeInfoOrNull, compoundMembers);
         return objectByteifyer;
     }

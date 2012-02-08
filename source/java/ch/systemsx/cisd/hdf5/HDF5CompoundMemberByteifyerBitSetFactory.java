@@ -34,9 +34,16 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
-    public boolean canHandle(Class<?> clazz)
+    public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
-        return (clazz == BitSet.class);
+        if (memberInfoOrNull != null)
+        {
+            return (clazz == BitSet.class)
+                    && memberInfoOrNull.getType().getDataClass() == HDF5DataClass.BITFIELD;
+        } else
+        {
+            return (clazz == BitSet.class);
+        }
     }
 
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
@@ -47,8 +54,9 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
 
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
             final HDF5CompoundMemberMapping member,
-            final HDF5CompoundMemberInformation compoundMemberInfoOrNull, final Class<?> memberClazz,
-            final int index, final int offset, final FileInfoProvider fileInfoProvider)
+            final HDF5CompoundMemberInformation compoundMemberInfoOrNull,
+            HDF5EnumerationType enumTypeOrNull, final Class<?> memberClazz, final int index,
+            final int offset, final FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final int memberTypeLengthInLongs;
@@ -56,7 +64,7 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
         {
             final int memberTypeLengthInBits = member.getMemberTypeLength();
             memberTypeLengthInLongs =
-                      memberTypeLengthInBits / 64 + (memberTypeLengthInBits % 64 != 0 ? 1 : 0);
+                    memberTypeLengthInBits / 64 + (memberTypeLengthInBits % 64 != 0 ? 1 : 0);
         } else
         {
             memberTypeLengthInLongs = compoundMemberInfoOrNull.getType().getNumberOfElements();

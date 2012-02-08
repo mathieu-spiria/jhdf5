@@ -262,6 +262,18 @@ public interface IHDF5CompoundInformationRetriever
      * 
      * @param objectPath The path of the compound dataset to get the type from.
      * @param pojoClass The class to use for the mapping.
+     * @param members The mapping from the Java compound type to the HDF5 type.
+     * @return The compound data type.
+     */
+    public <T> HDF5CompoundType<T> getDataSetType(String objectPath, Class<T> pojoClass,
+            HDF5CompoundMemberMapping... members);
+    
+    /**
+     * Returns the compound type for the given compound data set in <var>objectPath</var>, mapping
+     * it to <var>pojoClass</var>.
+     * 
+     * @param objectPath The path of the compound dataset to get the type from.
+     * @param pojoClass The class to use for the mapping.
      * @param hints The hints to provide to the mapping procedure.
      * @return The compound data type.
      */

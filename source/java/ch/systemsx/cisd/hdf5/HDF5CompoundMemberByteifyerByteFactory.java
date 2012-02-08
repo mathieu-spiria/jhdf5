@@ -47,22 +47,32 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
 
     private enum Rank
     {
-        SCALAR(byte.class, true), ARRAY1D(byte[].class, false), ARRAY2D(byte[][].class, false),
-        ARRAYMD(MDByteArray.class, false);
+        SCALAR(byte.class, 0), ARRAY1D(byte[].class, 1), ARRAY2D(byte[][].class, 2), ARRAYMD(
+                MDByteArray.class, -1);
 
-        private Class<?> clazz;
+        private final Class<?> clazz;
 
-        private boolean scalar;
+        private final int rank;
 
-        Rank(Class<?> clazz, boolean scalar)
+        Rank(Class<?> clazz, int rank)
         {
             this.clazz = clazz;
-            this.scalar = scalar;
+            this.rank = rank;
+        }
+
+        int getRank()
+        {
+            return rank;
         }
 
         boolean isScalar()
         {
-            return scalar;
+            return rank == 0;
+        }
+
+        boolean anyRank()
+        {
+            return rank == -1;
         }
 
         Class<?> getClazz()
@@ -79,9 +89,26 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
         }
     }
 
-    public boolean canHandle(Class<?> clazz)
+    public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
-        return classToRankMap.containsKey(clazz);
+        final Rank rankOrNull = classToRankMap.get(clazz);
+        if (memberInfoOrNull != null)
+        {
+            final HDF5DataTypeInformation typeInfo = memberInfoOrNull.getType();
+            if (rankOrNull == null || typeInfo.getDataClass() != HDF5DataClass.INTEGER
+                    || typeInfo.getElementSize() != 1)
+            {
+                return false;
+            }
+            return rankOrNull.anyRank()
+                    || (rankOrNull.getRank() == typeInfo.getDimensions().length)
+                    || (rankOrNull.isScalar() && typeInfo.getDimensions().length == 1 && typeInfo
+                            .getDimensions()[0] == 1);
+
+        } else
+        {
+            return rankOrNull != null;
+        }
     }
 
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
@@ -92,8 +119,9 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
 
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
             HDF5CompoundMemberMapping member,
-            HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
-            int index, int offset, FileInfoProvider fileInfoProvider)
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull,
+            HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
+            FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final Rank rank = classToRankMap.get(memberClazz);

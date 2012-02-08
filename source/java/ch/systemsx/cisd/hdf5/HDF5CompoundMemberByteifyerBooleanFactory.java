@@ -32,9 +32,16 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
-    public boolean canHandle(Class<?> clazz)
+    public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
-        return (clazz == boolean.class);
+        if (memberInfoOrNull != null)
+        {
+            return (clazz == boolean.class)
+                    && memberInfoOrNull.getType().getDataClass() == HDF5DataClass.BOOLEAN;
+        } else
+        {
+            return (clazz == boolean.class);
+        }
     }
 
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
@@ -45,8 +52,9 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
 
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
             final HDF5CompoundMemberMapping member,
-            final HDF5CompoundMemberInformation compoundMemberInfoOrNull, final Class<?> memberClazz,
-            final int index, final int offset, final FileInfoProvider fileInfoProvider)
+            final HDF5CompoundMemberInformation compoundMemberInfoOrNull,
+            HDF5EnumerationType enumTypeOrNull, final Class<?> memberClazz, final int index,
+            final int offset, final FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         // May be -1 if not known

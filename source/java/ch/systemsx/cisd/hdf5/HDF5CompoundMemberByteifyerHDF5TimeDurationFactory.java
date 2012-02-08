@@ -42,9 +42,16 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
         IHDF5CompoundMemberBytifyerFactory
 {
 
-    public boolean canHandle(Class<?> clazz)
+    public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
-        return (clazz == HDF5TimeDuration.class);
+        if (memberInfoOrNull != null)
+        {
+            return (clazz == HDF5TimeDuration.class || Long.class.isAssignableFrom(clazz))
+                    && memberInfoOrNull.getType().isTimeDuration();
+        } else
+        {
+            return (clazz == HDF5TimeDuration.class);
+        }
     }
 
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
@@ -62,8 +69,8 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
 
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
             HDF5CompoundMemberMapping member,
-            HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
-            int index, int offset, FileInfoProvider fileInfoProvider)
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull, HDF5EnumerationType enumTypeOrNull,
+            Class<?> memberClazz, int index, int offset, FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final HDF5DataTypeVariant typeVariant =

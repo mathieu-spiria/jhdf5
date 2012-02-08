@@ -18,10 +18,12 @@ package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.*;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.getEnumReturnType;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberByteifyerEnumFactory.getEnumReturnTypeFromField;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 
+import ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.EnumReturnType;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 
 /**
@@ -33,9 +35,21 @@ import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
-    public boolean canHandle(Class<?> clazz)
+    public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
-        return (clazz == HDF5EnumerationValueArray.class);
+        if (memberInfoOrNull != null)
+        {
+            return ((clazz == HDF5EnumerationValueArray.class)
+                    || (clazz.isArray() && clazz.getComponentType().isEnum())
+                    || clazz == String[].class
+                    || (clazz.isArray() && Number.class.isAssignableFrom(clazz.getComponentType())) || (clazz
+                    .getComponentType().isPrimitive() && clazz.getComponentType() != boolean.class))
+                    && memberInfoOrNull.getType().getDataClass() == HDF5DataClass.ENUM;
+        } else
+        {
+            return (clazz == HDF5EnumerationValueArray.class)
+                    || (clazz.isArray() && clazz.getComponentType().isEnum());
+        }
     }
 
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
@@ -46,46 +60,67 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
 
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
             final HDF5CompoundMemberMapping member,
-            HDF5CompoundMemberInformation compoundMemberInfoOrNull, Class<?> memberClazz,
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull,
+            HDF5EnumerationType compoundMemberInfoEnumTypeOrNull, Class<?> memberClazz,
             final int index, final int offset, final FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
-        final HDF5EnumerationType enumType = member.tryGetEnumerationType();
-        if (enumType == null)
+        HDF5EnumerationType enumTypeOrNull =
+                member.tryGetEnumerationType() != null ? member.tryGetEnumerationType()
+                        : compoundMemberInfoEnumTypeOrNull;
+        if (enumTypeOrNull == null)
         {
-            throw new NullPointerException("Enumeration type not set for member byteifyer.");
+            if (fieldOrNull.getType().isArray()
+                    && fieldOrNull.getType().getComponentType().isEnum())
+            {
+                @SuppressWarnings("unchecked")
+                Class<? extends Enum<?>> enumClass =
+                        (Class<? extends Enum<?>>) fieldOrNull.getType().getComponentType();
+                enumTypeOrNull =
+                        fileInfoProvider.getEnumType(ReflectionUtils.getEnumOptions(enumClass));
+            } else
+            {
+                throw new NullPointerException("Enumeration type not known for member byteifyer.");
+            }
         }
         final int memberTypeLength =
                 (compoundMemberInfoOrNull != null) ? compoundMemberInfoOrNull.getType()
                         .getNumberOfElements() : member.getMemberTypeLength();
         final int storageTypeId = member.getStorageDataTypeId();
         final int memberStorageTypeId =
-                (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(enumType.getStorageTypeId(),
-                        memberTypeLength) : storageTypeId;
+                (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                        enumTypeOrNull.getStorageTypeId(), memberTypeLength) : storageTypeId;
         switch (accessType)
         {
             case FIELD:
-                return createByteifyerForField(fieldOrNull, memberName, offset, enumType,
-                        memberTypeLength, memberStorageTypeId, member.tryGetTypeVariant());
+            {
+                if (fieldOrNull == null)
+                {
+                    throw new NullPointerException("No field for member " + memberName + ".");
+                }
+                return createByteifyerForField(fieldOrNull, memberName, offset, enumTypeOrNull,
+                        memberTypeLength, memberStorageTypeId, member.tryGetTypeVariant(),
+                        getEnumReturnTypeFromField(fieldOrNull.getType()));
+            }
             case MAP:
-                return createByteifyerForMap(memberName, offset, enumType, memberTypeLength,
+                return createByteifyerForMap(memberName, offset, enumTypeOrNull, memberTypeLength,
                         memberStorageTypeId, member.tryGetTypeVariant(), getEnumReturnType(member));
             case LIST:
-                return createByteifyerForList(memberName, index, offset, enumType,
+                return createByteifyerForList(memberName, index, offset, enumTypeOrNull,
                         memberTypeLength, memberStorageTypeId, member.tryGetTypeVariant(),
                         getEnumReturnType(member));
             case ARRAY:
-                return createByteifyerForArray(memberName, index, offset, enumType,
+                return createByteifyerForArray(memberName, index, offset, enumTypeOrNull,
                         memberTypeLength, memberStorageTypeId, member.tryGetTypeVariant(),
                         getEnumReturnType(member));
-            default:
-                throw new Error("Unknown access type");
         }
+        throw new Error("Unknown access type");
     }
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
             final int offset, final HDF5EnumerationType enumType, final int memberTypeLength,
-            final int memberStorageTypeId, final HDF5DataTypeVariant typeVariant)
+            final int memberStorageTypeId, final HDF5DataTypeVariant typeVariant,
+            final EnumReturnType enumReturnType)
     {
         ReflectionUtils.ensureAccessible(field);
         return new HDF5MemberByteifyer(field, memberName, enumType.getStorageForm()
@@ -114,9 +149,9 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                 public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
-                    final HDF5EnumerationValueArray enumValueArray =
-                            HDF5EnumerationValueArray.fromStorageForm(enumType, byteArr,
-                                    arrayOffset + offset, memberTypeLength);
+                    final Object enumValueArray =
+                            getEnumValue(enumType, byteArr, arrayOffset + offset, memberTypeLength,
+                                    enumReturnType, field);
                     field.set(obj, enumValueArray);
                 }
 
@@ -124,7 +159,8 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                         throws IllegalAccessException, IllegalArgumentException
                 {
                     assert obj != null;
-                    return (HDF5EnumerationValueArray) field.get(obj);
+                    final Object enumArrayObj = field.get(obj);
+                    return getEnumArrayFromField(enumArrayObj, enumType, enumReturnType);
                 }
             };
     }
@@ -162,7 +198,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                 {
                     final Object enumValueArray =
                             getEnumValue(enumType, byteArr, arrayOffset + offset, memberTypeLength,
-                                    enumReturnType);
+                                    enumReturnType, null);
                     putMap(obj, memberName, enumValueArray);
                 }
 
@@ -209,7 +245,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                 {
                     final Object enumValueArray =
                             getEnumValue(enumType, byteArr, arrayOffset + offset, memberTypeLength,
-                                    enumReturnType);
+                                    enumReturnType, null);
                     setList(obj, index, enumValueArray);
                 }
 
@@ -256,7 +292,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                 {
                     final Object enumValueArray =
                             getEnumValue(enumType, byteArr, arrayOffset + offset, memberTypeLength,
-                                    enumReturnType);
+                                    enumReturnType, null);
                     setArray(obj, index, enumValueArray);
                 }
 
@@ -270,7 +306,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
             };
     }
 
-    HDF5EnumerationValueArray guessEnumArray(final Object enumArrayObj,
+    static HDF5EnumerationValueArray guessEnumArray(final Object enumArrayObj,
             final HDF5EnumerationType enumType)
     {
         if (enumArrayObj instanceof HDF5EnumerationValueArray)
@@ -282,6 +318,10 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
         } else if (enumArrayObj instanceof String[])
         {
             return new HDF5EnumerationValueArray(enumType, (String[]) enumArrayObj);
+        } else if (enumArrayObj.getClass().isArray()
+                && enumArrayObj.getClass().getComponentType().isEnum())
+        {
+            return new HDF5EnumerationValueArray(enumType, (Enum<?>[]) enumArrayObj);
         } else
         {
             final String[] options = new String[Array.getLength(enumArrayObj)];
@@ -293,9 +333,29 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
         }
     }
 
-    private static Object getEnumValue(final HDF5EnumerationType enumType, byte[] byteArr,
-            int arrayOffset, final int length,
+    static HDF5EnumerationValueArray getEnumArrayFromField(final Object enumArrayObj,
+            final HDF5EnumerationType enumType,
             final HDF5CompoundMappingHints.EnumReturnType enumReturnType)
+    {
+        switch (enumReturnType)
+        {
+            case HDF5ENUMERATIONVALUE:
+                return (HDF5EnumerationValueArray) enumArrayObj;
+            case STRING:
+                return new HDF5EnumerationValueArray(enumType, (String[]) enumArrayObj);
+            case ORDINAL:
+                return new HDF5EnumerationValueArray(enumType, enumArrayObj);
+            case JAVAENUMERATION:
+            {
+                return new HDF5EnumerationValueArray(enumType, (Enum<?>[]) enumArrayObj);
+            }
+        }
+        throw new Error("Unknown EnumReturnType " + enumReturnType);
+    }
+
+    static Object getEnumValue(final HDF5EnumerationType enumType, byte[] byteArr, int arrayOffset,
+            final int length, final HDF5CompoundMappingHints.EnumReturnType enumReturnType,
+            Field fieldOrNull)
     {
         switch (enumReturnType)
         {
@@ -308,9 +368,40 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
             case ORDINAL:
                 return HDF5EnumerationValueArray.fromStorageFormToIntArray(enumType, byteArr,
                         arrayOffset, length);
-            default:
-                throw new Error("Unknown EnumReturnType " + enumReturnType);
+            case JAVAENUMERATION:
+            {
+                if (fieldOrNull == null)
+                {
+                    throw new NullPointerException(
+                            "JAVAENUMERATIONTYPE only available with access type FIELD");
+                }
+                final String[] values =
+                        HDF5EnumerationValueArray.fromStorageFormToStringArray(enumType, byteArr,
+                                arrayOffset, length);
+                @SuppressWarnings("unchecked")
+                final Class<Enum<?>> enumClass =
+                        (Class<Enum<?>>) fieldOrNull.getType().getComponentType();
+                final Enum<?>[] result =
+                        (Enum<?>[]) Array.newInstance(fieldOrNull.getType().getComponentType(),
+                                values.length);
+                for (int i = 0; i < result.length; ++i)
+                {
+                    result[i] = getValue(enumClass, values[i]);
+                }
+                return result;
+            }
         }
+        throw new Error("Unknown EnumReturnType " + enumReturnType);
+    }
+
+    /**
+     * Returns the value as Enum of type <var>enumClass</var>.
+     */
+    @SuppressWarnings(
+        { "unchecked", "rawtypes" })
+    private static Enum<?> getValue(Class<? extends Enum<?>> enumClass, String value)
+    {
+        return Enum.valueOf((Class<Enum>) enumClass, value);
     }
 
 }

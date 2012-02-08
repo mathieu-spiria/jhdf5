@@ -1034,12 +1034,18 @@ public final class HDF5CompoundMemberMapping
         return enumTypeName;
     }
 
-    Field tryGetField(Class<?> clazz) throws HDF5JavaException
+    Field tryGetField(Class<?> clazz, boolean skipChecks) throws HDF5JavaException
     {
-        return tryGetField(clazz, clazz);
+        return tryGetField(clazz, clazz, skipChecks);
     }
 
-    private Field tryGetField(Class<?> clazz, Class<?> searchClass) throws HDF5JavaException
+    Field tryGetField(Class<?> clazz) throws HDF5JavaException
+    {
+        return tryGetField(clazz, clazz, false);
+    }
+
+    private Field tryGetField(Class<?> clazz, Class<?> searchClass, boolean skipChecks)
+            throws HDF5JavaException
     {
         try
         {
@@ -1047,24 +1053,27 @@ public final class HDF5CompoundMemberMapping
             final Class<?> fieldType = field.getType();
             final boolean isArray = fieldType.isArray();
             final boolean isMDArray = MDAbstractArray.class.isAssignableFrom(fieldType);
-            if (memberTypeLength > 1)
+            if (skipChecks == false)
             {
-
-                if (field.getType() != String.class && isArray == false
-                        && field.getType() != java.util.BitSet.class
-                        && field.getType() != HDF5EnumerationValueArray.class && isMDArray == false)
+                if (memberTypeLength > 1)
+                {
+    
+                    if (field.getType() != String.class && isArray == false
+                            && field.getType() != java.util.BitSet.class
+                            && field.getType() != HDF5EnumerationValueArray.class && isMDArray == false)
+                    {
+                        throw new HDF5JavaException("Field '" + fieldName + "' of class '"
+                                + clazz.getCanonicalName()
+                                + "' is no String or array, but a length > 1 is given.");
+                    }
+    
+                } else if (memberTypeLength == 0
+                        && (field.getType() == String.class || isArray || isMDArray || field.getType() == java.util.BitSet.class))
                 {
                     throw new HDF5JavaException("Field '" + fieldName + "' of class '"
                             + clazz.getCanonicalName()
-                            + "' is no String or array, but a length > 1 is given.");
+                            + "' is a String or array, but a length == 0 is given.");
                 }
-
-            } else if (memberTypeLength == 0
-                    && (field.getType() == String.class || isArray || isMDArray || field.getType() == java.util.BitSet.class))
-            {
-                throw new HDF5JavaException("Field '" + fieldName + "' of class '"
-                        + clazz.getCanonicalName()
-                        + "' is a String or array, but a length == 0 is given.");
             }
             return field;
         } catch (NoSuchFieldException ex)
@@ -1075,7 +1084,7 @@ public final class HDF5CompoundMemberMapping
                 return null;
             } else
             {
-                return tryGetField(superClassOrNull, searchClass);
+                return tryGetField(superClassOrNull, searchClass, skipChecks);
             }
         }
     }

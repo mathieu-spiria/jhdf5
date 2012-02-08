@@ -232,6 +232,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             {
                 enumTypeOrNull = null;
             }
+            compoundInfo.enumTypes[i] = enumTypeOrNull;
             if (enumTypeOrNull != null)
             {
                 compoundInfo.members[i] =
@@ -421,6 +422,19 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     }
 
     public <T> HDF5CompoundType<T> getDataSetType(String objectPath, Class<T> pojoClass,
+            HDF5CompoundMemberMapping... members)
+    {
+        baseReader.checkOpen();
+        final CompoundTypeInformation cpdTypeInfo =
+                getFullCompoundDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL,
+                        baseReader.fileRegistry);
+        final HDF5CompoundType<T> typeForClass =
+                getCompoundType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                        createByteifyers(pojoClass, cpdTypeInfo, members));
+        return typeForClass;
+    }
+
+    public <T> HDF5CompoundType<T> getDataSetType(String objectPath, Class<T> pojoClass,
             HDF5CompoundMappingHints hints)
     {
         baseReader.checkOpen();
@@ -437,7 +451,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
 
     public <T> HDF5CompoundType<T> getDataSetType(String objectPath, Class<T> pojoClass)
     {
-        return getDataSetType(objectPath, pojoClass, null);
+        return getDataSetType(objectPath, pojoClass, (HDF5CompoundMappingHints) null);
     }
 
     public <T> HDF5CompoundType<T> getAttributeType(String objectPath, String attributeName,
@@ -504,6 +518,13 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
 
     private <T> HDF5ValueObjectByteifyer<T> createByteifyers(final Class<T> compoundClazz,
             final CompoundTypeInformation compoundTypeInfo,
+            final HDF5CompoundMemberMapping[] mapping)
+    {
+        return baseReader.createCompoundByteifyers(compoundClazz, mapping, compoundTypeInfo);
+    }
+
+    private <T> HDF5ValueObjectByteifyer<T> createByteifyers(final Class<T> compoundClazz,
+            final CompoundTypeInformation compoundTypeInfo,
             final HDF5CompoundMappingHints hintsOrNull)
     {
         return baseReader.createCompoundByteifyers(compoundClazz,
@@ -530,36 +551,11 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             {
                 if (dimensions.length == 0 || (dimensions.length == 1 && dimensions[0] == 1))
                 {
-                    if (fieldOrNull != null
-                            && (fieldOrNull.getType() != HDF5EnumerationValue.class)
-                            && fieldOrNull.getType().isEnum() == false)
-                    {
-                        throw new HDF5JavaException("Field of enum type '" + fieldOrNull.getName()
-                                + "' does not correspond to enumeration value.");
-
-                    }
-                    mapping.add(HDF5CompoundMemberMapping
-                            .mapping(memberName)
-                            .fieldName(fieldName)
-                            .enumType(
-                                    new HDF5EnumerationType(baseReader.fileId,
-                                            compoundMemberTypeId, baseReader.h5
-                                                    .getNativeDataTypeCheckForBitField(
-                                                            compoundMemberTypeId,
-                                                            baseReader.fileRegistry), baseReader
-                                                    .getEnumDataTypeName(compoundMember.getType()
-                                                            .tryGetName(), compoundMemberTypeId),
-                                            compoundMember.tryGetEnumValues()))
+                    mapping.add(HDF5CompoundMemberMapping.mapping(memberName).fieldName(fieldName)
+                            .enumType(compoundTypeInfo.enumTypes[i])
                             .typeVariant(typeInfo.tryGetTypeVariant()));
                 } else if (dimensions.length == 1)
                 {
-                    if (fieldOrNull != null
-                            && (fieldOrNull.getType() != HDF5EnumerationValueArray.class))
-                    {
-                        throw new HDF5JavaException("Field of enum type '" + fieldOrNull.getName()
-                                + "' does not correspond to enumeration value.");
-
-                    }
                     mapping.add(HDF5CompoundMemberMapping.mappingWithStorageTypeId(
                             fieldName,
                             memberName,

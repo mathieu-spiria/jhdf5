@@ -32,6 +32,8 @@ final class CompoundTypeInformation
     final HDF5CompoundMemberInformation[] members;
 
     final int[] dataTypeIds;
+    
+    final HDF5EnumerationType[] enumTypes;
 
     final int recordSize;
 
@@ -43,6 +45,7 @@ final class CompoundTypeInformation
         this.nativeCompoundDataTypeId = nativeCompoundDataTypeId;
         this.members = new HDF5CompoundMemberInformation[numberOfElements];
         this.dataTypeIds = new int[numberOfElements];
+        this.enumTypes = new HDF5EnumerationType[numberOfElements];
         this.recordSize = recordSize;
     }
 }
