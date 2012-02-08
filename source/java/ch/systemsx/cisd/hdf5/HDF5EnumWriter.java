@@ -245,7 +245,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     public HDF5EnumerationType getAnonType(final Class<? extends Enum<?>> enumClass)
             throws HDF5JavaException
     {
-        return getType(null, HDF5EnumReader.getEnumOptions(enumClass));
+        return getType(null, ReflectionUtils.getEnumOptions(enumClass));
     }
 
     @Override
@@ -272,21 +272,21 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     public HDF5EnumerationType getType(final String name,
             final Class<? extends Enum<?>> enumClass) throws HDF5JavaException
     {
-        return getType(name, HDF5EnumReader.getEnumOptions(enumClass), true);
+        return getType(name, ReflectionUtils.getEnumOptions(enumClass), true);
     }
 
     @Override
     public <T extends Enum<?>> HDF5EnumerationType getType(final String name,
             final Class<T> enumClass, final boolean check) throws HDF5JavaException
     {
-        return getType(name, HDF5EnumReader.getEnumOptions(enumClass), check);
+        return getType(name, ReflectionUtils.getEnumOptions(enumClass), check);
     }
 
     @Override
     public <T extends Enum<?>> HDF5EnumerationType getType(final Class<T> enumClass)
             throws HDF5JavaException
     {
-        return getType(enumClass.getSimpleName(), HDF5EnumReader.getEnumOptions(enumClass),
+        return getType(enumClass.getSimpleName(), ReflectionUtils.getEnumOptions(enumClass),
                 true);
     }
 
@@ -294,7 +294,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     public HDF5EnumerationType getType(final Class<? extends Enum<?>> enumClass,
             final boolean check) throws HDF5JavaException
     {
-        return getType(enumClass.getSimpleName(), HDF5EnumReader.getEnumOptions(enumClass),
+        return getType(enumClass.getSimpleName(), ReflectionUtils.getEnumOptions(enumClass),
                 check);
     }
 
