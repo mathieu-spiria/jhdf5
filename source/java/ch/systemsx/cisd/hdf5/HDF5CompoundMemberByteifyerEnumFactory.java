@@ -26,6 +26,8 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.getEnumReturnType;
 
 import java.lang.reflect.Field;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.EnumReturnType;
@@ -72,7 +74,7 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                         : compoundMemberInfoEnumTypeOrNull;
         if (enumTypeOrNull == null)
         {
-            throw new NullPointerException("Enumeration type not known for member byteifyer.");
+            throw new HDF5JavaException("Enumeration type not known for member byteifyer.");
         }
         switch (accessType)
         {
@@ -355,7 +357,7 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
             {
                 if (fieldOrNull == null)
                 {
-                    throw new NullPointerException(
+                    throw new HDF5JavaException(
                             "JAVAENUMERATIONTYPE only available with access type FIELD");
                 }
                 final String value = enumType.createStringFromStorageForm(byteArr, arrayOffset);

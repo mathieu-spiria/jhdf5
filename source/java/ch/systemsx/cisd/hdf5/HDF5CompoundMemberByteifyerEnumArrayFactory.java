@@ -23,6 +23,8 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberByteifyerEnumFactory.getEn
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
 import ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.EnumReturnType;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 
@@ -80,7 +82,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                         fileInfoProvider.getEnumType(ReflectionUtils.getEnumOptions(enumClass));
             } else
             {
-                throw new NullPointerException("Enumeration type not known for member byteifyer.");
+                throw new HDF5JavaException("Enumeration type not known for member byteifyer.");
             }
         }
         final int memberTypeLength =
@@ -96,7 +98,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
             {
                 if (fieldOrNull == null)
                 {
-                    throw new NullPointerException("No field for member " + memberName + ".");
+                    throw new HDF5JavaException("No field for member " + memberName + ".");
                 }
                 return createByteifyerForField(fieldOrNull, memberName, offset, enumTypeOrNull,
                         memberTypeLength, memberStorageTypeId, member.tryGetTypeVariant(),
@@ -372,7 +374,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
             {
                 if (fieldOrNull == null)
                 {
-                    throw new NullPointerException(
+                    throw new HDF5JavaException(
                             "JAVAENUMERATIONTYPE only available with access type FIELD");
                 }
                 final String[] values =
