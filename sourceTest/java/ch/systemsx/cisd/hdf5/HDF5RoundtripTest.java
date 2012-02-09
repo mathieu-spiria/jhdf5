@@ -5545,6 +5545,20 @@ public class HDF5RoundtripTest
                         { 1, 2, 3 },
                         { 4, 5, 6 } });
         writer.compounds().write("cpd", recordWritten);
+        final SimpleInheretingRecord2 recordWritten2 =
+                new SimpleInheretingRecord2(3.14159f, 42, (short) 17, "xzy", new long[][]
+                    {
+                        { 1, 2, 3 },
+                        { 4, 5, 6 },
+                        { 7, 8, 9 } });
+        writer.compounds().write("cpd2", recordWritten2);
+        final SimpleInheretingRecord3 recordWritten3 =
+                new SimpleInheretingRecord3(3.14159f, 42, (short) 17, "xzy", new long[][]
+                    {
+                        { 1, 2, 3 },
+                        { 4, 5, 6 },
+                        { 7, 8, 11 } });
+        writer.compounds().write("cpd3", recordWritten3);
         writer.close();
 
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
@@ -5556,6 +5570,12 @@ public class HDF5RoundtripTest
         type.checkMappingComplete();
         final SimpleInheretingRecord recordRead = reader.compounds().read("cpd", type);
         assertEquals(recordWritten, recordRead);
+        final SimpleInheretingRecord2 recordRead2 =
+                reader.compounds().read("cpd2", SimpleInheretingRecord2.class);
+        assertEquals(recordWritten2, recordRead2);
+        final SimpleInheretingRecord3 recordRead3 =
+                reader.compounds().read("cpd3", SimpleInheretingRecord3.class);
+        assertEquals(recordWritten3, recordRead3);
         reader.close();
     }
 
@@ -5619,7 +5639,6 @@ public class HDF5RoundtripTest
 
     static class JavaEnumArrayCompoundType
     {
-        @CompoundElement(dimensions = 3)
         TestEnum[] fruits;
 
         JavaEnumArrayCompoundType()
@@ -7485,6 +7504,124 @@ public class HDF5RoundtripTest
         public String toString()
         {
             return "SimpleInheretingRecord [l=" + ArrayUtils.toString(l) + ", getF()=" + getF()
+                    + ", getI()=" + getI() + ", getD()=" + getD() + ", getS()=" + getS() + "]";
+        }
+    }
+
+    static class SimpleInheretingRecord2 extends SimpleRecord
+    {
+        SimpleInheretingRecord2()
+        {
+        }
+
+        private long[][] ll;
+
+        public SimpleInheretingRecord2(float f, int i, short d, String s, long[][] l)
+        {
+            super(f, i, d, s);
+            this.ll = l;
+        }
+
+        public long[][] getL()
+        {
+            return ll;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = super.hashCode();
+            result = prime * result + Arrays.hashCode(ll);
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            SimpleInheretingRecord2 other = (SimpleInheretingRecord2) obj;
+            if (ArrayUtils.isEquals(ll, other.ll) == false)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "SimpleInheretingRecord2 [l=" + ArrayUtils.toString(ll) + ", getF()=" + getF()
+                    + ", getI()=" + getI() + ", getD()=" + getD() + ", getS()=" + getS() + "]";
+        }
+    }
+
+    static class SimpleInheretingRecord3 extends SimpleRecord
+    {
+        SimpleInheretingRecord3()
+        {
+        }
+
+        private MDLongArray ll;
+
+        public SimpleInheretingRecord3(float f, int i, short d, String s, long[][] l)
+        {
+            super(f, i, d, s);
+            this.ll = new MDLongArray(l);
+        }
+
+        public MDLongArray getL()
+        {
+            return ll;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = super.hashCode();
+            result = prime * result + ll.hashCode();
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (!super.equals(obj))
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            SimpleInheretingRecord3 other = (SimpleInheretingRecord3) obj;
+            if (ll.equals(other.ll) == false)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "SimpleInheretingRecord3 [l=" + ll + ", getF()=" + getF()
                     + ", getI()=" + getI() + ", getD()=" + getD() + ", getS()=" + getS() + "]";
         }
     }

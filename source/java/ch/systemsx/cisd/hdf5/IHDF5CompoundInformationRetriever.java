@@ -194,6 +194,36 @@ public interface IHDF5CompoundInformationRetriever
     public <T> HDF5CompoundType<T> getInferredType(T template);
 
     /**
+     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
+     * Java compound type to the HDF5 type by reflection.
+     * 
+     * @param name The name of the compound type in the HDF5 file.
+     * @param template The compound array to infer the HDF5 compound type from.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public <T> HDF5CompoundType<T> getInferredType(final String name, final T[] template);
+
+    /**
+     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
+     * Java compound type to the HDF5 type by reflection.
+     * 
+     * @param template The compound array to infer the HDF5 compound type from.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public <T> HDF5CompoundType<T> getInferredType(final T[] template);
+
+    /**
+     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
+     * Java compound type to the HDF5 type by reflection.
+     * 
+     * @param name The name of the compound type in the HDF5 file.
+     * @param template The compound array to infer the HDF5 compound type from.
+     * @param hints The hints to provide to the mapping procedure.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public <T> HDF5CompoundType<T> getInferredType(String name, T[] template,
+            HDF5CompoundMappingHints hints);
+    /**
      * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
      * the members.
      * 

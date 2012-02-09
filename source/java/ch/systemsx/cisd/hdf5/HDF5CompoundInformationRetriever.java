@@ -346,8 +346,48 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         {
             final Class<T> pojoClass = (Class<T>) pojo.getClass();
             return getType(name, pojoClass, addEnumTypes(HDF5CompoundMemberMapping.addHints(
-                    HDF5CompoundMemberMapping.inferMapping(pojoClass, HDF5CompoundMemberMapping
+                    HDF5CompoundMemberMapping.inferMapping(pojo, HDF5CompoundMemberMapping
                             .inferEnumerationTypeMap(pojo, enumTypeRetriever)), hints)));
+        }
+    }
+
+    public <T> HDF5CompoundType<T> getInferredType(final String name, final T[] pojo)
+    {
+        return getInferredType(name, pojo, null);
+    }
+
+    public <T> HDF5CompoundType<T> getInferredType(final T[] pojo)
+    {
+        return getInferredType(null, pojo, null);
+    }
+
+    @SuppressWarnings(
+        { "unchecked", "rawtypes" })
+    public <T> HDF5CompoundType<T> getInferredType(String name, T[] pojo,
+            HDF5CompoundMappingHints hints)
+    {
+        final Class<?> componentType = pojo.getClass().getComponentType();
+        if (pojo.length == 0)
+        {
+            return (HDF5CompoundType<T>) getInferredType(name, componentType,
+                    hints);
+        }
+        if (Map.class.isAssignableFrom(componentType))
+        {
+            final String compoundTypeName =
+                    (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(
+                            ((Map) pojo[0]).keySet(), true) : name;
+            return (HDF5CompoundType<T>) getType(
+                    compoundTypeName,
+                    Map.class,
+                    addEnumTypes(HDF5CompoundMemberMapping.addHints(
+                            HDF5CompoundMemberMapping.inferMapping((Map) pojo[0]), hints)));
+        } else
+        {
+            return (HDF5CompoundType<T>) getType(name, componentType,
+                    addEnumTypes(HDF5CompoundMemberMapping.addHints(HDF5CompoundMemberMapping
+                            .inferMapping(pojo, HDF5CompoundMemberMapping.inferEnumerationTypeMap(
+                                    pojo, enumTypeRetriever)), hints)));
         }
     }
 

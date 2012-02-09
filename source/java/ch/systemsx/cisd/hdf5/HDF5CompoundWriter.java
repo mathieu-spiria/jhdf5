@@ -141,11 +141,12 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> HDF5CompoundType<T> getInferredType(final String name, final T pojo)
+    public <T> HDF5CompoundType<T> getInferredType(final String name, final T pojo,
+            HDF5CompoundMappingHints hints)
     {
         if (baseWriter.keepDataSetIfExists == false)
         {
-            return super.getInferredType(name, pojo);
+            return super.getInferredType(name, pojo, hints);
         } else
         {
             final String dataTypeName = (name != null) ? name : pojo.getClass().getSimpleName();
@@ -157,7 +158,33 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 return (HDF5CompoundType<T>) getNamedType(dataTypeName, pojo.getClass());
             } else
             {
-                return super.getInferredType(dataTypeName, pojo);
+                return super.getInferredType(dataTypeName, pojo, hints);
+            }
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> HDF5CompoundType<T> getInferredType(final String name, final T[] pojo,
+            HDF5CompoundMappingHints hints)
+    {
+        if (baseWriter.keepDataSetIfExists == false)
+        {
+            return super.getInferredType(name, pojo, hints);
+        } else
+        {
+            final String dataTypeName =
+                    (name != null) ? name : pojo.getClass().getComponentType().getSimpleName();
+            final boolean typeExists =
+                    baseReader.h5.exists(baseReader.fileId,
+                            HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName));
+            if (typeExists)
+            {
+                return (HDF5CompoundType<T>) getNamedType(dataTypeName, pojo.getClass()
+                        .getComponentType());
+            } else
+            {
+                return super.getInferredType(dataTypeName, pojo, hints);
             }
         }
     }
@@ -338,7 +365,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
     {
         assert data != null && data.length > 0;
 
-        final HDF5CompoundType<T> inferredCompoundType = getInferredType(data[0]);
+        final HDF5CompoundType<T> inferredCompoundType = getInferredType(data);
         inferredCompoundType.checkMappingComplete();
         primWriteCompoundArray(objectPath, inferredCompoundType, data, features, null);
     }
@@ -775,7 +802,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         assert data != null && data.size() > 0;
 
         baseWriter.checkOpen();
-        final HDF5CompoundType<T> inferredCompoundType = getInferredType(data.getAsFlatArray()[0]);
+        final HDF5CompoundType<T> inferredCompoundType = getInferredType(data.getAsFlatArray());
         inferredCompoundType.checkMappingComplete();
         primWriteCompoundMDArray(objectPath, inferredCompoundType, data, features, null);
     }
