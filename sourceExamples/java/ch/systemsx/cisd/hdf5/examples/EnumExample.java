@@ -28,6 +28,8 @@ import ch.systemsx.cisd.hdf5.IHDF5Writer;
  */
 public class EnumExample
 {
+    
+    enum Colors { RED, GREEN, BLUE, YELLOW, ORANGE, MAGENTA, BLACK }
 
     public static void main(String[] args)
     {
@@ -40,11 +42,15 @@ public class EnumExample
         writer.enums().write("some color", new HDF5EnumerationValue(enumType, "BLUE"));
         writer.enums().writeArray("colors", new HDF5EnumerationValueArray(enumType, new String[]
             { "YELLOW", "MAGENTA", "GREEN" }));
+        // .. or simpler, as the type is created automatically
+        writer.enums().write("some other color", Colors.YELLOW);
         writer.close();
 
         // Read an enum and an enum array
         IHDF5Reader reader = HDF5Factory.openForReading("enum.h5");
         System.out.println(reader.enums().readAsString("some color"));
+        // ... or use the Java enum Colors
+        System.out.println(reader.enums().read("some color", Colors.class));
         for (String color : reader.enums().readArray("colors"))
         {
             System.out.println(color);
