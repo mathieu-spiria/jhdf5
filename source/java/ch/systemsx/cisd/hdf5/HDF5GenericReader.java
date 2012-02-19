@@ -82,7 +82,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
                             } else
                             {
                                 return new HDF5OpaqueType(baseReader.fileId, dataTypeId,
-                                        opaqueTagOrNull, baseReader.fileRegistry);
+                                        opaqueTagOrNull, baseReader);
                             }
                         }
                     };

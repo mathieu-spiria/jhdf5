@@ -268,7 +268,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 baseWriter.h5.getNativeDataType(storageDataTypeId, baseWriter.fileRegistry);
         return new HDF5EnumerationType(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
                 (nameOrNull == null) ? "__anonymous__" : nameOrNull, values,
-                baseWriter.fileRegistry);
+                baseWriter);
     }
 
     @Override

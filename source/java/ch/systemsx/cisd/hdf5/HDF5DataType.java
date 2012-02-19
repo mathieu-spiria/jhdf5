@@ -16,9 +16,9 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 
 /**
  * The abstract base class of Java wrappers for HDF data types.
@@ -31,17 +31,20 @@ public abstract class HDF5DataType
     private int fileId;
 
     private int storageTypeId;
-    
+
     private int nativeTypeId;
 
-    HDF5DataType(int fileId, int storageTypeId, int nativeTypeId, CleanUpRegistry registry)
+    private final HDF5BaseReader baseReader;
+
+    HDF5DataType(int fileId, int storageTypeId, int nativeTypeId, HDF5BaseReader baseReader)
     {
         assert fileId >= 0;
 
         this.fileId = fileId;
         this.storageTypeId = storageTypeId;
         this.nativeTypeId = nativeTypeId;
-        registry.registerCleanUp(new Runnable()
+        this.baseReader = baseReader;
+        baseReader.fileRegistry.registerCleanUp(new Runnable()
             {
                 public void run()
                 {
@@ -59,7 +62,7 @@ public abstract class HDF5DataType
     {
         return storageTypeId;
     }
-    
+
     /**
      * Returns the native data type id of this type.
      */
@@ -112,11 +115,39 @@ public abstract class HDF5DataType
         return (nameOrNull == null) ? "UNKNOWN" : nameOrNull;
     }
 
+    /**
+     * Returns the data type path of this type, or <code>null</code>, if this type is not a comitted
+     * data type.
+     */
+    public String tryGetDataTypePath()
+    {
+        return getDataTypeInformation(DataTypeInfoOptions.PATH).tryGetDataTypePath();
+    }
+
+    /**
+     * Returns the data type information for this data type.
+     * 
+     * @param dataTypeInfoOptions The options that decide how much information to fetch.
+     */
+    public HDF5DataTypeInformation getDataTypeInformation(
+            final DataTypeInfoOptions dataTypeInfoOptions)
+    {
+        return baseReader.getDataTypeInformation(storageTypeId, dataTypeInfoOptions);
+    }
+
+    /**
+     * Returns the data type information (with {@link DataTypeInfoOptions#DEFAULT}) for this data
+     * type.
+     */
+    public HDF5DataTypeInformation getDataTypeInformation()
+    {
+        return baseReader.getDataTypeInformation(storageTypeId, DataTypeInfoOptions.DEFAULT);
+    }
 
     //
     // Object
     //
-    
+
     @Override
     public int hashCode()
     {

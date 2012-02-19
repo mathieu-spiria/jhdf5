@@ -39,6 +39,8 @@ public final class HDF5DataTypeInformation
         static final DataTypeInfoOptions ALL = new DataTypeInfoOptions(true, true);
 
         static final DataTypeInfoOptions DEFAULT = new DataTypeInfoOptions(false, true);
+        
+        static final DataTypeInfoOptions PATH = new DataTypeInfoOptions(true, false);
 
         private boolean knowsDataTypePath;
 

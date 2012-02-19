@@ -66,7 +66,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                             return HDF5CompoundWriter.this.getCompoundMemberInformation(
                                     storageDataTypeId, nameOrNull, dataTypeOptions);
                         }
-                    }, baseReader.fileRegistry);
+                    }, baseReader);
     }
 
     @Override

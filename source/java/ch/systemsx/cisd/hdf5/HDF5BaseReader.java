@@ -282,7 +282,7 @@ class HDF5BaseReader
         final int nativeDataTypeId = h5.getNativeDataType(dataTypeId, fileRegistry);
         final String[] typeVariantNames = h5.getNamesForEnumOrCompoundMembers(dataTypeId);
         return new HDF5EnumerationType(fileId, dataTypeId, nativeDataTypeId,
-                TYPE_VARIANT_DATA_TYPE, typeVariantNames, fileRegistry);
+                TYPE_VARIANT_DATA_TYPE, typeVariantNames, this);
     }
 
     HDF5EnumerationType createTypeVariantDataType()
@@ -296,7 +296,7 @@ class HDF5BaseReader
         final int dataTypeId = h5.createDataTypeEnum(typeVariantNames, fileRegistry);
         final int nativeDataTypeId = h5.getNativeDataType(dataTypeId, fileRegistry);
         return new HDF5EnumerationType(fileId, dataTypeId, nativeDataTypeId,
-                TYPE_VARIANT_DATA_TYPE, typeVariantNames, fileRegistry);
+                TYPE_VARIANT_DATA_TYPE, typeVariantNames, this);
     }
 
     void readNamedDataTypes()
@@ -908,6 +908,30 @@ class HDF5BaseReader
     }
 
     HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId,
+            final DataTypeInfoOptions options)
+    {
+        final ICallableWithCleanUp<HDF5DataTypeInformation> informationDeterminationRunnable =
+                new ICallableWithCleanUp<HDF5DataTypeInformation>()
+                    {
+                        public HDF5DataTypeInformation call(ICleanUpRegistry registry)
+                        {
+                            final HDF5DataTypeInformation dataTypeInfo =
+                                    getDataTypeInformation(dataTypeId, options, registry);
+                            // Is it a variable-length string?
+                            final boolean vlString =
+                                    (dataTypeInfo.getDataClass() == HDF5DataClass.STRING && h5
+                                            .isVariableLengthString(dataTypeId));
+                            if (vlString)
+                            {
+                                dataTypeInfo.setElementSize(-1);
+                            }
+                            return dataTypeInfo;
+                        }
+                    };
+        return runner.call(informationDeterminationRunnable);
+    }
+    
+    HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId,
             final DataTypeInfoOptions options, final ICleanUpRegistry registry)
     {
         final int classTypeId = h5.getClassType(dataTypeId);
@@ -1020,7 +1044,7 @@ class HDF5BaseReader
                                     final int nativeDataTypeId =
                                             h5.getNativeDataType(storageDataTypeId, fileRegistry);
                                     return new HDF5EnumerationType(fileId, storageDataTypeId,
-                                            nativeDataTypeId, null, options, fileRegistry);
+                                            nativeDataTypeId, null, options, HDF5BaseReader.this);
                                 }
                             }, compoundTypeInfoOrNull, compoundMembers);
         return objectByteifyer;
@@ -1088,7 +1112,7 @@ class HDF5BaseReader
         final String[] values = h5.getNamesForEnumOrCompoundMembers(enumStoreDataTypeId);
         return new HDF5EnumerationType(fileId, enumStoreDataTypeId, nativeDataTypeId,
                 resolveName ? getEnumDataTypeName(nameOrNull, enumStoreDataTypeId) : nameOrNull,
-                values, fileRegistry);
+                values, this);
     }
 
     void checkEnumValues(int dataTypeId, final String[] values, final String nameOrNull)

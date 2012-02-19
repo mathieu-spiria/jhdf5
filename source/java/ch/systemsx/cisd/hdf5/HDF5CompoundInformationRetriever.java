@@ -276,7 +276,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                                     .getCompoundMemberInformation(storageDataTypeId, name,
                                             dataTypeInfoOptions);
                         }
-                    }, baseReader.fileRegistry);
+                    }, baseReader);
     }
 
     HDF5CompoundMemberInformation[] getCompoundMemberInformation(final int storageDataTypeId,
@@ -603,7 +603,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                                             baseReader.fileRegistry), baseReader
                                     .getEnumDataTypeName(compoundMember.getType().tryGetName(),
                                             compoundMemberTypeId), compoundMember
-                                    .tryGetEnumValues(), baseReader.fileRegistry), dimensions,
+                                    .tryGetEnumValues(), baseReader), dimensions,
                             compoundMemberTypeId, typeInfo.tryGetTypeVariant()));
                 }
             } else if (typeInfo.getDataClass() == HDF5DataClass.STRING)

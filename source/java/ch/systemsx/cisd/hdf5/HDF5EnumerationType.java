@@ -38,7 +38,6 @@ import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
-import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
@@ -107,9 +106,9 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     }
 
     HDF5EnumerationType(int fileId, int storageTypeId, int nativeTypeId, String nameOrNull,
-            String[] values, CleanUpRegistry registry)
+            String[] values, HDF5BaseReader baseReader)
     {
-        super(fileId, storageTypeId, nativeTypeId, registry);
+        super(fileId, storageTypeId, nativeTypeId, baseReader);
 
         assert values != null;
 

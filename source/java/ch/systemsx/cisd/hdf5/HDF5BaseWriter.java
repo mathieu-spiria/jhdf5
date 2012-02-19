@@ -386,7 +386,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             final String[] typeVariantNames = h5.getNamesForEnumOrCompoundMembers(dataTypeId);
             dataType =
                     new HDF5EnumerationType(fileId, dataTypeId, nativeDataTypeId,
-                            TYPE_VARIANT_DATA_TYPE, typeVariantNames, fileRegistry);
+                            TYPE_VARIANT_DATA_TYPE, typeVariantNames, this);
 
         }
         return dataType;

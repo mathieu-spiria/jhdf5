@@ -7395,6 +7395,9 @@ public class HDF5RoundtripTest
         final String dsName = "ds";
         final HDF5CompoundType<MatrixElementRecord> typeW =
                 writer.compounds().getInferredType(MatrixElementRecord.class);
+        assertEquals("/__DATA_TYPES__/Compound_MatrixElementRecord", typeW.tryGetDataTypePath());
+        assertEquals("<MatrixElementRecord>COMPOUND(8)",
+                typeW.getDataTypeInformation(HDF5DataTypeInformation.options().all()).toString());
         writer.createCompoundMDArray(dsName, typeW, new long[]
             { 4, 4 }, new int[]
             { 2, 2 });
@@ -7996,7 +7999,7 @@ public class HDF5RoundtripTest
         final File file = new File(workingDirectory, "overwriteCompoundKeepType.h5");
         file.delete();
         assertFalse(file.exists());
-        // file.deleteOnExit();
+        file.deleteOnExit();
         IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         HDF5CompoundType<RecordC> compoundTypeFloat =
                 writer.compounds().getInferredType(RecordC.class);

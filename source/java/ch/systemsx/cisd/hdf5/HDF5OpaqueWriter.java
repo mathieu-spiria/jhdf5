@@ -110,7 +110,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
                 }
             };
         baseWriter.runner.call(createRunnable);
-        return new HDF5OpaqueType(baseWriter.fileId, dataTypeId, tag, baseWriter.fileRegistry);
+        return new HDF5OpaqueType(baseWriter.fileId, dataTypeId, tag, baseWriter);
     }
 
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
@@ -134,7 +134,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
                 }
             };
         baseWriter.runner.call(createRunnable);
-        return new HDF5OpaqueType(baseWriter.fileId, dataTypeId, tag, baseWriter.fileRegistry);
+        return new HDF5OpaqueType(baseWriter.fileId, dataTypeId, tag, baseWriter);
     }
 
     public void writeOpaqueByteArrayBlock(final String objectPath, final HDF5OpaqueType dataType,

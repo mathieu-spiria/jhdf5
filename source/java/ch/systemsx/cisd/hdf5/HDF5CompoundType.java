@@ -30,7 +30,6 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import org.apache.commons.lang.ArrayUtils;
 
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
-import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
 
 /**
  * The definition of a HDF5 compound type. For information on how to create and work with compound
@@ -72,14 +71,14 @@ public class HDF5CompoundType<T> extends HDF5DataType
      *            file.
      * @param informationRetriever A role that allows to retrieve compound member information for a
      *            given compound type id.
-     * @param registry The cleanup registry that invalidates this type.
+     * @param baseReader The base reader that this types was derived from.
      */
     HDF5CompoundType(int fileId, int storageTypeId, int nativeTypeId, String nameOrNull,
             Class<T> compoundType, HDF5ValueObjectByteifyer<T> objectByteifer,
             IHDF5InternalCompoundMemberInformationRetriever informationRetriever,
-            CleanUpRegistry registry)
+            HDF5BaseReader baseReader)
     {
-        super(fileId, storageTypeId, nativeTypeId, registry);
+        super(fileId, storageTypeId, nativeTypeId, baseReader);
         assert compoundType != null;
         assert objectByteifer != null;
         assert informationRetriever != null;
