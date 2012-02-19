@@ -282,7 +282,7 @@ class HDF5BaseReader
         final int nativeDataTypeId = h5.getNativeDataType(dataTypeId, fileRegistry);
         final String[] typeVariantNames = h5.getNamesForEnumOrCompoundMembers(dataTypeId);
         return new HDF5EnumerationType(fileId, dataTypeId, nativeDataTypeId,
-                TYPE_VARIANT_DATA_TYPE, typeVariantNames);
+                TYPE_VARIANT_DATA_TYPE, typeVariantNames, fileRegistry);
     }
 
     HDF5EnumerationType createTypeVariantDataType()
@@ -296,7 +296,7 @@ class HDF5BaseReader
         final int dataTypeId = h5.createDataTypeEnum(typeVariantNames, fileRegistry);
         final int nativeDataTypeId = h5.getNativeDataType(dataTypeId, fileRegistry);
         return new HDF5EnumerationType(fileId, dataTypeId, nativeDataTypeId,
-                TYPE_VARIANT_DATA_TYPE, typeVariantNames);
+                TYPE_VARIANT_DATA_TYPE, typeVariantNames, fileRegistry);
     }
 
     void readNamedDataTypes()
@@ -1020,7 +1020,7 @@ class HDF5BaseReader
                                     final int nativeDataTypeId =
                                             h5.getNativeDataType(storageDataTypeId, fileRegistry);
                                     return new HDF5EnumerationType(fileId, storageDataTypeId,
-                                            nativeDataTypeId, null, options);
+                                            nativeDataTypeId, null, options, fileRegistry);
                                 }
                             }, compoundTypeInfoOrNull, compoundMembers);
         return objectByteifyer;
@@ -1088,7 +1088,7 @@ class HDF5BaseReader
         final String[] values = h5.getNamesForEnumOrCompoundMembers(enumStoreDataTypeId);
         return new HDF5EnumerationType(fileId, enumStoreDataTypeId, nativeDataTypeId,
                 resolveName ? getEnumDataTypeName(nameOrNull, enumStoreDataTypeId) : nameOrNull,
-                values);
+                values, fileRegistry);
     }
 
     void checkEnumValues(int dataTypeId, final String[] values, final String nameOrNull)

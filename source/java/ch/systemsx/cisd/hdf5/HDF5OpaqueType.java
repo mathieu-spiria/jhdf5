@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
+
 /**
  * A class that represents an opaque data type for a given HDF5 file and tag.
  *
@@ -26,9 +28,9 @@ public final class HDF5OpaqueType extends HDF5DataType
 
     private final String tag;
     
-    HDF5OpaqueType(int fileId, int typeId, String tag)
+    HDF5OpaqueType(int fileId, int typeId, String tag, CleanUpRegistry registry)
     {
-        super(fileId, typeId, typeId);
+        super(fileId, typeId, typeId, registry);
 
         assert tag != null;
         

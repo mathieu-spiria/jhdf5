@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
@@ -26,19 +28,28 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 public abstract class HDF5DataType
 {
 
-    private final int fileId;
+    private int fileId;
 
-    private final int storageTypeId;
+    private int storageTypeId;
     
-    private final int nativeTypeId;
+    private int nativeTypeId;
 
-    HDF5DataType(int fileId, int storageTypeId, int nativeTypeId)
+    HDF5DataType(int fileId, int storageTypeId, int nativeTypeId, CleanUpRegistry registry)
     {
         assert fileId >= 0;
 
         this.fileId = fileId;
         this.storageTypeId = storageTypeId;
         this.nativeTypeId = nativeTypeId;
+        registry.registerCleanUp(new Runnable()
+            {
+                public void run()
+                {
+                    HDF5DataType.this.fileId = -1;
+                    HDF5DataType.this.storageTypeId = -1;
+                    HDF5DataType.this.nativeTypeId = -1;
+                }
+            });
     }
 
     /**
@@ -64,9 +75,26 @@ public abstract class HDF5DataType
      */
     void check(final int expectedFileId) throws HDF5JavaException
     {
+        if (fileId < 0)
+        {
+            throw new HDF5JavaException("Type " + getName() + " is closed.");
+        }
         if (fileId != expectedFileId)
         {
             throw new HDF5JavaException("Type " + getName() + " is not from this file.");
+        }
+    }
+
+    /**
+     * Checks whether this type is open.
+     * 
+     * @throws HDF5JavaException If this type is not open.
+     */
+    void checkOpen() throws HDF5JavaException
+    {
+        if (fileId < 0)
+        {
+            throw new HDF5JavaException("Type " + getName() + " is closed.");
         }
     }
 

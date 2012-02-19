@@ -304,6 +304,7 @@ public class HDF5RoundtripTest
         test.testEnumArrayScaleCompression();
         test.testOpaqueType();
         test.testCompound();
+        test.testClosedCompoundType();
         test.testAnonCompound();
         test.testOverwriteCompound();
         test.testOverwriteCompoundKeepType();
@@ -5606,6 +5607,48 @@ public class HDF5RoundtripTest
         final SimpleInheretingRecord recordReadFile2 = reader2.compounds().read("cpd", type2);
         assertEquals(recordWritten, recordReadFile2);
         reader2.close();
+    }
+
+    @Test
+    public void testClosedCompoundType()
+    {
+        final File file = new File(workingDirectory, "closedCompoundType.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        final SimpleInheretingRecord recordWritten =
+                new SimpleInheretingRecord(3.14159f, 42, (short) 17, "xzy", new long[][]
+                    {
+                        { 1, 2, 3 },
+                        { 4, 5, 6 } });
+        final HDF5CompoundType<SimpleInheretingRecord> type =
+                writer.compounds().getInferredType(SimpleInheretingRecord.class);
+        writer.compounds().write("cpd", recordWritten);
+        writer.close();
+
+        final File file2 = new File(workingDirectory, "closedCompoundType2.h5");
+        file2.delete();
+        assertFalse(file2.exists());
+        file2.deleteOnExit();
+        final IHDF5Writer writer2 = HDF5Factory.open(file2);
+        try
+        {
+            writer2.compounds().write("cpd", type, recordWritten);
+            fail("Failed to detect closed type.");
+        } catch (HDF5JavaException ex)
+        {
+            assertEquals("Type SimpleInheretingRecord is closed.", ex.getMessage());
+        }
+        try
+        {
+            writer2.compounds().getClonedType(type);
+            fail("Failed to detect closed type.");
+        } catch (HDF5JavaException ex)
+        {
+            assertEquals("Type SimpleInheretingRecord is closed.", ex.getMessage());
+        }
+        writer2.close();
     }
 
     @Test

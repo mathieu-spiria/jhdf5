@@ -276,7 +276,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                                     .getCompoundMemberInformation(storageDataTypeId, name,
                                             dataTypeInfoOptions);
                         }
-                    });
+                    }, baseReader.fileRegistry);
     }
 
     HDF5CompoundMemberInformation[] getCompoundMemberInformation(final int storageDataTypeId,
@@ -369,8 +369,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         final Class<?> componentType = pojo.getClass().getComponentType();
         if (pojo.length == 0)
         {
-            return (HDF5CompoundType<T>) getInferredType(name, componentType,
-                    hints);
+            return (HDF5CompoundType<T>) getInferredType(name, componentType, hints);
         }
         if (Map.class.isAssignableFrom(componentType))
         {
@@ -604,8 +603,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                                             baseReader.fileRegistry), baseReader
                                     .getEnumDataTypeName(compoundMember.getType().tryGetName(),
                                             compoundMemberTypeId), compoundMember
-                                    .tryGetEnumValues()), dimensions, compoundMemberTypeId,
-                            typeInfo.tryGetTypeVariant()));
+                                    .tryGetEnumValues(), baseReader.fileRegistry), dimensions,
+                            compoundMemberTypeId, typeInfo.tryGetTypeVariant()));
                 }
             } else if (typeInfo.getDataClass() == HDF5DataClass.STRING)
             {

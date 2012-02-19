@@ -37,7 +37,8 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * used to get a compound type from a different file.
      * 
      * @param templateType The compound type to clone. Will typically be a compound type from
-     *            another reader or writer.
+     *            another reader or writer. The type needs to be <i>open</i> (which means that the
+     *            reader / writer from which it has been obtained has to be still open).
      */
     public <T> HDF5CompoundType<T> getClonedType(final HDF5CompoundType<T> templateType);
 

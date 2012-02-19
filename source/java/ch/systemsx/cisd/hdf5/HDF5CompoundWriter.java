@@ -66,7 +66,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                             return HDF5CompoundWriter.this.getCompoundMemberInformation(
                                     storageDataTypeId, nameOrNull, dataTypeOptions);
                         }
-                    });
+                    }, baseReader.fileRegistry);
     }
 
     @Override
@@ -128,6 +128,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
             final HDF5CompoundType<T> templateType)
     {
         baseWriter.checkOpen();
+        templateType.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectByteifyer = templateType.getObjectByteifyer();
         final String dataTypeName =
                 anonymousType ? null : (name == null) ? templateType.getName() : name;

@@ -30,6 +30,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import org.apache.commons.lang.ArrayUtils;
 
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
+import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
 
 /**
  * The definition of a HDF5 compound type. For information on how to create and work with compound
@@ -39,8 +40,7 @@ import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
  * <p>
  * Once you have a compound type, you may use methods like
  * {@link IHDF5CompoundReader#read(String, HDF5CompoundType)} and
- * {@link IHDF5CompoundWriter#write(String, HDF5CompoundType, Object)} and to read and write
- * them.
+ * {@link IHDF5CompoundWriter#write(String, HDF5CompoundType, Object)} and to read and write them.
  * 
  * @author Bernd Rinn
  */
@@ -72,12 +72,14 @@ public class HDF5CompoundType<T> extends HDF5DataType
      *            file.
      * @param informationRetriever A role that allows to retrieve compound member information for a
      *            given compound type id.
+     * @param registry The cleanup registry that invalidates this type.
      */
     HDF5CompoundType(int fileId, int storageTypeId, int nativeTypeId, String nameOrNull,
             Class<T> compoundType, HDF5ValueObjectByteifyer<T> objectByteifer,
-            IHDF5InternalCompoundMemberInformationRetriever informationRetriever)
+            IHDF5InternalCompoundMemberInformationRetriever informationRetriever,
+            CleanUpRegistry registry)
     {
-        super(fileId, storageTypeId, nativeTypeId);
+        super(fileId, storageTypeId, nativeTypeId, registry);
         assert compoundType != null;
         assert objectByteifer != null;
         assert informationRetriever != null;

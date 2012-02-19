@@ -103,7 +103,8 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
 
-    public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options, MDIntArray values)
+    public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options,
+            MDIntArray values)
     {
         return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
@@ -114,7 +115,8 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
 
-    public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options, MDByteArray values)
+    public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options,
+            MDByteArray values)
     {
         return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
@@ -265,12 +267,13 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         final int nativeDataTypeId =
                 baseWriter.h5.getNativeDataType(storageDataTypeId, baseWriter.fileRegistry);
         return new HDF5EnumerationType(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
-                (nameOrNull == null) ? "__anonymous__" : nameOrNull, values);
+                (nameOrNull == null) ? "__anonymous__" : nameOrNull, values,
+                baseWriter.fileRegistry);
     }
 
     @Override
-    public HDF5EnumerationType getType(final String name,
-            final Class<? extends Enum<?>> enumClass) throws HDF5JavaException
+    public HDF5EnumerationType getType(final String name, final Class<? extends Enum<?>> enumClass)
+            throws HDF5JavaException
     {
         return getType(name, ReflectionUtils.getEnumOptions(enumClass), true);
     }
@@ -286,16 +289,14 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     public <T extends Enum<?>> HDF5EnumerationType getType(final Class<T> enumClass)
             throws HDF5JavaException
     {
-        return getType(enumClass.getSimpleName(), ReflectionUtils.getEnumOptions(enumClass),
-                true);
+        return getType(enumClass.getSimpleName(), ReflectionUtils.getEnumOptions(enumClass), true);
     }
 
     @Override
-    public HDF5EnumerationType getType(final Class<? extends Enum<?>> enumClass,
-            final boolean check) throws HDF5JavaException
+    public HDF5EnumerationType getType(final Class<? extends Enum<?>> enumClass, final boolean check)
+            throws HDF5JavaException
     {
-        return getType(enumClass.getSimpleName(), ReflectionUtils.getEnumOptions(enumClass),
-                check);
+        return getType(enumClass.getSimpleName(), ReflectionUtils.getEnumOptions(enumClass), check);
     }
 
     private int getOrCreateEnumDataType(final String dataTypeNameOrNull, final String[] values,
@@ -348,8 +349,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     // Attributes
     // /////////////////////
 
-    public void setAttr(final String objectPath, final String name,
-            final HDF5EnumerationValue value)
+    public void setAttr(final String objectPath, final String name, final HDF5EnumerationValue value)
     {
         assert objectPath != null;
         assert name != null;
@@ -363,11 +363,9 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 value.toStorageForm());
     }
 
-    public void setAttr(String objectPath, String name, Enum<?> value)
-            throws HDF5JavaException
+    public void setAttr(String objectPath, String name, Enum<?> value) throws HDF5JavaException
     {
-        setAttr(objectPath, name, new HDF5EnumerationValue(
-                getType(getEnumClass(value)), value));
+        setAttr(objectPath, name, new HDF5EnumerationValue(getType(getEnumClass(value)), value));
     }
 
     public void setArrayAttr(final String objectPath, final String name,
@@ -376,8 +374,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         baseWriter.setEnumArrayAttribute(objectPath, name, value);
     }
 
-    public void setMDArrayAttr(String objectPath, String name,
-            HDF5EnumerationValueMDArray value)
+    public void setMDArrayAttr(String objectPath, String name, HDF5EnumerationValueMDArray value)
     {
         baseWriter.setEnumMDArrayAttribute(objectPath, name, value);
     }
@@ -460,8 +457,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     public HDF5EnumerationType createArray(final String objectPath,
             final HDF5EnumerationType enumType, final int size)
     {
-        return createArray(objectPath, enumType, size,
-                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+        return createArray(objectPath, enumType, size, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
     public HDF5EnumerationType createArray(final String objectPath,
