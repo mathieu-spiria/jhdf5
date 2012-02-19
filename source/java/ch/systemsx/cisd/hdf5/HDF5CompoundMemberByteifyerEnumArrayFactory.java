@@ -43,9 +43,9 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
         {
             return ((clazz == HDF5EnumerationValueArray.class)
                     || (clazz.isArray() && clazz.getComponentType().isEnum())
-                    || clazz == String[].class
-                    || (clazz.isArray() && Number.class.isAssignableFrom(clazz.getComponentType())) || (clazz
-                    .getComponentType().isPrimitive() && clazz.getComponentType() != boolean.class))
+                    || clazz == String[].class || (clazz.isArray() && (Number.class
+                    .isAssignableFrom(clazz.getComponentType()) || (clazz.getComponentType()
+                    .isPrimitive() && clazz.getComponentType() != boolean.class))))
                     && memberInfoOrNull.getType().getDataClass() == HDF5DataClass.ENUM;
         } else
         {

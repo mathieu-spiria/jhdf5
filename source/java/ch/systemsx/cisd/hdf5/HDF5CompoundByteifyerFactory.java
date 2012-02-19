@@ -276,9 +276,18 @@ class HDF5CompoundByteifyerFactory
                 return factory;
             }
         }
-        throw new IllegalArgumentException("The member '" + memberName + "' is of type '"
-                + memberClazz.getCanonicalName()
-                + "' which cannot be handled by an HDFMemberByteifyer.");
+        if (memberInfoOrNull == null)
+        {
+            throw new IllegalArgumentException("The member '" + memberName + "' is of type '"
+                    + memberClazz.getCanonicalName()
+                    + "' which cannot be handled by any HDFMemberByteifyer.");
+        } else
+        {
+            throw new IllegalArgumentException("The member '" + memberName + "' is of type '"
+                    + memberClazz.getCanonicalName() + "' [memory] and '"
+                    + memberInfoOrNull.getType()
+                    + "' [disk] which cannot be handled by any HDFMemberByteifyer.");
+        }
     }
 
     private static AccessType getAccessType(Class<?> clazz)

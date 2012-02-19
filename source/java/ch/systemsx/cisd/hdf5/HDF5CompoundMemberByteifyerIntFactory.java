@@ -96,8 +96,8 @@ class HDF5CompoundMemberByteifyerIntFactory implements IHDF5CompoundMemberBytify
         if (memberInfoOrNull != null)
         {
             final HDF5DataTypeInformation typeInfo = memberInfoOrNull.getType();
-            if (rankOrNull == null || typeInfo.getDataClass() != HDF5DataClass.INTEGER
-                    || typeInfo.getElementSize() != INT_SIZE)
+            if (rankOrNull == null
+                    || (typeInfo.getDataClass() != HDF5DataClass.INTEGER && typeInfo.getDataClass() != HDF5DataClass.FLOAT))
             {
                 return false;
             }

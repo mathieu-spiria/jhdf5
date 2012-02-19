@@ -36,8 +36,9 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
     {
         if (memberInfoOrNull != null)
         {
+            final HDF5DataClass dataClass = memberInfoOrNull.getType().getDataClass();
             return (clazz == boolean.class)
-                    && memberInfoOrNull.getType().getDataClass() == HDF5DataClass.BOOLEAN;
+                    && (dataClass == HDF5DataClass.BOOLEAN || dataClass == HDF5DataClass.INTEGER);
         } else
         {
             return (clazz == boolean.class);

@@ -96,8 +96,8 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
         if (memberInfoOrNull != null)
         {
             final HDF5DataTypeInformation typeInfo = memberInfoOrNull.getType();
-            if (rankOrNull == null || typeInfo.getDataClass() != HDF5DataClass.FLOAT
-                    || typeInfo.getElementSize() != FLOAT_SIZE)
+            if (rankOrNull == null
+                    || (typeInfo.getDataClass() != HDF5DataClass.FLOAT && typeInfo.getDataClass() != HDF5DataClass.INTEGER))
             {
                 return false;
             }
