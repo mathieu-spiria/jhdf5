@@ -41,7 +41,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
 
     protected final HDF5BaseReader baseReader;
 
-    private final IHDF5EnumTypeRetriever enumTypeRetriever;
+    protected final IHDF5EnumTypeRetriever enumTypeRetriever;
 
     HDF5CompoundInformationRetriever(HDF5BaseReader baseReader,
             IHDF5EnumTypeRetriever enumTypeRetriever)
@@ -255,10 +255,10 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         baseReader.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectArrayifyer =
                 baseReader.createCompoundByteifyers(pojoClass, members, null);
-        return getCompoundType(name, -1, pojoClass, objectArrayifyer);
+        return getType(name, -1, pojoClass, objectArrayifyer);
     }
 
-    private <T> HDF5CompoundType<T> getCompoundType(final String name, int committedDataTypeId,
+    <T> HDF5CompoundType<T> getType(final String name, int committedDataTypeId,
             final Class<T> compoundType, final HDF5ValueObjectByteifyer<T> objectArrayifyer)
     {
         final int storageDataTypeId =
@@ -391,7 +391,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         }
     }
 
-    private HDF5CompoundMemberMapping[] addEnumTypes(HDF5CompoundMemberMapping[] mapping)
+    HDF5CompoundMemberMapping[] addEnumTypes(HDF5CompoundMemberMapping[] mapping)
     {
         for (HDF5CompoundMemberMapping m : mapping)
         {
@@ -469,7 +469,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 getFullCompoundDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getCompoundType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
                         createByteifyers(pojoClass, cpdTypeInfo, members));
         return typeForClass;
     }
@@ -484,7 +484,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 getFullCompoundDataSetInformation(objectPath, DataTypeInfoOptions.ALL,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getCompoundType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
                         createByteifyers(pojoClass, cpdTypeInfo, hints));
         return typeForClass;
     }
@@ -515,7 +515,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 getFullCompoundAttributeInformation(objectPath, attributeName, dataTypeInfoOptions,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getCompoundType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
                         createByteifyers(pojoClass, cpdTypeInfo, hints));
         return typeForClass;
     }
@@ -551,7 +551,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 getFullCompoundDataTypeInformation(dataTypePath, dataTypeInfoOptions,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getCompoundType(dataTypeName, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                getType(dataTypeName, cpdTypeInfo.compoundDataTypeId, pojoClass,
                         createByteifyers(pojoClass, cpdTypeInfo, hints));
         return typeForClass;
     }

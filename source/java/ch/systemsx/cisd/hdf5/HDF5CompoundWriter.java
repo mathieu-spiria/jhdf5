@@ -20,6 +20,9 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 
+import java.util.List;
+import java.util.Map;
+
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -40,14 +43,15 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         this.baseWriter = baseWriter;
     }
 
-    @Override
-    public <T> HDF5CompoundType<T> getType(final String name, Class<T> pojoClass,
-            HDF5CompoundMemberMapping... members)
+    private <T> HDF5CompoundType<T> getType(final String nameOrNull, final boolean anonymousType,
+            Class<T> pojoClass, HDF5CompoundMemberMapping... members)
     {
         baseWriter.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectByteifyer =
                 baseWriter.createCompoundByteifyers(pojoClass, members, null);
-        final String dataTypeName = (name != null) ? name : deriveCompoundNameFromClass(pojoClass);
+        final String dataTypeName =
+                anonymousType ? null : (nameOrNull != null) ? nameOrNull
+                        : deriveCompoundNameFromClass(pojoClass);
         final int storageDataTypeId =
                 getOrCreateCompoundDataType(dataTypeName, objectByteifyer,
                         baseWriter.keepDataSetIfExists);
@@ -60,9 +64,144 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                                 final DataTypeInfoOptions dataTypeOptions)
                         {
                             return HDF5CompoundWriter.this.getCompoundMemberInformation(
-                                    storageDataTypeId, name, dataTypeOptions);
+                                    storageDataTypeId, nameOrNull, dataTypeOptions);
                         }
                     });
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getType(final String name, Class<T> pojoClass,
+            HDF5CompoundMemberMapping... members)
+    {
+        return getType(name, false, pojoClass, members);
+    }
+
+    public <T> HDF5CompoundType<T> getAnonType(Class<T> pojoClass,
+            HDF5CompoundMemberMapping... members)
+    {
+        return getType(null, true, pojoClass, members);
+    }
+
+    public <T> HDF5CompoundType<T> getInferredAnonType(Class<T> pojoClass,
+            HDF5CompoundMappingHints hints)
+    {
+        return getType(
+                null,
+                true,
+                pojoClass,
+                addEnumTypes(HDF5CompoundMemberMapping.addHints(
+                        HDF5CompoundMemberMapping.inferMapping(pojoClass), hints)));
+    }
+
+    public <T> HDF5CompoundType<T> getInferredAnonType(Class<T> pojoClass)
+    {
+        return getInferredAnonType(pojoClass, null);
+    }
+
+    public <T> HDF5CompoundType<T> getInferredAnonType(T template)
+    {
+        return getInferredAnonType(template, null);
+    }
+
+    @SuppressWarnings(
+        { "unchecked", "rawtypes" })
+    public <T> HDF5CompoundType<T> getInferredAnonType(T pojo, HDF5CompoundMappingHints hints)
+    {
+        if (Map.class.isInstance(pojo))
+        {
+            return (HDF5CompoundType<T>) getType(
+                    null,
+                    true,
+                    Map.class,
+                    addEnumTypes(HDF5CompoundMemberMapping.addHints(
+                            HDF5CompoundMemberMapping.inferMapping((Map) pojo), hints)));
+        } else
+        {
+            final Class<T> pojoClass = (Class<T>) pojo.getClass();
+            return getType(null, true, pojoClass, addEnumTypes(HDF5CompoundMemberMapping.addHints(
+                    HDF5CompoundMemberMapping.inferMapping(pojo, HDF5CompoundMemberMapping
+                            .inferEnumerationTypeMap(pojo, enumTypeRetriever)), hints)));
+        }
+    }
+
+    private <T> HDF5CompoundType<T> getType(final String name, final boolean anonymousType,
+            final HDF5CompoundType<T> templateType)
+    {
+        baseWriter.checkOpen();
+        final HDF5ValueObjectByteifyer<T> objectByteifyer = templateType.getObjectByteifyer();
+        final String dataTypeName =
+                anonymousType ? null : (name == null) ? templateType.getName() : name;
+        final int storageDataTypeId =
+                getOrCreateCompoundDataType(dataTypeName, objectByteifyer,
+                        baseWriter.keepDataSetIfExists);
+        return getType(dataTypeName, storageDataTypeId, templateType.getCompoundType(),
+                objectByteifyer);
+    }
+
+    public <T> HDF5CompoundType<T> getInferredAnonType(T[] template)
+    {
+        return getInferredAnonType(template, null);
+    }
+
+    @SuppressWarnings(
+        { "unchecked", "rawtypes" })
+    public <T> HDF5CompoundType<T> getInferredAnonType(T[] template, HDF5CompoundMappingHints hints)
+    {
+        final Class<?> componentType = template.getClass().getComponentType();
+        if (template.length == 0)
+        {
+            return (HDF5CompoundType<T>) getInferredAnonType(componentType, hints);
+        }
+        if (Map.class.isAssignableFrom(componentType))
+        {
+            return (HDF5CompoundType<T>) getType(
+                    null,
+                    true,
+                    Map.class,
+                    addEnumTypes(HDF5CompoundMemberMapping.addHints(
+                            HDF5CompoundMemberMapping.inferMapping((Map) template[0]), hints)));
+        } else
+        {
+            return (HDF5CompoundType<T>) getType(null, true, componentType,
+                    addEnumTypes(HDF5CompoundMemberMapping.addHints(HDF5CompoundMemberMapping
+                            .inferMapping(template, HDF5CompoundMemberMapping
+                                    .inferEnumerationTypeMap(template, enumTypeRetriever)), hints)));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public HDF5CompoundType<List<?>> getInferredAnonType(List<String> memberNames,
+            List<?> template, HDF5CompoundMappingHints hints)
+    {
+        final HDF5CompoundType<?> type =
+                getType(null, true, List.class, HDF5CompoundMemberMapping.addHints(
+                        HDF5CompoundMemberMapping.inferMapping(memberNames, template), hints));
+        return (HDF5CompoundType<List<?>>) type;
+    }
+
+    public HDF5CompoundType<List<?>> getInferredAnonType(List<String> memberNames, List<?> template)
+    {
+        return getInferredAnonType(memberNames, template, null);
+    }
+
+    public HDF5CompoundType<Object[]> getInferredAnonType(String[] memberNames, Object[] template)
+    {
+        return getInferredAnonType(memberNames, template, null);
+    }
+
+    @SuppressWarnings("unchecked")
+    public HDF5CompoundType<Object[]> getInferredAnonType(String[] memberNames, Object[] template,
+            HDF5CompoundMappingHints hints)
+    {
+        final HDF5CompoundType<?> type =
+                getType(null, true, List.class, HDF5CompoundMemberMapping.addHints(
+                        HDF5CompoundMemberMapping.inferMapping(memberNames, template), hints));
+        return (HDF5CompoundType<Object[]>) type;
+    }
+
+    public <T> HDF5CompoundType<T> getClonedType(final HDF5CompoundType<T> templateType)
+    {
+        return getType(null, false, templateType);
     }
 
     private <T> String deriveCompoundNameFromClass(Class<T> pojoClass)
@@ -76,20 +215,24 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
             final HDF5ValueObjectByteifyer<T> objectByteifyer,
             boolean committedDataTypeHasPreference)
     {
+        final boolean dataTypeNameGiven =
+                (dataTypeName != null && "UNKNOWN".equals(dataTypeName) == false);
         final String dataTypePath =
-                HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName);
-        final int committedStorageDataTypeId = baseWriter.getDataTypeId(dataTypePath);
+                dataTypeNameGiven ? HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX,
+                        dataTypeName) : null;
+        final int committedStorageDataTypeId =
+                dataTypeNameGiven ? baseWriter.getDataTypeId(dataTypePath) : -1;
         final boolean typeExists = (committedStorageDataTypeId >= 0);
         int storageDataTypeId = committedStorageDataTypeId;
         final boolean commitType;
-        if ((typeExists == false) || (committedDataTypeHasPreference == false))
+        if (((typeExists == false) || (committedDataTypeHasPreference == false)))
         {
             storageDataTypeId = baseWriter.createStorageCompoundDataType(objectByteifyer);
             final boolean typesAreEqual =
                     typeExists
                             && baseWriter.h5.dataTypesAreEqual(committedStorageDataTypeId,
                                     storageDataTypeId);
-            commitType = (typeExists == false) || (typesAreEqual == false);
+            commitType = dataTypeNameGiven && ((typeExists == false) || (typesAreEqual == false));
             if (typeExists && commitType)
             {
                 final String replacementDataTypePath = baseWriter.moveLinkOutOfTheWay(dataTypePath);
@@ -115,78 +258,6 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
             }
         }
         return storageDataTypeId;
-    }
-
-    @Override
-    public <T> HDF5CompoundType<T> getInferredType(String name, Class<T> pojoClass)
-    {
-        if (baseWriter.keepDataSetIfExists == false)
-        {
-            return super.getInferredType(name, pojoClass);
-        } else
-        {
-            final String dataTypeName = (name != null) ? name : pojoClass.getSimpleName();
-            final boolean typeExists =
-                    baseReader.h5.exists(baseReader.fileId,
-                            HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName));
-            if (typeExists)
-            {
-                return getNamedType(dataTypeName, pojoClass);
-            } else
-            {
-                return super.getInferredType(dataTypeName, pojoClass);
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> HDF5CompoundType<T> getInferredType(final String name, final T pojo,
-            HDF5CompoundMappingHints hints)
-    {
-        if (baseWriter.keepDataSetIfExists == false)
-        {
-            return super.getInferredType(name, pojo, hints);
-        } else
-        {
-            final String dataTypeName = (name != null) ? name : pojo.getClass().getSimpleName();
-            final boolean typeExists =
-                    baseReader.h5.exists(baseReader.fileId,
-                            HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName));
-            if (typeExists)
-            {
-                return (HDF5CompoundType<T>) getNamedType(dataTypeName, pojo.getClass());
-            } else
-            {
-                return super.getInferredType(dataTypeName, pojo, hints);
-            }
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public <T> HDF5CompoundType<T> getInferredType(final String name, final T[] pojo,
-            HDF5CompoundMappingHints hints)
-    {
-        if (baseWriter.keepDataSetIfExists == false)
-        {
-            return super.getInferredType(name, pojo, hints);
-        } else
-        {
-            final String dataTypeName =
-                    (name != null) ? name : pojo.getClass().getComponentType().getSimpleName();
-            final boolean typeExists =
-                    baseReader.h5.exists(baseReader.fileId,
-                            HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName));
-            if (typeExists)
-            {
-                return (HDF5CompoundType<T>) getNamedType(dataTypeName, pojo.getClass()
-                        .getComponentType());
-            } else
-            {
-                return super.getInferredType(dataTypeName, pojo, hints);
-            }
-        }
     }
 
     private <T> HDF5EnumerationValueArray tryCreateDataTypeVariantArray(

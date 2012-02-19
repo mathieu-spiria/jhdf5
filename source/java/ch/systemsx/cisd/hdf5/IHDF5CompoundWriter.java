@@ -16,6 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.util.List;
+
 import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
@@ -25,6 +27,136 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
  */
 public interface IHDF5CompoundWriter extends IHDF5CompoundReader
 {
+
+    // /////////////////////
+    // Types
+    // /////////////////////
+
+    /**
+     * Returns the compound type cloned from the given <var>templateType</var>. This method can be
+     * used to get a compound type from a different file.
+     * 
+     * @param templateType The compound type to clone. Will typically be a compound type from
+     *            another reader or writer.
+     */
+    public <T> HDF5CompoundType<T> getClonedType(final HDF5CompoundType<T> templateType);
+
+    /**
+     * Returns the anonymous compound type for this HDF5 file, using the default name chosen by
+     * JHDF5 which is based on the simple name of <var>pojoClass</var>.
+     * 
+     * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
+     * @param members The mapping from the Java compound type to the HDF5 type.
+     */
+    public <T> HDF5CompoundType<T> getAnonType(Class<T> pojoClass,
+            HDF5CompoundMemberMapping... members);
+
+    /**
+     * Returns the anonymous compound type <var>name></var> for this HDF5 file, inferring the
+     * mapping from the Java compound type to the HDF5 type by reflection.
+     * 
+     * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
+     * @param hints The hints to provide to the mapping procedure.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public <T> HDF5CompoundType<T> getInferredAnonType(Class<T> pojoClass,
+            HDF5CompoundMappingHints hints);
+
+    /**
+     * Returns the anonymous compound type <var>name></var> for this HDF5 file, inferring the
+     * mapping from the Java compound type to the HDF5 type by reflection.
+     * 
+     * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public <T> HDF5CompoundType<T> getInferredAnonType(Class<T> pojoClass);
+
+    /**
+     * Returns anonyous the compound type <var>name></var> for this HDF5 file, inferring the mapping
+     * from the Java compound type to the HDF5 type by reflection.
+     * 
+     * @param template The compound to infer the HDF5 compound type from.
+     * @param hints The hints to provide to the mapping procedure.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public <T> HDF5CompoundType<T> getInferredAnonType(T template, HDF5CompoundMappingHints hints);
+
+    /**
+     * Returns the anonymous compound type for this HDF5 file, inferring the mapping from the Java
+     * compound type to the HDF5 type by reflection and using the default name chosen by JHDF5 which
+     * is based on the simple name of <var>T</var>.
+     * 
+     * @param template The compound to infer the HDF5 compound type from.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public <T> HDF5CompoundType<T> getInferredAnonType(T template);
+
+    /**
+     * Returns the anonymous compound type <var>name></var> for this HDF5 file, inferring the
+     * mapping from the Java compound type to the HDF5 type by reflection.
+     * 
+     * @param template The compound array to infer the HDF5 compound type from.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public <T> HDF5CompoundType<T> getInferredAnonType(final T[] template);
+
+    /**
+     * Returns the anonymous compound type <var>name></var> for this HDF5 file, inferring the
+     * mapping from the Java compound type to the HDF5 type by reflection.
+     * 
+     * @param template The compound array to infer the HDF5 compound type from.
+     * @param hints The hints to provide to the mapping procedure.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public <T> HDF5CompoundType<T> getInferredAnonType(T[] template, HDF5CompoundMappingHints hints);
+
+    /**
+     * Returns the anonymous compound type for this HDF5 file, inferring the mapping from the Java
+     * types of the members.
+     * 
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length as <var>memberNames</var>.
+     * @param hints The hints to provide to the mapping procedure.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<List<?>> getInferredAnonType(List<String> memberNames,
+            List<?> template, HDF5CompoundMappingHints hints);
+
+    /**
+     * Returns the anonymous compound type for this HDF5 file, inferring the mapping from the Java
+     * types of the members.
+     * 
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length as <var>memberNames</var>.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<List<?>> getInferredAnonType(List<String> memberNames, List<?> template);
+
+    /**
+     * Returns the anonymous compound type for this HDF5 file, inferring the mapping from the Java
+     * types of the members.
+     * 
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length than <var>memberNames</var>.
+     * @param hints The hints to provide to the mapping procedure.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<Object[]> getInferredAnonType(String[] memberNames, Object[] template,
+            HDF5CompoundMappingHints hints);
+
+    /**
+     * Returns the anonymous compound type for this HDF5 file, inferring the mapping from the Java
+     * types of the members.
+     * 
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length than <var>memberNames</var>.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<Object[]> getInferredAnonType(String[] memberNames, Object[] template);
 
     // /////////////////////
     // Attributes
@@ -101,8 +233,8 @@ public interface IHDF5CompoundWriter extends IHDF5CompoundReader
      * @param value The value of the attribute. Data Transfer Object, a {@link HDF5CompoundDataMap},
      *            {@link HDF5CompoundDataList} or <code>Object[]</code> .
      */
-    public <T> void setMDArrayAttr(String objectPath, String attributeName, HDF5CompoundType<T> type,
-            MDArray<T> value);
+    public <T> void setMDArrayAttr(String objectPath, String attributeName,
+            HDF5CompoundType<T> type, MDArray<T> value);
 
     /**
      * Sets a compound attribute array (of rank N) to the referenced object.

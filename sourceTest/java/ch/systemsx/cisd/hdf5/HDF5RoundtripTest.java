@@ -304,6 +304,9 @@ public class HDF5RoundtripTest
         test.testEnumArrayScaleCompression();
         test.testOpaqueType();
         test.testCompound();
+        test.testAnonCompound();
+        test.testOverwriteCompound();
+        test.testOverwriteCompoundKeepType();
         test.testCompoundJavaEnum();
         test.testCompoundJavaEnumArray();
         test.testCompoundJavaEnumMap();
@@ -383,6 +386,7 @@ public class HDF5RoundtripTest
         test.testTimeDurationArray();
         test.testTimeDurationArrayChunked();
         test.testNumericConversion();
+        test.testNumericConversionWithNumericConversionsSwitchedOff();
         test.testSetDataSetSize();
         test.testObjectReference();
         test.testObjectReferenceArray();
@@ -5559,7 +5563,20 @@ public class HDF5RoundtripTest
                         { 4, 5, 6 },
                         { 7, 8, 11 } });
         writer.compounds().write("cpd3", recordWritten3);
+
+        final File file2 = new File(workingDirectory, "compound2.h5");
+        file2.delete();
+        assertFalse(file2.exists());
+        file2.deleteOnExit();
+        final IHDF5Writer writer2 = HDF5Factory.open(file2);
+        final HDF5CompoundType<HDF5CompoundDataMap> clonedType =
+                writer2.compounds().getClonedType(
+                        writer.compounds().getDataSetType("cpd", HDF5CompoundDataMap.class));
+        writer2.compounds().write("cpd", clonedType,
+                writer.compounds().read("cpd", HDF5CompoundDataMap.class));
+
         writer.close();
+        writer2.close();
 
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         final HDF5CompoundType<SimpleInheretingRecord> type =
@@ -5577,6 +5594,100 @@ public class HDF5RoundtripTest
                 reader.compounds().read("cpd3", SimpleInheretingRecord3.class);
         assertEquals(recordWritten3, recordRead3);
         reader.close();
+
+        final IHDF5Reader reader2 = HDF5Factory.openForReading(file2);
+        final HDF5CompoundType<SimpleInheretingRecord> type2 =
+                reader2.compounds().getDataSetType("cpd", SimpleInheretingRecord.class);
+        assertFalse(type2.isMappingIncomplete());
+        assertFalse(type2.isDiskRepresentationIncomplete());
+        assertFalse(type2.isMemoryRepresentationIncomplete());
+        assertEquals("SimpleInheretingRecord", type2.getName());
+        type2.checkMappingComplete();
+        final SimpleInheretingRecord recordReadFile2 = reader2.compounds().read("cpd", type2);
+        assertEquals(recordWritten, recordReadFile2);
+        reader2.close();
+    }
+
+    @Test
+    public void testAnonCompound()
+    {
+        final File file = new File(workingDirectory, "anonCompound.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        final HDF5CompoundType<SimpleInheretingRecord> anonType1 =
+                writer.compounds().getInferredAnonType(SimpleInheretingRecord.class);
+        assertEquals("UNKNOWN", anonType1.getName());
+        final SimpleInheretingRecord recordWritten =
+                new SimpleInheretingRecord(3.14159f, 42, (short) 17, "xzy", new long[][]
+                    {
+                        { 1, 2, 3 },
+                        { 4, 5, 6 } });
+        writer.compounds().write("cpd", anonType1, recordWritten);
+        final SimpleInheretingRecord2 recordWritten2 =
+                new SimpleInheretingRecord2(3.14159f, 42, (short) 17, "xzy", new long[][]
+                    {
+                        { 1, 2, 3 },
+                        { 4, 5, 6 },
+                        { 7, 8, 9 } });
+        final HDF5CompoundType<SimpleInheretingRecord2> anonType2 =
+                writer.compounds().getInferredAnonType(recordWritten2);
+        assertEquals("UNKNOWN", anonType2.getName());
+        writer.compounds().write("cpd2", anonType2, recordWritten2);
+        final SimpleInheretingRecord3 recordWritten3 =
+                new SimpleInheretingRecord3(3.14159f, 42, (short) 17, "xzy", new long[][]
+                    {
+                        { 1, 2, 3 },
+                        { 4, 5, 6 },
+                        { 7, 8, 11 } });
+        final HDF5CompoundType<SimpleInheretingRecord3> anonType3 =
+                writer.compounds().getInferredAnonType(recordWritten3);
+        assertEquals("UNKNOWN", anonType3.getName());
+        writer.compounds().write("cpd3", anonType3, recordWritten3);
+
+        final File file2 = new File(workingDirectory, "anonCompound2.h5");
+        file2.delete();
+        assertFalse(file2.exists());
+        file2.deleteOnExit();
+        final IHDF5Writer writer2 = HDF5Factory.open(file2);
+        final HDF5CompoundType<HDF5CompoundDataMap> clonedType =
+                writer2.compounds().getClonedType(
+                        writer.compounds().getDataSetType("cpd", HDF5CompoundDataMap.class));
+        writer2.compounds().write("cpd", clonedType,
+                writer.compounds().read("cpd", HDF5CompoundDataMap.class));
+
+        writer.close();
+        writer2.close();
+
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<SimpleInheretingRecord> type =
+                reader.compounds().getDataSetType("cpd", SimpleInheretingRecord.class);
+        assertFalse(type.isMappingIncomplete());
+        assertFalse(type.isDiskRepresentationIncomplete());
+        assertFalse(type.isMemoryRepresentationIncomplete());
+        type.checkMappingComplete();
+        final SimpleInheretingRecord recordRead = reader.compounds().read("cpd", type);
+        assertEquals(recordWritten, recordRead);
+        final SimpleInheretingRecord2 recordRead2 =
+                reader.compounds().read("cpd2", SimpleInheretingRecord2.class);
+        assertEquals(recordWritten2, recordRead2);
+        final SimpleInheretingRecord3 recordRead3 =
+                reader.compounds().read("cpd3", SimpleInheretingRecord3.class);
+        assertEquals(recordWritten3, recordRead3);
+        reader.close();
+
+        final IHDF5Reader reader2 = HDF5Factory.openForReading(file2);
+        final HDF5CompoundType<SimpleInheretingRecord> type2 =
+                reader2.compounds().getDataSetType("cpd", SimpleInheretingRecord.class);
+        assertFalse(type2.isMappingIncomplete());
+        assertFalse(type2.isDiskRepresentationIncomplete());
+        assertFalse(type2.isMemoryRepresentationIncomplete());
+        assertEquals("UNKNOWN", type2.getName());
+        type2.checkMappingComplete();
+        final SimpleInheretingRecord recordReadFile2 = reader2.compounds().read("cpd", type2);
+        assertEquals(recordWritten, recordReadFile2);
+        reader2.close();
     }
 
     static class StringEnumCompoundType
@@ -7173,6 +7284,21 @@ public class HDF5RoundtripTest
 
     }
 
+    static class RecordE
+    {
+        int a;
+
+        RecordE(int a)
+        {
+            this.a = a;
+        }
+
+        RecordE()
+        {
+        }
+
+    }
+
     static class MatrixElementRecord
     {
         int row;
@@ -7621,8 +7747,8 @@ public class HDF5RoundtripTest
         @Override
         public String toString()
         {
-            return "SimpleInheretingRecord3 [l=" + ll + ", getF()=" + getF()
-                    + ", getI()=" + getI() + ", getD()=" + getD() + ", getS()=" + getS() + "]";
+            return "SimpleInheretingRecord3 [l=" + ll + ", getF()=" + getF() + ", getI()=" + getI()
+                    + ", getD()=" + getD() + ", getS()=" + getS() + "]";
         }
     }
 
@@ -7787,6 +7913,72 @@ public class HDF5RoundtripTest
                 reader.compounds().getNamedType(typeName, RecordD.class);
         final RecordD recordRead = reader.compounds().read("/testCompound", compoundTypeFloat);
         assertEquals(recordWritten.a, recordRead.b);
+        reader.close();
+    }
+
+    @Test
+    public void testOverwriteCompound()
+    {
+        final File file = new File(workingDirectory, "overwriteCompound.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        HDF5CompoundType<RecordC> compoundTypeFloat =
+                writer.compounds().getInferredType(RecordC.class);
+        final RecordC recordWritten = new RecordC(33.33333f);
+        writer.compounds().write("/testCompound", compoundTypeFloat, recordWritten);
+        writer.close();
+        writer = HDF5FactoryProvider.get().open(file);
+        final RecordE recordWritten2 = new RecordE(-1);
+        HDF5CompoundType<RecordE> compoundTypeInt =
+                writer.compounds().getInferredType(RecordE.class);
+        writer.compounds().write("/testCompound", compoundTypeInt, recordWritten2);
+        writer.close();
+
+        final IHDF5Reader reader =
+                HDF5FactoryProvider.get().configureForReading(file).performNumericConversions()
+                        .reader();
+        HDF5CompoundType<RecordE> compoundTypeInt2 = reader.compounds().getNamedType(RecordE.class);
+        assertEquals(1, compoundTypeInt2.getCompoundMemberInformation().length);
+        assertEquals(HDF5DataClass.INTEGER, compoundTypeInt2.getCompoundMemberInformation()[0]
+                .getType().getDataClass());
+        assertEquals(-1, reader.compounds().read("/testCompound", compoundTypeInt2).a);
+        reader.close();
+    }
+
+    @Test
+    public void testOverwriteCompoundKeepType()
+    {
+        final File file = new File(workingDirectory, "overwriteCompoundKeepType.h5");
+        file.delete();
+        assertFalse(file.exists());
+        // file.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        HDF5CompoundType<RecordC> compoundTypeFloat =
+                writer.compounds().getInferredType(RecordC.class);
+        final RecordC recordWritten = new RecordC(33.33333f);
+        writer.compounds().write("/testCompound", compoundTypeFloat, recordWritten);
+        writer.close();
+        writer = HDF5FactoryProvider.get().configure(file).keepDataSetsIfTheyExist().writer();
+        final RecordE recordWritten2 = new RecordE(-1);
+        HDF5CompoundType<RecordE> compoundTypeInt =
+                writer.compounds().getInferredType(RecordE.class);
+        writer.compounds().write("/testCompound", compoundTypeInt, recordWritten2);
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().configureForReading(file)/*
+                                                                                       * .
+                                                                                       * performNumericConversions
+                                                                                       * ()
+                                                                                       */
+        .reader();
+        HDF5CompoundType<RecordE> compoundTypeInt2 =
+                reader.compounds().getDataSetType("/testCompound", RecordE.class);
+        assertEquals(1, compoundTypeInt2.getCompoundMemberInformation().length);
+        assertEquals(HDF5DataClass.FLOAT, compoundTypeInt2.getCompoundMemberInformation()[0]
+                .getType().getDataClass());
+        assertEquals(-1, reader.compounds().read("/testCompound", compoundTypeInt2).a);
         reader.close();
     }
 
@@ -8021,6 +8213,81 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = config.reader();
         assertEquals(3.14159, reader.readDouble("pi"), 1e-5);
         assertEquals(3, reader.readInt("pi"));
+        assertEquals(1e-5f, reader.getFloatAttribute("pi", "eps"), 1e-9);
+        assertEquals(17, reader.readByte("smallInteger"));
+        assertEquals(0.0f, reader.readFloat("verySmallFloat"));
+        assertEquals(Double.POSITIVE_INFINITY, reader.readDouble("INFINITY"));
+        try
+        {
+            reader.readInt("largeInteger");
+            fail("Failed to detect overflow");
+        } catch (HDF5DatatypeInterfaceException ex)
+        {
+            assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
+        }
+        try
+        {
+            reader.readFloat("veryLargeFloat");
+            fail("Failed to detect overflow");
+        } catch (HDF5DatatypeInterfaceException ex)
+        {
+            assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
+        }
+        try
+        {
+            reader.readLong("veryLargeFloat");
+            fail("Failed to detect overflow");
+        } catch (HDF5DatatypeInterfaceException ex)
+        {
+            assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
+        }
+        // On HDF5 1.8.3, numeric conversions on sparc don't detect overflows
+        // for INFINITY and DINFINITY values.
+        if (OSUtilities.getCPUArchitecture().startsWith("sparc"))
+        {
+            return;
+        }
+        try
+        {
+            reader.readFloat("DINFINITY");
+            fail("Failed to detect overflow");
+        } catch (HDF5DatatypeInterfaceException ex)
+        {
+            assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
+        }
+        try
+        {
+            reader.readLong("INFINITY");
+            fail("Failed to detect overflow");
+        } catch (HDF5DatatypeInterfaceException ex)
+        {
+            assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testNumericConversionWithNumericConversionsSwitchedOff()
+    {
+        final File file =
+                new File(workingDirectory, "numericConversionWithNumericConversionsSwitchedOff.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        writer.writeFloat("pi", 3.14159f);
+        writer.writeFloat("one", 1.0f);
+        writer.writeFloat("INFINITY", Float.POSITIVE_INFINITY);
+        writer.writeDouble("DINFINITY", Double.NEGATIVE_INFINITY);
+        writer.writeDouble("verySmallFloat", 1e-100);
+        writer.writeDouble("veryLargeFloat", 1e+100);
+        writer.setDoubleAttribute("pi", "eps", 1e-5);
+        writer.writeLong("smallInteger", 17L);
+        writer.writeLong("largeInteger", Long.MAX_VALUE);
+        writer.close();
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        assertEquals(3.14159, reader.readDouble("pi"), 1e-5);
+        assertEquals(1, reader.readInt("one"));
         assertEquals(1e-5f, reader.getFloatAttribute("pi", "eps"), 1e-9);
         assertEquals(17, reader.readByte("smallInteger"));
         assertEquals(0.0f, reader.readFloat("verySmallFloat"));
