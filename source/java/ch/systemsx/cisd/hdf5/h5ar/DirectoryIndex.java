@@ -375,7 +375,7 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
                     calcCrc32(concatenatedNamesStr));
             final String indexDataSetName = getIndexDataSetName();
             final CRC32 crc32 = new CRC32();
-            hdf5WriterOrNull.writeCompoundArray(indexDataSetName,
+            hdf5WriterOrNull.compounds().writeArray(indexDataSetName,
                     getHDF5LinkCompoundType(hdf5WriterOrNull), links.getLinkArray(),
                     HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                     new IHDF5CompoundInformationRetriever.IByteArrayInspector()
