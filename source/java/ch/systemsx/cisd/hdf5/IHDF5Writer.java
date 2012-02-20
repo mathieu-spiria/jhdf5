@@ -331,7 +331,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     // /////////////////////
 
     /**
-     * Returns the full writes for compounds.
+     * Returns the full writer for compounds.
      */
     public IHDF5CompoundWriter compounds();
 
