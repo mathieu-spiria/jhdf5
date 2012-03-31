@@ -173,6 +173,14 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
             DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
+     * Represents 'standard compression' with a pre-filter shuffle, that is deflation with the
+     * default deflation level.
+     */
+    public static final HDF5FloatStorageFeatures FLOAT_SHUFFLE_DEFLATE =
+            new HDF5FloatStorageFeatures(null, false, false, true, DEFAULT_DEFLATION_LEVEL,
+                    NO_SCALING_FACTOR);
+
+    /**
      * Represents 'standard compression', that is deflation with the default deflation level.
      * <p>
      * Keep existing data set and apply only if a new data set has to be created.
@@ -574,6 +582,14 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
     {
         super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists, deflateLevel,
                 scalingFactor);
+    }
+
+    HDF5FloatStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
+            boolean deleteDataSetIfExists, boolean shuffleBeforeDeflate, byte deflateLevel,
+            byte scalingFactor)
+    {
+        super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists,
+                shuffleBeforeDeflate, deflateLevel, scalingFactor);
     }
 
     /**

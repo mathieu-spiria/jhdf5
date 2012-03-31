@@ -579,6 +579,10 @@ class HDF5
                             compression.getScalingFactor());
                 }
             }
+            if (compression.isShuffleBeforeDeflate())
+            {
+                setShuffle(dataSetCreationPropertyListId);
+            }
             if (compression.isDeflating())
             {
                 setDeflate(dataSetCreationPropertyListId, compression.getDeflateLevel());
@@ -670,6 +674,13 @@ class HDF5
         H5Pset_chunk(dscpId, chunkSize.length, chunkSize);
     }
 
+    private void setShuffle(int dscpId)
+    {
+        assert dscpId >= 0;
+
+        H5Pset_shuffle(dscpId);
+    }
+    
     private void setDeflate(int dscpId, int deflateLevel)
     {
         assert dscpId >= 0;

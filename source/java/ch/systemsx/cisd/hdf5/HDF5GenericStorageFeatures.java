@@ -156,6 +156,14 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
             new HDF5GenericStorageFeatures(null, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
+     * Represents 'standard compression' with a pre-filter shuffle, that is deflation with the
+     * default deflation level.
+     */
+    public static final HDF5GenericStorageFeatures GENERIC_SHUFFLE_DEFLATE =
+            new HDF5GenericStorageFeatures(null, false, false, true, DEFAULT_DEFLATION_LEVEL,
+                    NO_SCALING_FACTOR);
+
+    /**
      * Represents 'standard compression', that is deflation with the default deflation level.
      * <p>
      * Keep existing data set and apply only if a new data set has to be created.
@@ -179,6 +187,14 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
      */
     public static final HDF5GenericStorageFeatures GENERIC_DEFLATE_MAX =
             new HDF5GenericStorageFeatures(null, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+
+    /**
+     * Represents 'maximal compression' with a pre-filter shuffle, that is deflation with the
+     * default deflation level.
+     */
+    public static final HDF5GenericStorageFeatures GENERIC_SHUFFLE_DEFLATE_MAX =
+            new HDF5GenericStorageFeatures(null, false, false, true, MAX_DEFLATION_LEVEL,
+                    NO_SCALING_FACTOR);
 
     /**
      * Represents 'maximal compression', that is deflation with the maximal deflation level.
@@ -267,6 +283,14 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
     {
         super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists, deflateLevel,
                 scalingFactor);
+    }
+
+    HDF5GenericStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
+            boolean deleteDataSetIfExists, boolean shuffleBeforeDeflate, byte deflateLevel,
+            byte scalingFactor)
+    {
+        super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists,
+                shuffleBeforeDeflate, deflateLevel, scalingFactor);
     }
 
     /**

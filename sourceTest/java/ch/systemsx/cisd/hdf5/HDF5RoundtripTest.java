@@ -24,6 +24,7 @@ import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE_M
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_SHUFFLE_DEFLATE;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
@@ -774,6 +775,12 @@ public class HDF5RoundtripTest
             { 0, -1, 1, -128, 127 };
         final String shortDatasetName = "/Group2/shorts";
         writer.writeShortArray(shortDatasetName, shortDataWritten, INT_DEFLATE);
+        final String intDatasetName1 = "/Group2/ints1";
+        final int[] intDataWritten = new int[]
+                { 0, 1, 2, 3, 4 };
+        final String intDatasetName2 = "/Group2/ints2";
+        writer.writeIntArray(intDatasetName1, intDataWritten, INT_DEFLATE);
+        writer.writeIntArray(intDatasetName2, intDataWritten, INT_SHUFFLE_DEFLATE);
         writer.flush();
         final String stringDataWritten1 = "Some Random String";
         final String stringDataWritten2 = "Another Random String";
@@ -796,6 +803,10 @@ public class HDF5RoundtripTest
         final short[] shortDataRead = reader.readShortArray(shortDatasetName);
         assertTrue(Arrays.equals(shortDataWritten, shortDataRead));
         final String stringDataRead1 = reader.readString(stringDatasetName);
+        final int[] intDataRead1 = reader.readIntArray(intDatasetName1);
+        assertTrue(Arrays.equals(intDataWritten, intDataRead1));
+        final int[] intDataRead2 = reader.readIntArray(intDatasetName2);
+        assertTrue(Arrays.equals(intDataWritten, intDataRead2));
         assertEquals(stringDataWritten1, stringDataRead1);
         final String stringDataRead2 = reader.readString(stringDatasetName2);
         assertEquals(stringDataWritten2, stringDataRead2);

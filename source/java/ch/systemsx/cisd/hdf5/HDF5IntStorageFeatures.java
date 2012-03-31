@@ -284,6 +284,13 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
             DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
 
     /**
+     * Represents 'standard compression' with a pre-filter shuffle, that is deflation with the
+     * default deflation level.
+     */
+    public static final HDF5IntStorageFeatures INT_SHUFFLE_DEFLATE = new HDF5IntStorageFeatures(
+            null, false, false, true, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+
+    /**
      * Represents 'standard compression' with unsigned integers, that is deflation with the default
      * deflation level.
      */
@@ -915,6 +922,15 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
     {
         super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists, deflateLevel,
                 scalingFactor);
+        this.signed = signed;
+    }
+
+    HDF5IntStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
+            boolean deleteDataSetIfExists, boolean shuffleBeforeDeflate, byte deflateLevel,
+            byte scalingFactor, boolean signed)
+    {
+        super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists,
+                shuffleBeforeDeflate, deflateLevel, scalingFactor);
         this.signed = signed;
     }
 

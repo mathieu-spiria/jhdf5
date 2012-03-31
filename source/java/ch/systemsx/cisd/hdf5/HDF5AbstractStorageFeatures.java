@@ -81,6 +81,8 @@ abstract class HDF5AbstractStorageFeatures
 
     private final HDF5StorageLayout proposedLayoutOrNull;
 
+    private final boolean shuffleBeforeDeflate;
+
     private final boolean keepDataSetIfExists;
 
     private final boolean deleteDataSetIfExists;
@@ -89,12 +91,21 @@ abstract class HDF5AbstractStorageFeatures
             final boolean keepDataSetIfExists, final boolean deleteDataSetIfExists,
             final byte deflateLevel, final byte scalingFactor)
     {
+        this(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists, false, deflateLevel,
+                scalingFactor);
+    }
+
+    HDF5AbstractStorageFeatures(final HDF5StorageLayout proposedLayoutOrNull,
+            final boolean keepDataSetIfExists, final boolean deleteDataSetIfExists,
+            final boolean shuffleBeforeDeflate, final byte deflateLevel, final byte scalingFactor)
+    {
         assert deflateLevel >= 0;
         assert (keepDataSetIfExists && deleteDataSetIfExists) == false;
 
         this.proposedLayoutOrNull = proposedLayoutOrNull;
         this.keepDataSetIfExists = keepDataSetIfExists;
         this.deleteDataSetIfExists = deleteDataSetIfExists;
+        this.shuffleBeforeDeflate = shuffleBeforeDeflate;
         this.deflateLevel = deflateLevel;
         this.scalingFactor = scalingFactor;
     }
@@ -137,7 +148,7 @@ abstract class HDF5AbstractStorageFeatures
     {
         return keepDataSetIfExists;
     }
-    
+
     boolean isDeleteDataSetIfExists()
     {
         return deleteDataSetIfExists;
@@ -150,6 +161,11 @@ abstract class HDF5AbstractStorageFeatures
             throw new IllegalStateException(
                     "Scaling compression is not allowed in strict HDF5 1.6.x compatibility mode.");
         }
+    }
+
+    public boolean isShuffleBeforeDeflate()
+    {
+        return shuffleBeforeDeflate;
     }
 
     byte getDeflateLevel()
