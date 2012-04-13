@@ -123,7 +123,7 @@ public class HDF5ArchiverFactory
      * @param writer The HDF5 writer to base the archive file on. Closing the archive writer will
      *            not close the HDF5 <var>writer</var>.
      */
-    public static IHDF5ArchiveInfoProvider open(IHDF5Writer writer)
+    public static IHDF5Archiver open(IHDF5Writer writer)
     {
         return new HDF5Archiver(writer, false, null);
     }
@@ -135,7 +135,7 @@ public class HDF5ArchiverFactory
      *            not close the HDF5 <var>writer</var>.
      * @param errorStrategy The {@link IErrorStrategy} to use on errors when accessing the archive.
      */
-    public static IHDF5ArchiveInfoProvider open(IHDF5Writer writer, IErrorStrategy errorStrategy)
+    public static IHDF5Archiver open(IHDF5Writer writer, IErrorStrategy errorStrategy)
     {
         return new HDF5Archiver(writer, false, errorStrategy);
     }
