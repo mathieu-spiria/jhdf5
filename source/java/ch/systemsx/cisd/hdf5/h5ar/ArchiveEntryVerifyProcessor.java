@@ -43,7 +43,9 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
 {
     private final IListEntryVisitor visitor;
 
-    private final String rootDirectory;
+    private final String rootDirectoryOnFS;
+
+    private final String rootDirectoryInArchive;
 
     private final byte[] buffer;
 
@@ -51,11 +53,20 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
 
     private final boolean numeric;
 
-    ArchiveEntryVerifyProcessor(IListEntryVisitor visitor, String rootDirectory, byte[] buffer,
+    ArchiveEntryVerifyProcessor(IListEntryVisitor visitor, String rootDirectoryOnFS, byte[] buffer,
             boolean checkAttributes, boolean numeric)
     {
+        this(visitor, rootDirectoryOnFS, "", buffer, checkAttributes, numeric);
+    }
+
+    ArchiveEntryVerifyProcessor(IListEntryVisitor visitor, String rootDirectoryOnFS,
+            String rootDirectoryInArchive, byte[] buffer, boolean checkAttributes, boolean numeric)
+    {
         this.visitor = visitor;
-        this.rootDirectory = rootDirectory;
+        this.rootDirectoryOnFS = rootDirectoryOnFS;
+        this.rootDirectoryInArchive =
+                rootDirectoryInArchive.endsWith("/") ? rootDirectoryInArchive.substring(0,
+                        rootDirectoryInArchive.length() - 1) : rootDirectoryInArchive;
         this.buffer = buffer;
         this.checkAttributes = checkAttributes;
         this.numeric = numeric;
@@ -76,11 +87,16 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
 
     private String checkLink(LinkRecord link, String path, IdCache idCache) throws IOException
     {
-        final File f = new File(rootDirectory, path);
+        if (rootDirectoryInArchive.length() > 0 && path.startsWith(rootDirectoryInArchive) == false)
+        {
+            return "Object '" + path + "' does not start with path prefix '" + rootDirectoryInArchive + "'.";
+        }
+        final String strippedPath = path.substring(rootDirectoryInArchive.length());
+        final File f = new File(rootDirectoryOnFS, strippedPath);
         if (f.exists() == false)
         {
             link.setVerifiedType(FileLinkType.OTHER);
-            return "Object '" + path + "' does not exist on file system.";
+            return "Object '" + strippedPath + "' does not exist on file system.";
         }
         final String symbolicLinkOrNull = tryGetSymbolicLink(f);
         if (symbolicLinkOrNull != null)
@@ -88,12 +104,12 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
             link.setVerifiedType(FileLinkType.SYMLINK);
             if (link.isSymLink() == false)
             {
-                return "Object '" + path + "' is a " + link.getLinkType()
+                return "Object '" + strippedPath + "' is a " + link.getLinkType()
                         + " in archive, but a symlink on file system.";
             }
             if (symbolicLinkOrNull.equals(link.tryGetLinkTarget()) == false)
             {
-                return "Symlink '" + path + "' links to '" + link.tryGetLinkTarget()
+                return "Symlink '" + strippedPath + "' links to '" + link.tryGetLinkTarget()
                         + "' in archive, but to '" + symbolicLinkOrNull + "' on file system";
             }
         } else if (f.isDirectory())
@@ -103,11 +119,11 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
             {
                 if (Unix.isOperational() || OSUtilities.isWindows())
                 {
-                    return "Object '" + path + "' is a " + link.getLinkType()
+                    return "Object '" + strippedPath + "' is a " + link.getLinkType()
                             + " in archive, but a directory on file system.";
                 } else
                 {
-                    return "Object '" + path + "' is a " + link.getLinkType()
+                    return "Object '" + strippedPath + "' is a " + link.getLinkType()
                             + " in archive, but a directory on file system (error may be "
                             + "inaccurate because Unix system calls are not available.)";
                 }
@@ -117,7 +133,7 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
             link.setVerifiedType(FileLinkType.REGULAR_FILE);
             if (link.isDirectory())
             {
-                return "Object '" + path
+                return "Object '" + strippedPath
                         + "' is a directory in archive, but a file on file system.";
 
             }
@@ -125,12 +141,12 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
             {
                 if (Unix.isOperational() || OSUtilities.isWindows())
                 {
-                    return "Object '" + path
+                    return "Object '" + strippedPath
                             + "' is a symbolic link in archive, but a file on file system.";
                 } else
                 {
                     return "Object '"
-                            + path
+                            + strippedPath
                             + "' is a symbolic link in archive, but a file on file system "
                             + "(error may be inaccurate because Unix system calls are not available.).";
                 }

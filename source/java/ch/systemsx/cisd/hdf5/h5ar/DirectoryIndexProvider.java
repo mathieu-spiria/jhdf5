@@ -16,7 +16,6 @@
 
 package ch.systemsx.cisd.hdf5.h5ar;
 
-import java.io.Closeable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +28,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
  * 
  * @author Bernd Rinn
  */
-class DirectoryIndexProvider implements Closeable
+class DirectoryIndexProvider implements IDirectoryIndexProvider
 {
     private final Map<String, DirectoryIndex> cacheMap = new HashMap<String, DirectoryIndex>();
 
@@ -43,7 +42,7 @@ class DirectoryIndexProvider implements Closeable
         this.errorStrategy = errorStrategy;
     }
 
-    public DirectoryIndex get(String normalizedGroupPath, boolean withLinkTargets)
+    public IDirectoryIndex get(String normalizedGroupPath, boolean withLinkTargets)
     {
         final String nonEmptyGroupPath =
                 (normalizedGroupPath.length() == 0) ? "/" : normalizedGroupPath;

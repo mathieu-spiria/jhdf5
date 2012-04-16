@@ -169,7 +169,7 @@ final class LinkRecord implements Comparable<LinkRecord>
         {
             final Stat info = Unix.getLinkInfo(file.getPath(), false);
             this.linkType = info.getLinkType();
-            this.size = info.getSize();
+            this.size = (linkType == FileLinkType.REGULAR_FILE) ? info.getSize() : 0;
             this.lastModified = info.getLastModified();
             this.uid = info.getUid();
             this.gid = info.getGid();
@@ -179,7 +179,7 @@ final class LinkRecord implements Comparable<LinkRecord>
             this.linkType =
                     (file.isDirectory()) ? FileLinkType.DIRECTORY
                             : (file.isFile() ? FileLinkType.REGULAR_FILE : FileLinkType.OTHER);
-            this.size = file.length();
+            this.size = (linkType == FileLinkType.REGULAR_FILE) ? file.length() : 0;
             this.lastModified = file.lastModified() / 1000;
             this.uid = Utils.UNKNOWN;
             this.gid = Utils.UNKNOWN;
@@ -410,5 +410,14 @@ final class LinkRecord implements Comparable<LinkRecord>
     public int hashCode()
     {
         return linkName.hashCode();
+    }
+
+    @Override
+    public String toString()
+    {
+        return "LinkRecord [linkName=" + linkName + ", linkType=" + linkType + ", size=" + size
+                + ", lastModified=" + lastModified + ", uid=" + uid + ", gid=" + gid
+                + ", permissions=" + permissions + ", crc32=" + crc32 + ", linkTargetOrNull="
+                + linkTargetOrNull + "]";
     }
 }

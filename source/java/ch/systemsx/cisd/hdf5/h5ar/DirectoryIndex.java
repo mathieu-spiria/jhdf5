@@ -18,7 +18,6 @@ package ch.systemsx.cisd.hdf5.h5ar;
 
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.Flushable;
 import java.util.Arrays;
@@ -55,7 +54,7 @@ import ch.systemsx.cisd.hdf5.StringUtils;
  * 
  * @author Bernd Rinn
  */
-class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
+class DirectoryIndex implements IDirectoryIndex
 {
     private static final String CRC32_ATTRIBUTE_NAME = "CRC32";
 
@@ -161,12 +160,12 @@ class DirectoryIndex implements Iterable<LinkRecord>, Closeable, Flushable
         readIndex(readLinkTargets);
     }
 
-    boolean addFlushable(Flushable flushable)
+    public boolean addFlushable(Flushable flushable)
     {
         return flushables.add(flushable);
     }
 
-    boolean removeFlushable(Flushable flushable)
+    public boolean removeFlushable(Flushable flushable)
     {
         return flushables.remove(flushable);
     }

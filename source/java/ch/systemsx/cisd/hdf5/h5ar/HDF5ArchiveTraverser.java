@@ -33,13 +33,13 @@ class HDF5ArchiveTraverser
 {
     private final IHDF5Reader hdf5Reader;
 
-    private final DirectoryIndexProvider indexProvider;
+    private final IDirectoryIndexProvider indexProvider;
 
     private final IErrorStrategy errorStrategy;
 
     private final IdCache idCache;
 
-    public HDF5ArchiveTraverser(IHDF5Reader hdf5Reader, DirectoryIndexProvider indexProvider,
+    public HDF5ArchiveTraverser(IHDF5Reader hdf5Reader, IDirectoryIndexProvider indexProvider,
             IdCache idCache)
     {
         this.hdf5Reader = hdf5Reader;

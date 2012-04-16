@@ -31,9 +31,9 @@ class HDF5ArchiveDeleter
 {
     private final IHDF5Writer hdf5Writer;
 
-    private final DirectoryIndexProvider indexProvider;
+    private final IDirectoryIndexProvider indexProvider;
 
-    public HDF5ArchiveDeleter(IHDF5Writer hdf5Writer, DirectoryIndexProvider indexProvider)
+    public HDF5ArchiveDeleter(IHDF5Writer hdf5Writer, IDirectoryIndexProvider indexProvider)
     {
         this.hdf5Writer = hdf5Writer;
         this.indexProvider = indexProvider;
@@ -45,7 +45,7 @@ class HDF5ArchiveDeleter
         {
             final String normalizedPath = Utils.normalizePath(path);
             final String group = Utils.getParentPath(normalizedPath);
-            final DirectoryIndex index = indexProvider.get(group, false);
+            final IDirectoryIndex index = indexProvider.get(group, false);
             try
             {
                 hdf5Writer.delete(normalizedPath);
