@@ -1,6 +1,6 @@
---- config/gnu-flags.orig	2011-04-23 18:22:36.000000000 +0200
-+++ config/gnu-flags	2011-04-23 18:26:42.000000000 +0200
-@@ -245,6 +245,9 @@
+--- config/gnu-flags.orig	2012-04-13 17:12:00.000000000 +0200
++++ config/gnu-flags	2012-04-17 18:07:25.104448452 +0200
+@@ -325,6 +325,9 @@
      # (Strictly speaking this isn't really a "warning" flag, so it's added to
      #   the debugging flags)
      #DEBUG_CFLAGS="$DEBUG_CFLAGS -Wstack-protector -fstack-protector-all"
