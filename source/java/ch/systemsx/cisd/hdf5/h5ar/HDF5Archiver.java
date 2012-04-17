@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
+
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.base.io.AdapterIInputStreamToInputStream;
@@ -234,6 +236,41 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         final String parentPath = Utils.getParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
         return indexProvider.get(parentPath, readLinkTargets).tryGetLink(name);
+    }
+
+    public ArchiveEntry tryResolveLink(ArchiveEntry entry)
+    {
+        if (entry == null)
+        {
+            return null;
+        }
+        ArchiveEntry workEntry = entry;
+        if (entry.isSymLink())
+        {
+            while (workEntry != null && workEntry.isSymLink())
+            {
+                String linkTarget;
+                if (workEntry.hasLinkTarget())
+                {
+                    linkTarget = workEntry.getLinkTarget();
+                } else
+                {
+                    workEntry = tryGetEntry(workEntry.getPath(), true);
+                    linkTarget = workEntry.getLinkTarget();
+                }
+                if (linkTarget.startsWith("/") == false)
+                {
+                    linkTarget = FilenameUtils.concat(workEntry.getParentPath(), linkTarget);
+                }
+                linkTarget = FilenameUtils.normalizeNoEndSeparator(linkTarget);
+                if (linkTarget == null) // impossible link target like '/..'
+                {
+                    return null;
+                }
+                workEntry = tryGetEntry(linkTarget, true);
+            }
+        }
+        return workEntry;
     }
 
     private static boolean isRegularFile(LinkRecord linkOrNull)

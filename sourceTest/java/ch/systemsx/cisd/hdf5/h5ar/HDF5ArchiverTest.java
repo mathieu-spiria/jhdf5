@@ -319,7 +319,8 @@ public class HDF5ArchiverTest
         // Set some special last modified time and access mode that we can recognize
         dir.getParentFile().setLastModified(111000L);
         Unix.setAccessMode(dir.getParent(), (short) 0777);
-        final File h5arfile = new File(workingDirectory, "testRoundtripArtificalRootWhichExistsOnFSOK.h5ar");
+        final File h5arfile =
+                new File(workingDirectory, "testRoundtripArtificalRootWhichExistsOnFSOK.h5ar");
         h5arfile.delete();
         h5arfile.deleteOnExit();
         HDF5ArchiverFactory.open(h5arfile).archiveFromFilesystem("ttt", dir).close();
@@ -327,7 +328,8 @@ public class HDF5ArchiverTest
         final List<ArchiveEntry> list = ar.list("/");
         assertEquals(7, list.size());
         assertEquals("/ttt", list.get(0).getPath());
-        // Does the archive entry have the last modified time and access mode we have set in the filesystem?
+        // Does the archive entry have the last modified time and access mode we have set in the
+        // filesystem?
         assertEquals(111, list.get(0).getLastModified());
         assertEquals((short) 0777, list.get(0).getPermissions());
         assertEquals("/ttt/test", list.get(1).getPath());
@@ -440,6 +442,71 @@ public class HDF5ArchiverTest
         assertTrue(ra.isDirectory("dir"));
         assertFalse(ra.isSymLink("dir"));
         assertFalse(ra.isRegularFile("dir"));
+        ra.close();
+    }
+
+    @Test
+    public void testResolveLinks()
+    {
+        workingDirectory.mkdirs();
+        final File h5arfile = new File(workingDirectory, "testResolveLinks.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        final IHDF5Archiver a = HDF5ArchiverFactory.open(h5arfile);
+        a.archiveFile(NewArchiveEntry.file("aFile"), "Some file content".getBytes());
+        a.archiveDirectory(NewArchiveEntry.directory("aDir"));
+        a.archiveSymlink(NewArchiveEntry.symlink("aLinkToAFile", "aFile"));
+        a.archiveSymlink(NewArchiveEntry.symlink("aLinkToADir", "aDir"));
+        a.archiveSymlink(NewArchiveEntry.symlink("aNonsenseLink", "../outOfFS"));
+        a.archiveSymlink(NewArchiveEntry.symlink("aLinkToANonexistingFile", "nonexistingFile"));
+        a.archiveSymlink(NewArchiveEntry.symlink("aDir/aLinkToALinkToAFile", "../aLinkToAFile"));
+        a.archiveSymlink(NewArchiveEntry.symlink("aDir/aLinkToALinkToADir", "/aLinkToADir"));
+        a.close();
+        final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
+        
+        // A file is resolved to itself
+        final ArchiveEntry aFileLink = ra.tryGetEntry("aFile", false);  
+        assertEquals(aFileLink, ra.tryResolveLink(aFileLink));
+        
+        // A directory is resolved to itself
+        final ArchiveEntry aDirLink = ra.tryGetEntry("aDir", false);  
+        assertEquals(aDirLink, ra.tryResolveLink(aDirLink));
+        
+        // A symlink to a file is correctly resolved...
+        final ArchiveEntry aSymLinkToAFile = ra.tryGetEntry("aLinkToAFile", true);
+        final ArchiveEntry aResolvedLinkToAFile = ra.tryResolveLink(aSymLinkToAFile);
+        assertNotNull(aResolvedLinkToAFile);
+        assertEquals(aFileLink.getPath(), aResolvedLinkToAFile.getPath());
+        // .. even when the link target was not read
+        final ArchiveEntry aSymLinkToAFileWithoutTarget = ra.tryGetEntry("aLinkToAFile", false);
+        final ArchiveEntry aResolvedLinkToAFileWithoutTarget = ra.tryResolveLink(aSymLinkToAFileWithoutTarget);
+        assertNotNull(aResolvedLinkToAFileWithoutTarget);
+        assertEquals(aFileLink.getPath(), aResolvedLinkToAFileWithoutTarget.getPath());
+
+        // A symlink to a dir is correctly resolved as well
+        final ArchiveEntry aSymLinkToADir = ra.tryGetEntry("aLinkToADir", true);
+        final ArchiveEntry aResolvedLinkToADir = ra.tryResolveLink(aSymLinkToADir);
+        assertNotNull(aResolvedLinkToADir);
+        assertEquals(aDirLink.getPath(), aResolvedLinkToADir.getPath());
+
+        // A nonsense link ('/../outOfFS') is resolved to null
+        assertNull(ra.tryResolveLink(ra.tryGetEntry("aNonsenseLink", true)));
+        
+        // A link to a non-existing file is resolved to null
+        assertNull(ra.tryResolveLink(ra.tryGetEntry("aLinkToANonexistingFile", true)));
+        
+        // A link to a link to a file
+        final ArchiveEntry aSymLinkToALinkToAFile = ra.tryGetEntry("/aDir/aLinkToALinkToAFile", false);
+        final ArchiveEntry aResolvedSymLinkToALinkToAFile = ra.tryResolveLink(aSymLinkToALinkToAFile);
+        assertNotNull(aResolvedSymLinkToALinkToAFile);
+        assertEquals(aFileLink.getPath(), aResolvedSymLinkToALinkToAFile.getPath());
+        
+        // A link to a link to a dir
+        final ArchiveEntry aSymLinkToALinkToADir = ra.tryGetEntry("/aDir/aLinkToALinkToADir", false);
+        final ArchiveEntry aResolvedSymLinkToALinkToADir = ra.tryResolveLink(aSymLinkToALinkToADir);
+        assertNotNull(aResolvedSymLinkToALinkToADir);
+        assertEquals(aDirLink.getPath(), aResolvedSymLinkToALinkToADir.getPath());
+        
         ra.close();
     }
 

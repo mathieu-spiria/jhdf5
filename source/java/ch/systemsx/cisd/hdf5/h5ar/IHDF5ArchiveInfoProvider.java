@@ -19,8 +19,8 @@ package ch.systemsx.cisd.hdf5.h5ar;
 import java.util.List;
 
 /**
- * An info provider for HDF5 archives. 
- *
+ * An info provider for HDF5 archives.
+ * 
  * @author Bernd Rinn
  */
 interface IHDF5ArchiveInfoProvider
@@ -34,6 +34,16 @@ interface IHDF5ArchiveInfoProvider
     public boolean isSymLink(String path);
 
     public ArchiveEntry tryGetEntry(String path, boolean readLinkTarget);
+
+    /**
+     * Resolves the symbolic link of <var>entry</var>, if any.
+     * 
+     * @param entry The archive entry to resolve.
+     * @return The resolved link, if <var>entry</var> is a symbolic link that links to an existing
+     *         file or directory target, <code>null</code> if <var>entry</var> is a symbolic link
+     *         that links to a non-existing target, or <var>entry</var>, if this is not a link.
+     */
+    public ArchiveEntry tryResolveLink(ArchiveEntry entry);
 
     public List<ArchiveEntry> list(String fileOrDir);
 
