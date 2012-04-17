@@ -599,7 +599,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                             fieldName,
                             memberName,
                             new HDF5EnumerationType(baseReader.fileId, -1, baseReader.h5
-                                    .getNativeDataTypeCheckForBitField(compoundMemberTypeId,
+                                    .getNativeDataType(compoundMemberTypeId,
                                             baseReader.fileRegistry), baseReader
                                     .getEnumDataTypeName(compoundMember.getType().tryGetName(),
                                             compoundMemberTypeId), compoundMember

@@ -91,7 +91,7 @@ abstract class HDF5MemberByteifyer
         if (getMemberNativeTypeId() < 0)
         {
             H5Tinsert(dataTypeId, memberName, offset,
-                    h5.getNativeDataTypeCheckForBitField(getMemberStorageTypeId(), registry));
+                    h5.getNativeDataType(getMemberStorageTypeId(), registry));
         } else
         {
             H5Tinsert(dataTypeId, memberName, offset, getMemberNativeTypeId());

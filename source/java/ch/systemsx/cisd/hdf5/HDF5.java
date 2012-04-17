@@ -46,7 +46,6 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SELECT_SET;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_UNLIMITED;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_BITFIELD;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_COMPOUND;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_C_S1;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
@@ -1524,22 +1523,6 @@ class HDF5
         return H5Tget_tag(dataTypeId);
     }
 
-    /**
-     * Use this if <var>dataTypeId</var> can possibly be a bit field.
-     */
-    public int getNativeDataTypeCheckForBitField(int dataTypeId, ICleanUpRegistry registry)
-    {
-        // Workaround: calling H5Tget_native_type() on one of the bit field types in 1.8.2 throws an
-        // "HDF5FunctionArgumentException: Invalid arguments to routine: Inappropriate type"
-        if (H5Tdetect_class(dataTypeId, H5T_BITFIELD))
-        {
-            return dataTypeId;
-        } else
-        {
-            return getNativeDataType(dataTypeId, registry);
-        }
-    }
-
     public int getNativeDataType(int dataTypeId, ICleanUpRegistry registry)
     {
         final int nativeDataTypeId = H5Tget_native_type(dataTypeId);
@@ -1564,19 +1547,6 @@ class HDF5
                 }
             });
         return getNativeDataType(dataTypeId, registry);
-    }
-
-    public int getNativeDataTypeForDataSetCheckBitFields(int dataSetId, ICleanUpRegistry registry)
-    {
-        final int dataTypeId = H5Dget_type(dataSetId);
-        registry.registerCleanUp(new Runnable()
-            {
-                public void run()
-                {
-                    H5Tclose(dataTypeId);
-                }
-            });
-        return getNativeDataTypeCheckForBitField(dataTypeId, registry);
     }
 
     public int getNativeDataTypeForAttribute(int attributeId, ICleanUpRegistry registry)
