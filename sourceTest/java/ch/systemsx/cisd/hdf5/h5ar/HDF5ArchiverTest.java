@@ -500,12 +500,33 @@ public class HDF5ArchiverTest
         final ArchiveEntry aResolvedSymLinkToALinkToAFile = ra.tryResolveLink(aSymLinkToALinkToAFile);
         assertNotNull(aResolvedSymLinkToALinkToAFile);
         assertEquals(aFileLink.getPath(), aResolvedSymLinkToALinkToAFile.getPath());
+        final ArchiveEntry aSymLinkToALinkToAFileWithPathInfoKept = ra.tryGetResolvedEntry("/aDir/aLinkToALinkToAFile", true);
+        assertEquals("/aDir", aSymLinkToALinkToAFileWithPathInfoKept.getParentPath());
+        assertEquals("aLinkToALinkToAFile", aSymLinkToALinkToAFileWithPathInfoKept.getName());
+        assertTrue(aSymLinkToALinkToAFileWithPathInfoKept.isRegularFile());
+        assertEquals(ra.tryGetEntry("aFile", false).getSize(), aSymLinkToALinkToAFileWithPathInfoKept.getSize());
         
         // A link to a link to a dir
         final ArchiveEntry aSymLinkToALinkToADir = ra.tryGetEntry("/aDir/aLinkToALinkToADir", false);
         final ArchiveEntry aResolvedSymLinkToALinkToADir = ra.tryResolveLink(aSymLinkToALinkToADir);
         assertNotNull(aResolvedSymLinkToALinkToADir);
         assertEquals(aDirLink.getPath(), aResolvedSymLinkToALinkToADir.getPath());
+        
+        final List<ArchiveEntry> entries = ra.list("/", ListParameters.build().resolveSymbolicLinks().get());
+        assertEquals(6, entries.size());
+        assertEquals("/aDir", entries.get(0).getPath());
+        assertTrue(entries.get(0).isDirectory());
+        assertEquals("/aDir/aLinkToALinkToADir", entries.get(1).getPath());
+        assertTrue(entries.get(1).isDirectory());
+        assertEquals("/aDir/aLinkToALinkToAFile", entries.get(2).getPath());
+        assertTrue(entries.get(2).isRegularFile());
+        assertEquals("/aFile", entries.get(3).getPath());
+        assertTrue(entries.get(3).isRegularFile());
+        assertEquals("/aLinkToADir", entries.get(4).getPath());
+        assertTrue(entries.get(4).isDirectory());
+        assertEquals("/aLinkToAFile", entries.get(5).getPath());
+        assertTrue(entries.get(5).isRegularFile());
+        assertEquals(entries.get(3).getCrc32(), entries.get(5).getCrc32());
         
         ra.close();
     }

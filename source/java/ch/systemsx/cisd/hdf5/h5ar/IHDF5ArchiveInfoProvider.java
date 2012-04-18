@@ -45,6 +45,26 @@ interface IHDF5ArchiveInfoProvider
      */
     public ArchiveEntry tryResolveLink(ArchiveEntry entry);
 
+    /**
+     * Returns the archive entry for <var>path</var>. If <var>path</var> is a symbolic link, the
+     * entry will be resolved to the real file or directory in the archive, or <code>null</code>, if
+     * the link target doesn't exist.
+     * 
+     * @param path The path in the archive to get the entry for.
+     * @param keepPath If <code>true</code>, the resolved entry will keep the <var>path</var>, i.e.
+     *            the returned entry of a symlink will look like a hard link. If <code>false</code>,
+     *            the returned entry will be the entry of the resolved path.
+     * @return The resolved link, if <var>path</var> denotes a file, directory, or symbolic link
+     *         that links to an existing file or directory target, <code>null</code> if
+     *         <var>path</var> denotes a symbolic link that links to a non-existing target.
+     */
+    public ArchiveEntry tryGetResolvedEntry(String path, boolean keepPath);
+
+    /**
+     * Returns the list of all entries in the archive with links resolved.
+     */
+    public List<ArchiveEntry> list();
+
     public List<ArchiveEntry> list(String fileOrDir);
 
     public List<ArchiveEntry> list(String fileOrDir, final ListParameters params);

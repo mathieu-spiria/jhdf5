@@ -88,6 +88,28 @@ public final class ArchiveEntry
         this.errorLineOrNull = errorLineOrNull;
     }
 
+    ArchiveEntry(ArchiveEntry pathInfo, ArchiveEntry linkInfo)
+    {
+        this.parentPath = pathInfo.parentPath;
+        this.path = pathInfo.path;
+        this.name = pathInfo.name;
+        this.idCache = pathInfo.idCache;
+        this.completeness = linkInfo.completeness;
+        this.hasLinkTarget = linkInfo.hasLinkTarget;
+        this.linkTarget = linkInfo.linkTarget;
+        this.linkType = linkInfo.linkType;
+        this.verifiedLinkType = linkInfo.verifiedLinkType;
+        this.size = linkInfo.size;
+        this.verifiedSize = linkInfo.verifiedSize;
+        this.lastModified = Math.max(pathInfo.lastModified, linkInfo.lastModified);
+        this.crc32 = linkInfo.crc32;
+        this.verifiedCrc32 = linkInfo.verifiedCrc32;
+        this.uid = linkInfo.uid;
+        this.gid = linkInfo.gid;
+        this.permissions = linkInfo.permissions;
+        this.errorLineOrNull = null;
+    }
+
     ArchiveEntry(String errorLineOrNull)
     {
         this.errorLineOrNull = errorLineOrNull;

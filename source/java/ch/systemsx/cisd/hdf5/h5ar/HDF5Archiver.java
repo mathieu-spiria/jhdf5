@@ -273,6 +273,21 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return workEntry;
     }
 
+    public ArchiveEntry tryGetResolvedEntry(String path, boolean keepPath)
+    {
+        final ArchiveEntry entry = tryGetEntry(path, true);
+        ArchiveEntry resolvedEntry = tryResolveLink(entry);
+        if (resolvedEntry == null)
+        {
+            return null;
+        }
+        if (entry != resolvedEntry && keepPath)
+        {
+            resolvedEntry = new ArchiveEntry(entry, resolvedEntry);
+        }
+        return resolvedEntry;
+    }
+
     private static boolean isRegularFile(LinkRecord linkOrNull)
     {
         return linkOrNull != null && linkOrNull.isRegularFile();
@@ -293,21 +308,24 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     // IHDF5ArchiveReader
     //
 
-    public List<ArchiveEntry> list(String fileOrDir)
+    public List<ArchiveEntry> list()
+    {
+        return list("/", ListParameters.DEFAULT);
+    }
+
+    public List<ArchiveEntry> list(final String fileOrDir)
     {
         return list(fileOrDir, ListParameters.DEFAULT);
     }
 
-    public List<ArchiveEntry> list(String fileOrDir, final ListParameters params)
+    public List<ArchiveEntry> list(final String fileOrDir, final ListParameters params)
     {
         final List<ArchiveEntry> result = new ArrayList<ArchiveEntry>(100);
         list(fileOrDir, new IListEntryVisitor()
             {
                 public void visit(ArchiveEntry entry)
                 {
-                    if (params.isSuppressDirectoryEntries() == false
-                            || entry.isDirectory() == false)
-                        result.add(entry);
+                    result.add(entry);
                 }
             }, params);
         return result;
@@ -334,21 +352,37 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return list(fileOrDir, visitor, ListParameters.DEFAULT);
     }
 
-    public IHDF5Archiver list(String fileOrDir, final IListEntryVisitor visitor,
-            ListParameters params)
+    public IHDF5Archiver list(final String fileOrDir, final IListEntryVisitor visitor,
+            final ListParameters params)
     {
-        final ArchiveEntryListProcessor listProcessor =
-                new ArchiveEntryListProcessor(
-                        params.isSuppressDirectoryEntries() ? new IListEntryVisitor()
+        final IListEntryVisitor decoratedVisitor =
+                params.isSuppressDirectoryEntries() || params.isResolveSymbolicLinks() ? new IListEntryVisitor()
+                    {
+                        public void visit(ArchiveEntry entry)
+                        {
+                            ArchiveEntry workEntry = entry;
+                            if (workEntry.isSymLink() && params.isResolveSymbolicLinks())
                             {
-                                public void visit(ArchiveEntry entry)
+                                workEntry = tryResolveLink(workEntry);
+                                if (workEntry == null)
                                 {
-                                    if (entry.isDirectory() == false)
-                                    {
-                                        visitor.visit(entry);
-                                    }
+                                    return;
                                 }
-                            } : visitor, buffer, params.isTestArchive());
+                                if (workEntry != entry)
+                                {
+                                    workEntry = new ArchiveEntry(entry, workEntry);
+                                }
+                            }
+                            if (params.isSuppressDirectoryEntries() == false
+                                    || workEntry.isDirectory() == false)
+                            {
+                                visitor.visit(workEntry);
+                            }
+                        }
+                    }
+                        : visitor;
+        final ArchiveEntryListProcessor listProcessor =
+                new ArchiveEntryListProcessor(decoratedVisitor, buffer, params.isTestArchive());
         processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(),
                 listProcessor);
         return this;
@@ -427,7 +461,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
             String rootDirectoryInArchive)
     {
-        return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, rootDirectoryInArchive, VerifyParameters.DEFAULT);
+        return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, rootDirectoryInArchive,
+                VerifyParameters.DEFAULT);
     }
 
     public IHDF5Archiver extractFile(String path, OutputStream out) throws IOExceptionUnchecked

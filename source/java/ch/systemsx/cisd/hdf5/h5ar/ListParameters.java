@@ -31,9 +31,12 @@ public final class ListParameters
 
     private final boolean suppressDirectoryEntries;
 
-    public static final ListParameters DEFAULT = new ListParameters(true, true, false, false);
+    private final boolean resolveSymbolicLinks;
 
-    public static final ListParameters TEST = new ListParameters(true, true, false, false);
+    public static final ListParameters DEFAULT =
+            new ListParameters(true, true, false, false, false);
+
+    public static final ListParameters TEST = new ListParameters(true, true, false, false, false);
 
     public static final class ListParametersBuilder
     {
@@ -44,6 +47,8 @@ public final class ListParameters
         private boolean testArchive = false;
 
         private boolean suppressDirectoryEntries = false;
+
+        private boolean resolveSymbolicLinks = false;
 
         private ListParametersBuilder()
         {
@@ -101,10 +106,30 @@ public final class ListParameters
             return this;
         }
 
+        /**
+         * Resolve symbolic links to their link targets.
+         * <p>
+         * This makes symbolic links kind of appear like hard links in the listing. Note, however,
+         * that symbolic links to directories being resolved do not lead to the directory content
+         * being listed as this could lead to infinite loops.
+         */
+        public ListParametersBuilder resolveSymbolicLinks()
+        {
+            this.resolveSymbolicLinks = true;
+            return this;
+        }
+
+        public ListParametersBuilder resolveSymbolicLinks(@SuppressWarnings("hiding")
+        boolean resolveSymbolicLinks)
+        {
+            this.resolveSymbolicLinks = resolveSymbolicLinks;
+            return this;
+        }
+
         public ListParameters get()
         {
             return new ListParameters(recursive, readLinkTargets, testArchive,
-                    suppressDirectoryEntries);
+                    suppressDirectoryEntries, resolveSymbolicLinks);
         }
     }
 
@@ -114,12 +139,13 @@ public final class ListParameters
     }
 
     private ListParameters(boolean recursive, boolean readLinkTargets, boolean testArchive,
-            boolean suppressDirectoryEntries)
+            boolean suppressDirectoryEntries, boolean resolveSymbolicLinks)
     {
         this.recursive = recursive;
-        this.readLinkTargets = readLinkTargets;
+        this.readLinkTargets = readLinkTargets || resolveSymbolicLinks;
         this.testArchive = testArchive;
         this.suppressDirectoryEntries = suppressDirectoryEntries;
+        this.resolveSymbolicLinks = resolveSymbolicLinks;
     }
 
     public boolean isRecursive()
@@ -140,5 +166,10 @@ public final class ListParameters
     public boolean isSuppressDirectoryEntries()
     {
         return suppressDirectoryEntries;
+    }
+
+    public boolean isResolveSymbolicLinks()
+    {
+        return resolveSymbolicLinks;
     }
 }
