@@ -31,12 +31,15 @@ public final class ListParameters
 
     private final boolean suppressDirectoryEntries;
 
+    private final boolean includeTopLevelDirectoryEntry;
+
     private final boolean resolveSymbolicLinks;
 
-    public static final ListParameters DEFAULT =
-            new ListParameters(true, true, false, false, false);
+    public static final ListParameters DEFAULT = new ListParameters(true, true, false, false,
+            false, false);
 
-    public static final ListParameters TEST = new ListParameters(true, true, false, false, false);
+    public static final ListParameters TEST = new ListParameters(true, true, false, false, true,
+            false);
 
     public static final class ListParametersBuilder
     {
@@ -47,6 +50,8 @@ public final class ListParameters
         private boolean testArchive = false;
 
         private boolean suppressDirectoryEntries = false;
+
+        private boolean includeTopLevelDirectoryEntry = false;
 
         private boolean resolveSymbolicLinks = false;
 
@@ -107,6 +112,22 @@ public final class ListParameters
         }
 
         /**
+         * Includes the top-level (or starting) directory in the listing. 
+         */
+        public ListParametersBuilder includeTopLevelDirectoryEntry()
+        {
+            this.includeTopLevelDirectoryEntry = true;
+            return this;
+        }
+
+        public ListParametersBuilder includeTopLevelDirectoryEntry(@SuppressWarnings("hiding")
+        boolean includeTopLevelDirectoryEntry)
+        {
+            this.includeTopLevelDirectoryEntry = includeTopLevelDirectoryEntry;
+            return this;
+        }
+
+        /**
          * Resolve symbolic links to their link targets.
          * <p>
          * This makes symbolic links kind of appear like hard links in the listing. Note, however,
@@ -129,7 +150,7 @@ public final class ListParameters
         public ListParameters get()
         {
             return new ListParameters(recursive, readLinkTargets, testArchive,
-                    suppressDirectoryEntries, resolveSymbolicLinks);
+                    suppressDirectoryEntries, includeTopLevelDirectoryEntry, resolveSymbolicLinks);
         }
     }
 
@@ -139,12 +160,14 @@ public final class ListParameters
     }
 
     private ListParameters(boolean recursive, boolean readLinkTargets, boolean testArchive,
-            boolean suppressDirectoryEntries, boolean resolveSymbolicLinks)
+            boolean suppressDirectoryEntries, boolean includeTopLevelDirectoryEntry,
+            boolean resolveSymbolicLinks)
     {
         this.recursive = recursive;
         this.readLinkTargets = readLinkTargets || resolveSymbolicLinks;
         this.testArchive = testArchive;
         this.suppressDirectoryEntries = suppressDirectoryEntries;
+        this.includeTopLevelDirectoryEntry = includeTopLevelDirectoryEntry;
         this.resolveSymbolicLinks = resolveSymbolicLinks;
     }
 
@@ -166,6 +189,11 @@ public final class ListParameters
     public boolean isSuppressDirectoryEntries()
     {
         return suppressDirectoryEntries;
+    }
+    
+    public boolean isIncludeTopLevelDirectoryEntry()
+    {
+        return includeTopLevelDirectoryEntry;
     }
 
     public boolean isResolveSymbolicLinks()

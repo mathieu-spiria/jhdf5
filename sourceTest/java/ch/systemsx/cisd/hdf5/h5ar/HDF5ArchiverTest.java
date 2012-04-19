@@ -323,6 +323,20 @@ public class HDF5ArchiverTest
         List<ArchiveEntry> verifyErrors =
                 ar.verifyAgainstFilesystem("/", dir.getParentFile().getAbsolutePath(), "/ttt");
         assertTrue(verifyErrors.toString(), verifyErrors.isEmpty());
+
+        final List<ArchiveEntry> list2 = ar.list("/ttt/test/dir_somedir");
+        assertEquals(2, list2.size());
+        assertEquals("file_test2.txt", list2.get(0).getName());
+        assertEquals("link_todir3", list2.get(1).getName());
+
+        final List<ArchiveEntry> list3 =
+                ar.list("/ttt/test/dir_somedir", ListParameters.build()
+                        .includeTopLevelDirectoryEntry().get());
+        assertEquals(3, list3.size());
+        assertEquals("dir_somedir", list3.get(0).getName());
+        assertEquals("file_test2.txt", list3.get(1).getName());
+        assertEquals("link_todir3", list3.get(2).getName());
+
         ar.close();
     }
 
@@ -431,6 +445,10 @@ public class HDF5ArchiverTest
         assertTrue(dirEntry.isDirectory());
         assertFalse(dirEntry.isRegularFile());
         assertFalse(dirEntry.isSymLink());
+
+        final List<ArchiveEntry> entriesDir = a.list("/dir");
+        assertEquals(1, entriesDir.size());
+        assertEquals("hello", entriesDir.get(0).getName());
         a.close();
         final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
         final List<ArchiveEntry> entriesRead =
@@ -477,15 +495,15 @@ public class HDF5ArchiverTest
         a.archiveSymlink(NewArchiveEntry.symlink("aDir/aLinkToALinkToADir", "/aLinkToADir"));
         a.close();
         final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
-        
+
         // A file is resolved to itself
-        final ArchiveEntry aFileLink = ra.tryGetEntry("aFile", false);  
+        final ArchiveEntry aFileLink = ra.tryGetEntry("aFile", false);
         assertEquals(aFileLink, ra.tryResolveLink(aFileLink));
-        
+
         // A directory is resolved to itself
-        final ArchiveEntry aDirLink = ra.tryGetEntry("aDir", false);  
+        final ArchiveEntry aDirLink = ra.tryGetEntry("aDir", false);
         assertEquals(aDirLink, ra.tryResolveLink(aDirLink));
-        
+
         // A symlink to a file is correctly resolved...
         final ArchiveEntry aSymLinkToAFile = ra.tryGetEntry("aLinkToAFile", true);
         final ArchiveEntry aResolvedLinkToAFile = ra.tryResolveLink(aSymLinkToAFile);
@@ -493,7 +511,8 @@ public class HDF5ArchiverTest
         assertEquals(aFileLink.getPath(), aResolvedLinkToAFile.getPath());
         // .. even when the link target was not read
         final ArchiveEntry aSymLinkToAFileWithoutTarget = ra.tryGetEntry("aLinkToAFile", false);
-        final ArchiveEntry aResolvedLinkToAFileWithoutTarget = ra.tryResolveLink(aSymLinkToAFileWithoutTarget);
+        final ArchiveEntry aResolvedLinkToAFileWithoutTarget =
+                ra.tryResolveLink(aSymLinkToAFileWithoutTarget);
         assertNotNull(aResolvedLinkToAFileWithoutTarget);
         assertEquals(aFileLink.getPath(), aResolvedLinkToAFileWithoutTarget.getPath());
 
@@ -505,28 +524,34 @@ public class HDF5ArchiverTest
 
         // A nonsense link ('/../outOfFS') is resolved to null
         assertNull(ra.tryResolveLink(ra.tryGetEntry("aNonsenseLink", true)));
-        
+
         // A link to a non-existing file is resolved to null
         assertNull(ra.tryResolveLink(ra.tryGetEntry("aLinkToANonexistingFile", true)));
-        
+
         // A link to a link to a file
-        final ArchiveEntry aSymLinkToALinkToAFile = ra.tryGetEntry("/aDir/aLinkToALinkToAFile", false);
-        final ArchiveEntry aResolvedSymLinkToALinkToAFile = ra.tryResolveLink(aSymLinkToALinkToAFile);
+        final ArchiveEntry aSymLinkToALinkToAFile =
+                ra.tryGetEntry("/aDir/aLinkToALinkToAFile", false);
+        final ArchiveEntry aResolvedSymLinkToALinkToAFile =
+                ra.tryResolveLink(aSymLinkToALinkToAFile);
         assertNotNull(aResolvedSymLinkToALinkToAFile);
         assertEquals(aFileLink.getPath(), aResolvedSymLinkToALinkToAFile.getPath());
-        final ArchiveEntry aSymLinkToALinkToAFileWithPathInfoKept = ra.tryGetResolvedEntry("/aDir/aLinkToALinkToAFile", true);
+        final ArchiveEntry aSymLinkToALinkToAFileWithPathInfoKept =
+                ra.tryGetResolvedEntry("/aDir/aLinkToALinkToAFile", true);
         assertEquals("/aDir", aSymLinkToALinkToAFileWithPathInfoKept.getParentPath());
         assertEquals("aLinkToALinkToAFile", aSymLinkToALinkToAFileWithPathInfoKept.getName());
         assertTrue(aSymLinkToALinkToAFileWithPathInfoKept.isRegularFile());
-        assertEquals(ra.tryGetEntry("aFile", false).getSize(), aSymLinkToALinkToAFileWithPathInfoKept.getSize());
-        
+        assertEquals(ra.tryGetEntry("aFile", false).getSize(),
+                aSymLinkToALinkToAFileWithPathInfoKept.getSize());
+
         // A link to a link to a dir
-        final ArchiveEntry aSymLinkToALinkToADir = ra.tryGetEntry("/aDir/aLinkToALinkToADir", false);
+        final ArchiveEntry aSymLinkToALinkToADir =
+                ra.tryGetEntry("/aDir/aLinkToALinkToADir", false);
         final ArchiveEntry aResolvedSymLinkToALinkToADir = ra.tryResolveLink(aSymLinkToALinkToADir);
         assertNotNull(aResolvedSymLinkToALinkToADir);
         assertEquals(aDirLink.getPath(), aResolvedSymLinkToALinkToADir.getPath());
-        
-        final List<ArchiveEntry> entries = ra.list("/", ListParameters.build().resolveSymbolicLinks().get());
+
+        final List<ArchiveEntry> entries =
+                ra.list("/", ListParameters.build().resolveSymbolicLinks().get());
         assertEquals(6, entries.size());
         assertEquals("/aDir", entries.get(0).getPath());
         assertTrue(entries.get(0).isDirectory());
@@ -541,7 +566,7 @@ public class HDF5ArchiverTest
         assertEquals("/aLinkToAFile", entries.get(5).getPath());
         assertTrue(entries.get(5).isRegularFile());
         assertEquals(entries.get(3).getCrc32(), entries.get(5).getCrc32());
-        
+
         ra.close();
     }
 

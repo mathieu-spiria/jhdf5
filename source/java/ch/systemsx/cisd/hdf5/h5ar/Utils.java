@@ -87,8 +87,8 @@ final class Utils
     }
 
     /**
-     * Returns the parent of <var>normalizedPath</var>, or "" if <var>normalizedPath</var> is the
-     * root "/".
+     * Returns "", if <var>normalizedPath</var> is in the root directory or is "/", and the parent
+     * path otherwise..
      */
     static String getParentPath(String normalizedPath)
     {
@@ -96,6 +96,22 @@ final class Utils
         if (lastSlashIdx < 2)
         {
             return "";
+        } else
+        {
+            return normalizedPath.substring(0, lastSlashIdx);
+        }
+    }
+
+    /**
+     * Returns the parent of <var>normalizedPath</var>, or "" if <var>normalizedPath</var> is the
+     * root "/".
+     */
+    static String getRealParentPath(String normalizedPath)
+    {
+        final int lastSlashIdx = normalizedPath.lastIndexOf('/');
+        if (lastSlashIdx == 0)
+        {
+            return normalizedPath.length() == 1 ? "" : "/";
         } else
         {
             return normalizedPath.substring(0, lastSlashIdx);

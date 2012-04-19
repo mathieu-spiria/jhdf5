@@ -181,7 +181,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
             indexProvider.close();
         }
     }
-    
+
     public boolean isClosed()
     {
         return hdf5Reader.isClosed();
@@ -363,35 +363,39 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     public IHDF5Archiver list(final String fileOrDir, final IListEntryVisitor visitor,
             final ListParameters params)
     {
-        final IListEntryVisitor decoratedVisitor =
-                params.isSuppressDirectoryEntries() || params.isResolveSymbolicLinks() ? new IListEntryVisitor()
+        final String normalizedPath = Utils.normalizePath(fileOrDir);
+        final IListEntryVisitor decoratedVisitor = new IListEntryVisitor()
+            {
+                public void visit(ArchiveEntry entry)
+                {
+                    if (params.isIncludeTopLevelDirectoryEntry() == false
+                            && normalizedPath.equals(entry.getPath()))
                     {
-                        public void visit(ArchiveEntry entry)
+                        return;
+                    }
+                    ArchiveEntry workEntry = entry;
+                    if (workEntry.isSymLink() && params.isResolveSymbolicLinks())
+                    {
+                        workEntry = tryResolveLink(workEntry);
+                        if (workEntry == null)
                         {
-                            ArchiveEntry workEntry = entry;
-                            if (workEntry.isSymLink() && params.isResolveSymbolicLinks())
-                            {
-                                workEntry = tryResolveLink(workEntry);
-                                if (workEntry == null)
-                                {
-                                    return;
-                                }
-                                if (workEntry != entry)
-                                {
-                                    workEntry = new ArchiveEntry(entry, workEntry);
-                                }
-                            }
-                            if (params.isSuppressDirectoryEntries() == false
-                                    || workEntry.isDirectory() == false)
-                            {
-                                visitor.visit(workEntry);
-                            }
+                            return;
+                        }
+                        if (workEntry != entry)
+                        {
+                            workEntry = new ArchiveEntry(entry, workEntry);
                         }
                     }
-                        : visitor;
+                    if (params.isSuppressDirectoryEntries() == false
+                            || workEntry.isDirectory() == false)
+                    {
+                        visitor.visit(workEntry);
+                    }
+                }
+            };
         final ArchiveEntryListProcessor listProcessor =
                 new ArchiveEntryListProcessor(decoratedVisitor, buffer, params.isTestArchive());
-        processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(),
+        processor.process(normalizedPath, params.isRecursive(), params.isReadLinkTargets(),
                 listProcessor);
         return this;
     }

@@ -54,13 +54,13 @@ class HDF5ArchiveTraverser
         final String normalizedPath = Utils.normalizePath(fileOrDir);
         final boolean isDirectory = hdf5Reader.isGroup(normalizedPath, false);
 
-        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String parentPath = Utils.getRealParentPath(normalizedPath);
         LinkRecord link = null;
         if (parentPath.length() > 0)
         {
             link =
                     indexProvider.get(parentPath, readLinkTargets).tryGetLink(
-                            normalizedPath.substring(parentPath.length() + 1));
+                            getNameFromPath(normalizedPath, parentPath));
             if (link == null)
             {
                 errorStrategy.dealWithError(processor.createException(normalizedPath,
@@ -88,6 +88,11 @@ class HDF5ArchiveTraverser
             processDirectory(normalizedPath, recursive, readLinkTargets, processor);
             postProcessDirectory(parentPath, normalizedPath, link, processor);
         }
+    }
+
+    private String getNameFromPath(final String normalizedPath, final String parentPath)
+    {
+        return normalizedPath.substring(parentPath.length() == 1 ? 1: parentPath.length() + 1);
     }
 
     private void postProcessDirectory(final String parentPath, final String normalizedPath,
