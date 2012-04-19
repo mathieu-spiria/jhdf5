@@ -599,6 +599,27 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory)
+    {
+        return archiveFromFilesystemBelowDirectory(rootInArchive, directory,
+                ArchivingStrategy.DEFAULT, null);
+    }
+
+    public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
+            ArchivingStrategy strategy)
+    {
+        return archiveFromFilesystemBelowDirectory(rootInArchive, directory, strategy, null);
+    }
+
+    public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
+            ArchivingStrategy strategy, IPathVisitor pathVisitorOrNull)
+    {
+        checkReadWrite();
+        updaterOrNull.archiveBelow(rootInArchive, directory, strategy, CHUNK_SIZE_AUTO,
+                pathVisitorOrNull);
+        return this;
+    }
+
     public IHDF5Archiver archiveFile(String path, byte[] data) throws IllegalStateException
     {
         return archiveFile(NewArchiveEntry.file(path), new ByteArrayInputStream(data));

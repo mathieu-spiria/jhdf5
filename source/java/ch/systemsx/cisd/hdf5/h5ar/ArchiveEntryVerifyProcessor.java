@@ -64,9 +64,7 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
     {
         this.visitor = visitor;
         this.rootDirectoryOnFS = rootDirectoryOnFS;
-        this.rootDirectoryInArchive =
-                rootDirectoryInArchive.endsWith("/") ? rootDirectoryInArchive.substring(0,
-                        rootDirectoryInArchive.length() - 1) : rootDirectoryInArchive;
+        this.rootDirectoryInArchive = Utils.normalizePath(rootDirectoryInArchive);
         this.buffer = buffer;
         this.checkAttributes = checkAttributes;
         this.numeric = numeric;

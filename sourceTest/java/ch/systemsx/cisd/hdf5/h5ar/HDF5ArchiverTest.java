@@ -284,6 +284,20 @@ public class HDF5ArchiverTest
     }
 
     @Test
+    public void testCreateVerifyContentArtificialRootRoundtripOK() throws IOException
+    {
+        final File dir = createTestDirectory();
+        final File h5arfile = new File(workingDirectory, "testRoundtripContentArtificialRoot.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        HDF5ArchiverFactory.open(h5arfile).archiveFromFilesystemBelowDirectory("ttt", dir).close();
+        final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
+        assertTrue(ar.test().isEmpty());
+        assertTrue(ar.verifyAgainstFilesystem("", dir.getAbsolutePath(), "ttt").isEmpty());
+        ar.close();
+    }
+
+    @Test
     public void testRoundtripArtificalRootOK() throws IOException
     {
         final File dir = createTestDirectory();

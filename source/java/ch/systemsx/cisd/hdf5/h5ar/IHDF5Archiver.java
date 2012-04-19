@@ -137,7 +137,8 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
      *            <code>path=/home/joe/work/a/b/c</code> and <code>rootInArchive=/t</code>, then
      *            <code>c</code> will end up in the archive at the path <code>/t/c</code>. If
      *            <var>rootInArchive</var> is the last part of the parent directory of
-     *            <var>path</var> on the filesystem, then its metadata will be taken from the filesystem.
+     *            <var>path</var> on the filesystem, then its metadata will be taken from the
+     *            filesystem.
      * @param path The file or directory to archive.
      */
     public IHDF5Archiver archiveFromFilesystem(String rootInArchive, File path);
@@ -149,7 +150,8 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
      *            <code>path=/home/joe/work/a/b/c</code> and <code>rootInArchive=/t</code>, then
      *            <code>c</code> will end up in the archive at the path <code>/t/c</code>. If
      *            <var>rootInArchive</var> is the last part of the parent directory of
-     *            <var>path</var> on the filesystem, then its metadata will be taken from the filesystem.
+     *            <var>path</var> on the filesystem, then its metadata will be taken from the
+     *            filesystem.
      * @param path The file or directory to archive.
      * @param strategy The archiving strategy to use. This strategy object determines which files to
      *            include and to exclude and which files to compress.
@@ -164,13 +166,62 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
      *            <code>path=/home/joe/work/a/b/c</code> and <code>rootInArchive=/t</code>, then
      *            <code>c</code> will end up in the archive at the path <code>/t/c</code>. If
      *            <var>rootInArchive</var> is the last part of the parent directory of
-     *            <var>path</var> on the filesystem, then its metadata will be taken from the filesystem.
+     *            <var>path</var> on the filesystem, then its metadata will be taken from the
+     *            filesystem.
      * @param path The file or directory to archive.
      * @param strategy The archiving strategy to use. This strategy object determines which files to
      *            include and to exclude and which files to compress.
      * @param pathVisitorOrNull The {@link IPathVisitor} to use. Can be <code>null</code>.
      */
     public IHDF5Archiver archiveFromFilesystem(String rootInArchive, File path,
+            ArchivingStrategy strategy, IPathVisitor pathVisitorOrNull);
+
+    /**
+     * Archive the content below <var>directory</var> from the filesystem.
+     * 
+     * @param rootInArchive The root directory of <var>path</var> in the archive. Example: If
+     *            <code>directory=/home/joe/work/a/b</code>, directory <code>b</code> has two files
+     *            <code>c</code> and <code>d</code>, and <code>rootInArchive=/t</code>, then the
+     *            archive will have <code>c</code> at path <code>/t/c</code> and <code>d</code> at
+     *            path <code>/t/d</code>.
+     * @param directory The directory to archive the content of. It is an error if this is not a
+     *            directory on the filesystem.
+     */
+    public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory);
+
+    /**
+     * Archive the content below <var>directory</var> from the filesystem.
+     * 
+     * @param rootInArchive The root directory of <var>path</var> in the archive. Example: If
+     *            <code>path=/home/joe/work/a/b/c</code> and <code>rootInArchive=/t</code>, then
+     *            <code>c</code> will end up in the archive at the path <code>/t/c</code>. If
+     *            <var>rootInArchive</var> is the last part of the parent directory of
+     *            <var>path</var> on the filesystem, then its metadata will be taken from the
+     *            filesystem.
+     * @param directory The directory to archive the content of. It is an error if this is not an
+     *            existing directory.
+     * @param strategy The archiving strategy to use. This strategy object determines which files to
+     *            include and to exclude and which files to compress.
+     */
+    public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
+            ArchivingStrategy strategy);
+
+    /**
+     * Archive the content below <var>directory</var> from the filesystem.
+     * 
+     * @param rootInArchive The root directory of <var>path</var> in the archive. Example: If
+     *            <code>path=/home/joe/work/a/b/c</code> and <code>rootInArchive=/t</code>, then
+     *            <code>c</code> will end up in the archive at the path <code>/t/c</code>. If
+     *            <var>rootInArchive</var> is the last part of the parent directory of
+     *            <var>path</var> on the filesystem, then its metadata will be taken from the
+     *            filesystem.
+     * @param directory The directory to archive the content of. It is an error if this is not an
+     *            existing directory.
+     * @param strategy The archiving strategy to use. This strategy object determines which files to
+     *            include and to exclude and which files to compress.
+     * @param pathVisitorOrNull The {@link IPathVisitor} to use. Can be <code>null</code>.
+     */
+    public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
             ArchivingStrategy strategy, IPathVisitor pathVisitorOrNull);
 
     /**
@@ -290,13 +341,13 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
 
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
             String rootDirectoryInArchive, IListEntryVisitor visitor, VerifyParameters params);
-    
+
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
             String rootDirectoryInArchive, VerifyParameters params);
-    
+
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
             String rootDirectoryInArchive);
-    
+
     public IHDF5Archiver extractFile(String path, OutputStream out) throws IOExceptionUnchecked;
 
     public IHDF5Archiver extractToFilesystem(File root, String path) throws IllegalStateException;

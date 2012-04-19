@@ -286,6 +286,22 @@ class HDF5ArchiveUpdater
         return this;
     }
 
+    public HDF5ArchiveUpdater archiveBelow(String rootDirInArchive, File directory,
+            ArchivingStrategy strategy, int chunkSize, IPathVisitor pathVisitorOrNull)
+    {
+        final File absoluteDirectory = directory.getAbsoluteFile();
+        if (absoluteDirectory.isDirectory())
+        {
+            archiveDirectory(rootDirInArchive, absoluteDirectory, false, strategy, chunkSize,
+                    pathVisitorOrNull);
+        } else
+        {
+            errorStrategy.dealWithError(new ArchivingException(absoluteDirectory, new IOException(
+                    "Path does not correspond to a directory.")));
+        }
+        return this;
+    }
+
     public HDF5ArchiveUpdater archive(File parentDirToStrip, File path, ArchivingStrategy strategy,
             int chunkSize, IPathVisitor pathVisitorOrNull)
     {
