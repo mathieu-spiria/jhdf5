@@ -44,7 +44,7 @@ class HDF5ArchiveDeleter
         for (String path : hdf5ObjectPaths)
         {
             final String normalizedPath = Utils.normalizePath(path);
-            final String group = Utils.getParentPath(normalizedPath);
+            final String group = Utils.getQuasiParentPath(normalizedPath);
             final IDirectoryIndex index = indexProvider.get(group, false);
             try
             {

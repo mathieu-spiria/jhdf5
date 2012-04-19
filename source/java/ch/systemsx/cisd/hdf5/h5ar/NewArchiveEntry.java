@@ -206,7 +206,7 @@ public abstract class NewArchiveEntry
     public static NewFileArchiveEntry file(String path)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
         if (name.length() == 0)
         {
@@ -227,7 +227,7 @@ public abstract class NewArchiveEntry
     public static NewSymLinkArchiveEntry symlink(String path, String linkTarget)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
         if (name.length() == 0)
         {
@@ -244,7 +244,7 @@ public abstract class NewArchiveEntry
     public static NewDirectoryArchiveEntry directory(String path)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
         if (name.length() == 0)
         {

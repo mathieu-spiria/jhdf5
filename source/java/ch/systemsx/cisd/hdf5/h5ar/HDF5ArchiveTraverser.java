@@ -54,7 +54,7 @@ class HDF5ArchiveTraverser
         final String normalizedPath = Utils.normalizePath(fileOrDir);
         final boolean isDirectory = hdf5Reader.isGroup(normalizedPath, false);
 
-        final String parentPath = Utils.getRealParentPath(normalizedPath);
+        final String parentPath = Utils.getParentPath(normalizedPath);
         LinkRecord link = null;
         if (parentPath.length() > 0)
         {

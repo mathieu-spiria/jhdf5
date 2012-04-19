@@ -206,7 +206,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     public boolean exists(String path)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
         return indexProvider.get(parentPath, false).exists(name);
     }
@@ -214,7 +214,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     public boolean isDirectory(String path)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
         return indexProvider.get(parentPath, false).isDirectory(name);
     }
@@ -232,7 +232,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     public ArchiveEntry tryGetEntry(String path, boolean readLinkTarget)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
         return trytoArchiveEntry(parentPath, normalizedPath,
                 indexProvider.get(parentPath, readLinkTarget).tryGetLink(name), idCache);
@@ -241,7 +241,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     private LinkRecord tryGetLink(String path, boolean readLinkTargets)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
         return indexProvider.get(parentPath, readLinkTargets).tryGetLink(name);
     }

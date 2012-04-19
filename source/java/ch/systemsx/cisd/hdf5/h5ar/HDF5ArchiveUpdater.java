@@ -393,7 +393,7 @@ class HDF5ArchiveUpdater
         String linkTargetOrNull = link.tryGetLinkTarget();
         while (true)
         {
-            final String hdf5GroupPath = Utils.getParentPath(Utils.normalizePath(pathProcessing));
+            final String hdf5GroupPath = Utils.getQuasiParentPath(Utils.normalizePath(pathProcessing));
             final IDirectoryIndex index = indexProvider.get(hdf5GroupPath, false);
             final String hdf5FileName = FilenameUtils.getName(pathProcessing);
             final LinkRecord linkProcessing =
