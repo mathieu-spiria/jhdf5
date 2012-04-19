@@ -61,10 +61,15 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
 
     /**
      * Closes this object and the file referenced by this object. This object must not be used after
-     * being closed.
+     * being closed. Calling this method for a second time is a no-op.
      */
     public void close();
 
+    /**
+     * Returns <code>true</code> if this reader has been already closed.
+     */
+    public boolean isClosed();
+    
     // /////////////////////
     // Objects & Links
     // /////////////////////

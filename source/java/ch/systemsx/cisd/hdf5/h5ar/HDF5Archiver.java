@@ -169,7 +169,10 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
 
     public void close()
     {
-        flush();
+        if (isClosed() == false)
+        {
+            flush();
+        }
         if (closeReaderOnCloseFile)
         {
             hdf5Reader.close();
@@ -177,6 +180,11 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         {
             indexProvider.close();
         }
+    }
+    
+    public boolean isClosed()
+    {
+        return hdf5Reader.isClosed();
     }
 
     //

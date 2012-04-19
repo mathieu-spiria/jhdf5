@@ -147,6 +147,11 @@ class HDF5Reader implements IHDF5Reader
         baseReader.close();
     }
 
+    public boolean isClosed()
+    {
+        return baseReader.isClosed();
+    }
+    
     // /////////////////////
     // Objects & Links
     // /////////////////////

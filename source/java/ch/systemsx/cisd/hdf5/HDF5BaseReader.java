@@ -198,6 +198,11 @@ class HDF5BaseReader
             state = State.CLOSED;
         }
     }
+    
+    boolean isClosed()
+    {
+        return state == State.CLOSED;
+    }
 
     int openOrCreateBooleanDataType()
     {

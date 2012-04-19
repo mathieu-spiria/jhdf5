@@ -30,8 +30,18 @@ import ch.systemsx.cisd.base.io.IInputStream;
  */
 public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
 {
+    
+    /**
+     * Closes this object and the file referenced by this object. This object must not be used after
+     * being closed. Calling this method for a second time is a no-op.
+     */
     public void close();
 
+    /**
+     * Returns <code>true</code> if this archive reader has been already closed.
+     */
+    public boolean isClosed();
+    
     public List<ArchiveEntry> list(String fileOrDir);
 
     public List<ArchiveEntry> list(String fileOrDir, ListParameters params);
