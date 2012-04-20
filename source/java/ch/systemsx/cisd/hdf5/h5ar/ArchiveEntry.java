@@ -31,10 +31,16 @@ public final class ArchiveEntry
 
     private final String name;
 
+    private final String realPath;
+
+    private final String realParentPath;
+
+    private final String realName;
+
     private final ArchiveEntryCompleteness completeness;
 
     private final boolean hasLinkTarget;
-    
+
     private final String linkTarget;
 
     private final FileLinkType linkType;
@@ -65,12 +71,15 @@ public final class ArchiveEntry
     {
         this(dir, path, link, idCache, null);
     }
-    
+
     ArchiveEntry(String dir, String path, LinkRecord link, IdCache idCache, String errorLineOrNull)
     {
         this.parentPath = dir;
+        this.realParentPath = parentPath;
         this.path = path;
+        this.realPath = path;
         this.name = link.getLinkName();
+        this.realName = name;
         this.idCache = idCache;
         this.completeness = link.getCompleteness();
         this.hasLinkTarget = (link.tryGetLinkTarget() != null);
@@ -93,6 +102,9 @@ public final class ArchiveEntry
         this.parentPath = pathInfo.parentPath;
         this.path = pathInfo.path;
         this.name = pathInfo.name;
+        this.realParentPath = linkInfo.parentPath;
+        this.realPath = linkInfo.realPath;
+        this.realName = linkInfo.name;
         this.idCache = pathInfo.idCache;
         this.completeness = linkInfo.completeness;
         this.hasLinkTarget = linkInfo.hasLinkTarget;
@@ -116,6 +128,9 @@ public final class ArchiveEntry
         this.path = null;
         this.parentPath = null;
         this.name = null;
+        this.realPath = null;
+        this.realParentPath = null;
+        this.realName = null;
         this.idCache = null;
         this.completeness = null;
         this.linkTarget = null;
@@ -132,19 +147,64 @@ public final class ArchiveEntry
         this.permissions = 0;
     }
 
+    /**
+     * Returns the full path of this entry.
+     */
     public String getPath()
     {
         return path;
     }
 
+    /**
+     * Returns the parent directory of the path of this entry.
+     */
     public String getParentPath()
     {
         return parentPath;
     }
 
+    /**
+     * Returns the name of the path this entry.
+     */
     public String getName()
     {
         return name;
+    }
+
+    /**
+     * Returns the real full path of this entry.
+     * <p>
+     * This will be the same as {@link #getPath()}, except when it originates from a call to
+     * {@link IHDF5ArchiveInfoProvider#tryGetResolvedEntry(String, boolean)} with
+     * <code>keepPath=true</code> where it will be the path of the link target.
+     */
+    public String getRealPath()
+    {
+        return realPath;
+    }
+
+    /**
+     * Returns the real parent directory of the path of this entry.
+     * <p>
+     * This will be the same as {@link #getPath()}, except when it originates from a call to
+     * {@link IHDF5ArchiveInfoProvider#tryGetResolvedEntry(String, boolean)} with
+     * <code>keepPath=true</code>  where it will be the parent path of the link target.
+     */
+    public String getRealParentPath()
+    {
+        return realParentPath;
+    }
+
+    /**
+     * Returns the name of the path this entry.
+     * <p>
+     * This will be the same as {@link #getPath()}, except when it originates from a call to
+     * {@link IHDF5ArchiveInfoProvider#tryGetResolvedEntry(String, boolean)} with
+     * <code>keepPath=true</code> where it will be the name of the link target.
+     */
+    public String getRealName()
+    {
+        return realName;
     }
 
     public ArchiveEntryCompleteness getCompleteness()
@@ -291,8 +351,9 @@ public final class ArchiveEntry
                 return "ERROR: " + errorLineOrNull;
             } else if (linkTypeOK() == false)
             {
-                return verbose ? String.format("ERROR: link type mismatch [expected: %s, found: %s]",
-                        linkType, verifiedLinkType) : "WRONG TYPE";
+                return verbose ? String.format(
+                        "ERROR: link type mismatch [expected: %s, found: %s]", linkType,
+                        verifiedLinkType) : "WRONG TYPE";
             } else if (sizeOK() == false)
             {
                 return verbose ? String.format("ERROR: size mismatch [expected: %d, found: %d]",
@@ -312,17 +373,17 @@ public final class ArchiveEntry
     {
         return describeLink(true, false, true);
     }
-    
+
     public String describeLink(boolean verbose)
     {
         return describeLink(verbose, false, true);
     }
-    
+
     public String describeLink(boolean verbose, boolean numeric)
     {
         return describeLink(verbose, numeric, true);
     }
-    
+
     public String describeLink(boolean verbose, boolean numeric, boolean includeCheck)
     {
         final StringBuilder builder = new StringBuilder();

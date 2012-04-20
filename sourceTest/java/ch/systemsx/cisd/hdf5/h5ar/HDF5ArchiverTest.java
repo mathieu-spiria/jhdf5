@@ -556,20 +556,19 @@ public class HDF5ArchiverTest
 
         final List<ArchiveEntry> entries =
                 ra.list("/", ListParameters.build().resolveSymbolicLinks().get());
-        for (ArchiveEntry entry : entries)
-        {
-            System.err.println(entry);
-        }
         assertEquals(8, entries.size());
         assertEquals("/aDir", entries.get(0).getPath());
         assertTrue(entries.get(0).isDirectory());
         assertEquals("/aDir/aLinkToALinkToADir", entries.get(1).getPath());
+        assertEquals("/aDir", entries.get(1).getRealPath());
         assertTrue(entries.get(1).isDirectory());
         assertEquals("/aDir/aLinkToALinkToAFile", entries.get(2).getPath());
+        assertEquals("/aFile", entries.get(2).getRealPath());
         assertTrue(entries.get(2).isRegularFile());
         assertEquals("/z", entries.get(3).getPath());
         assertTrue(entries.get(3).isDirectory());
         assertEquals("/z/y", entries.get(4).getPath());
+        assertEquals("/", entries.get(4).getRealPath());
         assertTrue(entries.get(4).isDirectory());
         assertEquals("/aFile", entries.get(5).getPath());
         assertTrue(entries.get(5).isRegularFile());
