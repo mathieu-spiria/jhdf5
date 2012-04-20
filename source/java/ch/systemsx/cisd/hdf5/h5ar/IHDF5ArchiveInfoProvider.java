@@ -23,7 +23,7 @@ import java.util.List;
  * 
  * @author Bernd Rinn
  */
-interface IHDF5ArchiveInfoProvider
+public interface IHDF5ArchiveInfoProvider
 {
     public boolean exists(String path);
 
