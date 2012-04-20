@@ -570,4 +570,24 @@ public class HDF5ArchiverTest
         ra.close();
     }
 
+    @Test
+    public void testResolveLinksWithLoops()
+    {
+        workingDirectory.mkdirs();
+        final File h5arfile = new File(workingDirectory, "testResolveLinksWithLoops.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        final IHDF5Archiver a = HDF5ArchiverFactory.open(h5arfile);
+        a.archiveSymlink(NewArchiveEntry.symlink("a", "b"));
+        a.archiveSymlink(NewArchiveEntry.symlink("b", "a"));
+        
+        a.archiveSymlink(NewArchiveEntry.symlink("c", "d"));
+        a.archiveSymlink(NewArchiveEntry.symlink("d", "e"));
+        a.archiveSymlink(NewArchiveEntry.symlink("e", "c"));
+        a.close();
+        final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
+        assertNull(ra.tryGetResolvedEntry("a", false));
+        assertNull(ra.tryGetResolvedEntry("d", false));
+        ra.close();
+    }
 }

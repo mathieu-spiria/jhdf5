@@ -26,7 +26,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -255,8 +257,15 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         ArchiveEntry workEntry = entry;
         if (entry.isSymLink())
         {
+            final Set<String> workPathSet = new HashSet<String>();
             while (workEntry != null && workEntry.isSymLink())
             {
+                if (workPathSet.contains(workEntry.getPath()))
+                {
+                    // The link targets form a loop, resolve to null.
+                    return null;
+                }
+                workPathSet.add(workEntry.getPath());
                 String linkTarget;
                 if (workEntry.hasLinkTarget())
                 {
