@@ -262,17 +262,29 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
             return null;
         }
         ArchiveEntry workEntry = entry;
+        String firstPath = null;
         if (entry.isSymLink())
         {
-            final Set<String> workPathSet = new HashSet<String>();
+            Set<String> workPathSet = null;
             while (workEntry != null && workEntry.isSymLink())
             {
-                if (workPathSet.contains(workEntry.getPath()))
+                if (firstPath == null)
                 {
-                    // The link targets form a loop, resolve to null.
-                    return null;
+                    firstPath = workEntry.getPath();
+                } else
+                {
+                    if (workPathSet == null)
+                    {
+                        workPathSet = new HashSet<String>();
+                        workPathSet.add(firstPath);
+                    }
+                    if (workPathSet.contains(workEntry.getPath()))
+                    {
+                        // The link targets form a loop, resolve to null.
+                        return null;
+                    }
+                    workPathSet.add(workEntry.getPath());
                 }
-                workPathSet.add(workEntry.getPath());
                 String linkTarget;
                 if (workEntry.hasLinkTarget())
                 {
