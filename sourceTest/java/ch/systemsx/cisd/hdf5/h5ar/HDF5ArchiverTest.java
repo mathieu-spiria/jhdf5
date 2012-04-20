@@ -493,6 +493,10 @@ public class HDF5ArchiverTest
         a.archiveSymlink(NewArchiveEntry.symlink("aLinkToANonexistingFile", "nonexistingFile"));
         a.archiveSymlink(NewArchiveEntry.symlink("aDir/aLinkToALinkToAFile", "../aLinkToAFile"));
         a.archiveSymlink(NewArchiveEntry.symlink("aDir/aLinkToALinkToADir", "/aLinkToADir"));
+        
+        // A loop
+        a.archiveDirectory(NewArchiveEntry.directory("z"));
+        a.archiveSymlink(NewArchiveEntry.symlink("z/y", ".."));
         a.close();
         final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
 
@@ -552,21 +556,31 @@ public class HDF5ArchiverTest
 
         final List<ArchiveEntry> entries =
                 ra.list("/", ListParameters.build().resolveSymbolicLinks().get());
-        assertEquals(6, entries.size());
+        for (ArchiveEntry entry : entries)
+        {
+            System.err.println(entry);
+        }
+        assertEquals(8, entries.size());
         assertEquals("/aDir", entries.get(0).getPath());
         assertTrue(entries.get(0).isDirectory());
         assertEquals("/aDir/aLinkToALinkToADir", entries.get(1).getPath());
         assertTrue(entries.get(1).isDirectory());
         assertEquals("/aDir/aLinkToALinkToAFile", entries.get(2).getPath());
         assertTrue(entries.get(2).isRegularFile());
-        assertEquals("/aFile", entries.get(3).getPath());
-        assertTrue(entries.get(3).isRegularFile());
-        assertEquals("/aLinkToADir", entries.get(4).getPath());
+        assertEquals("/z", entries.get(3).getPath());
+        assertTrue(entries.get(3).isDirectory());
+        assertEquals("/z/y", entries.get(4).getPath());
         assertTrue(entries.get(4).isDirectory());
-        assertEquals("/aLinkToAFile", entries.get(5).getPath());
+        assertEquals("/aFile", entries.get(5).getPath());
         assertTrue(entries.get(5).isRegularFile());
-        assertEquals(entries.get(3).getCrc32(), entries.get(5).getCrc32());
+        assertEquals("/aLinkToADir", entries.get(6).getPath());
+        assertTrue(entries.get(6).isDirectory());
+        assertEquals("/aLinkToAFile", entries.get(7).getPath());
+        assertTrue(entries.get(7).isRegularFile());
+        assertEquals(entries.get(5).getCrc32(), entries.get(7).getCrc32());
 
+        assertEquals("/", ra.tryGetResolvedEntry("z/y", false).getPath());
+        
         ra.close();
     }
 

@@ -71,7 +71,7 @@ final class LinkRecord implements Comparable<LinkRecord>
     private long verifiedSize = -1;
 
     private int verifiedCrc32 = 0;
-    
+
     /**
      * Returns a {@link LinkRecord} object for the given <var>link</var> {@link File}, or
      * <code>null</code> if a system call fails and <var>continueOnError</var> is <code>true</code>.
@@ -122,12 +122,30 @@ final class LinkRecord implements Comparable<LinkRecord>
     }
 
     /**
-     * Creates a directory entry.
+     * Creates a link record for a new directory entry.
      */
     LinkRecord(String hdf5DirectoryPath)
     {
         this(hdf5DirectoryPath, System.currentTimeMillis() / 1000, Utils.getCurrentUid(), Utils
                 .getCurrentGid(), (short) 0755);
+    }
+
+    /**
+     * Creates the root directory entry from the stat record of the HDF5 archive.
+     */
+    LinkRecord(Stat hdf5Archive)
+    {
+        this("", hdf5Archive.getLastModified(), hdf5Archive.getUid(), hdf5Archive.getGid(),
+                hdf5Archive.getPermissions());
+    }
+
+    /**
+     * Creates the root directory entry from the File of the HDF5 archive.
+     */
+    LinkRecord(File hdf5Archive)
+    {
+        this("", hdf5Archive.lastModified() / 1000, Utils.getCurrentUid(), Utils
+                .getCurrentGid(), Utils.UNKNOWN_S);
     }
 
     /**
@@ -348,7 +366,7 @@ final class LinkRecord implements Comparable<LinkRecord>
     {
         this.verifiedType = verifiedType;
     }
-    
+
     public int getVerifiedCrc32()
     {
         return verifiedCrc32;

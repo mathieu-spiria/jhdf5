@@ -38,6 +38,7 @@ import ch.systemsx.cisd.base.io.AdapterIInputStreamToInputStream;
 import ch.systemsx.cisd.base.io.AdapterIOutputStreamToOutputStream;
 import ch.systemsx.cisd.base.io.IInputStream;
 import ch.systemsx.cisd.base.io.IOutputStream;
+import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.hdf5.HDF5DataBlock;
 import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
@@ -234,6 +235,12 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     public ArchiveEntry tryGetEntry(String path, boolean readLinkTarget)
     {
         final String normalizedPath = Utils.normalizePath(path);
+        if ("/".equals(normalizedPath))
+        {
+            return new ArchiveEntry("", "/", Unix.isOperational() ? new LinkRecord(
+                    Unix.getFileInfo(hdf5Reader.getFile().getPath())) : new LinkRecord(
+                    hdf5Reader.getFile()), idCache);
+        }
         final String parentPath = Utils.getQuasiParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
         return trytoArchiveEntry(parentPath, normalizedPath,
