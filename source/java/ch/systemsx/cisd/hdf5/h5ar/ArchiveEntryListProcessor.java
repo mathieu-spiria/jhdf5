@@ -21,25 +21,27 @@ import java.io.IOException;
 import java.util.zip.CRC32;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
+import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.hdf5.HDF5ObjectInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 /**
  * An {@Link IArchiveEntryProcessor} that performs a file list.
- *
+ * 
  * @author Bernd Rinn
  */
 class ArchiveEntryListProcessor implements IArchiveEntryProcessor
 {
     private final IListEntryVisitor visitor;
-    
+
     private final byte[] buffer;
-    
+
     private final boolean checkArchive;
-    
+
     ArchiveEntryListProcessor(IListEntryVisitor visitor, byte[] buffer, boolean checkArchive)
     {
         this.visitor = visitor;
@@ -59,7 +61,7 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
             if (verifiedType == FileLinkType.REGULAR_FILE)
             {
                 final long verifiedSize = reader.getSize(path);
-                int verifiedCrc32 = 0; 
+                int verifiedCrc32 = 0;
                 try
                 {
                     verifiedCrc32 = calcCRC32Archive(path, verifiedSize, reader);
@@ -101,7 +103,19 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
 
     public ArchiverException createException(String objectPath, HDF5Exception cause)
     {
+        if (isTooManySymlinksError(cause))
+        {
+            return new ListArchiveTooManySymbolicLinksException(objectPath, cause);
+        }
         return new ListArchiveException(objectPath, cause);
+    }
+
+    private boolean isTooManySymlinksError(HDF5Exception cause)
+    {
+        return cause instanceof HDF5LibraryException
+                && ((HDF5LibraryException) cause).getMajorErrorNumber() == HDF5Constants.H5E_LINK
+                && "Too many soft links in path".equals(((HDF5LibraryException) cause)
+                        .getMinorError());
     }
 
     public ArchiverException createException(String objectPath, RuntimeException cause)
