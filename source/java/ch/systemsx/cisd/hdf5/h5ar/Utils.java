@@ -131,6 +131,16 @@ final class Utils
     }
 
     /**
+     * Returns an {@link ArchiveEntry} from a {@link LinkRecord}. Can handle <code>null</code>
+     * {@link LinkRecord}s.
+     */
+    static ArchiveEntry tryToArchiveEntry(String dir, String path, LinkRecord linkOrNull,
+            IdCache idCache)
+    {
+        return linkOrNull != null ? new ArchiveEntry(dir, path, linkOrNull, idCache) : null;
+    }
+
+    /**
      * Returns the UID of the current user or {@link Utils#UNKNOWN}, if that cannot be determined.
      */
     static int getCurrentUid()

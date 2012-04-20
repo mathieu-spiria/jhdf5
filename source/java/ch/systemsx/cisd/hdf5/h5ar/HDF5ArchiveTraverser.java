@@ -31,6 +31,11 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
  */
 class HDF5ArchiveTraverser
 {
+    interface IDirectoryChecker
+    {
+        boolean isDirectoryFollowSymlinks(ArchiveEntry entry);
+    }
+    
     private final IHDF5Reader hdf5Reader;
 
     private final IDirectoryIndexProvider indexProvider;
@@ -39,9 +44,12 @@ class HDF5ArchiveTraverser
 
     private final IdCache idCache;
 
-    public HDF5ArchiveTraverser(IHDF5Reader hdf5Reader, IDirectoryIndexProvider indexProvider,
-            IdCache idCache)
+    private final IDirectoryChecker directoryChecker;
+
+    public HDF5ArchiveTraverser(IDirectoryChecker directoryChecker,
+            IHDF5Reader hdf5Reader, IDirectoryIndexProvider indexProvider, IdCache idCache)
     {
+        this.directoryChecker = directoryChecker;
         this.hdf5Reader = hdf5Reader;
         this.indexProvider = indexProvider;
         this.errorStrategy = indexProvider.getErrorStrategy();
@@ -49,17 +57,18 @@ class HDF5ArchiveTraverser
     }
 
     public void process(String fileOrDir, boolean recursive, boolean readLinkTargets,
-            IArchiveEntryProcessor processor)
+            boolean followSymlinks, IArchiveEntryProcessor processor)
     {
         final String normalizedPath = Utils.normalizePath(fileOrDir);
-        final boolean isDirectory = hdf5Reader.isGroup(normalizedPath, false);
+        final boolean isDirectory = hdf5Reader.isGroup(normalizedPath, followSymlinks);
+        final boolean effectiveReadLinkTargets = readLinkTargets | followSymlinks;
 
         final String parentPath = Utils.getParentPath(normalizedPath);
         LinkRecord link = null;
         if (parentPath.length() > 0)
         {
             link =
-                    indexProvider.get(parentPath, readLinkTargets).tryGetLink(
+                    indexProvider.get(parentPath, effectiveReadLinkTargets).tryGetLink(
                             getNameFromPath(normalizedPath, parentPath));
             if (link == null)
             {
@@ -85,14 +94,15 @@ class HDF5ArchiveTraverser
         }
         if (isDirectory)
         {
-            processDirectory(normalizedPath, recursive, readLinkTargets, processor);
+            processDirectory(normalizedPath, recursive, effectiveReadLinkTargets, followSymlinks,
+                    processor);
             postProcessDirectory(parentPath, normalizedPath, link, processor);
         }
     }
 
     private String getNameFromPath(final String normalizedPath, final String parentPath)
     {
-        return normalizedPath.substring(parentPath.length() == 1 ? 1: parentPath.length() + 1);
+        return normalizedPath.substring(parentPath.length() == 1 ? 1 : parentPath.length() + 1);
     }
 
     private void postProcessDirectory(final String parentPath, final String normalizedPath,
@@ -119,12 +129,15 @@ class HDF5ArchiveTraverser
      * Provide the entries of <var>normalizedDir</var> to <var>processor</var>.
      */
     private void processDirectory(String normalizedDir, boolean recursive, boolean readLinkTargets,
-            IArchiveEntryProcessor processor)
+            boolean followSymlinks, IArchiveEntryProcessor processor)
     {
-        if (hdf5Reader.exists(normalizedDir, false) == false)
+        if (hdf5Reader.exists(normalizedDir, followSymlinks) == false)
         {
-            errorStrategy.dealWithError(processor.createException(normalizedDir,
-                    "Directory not found in archive."));
+            if (hdf5Reader.exists(normalizedDir, false) == false)
+            {
+                errorStrategy.dealWithError(processor.createException(normalizedDir,
+                        "Directory not found in archive."));
+            }
             return;
         }
         for (LinkRecord link : indexProvider.get(normalizedDir, readLinkTargets))
@@ -138,9 +151,9 @@ class HDF5ArchiveTraverser
                 {
                     continue;
                 }
-                if (recursive && link.isDirectory())
+                if (recursive && isDirectory(path, link, followSymlinks))
                 {
-                    processDirectory(path, recursive, readLinkTargets, processor);
+                    processDirectory(path, recursive, readLinkTargets, followSymlinks, processor);
                     postProcessDirectory(normalizedDir, path, link, processor);
                 }
             } catch (IOException ex)
@@ -153,4 +166,23 @@ class HDF5ArchiveTraverser
             }
         }
     }
+
+    private boolean isDirectory(String path, LinkRecord link, boolean followSymlinks)
+    {
+        if (link.isDirectory() == false && followSymlinks)
+        {
+            return directoryChecker.isDirectoryFollowSymlinks(toArchiveEntry(path, link));
+        } else
+        {
+            return link.isDirectory();
+        }
+    }
+
+    private ArchiveEntry toArchiveEntry(String path, LinkRecord linkRecord)
+    {
+        final String normalizedPath = Utils.normalizePath(path);
+        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
+        return Utils.tryToArchiveEntry(parentPath, normalizedPath, linkRecord, idCache);
+    }
+
 }

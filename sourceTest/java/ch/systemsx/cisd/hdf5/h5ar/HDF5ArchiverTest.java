@@ -478,6 +478,77 @@ public class HDF5ArchiverTest
     }
 
     @Test
+    public void testFollowSymbolicLinks()
+    {
+        workingDirectory.mkdirs();
+        final File h5arfile = new File(workingDirectory, "testFollowSymbolicLinks.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        final IHDF5Archiver a = HDF5ArchiverFactory.open(h5arfile);
+        a.archiveDirectory(NewArchiveEntry.directory("aDir"));
+        a.archiveFile(NewArchiveEntry.file("aDir/aFile"), "Some file content".getBytes());
+        a.archiveSymlink(NewArchiveEntry.symlink("aLinkToAFile", "aDir/aFile"));
+        a.archiveSymlink(NewArchiveEntry.symlink("aLinkToADir", "aDir"));
+        a.close();
+
+        final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
+        final List<ArchiveEntry> entries =
+                ra.list("/", ListParameters.build()./*resolveSymbolicLinks().*/followSymbolicLinks()
+                        .get());
+        
+        assertEquals(5, entries.size());
+        assertEquals("/aDir", entries.get(0).getPath());
+        assertTrue(entries.get(0).isDirectory());
+        assertEquals("/aDir/aFile", entries.get(1).getPath());
+        assertTrue(entries.get(1).isRegularFile());
+        assertEquals("/aLinkToADir", entries.get(2).getPath());
+        assertTrue(entries.get(2).isSymLink());
+        assertEquals("/aLinkToADir/aFile", entries.get(3).getPath());
+        assertTrue(entries.get(3).isRegularFile());
+        assertEquals("/aLinkToAFile", entries.get(4).getPath());
+        assertTrue(entries.get(4).isSymLink());
+        
+        ra.close();
+    }
+
+    @Test
+    public void testFollowAndResolveSymbolicLinks()
+    {
+        workingDirectory.mkdirs();
+        final File h5arfile = new File(workingDirectory, "testFollowAndResolveSymbolicLinks.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        final IHDF5Archiver a = HDF5ArchiverFactory.open(h5arfile);
+        a.archiveDirectory(NewArchiveEntry.directory("aDir"));
+        a.archiveFile(NewArchiveEntry.file("aDir/aFile"), "Some file content".getBytes());
+        a.archiveSymlink(NewArchiveEntry.symlink("aLinkToAFile", "aDir/aFile"));
+        a.archiveSymlink(NewArchiveEntry.symlink("aLinkToADir", "aDir"));
+        a.close();
+
+        final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
+
+        final List<ArchiveEntry> entries =
+                ra.list("/", ListParameters.build().resolveSymbolicLinks().followSymbolicLinks()
+                        .get());
+
+        assertEquals(5, entries.size());
+        assertEquals("/aDir", entries.get(0).getPath());
+        assertTrue(entries.get(0).isDirectory());
+        assertEquals("/aDir/aFile", entries.get(1).getPath());
+        assertTrue(entries.get(1).isRegularFile());
+        assertEquals("/aLinkToADir", entries.get(2).getPath());
+        assertEquals("/aDir", entries.get(2).getRealPath());
+        assertTrue(entries.get(2).isDirectory());
+        assertEquals("/aLinkToADir/aFile", entries.get(3).getPath());
+        assertTrue(entries.get(3).isRegularFile());
+        assertEquals("/aLinkToAFile", entries.get(4).getPath());
+        assertEquals("/aDir/aFile", entries.get(4).getRealPath());
+        assertTrue(entries.get(4).isRegularFile());
+        
+        ra.close();
+    }
+
+    @Test
     public void testResolveLinks()
     {
         workingDirectory.mkdirs();
@@ -493,11 +564,13 @@ public class HDF5ArchiverTest
         a.archiveSymlink(NewArchiveEntry.symlink("aLinkToANonexistingFile", "nonexistingFile"));
         a.archiveSymlink(NewArchiveEntry.symlink("aDir/aLinkToALinkToAFile", "../aLinkToAFile"));
         a.archiveSymlink(NewArchiveEntry.symlink("aDir/aLinkToALinkToADir", "/aLinkToADir"));
-        
+
         // A loop
         a.archiveDirectory(NewArchiveEntry.directory("z"));
         a.archiveSymlink(NewArchiveEntry.symlink("z/y", ".."));
+
         a.close();
+
         final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
 
         // A file is resolved to itself
@@ -579,7 +652,7 @@ public class HDF5ArchiverTest
         assertEquals(entries.get(5).getCrc32(), entries.get(7).getCrc32());
 
         assertEquals("/", ra.tryGetResolvedEntry("z/y", false).getPath());
-        
+
         ra.close();
     }
 
@@ -593,7 +666,7 @@ public class HDF5ArchiverTest
         final IHDF5Archiver a = HDF5ArchiverFactory.open(h5arfile);
         a.archiveSymlink(NewArchiveEntry.symlink("a", "b"));
         a.archiveSymlink(NewArchiveEntry.symlink("b", "a"));
-        
+
         a.archiveSymlink(NewArchiveEntry.symlink("c", "d"));
         a.archiveSymlink(NewArchiveEntry.symlink("d", "e"));
         a.archiveSymlink(NewArchiveEntry.symlink("e", "c"));
@@ -601,6 +674,35 @@ public class HDF5ArchiverTest
         final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
         assertNull(ra.tryGetResolvedEntry("a", false));
         assertNull(ra.tryGetResolvedEntry("d", false));
+        assertTrue(ra.list("/",
+                ListParameters.build().resolveSymbolicLinks().followSymbolicLinks().get())
+                .isEmpty());
         ra.close();
+    }
+
+    @Test(expectedExceptions = ListArchiveTooManySymbolicLinksException.class)
+    public void testResolveLinksWithLoopsInPath()
+    {
+        workingDirectory.mkdirs();
+        final File h5arfile = new File(workingDirectory, "testResolveLinksWithLoopsInPath.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        final IHDF5Archiver a = HDF5ArchiverFactory.open(h5arfile);
+
+        // A loop in the paths
+        a.archiveDirectory(NewArchiveEntry.directory("1"));
+        a.archiveDirectory(NewArchiveEntry.directory("2"));
+        a.archiveSymlink(NewArchiveEntry.symlink("1/3", "/2"));
+        a.archiveSymlink(NewArchiveEntry.symlink("2/4", "/1"));
+        a.close();
+        final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
+        try
+        {
+            // Will throw ListArchiveTooManySymbolicLinksException
+            ra.list("/", ListParameters.build().resolveSymbolicLinks().followSymbolicLinks().get());
+        } finally
+        {
+            ra.close();
+        }
     }
 }

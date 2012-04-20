@@ -18,7 +18,6 @@ package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
 
-import ch.rinn.restrictions.Private;
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.base.unix.FileLinkType;
@@ -209,7 +208,6 @@ final class LinkRecord implements Comparable<LinkRecord>
         }
     }
 
-    @Private
     LinkRecord(String linkName, String linkTargetOrNull, FileLinkType linkType, long size,
             long lastModified, int uid, int gid, short permissions, int crc32)
     {

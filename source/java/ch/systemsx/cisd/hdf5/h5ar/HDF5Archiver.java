@@ -125,7 +125,14 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         }
         this.indexProvider = new DirectoryIndexProvider(hdf5Reader, errorStrategy);
         this.idCache = new IdCache();
-        this.processor = new HDF5ArchiveTraverser(hdf5Reader, indexProvider, idCache);
+        this.processor = new HDF5ArchiveTraverser(new HDF5ArchiveTraverser.IDirectoryChecker()
+            {
+                public boolean isDirectoryFollowSymlinks(ArchiveEntry entry)
+                {
+                    final ArchiveEntry resolvedEntry = tryResolveLink(entry);
+                    return (resolvedEntry == null) ? false : resolvedEntry.isDirectory();
+                }
+            }, hdf5Reader, indexProvider, idCache);
         if (hdf5WriterOrNull == null)
         {
             this.updaterOrNull = null;
@@ -154,7 +161,13 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         this.hdf5Reader = reader;
         this.indexProvider = new DirectoryIndexProvider(hdf5Reader, errorStrategy);
         this.idCache = new IdCache();
-        this.processor = new HDF5ArchiveTraverser(hdf5Reader, indexProvider, idCache);
+        this.processor = new HDF5ArchiveTraverser(new HDF5ArchiveTraverser.IDirectoryChecker()
+            {
+                public boolean isDirectoryFollowSymlinks(ArchiveEntry entry)
+                {
+                    return tryResolveLink(entry).isDirectory();
+                }
+            }, hdf5Reader, indexProvider, idCache);
         if (hdf5WriterOrNull == null)
         {
             this.updaterOrNull = null;
@@ -243,7 +256,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         }
         final String parentPath = Utils.getQuasiParentPath(normalizedPath);
         final String name = normalizedPath.substring(parentPath.length() + 1);
-        return trytoArchiveEntry(parentPath, normalizedPath,
+        return Utils.tryToArchiveEntry(parentPath, normalizedPath,
                 indexProvider.get(parentPath, readLinkTarget).tryGetLink(name), idCache);
     }
 
@@ -334,12 +347,6 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return linkOrNull != null && linkOrNull.isSymLink();
     }
 
-    private static ArchiveEntry trytoArchiveEntry(String dir, String path, LinkRecord linkOrNull,
-            IdCache idCache)
-    {
-        return linkOrNull != null ? new ArchiveEntry(dir, path, linkOrNull, idCache) : null;
-    }
-
     //
     // IHDF5ArchiveReader
     //
@@ -424,7 +431,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         final ArchiveEntryListProcessor listProcessor =
                 new ArchiveEntryListProcessor(decoratedVisitor, buffer, params.isTestArchive());
         processor.process(normalizedPath, params.isRecursive(), params.isReadLinkTargets(),
-                listProcessor);
+                params.isFollowSymbolicLinks(), listProcessor);
         return this;
     }
 
@@ -466,7 +473,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         final ArchiveEntryVerifyProcessor verifyProcessor =
                 new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, buffer,
                         params.isVerifyAttributes(), params.isNumeric());
-        processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(),
+        processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(), false,
                 verifyProcessor);
         return this;
     }
@@ -477,7 +484,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         final ArchiveEntryVerifyProcessor verifyProcessor =
                 new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, rootDirectoryInArchive,
                         buffer, params.isVerifyAttributes(), params.isNumeric());
-        processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(),
+        processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(), false,
                 verifyProcessor);
         return this;
     }
@@ -566,7 +573,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         final IArchiveEntryProcessor extractor =
                 new ArchiveEntryExtractProcessor(visitorOrNull, strategy,
                         parentDirToStrip.getAbsolutePath(), buffer);
-        processor.process(path, true, true, extractor);
+        processor.process(path, true, true, false, extractor);
         return this;
     }
 
