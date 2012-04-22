@@ -16,6 +16,10 @@
 
 package ch.systemsx.cisd.hdf5.h5ar;
 
+import java.io.File;
+
+import org.apache.commons.io.FilenameUtils;
+
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.hdf5.HDF5ObjectType;
@@ -120,14 +124,24 @@ final class Utils
 
     /**
      * Returns a normalized path: it starts with "/" and doesn't have "/" at the end, except if it
-     * is the root path "/". This method does <i>not</i> remove any ".." or ".".
+     * is the root path "/". This method internally calls {@link FilenameUtils#normalize(String)}
+     * and thus removes any '.' and '..' elements.
      */
     static String normalizePath(String hdf5ObjectPath)
     {
+        final String prenormalizedPath = FilenameUtils.normalize(hdf5ObjectPath);
         final String pathStartingWithSlash =
-                (hdf5ObjectPath.startsWith("/") ? hdf5ObjectPath : "/" + hdf5ObjectPath);
+                (prenormalizedPath.startsWith("/") ? prenormalizedPath : "/" + prenormalizedPath);
         return (pathStartingWithSlash.length() > 1 && pathStartingWithSlash.endsWith("/")) ? pathStartingWithSlash
                 .substring(0, pathStartingWithSlash.length() - 1) : pathStartingWithSlash;
+    }
+    
+    /**
+     * Returns the absolute normalized {@link File} for <var>path</var>.
+     */
+    static File normalizePath(File path)
+    {
+        return new File(FilenameUtils.normalizeNoEndSeparator(path.getAbsolutePath()));
     }
 
     /**

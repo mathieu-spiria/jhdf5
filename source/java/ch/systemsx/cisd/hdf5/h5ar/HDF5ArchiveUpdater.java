@@ -93,9 +93,10 @@ class HDF5ArchiveUpdater
 
         private long size = 0;
 
-        public H5ARIOutputStream(String directory, LinkRecord link, int chunkSize, boolean compress)
+        H5ARIOutputStream(String normalizedDirectory, LinkRecord link, int chunkSize,
+                boolean compress)
         {
-            this.directory = Utils.normalizePath(directory);
+            this.directory = normalizedDirectory;
             this.path = concatenateLink(this.directory, link.getLinkName());
             this.link = link;
             final HDF5GenericStorageFeatures creationStorageFeature =
@@ -104,7 +105,7 @@ class HDF5ArchiveUpdater
             this.delegate =
                     HDF5IOAdapterFactory.asIOutputStream(hdf5Writer, path, creationStorageFeature,
                             getEffectiveChunkSize(chunkSize), OPAQUE_TAG_FILE);
-            indexProvider.get(directory, false).addFlushable(this);
+            indexProvider.get(normalizedDirectory, false).addFlushable(this);
         }
 
         public void write(int b) throws IOExceptionUnchecked
@@ -164,7 +165,7 @@ class HDF5ArchiveUpdater
     public HDF5ArchiveUpdater archive(File path, ArchivingStrategy strategy, int chunkSize,
             boolean keepNameFromPath, IPathVisitor pathVisitorOrNull)
     {
-        final File absolutePath = path.getAbsoluteFile();
+        final File absolutePath = Utils.normalizePath(path);
         return archive(keepNameFromPath ? absolutePath.getParentFile() : absolutePath,
                 absolutePath, strategy, chunkSize, pathVisitorOrNull);
     }
@@ -176,7 +177,7 @@ class HDF5ArchiveUpdater
         {
             errorStrategy.dealWithError(new ArchivingException("A regular file is expected here."));
         }
-        return new H5ARIOutputStream(directory, link, chunkSize, compress);
+        return new H5ARIOutputStream(Utils.normalizePath(directory), link, chunkSize, compress);
     }
 
     public HDF5ArchiveUpdater archive(String directory, LinkRecord link, InputStream inputOrNull,
@@ -249,8 +250,10 @@ class HDF5ArchiveUpdater
     public HDF5ArchiveUpdater archive(String rootDirInArchive, File path,
             ArchivingStrategy strategy, int chunkSize, IPathVisitor pathVisitorOrNull)
     {
-        final File absolutePath = path.getAbsoluteFile();
-        final String hdf5ObjectPath = concatenateLink(rootDirInArchive, path.getName());
+        final File absolutePath = Utils.normalizePath(path);
+        final String normalizedRootArchiveInDir = Utils.normalizePath(rootDirInArchive);
+        final String hdf5ObjectPath =
+                concatenateLink(normalizedRootArchiveInDir, absolutePath.getName());
         final String hdf5GroupPath = FilenameUtils.getFullPathNoEndSeparator(hdf5ObjectPath);
         final boolean groupExists =
                 hdf5GroupPath.length() == 0 ? true : hdf5Writer.isGroup(hdf5GroupPath);
@@ -263,8 +266,8 @@ class HDF5ArchiveUpdater
         } else if (absolutePath.isDirectory())
         {
             ok =
-                    archiveDirectory(rootDirInArchive, absolutePath, true, strategy, chunkSize,
-                            pathVisitorOrNull);
+                    archiveDirectory(normalizedRootArchiveInDir, absolutePath, true, strategy,
+                            chunkSize, pathVisitorOrNull);
         } else if (absolutePath.isFile())
         {
             final LinkRecord pseudoLinkForChecksum = new LinkRecord();
@@ -280,8 +283,8 @@ class HDF5ArchiveUpdater
         }
         if (ok)
         {
-            indexUpdater.updateIndicesOnThePath(rootDirInArchive, absolutePath, crc32, groupExists,
-                    strategy.doStoreOwnerAndPermissions());
+            indexUpdater.updateIndicesOnThePath(normalizedRootArchiveInDir, absolutePath, crc32,
+                    groupExists, strategy.doStoreOwnerAndPermissions());
         }
         return this;
     }
@@ -289,11 +292,11 @@ class HDF5ArchiveUpdater
     public HDF5ArchiveUpdater archiveBelow(String rootDirInArchive, File directory,
             ArchivingStrategy strategy, int chunkSize, IPathVisitor pathVisitorOrNull)
     {
-        final File absoluteDirectory = directory.getAbsoluteFile();
+        final File absoluteDirectory = Utils.normalizePath(directory);
         if (absoluteDirectory.isDirectory())
         {
-            archiveDirectory(rootDirInArchive, absoluteDirectory, false, strategy, chunkSize,
-                    pathVisitorOrNull);
+            archiveDirectory(Utils.normalizePath(rootDirInArchive), absoluteDirectory, false,
+                    strategy, chunkSize, pathVisitorOrNull);
         } else
         {
             errorStrategy.dealWithError(new ArchivingException(absoluteDirectory, new IOException(
@@ -305,8 +308,8 @@ class HDF5ArchiveUpdater
     public HDF5ArchiveUpdater archive(File parentDirToStrip, File path, ArchivingStrategy strategy,
             int chunkSize, IPathVisitor pathVisitorOrNull)
     {
-        final File absoluteParentDirToStrip = parentDirToStrip.getAbsoluteFile();
-        final File absolutePath = path.getAbsoluteFile();
+        final File absoluteParentDirToStrip = Utils.normalizePath(parentDirToStrip);
+        final File absolutePath = Utils.normalizePath(path);
         final String hdf5ObjectPath = getRelativePath(absoluteParentDirToStrip, absolutePath);
         final String hdf5GroupPath = FilenameUtils.getFullPathNoEndSeparator(hdf5ObjectPath);
         final boolean groupExists =
@@ -393,7 +396,8 @@ class HDF5ArchiveUpdater
         String linkTargetOrNull = link.tryGetLinkTarget();
         while (true)
         {
-            final String hdf5GroupPath = Utils.getQuasiParentPath(Utils.normalizePath(pathProcessing));
+            final String hdf5GroupPath =
+                    Utils.getQuasiParentPath(Utils.normalizePath(pathProcessing));
             final IDirectoryIndex index = indexProvider.get(hdf5GroupPath, false);
             final String hdf5FileName = FilenameUtils.getName(pathProcessing);
             final LinkRecord linkProcessing =
