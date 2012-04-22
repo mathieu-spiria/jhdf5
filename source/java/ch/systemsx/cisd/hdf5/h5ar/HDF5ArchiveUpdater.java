@@ -435,7 +435,7 @@ class HDF5ArchiveUpdater
     private boolean archiveDirectory(File parentDirToStrip, File dir, ArchivingStrategy strategy,
             int chunkSize, IPathVisitor pathVisitorOrNull)
     {
-        final String rootPathInArchive = getRelativePath(parentDirToStrip, dir.getParentFile());
+        final String rootPathInArchive = getRelativePath(parentDirToStrip, dir);
         return archiveDirectory(rootPathInArchive, dir, false, strategy, chunkSize,
                 pathVisitorOrNull);
     }
