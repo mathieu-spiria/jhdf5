@@ -694,7 +694,7 @@ class HDF5ArchiveUpdater
                 hdf5Writer.createOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, 0,
                         effectiveBufferLength, compression);
         long count = 0;
-        while (n != -1)
+        while (n > 0)
         {
             hdf5Writer.writeOpaqueByteArrayBlockWithOffset(objectPath, type, buffer, n, count);
             count += n;
