@@ -273,7 +273,7 @@ class HDF5ArchiveUpdater
             final LinkRecord pseudoLinkForChecksum = new LinkRecord();
             ok =
                     archiveFile(absolutePath, hdf5ObjectPath, pseudoLinkForChecksum,
-                            strategy.doCompress(hdf5ObjectPath), chunkSize, pathVisitorOrNull);
+                            strategy.getStorageFeatureForPath(hdf5ObjectPath), chunkSize, pathVisitorOrNull);
             crc32 = pseudoLinkForChecksum.getCrc32();
         } else
         {
@@ -330,7 +330,7 @@ class HDF5ArchiveUpdater
             final LinkRecord pseudoLinkForChecksum = new LinkRecord();
             ok =
                     archiveFile(absolutePath, hdf5ObjectPath, pseudoLinkForChecksum,
-                            strategy.doCompress(hdf5ObjectPath), chunkSize, pathVisitorOrNull);
+                            strategy.getStorageFeatureForPath(hdf5ObjectPath), chunkSize, pathVisitorOrNull);
             crc32 = pseudoLinkForChecksum.getCrc32();
         } else
         {
@@ -522,7 +522,7 @@ class HDF5ArchiveUpdater
                             Utils.concatLink(hdf5GroupPath, file.getName());
                     final boolean ok =
                             archiveFile(file, hdf5ObjectPath, link,
-                                    strategy.doCompress(hdf5ObjectPath), chunkSize,
+                                    strategy.getStorageFeatureForPath(hdf5ObjectPath), chunkSize,
                                     pathVisitorOrNull);
                     if (ok == false)
                     {

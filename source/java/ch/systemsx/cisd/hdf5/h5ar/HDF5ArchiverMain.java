@@ -295,7 +295,7 @@ public class HDF5ArchiverMain
     private ArchivingStrategy createArchivingStrategy()
     {
         final ArchivingStrategy strategy = new ArchivingStrategy();
-        strategy.setCompressAll(compressAll);
+        strategy.compressAll(compressAll);
         for (String pattern : fileWhiteList)
         {
             strategy.addToFileWhiteList(pattern);
