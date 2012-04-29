@@ -25,7 +25,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.unix.FileLinkType;
-import ch.systemsx.cisd.hdf5.HDF5ObjectInformation;
+import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
@@ -55,7 +55,7 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
         String errorMessage = null;
         if (checkArchive)
         {
-            final HDF5ObjectInformation info = reader.getObjectInformation(path);
+            final HDF5LinkInformation info = reader.getLinkInformation(path);
             final FileLinkType verifiedType = Utils.translateType(info.getType());
             link.setVerifiedType(verifiedType);
             if (verifiedType == FileLinkType.REGULAR_FILE)
