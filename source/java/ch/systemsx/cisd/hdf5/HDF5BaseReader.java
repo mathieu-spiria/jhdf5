@@ -16,13 +16,13 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.BOOLEAN_DATA_TYPE;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.DATATYPE_GROUP;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_MEMBERS_ATTRIBUTE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getBooleanDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantDataTypePath;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantMembersAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
@@ -104,10 +104,14 @@ class HDF5BaseReader
 
     final CharacterEncoding encoding;
 
+    final String houseKeepingNameSuffix;
+
     HDF5BaseReader(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
-            boolean autoDereference, FileFormat fileFormat, boolean overwrite)
+            boolean autoDereference, FileFormat fileFormat, boolean overwrite,
+            String preferredHouseKeepingNameSuffix)
     {
         assert hdf5File != null;
+        assert preferredHouseKeepingNameSuffix != null;
 
         this.performNumericConversions = performNumericConversions;
         this.encoding = useUTF8CharEncoding ? CharacterEncoding.UTF8 : CharacterEncoding.ASCII;
@@ -121,6 +125,11 @@ class HDF5BaseReader
                         autoDereference);
         fileId = openFile(fileFormat, overwrite);
         state = State.OPEN;
+
+        final String houseKeepingNameSuffixFromFileOrNull = tryGetHouseKeepingNameSuffix();
+        this.houseKeepingNameSuffix =
+                (houseKeepingNameSuffixFromFileOrNull == null) ? preferredHouseKeepingNameSuffix
+                        : houseKeepingNameSuffixFromFileOrNull;
         readNamedDataTypes();
         booleanDataTypeId = openOrCreateBooleanDataType();
         typeVariantDataType = openOrCreateTypeVariantDataType();
@@ -198,19 +207,41 @@ class HDF5BaseReader
             state = State.CLOSED;
         }
     }
-    
+
     boolean isClosed()
     {
         return state == State.CLOSED;
     }
 
+    String tryGetHouseKeepingNameSuffix()
+    {
+        final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
+            {
+                public String call(ICleanUpRegistry registry)
+                {
+                    final int objectId = h5.openObject(fileId, "/", registry);
+                    if (h5.existsAttribute(objectId,
+                            HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME))
+                    {
+                        return getStringAttribute(objectId, "/",
+                                HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, registry);
+                    } else
+                    {
+                        return null;
+                    }
+                }
+            };
+        return runner.call(readRunnable);
+    }
+
     int openOrCreateBooleanDataType()
     {
-        int dataTypeId = getDataTypeId(BOOLEAN_DATA_TYPE);
+        final String booleanDataTypePath = getBooleanDataTypePath(houseKeepingNameSuffix);
+        int dataTypeId = getDataTypeId(booleanDataTypePath);
         if (dataTypeId < 0)
         {
             dataTypeId = createBooleanDataType();
-            commitDataType(BOOLEAN_DATA_TYPE, dataTypeId);
+            commitDataType(booleanDataTypePath, dataTypeId);
         }
         return dataTypeId;
     }
@@ -247,7 +278,8 @@ class HDF5BaseReader
     String tryGetDataTypeName(int dataTypeId, HDF5DataClass dataClass)
     {
         final String dataTypePathOrNull = tryGetDataTypePath(dataTypeId);
-        return HDF5Utils.tryGetDataTypeNameFromPath(dataTypePathOrNull, dataClass);
+        return HDF5Utils.tryGetDataTypeNameFromPath(dataTypePathOrNull, houseKeepingNameSuffix,
+                dataClass);
     }
 
     int getDataTypeId(final String dataTypePath)
@@ -279,15 +311,16 @@ class HDF5BaseReader
 
     HDF5EnumerationType openOrCreateTypeVariantDataType()
     {
-        int dataTypeId = getDataTypeId(TYPE_VARIANT_DATA_TYPE);
+        final String typeVariantTypePath = getTypeVariantDataTypePath(houseKeepingNameSuffix);
+        int dataTypeId = getDataTypeId(typeVariantTypePath);
         if (dataTypeId < 0)
         {
             return createTypeVariantDataType();
         }
         final int nativeDataTypeId = h5.getNativeDataType(dataTypeId, fileRegistry);
         final String[] typeVariantNames = h5.getNamesForEnumOrCompoundMembers(dataTypeId);
-        return new HDF5EnumerationType(fileId, dataTypeId, nativeDataTypeId,
-                TYPE_VARIANT_DATA_TYPE, typeVariantNames, this);
+        return new HDF5EnumerationType(fileId, dataTypeId, nativeDataTypeId, typeVariantTypePath,
+                typeVariantNames, this);
     }
 
     HDF5EnumerationType createTypeVariantDataType()
@@ -301,16 +334,17 @@ class HDF5BaseReader
         final int dataTypeId = h5.createDataTypeEnum(typeVariantNames, fileRegistry);
         final int nativeDataTypeId = h5.getNativeDataType(dataTypeId, fileRegistry);
         return new HDF5EnumerationType(fileId, dataTypeId, nativeDataTypeId,
-                TYPE_VARIANT_DATA_TYPE, typeVariantNames, this);
+                getTypeVariantDataTypePath(houseKeepingNameSuffix), typeVariantNames, this);
     }
 
     void readNamedDataTypes()
     {
-        if (h5.exists(fileId, DATATYPE_GROUP) == false)
+        final String typeGroup = getDataTypeGroup(houseKeepingNameSuffix);
+        if (h5.exists(fileId, typeGroup) == false)
         {
             return;
         }
-        readNamedDataTypes(DATATYPE_GROUP);
+        readNamedDataTypes(typeGroup);
     }
 
     private void readNamedDataTypes(String dataTypePath)
@@ -593,7 +627,7 @@ class HDF5BaseReader
     List<String> getGroupMembers(final String groupPath)
     {
         assert groupPath != null;
-        return removeInternalNames(getAllGroupMembers(groupPath));
+        return removeInternalNames(getAllGroupMembers(groupPath), houseKeepingNameSuffix);
     }
 
     /**
@@ -826,14 +860,16 @@ class HDF5BaseReader
         }
         checkOpen();
         final int objectId = h5.openObject(fileId, dataTypePathOrNull, registry);
-        if (h5.existsAttribute(objectId, TYPE_VARIANT_MEMBERS_ATTRIBUTE) == false)
+        final String typeVariantMembersAttributeName =
+                getTypeVariantMembersAttributeName(houseKeepingNameSuffix);
+        if (h5.existsAttribute(objectId, typeVariantMembersAttributeName) == false)
         {
             return null;
         }
         final int attributeId =
-                h5.openAttribute(objectId, TYPE_VARIANT_MEMBERS_ATTRIBUTE, registry);
+                h5.openAttribute(objectId, typeVariantMembersAttributeName, registry);
         final HDF5EnumerationValueArray valueArray =
-                getEnumValueArray(attributeId, dataTypePathOrNull, TYPE_VARIANT_MEMBERS_ATTRIBUTE,
+                getEnumValueArray(attributeId, dataTypePathOrNull, typeVariantMembersAttributeName,
                         registry);
         final HDF5DataTypeVariant[] variants = new HDF5DataTypeVariant[valueArray.getLength()];
         boolean hasVariants = false;
@@ -874,11 +910,13 @@ class HDF5BaseReader
     int getAttributeTypeVariant(final int objectId, ICleanUpRegistry registry)
     {
         checkOpen();
-        if (h5.existsAttribute(objectId, TYPE_VARIANT_ATTRIBUTE) == false)
+        final String dataTypeVariantAttributeName =
+                getTypeVariantAttributeName(houseKeepingNameSuffix);
+        if (h5.existsAttribute(objectId, dataTypeVariantAttributeName) == false)
         {
             return -1;
         }
-        final int attributeId = h5.openAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, registry);
+        final int attributeId = h5.openAttribute(objectId, dataTypeVariantAttributeName, registry);
         return getEnumOrdinal(attributeId, -1, typeVariantDataType);
     }
 
@@ -893,7 +931,8 @@ class HDF5BaseReader
     int getAttributeTypeVariant(final int objectId, String attributeName, ICleanUpRegistry registry)
     {
         checkOpen();
-        final String typeVariantAttrName = createTypeVariantAttributeName(attributeName);
+        final String typeVariantAttrName =
+                createTypeVariantAttributeName(attributeName, houseKeepingNameSuffix);
         if (h5.existsAttribute(objectId, typeVariantAttrName) == false)
         {
             return -1;
@@ -935,7 +974,7 @@ class HDF5BaseReader
                     };
         return runner.call(informationDeterminationRunnable);
     }
-    
+
     HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId,
             final DataTypeInfoOptions options, final ICleanUpRegistry registry)
     {
@@ -952,7 +991,7 @@ class HDF5BaseReader
             final String dataTypePathOrNull =
                     options.knowsDataTypePath() ? tryGetDataTypePath(baseTypeId) : null;
             return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass, encoding,
-                    size, arrayDimensions, true);
+                    houseKeepingNameSuffix, size, arrayDimensions, true);
         } else
         {
             dataClass = getDataClassForClassType(classTypeId, dataTypeId);
@@ -967,7 +1006,7 @@ class HDF5BaseReader
             final String dataTypePathOrNull =
                     options.knowsDataTypePath() ? tryGetDataTypePath(dataTypeId) : null;
             return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass, encoding,
-                    totalSize, 1, opaqueTagOrNull);
+                    houseKeepingNameSuffix, totalSize, 1, opaqueTagOrNull);
         }
     }
 
@@ -1153,7 +1192,8 @@ class HDF5BaseReader
         } else
         {
             final String nameFromPathOrNull =
-                    HDF5Utils.tryGetDataTypeNameFromPath(tryGetDataTypePath(dataTypeId), dataClass);
+                    HDF5Utils.tryGetDataTypeNameFromPath(tryGetDataTypePath(dataTypeId),
+                            houseKeepingNameSuffix, dataClass);
             return (nameFromPathOrNull == null) ? "UNKNOWN" : nameFromPathOrNull;
         }
     }

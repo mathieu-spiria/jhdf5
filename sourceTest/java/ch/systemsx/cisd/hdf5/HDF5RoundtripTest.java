@@ -256,6 +256,9 @@ public class HDF5RoundtripTest
         test.testAttributeDimensionArrayOverwrite();
         test.testCreateDataTypes();
         test.testGroups();
+        test.testDefaultHousekeepingFile();
+        test.testNonDefaultHousekeepingFile();
+        test.testHousekeepingFileSuffixNonPrintable();
         test.testSoftLink();
         test.testBrokenSoftLink();
         test.testDeleteSoftLink();
@@ -3101,7 +3104,7 @@ public class HDF5RoundtripTest
         {
             final List<String> members = reader.getAllGroupMembers("/");
             assertEquals(1, members.size());
-            assertEquals("__DATA_TYPES__", members.get(0));
+            assertEquals(HDF5Utils.getDataTypeGroup("").substring(1), members.get(0));
         } finally
         {
             reader.close();
@@ -3135,7 +3138,7 @@ public class HDF5RoundtripTest
         {
             final List<String> members = reader.getAllGroupMembers("/");
             assertEquals(1, members.size());
-            assertEquals("__DATA_TYPES__", members.get(0));
+            assertEquals(HDF5Utils.getDataTypeGroup("").substring(1), members.get(0));
             assertEquals(0, reader.getGroupMembers("/").size());
         } finally
         {
@@ -4025,12 +4028,13 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         try
         {
-            final List<String> initialDataTypes = writer.getGroupMembers(HDF5Utils.DATATYPE_GROUP);
+            final List<String> initialDataTypes =
+                    writer.getGroupMembers(HDF5Utils.getDataTypeGroup(""));
 
             writer.enums().getType(enumName, new String[]
                 { "ONE", "TWO", "THREE" }, false);
             final Set<String> dataTypes =
-                    new HashSet<String>(writer.getGroupMembers(HDF5Utils.DATATYPE_GROUP));
+                    new HashSet<String>(writer.getGroupMembers(HDF5Utils.getDataTypeGroup("")));
             assertEquals(initialDataTypes.size() + 1, dataTypes.size());
             assertTrue(dataTypes.contains(HDF5Utils.ENUM_PREFIX + enumName));
         } finally
@@ -4068,6 +4072,81 @@ public class HDF5RoundtripTest
         assertTrue(reader.isGroup(groupName4));
         assertEquals(HDF5ObjectType.GROUP, reader.getObjectType(groupName4));
         assertFalse(reader.isGroup(dataSetName));
+        reader.close();
+    }
+
+    @Test
+    public void testDefaultHousekeepingFile()
+    {
+        final File file = new File(workingDirectory, "defaultHousekeepingFile.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
+        assertEquals("", writer.getHouseKeepingNameSuffix());
+        assertEquals("__abc__", writer.toHouseKeepingPath("abc"));
+        writer.writeString(writer.toHouseKeepingPath("abc"), "ABC");
+        assertTrue(writer.exists("__abc__"));
+        assertTrue(writer.getGroupMemberPaths("/").isEmpty());
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        assertEquals("", reader.getHouseKeepingNameSuffix());
+        assertEquals("__abc__", reader.toHouseKeepingPath("abc"));
+        assertTrue(reader.exists("__abc__"));
+        assertEquals("ABC", reader.readString("__abc__"));
+        assertTrue(reader.getGroupMemberPaths("/").isEmpty());
+        reader.close();
+    }
+
+    @Test
+    public void testNonDefaultHousekeepingFile()
+    {
+        final File file = new File(workingDirectory, "nonDefaultHousekeepingFile.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer =
+                HDF5Factory.configure(file).houseKeepingNameSuffix("XXX").writer();
+        assertEquals("XXX", writer.getHouseKeepingNameSuffix());
+        assertEquals("abcXXX", writer.toHouseKeepingPath("abc"));
+        writer.writeString(writer.toHouseKeepingPath("abc"), "ABC");
+        assertTrue(writer.exists("abcXXX"));
+        assertFalse(writer.exists("__abc__"));
+        assertTrue(writer.getGroupMemberPaths("/").isEmpty());
+        writer.close();
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        assertEquals("XXX", reader.getHouseKeepingNameSuffix());
+        assertEquals("abcXXX", reader.toHouseKeepingPath("abc"));
+        assertTrue(reader.exists("abcXXX"));
+        assertFalse(reader.exists("__abc__"));
+        assertEquals("ABC", reader.readString("abcXXX"));
+        assertTrue(reader.getGroupMemberPaths("/").isEmpty());
+        reader.close();
+    }
+
+    @Test
+    public void testHousekeepingFileSuffixNonPrintable()
+    {
+        final File file = new File(workingDirectory, "housekeepingFileSuffixNonPrintable.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer =
+                HDF5Factory.configure(file).houseKeepingNameSuffix("\\1\\0").writer();
+        assertEquals("\\1\\0", writer.getHouseKeepingNameSuffix());
+        assertEquals("abc\\1\\0", writer.toHouseKeepingPath("abc"));
+        writer.writeString(writer.toHouseKeepingPath("abc"), "ABC");
+        assertTrue(writer.exists("abc\\1\\0"));
+        assertFalse(writer.exists("__abc__"));
+        assertTrue(writer.getGroupMemberPaths("/").isEmpty());
+        writer.close();
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        assertEquals("\\1\\0", reader.getHouseKeepingNameSuffix());
+        assertEquals("abc\\1\\0", reader.toHouseKeepingPath("abc"));
+        assertTrue(reader.exists("abc\\1\\0"));
+        assertFalse(reader.exists("__abc__"));
+        assertEquals("ABC", reader.readString("abc\\1\\0"));
+        assertTrue(reader.getGroupMemberPaths("/").isEmpty());
         reader.close();
     }
 
@@ -4509,7 +4588,8 @@ public class HDF5RoundtripTest
         final HDF5EnumerationValue value = reader.enums().read(dsName);
         assertEquals("THREE", value.getValue());
         final String expectedDataTypePath =
-                HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, JavaEnum.class.getSimpleName());
+                HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, "",
+                        JavaEnum.class.getSimpleName());
         assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(value.getType()));
         assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(dsName));
         final HDF5EnumerationType type = reader.enums().getDataSetType(dsName);
@@ -4543,14 +4623,14 @@ public class HDF5RoundtripTest
         final HDF5DataTypeInformation typeInfo =
                 reader.getDataSetInformation(dsName, DataTypeInfoOptions.ALL).getTypeInformation();
         assertEquals(enumTypeName, typeInfo.tryGetName());
-        assertEquals(HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, enumTypeName),
+        assertEquals(HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, "", enumTypeName),
                 typeInfo.tryGetDataTypePath());
         final String valueStr = reader.readEnumAsString(dsName);
         assertEquals("THREE", valueStr);
         final HDF5EnumerationValue value = reader.enums().read(dsName);
         assertEquals("THREE", value.getValue());
         final String expectedDataTypePath =
-                HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, enumTypeName);
+                HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, "", enumTypeName);
         assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(value.getType()));
         assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(dsName));
         type = reader.enums().getDataSetType(dsName);
@@ -5371,7 +5451,8 @@ public class HDF5RoundtripTest
 
         static HDF5CompoundMemberInformation[] getMemberInfo(HDF5EnumerationType enumType)
         {
-            return HDF5CompoundMemberInformation.create(Record.class, getShuffledMapping(enumType));
+            return HDF5CompoundMemberInformation.create(Record.class, "",
+                    getShuffledMapping(enumType));
         }
 
         static HDF5CompoundType<Record> getHDF5Type(IHDF5Reader reader)
@@ -6393,9 +6474,9 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final HDF5CompoundMemberInformation[] memMemberInfo =
-                HDF5CompoundMemberInformation.create(DateRecord.class, mapping("d"));
+                HDF5CompoundMemberInformation.create(DateRecord.class, "", mapping("d"));
         final HDF5CompoundMemberInformation[] diskMemberInfo =
-                HDF5CompoundMemberInformation.create(DateRecord.class,
+                HDF5CompoundMemberInformation.create(DateRecord.class, "",
                         new HDF5CompoundMemberMapping[]
                             { mapping("d") });
         assertEquals(memMemberInfo.length, diskMemberInfo.length);
@@ -6517,9 +6598,11 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final HDF5CompoundMemberInformation[] memMemberInfo =
-                HDF5CompoundMemberInformation.create(MatrixRecord.class, MatrixRecord.getMapping());
+                HDF5CompoundMemberInformation.create(MatrixRecord.class, "",
+                        MatrixRecord.getMapping());
         final HDF5CompoundMemberInformation[] diskMemberInfo =
-                HDF5CompoundMemberInformation.create(MatrixRecord.class, MatrixRecord.getMapping());
+                HDF5CompoundMemberInformation.create(MatrixRecord.class, "",
+                        MatrixRecord.getMapping());
         assertEquals(memMemberInfo.length, diskMemberInfo.length);
         for (int i = 0; i < memMemberInfo.length; ++i)
         {
@@ -6836,8 +6919,8 @@ public class HDF5RoundtripTest
 
         static HDF5CompoundMemberInformation[] getMemberInfo()
         {
-            return HDF5CompoundMemberInformation.create(BitFieldRecord.class,
-                    mapping("bs").length(100));
+            return HDF5CompoundMemberInformation.create(BitFieldRecord.class, "", mapping("bs")
+                    .length(100));
         }
 
         static HDF5CompoundType<BitFieldRecord> getHDF5Type(IHDF5Reader reader)
@@ -7411,7 +7494,8 @@ public class HDF5RoundtripTest
         final String dsName = "ds";
         final HDF5CompoundType<MatrixElementRecord> typeW =
                 writer.compounds().getInferredType(MatrixElementRecord.class);
-        assertEquals("/__DATA_TYPES__/Compound_MatrixElementRecord", typeW.tryGetDataTypePath());
+        assertEquals(HDF5Utils.getDataTypeGroup("") + "/Compound_MatrixElementRecord",
+                typeW.tryGetDataTypePath());
         assertEquals("<MatrixElementRecord>COMPOUND(8)",
                 typeW.getDataTypeInformation(HDF5DataTypeInformation.options().all()).toString());
         writer.compounds().createMDArray(dsName, typeW, new long[]

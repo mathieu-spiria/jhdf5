@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createTypeVariantAttributeName;
 
 import java.io.Flushable;
@@ -309,7 +309,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void setTypeVariant(final String objectPath, final HDF5DataTypeVariant typeVariant)
     {
         baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE,
+        baseWriter.setAttribute(objectPath,
+                getTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix),
                 baseWriter.typeVariantDataType.getStorageTypeId(),
                 baseWriter.typeVariantDataType.getNativeTypeId(),
                 baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
@@ -319,7 +320,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             HDF5DataTypeVariant typeVariant)
     {
         baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath, createTypeVariantAttributeName(attributeName),
+        baseWriter.setAttribute(objectPath,
+                createTypeVariantAttributeName(attributeName, baseWriter.houseKeepingNameSuffix),
                 baseWriter.typeVariantDataType.getStorageTypeId(),
                 baseWriter.typeVariantDataType.getNativeTypeId(),
                 baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
@@ -327,12 +329,13 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     public void deleteTypeVariant(String objectPath)
     {
-        deleteAttribute(objectPath, TYPE_VARIANT_ATTRIBUTE);
+        deleteAttribute(objectPath, getTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix));
     }
 
     public void deleteTypeVariant(String objectPath, String attributeName)
     {
-        deleteAttribute(objectPath, createTypeVariantAttributeName(attributeName));
+        deleteAttribute(objectPath,
+                createTypeVariantAttributeName(attributeName, baseWriter.houseKeepingNameSuffix));
     }
 
     public void setBooleanAttribute(String objectPath, String name, boolean value)
@@ -1270,8 +1273,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
             long[] dimensions, int[] blockDimensions, HDF5GenericStorageFeatures features)
     {
-        compoundWriter.createMDArray(objectPath, type, dimensions, blockDimensions,
-                features);
+        compoundWriter.createMDArray(objectPath, type, dimensions, blockDimensions, features);
     }
 
     public <T> void createCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
@@ -1316,8 +1318,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public <T> void writeCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type, T[] data,
             long blockNumber, IByteArrayInspector inspectorOrNull)
     {
-        compoundWriter
-                .writeArrayBlock(objectPath, type, data, blockNumber, inspectorOrNull);
+        compoundWriter.writeArrayBlock(objectPath, type, data, blockNumber, inspectorOrNull);
     }
 
     public <T> void writeCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type, T[] data,
@@ -1329,8 +1330,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public <T> void writeCompoundArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
             T[] data, long offset, IByteArrayInspector inspectorOrNull)
     {
-        compoundWriter.writeArrayBlockWithOffset(objectPath, type, data, offset,
-                inspectorOrNull);
+        compoundWriter.writeArrayBlockWithOffset(objectPath, type, data, offset, inspectorOrNull);
     }
 
     public <T> void writeCompoundArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
@@ -1383,8 +1383,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public <T> void writeCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
             MDArray<T> data, long[] blockDimensions, IByteArrayInspector inspectorOrNull)
     {
-        compoundWriter.writeMDArrayBlock(objectPath, type, data, blockDimensions,
-                inspectorOrNull);
+        compoundWriter.writeMDArrayBlock(objectPath, type, data, blockDimensions, inspectorOrNull);
     }
 
     public <T> void writeCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
@@ -1397,24 +1396,23 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             HDF5CompoundType<T> type, MDArray<T> data, int[] blockDimensions, long[] offset,
             int[] memoryOffset, IByteArrayInspector inspectorOrNull)
     {
-        compoundWriter.writeMDArrayBlockWithOffset(objectPath, type, data, blockDimensions,
-                offset, memoryOffset, inspectorOrNull);
+        compoundWriter.writeMDArrayBlockWithOffset(objectPath, type, data, blockDimensions, offset,
+                memoryOffset, inspectorOrNull);
     }
 
     public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,
             HDF5CompoundType<T> type, MDArray<T> data, int[] blockDimensions, long[] offset,
             int[] memoryOffset)
     {
-        compoundWriter.writeMDArrayBlockWithOffset(objectPath, type, data, blockDimensions,
-                offset, memoryOffset);
+        compoundWriter.writeMDArrayBlockWithOffset(objectPath, type, data, blockDimensions, offset,
+                memoryOffset);
     }
 
     public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,
             HDF5CompoundType<T> type, MDArray<T> data, long[] offset,
             IByteArrayInspector inspectorOrNull)
     {
-        compoundWriter.writeMDArrayBlockWithOffset(objectPath, type, data, offset,
-                inspectorOrNull);
+        compoundWriter.writeMDArrayBlockWithOffset(objectPath, type, data, offset, inspectorOrNull);
     }
 
     public <T> void writeCompoundMDArrayBlockWithOffset(String objectPath,

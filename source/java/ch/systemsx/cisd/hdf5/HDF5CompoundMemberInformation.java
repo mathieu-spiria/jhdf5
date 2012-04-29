@@ -110,7 +110,7 @@ public final class HDF5CompoundMemberInformation implements
      * {@link java.util.Arrays#equals(Object[], Object[])}.
      */
     public static HDF5CompoundMemberInformation[] create(Class<?> compoundClass,
-            final HDF5CompoundMemberMapping... members)
+            String houseKeepingNameSuffix, final HDF5CompoundMemberMapping... members)
     {
         assert compoundClass != null;
         final HDF5CompoundMemberInformation[] info =
@@ -120,8 +120,8 @@ public final class HDF5CompoundMemberInformation implements
         {
             info[i] =
                     new HDF5CompoundMemberInformation(members[i].getMemberName(),
-                            getTypeInformation(compoundClass, CharacterEncoding.ASCII, members[i]),
-                            offset);
+                            getTypeInformation(compoundClass, houseKeepingNameSuffix,
+                                    CharacterEncoding.ASCII, members[i]), offset);
             offset += info[i].getType().getSize();
         }
         Arrays.sort(info);
@@ -129,48 +129,49 @@ public final class HDF5CompoundMemberInformation implements
     }
 
     private static HDF5DataTypeInformation getTypeInformation(Class<?> compoundClass,
-            CharacterEncoding encoding, final HDF5CompoundMemberMapping member)
+            String houseKeepingNameSuffix, CharacterEncoding encoding,
+            final HDF5CompoundMemberMapping member)
     {
         final Field fieldOrNull = member.tryGetField(compoundClass);
         final Class<?> fieldTypeOrNull = (fieldOrNull == null) ? null : fieldOrNull.getType();
         final HDF5DataTypeInformation typeInfo;
         if (fieldTypeOrNull == boolean.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.BOOLEAN, 1);
+            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.BOOLEAN, houseKeepingNameSuffix, 1);
         } else if (fieldTypeOrNull == byte.class || fieldTypeOrNull == byte[].class
                 || fieldTypeOrNull == byte[][].class || fieldTypeOrNull == MDByteArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 1);
+            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 1);
         } else if (fieldTypeOrNull == short.class || fieldTypeOrNull == short[].class
                 || fieldTypeOrNull == short[][].class || fieldTypeOrNull == MDShortArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 2);
+            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 2);
         } else if (fieldTypeOrNull == int.class || fieldTypeOrNull == int[].class
                 || fieldTypeOrNull == int[][].class || fieldTypeOrNull == MDIntArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 4);
+            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 4);
         } else if (fieldTypeOrNull == long.class || fieldTypeOrNull == long[].class
                 || fieldTypeOrNull == long[][].class || fieldTypeOrNull == MDLongArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, 8);
+            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 8);
         } else if (fieldTypeOrNull == BitSet.class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.BITFIELD, 8,
+                    new HDF5DataTypeInformation(HDF5DataClass.BITFIELD, houseKeepingNameSuffix, 8,
                             member.getMemberTypeLength() / 64
                                     + (member.getMemberTypeLength() % 64 != 0 ? 1 : 0));
         } else if (fieldTypeOrNull == float.class || fieldTypeOrNull == float[].class
                 || fieldTypeOrNull == float[][].class || fieldTypeOrNull == MDFloatArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, 4);
+            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, houseKeepingNameSuffix, 4);
         } else if (fieldTypeOrNull == double.class || fieldTypeOrNull == double[].class
                 || fieldTypeOrNull == double[][].class || fieldTypeOrNull == MDDoubleArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, 8);
+            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, houseKeepingNameSuffix, 8);
         } else if (fieldTypeOrNull == String.class || fieldTypeOrNull == char[].class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.STRING, encoding,
+                    new HDF5DataTypeInformation(HDF5DataClass.STRING, encoding, houseKeepingNameSuffix, 
                             member.getMemberTypeLength() + 1);
         } else if (fieldTypeOrNull == HDF5EnumerationValue.class)
         {
@@ -180,8 +181,8 @@ public final class HDF5CompoundMemberInformation implements
             typeInfo =
                     new HDF5DataTypeInformation(
                             options.knowsDataTypePath() ? HDF5Utils.createDataTypePath(
-                                    HDF5Utils.ENUM_PREFIX, member.tryGetEnumerationType().getName())
-                                    : null, options, HDF5DataClass.ENUM, member
+                                    HDF5Utils.ENUM_PREFIX, houseKeepingNameSuffix, member.tryGetEnumerationType().getName())
+                                    : null, options, HDF5DataClass.ENUM, houseKeepingNameSuffix, member
                                     .tryGetEnumerationType().getStorageForm().getStorageSize());
             if (options.knowsDataTypeVariant())
             {
@@ -189,7 +190,7 @@ public final class HDF5CompoundMemberInformation implements
             }
         } else
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.OTHER, -1);
+            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.OTHER, houseKeepingNameSuffix, -1);
         }
         if (fieldTypeOrNull != null
                 && (fieldTypeOrNull.isArray() && fieldTypeOrNull != char[].class)

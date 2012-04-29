@@ -151,7 +151,7 @@ class HDF5Reader implements IHDF5Reader
     {
         return baseReader.isClosed();
     }
-    
+
     // /////////////////////
     // Objects & Links
     // /////////////////////
@@ -210,6 +210,16 @@ class HDF5Reader implements IHDF5Reader
             return true;
         }
         return baseReader.h5.getObjectTypeId(baseReader.fileId, objectPath, false) >= 0;
+    }
+
+    public String getHouseKeepingNameSuffix()
+    {
+        return baseReader.houseKeepingNameSuffix;
+    }
+
+    public String toHouseKeepingPath(String objectPath)
+    {
+        return HDF5Utils.toHouseKeepingPath(objectPath, baseReader.houseKeepingNameSuffix);
     }
 
     public boolean isGroup(final String objectPath, boolean followLink)
@@ -296,7 +306,8 @@ class HDF5Reader implements IHDF5Reader
     {
         assert objectPath != null;
         baseReader.checkOpen();
-        return removeInternalNames(getAllAttributeNames(objectPath));
+        return removeInternalNames(getAllAttributeNames(objectPath),
+                baseReader.houseKeepingNameSuffix);
     }
 
     public List<String> getAllAttributeNames(final String objectPath)
@@ -454,10 +465,12 @@ class HDF5Reader implements IHDF5Reader
         baseReader.checkOpen();
         if (readLinkTargets)
         {
-            return baseReader.h5.getGroupMemberLinkInfo(baseReader.fileId, groupPath, false);
+            return baseReader.h5.getGroupMemberLinkInfo(baseReader.fileId, groupPath, false,
+                    baseReader.houseKeepingNameSuffix);
         } else
         {
-            return baseReader.h5.getGroupMemberTypeInfo(baseReader.fileId, groupPath, false);
+            return baseReader.h5.getGroupMemberTypeInfo(baseReader.fileId, groupPath, false,
+                    baseReader.houseKeepingNameSuffix);
         }
     }
 
@@ -467,10 +480,12 @@ class HDF5Reader implements IHDF5Reader
         baseReader.checkOpen();
         if (readLinkTargets)
         {
-            return baseReader.h5.getGroupMemberLinkInfo(baseReader.fileId, groupPath, true);
+            return baseReader.h5.getGroupMemberLinkInfo(baseReader.fileId, groupPath, true,
+                    baseReader.houseKeepingNameSuffix);
         } else
         {
-            return baseReader.h5.getGroupMemberTypeInfo(baseReader.fileId, groupPath, true);
+            return baseReader.h5.getGroupMemberTypeInfo(baseReader.fileId, groupPath, true,
+                    baseReader.houseKeepingNameSuffix);
         }
     }
 
@@ -1222,8 +1237,7 @@ class HDF5Reader implements IHDF5Reader
             boolean sortAlphabetically) throws HDF5JavaException
     {
         final HDF5CompoundMemberInformation[] compoundInformation =
-                compoundReader.getDataSetInfo(dataSetPath,
-                        DataTypeInfoOptions.DEFAULT);
+                compoundReader.getDataSetInfo(dataSetPath, DataTypeInfoOptions.DEFAULT);
         if (sortAlphabetically)
         {
             Arrays.sort(compoundInformation);
@@ -1414,31 +1428,29 @@ class HDF5Reader implements IHDF5Reader
             int[] blockDimensions, long[] blockNumber, IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException
     {
-        return compoundReader.readMDArrayBlock(objectPath, type, blockDimensions,
-                blockNumber, inspectorOrNull);
+        return compoundReader.readMDArrayBlock(objectPath, type, blockDimensions, blockNumber,
+                inspectorOrNull);
     }
 
     public <T> MDArray<T> readCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
             int[] blockDimensions, long[] blockNumber) throws HDF5JavaException
     {
-        return compoundReader.readMDArrayBlock(objectPath, type, blockDimensions,
-                blockNumber);
+        return compoundReader.readMDArrayBlock(objectPath, type, blockDimensions, blockNumber);
     }
 
     public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(String objectPath,
             HDF5CompoundType<T> type, int[] blockDimensions, long[] offset,
             IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
-        return compoundReader.readMDArrayBlockWithOffset(objectPath, type, blockDimensions,
-                offset, inspectorOrNull);
+        return compoundReader.readMDArrayBlockWithOffset(objectPath, type, blockDimensions, offset,
+                inspectorOrNull);
     }
 
     public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(String objectPath,
             HDF5CompoundType<T> type, int[] blockDimensions, long[] offset)
             throws HDF5JavaException
     {
-        return compoundReader.readMDArrayBlockWithOffset(objectPath, type, blockDimensions,
-                offset);
+        return compoundReader.readMDArrayBlockWithOffset(objectPath, type, blockDimensions, offset);
     }
 
     // ------------------------------------------------------------------------------

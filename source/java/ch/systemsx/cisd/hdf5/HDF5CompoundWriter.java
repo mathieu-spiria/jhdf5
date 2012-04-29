@@ -220,7 +220,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 (dataTypeName != null && "UNKNOWN".equals(dataTypeName) == false);
         final String dataTypePath =
                 dataTypeNameGiven ? HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX,
-                        dataTypeName) : null;
+                        baseWriter.houseKeepingNameSuffix, dataTypeName) : null;
         final int committedStorageDataTypeId =
                 dataTypeNameGiven ? baseWriter.getDataTypeId(dataTypePath) : -1;
         final boolean typeExists = (committedStorageDataTypeId >= 0);
@@ -254,8 +254,9 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     tryCreateDataTypeVariantArray(objectByteifyer);
             if (typeVariants != null)
             {
-                baseWriter.setEnumArrayAttribute(dataTypePath,
-                        HDF5Utils.TYPE_VARIANT_MEMBERS_ATTRIBUTE, typeVariants);
+                baseWriter.setEnumArrayAttribute(dataTypePath, HDF5Utils
+                        .getTypeVariantMembersAttributeName(baseWriter.houseKeepingNameSuffix),
+                        typeVariants);
             }
         }
         return storageDataTypeId;

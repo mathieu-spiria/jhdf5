@@ -27,7 +27,7 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * Implementation of {@link IHDF5OpaqueWriter}.
- *
+ * 
  * @author Bernd Rinn
  */
 public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
@@ -207,7 +207,8 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
 
     private int getOrCreateOpaqueTypeId(final String tag)
     {
-        final String dataTypePath = createDataTypePath(OPAQUE_PREFIX, tag);
+        final String dataTypePath =
+                createDataTypePath(OPAQUE_PREFIX, baseWriter.houseKeepingNameSuffix, tag);
         int dataTypeId = baseWriter.getDataTypeId(dataTypePath);
         if (dataTypeId < 0)
         {

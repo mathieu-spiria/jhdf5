@@ -16,11 +16,11 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.DATATYPE_GROUP;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_ATTRIBUTE;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.TYPE_VARIANT_DATA_TYPE;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantDataTypePath;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getVariableLengthStringDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isNonPositive;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
@@ -133,10 +133,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
             boolean autoDereference, FileFormat fileFormat, boolean useExtentableDataTypes,
-            boolean overwriteFile, boolean keepDataSetIfExists, SyncMode syncMode)
+            boolean overwriteFile, boolean keepDataSetIfExists,
+            String preferredHouseKeepingNameSuffix, SyncMode syncMode)
     {
         super(hdf5File, performNumericConversions, useUTF8CharEncoding, autoDereference,
-                fileFormat, overwriteFile);
+                fileFormat, overwriteFile, preferredHouseKeepingNameSuffix);
         try
         {
             this.fileForSyncing = new RandomAccessFile(hdf5File, "rw");
@@ -152,6 +153,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         this.syncMode = syncMode;
         readNamedDataTypes();
         variableLengthStringDataTypeId = openOrCreateVLStringType();
+        saveNonDefaultHouseKeepingNameSuffix();
         commandQueue = new LinkedBlockingQueue<Command>();
         setupSyncThread();
     }
@@ -362,6 +364,29 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
     }
 
+    void saveNonDefaultHouseKeepingNameSuffix()
+    {
+        // If it is empty, then there is nothing to save.
+        if ("".equals(houseKeepingNameSuffix))
+        {
+            return;
+        }
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final int objectId = h5.openObject(fileId, "/", registry);
+                            setStringAttribute(objectId,
+                                    HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME,
+                                    houseKeepingNameSuffix, houseKeepingNameSuffix.length(),
+                                    registry);
+                            return null; // Nothing to return.
+                        }
+                    };
+        runner.call(addAttributeRunnable);
+    }
+
     @Override
     void commitDataType(final String dataTypePath, final int dataTypeId)
     {
@@ -370,23 +395,24 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     HDF5EnumerationType openOrCreateTypeVariantDataType(final HDF5Writer writer)
     {
+        final String typeVariantTypePath = getTypeVariantDataTypePath(houseKeepingNameSuffix);
         final HDF5EnumerationType dataType;
-        int dataTypeId = getDataTypeId(HDF5Utils.TYPE_VARIANT_DATA_TYPE);
+        int dataTypeId = getDataTypeId(typeVariantTypePath);
         if (dataTypeId < 0
                 || h5.getNumberOfMembers(dataTypeId) < HDF5DataTypeVariant.values().length)
         {
             final String typeVariantPath = findFirstUnusedTypeVariantPath(writer);
             dataType = createTypeVariantDataType();
             commitDataType(typeVariantPath, dataType.getStorageTypeId());
-            writer.createOrUpdateSoftLink(typeVariantPath.substring(DATATYPE_GROUP.length() + 1),
-                    TYPE_VARIANT_DATA_TYPE);
+            writer.createOrUpdateSoftLink(typeVariantPath.substring(getDataTypeGroup(
+                    houseKeepingNameSuffix).length() + 1), typeVariantTypePath);
         } else
         {
             final int nativeDataTypeId = h5.getNativeDataType(dataTypeId, fileRegistry);
             final String[] typeVariantNames = h5.getNamesForEnumOrCompoundMembers(dataTypeId);
             dataType =
                     new HDF5EnumerationType(fileId, dataTypeId, nativeDataTypeId,
-                            TYPE_VARIANT_DATA_TYPE, typeVariantNames, this);
+                            typeVariantTypePath, typeVariantNames, this);
 
         }
         return dataType;
@@ -517,18 +543,20 @@ final class HDF5BaseWriter extends HDF5BaseReader
         String path;
         do
         {
-            path = TYPE_VARIANT_DATA_TYPE + "." + (number++);
+            path = getTypeVariantDataTypePath(houseKeepingNameSuffix) + "." + (number++);
         } while (reader.exists(path, false) && number < MAX_TYPE_VARIANT_TYPES);
         return path;
     }
 
     private int openOrCreateVLStringType()
     {
-        int dataTypeId = getDataTypeId(HDF5Utils.VARIABLE_LENGTH_STRING_DATA_TYPE);
+        final String variableLengthStringTypePath =
+                getVariableLengthStringDataTypePath(houseKeepingNameSuffix);
+        int dataTypeId = getDataTypeId(variableLengthStringTypePath);
         if (dataTypeId < 0)
         {
             dataTypeId = h5.createDataTypeVariableString(fileRegistry);
-            commitDataType(VARIABLE_LENGTH_STRING_DATA_TYPE, dataTypeId);
+            commitDataType(variableLengthStringTypePath, dataTypeId);
         }
         return dataTypeId;
     }
@@ -1362,15 +1390,16 @@ final class HDF5BaseWriter extends HDF5BaseReader
     void setTypeVariant(final int objectId, final HDF5DataTypeVariant typeVariant,
             ICleanUpRegistry registry)
     {
-        setAttribute(objectId, TYPE_VARIANT_ATTRIBUTE, typeVariantDataType.getStorageTypeId(),
-                typeVariantDataType.getNativeTypeId(),
+        setAttribute(objectId, getTypeVariantAttributeName(houseKeepingNameSuffix),
+                typeVariantDataType.getStorageTypeId(), typeVariantDataType.getNativeTypeId(),
                 typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
     }
 
     void setTypeVariant(final int objectId, final String attributeName,
             final HDF5DataTypeVariant typeVariant, ICleanUpRegistry registry)
     {
-        setAttribute(objectId, createTypeVariantAttributeName(attributeName),
+        setAttribute(objectId,
+                createTypeVariantAttributeName(attributeName, houseKeepingNameSuffix),
                 typeVariantDataType.getStorageTypeId(), typeVariantDataType.getNativeTypeId(),
                 typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
     }

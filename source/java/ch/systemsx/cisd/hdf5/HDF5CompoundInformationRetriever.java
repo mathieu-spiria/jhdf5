@@ -74,7 +74,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                         {
                             final String dataTypePath =
                                     HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX,
-                                            dataTypeName);
+                                            baseReader.houseKeepingNameSuffix, dataTypeName);
                             final int compoundDataTypeId =
                                     baseReader.h5.openDataType(baseReader.fileId, dataTypePath,
                                             registry);
@@ -182,7 +182,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             final ICleanUpRegistry registry)
     {
         final String typeName =
-                HDF5Utils.getDataTypeNameFromPath(dataTypePathOrNull, HDF5DataClass.COMPOUND);
+                HDF5Utils.getDataTypeNameFromPath(dataTypePathOrNull,
+                        baseReader.houseKeepingNameSuffix, HDF5DataClass.COMPOUND);
         final String[] memberNames =
                 baseReader.h5.getNamesForEnumOrCompoundMembers(compoundDataTypeId);
         final int nativeCompoundDataTypeId =
@@ -291,6 +292,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                             final String dataTypePath =
                                     (dataTypeNameOrNull == null) ? null : HDF5Utils
                                             .createDataTypePath(HDF5Utils.COMPOUND_PREFIX,
+                                                    baseReader.houseKeepingNameSuffix,
                                                     dataTypeNameOrNull);
                             final CompoundTypeInformation compoundInformation =
                                     getCompoundTypeInformation(storageDataTypeId, dataTypePath,
@@ -545,7 +547,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             HDF5CompoundMappingHints hints, DataTypeInfoOptions dataTypeInfoOptions)
     {
         final String dataTypePath =
-                HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX, dataTypeName);
+                HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX,
+                        baseReader.houseKeepingNameSuffix, dataTypeName);
         final CompoundTypeInformation cpdTypeInfo =
                 getFullCompoundDataTypeInformation(dataTypePath, dataTypeInfoOptions,
                         baseReader.fileRegistry);

@@ -37,6 +37,8 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     private boolean keepDataSetIfExists = false;
 
     private FileFormat fileFormat = FileFormat.ALLOW_1_8;
+    
+    private String houseKeepingNameSuffix = "";
 
     // For Windows, use a blocking sync mode by default as otherwise the mandatory locks are up for
     // some surprises after the file has been closed.
@@ -78,6 +80,13 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
         return this;
     }
 
+    public IHDF5WriterConfigurator houseKeepingNameSuffix(@SuppressWarnings("hiding")
+    String houseKeepingNameSuffix)
+    {
+        this.houseKeepingNameSuffix = houseKeepingNameSuffix;
+        return this;
+    }
+
     @Override
     public HDF5WriterConfigurator performNumericConversions()
     {
@@ -104,7 +113,7 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
             readerWriterOrNull =
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
                             useUTF8CharEncoding, autoDereference, fileFormat,
-                            useExtentableDataTypes, overwriteFile, keepDataSetIfExists, syncMode));
+                            useExtentableDataTypes, overwriteFile, keepDataSetIfExists, houseKeepingNameSuffix, syncMode));
         }
         return (HDF5Writer) readerWriterOrNull;
     }

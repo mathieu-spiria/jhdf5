@@ -43,52 +43,72 @@ final class HDF5Utils
     static final long[] SCALAR_DIMENSIONS = new long[]
         { 1 };
 
-    /** The attribute to signal that this is a variant of the data type. */
-    static final String TYPE_VARIANT_ATTRIBUTE = "__TYPE_VARIANT__";
-
-    /**
-     * The attribute to signal that this compound type has members with variant of the member data
-     * type.
-     */
-    static final String TYPE_VARIANT_MEMBERS_ATTRIBUTE = "__TYPE_VARIANT_MEMBERS__";
-
-    /** The attribute to store the name of the enum data type. */
-    static final String ENUM_TYPE_NAME_ATTRIBUTE = "__ENUM_TYPE_NAME__";
-
-    /** The group to store all named derived data types in. */
-    static final String DATATYPE_GROUP = "/__DATA_TYPES__";
-
     /** The prefix for opqaue data types. */
     static final String OPAQUE_PREFIX = "Opaque_";
 
     /** The prefix for enum data types. */
     static final String ENUM_PREFIX = "Enum_";
 
-    /** The prefix for time stamp data types. */
-    static final String TIMESTAMP_PREFIX = "Timestamp_";
-
     /** The prefix for compound data types. */
     static final String COMPOUND_PREFIX = "Compound_";
 
-    /** The boolean data type. */
-    static final String BOOLEAN_DATA_TYPE = DATATYPE_GROUP + "/" + ENUM_PREFIX + "Boolean";
-
-    /** The timestamp data type for milli-seconds since start of the epoch. */
-    static final String TIMESTAMP_DATA_TYPE = DATATYPE_GROUP + "/" + TIMESTAMP_PREFIX
-            + "MilliSecondsSinceStartOfTheEpoch";
-
-    /** The data type specifying a type variant. */
-    static final String TYPE_VARIANT_DATA_TYPE = DATATYPE_GROUP + "/" + ENUM_PREFIX + "TypeVariant";
-
-    /** The variable-length string data type. */
-    static final String VARIABLE_LENGTH_STRING_DATA_TYPE = DATATYPE_GROUP
-            + "/String_VariableLength";
+    /** The suffix for housekeeping files and groups. Overrides the default, which is: __NAME__. */
+    static final String HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME = "__HOUSEKEEPING_SUFFIX__";
 
     /**
      * The legacy attribute to signal that a data set is empty (for backward compatibility with
      * 8.10).
      */
     static final String DATASET_IS_EMPTY_LEGACY_ATTRIBUTE = "__EMPTY__";
+
+    /** Returns the attribute to signal that this is a variant of the data type. */
+    static String getTypeVariantAttributeName(String houseKeepingNameSuffix)
+    {
+        return "".equals(houseKeepingNameSuffix) ? "__TYPE_VARIANT__" : "TYPE_VARIANT"
+                + houseKeepingNameSuffix;
+    }
+
+    /** Returns the boolean data type. */
+    static String getBooleanDataTypePath(String houseKeepingNameSuffix)
+    {
+        return getDataTypeGroup(houseKeepingNameSuffix) + "/" + ENUM_PREFIX + "Boolean";
+    }
+
+    /** Returns the data type specifying a type variant. */
+    static String getTypeVariantDataTypePath(String houseKeepingNameSuffix)
+    {
+        return getDataTypeGroup(houseKeepingNameSuffix) + "/" + ENUM_PREFIX + "TypeVariant";
+    }
+
+    /** Returns the variable-length string data type. */
+    static String getVariableLengthStringDataTypePath(String houseKeepingNameSuffix)
+    {
+        return getDataTypeGroup(houseKeepingNameSuffix) + "/String_VariableLength";
+    }
+
+    /**
+     * Returns the attribute name to signal that this compound type has members with variant of the
+     * member data type.
+     */
+    static String getTypeVariantMembersAttributeName(String houseKeepingNameSuffix)
+    {
+        return "".equals(houseKeepingNameSuffix) ? "__TYPE_VARIANT_MEMBERS__"
+                : "TYPE_VARIANT_MEMBERS" + houseKeepingNameSuffix;
+    }
+
+    /** Returns the attribute to store the name of the enum data type. */
+    static String getEnumTypeNameAttributeName(String houseKeepingNameSuffix)
+    {
+        return "".equals(houseKeepingNameSuffix) ? "__ENUM_TYPE_NAME__" : "ENUM_TYPE_NAME"
+                + houseKeepingNameSuffix;
+    }
+
+    /** Returns the group to store all named derived data types in. */
+    static String getDataTypeGroup(String houseKeepingNameSuffix)
+    {
+        return "".equals(houseKeepingNameSuffix) ? "/__DATA_TYPES__" : "/DATA_TYPES"
+                + houseKeepingNameSuffix;
+    }
 
     /**
      * All integer types in Java.
@@ -231,14 +251,14 @@ final class HDF5Utils
      * this element starts with '/', this element itself will be considered the (complete) data type
      * path.
      */
-    static String createDataTypePath(String name, String... appendices)
+    static String createDataTypePath(String name, String houseKeepingSuffix, String... appendices)
     {
         if (appendices.length == 1 && appendices[0].startsWith("/"))
         {
             return appendices[0];
         }
         final StringBuilder builder = new StringBuilder();
-        builder.append(DATATYPE_GROUP);
+        builder.append(getDataTypeGroup(houseKeepingSuffix));
         builder.append('/');
         builder.append(name);
         for (String app : appendices)
@@ -252,16 +272,19 @@ final class HDF5Utils
      * Returns the name for a committed data type with <var>pathOrNull</var>. If
      * <code>pathOrNull == null</code>, the method will return <code>UNKNOWN</code>.
      */
-    static String getDataTypeNameFromPath(String pathOrNull, HDF5DataClass dataClass)
+    static String getDataTypeNameFromPath(String pathOrNull, String houseKeepingNameSuffix,
+            HDF5DataClass dataClass)
     {
-        return (pathOrNull == null) ? "UNKNOWN" : tryGetDataTypeNameFromPath(pathOrNull, dataClass);
+        return (pathOrNull == null) ? "UNKNOWN" : tryGetDataTypeNameFromPath(pathOrNull,
+                houseKeepingNameSuffix, dataClass);
     }
 
     /**
      * Returns the name for a committed data type with <var>pathOrNull</var>. If
      * <code>pathOrNull == null</code>, the method will return <code>null</code>.
      */
-    static String tryGetDataTypeNameFromPath(String pathOrNull, HDF5DataClass dataClass)
+    static String tryGetDataTypeNameFromPath(String pathOrNull, String houseKeepingNameSuffix,
+            HDF5DataClass dataClass)
     {
         if (pathOrNull == null)
         {
@@ -269,7 +292,7 @@ final class HDF5Utils
         } else
         {
             final String prefix = getPrefixForDataClass(dataClass);
-            final String pathPrefix = createDataTypePath(prefix);
+            final String pathPrefix = createDataTypePath(prefix, houseKeepingNameSuffix);
             if (pathOrNull.startsWith(pathPrefix))
             {
                 return pathOrNull.substring(pathPrefix.length());
@@ -357,11 +380,12 @@ final class HDF5Utils
     /**
      * Returns the type variant attribute for the given <var>attributeName</var>.
      */
-    static String createTypeVariantAttributeName(String attributeName)
+    static String createTypeVariantAttributeName(String attributeName, String suffix)
     {
-        return TYPE_VARIANT_ATTRIBUTE + attributeName + "__";
+        return getTypeVariantAttributeName(suffix) + attributeName
+                + ("".equals(suffix) ? "__" : suffix);
     }
-    
+
     /**
      * Returns <code>true</code>, if <var>name</var> denotes an internal name used by the library
      * for house-keeping.
@@ -372,16 +396,50 @@ final class HDF5Utils
     }
 
     /**
+     * Returns <code>true</code>, if <var>name</var> denotes an internal name used by the library
+     * for house-keeping, given the <var>suffix</var>.
+     */
+    static boolean isInternalName(String name, String houseKeepingNameSuffix)
+    {
+        return "".equals(houseKeepingNameSuffix) ? isInternalName(name) : name
+                .endsWith(houseKeepingNameSuffix);
+    }
+
+    /**
+     * Creates an internal name from the given <var>name</var>, using the
+     * <var>houseKeepingNameSuffix</var>.
+     */
+    static String toHouseKeepingName(String name, String houseKeepingNameSuffix)
+    {
+        return "".equals(houseKeepingNameSuffix) ? "__" + name + "__" : name
+                + houseKeepingNameSuffix;
+    }
+
+    /**
+     * Creates an internal name from the given <var>objectPath</var>, using the
+     * <var>houseKeepingNameSuffix</var>.
+     */
+    static String toHouseKeepingPath(String objectPath, String houseKeepingNameSuffix)
+    {
+        final int lastPathSeparator = objectPath.lastIndexOf('/') + 1;
+        return lastPathSeparator > 0 ? objectPath.substring(0, lastPathSeparator)
+                + toHouseKeepingName(objectPath.substring(lastPathSeparator),
+                        houseKeepingNameSuffix) : toHouseKeepingName(objectPath,
+                houseKeepingNameSuffix);
+    }
+
+    /**
      * Removes all internal names from the list <var>names</var>.
      * 
      * @return The list <var>names</var>.
      */
-    static List<String> removeInternalNames(final List<String> names)
+    static List<String> removeInternalNames(final List<String> names,
+            final String houseKeepingNameSuffix)
     {
         for (Iterator<String> iterator = names.iterator(); iterator.hasNext(); /**/)
         {
             final String memberName = iterator.next();
-            if (isInternalName(memberName))
+            if (isInternalName(memberName, houseKeepingNameSuffix))
             {
                 iterator.remove();
             }

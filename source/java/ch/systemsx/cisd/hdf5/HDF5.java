@@ -423,7 +423,8 @@ class HDF5
     }
 
     public List<HDF5LinkInformation> getGroupMemberLinkInfo(final int fileId,
-            final String groupName, final boolean includeInternal)
+            final String groupName, final boolean includeInternal,
+            final String houseKeepingNameSuffix)
     {
         checkMaxLength(groupName);
         final ICallableWithCleanUp<List<HDF5LinkInformation>> dataDimensionRunnable =
@@ -449,7 +450,9 @@ class HDF5
                                     new LinkedList<HDF5LinkInformation>();
                             for (int i = 0; i < n; ++i)
                             {
-                                if (includeInternal || HDF5Utils.isInternalName(names[i]) == false)
+                                if (includeInternal
+                                        || HDF5Utils.isInternalName(names[i],
+                                                houseKeepingNameSuffix) == false)
                                 {
                                     info.add(HDF5LinkInformation.create(superGroupName + names[i],
                                             types[i], linkNames[i]));
@@ -462,7 +465,8 @@ class HDF5
     }
 
     public List<HDF5LinkInformation> getGroupMemberTypeInfo(final int fileId,
-            final String groupName, final boolean includeInternal)
+            final String groupName, final boolean includeInternal,
+            final String houseKeepingNameSuffix)
     {
         checkMaxLength(groupName);
         final ICallableWithCleanUp<List<HDF5LinkInformation>> dataDimensionRunnable =
@@ -487,7 +491,9 @@ class HDF5
                                     new LinkedList<HDF5LinkInformation>();
                             for (int i = 0; i < n; ++i)
                             {
-                                if (includeInternal || HDF5Utils.isInternalName(names[i]) == false)
+                                if (includeInternal
+                                        || HDF5Utils.isInternalName(names[i],
+                                                houseKeepingNameSuffix) == false)
                                 {
                                     info.add(HDF5LinkInformation.create(superGroupName + names[i],
                                             types[i], null));
@@ -679,7 +685,7 @@ class HDF5
 
         H5Pset_shuffle(dscpId);
     }
-    
+
     private void setDeflate(int dscpId, int deflateLevel)
     {
         assert dscpId >= 0;

@@ -39,7 +39,7 @@ public final class HDF5DataTypeInformation
         static final DataTypeInfoOptions ALL = new DataTypeInfoOptions(true, true);
 
         static final DataTypeInfoOptions DEFAULT = new DataTypeInfoOptions(false, true);
-        
+
         static final DataTypeInfoOptions PATH = new DataTypeInfoOptions(true, false);
 
         private boolean knowsDataTypePath;
@@ -139,69 +139,76 @@ public final class HDF5DataTypeInformation
     private HDF5DataTypeVariant typeVariantOrNull;
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, int elementSize)
+            HDF5DataClass dataClass, String houseKeepingNameSuffix, int elementSize)
     {
-        this(dataTypePathOrNull, options, dataClass, CharacterEncoding.ASCII, elementSize,
-                new int[]
+        this(dataTypePathOrNull, options, dataClass, CharacterEncoding.ASCII,
+                houseKeepingNameSuffix, elementSize, new int[]
                     { 1 }, false, null);
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize)
+            HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
+            int elementSize)
     {
-        this(dataTypePathOrNull, options, dataClass, encoding, elementSize, new int[]
-            { 1 }, false, null);
-    }
-
-    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize)
-    {
-        this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII, elementSize,
+        this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
                 new int[]
                     { 1 }, false, null);
     }
 
-    HDF5DataTypeInformation(HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize)
+    HDF5DataTypeInformation(HDF5DataClass dataClass, String houseKeepingNameSuffix, int elementSize)
     {
-        this(null, DataTypeInfoOptions.ALL, dataClass, encoding, elementSize, new int[]
-            { 1 }, false, null);
+        this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
+                houseKeepingNameSuffix, elementSize, new int[]
+                    { 1 }, false, null);
     }
 
-    HDF5DataTypeInformation(HDF5DataClass dataClass, int elementSize, int numberOfElements)
+    HDF5DataTypeInformation(HDF5DataClass dataClass, CharacterEncoding encoding,
+            String houseKeepingNameSuffix, int elementSize)
     {
-        this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII, elementSize,
-                new int[]
+        this(null, DataTypeInfoOptions.ALL, dataClass, encoding, houseKeepingNameSuffix,
+                elementSize, new int[]
+                    { 1 }, false, null);
+    }
+
+    HDF5DataTypeInformation(HDF5DataClass dataClass, String houseKeepingNameSuffix,
+            int elementSize, int numberOfElements)
+    {
+        this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
+                houseKeepingNameSuffix, elementSize, new int[]
                     { numberOfElements }, false, null);
 
     }
 
-    HDF5DataTypeInformation(HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize,
-            int numberOfElements)
+    HDF5DataTypeInformation(HDF5DataClass dataClass, CharacterEncoding encoding,
+            String houseKeepingNameSuffix, int elementSize, int numberOfElements)
     {
-        this(null, DataTypeInfoOptions.ALL, dataClass, encoding, elementSize, new int[]
-            { numberOfElements }, false, null);
+        this(null, DataTypeInfoOptions.ALL, dataClass, encoding, houseKeepingNameSuffix,
+                elementSize, new int[]
+                    { numberOfElements }, false, null);
 
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize,
-            int numberOfElements, String opaqueTagOrNull)
+            HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
+            int elementSize, int numberOfElements, String opaqueTagOrNull)
     {
-        this(dataTypePathOrNull, options, dataClass, encoding, elementSize, new int[]
-            { numberOfElements }, false, opaqueTagOrNull);
+        this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
+                new int[]
+                    { numberOfElements }, false, opaqueTagOrNull);
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize, int[] dimensions,
-            boolean arrayType)
+            HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
+            int elementSize, int[] dimensions, boolean arrayType)
     {
-        this(dataTypePathOrNull, options, dataClass, encoding, elementSize, dimensions, arrayType,
-                null);
+        this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
+                dimensions, arrayType, null);
 
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, CharacterEncoding encoding, int elementSize, int[] dimensions,
-            boolean arrayType, String opaqueTagOrNull)
+            HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
+            int elementSize, int[] dimensions, boolean arrayType, String opaqueTagOrNull)
     {
         if (dataClass == HDF5DataClass.BOOLEAN || dataClass == HDF5DataClass.STRING)
         {
@@ -210,7 +217,9 @@ public final class HDF5DataTypeInformation
         } else
         {
             this.dataTypePathOrNull = dataTypePathOrNull;
-            this.nameOrNull = HDF5Utils.tryGetDataTypeNameFromPath(dataTypePathOrNull, dataClass);
+            this.nameOrNull =
+                    HDF5Utils.tryGetDataTypeNameFromPath(dataTypePathOrNull,
+                            houseKeepingNameSuffix, dataClass);
         }
         this.arrayType = arrayType;
         this.dataClass = dataClass;

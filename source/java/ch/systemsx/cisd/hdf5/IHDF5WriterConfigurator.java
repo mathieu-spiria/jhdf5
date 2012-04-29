@@ -150,11 +150,17 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
      * access file names that start with \0. The down-side of switching off automatic dereferencing
      * is that you can't provide references as obtained by
      * {@link IHDF5ReferenceReader#readObjectReference(String, boolean)} with
-     * <code>resolveName=false</code> in places where a dataset path is required.
-     * <br>
+     * <code>resolveName=false</code> in places where a dataset path is required. <br>
      * <i>Note: automatic dereferencing is switched on by default.</i>
      */
     public IHDF5WriterConfigurator noAutoDereference();
+
+    /**
+     * Sets the suffix that is used to mark and recognize house keeping files and groups. An empty
+     * string ("") encodes for the default, which is two leading and two trailing underscores
+     * ("__NAME__").
+     */
+    public IHDF5WriterConfigurator houseKeepingNameSuffix(String houseKeepingNameSuffix);
 
     /**
      * Returns an {@link IHDF5Writer} based on this configuration.

@@ -55,6 +55,13 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
     public boolean isPerformNumericConversions();
 
     /**
+     * Returns the suffix used to mark and recognize internal (house keeping) files and groups. An
+     * empty string ("") encodes for the default, which is two leading and two trailing underscores
+     * ("__NAME__")
+     */
+    public String getHouseKeepingNameSuffix();
+
+    /**
      * Returns the HDF5 file that this class is reading.
      */
     public File getFile();
@@ -69,7 +76,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * Returns <code>true</code> if this reader has been already closed.
      */
     public boolean isClosed();
-    
+
     // /////////////////////
     // Objects & Links
     // /////////////////////
@@ -118,6 +125,11 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      */
     public boolean exists(final String objectPath);
 
+    /**
+     * Creates and returns an internal (house-keeping) version of <var>objectPath</var>.
+     */
+    public String toHouseKeepingPath(final String objectPath);
+    
     /**
      * Returns <code>true</code> if the <var>objectPath</var> exists and represents a group and
      * <code>false</code> otherwise. Note that if <var>followLink</var> is <code>false</code> this

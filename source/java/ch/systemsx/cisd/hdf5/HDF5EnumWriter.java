@@ -267,8 +267,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         final int nativeDataTypeId =
                 baseWriter.h5.getNativeDataType(storageDataTypeId, baseWriter.fileRegistry);
         return new HDF5EnumerationType(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
-                (nameOrNull == null) ? "__anonymous__" : nameOrNull, values,
-                baseWriter);
+                (nameOrNull == null) ? "__anonymous__" : nameOrNull, values, baseWriter);
     }
 
     @Override
@@ -304,7 +303,8 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     {
         final String dataTypePathOrNull =
                 (dataTypeNameOrNull == null) ? null : HDF5Utils.createDataTypePath(
-                        HDF5Utils.ENUM_PREFIX, dataTypeNameOrNull);
+                        HDF5Utils.ENUM_PREFIX, baseWriter.houseKeepingNameSuffix,
+                        dataTypeNameOrNull);
         final int committedStorageDataTypeId =
                 (dataTypePathOrNull == null) ? -1 : baseWriter.getDataTypeId(dataTypePathOrNull);
         final boolean typeExists = (committedStorageDataTypeId >= 0);
@@ -435,9 +435,10 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         H5Dwrite(dataSetId, data.getType().getIntNativeTypeId(), H5S_ALL, H5S_ALL,
                                 H5P_DEFAULT, data.toStorageForm());
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
-                        baseWriter.setStringAttribute(dataSetId,
-                                HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, data.getType().getName(), data
-                                        .getType().getName().length(), registry);
+                        baseWriter.setStringAttribute(dataSetId, HDF5Utils
+                                .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
+                                data.getType().getName(), data.getType().getName().length(),
+                                registry);
                     } else
                     {
                         final int dataSetId =
@@ -491,9 +492,9 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                                             { blockSize }, enumType.getStorageForm()
                                                 .getStorageSize(), registry);
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
-                        baseWriter.setStringAttribute(dataSetId,
-                                HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, enumType.getName(), enumType
-                                        .getName().length(), registry);
+                        baseWriter.setStringAttribute(dataSetId, HDF5Utils
+                                .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
+                                enumType.getName(), enumType.getName().length(), registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
@@ -547,9 +548,9 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                                         dimensions, blockDimensionsOrNull, enumType
                                                 .getStorageForm().getStorageSize(), registry);
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
-                        baseWriter.setStringAttribute(dataSetId,
-                                HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, enumType.getName(), enumType
-                                        .getName().length(), registry);
+                        baseWriter.setStringAttribute(dataSetId, HDF5Utils
+                                .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
+                                enumType.getName(), enumType.getName().length(), registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
@@ -602,9 +603,10 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         H5Dwrite(dataSetId, data.getType().getIntNativeTypeId(), memorySpaceId,
                                 dataSpaceId, H5P_DEFAULT, data.toStorageForm());
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
-                        baseWriter.setStringAttribute(dataSetId,
-                                HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, data.getType().getName(), data
-                                        .getType().getName().length(), registry);
+                        baseWriter.setStringAttribute(dataSetId, HDF5Utils
+                                .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
+                                data.getType().getName(), data.getType().getName().length(),
+                                registry);
                     } else
                     {
                         H5Dwrite(dataSetId, data.getType().getNativeTypeId(), memorySpaceId,
@@ -649,9 +651,10 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         H5Dwrite(dataSetId, data.getType().getIntNativeTypeId(), H5S_ALL, H5S_ALL,
                                 H5P_DEFAULT, data.toStorageForm());
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
-                        baseWriter.setStringAttribute(dataSetId,
-                                HDF5Utils.ENUM_TYPE_NAME_ATTRIBUTE, data.getType().getName(), data
-                                        .getType().getName().length(), registry);
+                        baseWriter.setStringAttribute(dataSetId, HDF5Utils
+                                .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
+                                data.getType().getName(), data.getType().getName().length(),
+                                registry);
                     } else
                     {
                         final int dataSetId =
