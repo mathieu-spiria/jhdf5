@@ -153,7 +153,6 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
     /**
      * A record for file size and type.
      * 
-     *
      * @author Bernd Rinn
      */
     private static class FileSizeType
