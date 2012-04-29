@@ -96,6 +96,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         final IHDF5WriterConfigurator config = HDF5FactoryProvider.get().configure(archiveFile);
         config.fileFormat(fileFormat);
         config.useUTF8CharacterEncoding();
+        config.houseKeepingNameSuffix("\\1\\0");
         if (noSync == false)
         {
             config.syncMode(SyncMode.SYNC);

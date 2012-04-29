@@ -201,12 +201,12 @@ class DirectoryIndex implements IDirectoryIndex
 
     private String getIndexDataSetName()
     {
-        return groupPath + "/__INDEX__";
+        return groupPath + "/" + hdf5Reader.toHouseKeepingPath("INDEX");
     }
 
     private String getIndexNamesDataSetName()
     {
-        return groupPath + "/__INDEXNAMES__";
+        return groupPath + "/" + hdf5Reader.toHouseKeepingPath("INDEXNAMES");
     }
 
     /**

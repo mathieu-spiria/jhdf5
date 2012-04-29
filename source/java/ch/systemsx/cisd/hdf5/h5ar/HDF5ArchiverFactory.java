@@ -132,7 +132,9 @@ public class HDF5ArchiverFactory
      * Opens an HDF5 archive file based on an HDF writer for writing and reading.
      * 
      * @param writer The HDF5 writer to base the archive file on. Closing the archive writer will
-     *            not close the HDF5 <var>writer</var>.
+     *            not close the HDF5 <var>writer</var>. It is recommended that you configure the
+     *            writer with <code>IHDF5WriterConfigurator.houseKeepingNameSuffix("\\1\\0)")</code>
+     *            so that internal house-keeping files cannot overwrite archived files. .
      * @param errorStrategy The {@link IErrorStrategy} to use on errors when accessing the archive.
      */
     public static IHDF5Archiver open(IHDF5Writer writer, IErrorStrategy errorStrategy)
