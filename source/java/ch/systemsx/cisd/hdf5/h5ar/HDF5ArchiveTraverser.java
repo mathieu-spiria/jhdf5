@@ -142,8 +142,7 @@ class HDF5ArchiveTraverser
         }
         for (LinkRecord link : indexProvider.get(normalizedDir, readLinkTargets))
         {
-            final String path =
-                    ("/".equals(normalizedDir) ? "/" : normalizedDir + "/") + link.getLinkName();
+            final String path = Utils.concatLink(normalizedDir, link.getLinkName());
             try
             {
                 if (processor

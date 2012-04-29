@@ -135,7 +135,7 @@ final class Utils
         return (pathStartingWithSlash.length() > 1 && pathStartingWithSlash.endsWith("/")) ? pathStartingWithSlash
                 .substring(0, pathStartingWithSlash.length() - 1) : pathStartingWithSlash;
     }
-    
+
     /**
      * Returns the absolute normalized {@link File} for <var>path</var>.
      */
@@ -145,7 +145,16 @@ final class Utils
     }
 
     /**
-     * Returns an {@link ArchiveEntry} from a {@link LinkRecord}. Can handle <code>null</code>
+     * Concatenates <var>parentDirectory</var> and <var>name</var> to a new path and return it.
+     */
+    static String concatLink(String parentDirectory, String name)
+    {
+        return parentDirectory.endsWith("/") ? parentDirectory + name : parentDirectory + "/"
+                + name;
+    }
+
+    /**
+     * /** Returns an {@link ArchiveEntry} from a {@link LinkRecord}. Can handle <code>null</code>
      * {@link LinkRecord}s.
      */
     static ArchiveEntry tryToArchiveEntry(String dir, String path, LinkRecord linkOrNull,

@@ -97,7 +97,7 @@ class HDF5ArchiveUpdater
                 boolean compress)
         {
             this.directory = normalizedDirectory;
-            this.path = concatenateLink(this.directory, link.getLinkName());
+            this.path = Utils.concatLink(this.directory, link.getLinkName());
             this.link = link;
             final HDF5GenericStorageFeatures creationStorageFeature =
                     compress ? HDF5GenericStorageFeatures.GENERIC_DEFLATE
@@ -185,7 +185,7 @@ class HDF5ArchiveUpdater
     {
         boolean ok = true;
         final String normalizedDir = Utils.normalizePath(directory);
-        final String hdf5ObjectPath = concatenateLink(normalizedDir, link.getLinkName());
+        final String hdf5ObjectPath = Utils.concatLink(normalizedDir, link.getLinkName());
         final boolean groupExists = hdf5Writer.isGroup(normalizedDir);
         if (link.getLinkType() == FileLinkType.DIRECTORY)
         {
@@ -253,7 +253,7 @@ class HDF5ArchiveUpdater
         final File absolutePath = Utils.normalizePath(path);
         final String normalizedRootArchiveInDir = Utils.normalizePath(rootDirInArchive);
         final String hdf5ObjectPath =
-                concatenateLink(normalizedRootArchiveInDir, absolutePath.getName());
+                Utils.concatLink(normalizedRootArchiveInDir, absolutePath.getName());
         final String hdf5GroupPath = FilenameUtils.getFullPathNoEndSeparator(hdf5ObjectPath);
         final boolean groupExists =
                 hdf5GroupPath.length() == 0 ? true : hdf5Writer.isGroup(hdf5GroupPath);
@@ -416,15 +416,9 @@ class HDF5ArchiveUpdater
         }
     }
 
-    private String concatenateLink(String parentDirectory, String name)
-    {
-        return parentDirectory.endsWith("/") ? parentDirectory + name : parentDirectory + "/"
-                + name;
-    }
-
     private boolean archiveDirectory(String parentDirectory, LinkRecord link)
     {
-        final String hdf5GroupPath = concatenateLink(parentDirectory, link.getLinkName());
+        final String hdf5GroupPath = Utils.concatLink(parentDirectory, link.getLinkName());
         try
         {
             hdf5Writer.createGroup(hdf5GroupPath);
@@ -456,7 +450,7 @@ class HDF5ArchiveUpdater
             return false;
         }
         final String hdf5GroupPath =
-                includeDirNameInGroupPath ? concatenateLink(rootDirInArchive, dir.getName())
+                includeDirNameInGroupPath ? Utils.concatLink(rootDirInArchive, dir.getName())
                         : rootDirInArchive;
         if ("/".equals(hdf5GroupPath) == false)
             try
@@ -524,7 +518,8 @@ class HDF5ArchiveUpdater
                     }
                 } else if (link.isRegularFile())
                 {
-                    final String hdf5ObjectPath = concatenateLink(hdf5GroupPath, file.getName());
+                    final String hdf5ObjectPath =
+                            Utils.concatLink(hdf5GroupPath, file.getName());
                     final boolean ok =
                             archiveFile(file, hdf5ObjectPath, link,
                                     strategy.doCompress(hdf5ObjectPath), chunkSize,
@@ -576,7 +571,7 @@ class HDF5ArchiveUpdater
     {
         try
         {
-            final String hdf5LinkPath = concatenateLink(hdf5GroupPath, link.getLinkName());
+            final String hdf5LinkPath = Utils.concatLink(hdf5GroupPath, link.getLinkName());
             hdf5Writer.createSoftLink(linkTarget, hdf5LinkPath);
             if (pathVisitorOrNull != null)
             {
@@ -584,7 +579,7 @@ class HDF5ArchiveUpdater
             }
         } catch (HDF5Exception ex)
         {
-            errorStrategy.dealWithError(new ArchivingException(concatenateLink(hdf5GroupPath,
+            errorStrategy.dealWithError(new ArchivingException(Utils.concatLink(hdf5GroupPath,
                     link.getLinkName()), ex));
             return false;
         }
