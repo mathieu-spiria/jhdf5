@@ -91,7 +91,7 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
         }
         final String strippedPath = path.substring(rootDirectoryInArchive.length());
         final File f = new File(rootDirectoryOnFS, strippedPath);
-        if (f.exists() == false)
+        if (exists(f) == false)
         {
             link.setVerifiedType(FileLinkType.OTHER);
             return "Object '" + strippedPath + "' does not exist on file system.";
@@ -170,6 +170,17 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
             }
         }
         return checkAttributes ? doFilesystemAttributeCheck(f, idCache, link, numeric) : null;
+    }
+
+    private static boolean exists(final File f)
+    {
+        if (Unix.isOperational())
+        {
+            return Unix.tryGetLinkInfo(f.getPath(), false) != null;
+        } else
+        {
+            return f.exists();
+        }
     }
 
     private static String tryGetSymbolicLink(File f)
