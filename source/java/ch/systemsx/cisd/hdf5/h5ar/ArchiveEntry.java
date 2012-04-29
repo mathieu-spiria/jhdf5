@@ -188,7 +188,7 @@ public final class ArchiveEntry
      * <p>
      * This will be the same as {@link #getPath()}, except when it originates from a call to
      * {@link IHDF5ArchiveInfoProvider#tryGetResolvedEntry(String, boolean)} with
-     * <code>keepPath=true</code>  where it will be the parent path of the link target.
+     * <code>keepPath=true</code> where it will be the parent path of the link target.
      */
     public String getRealParentPath()
     {
@@ -352,16 +352,17 @@ public final class ArchiveEntry
             } else if (linkTypeOK() == false)
             {
                 return verbose ? String.format(
-                        "ERROR: link type mismatch [expected: %s, found: %s]", linkType,
-                        verifiedLinkType) : "WRONG TYPE";
+                        "ERROR: Entry '%s' failed link type test, expected: %s, found: %s.", path,
+                        linkType, verifiedLinkType) : "WRONG TYPE";
             } else if (sizeOK() == false)
             {
-                return verbose ? String.format("ERROR: size mismatch [expected: %d, found: %d]",
-                        size, verifiedSize) : "WRONG SIZE";
+                return verbose ? String.format(
+                        "ERROR: Entry '%s' failed size test, expected: %d, found: %d.", path, size,
+                        verifiedSize) : "WRONG SIZE";
             } else if (checksumOK() == false)
             {
                 return verbose ? String.format(
-                        "ERROR: checksum mismatch [expected: %s, found: %s]",
+                        "ERROR: Entry '%s' failed CRC checksum test, expected: %s, found: %s.", path,
                         Utils.crc32ToString(crc32), Utils.crc32ToString(verifiedCrc32))
                         : "WRONG CRC32";
             }
