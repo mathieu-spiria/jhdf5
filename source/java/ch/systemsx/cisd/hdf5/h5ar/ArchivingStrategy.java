@@ -47,7 +47,7 @@ public class ArchivingStrategy
     /**
      * The default strategy: include everything, compress nothing.
      */
-    public static final ArchivingStrategy DEFAULT = new ArchivingStrategy();
+    public static final ArchivingStrategy DEFAULT = new ArchivingStrategy().seal();
 
     private List<Pattern> getOrCreateFileWhiteList()
     {
