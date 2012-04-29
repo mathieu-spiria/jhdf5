@@ -4114,12 +4114,27 @@ public class HDF5RoundtripTest
         assertFalse(writer.exists("__abc__"));
         assertTrue(writer.getGroupMemberPaths("/").isEmpty());
         writer.close();
+        
+        // The house keeping index is only considered when creating a new file.
+        // If the file exists, the one saved in the file takes precedence.
+        final IHDF5Writer writer2 =
+                HDF5Factory.configure(file).houseKeepingNameSuffix("YYY").writer();
+        assertEquals("XXX", writer2.getHouseKeepingNameSuffix());
+        assertEquals("abcXXX", writer2.toHouseKeepingPath("abc"));
+        assertTrue(writer2.exists("abcXXX"));
+        writer2.writeString(writer2.toHouseKeepingPath("abc"), "CAB");
+        assertFalse(writer2.exists("__abc__"));
+        assertFalse(writer2.exists("abcYYY"));
+        assertEquals("CAB", writer2.readString("abcXXX"));
+        assertTrue(writer2.getGroupMemberPaths("/").isEmpty());
+        writer2.close();
+        
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         assertEquals("XXX", reader.getHouseKeepingNameSuffix());
         assertEquals("abcXXX", reader.toHouseKeepingPath("abc"));
         assertTrue(reader.exists("abcXXX"));
         assertFalse(reader.exists("__abc__"));
-        assertEquals("ABC", reader.readString("abcXXX"));
+        assertEquals("CAB", reader.readString("abcXXX"));
         assertTrue(reader.getGroupMemberPaths("/").isEmpty());
         reader.close();
     }
