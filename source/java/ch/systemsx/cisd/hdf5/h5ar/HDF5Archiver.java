@@ -474,7 +474,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         final ArchiveEntryVerifyProcessor verifyProcessor =
                 new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, buffer,
                         params.isVerifyAttributes(), params.isNumeric());
-        processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(), false,
+        processor.process(fileOrDir, params.isRecursive(), true, false,
                 verifyProcessor);
         return this;
     }
@@ -485,7 +485,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         final ArchiveEntryVerifyProcessor verifyProcessor =
                 new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, rootDirectoryInArchive,
                         buffer, params.isVerifyAttributes(), params.isNumeric());
-        processor.process(fileOrDir, params.isRecursive(), params.isReadLinkTargets(), false,
+        processor.process(fileOrDir, params.isRecursive(), true, false,
                 verifyProcessor);
         return this;
     }

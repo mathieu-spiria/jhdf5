@@ -507,8 +507,8 @@ public class HDF5ArchiverMain
                     final ListingVisitor visitor =
                             new ListingVisitor(true, quiet, verbose, numeric);
                     archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot().getPath(), visitor,
-                            VerifyParameters.build().recursive(recursive).readLinkTargets(verbose)
-                                    .numeric(numeric).verifyAttributes(verifyAttributes).get());
+                            VerifyParameters.build().recursive(recursive).numeric(numeric)
+                                    .verifyAttributes(verifyAttributes).get());
                     return visitor.isOK();
                 }
                 case LIST:

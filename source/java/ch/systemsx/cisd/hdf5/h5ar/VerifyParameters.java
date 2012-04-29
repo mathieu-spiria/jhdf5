@@ -27,19 +27,15 @@ public final class VerifyParameters
 {
     private final boolean recursive;
 
-    private final boolean readLinkTargets;
-
     private final boolean numeric;
 
     private final boolean verifyAttributes;
 
-    public static final VerifyParameters DEFAULT = new VerifyParameters(true, true, false, false);
+    public static final VerifyParameters DEFAULT = new VerifyParameters(true, false, false);
 
     public static final class VerifyParametersBuilder
     {
         private boolean recursive = true;
-
-        private boolean readLinkTargets = true;
 
         private boolean numeric = false;
 
@@ -59,19 +55,6 @@ public final class VerifyParameters
         boolean recursive)
         {
             this.recursive = recursive;
-            return this;
-        }
-
-        public VerifyParametersBuilder noReadLinkTarget()
-        {
-            this.readLinkTargets = false;
-            return this;
-        }
-
-        public VerifyParametersBuilder readLinkTargets(@SuppressWarnings("hiding")
-        boolean readLinkTargets)
-        {
-            this.readLinkTargets = readLinkTargets;
             return this;
         }
 
@@ -103,7 +86,7 @@ public final class VerifyParameters
 
         public VerifyParameters get()
         {
-            return new VerifyParameters(recursive, readLinkTargets, numeric, verifyAttributes);
+            return new VerifyParameters(recursive, numeric, verifyAttributes);
         }
     }
 
@@ -112,11 +95,9 @@ public final class VerifyParameters
         return new VerifyParametersBuilder();
     }
 
-    private VerifyParameters(boolean recursive, boolean readLinkTargets, boolean numeric,
-            boolean verifyAttributes)
+    private VerifyParameters(boolean recursive, boolean numeric, boolean verifyAttributes)
     {
         this.recursive = recursive;
-        this.readLinkTargets = readLinkTargets;
         this.numeric = numeric;
         this.verifyAttributes = verifyAttributes;
     }
@@ -124,11 +105,6 @@ public final class VerifyParameters
     public boolean isRecursive()
     {
         return recursive;
-    }
-
-    public boolean isReadLinkTargets()
-    {
-        return readLinkTargets;
     }
 
     public boolean isNumeric()
