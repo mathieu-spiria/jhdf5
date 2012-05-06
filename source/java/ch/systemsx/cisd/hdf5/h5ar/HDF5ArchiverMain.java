@@ -22,10 +22,10 @@ import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.FilenameUtils;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
+
+import org.apache.commons.io.FilenameUtils;
 
 import ch.systemsx.cisd.args4j.Argument;
 import ch.systemsx.cisd.args4j.CmdLineException;
@@ -128,8 +128,11 @@ public class HDF5ArchiverMain
     @Option(name = "c", longName = "compress", metaVar = "REGEX", skipForExample = true, usage = "Regex of files to compress")
     private List<String> compressionWhiteList = new ArrayList<String>();
 
-    @Option(name = "C", longName = "compress-all", usage = "Regex of files to compress")
-    private boolean compressAll = false;
+    @Option(name = "nc", longName = "no-compression", metaVar = "REGEX", skipForExample = true, usage = "Regex of files not to compress")
+    private List<String> compressionBlackList = new ArrayList<String>();
+
+    @Option(name = "C", longName = "compress-all", usage = "Compress all files")
+    private Boolean compressAll = null;
 
     @Option(name = "r", longName = "root-dir", metaVar = "DIR", usage = "Root directory for archiving / extracting / verifying")
     private File rootOrNull;
@@ -294,8 +297,14 @@ public class HDF5ArchiverMain
 
     private ArchivingStrategy createArchivingStrategy()
     {
-        final ArchivingStrategy strategy = new ArchivingStrategy();
-        strategy.compressAll(compressAll);
+        final ArchivingStrategy strategy =
+                new ArchivingStrategy(
+                        compressionBlackList.isEmpty() ? ArchivingStrategy.DEFAULT_WITH_COMPRESSION
+                                : ArchivingStrategy.DEFAULT);
+        if (compressAll != null)
+        {
+            strategy.compressAll(compressAll);
+        }
         for (String pattern : fileWhiteList)
         {
             strategy.addToFileWhiteList(pattern);
@@ -319,6 +328,10 @@ public class HDF5ArchiverMain
         for (String pattern : compressionWhiteList)
         {
             strategy.addToCompressionWhiteList(pattern);
+        }
+        for (String pattern : compressionBlackList)
+        {
+            strategy.addToCompressionBlackList(pattern);
         }
         return strategy;
     }
@@ -419,10 +432,19 @@ public class HDF5ArchiverMain
                         break;
                     }
                     final ArchivingStrategy strategy = createArchivingStrategy();
+                    if (verbose)
+                    {
+                        System.out.printf("Archiving to file '%s', file system root: '%s'\n",
+                                archiveFile, getFSRoot());
+                    }
                     if (rootOrNull != null)
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
+                            if (verbose)
+                            {
+                                System.out.printf("  Adding entry: '%s'\n", arguments.get(i));
+                            }
                             archiver.archiveFromFilesystem(rootOrNull, new File(rootOrNull,
                                     arguments.get(i)), strategy,
                                     verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
@@ -431,6 +453,10 @@ public class HDF5ArchiverMain
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
+                            if (verbose)
+                            {
+                                System.out.printf("  Adding entry: '%s'\n", arguments.get(i));
+                            }
                             archiver.archiveFromFilesystem(new File(arguments.get(i)), strategy,
                                     true, verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                         }
@@ -464,8 +490,17 @@ public class HDF5ArchiverMain
                         break;
                     }
                     final ArchivingStrategy strategy = createArchivingStrategy();
+                    if (verbose)
+                    {
+                        System.out.printf("Extracting from file '%s', file system root: '%s'\n",
+                                archiveFile, getFSRoot());
+                    }
                     if (arguments.size() == 2)
                     {
+                        if (verbose)
+                        {
+                            System.out.println("  Extracting entry: '/'");
+                        }
                         archiver.extractToFilesystem(getFSRoot(), "/", strategy,
                                 verbose ? IListEntryVisitor.DEFAULT_VISITOR : quiet ? null
                                         : IListEntryVisitor.NONVERBOSE_VISITOR);
@@ -473,6 +508,10 @@ public class HDF5ArchiverMain
                     {
                         for (int i = 2; i < arguments.size(); ++i)
                         {
+                            if (verbose)
+                            {
+                                System.out.printf("  Extracting entry: '%s'\n", arguments.get(i));
+                            }
                             final String unixPath =
                                     FilenameUtils.separatorsToUnix(arguments.get(i));
                             archiver.extractToFilesystem(getFSRoot(), unixPath, strategy,
@@ -493,6 +532,14 @@ public class HDF5ArchiverMain
                     {
                         break;
                     }
+                    if (verbose)
+                    {
+                        System.out.printf("Deleting from file '%s'\n", archiveFile);
+                        for (String entry : arguments.subList(2, arguments.size()))
+                        {
+                            System.out.printf("  Deleting entry: '%s'\n", entry);
+                        }
+                    }
                     archiver.delete(arguments.subList(2, arguments.size()),
                             verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
                     break;
@@ -502,6 +549,11 @@ public class HDF5ArchiverMain
                     if (createArchiver() == false)
                     {
                         break;
+                    }
+                    if (verbose)
+                    {
+                        System.out.printf("Verifying file '%s', file system root: '%s'\n",
+                                archiveFile, getFSRoot());
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final ListingVisitor visitor =
@@ -516,6 +568,10 @@ public class HDF5ArchiverMain
                     if (createArchiver() == false)
                     {
                         break;
+                    }
+                    if (verbose)
+                    {
+                        System.out.printf("Listing file '%s'\n", archiveFile);
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final ListingVisitor visitor =

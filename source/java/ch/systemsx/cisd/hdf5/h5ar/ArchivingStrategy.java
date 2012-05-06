@@ -30,6 +30,12 @@ import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
  */
 public class ArchivingStrategy
 {
+
+    public enum CompressionStrategy
+    {
+        COMPRESS_NOTHING, COMPRESS_ALL, USE_BLACK_WHITE_LISTS
+    }
+
     private List<Pattern> fileWhiteListOrNull;
 
     private List<Pattern> fileBlackListOrNull;
@@ -40,7 +46,9 @@ public class ArchivingStrategy
 
     private List<Pattern> compressionWhiteListOrNull;
 
-    private boolean compressAll;
+    private List<Pattern> compressionBlackListOrNull;
+
+    private CompressionStrategy compressionStrategy;
 
     private boolean sealed;
 
@@ -49,6 +57,30 @@ public class ArchivingStrategy
      */
     public static final ArchivingStrategy DEFAULT = new ArchivingStrategy().seal();
 
+    /**
+     * The default strategy with compression: include everything, compress all files except those
+     * known to be already compressed.
+     */
+    public static final ArchivingStrategy DEFAULT_WITH_COMPRESSION = new ArchivingStrategy()
+            .addToCompressionBlackList(".*\\.zip").addToCompressionBlackList(".*\\.gz")
+            .addToCompressionBlackList(".*\\.bz2").seal();
+
+    public ArchivingStrategy()
+    {
+        this.compressionStrategy = CompressionStrategy.COMPRESS_NOTHING;
+    }
+    
+    public ArchivingStrategy(ArchivingStrategy template)
+    {
+        this.fileWhiteListOrNull = template.fileWhiteListOrNull;
+        this.fileBlackListOrNull = template.fileBlackListOrNull;
+        this.dirWhiteListOrNull = template.dirWhiteListOrNull;
+        this.dirBlackListOrNull = template.dirBlackListOrNull;
+        this.compressionStrategy = template.compressionStrategy;
+        this.compressionWhiteListOrNull = template.compressionWhiteListOrNull;
+        this.compressionBlackListOrNull = template.compressionBlackListOrNull;
+    }
+    
     private List<Pattern> getOrCreateFileWhiteList()
     {
         if (fileWhiteListOrNull == null)
@@ -94,6 +126,15 @@ public class ArchivingStrategy
         return compressionWhiteListOrNull;
     }
 
+    private List<Pattern> getOrCreateCompressionBlackList()
+    {
+        if (compressionBlackListOrNull == null)
+        {
+            compressionBlackListOrNull = new ArrayList<Pattern>();
+        }
+        return compressionBlackListOrNull;
+    }
+
     private void checkSealed()
     {
         if (sealed)
@@ -103,7 +144,7 @@ public class ArchivingStrategy
     }
 
     /**
-     * Add the given <var>pattern</var>to the whitelist of files to include in archiving.
+     * Add the given <var>pattern</var> to the whitelist of files to include in archiving.
      */
     public ArchivingStrategy addToFileWhiteList(Pattern pattern)
     {
@@ -113,7 +154,7 @@ public class ArchivingStrategy
     }
 
     /**
-     * Add the given <var>pattern</var>to the whitelist of files to include in archiving.
+     * Add the given <var>pattern</var> to the whitelist of files to include in archiving.
      */
     public ArchivingStrategy addToFileWhiteList(String pattern)
     {
@@ -123,7 +164,7 @@ public class ArchivingStrategy
     }
 
     /**
-     * Add the given <var>pattern</var>to the blacklist of files to exclude from archiving.
+     * Add the given <var>pattern</var> to the blacklist of files to exclude from archiving.
      */
     public ArchivingStrategy addToFileBlackList(Pattern pattern)
     {
@@ -133,7 +174,7 @@ public class ArchivingStrategy
     }
 
     /**
-     * Add the given <var>pattern</var>to the blacklist of files to exclude from archiving.
+     * Add the given <var>pattern</var> to the blacklist of files to exclude from archiving.
      */
     public ArchivingStrategy addToFileBlackList(String pattern)
     {
@@ -143,7 +184,7 @@ public class ArchivingStrategy
     }
 
     /**
-     * Add the given <var>pattern</var>to the whitelist of directories to include in archiving.
+     * Add the given <var>pattern</var> to the whitelist of directories to include in archiving.
      */
     public ArchivingStrategy addToDirWhiteList(Pattern pattern)
     {
@@ -153,7 +194,7 @@ public class ArchivingStrategy
     }
 
     /**
-     * Add the given <var>pattern</var>to the whitelist of directories to include in archiving.
+     * Add the given <var>pattern</var> to the whitelist of directories to include in archiving.
      */
     public ArchivingStrategy addToDirWhiteList(String pattern)
     {
@@ -163,7 +204,7 @@ public class ArchivingStrategy
     }
 
     /**
-     * Add the given <var>pattern</var>to the blacklist of directories to exclude from archiving.
+     * Add the given <var>pattern</var> to the blacklist of directories to exclude from archiving.
      */
     public ArchivingStrategy addToDirBlackList(Pattern pattern)
     {
@@ -173,7 +214,7 @@ public class ArchivingStrategy
     }
 
     /**
-     * Add the given <var>pattern</var>to the blacklist of directories to exclude from archiving.
+     * Add the given <var>pattern</var> to the blacklist of directories to exclude from archiving.
      */
     public ArchivingStrategy addToDirBlackList(String pattern)
     {
@@ -183,22 +224,46 @@ public class ArchivingStrategy
     }
 
     /**
-     * Add the given <var>pattern</var>to the whitelist of files to store compressed in archive.
+     * Add the given <var>pattern</var> to the whitelist of files to store compressed in archive.
      */
     public ArchivingStrategy addToCompressionWhiteList(Pattern pattern)
     {
         checkSealed();
         getOrCreateCompressionWhiteList().add(pattern);
+        compressionStrategy = CompressionStrategy.USE_BLACK_WHITE_LISTS;
         return this;
     }
 
     /**
-     * Add the given <var>pattern</var>to the whitelist of files to store compressed in archive.
+     * Add the given <var>pattern</var> to the whitelist of files to store compressed in archive.
      */
     public ArchivingStrategy addToCompressionWhiteList(String pattern)
     {
         checkSealed();
         getOrCreateCompressionWhiteList().add(Pattern.compile(pattern));
+        compressionStrategy = CompressionStrategy.USE_BLACK_WHITE_LISTS;
+        return this;
+    }
+
+    /**
+     * Add the given <var>pattern</var> to the blacklist of files to store compressed in archive.
+     */
+    public ArchivingStrategy addToCompressionBlackList(Pattern pattern)
+    {
+        checkSealed();
+        getOrCreateCompressionBlackList().add(pattern);
+        compressionStrategy = CompressionStrategy.USE_BLACK_WHITE_LISTS;
+        return this;
+    }
+
+    /**
+     * Add the given <var>pattern</var> to the blacklist of files to store compressed in archive.
+     */
+    public ArchivingStrategy addToCompressionBlackList(String pattern)
+    {
+        checkSealed();
+        getOrCreateCompressionBlackList().add(Pattern.compile(pattern));
+        compressionStrategy = CompressionStrategy.USE_BLACK_WHITE_LISTS;
         return this;
     }
 
@@ -228,7 +293,7 @@ public class ArchivingStrategy
     public ArchivingStrategy compressAll()
     {
         checkSealed();
-        this.compressAll = true;
+        this.compressionStrategy = CompressionStrategy.COMPRESS_ALL;
         return this;
     }
 
@@ -236,11 +301,11 @@ public class ArchivingStrategy
      * Sets, whether all files should be stored compressed in archive (<code>true</code>) or not (
      * <code>false</code>).
      */
-    public ArchivingStrategy compressAll(@SuppressWarnings("hiding")
-    boolean compressAll)
+    public ArchivingStrategy compressAll(boolean compress)
     {
         checkSealed();
-        this.compressAll = compressAll;
+        this.compressionStrategy =
+                compress ? CompressionStrategy.COMPRESS_ALL : CompressionStrategy.COMPRESS_NOTHING;
         return this;
     }
 
@@ -248,10 +313,11 @@ public class ArchivingStrategy
      * @deprecated Use {@link #compressAll(boolean)} instead.
      */
     @Deprecated
-    public final void setCompressAll(boolean compressAll)
+    public final void setCompress(boolean compress)
     {
         checkSealed();
-        this.compressAll = compressAll;
+        this.compressionStrategy =
+                compress ? CompressionStrategy.COMPRESS_ALL : CompressionStrategy.COMPRESS_NOTHING;
     }
 
     boolean doStoreOwnerAndPermissions()
@@ -278,22 +344,20 @@ public class ArchivingStrategy
 
     public boolean doCompress(String path)
     {
-        if (compressAll)
+        switch (compressionStrategy)
         {
-            return true;
-        }
-        if (compressionWhiteListOrNull == null)
-        {
-            return false;
-        } else
-        {
-            return match(null, compressionWhiteListOrNull, path);
+            case COMPRESS_NOTHING:
+                return false;
+            case COMPRESS_ALL:
+                return true;
+            default:
+                return match(compressionBlackListOrNull, compressionWhiteListOrNull, path);
         }
     }
 
-    public boolean isCompressAll()
+    public CompressionStrategy getCompressionStrategy()
     {
-        return compressAll;
+        return compressionStrategy;
     }
 
     private static boolean match(Iterable<Pattern> blackListOrNull,
