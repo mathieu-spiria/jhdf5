@@ -346,7 +346,7 @@ class HDF5
     }
 
     public HDF5LinkInformation getLinkInfo(final int fileId, final String objectName,
-            boolean exceptionWhenNonExistent)
+            boolean exceptionIfNonExistent)
     {
         checkMaxLength(objectName);
         if ("/".equals(objectName))
@@ -354,7 +354,7 @@ class HDF5
             return HDF5LinkInformation.ROOT_LINK_INFO;
         }
         final String[] lname = new String[1];
-        final int typeId = H5Lget_link_info(fileId, objectName, lname, exceptionWhenNonExistent);
+        final int typeId = H5Lget_link_info(fileId, objectName, lname, exceptionIfNonExistent);
         return HDF5LinkInformation.create(objectName, typeId, lname[0]);
     }
 
