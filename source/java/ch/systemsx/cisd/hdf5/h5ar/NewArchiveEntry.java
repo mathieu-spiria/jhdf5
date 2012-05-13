@@ -206,8 +206,8 @@ public abstract class NewArchiveEntry
     public static NewFileArchiveEntry file(String path)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
-        final String name = normalizedPath.substring(parentPath.length() + 1);
+        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String name = Utils.getName(normalizedPath);
         if (name.length() == 0)
         {
             throw new ArchivingException(path, "Path does not contain a name.");
@@ -224,11 +224,15 @@ public abstract class NewArchiveEntry
         return new NewFileArchiveEntry(parentPath, name);
     }
 
+    /**
+     * @param path The path of the symlink in the archive.
+     * @param linkTarget the link target of the symlink.
+     */
     public static NewSymLinkArchiveEntry symlink(String path, String linkTarget)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
-        final String name = normalizedPath.substring(parentPath.length() + 1);
+        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String name = Utils.getName(normalizedPath);
         if (name.length() == 0)
         {
             throw new ArchivingException(path, "Path does not contain a name.");
@@ -244,8 +248,8 @@ public abstract class NewArchiveEntry
     public static NewDirectoryArchiveEntry directory(String path)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
-        final String name = normalizedPath.substring(parentPath.length() + 1);
+        final String parentPath = Utils.getParentPath(normalizedPath);
+        final String name = Utils.getName(normalizedPath);
         if (name.length() == 0)
         {
             throw new ArchivingException(path, "Path does not contain a name.");

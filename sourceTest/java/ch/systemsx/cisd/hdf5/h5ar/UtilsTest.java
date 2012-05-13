@@ -16,9 +16,9 @@
 
 package ch.systemsx.cisd.hdf5.h5ar;
 
-import org.testng.annotations.Test;
+import static org.testng.AssertJUnit.assertEquals;
 
-import static org.testng.AssertJUnit.*;
+import org.testng.annotations.Test;
 
 /**
  * Test cases for {@link Utils}.
@@ -30,11 +30,28 @@ public class UtilsTest
     @Test
     public void testNormalizePath()
     {
+        assertEquals("/", Utils.normalizePath("/"));
         assertEquals("/a", Utils.normalizePath("a"));
         assertEquals("/a", Utils.normalizePath("a/"));
         assertEquals("/a", Utils.normalizePath("/a/"));
         assertEquals("/a/b/c", Utils.normalizePath("a/b/c"));
         assertEquals("/a/c", Utils.normalizePath("a/b/../c/./"));
+    }
+    
+    @Test
+    public void testGetParentPath()
+    {
+        assertEquals("", Utils.getParentPath("/"));
+        assertEquals("/", Utils.getParentPath("/dir"));
+        assertEquals("/some", Utils.getParentPath("/some/dir"));
+    }
+    
+    @Test
+    public void testConcatLink()
+    {
+        assertEquals("/", Utils.concatLink(Utils.getParentPath("/"), Utils.getName("/")));
+        assertEquals("/a", Utils.concatLink(Utils.getParentPath("/a"), Utils.getName("/a")));
+        assertEquals("/a/b", Utils.concatLink(Utils.getParentPath("/a/b"), Utils.getName("/a/b")));
     }
     
 }

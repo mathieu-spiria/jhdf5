@@ -180,7 +180,7 @@ class HDF5ArchiveTraverser
     private ArchiveEntry toArchiveEntry(String path, LinkRecord linkRecord)
     {
         final String normalizedPath = Utils.normalizePath(path);
-        final String parentPath = Utils.getQuasiParentPath(normalizedPath);
+        final String parentPath = Utils.getParentPath(normalizedPath);
         return Utils.tryToArchiveEntry(parentPath, normalizedPath, linkRecord, idCache);
     }
 

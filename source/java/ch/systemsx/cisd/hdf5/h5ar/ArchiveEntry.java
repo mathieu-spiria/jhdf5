@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5.h5ar;
 
 import ch.systemsx.cisd.base.unix.FileLinkType;
+import ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiveUpdater.DataSetInfo;
 
 /**
  * An entry of an archive listing.
@@ -49,13 +50,15 @@ public final class ArchiveEntry
 
     private final long size;
 
-    private final long verifiedSize;
+    private long verifiedSize;
 
     private final long lastModified;
 
-    private final int crc32;
+    private final long verifiedLastModified;
 
-    private final int verifiedCrc32;
+    private int crc32;
+
+    private int verifiedCrc32;
 
     private final int uid;
 
@@ -74,7 +77,7 @@ public final class ArchiveEntry
 
     ArchiveEntry(String dir, String path, LinkRecord link, IdCache idCache, String errorLineOrNull)
     {
-        this.parentPath = dir;
+        this.parentPath = (dir != null) ? dir : Utils.getParentPath(path);
         this.realParentPath = parentPath;
         this.path = path;
         this.realPath = path;
@@ -89,6 +92,7 @@ public final class ArchiveEntry
         this.size = link.getSize();
         this.verifiedSize = link.getVerifiedSize();
         this.lastModified = link.getLastModified();
+        this.verifiedLastModified = link.getVerifiedLastModified();
         this.crc32 = link.getCrc32();
         this.verifiedCrc32 = link.getVerifiedCrc32();
         this.uid = link.getUid();
@@ -114,6 +118,8 @@ public final class ArchiveEntry
         this.size = linkInfo.size;
         this.verifiedSize = linkInfo.verifiedSize;
         this.lastModified = Math.max(pathInfo.lastModified, linkInfo.lastModified);
+        this.verifiedLastModified =
+                Math.max(pathInfo.verifiedLastModified, linkInfo.verifiedLastModified);
         this.crc32 = linkInfo.crc32;
         this.verifiedCrc32 = linkInfo.verifiedCrc32;
         this.uid = linkInfo.uid;
@@ -137,14 +143,22 @@ public final class ArchiveEntry
         this.hasLinkTarget = false;
         this.linkType = null;
         this.verifiedLinkType = null;
-        this.size = -1;
-        this.verifiedSize = -1;
-        this.lastModified = -1;
+        this.size = Utils.UNKNOWN;
+        this.verifiedSize = Utils.UNKNOWN;
+        this.lastModified = Utils.UNKNOWN;
+        this.verifiedLastModified = Utils.UNKNOWN;
         this.crc32 = 0;
         this.verifiedCrc32 = 0;
-        this.uid = 0;
-        this.gid = 0;
-        this.permissions = 0;
+        this.uid = Utils.UNKNOWN;
+        this.gid = Utils.UNKNOWN;
+        this.permissions = Utils.UNKNOWN_S;
+    }
+    
+    void setDataSetInfo(DataSetInfo dataSetInfo)
+    {
+        this.verifiedSize = dataSetInfo.size;
+        this.crc32 = dataSetInfo.crc32;
+        this.verifiedCrc32 = crc32;
     }
 
     /**
@@ -207,141 +221,332 @@ public final class ArchiveEntry
         return realName;
     }
 
+    /**
+     * Returns how complete this entry is.
+     * <p>
+     * {@link ArchiveEntryCompleteness#BASE} entries can occur if the archive does not contain valid
+     * file attributes, {@link ArchiveEntryCompleteness#LAST_MODIFIED} entries can occur if the
+     * archive has been created or updated on a non-POSIX (read: Microsoft Windows) machine.
+     */
     public ArchiveEntryCompleteness getCompleteness()
     {
         return completeness;
     }
 
+    /**
+     * Returns the link target. May be "?" if the link target has not been readm or if this entry
+     * does not represent a link.
+     * 
+     * @see #hasLinkTarget()
+     */
     public String getLinkTarget()
     {
         return linkTarget;
     }
 
+    /**
+     * Returns <code>true</code>, if this entry has a meaningful link target.
+     * 
+     * @see #getLinkTarget()
+     */
     public boolean hasLinkTarget()
     {
         return hasLinkTarget;
     }
 
+    /**
+     * Returns the type of this entry.
+     */
     public FileLinkType getLinkType()
     {
         return linkType;
     }
 
+    /**
+     * Returns if this entry is of type {@link FileLinkType#DIRECTORY}.
+     */
     public boolean isDirectory()
     {
         return linkType == FileLinkType.DIRECTORY;
     }
 
+    /**
+     * Returns if this entry is of type {@link FileLinkType#SYMLINK}.
+     */
     public boolean isSymLink()
     {
         return linkType == FileLinkType.SYMLINK;
     }
 
+    /**
+     * Returns if this entry is of type {@link FileLinkType#REGULAR_FILE}.
+     */
     public boolean isRegularFile()
     {
         return linkType == FileLinkType.REGULAR_FILE;
     }
 
-    public FileLinkType tryGetVerifiedLinkType()
-    {
-        return verifiedLinkType;
-    }
-
+    /**
+     * Returns the size of this entry, if this entry is a regular file, or 0 otherwise.
+     * 
+     * @see #isRegularFile()
+     */
     public long getSize()
     {
         return size;
     }
 
-    public long getVerifiedSize()
-    {
-        return verifiedSize;
-    }
-
+    /**
+     * Returns the date and time of last modification of this entry, measured in seconds since the
+     * epoch (00:00:00 GMT, January 1, 1970), or -1, if this information is not available.
+     */
     public long getLastModified()
     {
         return lastModified;
     }
 
+    /**
+     * Returns a string representation of the date and time of last modification of this entry, or
+     * "?", if this information is not available.
+     */
+    public String getLastModifiedStr()
+    {
+        return getLastModifiedStr(lastModified);
+    }
+
+    private static String getLastModifiedStr(long lastModified)
+    {
+        if (lastModified >= 0)
+        {
+            return String.format("%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS", lastModified
+                    * Utils.MILLIS_PER_SECOND);
+        } else
+        {
+            return "?";
+        }
+
+    }
+
+    /**
+     * Returns the CRC32 checksum of this entry, or 0, if this information is not available or if
+     * this entry is not a regular file.
+     * 
+     * @see #isRegularFile()
+     */
     public int getCrc32()
     {
         return crc32;
     }
 
+    /**
+     * Returns a string representation (using hexadecimal digits) of the CRC32 checksum of this
+     * entry, or "00000000", if this information is not available or if this entry is not a regular
+     * file.
+     * 
+     * @see #isRegularFile()
+     */
     public String getCrc32Str()
     {
         return Utils.crc32ToString(crc32);
     }
 
-    public int getVerifiedCrc32()
-    {
-        return verifiedCrc32;
-    }
-
-    public String getVerifiedCrc32Str()
-    {
-        return Utils.crc32ToString(verifiedCrc32);
-    }
-
+    /**
+     * Returns a string representation of the user owning this archive entry, or "?", if this
+     * information is not available.
+     * <p>
+     * Note that the archive only stores the UID and it is the local system which is used to resolve
+     * the UID to a user.
+     */
     public String getUser(boolean numeric)
     {
-        return idCache.getUser(uid, numeric);
+        return (uid >= 0) ? idCache.getUser(uid, numeric) : "?";
     }
 
+    /**
+     * Returns the UID of the user owning this archive entry, or -1, if this information is not
+     * available.
+     */
     public int getUid()
     {
         return uid;
     }
 
+    /**
+     * Returns a string representation of the group owning this archive entry, or "?", if this
+     * information is not available.
+     * <p>
+     * Note that the archive only stores the GID and it is the local system which is used to resolve
+     * the GID to a group.
+     */
     public String getGroup(boolean numeric)
     {
-        return idCache.getGroup(gid, numeric);
+        return (gid >= 0) ? idCache.getGroup(gid, numeric) : "?";
     }
 
+    /**
+     * Returns the GID of the group owning this archive entry, or -1, if this information is not
+     * available.
+     */
     public int getGid()
     {
         return gid;
     }
 
+    /**
+     * Returns the access permissions of this archive entry, or -1, if this information is not
+     * available.
+     */
     public short getPermissions()
     {
         return permissions;
     }
 
+    /**
+     * Returns a string representation of the access permissions of this archive entry, or "?", if
+     * this information is not available.
+     */
     public String getPermissionsString(boolean numeric)
     {
-        return Utils.permissionsToString(permissions, linkType == FileLinkType.DIRECTORY, numeric);
+        return (permissions >= 0) ? Utils.permissionsToString(permissions,
+                linkType == FileLinkType.DIRECTORY, numeric) : "?";
     }
 
-    public String getErrorLineOrNull()
+    /**
+     * Returns the error line saved for this archive entry, or <code>null</code>, if no error line
+     * is available. A non-null error line is one indication of a verification error.
+     * <p>
+     * Note that the error line may contain additional information when a verification step has
+     * failed on the archive entry.
+     */
+    public String tryGetErrorLine()
     {
         return errorLineOrNull;
     }
 
-    public boolean hasCheck()
+    /**
+     * Returns the verified type of this entry, or <code>null</code>, if no verification has been
+     * performed on this entry.
+     * <p>
+     * This information may come from an internal test of the archive (see
+     * {@link ListParameters#isTestArchive()}) or from a verification of the archive against the
+     * filesystem (see {@link VerifyParameters}).
+     */
+    public FileLinkType tryGetVerifiedLinkType()
     {
-        return (verifiedLinkType != null || verifiedSize != -1 || verifiedCrc32 != 0 || errorLineOrNull != null);
+        return verifiedLinkType;
     }
 
+    /**
+     * Returns the verified size of this archive entry, or -1, if this information is not available.
+     */
+    public long getVerifiedSize()
+    {
+        return verifiedSize;
+    }
+
+    /**
+     * Returns the verified CRC32 checksum of this archive entry, or 0, if this information is not
+     * available.
+     */
+    public int getVerifiedCrc32()
+    {
+        return verifiedCrc32;
+    }
+
+    /**
+     * Returns a string representation (using hexadecimal digits) of the verified CRC32 checksum of
+     * this entry, or "00000000", if this information is not available or if this entry is not a
+     * regular file.
+     * 
+     * @see #isRegularFile()
+     */
+    public String getVerifiedCrc32Str()
+    {
+        return Utils.crc32ToString(verifiedCrc32);
+    }
+
+    /**
+     * Returns the verified date and time of last modification of this entry, measured in seconds
+     * since the epoch (00:00:00 GMT, January 1, 1970), or -1, if this information is not available.
+     */
+    public long getVerifiedLastModified()
+    {
+        return verifiedLastModified;
+    }
+
+    /**
+     * Returns a string representation of the verified date and time of last modification of this
+     * entry, or "?", if this information is not available.
+     */
+    public String getVerifiedLastModifiedStr()
+    {
+        return getLastModifiedStr(verifiedLastModified);
+    }
+
+    /**
+     * Returns true, if this entry has verification information on archive integrity.
+     */
+    public boolean hasVerificationInfo()
+    {
+        return (verifiedLinkType != null || verifiedSize != -1 || verifiedCrc32 != 0
+                || verifiedLastModified != -1 || errorLineOrNull != null);
+    }
+
+    /**
+     * Returns <code>true</code> if this archive entry has been verified successfully (or if no
+     * verification information is available).
+     */
     public boolean isOK()
     {
-        return (errorLineOrNull == null) && linkTypeOK() && sizeOK() && checksumOK();
+        return (errorLineOrNull == null) && linkTypeOK() && sizeOK() && lastModifiedOK()
+                && checksumOK();
     }
 
+    /**
+     * Returns <code>true</code> if this the type of this archive entry has been verified
+     * successfully (or if no verification information for the type is available).
+     */
     public boolean linkTypeOK()
     {
         return (verifiedLinkType == null) || (linkType == verifiedLinkType);
     }
 
+    /**
+     * Returns <code>true</code> if this the size of this archive entry has been verified
+     * successfully (or if no verification information for the size is available).
+     */
     public boolean sizeOK()
     {
         return (verifiedSize == -1) || (size == verifiedSize);
     }
 
+    /**
+     * Returns <code>true</code> if this the last modification date of this archive entry has been
+     * verified successfully (or if no verification information for the last modification date is
+     * available).
+     */
+    public boolean lastModifiedOK()
+    {
+        return (verifiedLastModified == -1) || (lastModified == verifiedLastModified);
+    }
+
+    /**
+     * Returns <code>true</code> if this the checksum of this archive entry has been verified
+     * successfully (or if no verification information for the checksum is available).
+     */
     public boolean checksumOK()
     {
         return (verifiedSize == -1) || (crc32 == verifiedCrc32);
     }
 
+    /**
+     * Returns a status string for this entry.
+     * <p>
+     * Note that the status will alway be <code>OK</code> if no verification information is
+     * available.
+     * 
+     * @see #hasVerificationInfo()
+     */
     public String getStatus(boolean verbose)
     {
         if (isOK() == false)
@@ -362,29 +567,68 @@ public final class ArchiveEntry
             } else if (checksumOK() == false)
             {
                 return verbose ? String.format(
-                        "ERROR: Entry '%s' failed CRC checksum test, expected: %s, found: %s.", path,
-                        Utils.crc32ToString(crc32), Utils.crc32ToString(verifiedCrc32))
+                        "ERROR: Entry '%s' failed CRC checksum test, expected: %s, found: %s.",
+                        path, Utils.crc32ToString(crc32), Utils.crc32ToString(verifiedCrc32))
                         : "WRONG CRC32";
+            } else if (lastModifiedOK() == false)
+            {
+                return verbose ? String
+                        .format("ERROR: Entry '%s' failed last modification test, expected: %s, found: %s.",
+                                path, getLastModifiedStr(), getVerifiedLastModifiedStr())
+                        : "WRONG LASTMODIFICATION";
             }
         }
         return "OK";
     }
 
+    /**
+     * Returns a (verbose) string description of this entry, including the (brief) verification
+     * status, if available.
+     */
     public String describeLink()
     {
         return describeLink(true, false, true);
     }
 
+    /**
+     * Returns a string description of this entry, including the (brief) verification status, if
+     * available.
+     * 
+     * @param verbose If <code>true</code>, the link description will contain all information
+     *            available, if <code>false</code>, it will only contain the path information.
+     */
     public String describeLink(boolean verbose)
     {
         return describeLink(verbose, false, true);
     }
 
+    /**
+     * Returns a string description of this entry, including the (brief) verification status, if
+     * available.
+     * 
+     * @param verbose If <code>true</code>, the link description will contain all information
+     *            available, if <code>false</code>, it will only contain the path information.
+     * @param numeric If <code>true</code>, file ownership and access permissions will be
+     *            represented numerically, if <code>false</code>, they will be represented as
+     *            strings. Only relevant if <var>verbose</var> is <code>true</code>.
+     */
     public String describeLink(boolean verbose, boolean numeric)
     {
         return describeLink(verbose, numeric, true);
     }
 
+    /**
+     * Returns a string description of this entry.
+     * 
+     * @param verbose If <code>true</code>, the link description will contain all information
+     *            available, if <code>false</code>, it will only contain the path information.
+     * @param numeric If <code>true</code>, file ownership and access permissions will be
+     *            represented numerically, if <code>false</code>, they will be represented as
+     *            strings. Only relevant if <var>verbose</var> is <code>true</code>.
+     * @param includeCheck If <code>true</code> (and if verification information is available for
+     *            this entry), add a (brief) verification status string.
+     * @see #hasVerificationInfo()
+     */
     public String describeLink(boolean verbose, boolean numeric, boolean includeCheck)
     {
         final StringBuilder builder = new StringBuilder();
@@ -458,7 +702,7 @@ public final class ArchiveEntry
                     throw new Error("Unknown level of link completeness: " + completeness);
             }
         }
-        if (includeCheck && hasCheck())
+        if (includeCheck && hasVerificationInfo())
         {
             builder.append('\t');
             builder.append(getStatus(false));

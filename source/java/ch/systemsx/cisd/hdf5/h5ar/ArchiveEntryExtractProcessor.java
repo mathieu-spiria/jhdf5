@@ -43,7 +43,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
 {
     private static final int ROOT_UID = 0;
 
-    private final IListEntryVisitor visitorOrNull;
+    private final IArchiveEntryVisitor visitorOrNull;
 
     private final ArchivingStrategy strategy;
 
@@ -53,7 +53,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
 
     private final GroupCache groupCache;
 
-    ArchiveEntryExtractProcessor(IListEntryVisitor visitorOrNull, ArchivingStrategy strategy,
+    ArchiveEntryExtractProcessor(IArchiveEntryVisitor visitorOrNull, ArchivingStrategy strategy,
             String rootDirectory, byte[] buffer)
     {
         this.visitorOrNull = visitorOrNull;
@@ -87,6 +87,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
         {
             try
             {
+                file.delete();
                 final String linkTarget = link.tryGetLinkTarget();
                 Unix.createSymbolicLink(linkTarget, file.getAbsolutePath());
                 if (visitorOrNull != null)
@@ -120,7 +121,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
                     restoreAttributes(file, link);
                     final FileSizeType sizeType = getFileSizeType(file);
                     link.setVerifiedType(sizeType.type);
-                    link.setFileVerification(sizeType.size, crc32);
+                    link.setFileVerification(sizeType.size, crc32, file.lastModified() / Utils.MILLIS_PER_SECOND);
                     final ArchiveEntry entry = new ArchiveEntry(dir, path, link, idCache);
                     if (visitorOrNull != null)
                     {

@@ -32,28 +32,40 @@ class HDF5ArchiveDeleter
     private final IHDF5Writer hdf5Writer;
 
     private final IDirectoryIndexProvider indexProvider;
+    
+    private final IdCache idCache;
 
-    public HDF5ArchiveDeleter(IHDF5Writer hdf5Writer, IDirectoryIndexProvider indexProvider)
+    public HDF5ArchiveDeleter(IHDF5Writer hdf5Writer, IDirectoryIndexProvider indexProvider, IdCache idCache)
     {
         this.hdf5Writer = hdf5Writer;
         this.indexProvider = indexProvider;
+        this.idCache = idCache;
     }
 
-    public HDF5ArchiveDeleter delete(List<String> hdf5ObjectPaths, IPathVisitor pathVisitorOrNull)
+    public HDF5ArchiveDeleter delete(List<String> hdf5ObjectPaths, IArchiveEntryVisitor entryVisitorOrNull)
     {
         for (String path : hdf5ObjectPaths)
         {
             final String normalizedPath = Utils.normalizePath(path);
-            final String group = Utils.getQuasiParentPath(normalizedPath);
+            final String group = Utils.getParentPath(normalizedPath);
             final IDirectoryIndex index = indexProvider.get(group, false);
             try
             {
-                hdf5Writer.delete(normalizedPath);
-                final String name = normalizedPath.substring(group.length() + 1);
-                index.remove(name);
-                if (pathVisitorOrNull != null)
+                final String name = Utils.getName(normalizedPath);
+                LinkRecord link = index.tryGetLink(name);
+                if (link == null)
                 {
-                    pathVisitorOrNull.visit(normalizedPath);
+                    link = LinkRecord.tryReadFromArchive(hdf5Writer, normalizedPath);
+                }
+                if (link != null)
+                {
+                    hdf5Writer.delete(normalizedPath);
+                    index.remove(name);
+                    if (entryVisitorOrNull != null)
+                    {
+                        final ArchiveEntry entry = new ArchiveEntry(group, normalizedPath, link, idCache);
+                        entryVisitorOrNull.visit(entry);
+                    }
                 }
             } catch (HDF5Exception ex)
             {

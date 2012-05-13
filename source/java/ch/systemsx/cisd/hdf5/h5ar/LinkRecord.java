@@ -67,20 +67,21 @@ final class LinkRecord implements Comparable<LinkRecord>
 
     private FileLinkType verifiedType;
 
-    private long verifiedSize = -1;
+    private long verifiedSize = Utils.UNKNOWN;
 
     private int verifiedCrc32 = 0;
+
+    private long verifiedLastModified = Utils.UNKNOWN;
 
     /**
      * Returns a {@link LinkRecord} object for the given <var>link</var> {@link File}, or
      * <code>null</code> if a system call fails and <var>continueOnError</var> is <code>true</code>.
      */
-    public static LinkRecord tryCreate(File file, boolean includeOwnerAndPermissions,
-            IErrorStrategy errorStrategy)
+    public static LinkRecord tryCreate(File file, IErrorStrategy errorStrategy)
     {
         try
         {
-            return new LinkRecord(file, includeOwnerAndPermissions);
+            return new LinkRecord(file);
         } catch (IOExceptionUnchecked ex)
         {
             errorStrategy.dealWithError(new ArchivingException(file, ex.getCause()));
@@ -101,6 +102,22 @@ final class LinkRecord implements Comparable<LinkRecord>
         {
             return null;
         }
+    }
+
+    /**
+     * Returns a link record for <var>normalizedPath</var> in the HDF5 archive represented by
+     * <var>hdf5Reader</var>, or <code>null</code>, if this path does not exist in the archive.
+     */
+    public static LinkRecord tryReadFromArchive(IHDF5Reader hdf5Reader, String normalizedPath)
+    {
+        final HDF5LinkInformation linfo = hdf5Reader.getLinkInformation(normalizedPath);
+        if (linfo.exists() == false)
+        {
+            return null;
+        }
+        final long size = linfo.isDataSet() ? hdf5Reader.getSize(linfo.getPath()) : Utils.UNKNOWN;
+        return new LinkRecord(linfo, size);
+
     }
 
     /**
@@ -125,26 +142,25 @@ final class LinkRecord implements Comparable<LinkRecord>
      */
     LinkRecord(String hdf5DirectoryPath)
     {
-        this(hdf5DirectoryPath, System.currentTimeMillis() / 1000, Utils.getCurrentUid(), Utils
-                .getCurrentGid(), (short) 0755);
-    }
-
-    /**
-     * Creates the root directory entry from the stat record of the HDF5 archive.
-     */
-    LinkRecord(Stat hdf5Archive)
-    {
-        this("", hdf5Archive.getLastModified(), hdf5Archive.getUid(), hdf5Archive.getGid(),
-                hdf5Archive.getPermissions());
+        this(hdf5DirectoryPath, System.currentTimeMillis() / Utils.MILLIS_PER_SECOND, Utils
+                .getCurrentUid(), Utils.getCurrentGid(), (short) 0755);
     }
 
     /**
      * Creates the root directory entry from the File of the HDF5 archive.
      */
-    LinkRecord(File hdf5Archive)
+    static LinkRecord getLinkRecordForArchiveRoot(File hdf5Archive)
     {
-        this("", hdf5Archive.lastModified() / 1000, Utils.getCurrentUid(), Utils
-                .getCurrentGid(), Utils.UNKNOWN_S);
+        if (Unix.isOperational())
+        {
+            final Stat stat = Unix.getFileInfo(hdf5Archive.getPath());
+            return new LinkRecord("", stat.getLastModified(), stat.getUid(), stat.getGid(),
+                    stat.getPermissions());
+        } else
+        {
+            return new LinkRecord("", hdf5Archive.lastModified() / Utils.MILLIS_PER_SECOND,
+                    Utils.getCurrentUid(), Utils.getCurrentGid(), Utils.UNKNOWN_S);
+        }
     }
 
     /**
@@ -179,10 +195,10 @@ final class LinkRecord implements Comparable<LinkRecord>
     /**
      * Returns a {@link LinkRecord} object for the given <var>link</var> {@link File}.
      */
-    private LinkRecord(File file, boolean includeOwnerAndPermissions)
+    private LinkRecord(File file)
     {
         this.linkName = file.getName();
-        if (includeOwnerAndPermissions && Unix.isOperational())
+        if (Unix.isOperational())
         {
             final Stat info = Unix.getLinkInfo(file.getPath(), false);
             this.linkType = info.getLinkType();
@@ -197,7 +213,7 @@ final class LinkRecord implements Comparable<LinkRecord>
                     (file.isDirectory()) ? FileLinkType.DIRECTORY
                             : (file.isFile() ? FileLinkType.REGULAR_FILE : FileLinkType.OTHER);
             this.size = (linkType == FileLinkType.REGULAR_FILE) ? file.length() : 0;
-            this.lastModified = file.lastModified() / 1000;
+            this.lastModified = file.lastModified() / Utils.MILLIS_PER_SECOND;
             this.uid = Utils.UNKNOWN;
             this.gid = Utils.UNKNOWN;
             this.permissions = Utils.UNKNOWN_S;
@@ -375,10 +391,16 @@ final class LinkRecord implements Comparable<LinkRecord>
         return verifiedSize;
     }
 
-    public void setFileVerification(long size, int crc32)
+    public long getVerifiedLastModified()
+    {
+        return verifiedLastModified;
+    }
+
+    public void setFileVerification(long size, int crc32, long lastModified)
     {
         this.verifiedSize = size;
         this.verifiedCrc32 = crc32;
+        this.verifiedLastModified = lastModified;
     }
 
     public void resetVerification()

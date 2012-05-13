@@ -91,13 +91,12 @@ class DirectoryIndex implements IDirectoryIndex
      * 
      * @return A list of {@link LinkRecord}s in the same order as <var>entries</var>.
      */
-    public static List<LinkRecord> convertFilesToLinks(File[] files,
-            boolean storeOwnerAndPermissions, IErrorStrategy errorStrategy)
+    public static List<LinkRecord> convertFilesToLinks(File[] files, IErrorStrategy errorStrategy)
     {
         final List<LinkRecord> list = new LinkedList<LinkRecord>();
         for (File file : files)
         {
-            list.add(LinkRecord.tryCreate(file, storeOwnerAndPermissions, errorStrategy));
+            list.add(LinkRecord.tryCreate(file, errorStrategy));
         }
         return list;
     }

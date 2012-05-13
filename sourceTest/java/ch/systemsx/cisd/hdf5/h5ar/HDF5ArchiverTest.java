@@ -30,6 +30,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
 import org.testng.annotations.BeforeSuite;
@@ -38,7 +39,10 @@ import org.testng.annotations.Test;
 import ch.rinn.restrictions.Friend;
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.base.unix.Unix;
+import ch.systemsx.cisd.base.unix.Unix.Stat;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
+import ch.systemsx.cisd.hdf5.HDF5Factory;
+import ch.systemsx.cisd.hdf5.IHDF5Writer;
 
 /**
  * Tests for {@link HDF5Archiver}.
@@ -232,14 +236,17 @@ public class HDF5ArchiverTest
 
     private File createTestDirectory() throws IOException
     {
-        return createTestDirectory(null);
+        return createTestDirectory(null, System.currentTimeMillis());
     }
 
-    private File createTestDirectory(String prefixOrNull) throws IOException
+    private File createTestDirectory(String prefixOrNull, long time) throws IOException
     {
-        final File dir =
-                (prefixOrNull != null) ? new File(new File(workingDirectory, prefixOrNull), "test")
-                        : new File(workingDirectory, "test");
+        final File prefixDir =
+                (prefixOrNull != null) ? new File(workingDirectory, prefixOrNull)
+                        : workingDirectory;
+        prefixDir.delete();
+        prefixDir.deleteOnExit();
+        final File dir = new File(prefixDir, "test");
         dir.delete();
         dir.deleteOnExit();
         dir.mkdirs();
@@ -247,6 +254,7 @@ public class HDF5ArchiverTest
         f1.delete();
         f1.deleteOnExit();
         FileUtils.writeLines(f1, Arrays.asList("Line 1", "Line 2", "Line 3"));
+        f1.setLastModified(time);
         final File dir2 = new File(dir, "dir_somedir");
         dir2.delete();
         dir2.mkdir();
@@ -255,6 +263,7 @@ public class HDF5ArchiverTest
         f2.delete();
         f2.deleteOnExit();
         FileUtils.writeLines(f2, Arrays.asList("A", "B", "C"));
+        f2.setLastModified(time);
         final File dir3 = new File(dir, "dir_someotherdir");
         dir3.delete();
         dir3.mkdir();
@@ -266,6 +275,9 @@ public class HDF5ArchiverTest
             l1.deleteOnExit();
             Unix.createSymbolicLink("../" + dir3.getName(), l1.getAbsolutePath());
         }
+        dir2.setLastModified(time);
+        dir3.setLastModified(time);
+        dir.setLastModified(time);
         return dir;
     }
 
@@ -279,7 +291,7 @@ public class HDF5ArchiverTest
         HDF5ArchiverFactory.open(h5arfile).archiveFromFilesystem(dir).close();
         final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
         assertTrue(ar.test().isEmpty());
-        assertTrue(ar.verifyAgainstFilesystem(dir.getAbsolutePath()).isEmpty());
+        assertTrue(ar.verifyAgainstFilesystem(dir).isEmpty());
         ar.close();
     }
 
@@ -293,8 +305,99 @@ public class HDF5ArchiverTest
         HDF5ArchiverFactory.open(h5arfile).archiveFromFilesystemBelowDirectory("ttt", dir).close();
         final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
         assertTrue(ar.test().isEmpty());
-        assertTrue(ar.verifyAgainstFilesystem("", dir.getAbsolutePath(), "ttt").isEmpty());
+        assertTrue(ar.verifyAgainstFilesystem("", dir, "ttt").isEmpty());
         ar.close();
+    }
+
+    @Test
+    public void testRoundtrip() throws IOException
+    {
+        final long now = System.currentTimeMillis();
+        final long dirLastChanged = now - 1000L * 3600L * 24 * 5;
+        final File dir = createTestDirectory("original", dirLastChanged);
+        final long dirLastChangedSeconds = dirLastChanged / 1000L;
+        final File h5arfile = new File(workingDirectory, "testRoundtrip.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        final AtomicInteger entryCount = new AtomicInteger(0);
+        HDF5ArchiverFactory.open(h5arfile)
+                .archiveFromFilesystemBelowDirectory("/", dir, new IArchiveEntryVisitor()
+                    {
+                        public void visit(ArchiveEntry entry)
+                        {
+                            entryCount.incrementAndGet();
+                            final File f = new File(dir, entry.getPath());
+                            assertTrue(entry.getPath(), f.exists());
+                            assertTrue(entry.isOK());
+                            if (entry.isSymLink() == false)
+                            {
+                                assertEquals(dirLastChangedSeconds, entry.getLastModified());
+                                assertEquals(entry.getPath(), f.isDirectory(), entry.isDirectory());
+                                assertEquals(entry.getPath(), f.isFile(), entry.isRegularFile());
+                                if (entry.isRegularFile())
+                                {
+                                    assertEquals(entry.getPath(), f.length(), entry.getSize());
+                                }
+                            }
+                        }
+                    }).close();
+        assertEquals(6, entryCount.intValue());
+        final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
+        entryCount.set(0);
+        ar.list("/", new IArchiveEntryVisitor()
+            {
+                public void visit(ArchiveEntry entry)
+                {
+                    entryCount.incrementAndGet();
+                    final File f = new File(dir, entry.getPath());
+                    assertTrue(entry.getPath(), f.exists());
+                    assertTrue(entry.isOK());
+                    if (entry.isSymLink() == false)
+                    {
+                        assertEquals(dirLastChangedSeconds, entry.getLastModified());
+                        assertEquals(entry.getPath(), f.isDirectory(), entry.isDirectory());
+                        assertEquals(entry.getPath(), f.isFile(), entry.isRegularFile());
+                        if (entry.isRegularFile())
+                        {
+                            assertEquals(entry.getPath(), f.length(), entry.getSize());
+                        }
+                    }
+                }
+            });
+        assertEquals(5, entryCount.intValue());
+        assertTrue(ar.verifyAgainstFilesystem(dir).isEmpty());
+        final File extracted = new File(dir.getParentFile().getParentFile(), "extracted");
+        ar.extractToFilesystem(extracted, "/");
+        assertTrue(ar.verifyAgainstFilesystem(extracted).isEmpty());
+        entryCount.set(0);
+        checkDirectoryEntries(dir, extracted, entryCount);
+        assertEquals(5, entryCount.intValue());
+        ar.close();
+    }
+
+    private void checkDirectoryEntries(final File dir, final File extracted,
+            final AtomicInteger entryCount)
+    {
+        for (File f : extracted.listFiles())
+        {
+            entryCount.incrementAndGet();
+            final String relativePath = f.getAbsolutePath().substring(extracted.getAbsolutePath().length() + 1);
+            final File orig = new File(dir, relativePath);
+            assertTrue(relativePath, orig.exists());
+            assertEquals(relativePath, orig.isDirectory(), f.isDirectory());
+            assertEquals(relativePath, orig.isFile(), f.isFile());
+            if (Unix.isOperational())
+            {
+                final Stat fStat = Unix.getLinkInfo(f.getPath(), true);
+                final Stat origStat = Unix.getLinkInfo(orig.getPath(), true);
+                assertEquals(relativePath, origStat.isSymbolicLink(), fStat.isSymbolicLink());
+                assertEquals(relativePath, origStat.tryGetSymbolicLink(), fStat.tryGetSymbolicLink());
+            }
+            if (f.isDirectory())
+            {
+                checkDirectoryEntries(orig, f, entryCount);
+            }
+        }
     }
 
     @Test
@@ -321,7 +424,7 @@ public class HDF5ArchiverTest
                 new String(ar.extractFileAsByteArray("/ttt/test/dir_somedir/file_test2.txt")));
         assertTrue(ar.test().isEmpty());
         List<ArchiveEntry> verifyErrors =
-                ar.verifyAgainstFilesystem("/", dir.getParentFile().getAbsolutePath(), "/ttt");
+                ar.verifyAgainstFilesystem("/", dir.getParentFile(), "/ttt");
         assertTrue(verifyErrors.toString(), verifyErrors.isEmpty());
 
         final List<ArchiveEntry> list2 = ar.list("/ttt/test/dir_somedir");
@@ -343,7 +446,9 @@ public class HDF5ArchiverTest
     @Test
     public void testRoundtripArtificalRootWhichExistsOnFSOK() throws IOException
     {
-        final File dir = createTestDirectory("ttt");
+        final long now = System.currentTimeMillis();
+        final long dirLastChanged = now - 1000L * 3600L * 24 * 3;
+        final File dir = createTestDirectory("ttt", dirLastChanged);
         // Set some special last modified time and access mode that we can recognize
         dir.getParentFile().setLastModified(111000L);
         Unix.setAccessMode(dir.getParent(), (short) 0777);
@@ -372,7 +477,7 @@ public class HDF5ArchiverTest
                 new String(ar.extractFileAsByteArray("/ttt/test/dir_somedir/file_test2.txt")));
         assertTrue(ar.test().isEmpty());
         List<ArchiveEntry> verifyErrors =
-                ar.verifyAgainstFilesystem("/", dir.getParentFile().getAbsolutePath(), "/ttt");
+                ar.verifyAgainstFilesystem("/", dir.getParentFile(), "/ttt");
         assertTrue(verifyErrors.toString(), verifyErrors.isEmpty());
         ar.close();
     }
@@ -493,9 +598,9 @@ public class HDF5ArchiverTest
 
         final IHDF5ArchiveReader ra = HDF5ArchiverFactory.openForReading(h5arfile);
         final List<ArchiveEntry> entries =
-                ra.list("/", ListParameters.build()./*resolveSymbolicLinks().*/followSymbolicLinks()
-                        .get());
-        
+                ra.list("/", ListParameters.build()
+                        ./* resolveSymbolicLinks(). */followSymbolicLinks().get());
+
         assertEquals(5, entries.size());
         assertEquals("/aDir", entries.get(0).getPath());
         assertTrue(entries.get(0).isDirectory());
@@ -507,7 +612,7 @@ public class HDF5ArchiverTest
         assertTrue(entries.get(3).isRegularFile());
         assertEquals("/aLinkToAFile", entries.get(4).getPath());
         assertTrue(entries.get(4).isSymLink());
-        
+
         ra.close();
     }
 
@@ -544,7 +649,7 @@ public class HDF5ArchiverTest
         assertEquals("/aLinkToAFile", entries.get(4).getPath());
         assertEquals("/aDir/aFile", entries.get(4).getRealPath());
         assertTrue(entries.get(4).isRegularFile());
-        
+
         ra.close();
     }
 
@@ -704,5 +809,31 @@ public class HDF5ArchiverTest
         {
             ra.close();
         }
+    }
+
+    @Test
+    public void testIntegrityCheck() throws IOException
+    {
+        final File dir = createTestDirectory();
+        final File h5arfile = new File(workingDirectory, "testIntegrityCheck.h5ar");
+        h5arfile.delete();
+        h5arfile.deleteOnExit();
+        HDF5ArchiverFactory.open(h5arfile).archiveFromFilesystem("ttt", dir).close();
+        IHDF5Writer w = HDF5Factory.open(h5arfile);
+        w.writeString("/ttt/test/file_test1.txt", "changed behind the back.");
+        w.writeByteArray("/ttt/test/dir_somedir/file_test2.txt", "A\nB\nD\n".getBytes());
+        w.close();
+        final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
+        final List<ArchiveEntry> failed = ar.test();
+        ar.close();
+        assertEquals(2, failed.size());
+        assertEquals("/ttt/test/dir_somedir/file_test2.txt", failed.get(0).getPath());
+        assertFalse(failed.get(0).isOK());
+        assertTrue(failed.get(0).sizeOK());
+        assertFalse(failed.get(0).checksumOK());
+        assertEquals("/ttt/test/file_test1.txt", failed.get(1).getPath());
+        assertFalse(failed.get(1).isOK());
+        assertFalse(failed.get(1).sizeOK());
+        assertFalse(failed.get(1).checksumOK());
     }
 }

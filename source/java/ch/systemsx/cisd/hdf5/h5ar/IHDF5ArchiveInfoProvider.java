@@ -25,14 +25,46 @@ import java.util.List;
  */
 public interface IHDF5ArchiveInfoProvider
 {
+    //
+    // Information about individual entries
+    //
+
+    /**
+     * Returns <code>true</code>, if an entry <var>path</var> exists in the archive.
+     * 
+     * @param path The path to obtain information for.
+     */
     public boolean exists(String path);
 
+    /**
+     * Returns <code>true</code>, if a directory entry <var>path</var> exists in the archive.
+     * 
+     * @param path The path to obtain information for.
+     */
     public boolean isDirectory(String path);
 
+    /**
+     * Returns <code>true</code>, if a regular file entry <var>path</var> exists in the archive.
+     * 
+     * @param path The path to obtain information for.
+     */
     public boolean isRegularFile(String path);
 
+    /**
+     * Returns <code>true</code>, if a symbolic link entry <var>path</var> exists in the archive.
+     * 
+     * @param path The path to obtain information for.
+     */
     public boolean isSymLink(String path);
 
+    /**
+     * Returns an archive entry for <var>path</var>, or <code>null</code>, if the archive has no
+     * archive entry for this <var>path</var>.
+     * 
+     * @param path The path to obtain information for.
+     * @param readLinkTarget If <code>true</code> and if the entry is a symbolic link entry, read
+     *            the link target.
+     */
     public ArchiveEntry tryGetEntry(String path, boolean readLinkTarget);
 
     /**
@@ -60,18 +92,59 @@ public interface IHDF5ArchiveInfoProvider
      */
     public ArchiveEntry tryGetResolvedEntry(String path, boolean keepPath);
 
+    //
+    // Listing
+    //
+
     /**
-     * Returns the list of all entries in the archive with links resolved.
+     * Returns the list of all entries in the archive recursively.
+     * 
+     * @return The list of archive entries.
      */
     public List<ArchiveEntry> list();
 
+    /**
+     * Returns the list of all entries below <var>fileOrDir</var> in the archive recursively.
+     * 
+     * @param fileOrDir The file to list or the directory to list the entries from recursively.
+     * @return The list of archive entries.
+     */
     public List<ArchiveEntry> list(String fileOrDir);
 
-    public List<ArchiveEntry> list(String fileOrDir, final ListParameters params);
+    /**
+     * Returns the list of entries below <var>fileOrDir</var> in the archive.
+     * 
+     * @param fileOrDir The file to list or the directory to list the entries from.
+     * @param params the parameters to modify the listing behavior.
+     * @return The list of archive entries.
+     */
+    public List<ArchiveEntry> list(String fileOrDir, ListParameters params);
 
-    public IHDF5ArchiveInfoProvider list(String fileOrDir, IListEntryVisitor visitor);
+    /**
+     * Returns the list of all entries below <var>fileOrDir</var> in the archive recursively.
+     * 
+     * @param fileOrDir The file to list or the directory to list the entries from recursively.
+     * @param visitor The archive entry visitor to call for each entry.
+     * @return This archive info provider.
+     */
+    public IHDF5ArchiveInfoProvider list(String fileOrDir, IArchiveEntryVisitor visitor);
 
-    public IHDF5ArchiveInfoProvider list(String fileOrDir, final IListEntryVisitor visitor,
+    /**
+     * Returns the list of entries below <var>fileOrDir</var> in the archive.
+     * 
+     * @param fileOrDir The file to list or the directory to list the entries from.
+     * @param visitor The archive entry visitor to call for each entry.
+     * @param params the parameters to modify the listing behavior.
+     * @return This archive info provider.
+     */
+    public IHDF5ArchiveInfoProvider list(String fileOrDir, IArchiveEntryVisitor visitor,
             ListParameters params);
+
+    /**
+     * Performs an integrity of the archive.
+     * 
+     * @return All entries which failed the integrity check.
+     */
+    public List<ArchiveEntry> test();
 
 }

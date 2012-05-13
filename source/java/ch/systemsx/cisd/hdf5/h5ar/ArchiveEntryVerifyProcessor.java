@@ -41,9 +41,9 @@ import ch.systemsx.cisd.hdf5.IHDF5Reader;
  */
 class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
 {
-    private final IListEntryVisitor visitor;
+    private final IArchiveEntryVisitor visitor;
 
-    private final String rootDirectoryOnFS;
+    private final File rootDirectoryOnFS;
 
     private final String rootDirectoryInArchive;
 
@@ -53,13 +53,13 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
 
     private final boolean numeric;
 
-    ArchiveEntryVerifyProcessor(IListEntryVisitor visitor, String rootDirectoryOnFS, byte[] buffer,
+    ArchiveEntryVerifyProcessor(IArchiveEntryVisitor visitor, File rootDirectoryOnFS, byte[] buffer,
             boolean checkAttributes, boolean numeric)
     {
         this(visitor, rootDirectoryOnFS, "", buffer, checkAttributes, numeric);
     }
 
-    ArchiveEntryVerifyProcessor(IListEntryVisitor visitor, String rootDirectoryOnFS,
+    ArchiveEntryVerifyProcessor(IArchiveEntryVisitor visitor, File rootDirectoryOnFS,
             String rootDirectoryInArchive, byte[] buffer, boolean checkAttributes, boolean numeric)
     {
         this.visitor = visitor;
@@ -152,7 +152,7 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
             }
             final long size = f.length();
             final int crc32 = calcCRC32Filesystem(f, buffer);
-            link.setFileVerification(size, crc32);
+            link.setFileVerification(size, crc32, f.lastModified() / Utils.MILLIS_PER_SECOND);
             if (link.getSize() != size)
             {
                 return "File '" + f.getAbsolutePath() + "' failed size test, expected: "

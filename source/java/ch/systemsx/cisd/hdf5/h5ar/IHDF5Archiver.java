@@ -61,9 +61,9 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
      * Archive the <var>path</var> from the filesystem.
      * 
      * @param path The file or directory to archive. Everything below this path is archived.
-     * @param pathVisitorOrNull The {@link IPathVisitor} to use. Can be <code>null</code>.
+     * @param visitor The {@link IArchiveEntryVisitor} to use. Can be <code>null</code>.
      */
-    public IHDF5Archiver archiveFromFilesystem(File path, IPathVisitor pathVisitorOrNull);
+    public IHDF5Archiver archiveFromFilesystem(File path, IArchiveEntryVisitor visitor);
 
     /**
      * Archive the <var>path</var> from the filesystem.
@@ -79,10 +79,10 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
      *            <code>archiveFromFilesystem(path.getParentFile(), path, strategy, pathVisitorOrNull)</code>
      *            , while <code>keepNameFromPath=false</code> is a shortcut for
      *            <code>archiveFromFilesystem(path, path, strategy, pathVisitorOrNull)</code>.
-     * @param pathVisitorOrNull The {@link IPathVisitor} to use. Can be <code>null</code>.
+     * @param visitor The {@link IArchiveEntryVisitor} to use. Can be <code>null</code>.
      */
     public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy,
-            boolean keepNameFromPath, IPathVisitor pathVisitorOrNull);
+            boolean keepNameFromPath, IArchiveEntryVisitor visitor);
 
     /**
      * Archive the <var>path</var> from the filesystem.
@@ -125,10 +125,10 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
      * @param path The file or directory to archive.
      * @param strategy The archiving strategy to use. This strategy object determines which files to
      *            include and to exclude and which files to compress.
-     * @param pathVisitorOrNull The {@link IPathVisitor} to use. Can be <code>null</code>.
+     * @param visitor The {@link IArchiveEntryVisitor} to use. Can be <code>null</code>.
      */
     public IHDF5Archiver archiveFromFilesystem(File parentDirToStrip, File path,
-            ArchivingStrategy strategy, IPathVisitor pathVisitorOrNull);
+            ArchivingStrategy strategy, IArchiveEntryVisitor visitor);
 
     /**
      * Archive the <var>path</var> from the filesystem.
@@ -171,10 +171,10 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
      * @param path The file or directory to archive.
      * @param strategy The archiving strategy to use. This strategy object determines which files to
      *            include and to exclude and which files to compress.
-     * @param pathVisitorOrNull The {@link IPathVisitor} to use. Can be <code>null</code>.
+     * @param visitor The {@link IArchiveEntryVisitor} to use. Can be <code>null</code>.
      */
     public IHDF5Archiver archiveFromFilesystem(String rootInArchive, File path,
-            ArchivingStrategy strategy, IPathVisitor pathVisitorOrNull);
+            ArchivingStrategy strategy, IArchiveEntryVisitor visitor);
 
     /**
      * Archive the content below <var>directory</var> from the filesystem.
@@ -217,12 +217,28 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
      *            filesystem.
      * @param directory The directory to archive the content of. It is an error if this is not an
      *            existing directory.
-     * @param strategy The archiving strategy to use. This strategy object determines which files to
-     *            include and to exclude and which files to compress.
-     * @param pathVisitorOrNull The {@link IPathVisitor} to use. Can be <code>null</code>.
+     * @param visitor The {@link IArchiveEntryVisitor} to use. Can be <code>null</code>.
      */
     public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
-            ArchivingStrategy strategy, IPathVisitor pathVisitorOrNull);
+            IArchiveEntryVisitor visitor);
+
+    /**
+     * Archive the content below <var>directory</var> from the filesystem.
+     * 
+     * @param rootInArchive The root directory of <var>path</var> in the archive. Example: If
+     *            <code>path=/home/joe/work/a/b/c</code> and <code>rootInArchive=/t</code>, then
+     *            <code>c</code> will end up in the archive at the path <code>/t/c</code>. If
+     *            <var>rootInArchive</var> is the last part of the parent directory of
+     *            <var>path</var> on the filesystem, then its metadata will be taken from the
+     *            filesystem.
+     * @param directory The directory to archive the content of. It is an error if this is not an
+     *            existing directory.
+     * @param strategy The archiving strategy to use. This strategy object determines which files to
+     *            include and to exclude and which files to compress.
+     * @param visitor The {@link IArchiveEntryVisitor} to use. Can be <code>null</code>.
+     */
+    public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
+            ArchivingStrategy strategy, IArchiveEntryVisitor visitor);
 
     /**
      * Archive the <var>data</var> as file in the archive.
@@ -321,41 +337,41 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
      * Deletes a list of <var>paths</var> from the archive.
      * 
      * @param paths The paths to delete.
-     * @param pathVisitorOrNull The visitor for each path which is actually deleted. If no errors
-     *            occur, the visitor will be called once for each path in the list of
+     * @param entryVisitorOrNull The visitor for each archive entry which is actually deleted. If no
+     *            errors occur, the visitor will be called once for each path in the list of
      *            <var>paths</var>.
      */
-    public IHDF5Archiver delete(List<String> paths, IPathVisitor pathVisitorOrNull);
+    public IHDF5Archiver delete(List<String> paths, IArchiveEntryVisitor entryVisitorOrNull);
 
     // Method overridden from IHDF5ArchiveReader, see there for javadoc.
 
-    public IHDF5Archiver list(String fileOrDir, IListEntryVisitor visitor);
+    public IHDF5Archiver list(String fileOrDir, IArchiveEntryVisitor visitor);
 
-    public IHDF5Archiver list(String fileOrDir, IListEntryVisitor visitor, ListParameters params);
+    public IHDF5Archiver list(String fileOrDir, IArchiveEntryVisitor visitor, ListParameters params);
 
-    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
-            IListEntryVisitor visitor);
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            IArchiveEntryVisitor visitor);
 
-    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, String rootDirectory,
-            IListEntryVisitor visitor, VerifyParameters params);
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            IArchiveEntryVisitor visitor, VerifyParameters params);
 
-    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
-            String rootDirectoryInArchive, IListEntryVisitor visitor, VerifyParameters params);
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            String rootDirectoryInArchive, IArchiveEntryVisitor visitor, VerifyParameters params);
 
-    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
+    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive, VerifyParameters params);
 
-    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
+    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive);
 
     public IHDF5Archiver extractFile(String path, OutputStream out) throws IOExceptionUnchecked;
 
     public IHDF5Archiver extractToFilesystem(File root, String path) throws IllegalStateException;
 
-    public IHDF5Archiver extractToFilesystem(File root, String path, IListEntryVisitor visitorOrNull)
+    public IHDF5Archiver extractToFilesystem(File root, String path, IArchiveEntryVisitor visitor)
             throws IllegalStateException;
 
     public IHDF5Archiver extractToFilesystem(File root, String path, ArchivingStrategy strategy,
-            IListEntryVisitor visitorOrNull) throws IllegalStateException;
+            IArchiveEntryVisitor visitor) throws IllegalStateException;
 
 }

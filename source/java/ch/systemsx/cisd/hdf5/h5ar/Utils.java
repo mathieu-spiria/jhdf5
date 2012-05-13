@@ -91,15 +91,15 @@ final class Utils
     }
 
     /**
-     * Returns "", if <var>normalizedPath</var> is in the root directory or is "/", and the parent
-     * path otherwise..
+     * Returns the parent of <var>normalizedPath</var>, or "" if <var>normalizedPath</var> is the
+     * root "/".
      */
-    static String getQuasiParentPath(String normalizedPath)
+    static String getParentPath(String normalizedPath)
     {
         final int lastSlashIdx = normalizedPath.lastIndexOf('/');
-        if (lastSlashIdx < 2)
+        if (lastSlashIdx <= 0)
         {
-            return "";
+            return normalizedPath.length() <= 1 ? "" : "/";
         } else
         {
             return normalizedPath.substring(0, lastSlashIdx);
@@ -107,19 +107,11 @@ final class Utils
     }
 
     /**
-     * Returns the parent of <var>normalizedPath</var>, or "" if <var>normalizedPath</var> is the
-     * root "/".
+     * Returns the name part of <var>path</var>.
      */
-    static String getParentPath(String normalizedPath)
+    static String getName(String path)
     {
-        final int lastSlashIdx = normalizedPath.lastIndexOf('/');
-        if (lastSlashIdx == 0)
-        {
-            return normalizedPath.length() == 1 ? "" : "/";
-        } else
-        {
-            return normalizedPath.substring(0, lastSlashIdx);
-        }
+        return path.substring(path.lastIndexOf('/') + 1);
     }
 
     /**
@@ -129,7 +121,15 @@ final class Utils
      */
     static String normalizePath(String hdf5ObjectPath)
     {
-        final String prenormalizedPath = FilenameUtils.normalize(hdf5ObjectPath);
+        String prenormalizedPath = FilenameUtils.normalize(hdf5ObjectPath);
+        if (prenormalizedPath == null)
+        {
+            prenormalizedPath = FilenameUtils.normalize(hdf5ObjectPath.replace("//", "/"));
+            if (prenormalizedPath == null)
+            {
+                prenormalizedPath = hdf5ObjectPath.replace("//", "/");
+            }
+        }
         final String pathStartingWithSlash =
                 (prenormalizedPath.startsWith("/") ? prenormalizedPath : "/" + prenormalizedPath);
         return (pathStartingWithSlash.length() > 1 && pathStartingWithSlash.endsWith("/")) ? pathStartingWithSlash

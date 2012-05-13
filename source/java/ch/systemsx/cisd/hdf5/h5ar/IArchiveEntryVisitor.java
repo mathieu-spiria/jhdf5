@@ -17,13 +17,13 @@
 package ch.systemsx.cisd.hdf5.h5ar;
 
 /**
- * An entry to visit {@link ArchiveEntry}s.
+ * A role to visit {@link ArchiveEntry}s.
  * 
  * @author Bernd Rinn
  */
-public interface IListEntryVisitor
+public interface IArchiveEntryVisitor
 {
-    public final static IListEntryVisitor DEFAULT_VISITOR = new IListEntryVisitor()
+    public final static IArchiveEntryVisitor DEFAULT_VISITOR = new IArchiveEntryVisitor()
     {
         public void visit(ArchiveEntry entry)
         {
@@ -31,7 +31,7 @@ public interface IListEntryVisitor
         }
     };
 
-    public final static IListEntryVisitor NONVERBOSE_VISITOR = new IListEntryVisitor()
+    public final static IArchiveEntryVisitor NONVERBOSE_VISITOR = new IArchiveEntryVisitor()
     {
         public void visit(ArchiveEntry entry)
         {
@@ -39,5 +39,8 @@ public interface IListEntryVisitor
         }
     };
 
+    /**
+     * Called for each archive <var>entry</var> which is visited.
+     */
     public void visit(ArchiveEntry entry);
 }

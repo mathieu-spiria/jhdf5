@@ -36,13 +36,13 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
  */
 class ArchiveEntryListProcessor implements IArchiveEntryProcessor
 {
-    private final IListEntryVisitor visitor;
+    private final IArchiveEntryVisitor visitor;
 
     private final byte[] buffer;
 
     private final boolean checkArchive;
 
-    ArchiveEntryListProcessor(IListEntryVisitor visitor, byte[] buffer, boolean checkArchive)
+    ArchiveEntryListProcessor(IArchiveEntryVisitor visitor, byte[] buffer, boolean checkArchive)
     {
         this.visitor = visitor;
         this.buffer = buffer;
@@ -69,7 +69,7 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
                 {
                     errorMessage = ex.getClass().getSimpleName() + ": " + ex.getMessage();
                 }
-                link.setFileVerification(verifiedSize, verifiedCrc32);
+                link.setFileVerification(verifiedSize, verifiedCrc32, Utils.UNKNOWN);
             }
         }
         visitor.visit(new ArchiveEntry(dir, path, link, idCache, errorMessage));

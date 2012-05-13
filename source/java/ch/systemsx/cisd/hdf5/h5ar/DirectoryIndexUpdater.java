@@ -18,8 +18,6 @@ package ch.systemsx.cisd.hdf5.h5ar;
 
 import java.io.File;
 
-import org.apache.commons.io.FilenameUtils;
-
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 
@@ -40,14 +38,13 @@ final class DirectoryIndexUpdater
         this.errorStrategy = indexProvider.getErrorStrategy();
     }
 
-    void updateIndicesOnThePath(String rootDir, File path, int crc32, boolean immediateGroupOnly,
-            boolean storeOwnerAndPermissions) throws IOExceptionUnchecked
+    void updateIndicesOnThePath(String rootDir, File path, int crc32, boolean immediateGroupOnly)
+            throws IOExceptionUnchecked
     {
         String groupPath =
                 rootDir.endsWith("/") ? rootDir.substring(0, rootDir.length() - 1) : rootDir;
         final IDirectoryIndex index = indexProvider.get(groupPath, false);
-        final LinkRecord linkOrNull =
-                LinkRecord.tryCreate(path, storeOwnerAndPermissions, errorStrategy);
+        final LinkRecord linkOrNull = LinkRecord.tryCreate(path, errorStrategy);
         if (linkOrNull == null)
         {
             throw new IOExceptionUnchecked("Cannot get link information for path '" + path + "'.");
@@ -58,19 +55,18 @@ final class DirectoryIndexUpdater
         if (immediateGroupOnly == false)
         {
             final String pathPrefixOnFSOrNull = tryGetPathPrefix(groupPath, path.getAbsolutePath());
-            String groupName = FilenameUtils.getName(groupPath);
-            groupPath = FilenameUtils.getFullPathNoEndSeparator(groupPath);
+            String groupName = Utils.getName(groupPath);
+            groupPath = Utils.getParentPath(groupPath);
             while (groupName.length() > 0)
             {
-                updateIndex(pathPrefixOnFSOrNull, groupPath, groupName, storeOwnerAndPermissions);
-                groupName = FilenameUtils.getName(groupPath);
-                groupPath = FilenameUtils.getFullPathNoEndSeparator(groupPath);
+                updateIndex(pathPrefixOnFSOrNull, groupPath, groupName);
+                groupName = Utils.getName(groupPath);
+                groupPath = Utils.getParentPath(groupPath);
             }
         }
     }
 
-    private void updateIndex(String pathPrefixOnFSOrNull, String groupPath, String groupName,
-            boolean storeOwnerAndPermissions)
+    private void updateIndex(String pathPrefixOnFSOrNull, String groupPath, String groupName)
     {
         final IDirectoryIndex index = indexProvider.get(groupPath, false);
         if (pathPrefixOnFSOrNull == null)
@@ -79,14 +75,13 @@ final class DirectoryIndexUpdater
         } else
         {
             final File groupPathFile = new File(pathPrefixOnFSOrNull, groupName);
-            index.updateIndex(LinkRecord.tryCreate(groupPathFile, storeOwnerAndPermissions,
-                    errorStrategy));
+            index.updateIndex(LinkRecord.tryCreate(groupPathFile, errorStrategy));
         }
     }
 
     private String tryGetPathPrefix(String root, String filePath)
     {
-        final String parentPath = FilenameUtils.getFullPathNoEndSeparator(filePath);
+        final String parentPath = Utils.getParentPath(filePath);
         if (parentPath.endsWith(root) == false)
         {
             return null;

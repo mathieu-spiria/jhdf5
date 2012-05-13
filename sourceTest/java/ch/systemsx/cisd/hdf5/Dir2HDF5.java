@@ -23,8 +23,8 @@ import org.apache.commons.lang.time.StopWatch;
 
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverFactory;
+import ch.systemsx.cisd.hdf5.h5ar.IArchiveEntryVisitor;
 import ch.systemsx.cisd.hdf5.h5ar.IHDF5Archiver;
-import ch.systemsx.cisd.hdf5.h5ar.IPathVisitor;
 
 /**
  * Creates a HDF5 file from a directory.
@@ -50,11 +50,11 @@ public class Dir2HDF5
         {
             for (int i = 1; i < args.length; ++i)
             {
-                archiver.archiveFromFilesystem(new File(args[i]), IPathVisitor.DEFAULT_PATH_VISITOR);
+                archiver.archiveFromFilesystem(new File(args[i]), IArchiveEntryVisitor.NONVERBOSE_VISITOR);
             }
         } else
         {
-            archiver.archiveFromFilesystem(new File("."), IPathVisitor.DEFAULT_PATH_VISITOR);
+            archiver.archiveFromFilesystem(new File("."), IArchiveEntryVisitor.NONVERBOSE_VISITOR);
         }
         archiver.close();
         watch.stop();

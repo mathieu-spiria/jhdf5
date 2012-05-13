@@ -320,11 +320,6 @@ public class ArchivingStrategy
                 compress ? CompressionStrategy.COMPRESS_ALL : CompressionStrategy.COMPRESS_NOTHING;
     }
 
-    boolean doStoreOwnerAndPermissions()
-    {
-        return true;
-    }
-
     boolean doExclude(String path, boolean isDirectory)
     {
         if (isDirectory)

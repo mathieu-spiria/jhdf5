@@ -183,15 +183,15 @@ public class DirectoryIndexUpdaterTest
                     final IDirectoryIndex indexBla  = context.mock(IDirectoryIndex.class, "indexBla");
                     one(provider).get("/bla", false);
                     will(returnValue(indexBla));
-                    one(indexBla).updateIndex(with(LinkEntryEntryMatcher.dir("blub", System.currentTimeMillis()/ 1000)));
+                    one(indexBla).updateIndex(with(LinkEntryEntryMatcher.dir("blub", System.currentTimeMillis()/1000)));
 
                     final IDirectoryIndex indexRoot  = context.mock(IDirectoryIndex.class, "indexRoot");
-                    one(provider).get("", false);
+                    one(provider).get("/", false);
                     will(returnValue(indexRoot));
-                    one(indexRoot).updateIndex(with(LinkEntryEntryMatcher.dir("bla", System.currentTimeMillis()/ 1000)));
+                    one(indexRoot).updateIndex(with(LinkEntryEntryMatcher.dir("bla", System.currentTimeMillis()/1000)));
                 }
             });
-        updater.updateIndicesOnThePath("/bla/blub", f, 123, false, true);
+        updater.updateIndicesOnThePath("/bla/blub", f, 123, false);
     }
 
     @Test
@@ -215,11 +215,11 @@ public class DirectoryIndexUpdaterTest
                     one(indexTtt).updateIndex(with(LinkEntryEntryMatcher.file(name, crc32, lastModified)));
 
                     final IDirectoryIndex indexRoot  = context.mock(IDirectoryIndex.class, "indexRoot");
-                    one(provider).get("", false);
+                    one(provider).get("/", false);
                     will(returnValue(indexRoot));
                     one(indexRoot).updateIndex(with(LinkEntryEntryMatcher.dir("ttt", lastModifiedDir)));
                 }
             });
-        updater.updateIndicesOnThePath("/ttt", f, 123, false, true);
+        updater.updateIndicesOnThePath("/ttt", f, 123, false);
     }
 }

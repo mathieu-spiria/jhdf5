@@ -341,7 +341,7 @@ public class HDF5ArchiverMain
         return (rootOrNull == null) ? new File(".") : rootOrNull;
     }
 
-    private static class ListingVisitor implements IListEntryVisitor
+    private static class ListingVisitor implements IArchiveEntryVisitor
     {
         private final boolean verifying;
 
@@ -447,7 +447,7 @@ public class HDF5ArchiverMain
                             }
                             archiver.archiveFromFilesystem(rootOrNull, new File(rootOrNull,
                                     arguments.get(i)), strategy,
-                                    verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
+                                    verbose ? IArchiveEntryVisitor.NONVERBOSE_VISITOR : null);
                         }
                     } else
                     {
@@ -458,7 +458,7 @@ public class HDF5ArchiverMain
                                 System.out.printf("  Adding entry: '%s'\n", arguments.get(i));
                             }
                             archiver.archiveFromFilesystem(new File(arguments.get(i)), strategy,
-                                    true, verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
+                                    true, verbose ? IArchiveEntryVisitor.NONVERBOSE_VISITOR : null);
                         }
                     }
                     break;
@@ -502,8 +502,8 @@ public class HDF5ArchiverMain
                             System.out.println("  Extracting entry: '/'");
                         }
                         archiver.extractToFilesystem(getFSRoot(), "/", strategy,
-                                verbose ? IListEntryVisitor.DEFAULT_VISITOR : quiet ? null
-                                        : IListEntryVisitor.NONVERBOSE_VISITOR);
+                                verbose ? IArchiveEntryVisitor.DEFAULT_VISITOR : quiet ? null
+                                        : IArchiveEntryVisitor.NONVERBOSE_VISITOR);
                     } else
                     {
                         for (int i = 2; i < arguments.size(); ++i)
@@ -515,8 +515,8 @@ public class HDF5ArchiverMain
                             final String unixPath =
                                     FilenameUtils.separatorsToUnix(arguments.get(i));
                             archiver.extractToFilesystem(getFSRoot(), unixPath, strategy,
-                                    verbose ? IListEntryVisitor.DEFAULT_VISITOR : quiet ? null
-                                            : IListEntryVisitor.NONVERBOSE_VISITOR);
+                                    verbose ? IArchiveEntryVisitor.DEFAULT_VISITOR : quiet ? null
+                                            : IArchiveEntryVisitor.NONVERBOSE_VISITOR);
                         }
                     }
                     break;
@@ -541,7 +541,7 @@ public class HDF5ArchiverMain
                         }
                     }
                     archiver.delete(arguments.subList(2, arguments.size()),
-                            verbose ? IPathVisitor.DEFAULT_PATH_VISITOR : null);
+                            verbose ? IArchiveEntryVisitor.NONVERBOSE_VISITOR : null);
                     break;
                 }
                 case VERIFY:
@@ -558,7 +558,7 @@ public class HDF5ArchiverMain
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final ListingVisitor visitor =
                             new ListingVisitor(true, quiet, verbose, numeric);
-                    archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot().getPath(), visitor,
+                    archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot(), visitor,
                             VerifyParameters.build().recursive(recursive).numeric(numeric)
                                     .verifyAttributes(verifyAttributes).get());
                     return visitor.isOK();

@@ -30,7 +30,7 @@ import ch.systemsx.cisd.base.io.IInputStream;
  */
 public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
 {
-    
+
     /**
      * Closes this object and the file referenced by this object. This object must not be used after
      * being closed. Calling this method for a second time is a no-op.
@@ -41,39 +41,107 @@ public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
      * Returns <code>true</code> if this archive reader has been already closed.
      */
     public boolean isClosed();
-    
-    public List<ArchiveEntry> list(String fileOrDir);
 
-    public List<ArchiveEntry> list(String fileOrDir, ListParameters params);
+    //
+    // Verification
+    //
 
-    public IHDF5ArchiveReader list(String fileOrDir, IListEntryVisitor visitor);
+    /**
+     * Verifies the content of the archive against the filesystem.
+     * 
+     * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
+     *            case all entries below <var>rootDirectoryInArchive</var> are verified.
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @param rootDirectoryInArchive The root directory in the archive to start verify from. It will
+     *            be stripped from each entry before <var>rootDirectoryOnFS</var> is added.
+     * @param visitor The entry visitor to call for each entry. Call {@link ArchiveEntry#isOK()} to
+     *            check whether verification was successful.
+     * @param params The parameters to determine behavior of the verification process.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            String rootDirectoryInArchive, IArchiveEntryVisitor visitor, VerifyParameters params);
 
-    public IHDF5ArchiveReader list(String fileOrDir, IListEntryVisitor visitor,
-            ListParameters params);
+    /**
+     * Verifies the content of the complete archive against the filesystem.
+     * 
+     * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
+     *            case all entries below <var>rootDirectoryInArchive</var> are verified.
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @param visitor The entry visitor to call for each entry. Call {@link ArchiveEntry#isOK()} to
+     *            check whether verification was successful.
+     * @param params The parameters to determine behavior of the verification process.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            IArchiveEntryVisitor visitor, VerifyParameters params);
 
-    public List<ArchiveEntry> test();
+    /**
+     * Verifies the content of the complete archive against the filesystem.
+     * 
+     * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
+     *            case all entries below <var>rootDirectoryInArchive</var> are verified.
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @param visitor The entry visitor to call for each entry. Call {@link ArchiveEntry#isOK()} to
+     *            check whether verification was successful.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            IArchiveEntryVisitor visitor);
 
-    public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
-            IListEntryVisitor visitor);
-
-    public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
-            IListEntryVisitor visitor, VerifyParameters params);
-
-    public List<ArchiveEntry> verifyAgainstFilesystem(String rootDirectoryOnFS);
-
-    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS);
-
-    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
-            VerifyParameters params);
-
-    public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
-            String rootDirectoryInArchive, IListEntryVisitor visitor, VerifyParameters params);
-
-    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
+    /**
+     * Verifies the content of the archive against the filesystem.
+     * 
+     * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
+     *            case all entries below <var>rootDirectoryInArchive</var> are verified.
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @param rootDirectoryInArchive The root directory in the archive to start verify from. It will
+     *            be stripped from each entry before <var>rootDirectoryOnFS</var> is added.
+     * @param params The parameters to determine behavior of the verification process.
+     * @return The list of archive entries which failed verification.
+     */
+    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive, VerifyParameters params);
 
     /**
-     * Verifies the archive against the filesystem.
+     * Verifies the content of the archive against the filesystem.
+     * 
+     * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
+     *            case all entries below <var>rootDirectoryInArchive</var> are verified.
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @param params The parameters to determine behavior of the verification process.
+     * @return The list of archive entries which failed verification.
+     */
+    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            VerifyParameters params);
+
+    /**
+     * Verifies the content of the archive against the filesystem.
+     * 
+     * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
+     *            case all entries below <var>rootDirectoryInArchive</var> are verified.
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @return The list of archive entries which failed verification.
+     */
+    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS);
+
+    /**
+     * Verifies the content of the complete archive against the filesystem.
+     * 
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @return The list of archive entries which failed verification.
+     */
+    public List<ArchiveEntry> verifyAgainstFilesystem(File rootDirectoryOnFS);
+
+    /**
+     * Verifies the content of the archive against the filesystem.
      * 
      * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
      *            case all entries below <var>rootDirectoryInArchive</var> are verified.
@@ -82,8 +150,12 @@ public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
      * @param rootDirectoryInArchive The root directory in the archive to start verify from. It will
      *            be stripped from each entry before <var>rootDirectoryOnFS</var> is added.
      */
-    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, String rootDirectoryOnFS,
+    public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive);
+
+    //
+    // Extraction
+    //
 
     public IHDF5ArchiveReader extractFile(String path, OutputStream out);
 
@@ -104,9 +176,9 @@ public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
     public IHDF5ArchiveReader extractToFilesystem(File root, String path);
 
     public IHDF5ArchiveReader extractToFilesystem(File root, String path,
-            IListEntryVisitor visitorOrNull);
+            IArchiveEntryVisitor visitor);
 
     public IHDF5ArchiveReader extractToFilesystem(File root, String path,
-            ArchivingStrategy strategy, IListEntryVisitor visitorOrNull);
+            ArchivingStrategy strategy, IArchiveEntryVisitor visitor);
 
 }
