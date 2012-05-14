@@ -299,8 +299,8 @@ public class HDF5ArchiverMain
     {
         final ArchivingStrategy strategy =
                 new ArchivingStrategy(
-                        compressionBlackList.isEmpty() ? ArchivingStrategy.DEFAULT_WITH_COMPRESSION
-                                : ArchivingStrategy.DEFAULT);
+                        compressionBlackList.isEmpty() ? ArchivingStrategy.DEFAULT
+                                : ArchivingStrategy.DEFAULT_NO_COMPRESSION);
         if (compressAll != null)
         {
             strategy.compressAll(compressAll);

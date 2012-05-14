@@ -53,17 +53,22 @@ public class ArchivingStrategy
     private boolean sealed;
 
     /**
-     * The default strategy: include everything, compress nothing.
-     */
-    public static final ArchivingStrategy DEFAULT = new ArchivingStrategy().seal();
-
-    /**
-     * The default strategy with compression: include everything, compress all files except those
+     * The default strategy: include everything, compress all files except those
      * known to be already compressed.
      */
-    public static final ArchivingStrategy DEFAULT_WITH_COMPRESSION = new ArchivingStrategy()
+    public static final ArchivingStrategy DEFAULT = new ArchivingStrategy()
             .addToCompressionBlackList(".*\\.zip").addToCompressionBlackList(".*\\.gz")
             .addToCompressionBlackList(".*\\.bz2").seal();
+    
+    /**
+     * An alias for the default strategy (kept for backward compatibility).
+     */
+    public static final ArchivingStrategy DEFAULT_WITH_COMPRESSION = DEFAULT;
+
+    /**
+     * The default strategy without compression: include everything, compress nothing.
+     */
+    public static final ArchivingStrategy DEFAULT_NO_COMPRESSION = new ArchivingStrategy().seal();
 
     public ArchivingStrategy()
     {

@@ -33,19 +33,19 @@ public class ArchivingStrategyTest
     public void testCompressDefault()
     {
         assertEquals(CompressionStrategy.COMPRESS_NOTHING,
-                ArchivingStrategy.DEFAULT.getCompressionStrategy());
-        assertFalse(ArchivingStrategy.DEFAULT.doCompress("/test.txt"));
+                ArchivingStrategy.DEFAULT_NO_COMPRESSION.getCompressionStrategy());
+        assertFalse(ArchivingStrategy.DEFAULT_NO_COMPRESSION.doCompress("/test.txt"));
     }
 
     @Test
     public void testCompressDefaultWithCompression()
     {
         assertEquals(CompressionStrategy.USE_BLACK_WHITE_LISTS,
-                ArchivingStrategy.DEFAULT_WITH_COMPRESSION.getCompressionStrategy());
-        assertTrue(ArchivingStrategy.DEFAULT_WITH_COMPRESSION.doCompress("/test.txt"));
-        assertFalse(ArchivingStrategy.DEFAULT_WITH_COMPRESSION.doCompress("/test.txt.gz"));
-        assertFalse(ArchivingStrategy.DEFAULT_WITH_COMPRESSION.doCompress("/test.txt.bz2"));
-        assertFalse(ArchivingStrategy.DEFAULT_WITH_COMPRESSION.doCompress("/test.txt.zip"));
+                ArchivingStrategy.DEFAULT.getCompressionStrategy());
+        assertTrue(ArchivingStrategy.DEFAULT.doCompress("/test.txt"));
+        assertFalse(ArchivingStrategy.DEFAULT.doCompress("/test.txt.gz"));
+        assertFalse(ArchivingStrategy.DEFAULT.doCompress("/test.txt.bz2"));
+        assertFalse(ArchivingStrategy.DEFAULT.doCompress("/test.txt.zip"));
     }
 
     @Test
