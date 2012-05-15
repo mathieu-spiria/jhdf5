@@ -366,12 +366,27 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
 
     public IHDF5Archiver extractFile(String path, OutputStream out) throws IOExceptionUnchecked;
 
-    public IHDF5Archiver extractToFilesystem(File root, String path) throws IllegalStateException;
+    public IHDF5Archiver extractToFilesystem(File rootDirectory);
 
-    public IHDF5Archiver extractToFilesystem(File root, String path, IArchiveEntryVisitor visitor)
+    public IHDF5Archiver extractToFilesystem(File rootDirectory, String path)
             throws IllegalStateException;
 
-    public IHDF5Archiver extractToFilesystem(File root, String path, ArchivingStrategy strategy,
+    public IHDF5Archiver extractToFilesystem(File rootDirectory, String path,
             IArchiveEntryVisitor visitor) throws IllegalStateException;
 
+    public IHDF5Archiver extractToFilesystem(File rootDirectory, String path,
+            ArchivingStrategy strategy, IArchiveEntryVisitor visitor) throws IllegalStateException;
+
+    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootPathInArchive);
+    
+    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootPathInArchive, IArchiveEntryVisitor visitorOrNull);
+
+    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootPathInArchive, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull);
+
+    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory, String rootPathInArchive,
+            String path, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull)
+            throws IllegalStateException;
 }

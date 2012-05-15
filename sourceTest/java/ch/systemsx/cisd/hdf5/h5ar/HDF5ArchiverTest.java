@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
@@ -64,6 +65,24 @@ public class HDF5ArchiverTest
         assertTrue(workingDirectory.isDirectory());
         workingDirectory.deleteOnExit();
         rootDirectory.deleteOnExit();
+    }
+
+    @AfterTest
+    public void cleanup()
+    {
+        deleteAll(workingDirectory);
+    }
+
+    private void deleteAll(File path)
+    {
+        if (path.isDirectory())
+        {
+            for (File sub : path.listFiles())
+            {
+                deleteAll(sub);
+            }
+        }
+        path.delete();
     }
 
     @Override
@@ -367,11 +386,49 @@ public class HDF5ArchiverTest
         assertEquals(5, entryCount.intValue());
         assertTrue(ar.verifyAgainstFilesystem(dir).isEmpty());
         final File extracted = new File(dir.getParentFile().getParentFile(), "extracted");
-        ar.extractToFilesystem(extracted, "/");
+        deleteAll(extracted);
+        entryCount.set(0);
+        ar.extractToFilesystem(extracted, "/", new IArchiveEntryVisitor()
+            {
+                public void visit(ArchiveEntry entry)
+                {
+                    entryCount.incrementAndGet();
+                    final File f = new File(dir, entry.getPath());
+                    assertTrue(entry.getPath(), f.exists());
+                    assertTrue(entry.isOK());
+                    if (entry.isSymLink() == false)
+                    {
+                        assertEquals(dirLastChangedSeconds, entry.getLastModified());
+                        assertEquals(entry.getPath(), f.isDirectory(), entry.isDirectory());
+                        assertEquals(entry.getPath(), f.isFile(), entry.isRegularFile());
+                        if (entry.isRegularFile())
+                        {
+                            assertEquals(entry.getPath(), f.length(), entry.getSize());
+                        }
+                    }
+                }
+            });
+        assertEquals(5, entryCount.get());
         assertTrue(ar.verifyAgainstFilesystem(extracted).isEmpty());
         entryCount.set(0);
         checkDirectoryEntries(dir, extracted, entryCount);
         assertEquals(5, entryCount.intValue());
+        final File partiallyExtracted =
+                new File(dir.getParentFile().getParentFile(), "partiallyExtracted");
+        deleteAll(partiallyExtracted);
+        entryCount.set(0);
+        final String[] pathsInDirSomedir = new String[]
+            { "/dir_somedir", "/dir_somedir/file_test2.txt", "/dir_somedir/link_todir3" };
+        ar.extractToFilesystemBelowDirectory(partiallyExtracted, "/dir_somedir",
+                new IArchiveEntryVisitor()
+                    {
+                        public void visit(ArchiveEntry entry)
+                        {
+                            int idx = entryCount.getAndIncrement();
+                            assertEquals(pathsInDirSomedir[idx], entry.getPath());
+                        }
+                    });
+        assertEquals(3, entryCount.get());
         ar.close();
     }
 
@@ -381,7 +438,8 @@ public class HDF5ArchiverTest
         for (File f : extracted.listFiles())
         {
             entryCount.incrementAndGet();
-            final String relativePath = f.getAbsolutePath().substring(extracted.getAbsolutePath().length() + 1);
+            final String relativePath =
+                    f.getAbsolutePath().substring(extracted.getAbsolutePath().length() + 1);
             final File orig = new File(dir, relativePath);
             assertTrue(relativePath, orig.exists());
             assertEquals(relativePath, orig.isDirectory(), f.isDirectory());
@@ -391,7 +449,8 @@ public class HDF5ArchiverTest
                 final Stat fStat = Unix.getLinkInfo(f.getPath(), true);
                 final Stat origStat = Unix.getLinkInfo(orig.getPath(), true);
                 assertEquals(relativePath, origStat.isSymbolicLink(), fStat.isSymbolicLink());
-                assertEquals(relativePath, origStat.tryGetSymbolicLink(), fStat.tryGetSymbolicLink());
+                assertEquals(relativePath, origStat.tryGetSymbolicLink(),
+                        fStat.tryGetSymbolicLink());
             }
             if (f.isDirectory())
             {

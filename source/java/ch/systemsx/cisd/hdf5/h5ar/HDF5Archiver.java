@@ -553,26 +553,61 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return new AdapterIInputStreamToInputStream(extractFileAsIInputStream(path));
     }
 
-    public IHDF5Archiver extractToFilesystem(File parentDirToStrip, String path)
+    public IHDF5Archiver extractToFilesystem(File rootDirectory) throws IllegalStateException
+    {
+        return extractToFilesystemBelowDirectory(rootDirectory, "", "/", ArchivingStrategy.DEFAULT, null);
+    }
+
+    public IHDF5Archiver extractToFilesystem(File rootDirectory, String path)
             throws IllegalStateException
     {
-        return extractToFilesystem(parentDirToStrip, path, ArchivingStrategy.DEFAULT, null);
+        return extractToFilesystemBelowDirectory(rootDirectory, "", path, ArchivingStrategy.DEFAULT,
+                null);
     }
 
-    public IHDF5Archiver extractToFilesystem(File parentDirToStrip, String path,
+    public IHDF5Archiver extractToFilesystem(File rootDirectory, String path,
             IArchiveEntryVisitor visitorOrNull) throws IllegalStateException
     {
-        return extractToFilesystem(parentDirToStrip, path, ArchivingStrategy.DEFAULT, visitorOrNull);
+        return extractToFilesystemBelowDirectory(rootDirectory, "", path, ArchivingStrategy.DEFAULT,
+                visitorOrNull);
     }
 
-    public IHDF5Archiver extractToFilesystem(File parentDirToStrip, String path,
+    public IHDF5Archiver extractToFilesystem(File rootDirectory, String path,
             ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull)
             throws IllegalStateException
     {
+        return extractToFilesystemBelowDirectory(rootDirectory, "", path, strategy, visitorOrNull);
+    }
+
+    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory, String rootPathInArchive)
+    {
+        return extractToFilesystemBelowDirectory(rootDirectory, rootPathInArchive, "",
+                ArchivingStrategy.DEFAULT, null);
+    }
+
+    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootPathInArchive, IArchiveEntryVisitor visitorOrNull)
+    {
+        return extractToFilesystemBelowDirectory(rootDirectory, rootPathInArchive, "",
+                ArchivingStrategy.DEFAULT, visitorOrNull);
+        
+    }
+
+    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootPathInArchive, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull)
+    {
+        return extractToFilesystemBelowDirectory(rootDirectory, rootPathInArchive, "",
+                strategy, visitorOrNull);
+    }
+
+    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory, String rootPathInArchive,
+            String path, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull)
+            throws IllegalStateException
+    {
         final IArchiveEntryProcessor extractor =
-                new ArchiveEntryExtractProcessor(visitorOrNull, strategy,
-                        parentDirToStrip.getAbsolutePath(), buffer);
-        processor.process(path, true, true, false, extractor);
+                new ArchiveEntryExtractProcessor(visitorOrNull, strategy, rootDirectory,
+                        rootPathInArchive, buffer);
+        processor.process(Utils.concatLink(rootPathInArchive, path), true, true, false, extractor);
         return this;
     }
 
@@ -582,7 +617,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
 
     public IHDF5Archiver archiveFromFilesystem(File path) throws IllegalStateException
     {
-        return archiveFromFilesystem(path, ArchivingStrategy.DEFAULT, false, (IArchiveEntryVisitor) null);
+        return archiveFromFilesystem(path, ArchivingStrategy.DEFAULT, false,
+                (IArchiveEntryVisitor) null);
     }
 
     public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy)
@@ -598,10 +634,12 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     }
 
     public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy,
-            boolean keepNameFromPath, IArchiveEntryVisitor entryVisitorOrNull) throws IllegalStateException
+            boolean keepNameFromPath, IArchiveEntryVisitor entryVisitorOrNull)
+            throws IllegalStateException
     {
         checkReadWrite();
-        updaterOrNull.archive(path, strategy, CHUNK_SIZE_AUTO, keepNameFromPath, entryVisitorOrNull);
+        updaterOrNull
+                .archive(path, strategy, CHUNK_SIZE_AUTO, keepNameFromPath, entryVisitorOrNull);
         return this;
     }
 
@@ -622,7 +660,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
             throws IllegalStateException
     {
         checkReadWrite();
-        updaterOrNull.archive(parentDirToStrip, path, strategy, CHUNK_SIZE_AUTO, entryVisitorOrNull);
+        updaterOrNull
+                .archive(parentDirToStrip, path, strategy, CHUNK_SIZE_AUTO, entryVisitorOrNull);
         return this;
     }
 
@@ -660,7 +699,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
             IArchiveEntryVisitor visitor)
     {
-        return archiveFromFilesystemBelowDirectory(rootInArchive, directory, ArchivingStrategy.DEFAULT, visitor);
+        return archiveFromFilesystemBelowDirectory(rootInArchive, directory,
+                ArchivingStrategy.DEFAULT, visitor);
     }
 
     public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
@@ -749,7 +789,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return delete(hdf5ObjectPaths, null);
     }
 
-    public IHDF5Archiver delete(List<String> hdf5ObjectPaths, IArchiveEntryVisitor entryVisitorOrNull)
+    public IHDF5Archiver delete(List<String> hdf5ObjectPaths,
+            IArchiveEntryVisitor entryVisitorOrNull)
     {
         checkReadWrite();
         deleterOrNull.delete(hdf5ObjectPaths, entryVisitorOrNull);

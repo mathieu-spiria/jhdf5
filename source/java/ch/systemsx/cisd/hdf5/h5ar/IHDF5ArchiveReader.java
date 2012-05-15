@@ -157,28 +157,156 @@ public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
     // Extraction
     //
 
+    /**
+     * Extract the content of a file in the archive to an {@link OutputStream}.
+     * 
+     * @param path The path of the file to extract the content of.
+     * @param out The output stream to extract the content to.
+     * @return This archive reader.
+     */
     public IHDF5ArchiveReader extractFile(String path, OutputStream out);
 
+    /**
+     * Extract the content of a file in the archive to a byte array.
+     * 
+     * @param path The path of the file to extract the content of.
+     * @return The byte array representing the content of the file.
+     */
     public byte[] extractFileAsByteArray(String path);
 
     /**
-     * @return If the {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy} of the archive reader
-     *         does not re-throw exceptions, the return value will be <code>null</code> on errors.
+     * Extract the content of a file in the archive as an {@link IInputStream}.
+     * 
+     * @param path The path of the file to extract the content of.
+     * @return The input stream interface. If an error occurs and the
+     *         {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy} of the archive reader does
+     *         not re-throw the exception, the return value will be <code>null</code> on errors.
      */
     public IInputStream extractFileAsIInputStream(String path);
 
     /**
-     * @return If the {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy} of the archive reader
-     *         does not re-throw exceptions, the return value will be <code>null</code> on errors.
+     * Extract the content of a file in the archive as an {@link InputStream}.
+     * 
+     * @param path The path of the file to extract the content of.
+     * @return The input stream. If an error occurs and the
+     *         {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy} of the archive reader does
+     *         not re-throw the exception, the return value will be <code>null</code> on errors.
      */
     public InputStream extractFileAsInputStream(String path);
 
-    public IHDF5ArchiveReader extractToFilesystem(File root, String path);
+    /**
+     * Extracts the complete archive to the file system.
+     * 
+     * @param rootDirectory The directory in the file system to use as root directory for the
+     *            extracted archive path.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader extractToFilesystem(File rootDirectory);
 
-    public IHDF5ArchiveReader extractToFilesystem(File root, String path,
-            IArchiveEntryVisitor visitor);
+    /**
+     * Extracts a path from the archive to the file system.
+     * 
+     * @param rootDirectory The directory in the file system to use as root directory for the
+     *            extracted archive path.
+     * @param path The path in the archive to extract. This path will be kept unchanged when
+     *            extracted.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader extractToFilesystem(File rootDirectory, String path);
 
-    public IHDF5ArchiveReader extractToFilesystem(File root, String path,
-            ArchivingStrategy strategy, IArchiveEntryVisitor visitor);
+    /**
+     * Extracts a path from the archive to the file system.
+     * 
+     * @param rootDirectory The directory in the file system to use as root directory for the
+     *            extracted archive path.
+     * @param path The path in the archive to extract. This path will be kept unchanged when
+     *            extracted.
+     * @param visitorOrNull The entry visitor to call for each entry. Call
+     *            {@link ArchiveEntry#isOK()} to check whether verification was successful. May be
+     *            <code>null</code>.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader extractToFilesystem(File rootDirectory, String path,
+            IArchiveEntryVisitor visitorOrNull);
 
+    /**
+     * Extracts a path from the archive to the file system.
+     * 
+     * @param rootDirectory The directory in the file system to use as root directory for the
+     *            extracted archive path.
+     * @param path The path in the archive to extract. This path will be kept unchanged when
+     *            extracted.
+     * @param strategy The strategy to determine which files and directories to extract and which
+     *            ones to suppress.
+     * @param visitorOrNull The entry visitor to call for each entry. Call
+     *            {@link ArchiveEntry#isOK()} to check whether verification was successful. May be
+     *            <code>null</code>.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader extractToFilesystem(File rootDirectory, String path,
+            ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull);
+
+    /**
+     * Extracts all paths below a given directory path from the archive to the file system.
+     * 
+     * @param rootDirectory The directory in the file system to use as root directory for the
+     *            extracted archive path.
+     * @param rootInArchive The root path in the archive to extract. This path will be stripped when
+     *            extracted.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootInArchive);
+
+    /**
+     * Extracts all paths below a given directory path from the archive to the file system.
+     * 
+     * @param rootDirectory The directory in the file system to use as root directory for the
+     *            extracted archive path.
+     * @param rootInArchive The root path in the archive to extract. This path will be stripped when
+     *            extracted.
+     * @param visitorOrNull The entry visitor to call for each entry. Call
+     *            {@link ArchiveEntry#isOK()} to check whether verification was successful. May be
+     *            <code>null</code>.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootInArchive, IArchiveEntryVisitor visitorOrNull);
+
+    /**
+     * Extracts all paths below a given directory path from the archive to the file system.
+     * 
+     * @param rootDirectory The directory in the file system to use as root directory for the
+     *            extracted archive path.
+     * @param rootInArchive The root path in the archive to extract. This path will be stripped when
+     *            extracted.
+     * @param strategy The strategy to determine which files and directories to extract and which
+     *            ones to suppress.
+     * @param visitorOrNull The entry visitor to call for each entry. Call
+     *            {@link ArchiveEntry#isOK()} to check whether verification was successful. May be
+     *            <code>null</code>.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootInArchive, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull);
+
+    /**
+     * Extracts a path from the archive below a given directory path to the file system.
+     * 
+     * @param rootDirectory The directory in the file system to use as root directory for the
+     *            extracted archive path.
+     * @param rootInArchive The root path in the archive to extract. This path will be stripped when
+     *            extracted.
+     * @param path The path in the archive to extract, relative to <var>rootPathInArchive</var>.
+     *            This path will be kept unchanged when extracted.
+     * @param strategy The strategy to determine which files and directories to extract and which
+     *            ones to suppress.
+     * @param visitorOrNull The entry visitor to call for each entry. Call
+     *            {@link ArchiveEntry#isOK()} to check whether verification was successful. May be
+     *            <code>null</code>.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootInArchive, String path, ArchivingStrategy strategy,
+            IArchiveEntryVisitor visitorOrNull);
 }

@@ -47,18 +47,23 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
 
     private final ArchivingStrategy strategy;
 
-    private final String rootDirectory;
+    private final File rootDirectory;
+
+    private final String rootPathToStrip;
 
     private final byte[] buffer;
 
     private final GroupCache groupCache;
 
     ArchiveEntryExtractProcessor(IArchiveEntryVisitor visitorOrNull, ArchivingStrategy strategy,
-            String rootDirectory, byte[] buffer)
+            File rootDirectory, String rootPathToStrip, byte[] buffer)
     {
         this.visitorOrNull = visitorOrNull;
         this.strategy = strategy;
         this.rootDirectory = rootDirectory;
+        final String normalizedRootPathToStrip = Utils.normalizePath(rootPathToStrip);
+        this.rootPathToStrip =
+                "/".equals(normalizedRootPathToStrip) ? "" : normalizedRootPathToStrip;
         this.buffer = buffer;
         this.groupCache = new GroupCache();
     }
@@ -70,7 +75,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
         {
             return false;
         }
-        final File file = new File(rootDirectory, path);
+        final File file = createFile(path);
         if (link.isDirectory())
         {
             if (file.exists() && file.isDirectory() == false)
@@ -82,6 +87,10 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
             {
                 errorStrategy.dealWithError(new UnarchivingException(file, new IOException(
                         "Failed to make directory '" + file.getAbsolutePath() + "'.")));
+            }
+            if (visitorOrNull != null)
+            {
+                visitorOrNull.visit(new ArchiveEntry(dir, path, link, idCache));
             }
         } else if (link.tryGetLinkTarget() != null && Unix.isOperational())
         {
@@ -121,7 +130,8 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
                     restoreAttributes(file, link);
                     final FileSizeType sizeType = getFileSizeType(file);
                     link.setVerifiedType(sizeType.type);
-                    link.setFileVerification(sizeType.size, crc32, file.lastModified() / Utils.MILLIS_PER_SECOND);
+                    link.setFileVerification(sizeType.size, crc32, file.lastModified()
+                            / Utils.MILLIS_PER_SECOND);
                     final ArchiveEntry entry = new ArchiveEntry(dir, path, link, idCache);
                     if (visitorOrNull != null)
                     {
@@ -147,8 +157,16 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
     public void postProcessDirectory(String dir, String path, LinkRecord link, IHDF5Reader reader,
             IdCache idCache, IErrorStrategy errorStrategy) throws IOException, HDF5Exception
     {
-        final File file = new File(rootDirectory, path);
+        final File file = createFile(path);
         restoreAttributes(file, link);
+    }
+
+    private File createFile(String path)
+    {
+        final String workingPath =
+                path.startsWith(rootPathToStrip) ? path.substring(rootPathToStrip.length()) : path;
+        final File file = new File(rootDirectory, workingPath);
+        return file;
     }
 
     /**
