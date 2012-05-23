@@ -2533,6 +2533,20 @@ public class HDF5RoundtripTest
                 .getStorageLayout());
         reader.close();
     }
+    
+    @Test
+    public void testReadStringAttributeAsByteArray()
+    {
+        final File file = new File(workingDirectory, "readStringAttributeAsByteArray.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        IHDF5Writer w = HDF5Factory.open(file);
+        w.setStringAttribute("/", "a", "abc");
+        byte[] b = w.getAttributeAsByteArray("/", "a");
+        assertEquals("abc\0", new String(b));
+        
+    }
 
     @Test
     public void testStringCompact()
