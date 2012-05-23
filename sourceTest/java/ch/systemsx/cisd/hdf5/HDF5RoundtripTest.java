@@ -155,6 +155,7 @@ public class HDF5RoundtripTest
         test.testStringCompact();
         test.testStringContiguous();
         test.testStringUnicode();
+        test.testStringVariableLength();
         test.testStringArray();
         test.testStringArrayBlock();
         test.testStringArrayBlockCompact();
@@ -754,6 +755,25 @@ public class HDF5RoundtripTest
         }
     }
 
+    @Test
+    public void testStringVariableLength()
+    {
+        final File datasetFile = new File(workingDirectory, "stringVariableLength.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        writer.writeStringVariableLength("a", "");
+        writer.writeStringVariableLength("b", "\0");
+        writer.writeStringVariableLength("c", "\0ABC\0");
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        assertEquals("", reader.readString("a"));
+        assertEquals("\0", reader.readString("b"));
+        assertEquals("\0ABC\0", reader.readString("c"));
+        reader.close();
+    }
+    
     @Test
     public void testDataSets()
     {
