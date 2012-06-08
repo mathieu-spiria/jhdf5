@@ -126,7 +126,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         {
             final String enumTypeName =
                     baseReader.getStringAttribute(objectId, objectName, HDF5Utils
-                            .getEnumTypeNameAttributeName(baseReader.houseKeepingNameSuffix),
+                            .getEnumTypeNameAttributeName(baseReader.houseKeepingNameSuffix), true,
                             registry);
             return getType(enumTypeName);
         } else

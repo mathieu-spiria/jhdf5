@@ -16,13 +16,10 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
-
 import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -101,10 +98,10 @@ public class HDF5GenericReader implements IHDF5GenericReader
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final int nativeDataTypeId =
-                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId,
-                                    registry);
+                            baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
                     final byte[] data = new byte[spaceParams.blockSize * elementSize];
+                    // FIXME: that doesn't work properly on Strings
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
@@ -122,30 +119,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
                 {
                     final int objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
-                            baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final int nativeDataTypeId =
-                            baseReader.h5.getNativeDataTypeForAttribute(attributeId, registry);
-                    final int dataClass = baseReader.h5.getClassType(nativeDataTypeId);
-                    final int numberOfElements;
-                    final int elementSize;
-                    if (dataClass == H5T_ARRAY)
-                    {
-                        numberOfElements =
-                                MDArray.getLength(baseReader.h5
-                                        .getArrayDimensions(nativeDataTypeId));
-                        final int baseDataType =
-                                baseReader.h5.getBaseDataType(nativeDataTypeId, registry);
-                        elementSize = baseReader.h5.getDataTypeSize(baseDataType);
-                    } else
-                    {
-                        numberOfElements =
-                                MDArray.getLength(baseReader.h5.getDataDimensionsForAttribute(
-                                        attributeId, registry));
-                        elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
-                    }
-                    return baseReader.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId,
-                            numberOfElements * elementSize);
+                    return baseReader.getAttributeAsByteArray(objectId, attributeName, registry);
                 }
             };
         return baseReader.runner.call(readCallable);
@@ -168,6 +142,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
                     final byte[] data = new byte[elementSize * spaceParams.blockSize];
+                    // FIXME: that doesn't work properly on Strings
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;

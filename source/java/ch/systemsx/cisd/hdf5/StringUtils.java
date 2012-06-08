@@ -48,6 +48,21 @@ public final class StringUtils
     }
 
     /**
+     * Converts string <var>s</var> to a byte array of a string, using
+     * <var>encoding</var> and cutting it to <var>maxLength</var< if necessary.
+     */
+    public static byte[] toBytes(String s, int maxLength, CharacterEncoding encoding)
+    {
+        try
+        {
+            return (cut(s, maxLength)).getBytes(encoding.getCharSetName());
+        } catch (UnsupportedEncodingException ex)
+        {
+            return (cut(s, maxLength)).getBytes();
+        }
+    }
+
+    /**
      * Converts string array <var>in</var> to a byte array of a 0-terminated string, using
      * <var>encoding</var> and cutting it to <var>maxLength</var< if necessary.
      */
@@ -92,6 +107,30 @@ public final class StringUtils
         } catch (UnsupportedEncodingException ex)
         {
             return new String(data, startIdx, termIdx - startIdx);
+        }
+    }
+
+    /**
+     * Converts byte array <var>data</var> containing a string using <var>encoding</var> to a
+     * string.
+     */
+    static String fromBytes(byte[] data, CharacterEncoding encoding)
+    {
+        return fromBytes(data, 0, data.length, encoding);
+    }
+
+    /**
+     * Converts byte array <var>data</var> containing a string from <var>startIdx</var> to
+     * <var>endIdx</var> using <var>encoding</var> to a string.
+     */
+    static String fromBytes(byte[] data, int startIdx, int endIdx, CharacterEncoding encoding)
+    {
+        try
+        {
+            return new String(data, startIdx, endIdx - startIdx, encoding.getCharSetName());
+        } catch (UnsupportedEncodingException ex)
+        {
+            return new String(data, startIdx, endIdx - startIdx);
         }
     }
 

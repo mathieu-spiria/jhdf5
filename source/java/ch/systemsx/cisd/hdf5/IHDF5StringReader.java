@@ -43,6 +43,17 @@ public interface IHDF5StringReader
     public String getStringAttribute(final String objectPath, final String attributeName);
 
     /**
+     * Reads a string attribute named <var>attributeName</var> from the object
+     * <var>objectPath</var>. Does not assume a 0-terminated string but reads the full length of the
+     * string.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute value read from the data set.
+     */
+    public String getStringAttributeNoZeroTermination(final String objectPath, final String attributeName);
+
+    /**
      * Reads a string array attribute named <var>attributeName</var> from the object
      * <var>objectPath</var>.
      * 
@@ -53,6 +64,18 @@ public interface IHDF5StringReader
     public String[] getStringArrayAttribute(final String objectPath, final String attributeName);
 
     /**
+     * Reads a string array attribute named <var>attributeName</var> from the object
+     * <var>objectPath</var>. Does not assume a 0-terminated string but reads the full length of the
+     * string.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute value read from the data set.
+     */
+    public String[] getStringArrayAttributeNoZeroTermination(final String objectPath,
+            final String attributeName);
+
+    /**
      * Reads a multi-dimensional string array attribute named <var>attributeName</var> from the
      * object <var>objectPath</var>.
      * 
@@ -61,6 +84,18 @@ public interface IHDF5StringReader
      * @return The attribute value read from the data set.
      */
     public MDArray<String> getStringMDArrayAttribute(final String objectPath,
+            final String attributeName);
+
+    /**
+     * Reads a multi-dimensional string array attribute named <var>attributeName</var> from the
+     * object <var>objectPath</var>. Does not assume a 0-terminated string but reads the full length
+     * of the string.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The attribute value read from the data set.
+     */
+    public MDArray<String> getStringMDArrayAttributeNoZeroTermination(final String objectPath,
             final String attributeName);
 
     // /////////////////////
@@ -77,8 +112,8 @@ public interface IHDF5StringReader
     public String readString(final String objectPath) throws HDF5JavaException;
 
     /**
-     * Reads a string array (of rank 1) from the data set <var>objectPath</var>. The
-     * elements of this data set need to be a string type.
+     * Reads a string array (of rank 1) from the data set <var>objectPath</var>. The elements of
+     * this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
@@ -87,8 +122,8 @@ public interface IHDF5StringReader
     public String[] readStringArray(final String objectPath) throws HDF5JavaException;
 
     /**
-     * Reads a block of a string array (of rank 1) from the data set
-     * <var>objectPath</var>. The elements of this data set need to be a string type.
+     * Reads a block of a string array (of rank 1) from the data set <var>objectPath</var>. The
+     * elements of this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSize The size of the block to read from the data set.
@@ -101,8 +136,8 @@ public interface IHDF5StringReader
             final long blockNumber);
 
     /**
-     * Reads a block of a string array (of rank 1) from the data set
-     * <var>objectPath</var>. The elements of this data set need to be a string type.
+     * Reads a block of a string array (of rank 1) from the data set <var>objectPath</var>. The
+     * elements of this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSize The size of the block to read from the data set.
@@ -114,8 +149,8 @@ public interface IHDF5StringReader
             final long offset);
 
     /**
-     * Reads a string array (of rank N) from the data set <var>objectPath</var>. The
-     * elements of this data set need to be a string type.
+     * Reads a string array (of rank N) from the data set <var>objectPath</var>. The elements of
+     * this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
@@ -124,8 +159,8 @@ public interface IHDF5StringReader
     public MDArray<String> readStringMDArray(final String objectPath);
 
     /**
-     * Reads a block of a string array (of rank N) from the data set
-     * <var>objectPath</var>. The elements of this data set need to be a string type.
+     * Reads a block of a string array (of rank N) from the data set <var>objectPath</var>. The
+     * elements of this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockDimensions The dimensions (along each axis) of the block to read from the data
@@ -139,8 +174,8 @@ public interface IHDF5StringReader
             final int[] blockDimensions, final long[] blockNumber);
 
     /**
-     * Reads a block of a string array (of rank N) from the data set
-     * <var>objectPath</var>. The elements of this data set need to be a string type.
+     * Reads a block of a string array (of rank N) from the data set <var>objectPath</var>. The
+     * elements of this data set need to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockDimensions The dimensions (along each axis) of the block to read from the data

@@ -437,7 +437,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
                         baseWriter.setStringAttribute(dataSetId, HDF5Utils
                                 .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
-                                data.getType().getName(), data.getType().getName().length(),
+                                data.getType().getName(), data.getType().getName().length(), true,
                                 registry);
                     } else
                     {
@@ -494,7 +494,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
                         baseWriter.setStringAttribute(dataSetId, HDF5Utils
                                 .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
-                                enumType.getName(), enumType.getName().length(), registry);
+                                enumType.getName(), enumType.getName().length(), true, registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
@@ -550,7 +550,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
                         baseWriter.setStringAttribute(dataSetId, HDF5Utils
                                 .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
-                                enumType.getName(), enumType.getName().length(), registry);
+                                enumType.getName(), enumType.getName().length(), true, registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
@@ -605,7 +605,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
                         baseWriter.setStringAttribute(dataSetId, HDF5Utils
                                 .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
-                                data.getType().getName(), data.getType().getName().length(),
+                                data.getType().getName(), data.getType().getName().length(), true,
                                 registry);
                     } else
                     {
@@ -653,7 +653,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
                         baseWriter.setStringAttribute(dataSetId, HDF5Utils
                                 .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
-                                data.getType().getName(), data.getType().getName().length(),
+                                data.getType().getName(), data.getType().getName().length(), true,
                                 registry);
                     } else
                     {

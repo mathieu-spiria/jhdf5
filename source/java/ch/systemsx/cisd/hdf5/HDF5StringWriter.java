@@ -79,11 +79,29 @@ public class HDF5StringWriter implements IHDF5StringWriter
 
     public void setStringAttribute(final String objectPath, final String name, final String value)
     {
-        setStringAttribute(objectPath, name, value, value.length());
+        setStringAttribute(objectPath, name, value, value.length(), true);
     }
 
     public void setStringAttribute(final String objectPath, final String name, final String value,
             final int maxLength)
+    {
+        setStringAttribute(objectPath, name, value, maxLength, true);
+    }
+
+    public void setStringAttributeNoZeroTermination(final String objectPath, final String name,
+            final String value)
+    {
+        setStringAttribute(objectPath, name, value, value.length(), false);
+    }
+
+    public void setStringAttributeNoZeroTermination(final String objectPath, final String name,
+            final String value, final int maxLength)
+    {
+        setStringAttribute(objectPath, name, value, maxLength, false);
+    }
+
+    void setStringAttribute(final String objectPath, final String name, final String value,
+            final int maxLength, final boolean zeroTerminated)
     {
         assert name != null;
         assert value != null;
@@ -98,7 +116,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                     baseWriter.h5.openObject(baseWriter.fileId, objectPath,
                                             registry);
                             baseWriter.setStringAttribute(objectId, name, value, maxLength,
-                                    registry);
+                                    zeroTerminated, registry);
                             return null; // Nothing to return.
                         }
                     };
@@ -108,11 +126,29 @@ public class HDF5StringWriter implements IHDF5StringWriter
     public void setStringArrayAttribute(final String objectPath, final String name,
             final String[] value)
     {
-        setStringArrayAttribute(objectPath, name, value, getMaxLength(value));
+        setStringArrayAttribute(objectPath, name, value, getMaxLength(value), true);
     }
 
     public void setStringArrayAttribute(final String objectPath, final String name,
             final String[] value, final int maxLength)
+    {
+        setStringArrayAttribute(objectPath, name, value, maxLength, true);
+    }
+
+    public void setStringArrayAttributeNoZeroTermination(String objectPath, String name,
+            String[] value)
+    {
+        setStringArrayAttribute(objectPath, name, value, getMaxLength(value), false);
+    }
+
+    public void setStringArrayAttributeNoZeroTermination(String objectPath, String name,
+            String[] value, int maxLength)
+    {
+        setStringArrayAttribute(objectPath, name, value, maxLength, false);
+    }
+
+    void setStringArrayAttribute(final String objectPath, final String name, final String[] value,
+            final int maxLength, final boolean zeroTerminated)
     {
         assert objectPath != null;
         assert name != null;
@@ -125,7 +161,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 {
                     final int objectId =
                             baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
-                    baseWriter.setStringArrayAttribute(objectId, name, value, maxLength, registry);
+                    baseWriter.setStringArrayAttribute(objectId, name, value, maxLength,
+                            zeroTerminated, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -135,11 +172,29 @@ public class HDF5StringWriter implements IHDF5StringWriter
     public void setStringMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> value)
     {
-        setStringMDArrayAttribute(objectPath, name, value, getMaxLength(value.getAsFlatArray()));
+        setStringMDArrayAttribute(objectPath, name, value, getMaxLength(value.getAsFlatArray()), true);
     }
 
     public void setStringMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> value, final int maxLength)
+    {
+        setStringMDArrayAttribute(objectPath, name, value, maxLength, true);
+    }
+
+    public void setStringMDArrayAttributeNoZeroTermination(String objectPath, String name,
+            MDArray<String> value)
+    {
+        setStringMDArrayAttribute(objectPath, name, value, getMaxLength(value.getAsFlatArray()), false);
+    }
+
+    public void setStringMDArrayAttributeNoZeroTermination(String objectPath, String name,
+            MDArray<String> value, int maxLength)
+    {
+        setStringMDArrayAttribute(objectPath, name, value, maxLength, false);
+        
+    }
+    void setStringMDArrayAttribute(final String objectPath, final String name,
+            final MDArray<String> value, final int maxLength, final boolean zeroTerminated)
     {
         assert objectPath != null;
         assert name != null;
@@ -152,7 +207,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 {
                     final int objectId =
                             baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
-                    baseWriter.setStringArrayAttribute(objectId, name, value, maxLength, registry);
+                    baseWriter.setStringArrayAttribute(objectId, name, value, maxLength,
+                            zeroTerminated, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -312,8 +368,9 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
                     final int dataSetId =
-                            baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId, new long[]
-                                { data.length }, elementSize, features, registry);
+                            baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
+                                    new long[]
+                                        { data.length }, elementSize, features, registry);
                     if (variableLength)
                     {
                         baseWriter.writeStringVL(dataSetId, data);
@@ -824,9 +881,9 @@ public class HDF5StringWriter implements IHDF5StringWriter
 
         /* will raise exception on error */
         final int status =
-                H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id,
-                        buf);
+                H5Dwrite(dataset_id, mem_type_id, mem_space_id, file_space_id, xfer_plist_id, buf);
 
         return status;
     }
+
 }

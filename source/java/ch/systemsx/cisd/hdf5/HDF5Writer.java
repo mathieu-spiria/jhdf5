@@ -889,6 +889,17 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         stringWriter.setStringAttribute(objectPath, name, value, maxLength);
     }
 
+    public void setStringAttributeNoZeroTermination(String objectPath, String name, String value)
+    {
+        stringWriter.setStringAttributeNoZeroTermination(objectPath, name, value);
+    }
+
+    public void setStringAttributeNoZeroTermination(String objectPath, String name, String value,
+            int maxLength)
+    {
+        stringWriter.setStringAttributeNoZeroTermination(objectPath, name, value, maxLength);
+    }
+
     public void setStringArrayAttribute(String objectPath, String name, String[] value,
             int maxLength)
     {
@@ -909,6 +920,30 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             int maxLength)
     {
         stringWriter.setStringMDArrayAttribute(objectPath, name, value, maxLength);
+    }
+
+    public void setStringArrayAttributeNoZeroTermination(String objectPath, String name,
+            String[] value)
+    {
+        stringWriter.setStringArrayAttributeNoZeroTermination(objectPath, name, value);
+    }
+
+    public void setStringArrayAttributeNoZeroTermination(String objectPath, String name,
+            String[] value, int maxLength)
+    {
+        stringWriter.setStringArrayAttributeNoZeroTermination(objectPath, name, value, maxLength);
+    }
+
+    public void setStringMDArrayAttributeNoZeroTermination(String objectPath, String name,
+            MDArray<String> value)
+    {
+        stringWriter.setStringMDArrayAttributeNoZeroTermination(objectPath, name, value);
+    }
+
+    public void setStringMDArrayAttributeNoZeroTermination(String objectPath, String name,
+            MDArray<String> value, int maxLength)
+    {
+        stringWriter.setStringMDArrayAttributeNoZeroTermination(objectPath, name, value, maxLength);
     }
 
     public void setStringAttributeVariableLength(String objectPath, String name, String value)

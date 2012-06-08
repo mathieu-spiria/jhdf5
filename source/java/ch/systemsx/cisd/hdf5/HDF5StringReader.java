@@ -51,6 +51,17 @@ public class HDF5StringReader implements IHDF5StringReader
 
     public String getStringAttribute(final String objectPath, final String attributeName)
     {
+        return getStringAttribute(objectPath, attributeName, true);
+    }
+
+    public String getStringAttributeNoZeroTermination(final String objectPath, final String attributeName)
+    {
+        return getStringAttribute(objectPath, attributeName, false);
+    }
+
+    String getStringAttribute(final String objectPath, final String attributeName,
+            final boolean zeroTerminated)
+    {
         assert objectPath != null;
         assert attributeName != null;
 
@@ -62,13 +73,25 @@ public class HDF5StringReader implements IHDF5StringReader
                     final int objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     return baseReader.getStringAttribute(objectId, objectPath, attributeName,
-                            registry);
+                            zeroTerminated, registry);
                 }
             };
         return baseReader.runner.call(readRunnable);
     }
 
     public String[] getStringArrayAttribute(final String objectPath, final String attributeName)
+    {
+        return getStringArrayAttribute(objectPath, attributeName, true);
+    }
+
+    public String[] getStringArrayAttributeNoZeroTermination(final String objectPath,
+            final String attributeName)
+    {
+        return getStringArrayAttribute(objectPath, attributeName, false);
+    }
+
+    String[] getStringArrayAttribute(final String objectPath, final String attributeName,
+            final boolean zeroTerminated)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -81,7 +104,7 @@ public class HDF5StringReader implements IHDF5StringReader
                     final int objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     return baseReader.getStringArrayAttribute(objectId, objectPath, attributeName,
-                            registry);
+                            zeroTerminated, registry);
                 }
             };
         return baseReader.runner.call(readRunnable);
@@ -90,20 +113,34 @@ public class HDF5StringReader implements IHDF5StringReader
     public MDArray<String> getStringMDArrayAttribute(final String objectPath,
             final String attributeName)
     {
+        return getStringMDArrayAttribute(objectPath, attributeName, true);
+    }
+
+    public MDArray<String> getStringMDArrayAttributeNoZeroTermination(final String objectPath,
+            final String attributeName)
+    {
+        return getStringMDArrayAttribute(objectPath, attributeName, false);
+    }
+
+    MDArray<String> getStringMDArrayAttribute(final String objectPath, final String attributeName,
+            final boolean zeroTerminated)
+    {
         assert objectPath != null;
         assert attributeName != null;
 
         baseReader.checkOpen();
-        final ICallableWithCleanUp<MDArray<String>> readRunnable = new ICallableWithCleanUp<MDArray<String>>()
-            {
-                public MDArray<String> call(ICleanUpRegistry registry)
-                {
-                    final int objectId =
-                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    return baseReader.getStringMDArrayAttribute(objectId, objectPath, attributeName,
-                            registry);
-                }
-            };
+        final ICallableWithCleanUp<MDArray<String>> readRunnable =
+                new ICallableWithCleanUp<MDArray<String>>()
+                    {
+                        public MDArray<String> call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            return baseReader.getStringMDArrayAttribute(objectId, objectPath,
+                                    attributeName, zeroTerminated, registry);
+                        }
+                    };
         return baseReader.runner.call(readRunnable);
     }
 

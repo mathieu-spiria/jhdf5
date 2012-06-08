@@ -148,6 +148,9 @@ public class HDF5RoundtripTest
         test.testBooleanArray();
         test.testBooleanArrayBlock();
         test.testSmallString();
+        test.testReadStringAttributeAsByteArray();
+        test.testStringAttributeNoZeroTermination();
+        test.testStringArrayAttributeNoZeroTermination();
         test.testVeryLargeString();
         test.testOverwriteString();
         test.testOverwriteStringWithLarge();
@@ -773,7 +776,7 @@ public class HDF5RoundtripTest
         assertEquals("\0ABC\0", reader.readString("c"));
         reader.close();
     }
-    
+
     @Test
     public void testDataSets()
     {
@@ -2553,7 +2556,7 @@ public class HDF5RoundtripTest
                 .getStorageLayout());
         reader.close();
     }
-    
+
     @Test
     public void testReadStringAttributeAsByteArray()
     {
@@ -2561,11 +2564,47 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        IHDF5Writer w = HDF5Factory.open(file);
+        final IHDF5Writer w = HDF5Factory.open(file);
         w.setStringAttribute("/", "a", "abc");
-        byte[] b = w.getAttributeAsByteArray("/", "a");
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final byte[] b = r.getAttributeAsByteArray("/", "a");
         assertEquals("abc\0", new String(b));
-        
+        r.close();
+    }
+
+    @Test
+    public void testStringAttributeNoZeroTermination()
+    {
+        final File file = new File(workingDirectory, "stringAttributeNoZeroTermination.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        w.setStringAttributeNoZeroTermination("/", "a", "a\0c");
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final String b = r.getStringAttributeNoZeroTermination("/", "a");
+        assertEquals("a\0c", b);
+        r.close();
+    }
+
+    @Test
+    public void testStringArrayAttributeNoZeroTermination()
+    {
+        final File file = new File(workingDirectory, "stringArrayAttributeNoZeroTermination.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        w.setStringArrayAttributeNoZeroTermination("/", "a", new String[]
+            { "12", "a\0c", "QWERTY" });
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final String[] b = r.getStringArrayAttributeNoZeroTermination("/", "a");
+        assertTrue(Arrays.equals(new String[]
+            { "12\0\0\0\0", "a\0c\0\0\0", "QWERTY" }, b));
+        r.close();
     }
 
     @Test
@@ -4148,7 +4187,7 @@ public class HDF5RoundtripTest
         assertFalse(writer.exists("__abc__"));
         assertTrue(writer.getGroupMemberPaths("/").isEmpty());
         writer.close();
-        
+
         // The house keeping index is only considered when creating a new file.
         // If the file exists, the one saved in the file takes precedence.
         final IHDF5Writer writer2 =
@@ -4162,7 +4201,7 @@ public class HDF5RoundtripTest
         assertEquals("CAB", writer2.readString("abcXXX"));
         assertTrue(writer2.getGroupMemberPaths("/").isEmpty());
         writer2.close();
-        
+
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         assertEquals("XXX", reader.getHouseKeepingNameSuffix());
         assertEquals("abcXXX", reader.toHouseKeepingPath("abc"));
@@ -4181,20 +4220,20 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer writer =
-                HDF5Factory.configure(file).houseKeepingNameSuffix("\\1\\0").writer();
-        assertEquals("\\1\\0", writer.getHouseKeepingNameSuffix());
-        assertEquals("abc\\1\\0", writer.toHouseKeepingPath("abc"));
+                HDF5Factory.configure(file).houseKeepingNameSuffix("\1\0").writer();
+        assertEquals("\1\0", writer.getHouseKeepingNameSuffix());
+        assertEquals("abc\1\0", writer.toHouseKeepingPath("abc"));
         writer.writeString(writer.toHouseKeepingPath("abc"), "ABC");
-        assertTrue(writer.exists("abc\\1\\0"));
+        assertTrue(writer.exists("abc\1\0"));
         assertFalse(writer.exists("__abc__"));
         assertTrue(writer.getGroupMemberPaths("/").isEmpty());
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
-        assertEquals("\\1\\0", reader.getHouseKeepingNameSuffix());
-        assertEquals("abc\\1\\0", reader.toHouseKeepingPath("abc"));
-        assertTrue(reader.exists("abc\\1\\0"));
+        assertEquals("\1\0", reader.getHouseKeepingNameSuffix());
+        assertEquals("abc\1\0", reader.toHouseKeepingPath("abc"));
+        assertTrue(reader.exists("abc\1\0"));
         assertFalse(reader.exists("__abc__"));
-        assertEquals("ABC", reader.readString("abc\\1\\0"));
+        assertEquals("ABC", reader.readString("abc\1\0"));
         assertTrue(reader.getGroupMemberPaths("/").isEmpty());
         reader.close();
     }

@@ -224,7 +224,7 @@ class HDF5BaseReader
                             HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME))
                     {
                         return getStringAttribute(objectId, "/",
-                                HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, registry);
+                                HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, false, registry);
                     } else
                     {
                         return null;
@@ -232,6 +232,39 @@ class HDF5BaseReader
                 }
             };
         return runner.call(readRunnable);
+    }
+
+    byte[] getAttributeAsByteArray(final int objectId, final String attributeName,
+            ICleanUpRegistry registry)
+    {
+        final int attributeId = h5.openAttribute(objectId, attributeName, registry);
+        final int nativeDataTypeId = h5.getNativeDataTypeForAttribute(attributeId, registry);
+        final int dataClass = h5.getClassType(nativeDataTypeId);
+        final int size;
+        if (dataClass == H5T_ARRAY)
+        {
+            final int numberOfElements = MDArray.getLength(h5.getArrayDimensions(nativeDataTypeId));
+            final int baseDataType = h5.getBaseDataType(nativeDataTypeId, registry);
+            final int elementSize = h5.getDataTypeSize(baseDataType);
+            size = numberOfElements * elementSize;
+        } else if (dataClass == H5T_STRING)
+        {
+            final int stringDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
+            size = h5.getDataTypeSize(stringDataTypeId);
+            if (h5.isVariableLengthString(stringDataTypeId))
+            {
+                String[] data = new String[1];
+                h5.readAttributeVL(attributeId, stringDataTypeId, data);
+                return data[0].getBytes();
+            }
+        } else
+        {
+            final int numberOfElements =
+                    MDArray.getLength(h5.getDataDimensionsForAttribute(attributeId, registry));
+            final int elementSize = h5.getDataTypeSize(nativeDataTypeId);
+            size = numberOfElements * elementSize;
+        }
+        return h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, size);
     }
 
     int openOrCreateBooleanDataType()
@@ -1209,7 +1242,8 @@ class HDF5BaseReader
     //
 
     String getStringAttribute(final int objectId, final String objectPath,
-            final String attributeName, final ICleanUpRegistry registry)
+            final String attributeName, final boolean zeroTerminated,
+            final ICleanUpRegistry registry)
     {
         final int attributeId = h5.openAttribute(objectId, attributeName, registry);
         final int stringDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
@@ -1228,12 +1262,14 @@ class HDF5BaseReader
         } else
         {
             byte[] data = h5.readAttributeAsByteArray(attributeId, stringDataTypeId, size);
-            return StringUtils.fromBytes0Term(data, encoding);
+            return zeroTerminated ? StringUtils.fromBytes0Term(data, encoding) : StringUtils
+                    .fromBytes(data, encoding);
         }
     }
 
     String[] getStringArrayAttribute(final int objectId, final String objectPath,
-            final String attributeName, final ICleanUpRegistry registry)
+            final String attributeName, final boolean zeroTerminated,
+            final ICleanUpRegistry registry)
     {
         final int attributeId = h5.openAttribute(objectId, attributeName, registry);
         final int stringArrayDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
@@ -1272,14 +1308,18 @@ class HDF5BaseReader
             {
                 final int startIdx = i * lengthPerElement;
                 final int maxEndIdx = startIdx + lengthPerElement;
-                result[i] = StringUtils.fromBytes0Term(data, startIdx, maxEndIdx, encoding);
+                result[i] =
+                        zeroTerminated ? StringUtils.fromBytes0Term(data, startIdx, maxEndIdx,
+                                encoding) : StringUtils.fromBytes(data, startIdx, maxEndIdx,
+                                encoding);
             }
             return result;
         }
     }
 
     MDArray<String> getStringMDArrayAttribute(final int objectId, final String objectPath,
-            final String attributeName, final ICleanUpRegistry registry)
+            final String attributeName, final boolean zeroTerminated,
+            final ICleanUpRegistry registry)
     {
         final int attributeId = h5.openAttribute(objectId, attributeName, registry);
         final int stringArrayDataTypeId = h5.getDataTypeForAttribute(attributeId, registry);
@@ -1314,7 +1354,10 @@ class HDF5BaseReader
             {
                 final int startIdx = i * lengthPerElement;
                 final int maxEndIdx = startIdx + lengthPerElement;
-                result[i] = StringUtils.fromBytes0Term(data, startIdx, maxEndIdx, encoding);
+                result[i] =
+                        zeroTerminated ? StringUtils.fromBytes0Term(data, startIdx, maxEndIdx,
+                                encoding) : StringUtils.fromBytes(data, startIdx, maxEndIdx,
+                                encoding);
             }
             return new MDArray<String>(result, arrayDimensions);
         }

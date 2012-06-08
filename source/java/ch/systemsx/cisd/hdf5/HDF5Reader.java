@@ -1049,6 +1049,22 @@ class HDF5Reader implements IHDF5Reader
         return stringReader.getStringMDArrayAttribute(objectPath, attributeName);
     }
 
+    public String getStringAttributeNoZeroTermination(String objectPath, String attributeName)
+    {
+        return stringReader.getStringAttributeNoZeroTermination(objectPath, attributeName);
+    }
+
+    public String[] getStringArrayAttributeNoZeroTermination(String objectPath, String attributeName)
+    {
+        return stringReader.getStringArrayAttributeNoZeroTermination(objectPath, attributeName);
+    }
+
+    public MDArray<String> getStringMDArrayAttributeNoZeroTermination(String objectPath,
+            String attributeName)
+    {
+        return stringReader.getStringMDArrayAttributeNoZeroTermination(objectPath, attributeName);
+    }
+
     public String readString(String objectPath) throws HDF5JavaException
     {
         return stringReader.readString(objectPath);

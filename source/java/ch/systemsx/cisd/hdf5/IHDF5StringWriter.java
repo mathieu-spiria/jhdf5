@@ -45,6 +45,19 @@ public interface IHDF5StringWriter
     public void setStringAttribute(final String objectPath, final String name, final String value);
 
     /**
+     * Sets a string attribute on the referenced object. Does not add '\0' at the end.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setStringAttributeNoZeroTermination(final String objectPath, final String name,
+            final String value);
+
+    /**
      * Sets a string attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
@@ -57,6 +70,20 @@ public interface IHDF5StringWriter
      */
     public void setStringAttribute(final String objectPath, final String name, final String value,
             final int maxLength);
+
+    /**
+     * Sets a string attribute on the referenced object. Does not add '\0' at the end.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     * @param maxLength The maximal length of the value.
+     */
+    public void setStringAttributeNoZeroTermination(final String objectPath, final String name,
+            final String value, final int maxLength);
 
     /**
      * Sets a string array attribute on the referenced object. The length of the array is taken to
@@ -73,6 +100,20 @@ public interface IHDF5StringWriter
             final String[] value);
 
     /**
+     * Sets a string array attribute on the referenced object. The length of the array is taken to
+     * be the longest string in <var>value</var>. Does not add '\0' at the end.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setStringArrayAttributeNoZeroTermination(final String objectPath,
+            final String name, final String[] value);
+
+    /**
      * Sets a string array attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
@@ -85,6 +126,20 @@ public interface IHDF5StringWriter
      */
     public void setStringArrayAttribute(final String objectPath, final String name,
             final String[] value, final int maxLength);
+
+    /**
+     * Sets a string array attribute on the referenced object. Does not add '\0' at the end.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     * @param maxLength The maximal length of the value.
+     */
+    public void setStringArrayAttributeNoZeroTermination(final String objectPath,
+            final String name, final String[] value, final int maxLength);
 
     /**
      * Sets a multi-dimensional string array attribute on the referenced object. The length of the
@@ -101,6 +156,20 @@ public interface IHDF5StringWriter
             final MDArray<String> value);
 
     /**
+     * Sets a multi-dimensional string array attribute on the referenced object. The length of the
+     * array is taken to be the longest string in <var>value</var>. Does not add '\0' at the end.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setStringMDArrayAttributeNoZeroTermination(final String objectPath,
+            final String name, final MDArray<String> value);
+
+    /**
      * Sets a multi-dimensional string array attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
@@ -113,6 +182,21 @@ public interface IHDF5StringWriter
      */
     public void setStringMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> value, final int maxLength);
+
+    /**
+     * Sets a multi-dimensional string array attribute on the referenced object. Does not add '\0'
+     * at the end.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     * @param maxLength The maximal length of the value.
+     */
+    public void setStringMDArrayAttributeNoZeroTermination(final String objectPath,
+            final String name, final MDArray<String> value, final int maxLength);
 
     /**
      * Sets a string attribute with variable length on the referenced object.
