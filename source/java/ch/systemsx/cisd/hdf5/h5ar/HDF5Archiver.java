@@ -56,6 +56,8 @@ import ch.systemsx.cisd.hdf5.io.HDF5IOAdapterFactory;
  */
 final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5ArchiveInfoProvider
 {
+    private static final String HOUSEKEEPING_SUFFIX = "\1\0";
+
     public static final int CHUNK_SIZE_AUTO = -1;
 
     private final static int MB = 1024 * 1024;
@@ -93,7 +95,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         final IHDF5WriterConfigurator config = HDF5FactoryProvider.get().configure(archiveFile);
         config.fileFormat(fileFormat);
         config.useUTF8CharacterEncoding();
-        config.houseKeepingNameSuffix("\\1\\0");
+        config.houseKeepingNameSuffix(HOUSEKEEPING_SUFFIX);
         if (noSync == false)
         {
             config.syncMode(SyncMode.SYNC);
