@@ -46,12 +46,17 @@ public class HDF5CodeGenerator
 
         final String storageType;
 
+        final String featureBasedStorageType;
+
+        final String storageTypeImport;
+
         final String memoryType;
 
         final String elementSize;
 
         TemplateParameters(String name, String capitalizedName, String capitalizedClassName,
-                String wrapperName, String storageType, String memoryType, String elementSize)
+                String wrapperName, String storageType, String featureBasedStorageType,
+                String storageTypeImport, String memoryType, String elementSize)
         {
             this.name = name;
             this.capitalizedName = capitalizedName;
@@ -59,6 +64,8 @@ public class HDF5CodeGenerator
             this.upperCaseClassName = capitalizedClassName.toUpperCase();
             this.wrapperName = wrapperName;
             this.storageType = storageType;
+            this.featureBasedStorageType = featureBasedStorageType;
+            this.storageTypeImport = storageTypeImport;
             this.memoryType = memoryType;
             this.elementSize = elementSize;
         }
@@ -66,33 +73,45 @@ public class HDF5CodeGenerator
     }
 
     static TemplateParameters tp(String name, String capitalizedName, String capitalizedClassName,
-            String wrapperName, String storageType, String memoryType, String elementSize)
+            String wrapperName, String storageType, String featureBasedStorageType,
+            String storageTypeImport, String memoryType, String elementSize)
     {
         return new TemplateParameters(name, capitalizedName, capitalizedClassName, wrapperName,
-                storageType, memoryType, elementSize);
+                storageType, featureBasedStorageType, storageTypeImport, memoryType, elementSize);
     }
 
     static final TemplateParameters PLACEHOLDERS = tp("__name__", "__Name__", "__Classname__",
-            "__Wrappername__", "__Storagetype__", "__Memorytype__", "__elementsize__");
+            "__Wrappername__", "__Storagetype__", "__FeatureBasedStoragetype__",
+            "__StoragetypeImport__", "__Memorytype__", "__elementsize__");
 
     static final TemplateParameters[] NUMERICAL_TYPES =
             new TemplateParameters[]
                 {
-                        tp("byte", "Byte", "Int", "Byte",
+                        tp("byte", "Byte", "Int", "Byte", "H5T_STD_I8LE",
                                 "features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;\n" + 
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U8LE;", 
                                 "H5T_NATIVE_INT8", "1"),
-                        tp("short", "Short", "Int", "Short",
+                        tp("short", "Short", "Int", "Short", "H5T_STD_I16LE",
                                 "features.isSigned() ? H5T_STD_I16LE : H5T_STD_U16LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;\n" + 
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;", 
                                 "H5T_NATIVE_INT16", "2"),
-                        tp("int", "Int", "Int", "Integer",
+                        tp("int", "Int", "Int", "Integer", "H5T_STD_I32LE",
                                 "features.isSigned() ? H5T_STD_I32LE : H5T_STD_U32LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;\n" + 
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U32LE;", 
                                 "H5T_NATIVE_INT32", "4"),
-                        tp("long", "Long", "Int", "Long",
+                        tp("long", "Long", "Int", "Long", "H5T_STD_I64LE",
                                 "features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;\n" + 
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;", 
                                 "H5T_NATIVE_INT64", "8"),
-                        tp("float", "Float", "Float", "Float", "H5T_IEEE_F32LE",
+                        tp("float", "Float", "Float", "Float", "H5T_IEEE_F32LE", "H5T_IEEE_F32LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;", 
                                 "H5T_NATIVE_FLOAT", "4"),
-                        tp("double", "Double", "Float", "Double", "H5T_IEEE_F64LE",
+                        tp("double", "Double", "Float", "Double", "H5T_IEEE_F64LE", "H5T_IEEE_F64LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F64LE;", 
                                 "H5T_NATIVE_DOUBLE", "8") };
 
     /**
@@ -121,6 +140,10 @@ public class HDF5CodeGenerator
         s = StringUtils.replace(s, PLACEHOLDERS.upperCaseClassName, params.upperCaseClassName);
         s = StringUtils.replace(s, PLACEHOLDERS.wrapperName, params.wrapperName);
         s = StringUtils.replace(s, PLACEHOLDERS.storageType, params.storageType);
+        s =
+                StringUtils.replace(s, PLACEHOLDERS.featureBasedStorageType,
+                        params.featureBasedStorageType);
+        s = StringUtils.replace(s, PLACEHOLDERS.storageTypeImport, params.storageTypeImport);
         s = StringUtils.replace(s, PLACEHOLDERS.memoryType, params.memoryType);
         s = StringUtils.replace(s, PLACEHOLDERS.elementSize, params.elementSize);
         out.println(s);

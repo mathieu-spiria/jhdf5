@@ -17,12 +17,12 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
-import static ncsa.hdf.hdf5lib.H5.H5Dwrite;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_STD_U64LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
