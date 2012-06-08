@@ -3,6 +3,9 @@
 # This script requires the readlink binary. If your system lacks this binary, $JHDFDIR needs to be hard-coded
 
 SCRIPT="$0"
+if [ "${SCRIPT}" = "${SCRIPT#/}" ]; then
+  SCRIPT="`pwd`/${SCRIPT#./}"
+fi
 BINDIR="${SCRIPT%/*}"
 LINK="`readlink $0`"
 while [ -n "${LINK}" ]; do
