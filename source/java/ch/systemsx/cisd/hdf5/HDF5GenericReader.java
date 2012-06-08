@@ -16,6 +16,9 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STRING;
+
+import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
@@ -99,11 +102,35 @@ public class HDF5GenericReader implements IHDF5GenericReader
                             baseReader.getSpaceParameters(dataSetId, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
-                    final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
-                    final byte[] data = new byte[spaceParams.blockSize * elementSize];
-                    // FIXME: that doesn't work properly on Strings
-                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
-                            spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                    final boolean isString =
+                            (baseReader.h5.getClassType(nativeDataTypeId) == H5T_STRING);
+                    byte[] data;
+                    if (isString)
+                    {
+                        if (baseReader.h5.isVariableLengthString(nativeDataTypeId))
+                        {
+                            String[] value = new String[1];
+                            baseReader.h5.readDataSetVL(dataSetId, nativeDataTypeId, value);
+                            try
+                            {
+                                data = value[0].getBytes(CharacterEncoding.ASCII.getCharSetName());
+                            } catch (UnsupportedEncodingException ex)
+                            {
+                                data = value[0].getBytes();
+                            }
+                        } else
+                        {
+                            final int size = baseReader.h5.getDataTypeSize(nativeDataTypeId);
+                            data = new byte[size];
+                            baseReader.h5.readDataSetNonNumeric(dataSetId, nativeDataTypeId, data);
+                        }
+                    } else
+                    {
+                        final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
+                        data = new byte[spaceParams.blockSize * elementSize];
+                        baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                                spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                    }
                     return data;
                 }
             };
@@ -140,9 +167,9 @@ public class HDF5GenericReader implements IHDF5GenericReader
                                     blockSize, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    checkNotAString(objectPath, nativeDataTypeId);
                     final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
                     final byte[] data = new byte[elementSize * spaceParams.blockSize];
-                    // FIXME: that doesn't work properly on Strings
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                     return data;
@@ -165,6 +192,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    checkNotAString(objectPath, nativeDataTypeId);
                     final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
                     final byte[] data = new byte[elementSize * spaceParams.blockSize];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
@@ -195,6 +223,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
                                     blockSize, false, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
+                    checkNotAString(objectPath, nativeDataTypeId);
                     final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
                     if ((blockSize + memoryOffset) * elementSize > buffer.length)
                     {
@@ -246,6 +275,16 @@ public class HDF5GenericReader implements IHDF5GenericReader
                         };
                 }
             };
+    }
+
+    private void checkNotAString(final String objectPath, final int nativeDataTypeId)
+    {
+        final boolean isString =
+                (baseReader.h5.getClassType(nativeDataTypeId) == H5T_STRING);
+        if (isString)
+        {
+            throw new HDF5JavaException(objectPath + " cannot be a String.");
+        }
     }
 
 }

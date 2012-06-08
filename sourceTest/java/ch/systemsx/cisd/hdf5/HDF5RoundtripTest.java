@@ -149,6 +149,8 @@ public class HDF5RoundtripTest
         test.testBooleanArrayBlock();
         test.testSmallString();
         test.testReadStringAttributeAsByteArray();
+        test.testReadStringAsByteArray();
+        test.testReadStringVLAsByteArray();
         test.testStringAttributeNoZeroTermination();
         test.testStringArrayAttributeNoZeroTermination();
         test.testVeryLargeString();
@@ -384,6 +386,8 @@ public class HDF5RoundtripTest
         test.testWriteByteMatrixDataSetBlockWiseMismatch();
         test.testReadFloatMatrixDataSetBlockWise();
         test.testWriteFloatMatrixDataSetBlockWise();
+        test.testWriteFloatMatrixDataSetBlockWiseWithOffset();
+        test.testReadMDFloatArrayAsByteArray();
         test.testExtendContiguousDataset();
         test.testAutomaticDeletionOfDataSetOnWrite();
         test.testAutomaticDeletionOfDataSetOnCreate();
@@ -1570,6 +1574,33 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testReadMDFloatArrayAsByteArray()
+    {
+        final File datasetFile = new File(workingDirectory, "readMDFloatArrayAsByteArray.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        writer.writeFloatMatrix("fm", new float[][] { {1f, 2f}, {3f, 4f} });
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final byte[] arr = reader.readAsByteArray("fm");
+        assertEquals(1f, NativeData.byteToFloat(arr, ByteOrder.LITTLE_ENDIAN, 0, 1)[0]);
+        assertEquals(2f, NativeData.byteToFloat(arr, ByteOrder.LITTLE_ENDIAN, 4, 1)[0]);
+        assertEquals(3f, NativeData.byteToFloat(arr, ByteOrder.LITTLE_ENDIAN, 8, 1)[0]);
+        assertEquals(4f, NativeData.byteToFloat(arr, ByteOrder.LITTLE_ENDIAN, 12, 1)[0]);
+        try
+        {
+            reader.readAsByteArrayBlock("fm", 2, 0);
+            fail("readAsByteArrayBlock() is expected to fail on datasets of rank > 1");
+        } catch (HDF5JavaException ex)
+        {
+            assertEquals("Data Set is expected to be of rank 1 (rank=2)", ex.getMessage());
+        }
+        reader.close();
+    }
+
+    @Test
     public void testReadByteArrayDataSetBlockWise()
     {
         final File datasetFile = new File(workingDirectory, "readByteArrayBlockWise.h5");
@@ -2557,6 +2588,38 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
+    @Test
+    public void testReadStringAsByteArray()
+    {
+        final File file = new File(workingDirectory, "readStringAsByteArray.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        w.writeString("a", "abc");
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final byte[] b = r.readAsByteArray("a");
+        assertEquals("abc\0", new String(b));
+        r.close();
+    }
+    
+    @Test
+    public void testReadStringVLAsByteArray()
+    {
+        final File file = new File(workingDirectory, "readStringVLAsByteArray.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        w.writeStringVariableLength("a", "abc");
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final byte[] b = r.readAsByteArray("a");
+        assertEquals("abc", new String(b));
+        r.close();
+    }
+    
     @Test
     public void testReadStringAttributeAsByteArray()
     {

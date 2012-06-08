@@ -63,7 +63,7 @@ public interface IHDF5GenericReader
 
     /**
      * Reads a block from data set <var>objectPath</var> as byte array (of rank 1).
-     * <em>Must not be called for data sets of rank other than 1!</em>
+     * <em>Must not be called for data sets of rank other than 1 and must not be called on Strings!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSize The block size in numbers of elements (this will be the length of the
@@ -71,14 +71,14 @@ public interface IHDF5GenericReader
      * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
      *            <var>blockSize</var>).
      * @return The data block read from the data set.
-     * @throws HDF5JavaException If the data set is not of rank 1.
+     * @throws HDF5JavaException If the data set is not of rank 1 or is a String.
      */
     public byte[] readAsByteArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber) throws HDF5JavaException;
 
     /**
      * Reads a block from data set <var>objectPath</var> as byte array (of rank 1).
-     * <em>Must not be called for data sets of rank other than 1!</em>
+     * <em>Must not be called for data sets of rank other than 1 and must not be called on Strings!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSize The block size in numbers of elements (this will be the length of the
@@ -92,7 +92,8 @@ public interface IHDF5GenericReader
 
     /**
      * Reads a block from data set <var>objectPath</var> as byte array (of rank 1) into
-     * <var>buffer</var>. <em>Must not be called for data sets of rank other than 1!</em>
+     * <var>buffer</var>.
+     * <em>Must not be called for data sets of rank other than 1 and must not be called on Strings!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param buffer The buffer to read the values in.
@@ -110,7 +111,7 @@ public interface IHDF5GenericReader
 
     /**
      * Provides all natural blocks of this one-dimensional data set to iterate over.
-     * <em>Must not be called for data sets of rank other than 1!</em>
+     * <em>Must not be called for data sets of rank other than 1 and must not be called on Strings!</em>
      * 
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
