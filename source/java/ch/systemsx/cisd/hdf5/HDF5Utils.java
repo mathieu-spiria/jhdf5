@@ -52,8 +52,18 @@ final class HDF5Utils
     /** The prefix for compound data types. */
     static final String COMPOUND_PREFIX = "Compound_";
 
-    /** The suffix for housekeeping files and groups. Overrides the default, which is: __NAME__. */
+    /**
+     * The suffix for housekeeping files and groups. Setting this attribute overrides the default,
+     * which is: __NAME__.
+     */
     static final String HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME = "__HOUSEKEEPING_SUFFIX__";
+
+    /**
+     * The length of the suffix for housekeeping files and groups. If this attribute is not set, the
+     * suffix is treated as 0-terminated string.
+     */
+    static final String HOUSEKEEPING_NAME_SUFFIX_LENGTH_ATTRIBUTE_NAME =
+            "__HOUSEKEEPING_SUFFIX_LENGTH__";
 
     /**
      * The legacy attribute to signal that a data set is empty (for backward compatibility with

@@ -28,6 +28,7 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STRING;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -223,11 +224,33 @@ class HDF5BaseReader
                     if (h5.existsAttribute(objectId,
                             HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME))
                     {
-                        return getStringAttribute(objectId, "/",
-                                HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, false, registry);
+                        final int suffixLen = getSuffixLength(objectId, registry);
+                        final boolean zeroTerminated = (suffixLen < 0);
+                        final String rawSuffix = getStringAttribute(objectId, "/",
+                                HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, zeroTerminated, registry); 
+                        return zeroTerminated ? rawSuffix : rawSuffix.substring(0, suffixLen);
                     } else
                     {
                         return null;
+                    }
+                }
+
+                private int getSuffixLength(int objectId, ICleanUpRegistry registry)
+                {
+                    if (h5.existsAttribute(objectId,
+                            HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_LENGTH_ATTRIBUTE_NAME))
+                    {
+                        final int attributeId =
+                                h5.openAttribute(objectId,
+                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_LENGTH_ATTRIBUTE_NAME,
+                                        registry);
+                        final int[] data =
+                                h5.readAttributeAsIntArray(attributeId, H5T_NATIVE_INT32, 1);
+                        return data[0];
+
+                    } else
+                    {
+                        return -1;
                     }
                 }
             };

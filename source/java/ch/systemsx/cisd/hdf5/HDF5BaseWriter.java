@@ -27,6 +27,10 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_UNLIMITED;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -379,9 +383,28 @@ final class HDF5BaseWriter extends HDF5BaseReader
                             final int objectId = h5.openObject(fileId, "/", registry);
                             setStringAttribute(objectId,
                                     HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME,
-                                    houseKeepingNameSuffix, houseKeepingNameSuffix.length(), 
-                                    false, registry);
+                                    houseKeepingNameSuffix, houseKeepingNameSuffix.length(), false,
+                                    registry);
+                            saveHousekeekingNameSuffixLength(objectId, registry);
                             return null; // Nothing to return.
+                        }
+
+                        private void saveHousekeekingNameSuffixLength(final int objectId,
+                                ICleanUpRegistry registry)
+                        {
+                            if (houseKeepingNameSuffix.length() > 127)
+                            {
+                                setAttribute(objectId,
+                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_LENGTH_ATTRIBUTE_NAME,
+                                        H5T_STD_I32LE, H5T_NATIVE_INT32, new int[]
+                                            { houseKeepingNameSuffix.length() }, registry);
+                            } else
+                            {
+                                setAttribute(objectId,
+                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_LENGTH_ATTRIBUTE_NAME,
+                                        H5T_STD_I8LE, H5T_NATIVE_INT8, new byte[]
+                                            { (byte) houseKeepingNameSuffix.length() }, registry);
+                            }
                         }
                     };
         runner.call(addAttributeRunnable);
