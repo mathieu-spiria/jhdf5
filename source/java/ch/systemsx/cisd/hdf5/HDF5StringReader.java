@@ -54,7 +54,7 @@ public class HDF5StringReader implements IHDF5StringReader
         return getStringAttribute(objectPath, attributeName, true);
     }
 
-    public String getStringAttributeNoZeroTermination(final String objectPath, final String attributeName)
+    public String getStringAttributeFixedLength(final String objectPath, final String attributeName)
     {
         return getStringAttribute(objectPath, attributeName, false);
     }
@@ -84,7 +84,7 @@ public class HDF5StringReader implements IHDF5StringReader
         return getStringArrayAttribute(objectPath, attributeName, true);
     }
 
-    public String[] getStringArrayAttributeNoZeroTermination(final String objectPath,
+    public String[] getStringArrayAttributeFixedLength(final String objectPath,
             final String attributeName)
     {
         return getStringArrayAttribute(objectPath, attributeName, false);
@@ -116,7 +116,7 @@ public class HDF5StringReader implements IHDF5StringReader
         return getStringMDArrayAttribute(objectPath, attributeName, true);
     }
 
-    public MDArray<String> getStringMDArrayAttributeNoZeroTermination(final String objectPath,
+    public MDArray<String> getStringMDArrayAttributeFixedLength(final String objectPath,
             final String attributeName)
     {
         return getStringMDArrayAttribute(objectPath, attributeName, false);

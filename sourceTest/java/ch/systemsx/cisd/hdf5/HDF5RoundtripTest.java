@@ -151,8 +151,11 @@ public class HDF5RoundtripTest
         test.testReadStringAttributeAsByteArray();
         test.testReadStringAsByteArray();
         test.testReadStringVLAsByteArray();
-        test.testStringAttributeNoZeroTermination();
-        test.testStringArrayAttributeNoZeroTermination();
+        test.testStringAttributeFixedLength();
+        test.testStringAttributeFixedLengthOverwriteWithShorter();
+        test.testStringAttributeUTF8FixedLength();
+        test.testStringArrayAttributeFixedLength();
+        test.testStringArrayAttributeUTF8FixedLength();
         test.testVeryLargeString();
         test.testOverwriteString();
         test.testOverwriteStringWithLarge();
@@ -2637,34 +2640,91 @@ public class HDF5RoundtripTest
     }
 
     @Test
-    public void testStringAttributeNoZeroTermination()
+    public void testStringAttributeFixedLength()
     {
-        final File file = new File(workingDirectory, "stringAttributeNoZeroTermination.h5");
+        final File file = new File(workingDirectory, "stringAttributeFixedLength.h5");
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer w = HDF5Factory.open(file);
-        w.setStringAttributeNoZeroTermination("/", "a", "a\0c");
+        w.setStringAttributeFixedLength("/", "a", "a\0c");
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
-        final String b = r.getStringAttributeNoZeroTermination("/", "a");
+        final String b = r.getStringAttributeFixedLength("/", "a");
         assertEquals("a\0c", b);
         r.close();
     }
 
     @Test
-    public void testStringArrayAttributeNoZeroTermination()
+    public void testStringAttributeFixedLengthOverwriteWithShorter()
     {
-        final File file = new File(workingDirectory, "stringArrayAttributeNoZeroTermination.h5");
+        final File file = new File(workingDirectory, "stringAttributeFixedLengthOverwriteWithShorter.h5");
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer w = HDF5Factory.open(file);
-        w.setStringArrayAttributeNoZeroTermination("/", "a", new String[]
+        w.setStringAttributeFixedLength("/", "a", "abcdef");
+        // This will delete the old attribute and write a new one with length 3.
+        w.setStringAttributeFixedLength("/", "a", "ghi");
+        w.setStringAttributeFixedLength("/", "b", "abcdef", 6);
+        // This will keep the old attribute (of length 6) and just overwrite its value.
+        w.setStringAttributeFixedLength("/", "b", "jkl", 6);
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final String a = r.getStringAttributeFixedLength("/", "a");
+        assertEquals("ghi", a);
+        final String b = r.getStringAttributeFixedLength("/", "b");
+        assertEquals("jkl\0\0\0", b);
+        r.close();
+    }
+
+    @Test
+    public void testStringAttributeUTF8FixedLength()
+    {
+        final File file = new File(workingDirectory, "stringAttributeUTF8FixedLength.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.configure(file).useUTF8CharacterEncoding().writer();
+        w.setStringAttributeFixedLength("/", "a", "a\0c");
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final String b = r.getStringAttributeFixedLength("/", "a");
+        assertEquals("a\0c", b);
+        r.close();
+    }
+
+    @Test
+    public void testStringArrayAttributeFixedLength()
+    {
+        final File file = new File(workingDirectory, "stringArrayAttributeFixedLength.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        w.setStringArrayAttributeFixedLength("/", "a", new String[]
             { "12", "a\0c", "QWERTY" });
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
-        final String[] b = r.getStringArrayAttributeNoZeroTermination("/", "a");
+        final String[] b = r.getStringArrayAttributeFixedLength("/", "a");
+        assertTrue(Arrays.equals(new String[]
+            { "12\0\0\0\0", "a\0c\0\0\0", "QWERTY" }, b));
+        r.close();
+    }
+
+    @Test
+    public void testStringArrayAttributeUTF8FixedLength()
+    {
+        final File file = new File(workingDirectory, "stringArrayAttributeUTF8NoFixedLength.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.configure(file).useUTF8CharacterEncoding().writer();
+        w.setStringArrayAttributeFixedLength("/", "a", new String[]
+            { "12", "a\0c", "QWERTY" });
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final String[] b = r.getStringArrayAttributeFixedLength("/", "a");
         assertTrue(Arrays.equals(new String[]
             { "12\0\0\0\0", "a\0c\0\0\0", "QWERTY" }, b));
         r.close();

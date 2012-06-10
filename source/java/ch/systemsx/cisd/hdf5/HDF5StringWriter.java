@@ -88,13 +88,13 @@ public class HDF5StringWriter implements IHDF5StringWriter
         setStringAttribute(objectPath, name, value, maxLength, true);
     }
 
-    public void setStringAttributeNoZeroTermination(final String objectPath, final String name,
+    public void setStringAttributeFixedLength(final String objectPath, final String name,
             final String value)
     {
         setStringAttribute(objectPath, name, value, value.length(), false);
     }
 
-    public void setStringAttributeNoZeroTermination(final String objectPath, final String name,
+    public void setStringAttributeFixedLength(final String objectPath, final String name,
             final String value, final int maxLength)
     {
         setStringAttribute(objectPath, name, value, maxLength, false);
@@ -135,13 +135,13 @@ public class HDF5StringWriter implements IHDF5StringWriter
         setStringArrayAttribute(objectPath, name, value, maxLength, true);
     }
 
-    public void setStringArrayAttributeNoZeroTermination(String objectPath, String name,
+    public void setStringArrayAttributeFixedLength(String objectPath, String name,
             String[] value)
     {
         setStringArrayAttribute(objectPath, name, value, getMaxLength(value), false);
     }
 
-    public void setStringArrayAttributeNoZeroTermination(String objectPath, String name,
+    public void setStringArrayAttributeFixedLength(String objectPath, String name,
             String[] value, int maxLength)
     {
         setStringArrayAttribute(objectPath, name, value, maxLength, false);
@@ -181,18 +181,19 @@ public class HDF5StringWriter implements IHDF5StringWriter
         setStringMDArrayAttribute(objectPath, name, value, maxLength, true);
     }
 
-    public void setStringMDArrayAttributeNoZeroTermination(String objectPath, String name,
+    public void setStringMDArrayAttributeFixedLength(String objectPath, String name,
             MDArray<String> value)
     {
         setStringMDArrayAttribute(objectPath, name, value, getMaxLength(value.getAsFlatArray()), false);
     }
 
-    public void setStringMDArrayAttributeNoZeroTermination(String objectPath, String name,
+    public void setStringMDArrayAttributeFixedLength(String objectPath, String name,
             MDArray<String> value, int maxLength)
     {
         setStringMDArrayAttribute(objectPath, name, value, maxLength, false);
         
     }
+    
     void setStringMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> value, final int maxLength, final boolean zeroTerminated)
     {

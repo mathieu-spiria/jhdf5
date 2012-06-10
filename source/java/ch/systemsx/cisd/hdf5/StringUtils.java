@@ -34,7 +34,7 @@ public final class StringUtils
 
     /**
      * Converts string <var>s</var> to a byte array of a 0-terminated string, using
-     * <var>encoding</var> and cutting it to <var>maxLength</var< if necessary.
+     * <var>encoding</var> and cutting it to <var>maxLength</var> if necessary.
      */
     public static byte[] toBytes0Term(String s, int maxLength, CharacterEncoding encoding)
     {
@@ -48,17 +48,18 @@ public final class StringUtils
     }
 
     /**
-     * Converts string <var>s</var> to a byte array of a string, using
-     * <var>encoding</var> and cutting it to <var>maxLength</var< if necessary.
+     * Converts string <var>s</var> to a byte array of a string, using <var>encoding</var> and
+     * cutting it to <var>length</var> or padding it (with '\0') to this <var>length</var>, if
+     * necessary.
      */
-    public static byte[] toBytes(String s, int maxLength, CharacterEncoding encoding)
+    static byte[] toBytes(String s, int length, CharacterEncoding encoding)
     {
         try
         {
-            return (cut(s, maxLength)).getBytes(encoding.getCharSetName());
+            return (cutOrPad(s, length)).getBytes(encoding.getCharSetName());
         } catch (UnsupportedEncodingException ex)
         {
-            return (cut(s, maxLength)).getBytes();
+            return (cutOrPad(s, length)).getBytes();
         }
     }
 
@@ -139,6 +140,20 @@ public final class StringUtils
         if (s.length() > maxLength)
         {
             return s.substring(0, maxLength);
+        } else
+        {
+            return s;
+        }
+    }
+
+    private static String cutOrPad(String s, int length)
+    {
+        if (s.length() > length)
+        {
+            return s.substring(0, length);
+        } else if (s.length() < length)
+        {
+            return org.apache.commons.lang.StringUtils.rightPad(s, length, '\0');
         } else
         {
             return s;

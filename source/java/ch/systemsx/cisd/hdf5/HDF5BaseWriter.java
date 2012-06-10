@@ -1430,11 +1430,17 @@ final class HDF5BaseWriter extends HDF5BaseReader
     void setStringAttribute(final int objectId, final String name, final String value,
             final int maxLength, final boolean zeroTerm, ICleanUpRegistry registry)
     {
-        int realMaxLength = ((encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength);
+        final byte[] bytes =
+                zeroTerm ? StringUtils.toBytes0Term(value, maxLength, encoding) : StringUtils
+                        .toBytes(value, maxLength, encoding);
+        final int realMaxLength;
         if (zeroTerm)
         {
-            // Trailing '\0'
-            ++realMaxLength;
+            realMaxLength = ((encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
+                                                                                            // '\0'
+        } else
+        {
+            realMaxLength = bytes.length;
         }
         final int storageDataTypeId = h5.createDataTypeString(realMaxLength, registry);
         int attributeId;
@@ -1451,11 +1457,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
-        h5.writeAttribute(
-                attributeId,
-                storageDataTypeId,
-                zeroTerm ? StringUtils.toBytes0Term(value, maxLength, encoding) : StringUtils
-                        .toBytes(value, maxLength, encoding));
+        h5.writeAttribute(attributeId, storageDataTypeId, bytes);
     }
 
     class StringArrayBuffer
@@ -1464,42 +1466,64 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         private int len;
 
-        private final int maxLengthPerString;
+        private int realMaxLengthPerString;
 
-        private final int realMaxLengthPerString;
+        private final int maxLengthPerString;
 
         private final boolean zeroTerm;
 
-        StringArrayBuffer(int maxLengthPerString, int initialCapacity, boolean zeroTerm)
+        StringArrayBuffer(int maxLengthPerString, boolean zeroTerm)
         {
             this.maxLengthPerString = maxLengthPerString;
-            int workRealMaxLengthPerString =
-                    (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLengthPerString;
+            this.zeroTerm = zeroTerm;
             if (zeroTerm)
             {
-                // Trailing '\0'
-                ++workRealMaxLengthPerString;
+                // '+1' reflects trailing '\0'
+                this.realMaxLengthPerString =
+                        (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLengthPerString + 1;
             }
-            this.realMaxLengthPerString = workRealMaxLengthPerString;
-            this.zeroTerm = zeroTerm;
-            buf = new byte[initialCapacity];
         }
 
-        void add(String s)
+        void addAll(String[] array)
         {
-            final byte[] data =
-                    zeroTerm ? StringUtils.toBytes0Term(s, maxLengthPerString, encoding)
-                            : StringUtils.toBytes(s, maxLengthPerString, encoding);
-            final int dataLen = Math.min(data.length, realMaxLengthPerString);
-            final int newLen = len + realMaxLengthPerString;
-            if (newLen > buf.length)
+            if (zeroTerm)
             {
-                final byte[] newBuf = new byte[Math.max(2 * buf.length, newLen)];
-                System.arraycopy(buf, 0, newBuf, 0, len);
-                buf = newBuf;
+                addAllZeroTerminated(array);
+            } else
+            {
+                addAllFixedLength(array);
             }
-            System.arraycopy(data, 0, buf, len, dataLen);
-            len = newLen;
+        }
+
+        private void addAllZeroTerminated(String[] array)
+        {
+            this.buf = new byte[realMaxLengthPerString * array.length];
+            for (String s : array)
+            {
+                final byte[] data = StringUtils.toBytes0Term(s, maxLengthPerString, encoding);
+                final int dataLen = Math.min(data.length, realMaxLengthPerString);
+                final int newLen = len + realMaxLengthPerString;
+                System.arraycopy(data, 0, buf, len, dataLen);
+                len = newLen;
+            }
+        }
+
+        private void addAllFixedLength(String[] array)
+        {
+            final byte[][] data = new byte[array.length][];
+            int idx = 0;
+            for (String s : array)
+            {
+                final byte[] bytes = StringUtils.toBytes(s, maxLengthPerString, encoding);
+                realMaxLengthPerString = Math.max(realMaxLengthPerString, bytes.length);
+                data[idx++] = bytes;
+            }
+            this.buf = new byte[realMaxLengthPerString * array.length];
+            for (byte[] bytes : data)
+            {
+                System.arraycopy(bytes, 0, buf, len, bytes.length);
+                len = len + realMaxLengthPerString;
+            }
         }
 
         byte[] toArray()
@@ -1524,12 +1548,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
     void setStringArrayAttribute(final int objectId, final String name, final String[] value,
             final int maxLength, final boolean zeroTerm, ICleanUpRegistry registry)
     {
-        final StringArrayBuffer array =
-                new StringArrayBuffer(maxLength, value.length * 10, zeroTerm);
-        for (int i = 0; i < value.length; ++i)
-        {
-            array.add(value[i]);
-        }
+        final StringArrayBuffer array = new StringArrayBuffer(maxLength, zeroTerm);
+        array.addAll(value);
         final byte[] arrData = array.toArray();
         final int stringDataTypeId = h5.createDataTypeString(array.getMaxLengthInByte(), registry);
         final int storageDataTypeId = h5.createArrayType(stringDataTypeId, value.length, registry);
@@ -1554,12 +1574,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
             final MDArray<String> value, final int maxLength, final boolean zeroTerm,
             ICleanUpRegistry registry)
     {
-        final StringArrayBuffer array =
-                new StringArrayBuffer(maxLength, value.getAsFlatArray().length * 10, zeroTerm);
-        for (int i = 0; i < value.getAsFlatArray().length; ++i)
-        {
-            array.add(value.getAsFlatArray()[i]);
-        }
+        final StringArrayBuffer array = new StringArrayBuffer(maxLength, zeroTerm);
+        array.addAll(value.getAsFlatArray());
         final byte[] arrData = array.toArray();
         final int stringDataTypeId = h5.createDataTypeString(array.getMaxLengthInByte(), registry);
         final int storageDataTypeId =

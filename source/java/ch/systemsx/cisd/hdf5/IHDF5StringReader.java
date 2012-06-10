@@ -45,13 +45,13 @@ public interface IHDF5StringReader
     /**
      * Reads a string attribute named <var>attributeName</var> from the object
      * <var>objectPath</var>. Does not assume a 0-terminated string but reads the full length of the
-     * string.
+     * fixed-length string.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public String getStringAttributeNoZeroTermination(final String objectPath, final String attributeName);
+    public String getStringAttributeFixedLength(final String objectPath, final String attributeName);
 
     /**
      * Reads a string array attribute named <var>attributeName</var> from the object
@@ -66,13 +66,13 @@ public interface IHDF5StringReader
     /**
      * Reads a string array attribute named <var>attributeName</var> from the object
      * <var>objectPath</var>. Does not assume a 0-terminated string but reads the full length of the
-     * string.
+     * fixed-length string.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public String[] getStringArrayAttributeNoZeroTermination(final String objectPath,
+    public String[] getStringArrayAttributeFixedLength(final String objectPath,
             final String attributeName);
 
     /**
@@ -89,13 +89,13 @@ public interface IHDF5StringReader
     /**
      * Reads a multi-dimensional string array attribute named <var>attributeName</var> from the
      * object <var>objectPath</var>. Does not assume a 0-terminated string but reads the full length
-     * of the string.
+     * of the fixed-length string.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public MDArray<String> getStringMDArrayAttributeNoZeroTermination(final String objectPath,
+    public MDArray<String> getStringMDArrayAttributeFixedLength(final String objectPath,
             final String attributeName);
 
     // /////////////////////
