@@ -49,8 +49,8 @@ public final class StringUtils
 
     /**
      * Converts string <var>s</var> to a byte array of a string, using <var>encoding</var> and
-     * cutting it to <var>length</var> or padding it (with '\0') to this <var>length</var>, if
-     * necessary.
+     * cutting it to <var>length</var> characters or padding it (with '\0') to this
+     * <var>length</var>, if necessary.
      */
     static byte[] toBytes(String s, int length, CharacterEncoding encoding)
     {
@@ -60,6 +60,20 @@ public final class StringUtils
         } catch (UnsupportedEncodingException ex)
         {
             return (cutOrPad(s, length)).getBytes();
+        }
+    }
+
+    /**
+     * Converts string <var>s</var> to a byte array of a string, using <var>encoding</var>.
+     */
+    static byte[] toBytes(String s, CharacterEncoding encoding)
+    {
+        try
+        {
+            return s.getBytes(encoding.getCharSetName());
+        } catch (UnsupportedEncodingException ex)
+        {
+            return s.getBytes();
         }
     }
 

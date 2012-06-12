@@ -85,23 +85,11 @@ public class HDF5StringWriter implements IHDF5StringWriter
     public void setStringAttribute(final String objectPath, final String name, final String value,
             final int maxLength)
     {
-        setStringAttribute(objectPath, name, value, maxLength, true);
-    }
-
-    public void setStringAttributeFixedLength(final String objectPath, final String name,
-            final String value)
-    {
-        setStringAttribute(objectPath, name, value, value.length(), false);
-    }
-
-    public void setStringAttributeFixedLength(final String objectPath, final String name,
-            final String value, final int maxLength)
-    {
         setStringAttribute(objectPath, name, value, maxLength, false);
     }
 
     void setStringAttribute(final String objectPath, final String name, final String value,
-            final int maxLength, final boolean zeroTerminated)
+            final int maxLength, final boolean lengthFitsValue)
     {
         assert name != null;
         assert value != null;
@@ -116,7 +104,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                     baseWriter.h5.openObject(baseWriter.fileId, objectPath,
                                             registry);
                             baseWriter.setStringAttribute(objectId, name, value, maxLength,
-                                    zeroTerminated, registry);
+                                    lengthFitsValue, registry);
                             return null; // Nothing to return.
                         }
                     };
@@ -126,29 +114,17 @@ public class HDF5StringWriter implements IHDF5StringWriter
     public void setStringArrayAttribute(final String objectPath, final String name,
             final String[] value)
     {
-        setStringArrayAttribute(objectPath, name, value, getMaxLength(value), true);
+        setStringArrayAttribute(objectPath, name, value, -1, true);
     }
 
     public void setStringArrayAttribute(final String objectPath, final String name,
             final String[] value, final int maxLength)
     {
-        setStringArrayAttribute(objectPath, name, value, maxLength, true);
-    }
-
-    public void setStringArrayAttributeFixedLength(String objectPath, String name,
-            String[] value)
-    {
-        setStringArrayAttribute(objectPath, name, value, getMaxLength(value), false);
-    }
-
-    public void setStringArrayAttributeFixedLength(String objectPath, String name,
-            String[] value, int maxLength)
-    {
         setStringArrayAttribute(objectPath, name, value, maxLength, false);
     }
 
     void setStringArrayAttribute(final String objectPath, final String name, final String[] value,
-            final int maxLength, final boolean zeroTerminated)
+            final int maxLength, final boolean lengthFitsValue)
     {
         assert objectPath != null;
         assert name != null;
@@ -162,7 +138,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     final int objectId =
                             baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
                     baseWriter.setStringArrayAttribute(objectId, name, value, maxLength,
-                            zeroTerminated, registry);
+                            lengthFitsValue, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -172,30 +148,17 @@ public class HDF5StringWriter implements IHDF5StringWriter
     public void setStringMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> value)
     {
-        setStringMDArrayAttribute(objectPath, name, value, getMaxLength(value.getAsFlatArray()), true);
+        setStringMDArrayAttribute(objectPath, name, value, -1, true);
     }
 
     public void setStringMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> value, final int maxLength)
     {
-        setStringMDArrayAttribute(objectPath, name, value, maxLength, true);
-    }
-
-    public void setStringMDArrayAttributeFixedLength(String objectPath, String name,
-            MDArray<String> value)
-    {
-        setStringMDArrayAttribute(objectPath, name, value, getMaxLength(value.getAsFlatArray()), false);
-    }
-
-    public void setStringMDArrayAttributeFixedLength(String objectPath, String name,
-            MDArray<String> value, int maxLength)
-    {
         setStringMDArrayAttribute(objectPath, name, value, maxLength, false);
-        
     }
-    
+
     void setStringMDArrayAttribute(final String objectPath, final String name,
-            final MDArray<String> value, final int maxLength, final boolean zeroTerminated)
+            final MDArray<String> value, final int maxLength, final boolean lengthFitsValue)
     {
         assert objectPath != null;
         assert name != null;
@@ -209,7 +172,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     final int objectId =
                             baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
                     baseWriter.setStringArrayAttribute(objectId, name, value, maxLength,
-                            zeroTerminated, registry);
+                            lengthFitsValue, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -251,7 +214,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int realMaxLength =
-                            ((baseWriter.encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
+                            ((baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength) + 1; // Trailing
                                                                                                        // '\0'
                     final int stringDataTypeId =
                             baseWriter.h5.createDataTypeString(realMaxLength, registry);
@@ -363,7 +326,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     } else
                     {
                         elementSize =
-                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
+                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength) + 1; // Trailing
                                                                                                            // '\0'
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
@@ -425,7 +388,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     } else
                     {
                         elementSize =
-                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
+                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength) + 1; // Trailing
                                                                                                            // '\0'
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
@@ -475,7 +438,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     } else
                     {
                         elementSize =
-                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
+                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength) + 1; // Trailing
                                                                                                            // '\0'
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);

@@ -1428,21 +1428,20 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     void setStringAttribute(final int objectId, final String name, final String value,
-            final int maxLength, final boolean zeroTerm, ICleanUpRegistry registry)
+            final int maxLength, final boolean lengthFitsValue, ICleanUpRegistry registry)
     {
-        final byte[] bytes =
-                zeroTerm ? StringUtils.toBytes0Term(value, maxLength, encoding) : StringUtils
-                        .toBytes(value, maxLength, encoding);
-        final int realMaxLength;
-        if (zeroTerm)
+        final byte[] bytes;
+        final int realMaxLengthInBytes;
+        if (lengthFitsValue)
         {
-            realMaxLength = ((encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength) + 1; // Trailing
-                                                                                            // '\0'
+            bytes = StringUtils.toBytes(value, encoding);
+            realMaxLengthInBytes = bytes.length;
         } else
         {
-            realMaxLength = bytes.length;
+            bytes = StringUtils.toBytes(value, maxLength, encoding);
+            realMaxLengthInBytes = (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
         }
-        final int storageDataTypeId = h5.createDataTypeString(realMaxLength, registry);
+        final int storageDataTypeId = h5.createDataTypeString(realMaxLengthInBytes, registry);
         int attributeId;
         if (h5.existsAttribute(objectId, name))
         {
@@ -1470,37 +1469,33 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         private final int maxLengthPerString;
 
-        private final boolean zeroTerm;
+        private final boolean lengthFitsValue;
 
-        StringArrayBuffer(int maxLengthPerString, boolean zeroTerm)
+        StringArrayBuffer(int maxLengthPerString, boolean lengthFitsValue)
         {
             this.maxLengthPerString = maxLengthPerString;
-            this.zeroTerm = zeroTerm;
-            if (zeroTerm)
-            {
-                // '+1' reflects trailing '\0'
-                this.realMaxLengthPerString =
-                        (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLengthPerString + 1;
-            }
+            this.lengthFitsValue = lengthFitsValue;
         }
 
         void addAll(String[] array)
         {
-            if (zeroTerm)
+            if (lengthFitsValue)
             {
-                addAllZeroTerminated(array);
+                addAllLengthFitsValue(array);
             } else
             {
-                addAllFixedLength(array);
+                addAllLengthFixedLength(array);
             }
         }
 
-        private void addAllZeroTerminated(String[] array)
+        private void addAllLengthFixedLength(String[] array)
         {
+            this.realMaxLengthPerString =
+                    (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLengthPerString;
             this.buf = new byte[realMaxLengthPerString * array.length];
             for (String s : array)
             {
-                final byte[] data = StringUtils.toBytes0Term(s, maxLengthPerString, encoding);
+                final byte[] data = StringUtils.toBytes(s, maxLengthPerString, encoding);
                 final int dataLen = Math.min(data.length, realMaxLengthPerString);
                 final int newLen = len + realMaxLengthPerString;
                 System.arraycopy(data, 0, buf, len, dataLen);
@@ -1508,13 +1503,13 @@ final class HDF5BaseWriter extends HDF5BaseReader
             }
         }
 
-        private void addAllFixedLength(String[] array)
+        private void addAllLengthFitsValue(String[] array)
         {
             final byte[][] data = new byte[array.length][];
             int idx = 0;
             for (String s : array)
             {
-                final byte[] bytes = StringUtils.toBytes(s, maxLengthPerString, encoding);
+                final byte[] bytes = StringUtils.toBytes(s, encoding);
                 realMaxLengthPerString = Math.max(realMaxLengthPerString, bytes.length);
                 data[idx++] = bytes;
             }
@@ -1546,9 +1541,9 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     void setStringArrayAttribute(final int objectId, final String name, final String[] value,
-            final int maxLength, final boolean zeroTerm, ICleanUpRegistry registry)
+            final int maxLength, final boolean lengthFitsValue, ICleanUpRegistry registry)
     {
-        final StringArrayBuffer array = new StringArrayBuffer(maxLength, zeroTerm);
+        final StringArrayBuffer array = new StringArrayBuffer(maxLength, lengthFitsValue);
         array.addAll(value);
         final byte[] arrData = array.toArray();
         final int stringDataTypeId = h5.createDataTypeString(array.getMaxLengthInByte(), registry);
@@ -1571,10 +1566,10 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     void setStringArrayAttribute(final int objectId, final String name,
-            final MDArray<String> value, final int maxLength, final boolean zeroTerm,
+            final MDArray<String> value, final int maxLength, final boolean lengthFitsValue,
             ICleanUpRegistry registry)
     {
-        final StringArrayBuffer array = new StringArrayBuffer(maxLength, zeroTerm);
+        final StringArrayBuffer array = new StringArrayBuffer(maxLength, lengthFitsValue);
         array.addAll(value.getAsFlatArray());
         final byte[] arrData = array.toArray();
         final int stringDataTypeId = h5.createDataTypeString(array.getMaxLengthInByte(), registry);

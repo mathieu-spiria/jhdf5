@@ -889,17 +889,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         stringWriter.setStringAttribute(objectPath, name, value, maxLength);
     }
 
-    public void setStringAttributeFixedLength(String objectPath, String name, String value)
-    {
-        stringWriter.setStringAttributeFixedLength(objectPath, name, value);
-    }
-
-    public void setStringAttributeFixedLength(String objectPath, String name, String value,
-            int maxLength)
-    {
-        stringWriter.setStringAttributeFixedLength(objectPath, name, value, maxLength);
-    }
-
     public void setStringArrayAttribute(String objectPath, String name, String[] value,
             int maxLength)
     {
@@ -920,30 +909,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             int maxLength)
     {
         stringWriter.setStringMDArrayAttribute(objectPath, name, value, maxLength);
-    }
-
-    public void setStringArrayAttributeFixedLength(String objectPath, String name,
-            String[] value)
-    {
-        stringWriter.setStringArrayAttributeFixedLength(objectPath, name, value);
-    }
-
-    public void setStringArrayAttributeFixedLength(String objectPath, String name,
-            String[] value, int maxLength)
-    {
-        stringWriter.setStringArrayAttributeFixedLength(objectPath, name, value, maxLength);
-    }
-
-    public void setStringMDArrayAttributeFixedLength(String objectPath, String name,
-            MDArray<String> value)
-    {
-        stringWriter.setStringMDArrayAttributeFixedLength(objectPath, name, value);
-    }
-
-    public void setStringMDArrayAttributeFixedLength(String objectPath, String name,
-            MDArray<String> value, int maxLength)
-    {
-        stringWriter.setStringMDArrayAttributeFixedLength(objectPath, name, value, maxLength);
     }
 
     public void setStringAttributeVariableLength(String objectPath, String name, String value)
