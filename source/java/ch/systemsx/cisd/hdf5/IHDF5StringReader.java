@@ -54,6 +54,16 @@ public interface IHDF5StringReader
     public String getStringAttributeFixedLength(final String objectPath, final String attributeName);
 
     /**
+     * Reads a explicitly saved length of the string attribute named <var>attributeName</var> from
+     * the object <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The length of the string attribute, or -1, if no length has been set.
+     */
+    public int getStringAttributeExplicitLength(final String objectPath, final String attributeName);
+
+    /**
      * Reads a string array attribute named <var>attributeName</var> from the object
      * <var>objectPath</var>.
      * 

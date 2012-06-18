@@ -307,7 +307,7 @@ class HDF5Reader implements IHDF5Reader
         assert objectPath != null;
         baseReader.checkOpen();
         return removeInternalNames(getAllAttributeNames(objectPath),
-                baseReader.houseKeepingNameSuffix);
+                baseReader.houseKeepingNameSuffix, "/".equals(objectPath));
     }
 
     public List<String> getAllAttributeNames(final String objectPath)
@@ -1037,6 +1037,11 @@ class HDF5Reader implements IHDF5Reader
     public String getStringAttribute(String objectPath, String attributeName)
     {
         return stringReader.getStringAttribute(objectPath, attributeName);
+    }
+
+    public int getStringAttributeExplicitLength(String objectPath, String attributeName)
+    {
+        return stringReader.getStringAttributeExplicitLength(objectPath, attributeName);
     }
 
     public String[] getStringArrayAttribute(String objectPath, String attributeName)

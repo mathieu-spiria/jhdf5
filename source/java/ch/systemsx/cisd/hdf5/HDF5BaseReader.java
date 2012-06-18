@@ -16,19 +16,22 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getBooleanDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantMembersAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectStringLengthAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeStringLengthAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createCompoundElementStringLengthAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STRING;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -224,33 +227,19 @@ class HDF5BaseReader
                     if (h5.existsAttribute(objectId,
                             HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME))
                     {
-                        final int suffixLen = getSuffixLength(objectId, registry);
+                        final int suffixLen =
+                                getExplicitStringLengthAttribute(objectId,
+                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, "",
+                                        registry);
                         final boolean zeroTerminated = (suffixLen < 0);
-                        final String rawSuffix = getStringAttribute(objectId, "/",
-                                HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, zeroTerminated, registry); 
+                        final String rawSuffix =
+                                getStringAttribute(objectId, "/",
+                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME,
+                                        zeroTerminated, registry);
                         return zeroTerminated ? rawSuffix : rawSuffix.substring(0, suffixLen);
                     } else
                     {
                         return null;
-                    }
-                }
-
-                private int getSuffixLength(int objectId, ICleanUpRegistry registry)
-                {
-                    if (h5.existsAttribute(objectId,
-                            HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_LENGTH_ATTRIBUTE_NAME))
-                    {
-                        final int attributeId =
-                                h5.openAttribute(objectId,
-                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_LENGTH_ATTRIBUTE_NAME,
-                                        registry);
-                        final int[] data =
-                                h5.readAttributeAsIntArray(attributeId, H5T_NATIVE_INT32, 1);
-                        return data[0];
-
-                    } else
-                    {
-                        return -1;
                     }
                 }
             };
@@ -683,7 +672,7 @@ class HDF5BaseReader
     List<String> getGroupMembers(final String groupPath)
     {
         assert groupPath != null;
-        return removeInternalNames(getAllGroupMembers(groupPath), houseKeepingNameSuffix);
+        return removeInternalNames(getAllGroupMembers(groupPath), houseKeepingNameSuffix, false);
     }
 
     /**
@@ -967,7 +956,7 @@ class HDF5BaseReader
     {
         checkOpen();
         final String dataTypeVariantAttributeName =
-                getTypeVariantAttributeName(houseKeepingNameSuffix);
+                createObjectTypeVariantAttributeName(houseKeepingNameSuffix);
         if (h5.existsAttribute(objectId, dataTypeVariantAttributeName) == false)
         {
             return -1;
@@ -988,7 +977,7 @@ class HDF5BaseReader
     {
         checkOpen();
         final String typeVariantAttrName =
-                createTypeVariantAttributeName(attributeName, houseKeepingNameSuffix);
+                createAttributeTypeVariantAttributeName(attributeName, houseKeepingNameSuffix);
         if (h5.existsAttribute(objectId, typeVariantAttrName) == false)
         {
             return -1;
@@ -1005,6 +994,89 @@ class HDF5BaseReader
                         (nativeDataTypeId < 0) ? enumType.getNativeTypeId() : nativeDataTypeId,
                         enumType.getStorageForm().getStorageSize());
         return HDF5EnumerationType.fromStorageForm(data);
+    }
+
+    /**
+     * Returns the explicitly saved string length for <var>objectId</var>, or <code>-1</code>, if no
+     * explicit string length is defined for this object.
+     * 
+     * @param objectId The id of the data set object in the file.
+     * @param objectName The name of the data set object in the file.
+     * @return The explicitly set length of the string data set, or -1, if no length was set
+     *         explicitly.
+     */
+    int getExplicitStringLength(final int objectId, final String objectName,
+            ICleanUpRegistry registry)
+    {
+        final String stringLengthAttributeName =
+                createObjectStringLengthAttributeName(objectName, houseKeepingNameSuffix);
+        if (h5.existsAttribute(objectId, stringLengthAttributeName) == false)
+        {
+            return -1;
+        }
+        final int attributeId = h5.openAttribute(objectId, stringLengthAttributeName, registry);
+        final int[] data = h5.readAttributeAsIntArray(attributeId, H5T_NATIVE_INT32, 1);
+        return data[0];
+    }
+
+    /**
+     * Returns the explicitly saved string length for attribute <var>attributeName</var> of
+     * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
+     * attribute.
+     * 
+     * @param objectId The id of the data set object in the file.
+     * @return The ordinal of the type variant or <code>null</code>.
+     */
+    int getExplicitStringLengthAttribute(final int objectId, final String attributeName,
+            ICleanUpRegistry registry)
+    {
+        return getExplicitStringLengthAttribute(objectId, attributeName, houseKeepingNameSuffix,
+                registry);
+    }
+
+    /**
+     * Returns the explicitly saved string length for attribute <var>attributeName</var> of
+     * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
+     * attribute.
+     * 
+     * @param objectId The id of the data set object in the file.
+     * @return The ordinal of the type variant or <code>null</code>.
+     */
+    int getExplicitStringLengthAttribute(final int objectId, final String attributeName,
+            final String suffix, ICleanUpRegistry registry)
+    {
+        final String name = createAttributeStringLengthAttributeName(attributeName, suffix);
+        if (h5.existsAttribute(objectId, name) == false)
+        {
+            return -1;
+        }
+        final int attributeId = h5.openAttribute(objectId, name, registry);
+        final int[] data = h5.readAttributeAsIntArray(attributeId, H5T_NATIVE_INT32, 1);
+        return data[0];
+    }
+
+    /**
+     * Returns the explicitly saved string length for <var>compoundElementName</var> of
+     * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
+     * compound element.
+     * 
+     * @param objectId The id of the data set object in the file.
+     * @return The ordinal of the type variant or <code>null</code>.
+     */
+    int getExplicitStringLengthCompoundElement(final int objectId,
+            final String compoundElementName, final ICleanUpRegistry registry)
+    {
+        checkOpen();
+        final String stringLengthAttributeName =
+                createCompoundElementStringLengthAttributeName(compoundElementName,
+                        houseKeepingNameSuffix);
+        if (h5.existsAttribute(objectId, stringLengthAttributeName) == false)
+        {
+            return -1;
+        }
+        final int attributeId = h5.openAttribute(objectId, stringLengthAttributeName, registry);
+        final int[] data = h5.readAttributeAsIntArray(attributeId, H5T_NATIVE_INT32, 1);
+        return data[0];
     }
 
     HDF5DataTypeInformation getDataTypeInformation(final int dataTypeId,

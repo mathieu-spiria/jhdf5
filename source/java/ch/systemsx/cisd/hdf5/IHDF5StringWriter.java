@@ -59,6 +59,20 @@ public interface IHDF5StringWriter
             final int maxLength);
 
     /**
+    /**
+     * Sets the length of a string attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param stringLength The length of the attribute.
+     */
+    public void setStringAttributeExplicitLength(final String objectPath, final String name,
+            final int stringLength);
+    
+    /**
      * Sets a string array attribute on the referenced object. The length of the array is taken to
      * be the longest string in <var>value</var>.
      * <p>

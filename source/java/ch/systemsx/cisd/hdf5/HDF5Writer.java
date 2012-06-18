@@ -16,8 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantAttributeName;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeTypeVariantAttributeName;
 
 import java.io.Flushable;
 import java.util.BitSet;
@@ -310,7 +310,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         baseWriter.checkOpen();
         baseWriter.setAttribute(objectPath,
-                getTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix),
+                createObjectTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix),
                 baseWriter.typeVariantDataType.getStorageTypeId(),
                 baseWriter.typeVariantDataType.getNativeTypeId(),
                 baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
@@ -321,7 +321,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         baseWriter.checkOpen();
         baseWriter.setAttribute(objectPath,
-                createTypeVariantAttributeName(attributeName, baseWriter.houseKeepingNameSuffix),
+                createAttributeTypeVariantAttributeName(attributeName, baseWriter.houseKeepingNameSuffix),
                 baseWriter.typeVariantDataType.getStorageTypeId(),
                 baseWriter.typeVariantDataType.getNativeTypeId(),
                 baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
@@ -329,13 +329,13 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     public void deleteTypeVariant(String objectPath)
     {
-        deleteAttribute(objectPath, getTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix));
+        deleteAttribute(objectPath, createObjectTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix));
     }
 
     public void deleteTypeVariant(String objectPath, String attributeName)
     {
         deleteAttribute(objectPath,
-                createTypeVariantAttributeName(attributeName, baseWriter.houseKeepingNameSuffix));
+                createAttributeTypeVariantAttributeName(attributeName, baseWriter.houseKeepingNameSuffix));
     }
 
     public void setBooleanAttribute(String objectPath, String name, boolean value)
@@ -887,6 +887,11 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void setStringAttribute(String objectPath, String name, String value, int maxLength)
     {
         stringWriter.setStringAttribute(objectPath, name, value, maxLength);
+    }
+
+    public void setStringAttributeExplicitLength(String objectPath, String name, int stringLength)
+    {
+        stringWriter.setStringAttributeExplicitLength(objectPath, name, stringLength);
     }
 
     public void setStringArrayAttribute(String objectPath, String name, String[] value,

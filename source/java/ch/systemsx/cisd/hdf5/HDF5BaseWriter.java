@@ -16,9 +16,10 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeStringLengthAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getVariableLengthStringDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
@@ -385,29 +386,50 @@ final class HDF5BaseWriter extends HDF5BaseReader
                                     HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME,
                                     houseKeepingNameSuffix, houseKeepingNameSuffix.length(), false,
                                     registry);
-                            saveHousekeekingNameSuffixLength(objectId, registry);
+                            setExplicitStringLengthAttribute(objectId,
+                                    HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME,
+                                    houseKeepingNameSuffix.length(), "", registry);
                             return null; // Nothing to return.
-                        }
-
-                        private void saveHousekeekingNameSuffixLength(final int objectId,
-                                ICleanUpRegistry registry)
-                        {
-                            if (houseKeepingNameSuffix.length() > 127)
-                            {
-                                setAttribute(objectId,
-                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_LENGTH_ATTRIBUTE_NAME,
-                                        H5T_STD_I32LE, H5T_NATIVE_INT32, new int[]
-                                            { houseKeepingNameSuffix.length() }, registry);
-                            } else
-                            {
-                                setAttribute(objectId,
-                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_LENGTH_ATTRIBUTE_NAME,
-                                        H5T_STD_I8LE, H5T_NATIVE_INT8, new byte[]
-                                            { (byte) houseKeepingNameSuffix.length() }, registry);
-                            }
                         }
                     };
         runner.call(addAttributeRunnable);
+    }
+
+    /**
+     * Saves the <var>stringLength</var. for attribute <var>attributeName</var> of
+     * <var>objectId</var> explicitly.
+     * 
+     * @param objectId The id of the data set object in the file.
+     */
+    void setExplicitStringLengthAttribute(final int objectId, final String attributeName,
+            final int stringLength, ICleanUpRegistry registry)
+    {
+        setExplicitStringLengthAttribute(objectId, attributeName, stringLength,
+                houseKeepingNameSuffix, registry);
+    }
+
+    /**
+     * Saves the <var>stringLength</var. for attribute <var>attributeName</var> of
+     * <var>objectId</var> explicitly.
+     * 
+     * @param objectId The id of the data set object in the file.
+     */
+    private void setExplicitStringLengthAttribute(final int objectId, final String attributeName,
+            final int stringLength, final String suffix, ICleanUpRegistry registry)
+    {
+        final String stringLengthAttributeName =
+                createAttributeStringLengthAttributeName(attributeName, suffix);
+        if (stringLength > 127)
+        {
+            setAttribute(objectId, stringLengthAttributeName, H5T_STD_I32LE, H5T_NATIVE_INT32,
+                    new int[]
+                        { stringLength }, registry);
+        } else
+        {
+            setAttribute(objectId, stringLengthAttributeName, H5T_STD_I8LE, H5T_NATIVE_INT8,
+                    new byte[]
+                        { (byte) stringLength }, registry);
+        }
     }
 
     @Override
@@ -1413,7 +1435,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
     void setTypeVariant(final int objectId, final HDF5DataTypeVariant typeVariant,
             ICleanUpRegistry registry)
     {
-        setAttribute(objectId, getTypeVariantAttributeName(houseKeepingNameSuffix),
+        setAttribute(objectId, createObjectTypeVariantAttributeName(houseKeepingNameSuffix),
                 typeVariantDataType.getStorageTypeId(), typeVariantDataType.getNativeTypeId(),
                 typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
     }
@@ -1422,7 +1444,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             final HDF5DataTypeVariant typeVariant, ICleanUpRegistry registry)
     {
         setAttribute(objectId,
-                createTypeVariantAttributeName(attributeName, houseKeepingNameSuffix),
+                createAttributeTypeVariantAttributeName(attributeName, houseKeepingNameSuffix),
                 typeVariantDataType.getStorageTypeId(), typeVariantDataType.getNativeTypeId(),
                 typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
     }

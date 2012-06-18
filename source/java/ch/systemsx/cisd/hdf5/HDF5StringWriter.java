@@ -88,9 +88,33 @@ public class HDF5StringWriter implements IHDF5StringWriter
         setStringAttribute(objectPath, name, value, maxLength, false);
     }
 
+    public void setStringAttributeExplicitLength(final String objectPath, final String name,
+            final int stringLength)
+    {
+        assert objectPath != null;
+        assert name != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseWriter.h5.openObject(baseWriter.fileId, objectPath,
+                                            registry);
+                            baseWriter.setExplicitStringLengthAttribute(objectId, name,
+                                    stringLength, registry);
+                            return null; // Nothing to return.
+                        }
+                    };
+        baseWriter.runner.call(addAttributeRunnable);
+    }
+
     void setStringAttribute(final String objectPath, final String name, final String value,
             final int maxLength, final boolean lengthFitsValue)
     {
+        assert objectPath != null;
         assert name != null;
         assert value != null;
 

@@ -152,6 +152,7 @@ public class HDF5RoundtripTest
         test.testReadStringAsByteArray();
         test.testReadStringVLAsByteArray();
         test.testStringAttributeFixedLength();
+        test.testStringAttributeFixedLengthExplicitlySaveLength();
         test.testStringAttributeFixedLengthOverwriteWithShorter();
         test.testStringAttributeUTF8FixedLength();
         test.testStringArrayAttributeLengthFitsValue();
@@ -2661,6 +2662,25 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testStringAttributeFixedLengthExplicitlySaveLength()
+    {
+        final File file =
+                new File(workingDirectory, "stringAttributeFixedLengthExplicitlySaveLength.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        w.setStringAttribute("/", "a", "a\0c");
+        w.setStringAttributeExplicitLength("/", "a", 3);
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final String b = r.getStringAttributeFixedLength("/", "a");
+        assertEquals("a\0c", b);
+        assertEquals(3, r.getStringAttributeExplicitLength("/", "a"));
+        r.close();
+    }
+
+    @Test
     public void testStringAttributeFixedLengthOverwriteWithShorter()
     {
         final File file =
@@ -4341,6 +4361,7 @@ public class HDF5RoundtripTest
         assertTrue(writer.getGroupMemberPaths("/").isEmpty());
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        assertTrue(reader.getAttributeNames("/").isEmpty());
         assertEquals("", reader.getHouseKeepingNameSuffix());
         assertEquals("__abc__", reader.toHouseKeepingPath("abc"));
         assertTrue(reader.exists("__abc__"));
@@ -4381,6 +4402,7 @@ public class HDF5RoundtripTest
         writer2.close();
 
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        assertTrue(reader.getAttributeNames("/").isEmpty());
         assertEquals("XXX", reader.getHouseKeepingNameSuffix());
         assertEquals("abcXXX", reader.toHouseKeepingPath("abc"));
         assertTrue(reader.exists("abcXXX"));

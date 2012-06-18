@@ -32,6 +32,16 @@ import ch.rinn.restrictions.Private;
 final class HDF5Utils
 {
 
+    /**
+     * The name for an explicitly saved string length attribute.
+     */
+    static final String STRING_LENGTH_ATTRIBUTE_NAME = "STRING_LENGTH";
+
+    /**
+     * The name for a type variant attribute.
+     */
+    static final String TYPE_VARIANT_ATTRIBUTE_NAME = "TYPE_VARIANT";
+
     /** The minimal size of a chunk. */
     @Private
     static final int MIN_CHUNK_SIZE = 1;
@@ -59,24 +69,16 @@ final class HDF5Utils
     static final String HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME = "__HOUSEKEEPING_SUFFIX__";
 
     /**
-     * The length of the suffix for housekeeping files and groups. If this attribute is not set, the
-     * suffix is treated as 0-terminated string.
+     * The length of the suffix for housekeeping files and groups.
      */
-    static final String HOUSEKEEPING_NAME_SUFFIX_LENGTH_ATTRIBUTE_NAME =
-            "__HOUSEKEEPING_SUFFIX_LENGTH__";
+    private static final String HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME =
+            createAttributeStringLengthAttributeName(HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, "");
 
     /**
      * The legacy attribute to signal that a data set is empty (for backward compatibility with
      * 8.10).
      */
     static final String DATASET_IS_EMPTY_LEGACY_ATTRIBUTE = "__EMPTY__";
-
-    /** Returns the attribute to signal that this is a variant of the data type. */
-    static String getTypeVariantAttributeName(String houseKeepingNameSuffix)
-    {
-        return "".equals(houseKeepingNameSuffix) ? "__TYPE_VARIANT__" : "TYPE_VARIANT"
-                + houseKeepingNameSuffix;
-    }
 
     /** Returns the boolean data type. */
     static String getBooleanDataTypePath(String houseKeepingNameSuffix)
@@ -387,20 +389,28 @@ final class HDF5Utils
         return length;
     }
 
+    /** Returns the attribute to signal that this is a variant of the data type. */
+    static String createObjectTypeVariantAttributeName(String houseKeepingNameSuffix)
+    {
+        return "".equals(houseKeepingNameSuffix) ? "__" + TYPE_VARIANT_ATTRIBUTE_NAME + "__"
+                : TYPE_VARIANT_ATTRIBUTE_NAME + houseKeepingNameSuffix;
+    }
+
     /**
      * Returns the type variant attribute for the given <var>attributeName</var>.
      */
-    static String createTypeVariantAttributeName(String attributeName, String suffix)
+    static String createAttributeTypeVariantAttributeName(String attributeName, String suffix)
     {
-        return getTypeVariantAttributeName(suffix) + attributeName
-                + ("".equals(suffix) ? "__" : suffix);
+        final boolean noSuffix = "".equals(suffix);
+        return (noSuffix ? "__" : "") + TYPE_VARIANT_ATTRIBUTE_NAME + "__" + attributeName
+                + (noSuffix ? "__" : suffix);
     }
 
     /**
      * Returns <code>true</code>, if <var>name</var> denotes an internal name used by the library
      * for house-keeping.
      */
-    static boolean isInternalName(final String name)
+    private static boolean isInternalName(final String name)
     {
         return name.startsWith("__") && name.endsWith("__");
     }
@@ -438,20 +448,65 @@ final class HDF5Utils
                 houseKeepingNameSuffix);
     }
 
+    /** Returns the attribute to denote the real length of a string. */
+    static String createObjectStringLengthAttributeName(String objectName, String suffix)
+    {
+        final boolean noSuffix = "".equals(suffix);
+        return noSuffix ? ("__" + STRING_LENGTH_ATTRIBUTE_NAME + "__" + objectName + "__")
+                : (STRING_LENGTH_ATTRIBUTE_NAME + "__" + objectName + suffix);
+    }
+
+    /**
+     * Returns the string length attribute for the given <var>attributeName</var>.
+     */
+    static String createAttributeStringLengthAttributeName(String attributeName, String suffix)
+    {
+        final boolean noSuffix = "".equals(suffix);
+        return (noSuffix ? "__" : "") + STRING_LENGTH_ATTRIBUTE_NAME + "__" + attributeName
+                + (noSuffix ? "__" : suffix);
+    }
+
+    /**
+     * Returns the string length attribute for the given <var>compoundElementName</var>.
+     */
+    static String createCompoundElementStringLengthAttributeName(String compoundElementName,
+            String suffix)
+    {
+        final boolean noSuffix = "".equals(suffix);
+        return noSuffix ? ("__" + STRING_LENGTH_ATTRIBUTE_NAME + "__CompoundElement__"
+                + compoundElementName + "__") : (STRING_LENGTH_ATTRIBUTE_NAME
+                + "__CompoundElement__" + compoundElementName + suffix);
+    }
+
     /**
      * Removes all internal names from the list <var>names</var>.
      * 
      * @return The list <var>names</var>.
      */
     static List<String> removeInternalNames(final List<String> names,
-            final String houseKeepingNameSuffix)
+            final String houseKeepingNameSuffix, final boolean filterRootAttributes)
     {
-        for (Iterator<String> iterator = names.iterator(); iterator.hasNext(); /**/)
+        if (filterRootAttributes)
         {
-            final String memberName = iterator.next();
-            if (isInternalName(memberName, houseKeepingNameSuffix))
+            for (Iterator<String> iterator = names.iterator(); iterator.hasNext(); /**/)
             {
-                iterator.remove();
+                final String memberName = iterator.next();
+                if (isInternalName(memberName, houseKeepingNameSuffix)
+                        || HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME.equals(memberName)
+                        || HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME.equals(memberName))
+                {
+                    iterator.remove();
+                }
+            }
+        } else
+        {
+            for (Iterator<String> iterator = names.iterator(); iterator.hasNext(); /**/)
+            {
+                final String memberName = iterator.next();
+                if (isInternalName(memberName, houseKeepingNameSuffix))
+                {
+                    iterator.remove();
+                }
             }
         }
         return names;

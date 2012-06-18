@@ -79,6 +79,25 @@ public class HDF5StringReader implements IHDF5StringReader
         return baseReader.runner.call(readRunnable);
     }
 
+    public int getStringAttributeExplicitLength(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<Integer> readRunnable = new ICallableWithCleanUp<Integer>()
+            {
+                public Integer call(ICleanUpRegistry registry)
+                {
+                    final int objectId =
+                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
+                    return baseReader.getExplicitStringLengthAttribute(objectId, attributeName,
+                            registry);
+                }
+            };
+        return baseReader.runner.call(readRunnable);
+    }
+
     public String[] getStringArrayAttribute(final String objectPath, final String attributeName)
     {
         return getStringArrayAttribute(objectPath, attributeName, true);
