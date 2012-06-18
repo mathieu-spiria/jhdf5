@@ -153,6 +153,7 @@ public class HDF5RoundtripTest
         test.testReadStringVLAsByteArray();
         test.testStringAttributeFixedLength();
         test.testStringAttributeFixedLengthExplicitlySaveLength();
+        test.testStringAttributeFixedLengthExplicitlySaveLengthNonDefaultHouseKeepingSuffix();
         test.testStringAttributeFixedLengthOverwriteWithShorter();
         test.testStringAttributeUTF8FixedLength();
         test.testStringArrayAttributeLengthFitsValue();
@@ -2670,6 +2671,26 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer w = HDF5Factory.open(file);
+        w.setStringAttribute("/", "a", "a\0c");
+        w.setStringAttributeExplicitLength("/", "a", 3);
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final String b = r.getStringAttributeFixedLength("/", "a");
+        assertEquals("a\0c", b);
+        assertEquals(3, r.getStringAttributeExplicitLength("/", "a"));
+        r.close();
+    }
+
+    @Test
+    public void testStringAttributeFixedLengthExplicitlySaveLengthNonDefaultHouseKeepingSuffix()
+    {
+        final File file =
+                new File(workingDirectory,
+                        "stringAttributeFixedLengthExplicitlySaveLengthNonDefaultHouseKeepingSuffix.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.configure(file).houseKeepingNameSuffix("\0\0").writer();
         w.setStringAttribute("/", "a", "a\0c");
         w.setStringAttributeExplicitLength("/", "a", 3);
         w.close();
