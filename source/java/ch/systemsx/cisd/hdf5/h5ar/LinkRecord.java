@@ -48,7 +48,7 @@ final class LinkRecord implements Comparable<LinkRecord>
 
     @CompoundElement(memberName = "lastModified")
     private long lastModified;
-
+    
     @CompoundElement(memberName = "uid")
     private int uid;
 
@@ -60,6 +60,8 @@ final class LinkRecord implements Comparable<LinkRecord>
 
     @CompoundElement(memberName = "checksum")
     private int crc32;
+    
+    private boolean hasCrc32Checksum = false;
 
     private String linkName;
 
@@ -244,6 +246,7 @@ final class LinkRecord implements Comparable<LinkRecord>
     int initAfterReading(String concatenatedNames, int startPos, IHDF5Reader reader,
             String groupPath, boolean readLinkTarget)
     {
+        this.hasCrc32Checksum = true;
         final int endPos = startPos + linkNameLength;
         this.linkName = concatenatedNames.substring(startPos, endPos);
         if (readLinkTarget && linkType == FileLinkType.SYMLINK)
@@ -369,6 +372,12 @@ final class LinkRecord implements Comparable<LinkRecord>
     public void setCrc32(int crc32)
     {
         this.crc32 = crc32;
+        this.hasCrc32Checksum = true;
+    }
+
+    boolean hasCRC32Checksum()
+    {
+        return hasCrc32Checksum;
     }
 
     public FileLinkType getVerifiedType()
@@ -406,8 +415,9 @@ final class LinkRecord implements Comparable<LinkRecord>
     public void resetVerification()
     {
         verifiedType = null;
-        verifiedSize = -1;
+        verifiedSize = Utils.UNKNOWN;
         verifiedCrc32 = 0;
+        verifiedLastModified = Utils.UNKNOWN;
     }
 
     //

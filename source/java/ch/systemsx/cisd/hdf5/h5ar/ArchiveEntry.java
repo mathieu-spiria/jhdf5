@@ -58,6 +58,8 @@ public final class ArchiveEntry
 
     private int crc32;
 
+    private boolean knowsChecksum;
+
     private int verifiedCrc32;
 
     private final int uid;
@@ -94,6 +96,7 @@ public final class ArchiveEntry
         this.lastModified = link.getLastModified();
         this.verifiedLastModified = link.getVerifiedLastModified();
         this.crc32 = link.getCrc32();
+        this.knowsChecksum = link.hasCRC32Checksum();
         this.verifiedCrc32 = link.getVerifiedCrc32();
         this.uid = link.getUid();
         this.gid = link.getGid();
@@ -121,6 +124,7 @@ public final class ArchiveEntry
         this.verifiedLastModified =
                 Math.max(pathInfo.verifiedLastModified, linkInfo.verifiedLastModified);
         this.crc32 = linkInfo.crc32;
+        this.knowsChecksum = linkInfo.knowsChecksum;
         this.verifiedCrc32 = linkInfo.verifiedCrc32;
         this.uid = linkInfo.uid;
         this.gid = linkInfo.gid;
@@ -153,12 +157,13 @@ public final class ArchiveEntry
         this.gid = Utils.UNKNOWN;
         this.permissions = Utils.UNKNOWN_S;
     }
-    
+
     void setDataSetInfo(DataSetInfo dataSetInfo)
     {
         this.verifiedSize = dataSetInfo.size;
         this.crc32 = dataSetInfo.crc32;
         this.verifiedCrc32 = crc32;
+        this.knowsChecksum = true;
     }
 
     /**
@@ -517,7 +522,7 @@ public final class ArchiveEntry
      */
     public boolean sizeOK()
     {
-        return (verifiedSize == -1) || (size == verifiedSize);
+        return (verifiedSize == Utils.UNKNOWN) || (size == verifiedSize);
     }
 
     /**
@@ -527,7 +532,8 @@ public final class ArchiveEntry
      */
     public boolean lastModifiedOK()
     {
-        return (verifiedLastModified == -1) || (lastModified == verifiedLastModified);
+        return (verifiedLastModified == Utils.UNKNOWN) || (lastModified == Utils.UNKNOWN)
+                || (lastModified == verifiedLastModified);
     }
 
     /**
@@ -536,7 +542,7 @@ public final class ArchiveEntry
      */
     public boolean checksumOK()
     {
-        return (verifiedSize == -1) || (crc32 == verifiedCrc32);
+        return (false == knowsChecksum) || (verifiedSize == Utils.UNKNOWN) ||(crc32 == verifiedCrc32);
     }
 
     /**
