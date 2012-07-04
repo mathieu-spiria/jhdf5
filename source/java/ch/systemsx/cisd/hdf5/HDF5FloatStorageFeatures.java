@@ -377,6 +377,230 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
             new HDF5FloatStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL, (byte) 3);
 
     /**
+     * A builder for storage features.
+     */
+    public static final class HDF5FloatStorageFeatureBuilder extends
+            HDF5AbstractStorageFeatureBuilder
+    {
+        /**
+         * Compresses the dataset with default deflation level, if <code>compress==true</code>, do
+         * not compress if <code>compress==false</code>.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5FloatStorageFeatureBuilder compress(boolean compress)
+        {
+            super.compress(compress);
+            return this;
+        }
+
+        /**
+         * Compress the dataset with default deflation level.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5FloatStorageFeatureBuilder compress()
+        {
+            super.compress();
+            return this;
+        }
+
+        /**
+         * Compresses this dataset with the given <var>deflateLevel</var>.
+         * {@link #NO_DEFLATION_LEVEL} means: do not compress. A good default value is
+         * {@link #DEFAULT_DEFLATION_LEVEL}, the maximum value supported is
+         * {@link #MAX_DEFLATION_LEVEL}.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5FloatStorageFeatureBuilder deflateLevel(byte deflateLevel)
+        {
+            super.deflateLevel(deflateLevel);
+            return this;
+        }
+
+        /**
+         * Sets the scaling factor for an integer scaling pre-filter.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5FloatStorageFeatureBuilder scalingFactor(byte scalingFactor)
+        {
+            super.scalingFactor(scalingFactor);
+            return this;
+        }
+
+        /**
+         * Sets a shuffling pre-filter for deflation if <code>shuffleBeforeDeflate==true</code> and
+         * disables it if <code>shuffleBeforeDeflate==false</code>. Theshuffling pre-filter may
+         * improve the compression level but may also increase the compression time.
+         * <p>
+         * Only takes effect if compression is switched on.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5FloatStorageFeatureBuilder shuffleBeforeDeflate(boolean shuffleBeforeDeflate)
+        {
+            super.shuffleBeforeDeflate(shuffleBeforeDeflate);
+            return this;
+        }
+
+        /**
+         * Sets a shuffling pre-filter for deflation. This may improve the compression level but may
+         * also increase the compression time.
+         * <p>
+         * Only takes effect if compression is switched on.
+         * 
+         * @see #compress()
+         * @see #deflateLevel(byte)
+         * @return This builder.
+         */
+        @Override
+        public HDF5AbstractStorageFeatureBuilder shuffleBeforeDeflate()
+        {
+            super.shuffleBeforeDeflate();
+            return this;
+        }
+
+        /**
+         * Set the layout for the dataset.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5FloatStorageFeatureBuilder storageLayout(HDF5StorageLayout proposedLayout)
+        {
+            super.storageLayout(proposedLayout);
+            return this;
+        }
+
+        /**
+         * Set a compact layout for the dataset.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5AbstractStorageFeatureBuilder compactStorageLayout()
+        {
+            super.compactStorageLayout();
+            return this;
+        }
+
+        /**
+         * Set a contiguous layout for the dataset.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5AbstractStorageFeatureBuilder contiguousStorageLayout()
+        {
+            super.contiguousStorageLayout();
+            return this;
+        }
+
+        /**
+         * Set a chunked layout for the dataset.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5AbstractStorageFeatureBuilder chunkedStorageLayout()
+        {
+            super.chunkedStorageLayout();
+            return this;
+        }
+
+        /**
+         * Let a heuristic choose the right layout for the dataset.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5AbstractStorageFeatureBuilder defaultStorageLayout()
+        {
+            this.defaultStorageLayout();
+            return this;
+        }
+
+        /**
+         * Set the dataset replacement policy for existing datasets.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5FloatStorageFeatureBuilder datasetReplacementPolicy(
+                DataSetReplacementPolicy datasetReplacementPolicy)
+        {
+            super.datasetReplacementPolicy(datasetReplacementPolicy);
+            return this;
+        }
+
+        /**
+         * Set the dataset replacement policy for existing datasets to
+         * {@link ch.systemsx.cisd.hdf5.HDF5AbstractStorageFeatures.DataSetReplacementPolicy#USE_WRITER_DEFAULT}
+         * .
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5FloatStorageFeatureBuilder datasetReplacementUseWriterDefault()
+        {
+            super.datasetReplacementUseWriterDefault();
+            return this;
+        }
+
+        /**
+         * Set the dataset replacement policy for existing datasets to
+         * {@link ch.systemsx.cisd.hdf5.HDF5AbstractStorageFeatures.DataSetReplacementPolicy#ENFORCE_KEEP_EXISTING}
+         * .
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5FloatStorageFeatureBuilder datasetReplacementEnforceKeepExisting()
+        {
+            super.datasetReplacementEnforceKeepExisting();
+            return this;
+        }
+
+        /**
+         * Set the dataset replacement policy for existing datasets to
+         * {@link ch.systemsx.cisd.hdf5.HDF5AbstractStorageFeatures.DataSetReplacementPolicy#ENFORCE_REPLACE_WITH_NEW}
+         * .
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5FloatStorageFeatureBuilder datasetReplacementEnforceReplaceWithNew()
+        {
+            super.datasetReplacementEnforceReplaceWithNew();
+            return this;
+        }
+
+        /**
+         * Returns the storage features corresponding to this builder's values.
+         */
+        @Override
+        public HDF5FloatStorageFeatures features()
+        {
+            return new HDF5FloatStorageFeatures(this);
+        }
+    }
+
+    /**
+     * Returns a new storage feature builder.
+     */
+    public static HDF5FloatStorageFeatureBuilder build()
+    {
+        return new HDF5FloatStorageFeatureBuilder();
+    }
+
+    /**
      * Create a corresponding {@link HDF5FloatStorageFeatures} for the given
      * {@link HDF5GenericStorageFeatures}.
      */
@@ -582,6 +806,15 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
     {
         super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists, deflateLevel,
                 scalingFactor);
+    }
+
+    HDF5FloatStorageFeatures(HDF5FloatStorageFeatureBuilder builder)
+    {
+        super(builder.getStorageLayout(), DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING == builder
+                .getDatasetReplacementPolicy(),
+                DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW == builder
+                        .getDatasetReplacementPolicy(), builder.isShuffleBeforeDeflate(), builder
+                        .getDeflateLevel(), builder.getScalingFactor());
     }
 
     HDF5FloatStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,

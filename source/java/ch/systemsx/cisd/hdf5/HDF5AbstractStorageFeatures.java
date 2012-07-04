@@ -61,6 +61,21 @@ abstract class HDF5AbstractStorageFeatures
     public final static byte MAX_DEFLATION_LEVEL = 9;
 
     /**
+     * The policy on how to deal with write access to existing datasets. "Keeping the dataset" means
+     * to overwrite the content of the dataset, while "replacing the dataset" refers to deleting the
+     * existing dataset and create a new one.
+     */
+    public enum DataSetReplacementPolicy
+    {
+        /** Use the default behavior as specified when the writer was created. */
+        USE_WRITER_DEFAULT,
+        /** Enforce to keep the existing dataset, overwriting the writer's default. */
+        ENFORCE_KEEP_EXISTING,
+        /** Enforce to replace the existing dataset, overwriting the writer's default. */
+        ENFORCE_REPLACE_WITH_NEW
+    }
+
+    /**
      * Do not perform any scaling on the data.
      */
     final static byte NO_SCALING_FACTOR = -1;
@@ -87,6 +102,153 @@ abstract class HDF5AbstractStorageFeatures
 
     private final boolean deleteDataSetIfExists;
 
+    public abstract static class HDF5AbstractStorageFeatureBuilder
+    {
+        private byte deflateLevel;
+
+        private byte scalingFactor;
+
+        private HDF5StorageLayout storageLayout;
+
+        private DataSetReplacementPolicy datasetReplacementPolicy =
+                DataSetReplacementPolicy.USE_WRITER_DEFAULT;
+
+        private boolean shuffleBeforeDeflate;
+
+        HDF5AbstractStorageFeatureBuilder()
+        {
+        }
+
+        byte getDeflateLevel()
+        {
+            return deflateLevel;
+        }
+
+        byte getScalingFactor()
+        {
+            return scalingFactor;
+        }
+
+        HDF5StorageLayout getStorageLayout()
+        {
+            return storageLayout;
+        }
+
+        DataSetReplacementPolicy getDatasetReplacementPolicy()
+        {
+            return datasetReplacementPolicy;
+        }
+
+        boolean isShuffleBeforeDeflate()
+        {
+            return shuffleBeforeDeflate;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder compress(boolean compress)
+        {
+            this.deflateLevel = compress ? DEFAULT_DEFLATION_LEVEL : NO_DEFLATION_LEVEL;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder compress()
+        {
+            this.deflateLevel = DEFAULT_DEFLATION_LEVEL;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder deflateLevel(@SuppressWarnings("hiding")
+        byte deflateLevel)
+        {
+            this.deflateLevel = deflateLevel;
+            return this;
+        }
+
+        HDF5AbstractStorageFeatureBuilder scalingFactor(@SuppressWarnings("hiding")
+        byte scalingFactor)
+        {
+            this.scalingFactor = scalingFactor;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder shuffleBeforeDeflate(@SuppressWarnings("hiding")
+        boolean shuffleBeforeDeflate)
+        {
+            this.shuffleBeforeDeflate = shuffleBeforeDeflate;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder shuffleBeforeDeflate()
+        {
+            this.shuffleBeforeDeflate = true;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder noShuffleBeforeDeflate()
+        {
+            this.shuffleBeforeDeflate = true;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder storageLayout(@SuppressWarnings("hiding")
+        HDF5StorageLayout storageLayout)
+        {
+            this.storageLayout = storageLayout;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder compactStorageLayout()
+        {
+            this.storageLayout = HDF5StorageLayout.COMPACT;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder contiguousStorageLayout()
+        {
+            this.storageLayout = HDF5StorageLayout.CONTIGUOUS;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder chunkedStorageLayout()
+        {
+            this.storageLayout = HDF5StorageLayout.CHUNKED;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder defaultStorageLayout()
+        {
+            this.storageLayout = null;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder datasetReplacementPolicy(
+                @SuppressWarnings("hiding")
+                DataSetReplacementPolicy datasetReplacementPolicy)
+        {
+            this.datasetReplacementPolicy = datasetReplacementPolicy;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder datasetReplacementUseWriterDefault()
+        {
+            this.datasetReplacementPolicy = DataSetReplacementPolicy.USE_WRITER_DEFAULT;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder datasetReplacementEnforceKeepExisting()
+        {
+            this.datasetReplacementPolicy = DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder datasetReplacementEnforceReplaceWithNew()
+        {
+            this.datasetReplacementPolicy = DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW;
+            return this;
+        }
+
+        abstract public HDF5AbstractStorageFeatures features();
+    }
+
     HDF5AbstractStorageFeatures(final HDF5StorageLayout proposedLayoutOrNull,
             final boolean keepDataSetIfExists, final boolean deleteDataSetIfExists,
             final byte deflateLevel, final byte scalingFactor)
@@ -99,9 +261,17 @@ abstract class HDF5AbstractStorageFeatures
             final boolean keepDataSetIfExists, final boolean deleteDataSetIfExists,
             final boolean shuffleBeforeDeflate, final byte deflateLevel, final byte scalingFactor)
     {
-        assert deflateLevel >= 0;
         assert (keepDataSetIfExists && deleteDataSetIfExists) == false;
 
+        if (deflateLevel < 0)
+        {
+            throw new IllegalArgumentException("Invalid deflateLevel " + deflateLevel);
+        }
+        if (keepDataSetIfExists && deleteDataSetIfExists)
+        {
+            throw new IllegalArgumentException(
+                    "Cannot set both keepDataSetIfExists and deleteDataSetIfExists as they are contradicting.");
+        }
         this.proposedLayoutOrNull = proposedLayoutOrNull;
         this.keepDataSetIfExists = keepDataSetIfExists;
         this.deleteDataSetIfExists = deleteDataSetIfExists;
