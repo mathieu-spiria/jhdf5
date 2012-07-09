@@ -17,17 +17,18 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectStringLengthAttributeName;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5DwriteString;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.hdf5.HDF5BaseWriter.StringArrayBuffer;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
@@ -86,29 +87,6 @@ public class HDF5StringWriter implements IHDF5StringWriter
             final int maxLength)
     {
         setStringAttribute(objectPath, name, value, maxLength, false);
-    }
-
-    public void setStringAttributeExplicitLength(final String objectPath, final String name,
-            final int stringLength)
-    {
-        assert objectPath != null;
-        assert name != null;
-
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Object> addAttributeRunnable =
-                new ICallableWithCleanUp<Object>()
-                    {
-                        public Object call(ICleanUpRegistry registry)
-                        {
-                            final int objectId =
-                                    baseWriter.h5.openObject(baseWriter.fileId, objectPath,
-                                            registry);
-                            baseWriter.setExplicitStringLengthAttribute(objectId, name,
-                                    stringLength, registry);
-                            return null; // Nothing to return.
-                        }
-                    };
-        baseWriter.runner.call(addAttributeRunnable);
     }
 
     void setStringAttribute(final String objectPath, final String name, final String value,
@@ -224,10 +202,16 @@ public class HDF5StringWriter implements IHDF5StringWriter
         writeString(objectPath, data, data.length(), features);
     }
 
-    // Implementation note: this needs special treatment as we want to create a (possibly chunked)
-    // data set with max dimension 1 instead of infinity.
     public void writeString(final String objectPath, final String data, final int maxLength,
             final HDF5GenericStorageFeatures features)
+    {
+        writeString(objectPath, data, maxLength, false, features);
+    }
+
+    // Implementation note: this needs special treatment as we want to create a (possibly chunked)
+    // data set with max dimension 1 instead of infinity.
+    void writeString(final String objectPath, final String data, final int maxLength,
+            final boolean lengthFitsValue, final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
@@ -237,22 +221,33 @@ public class HDF5StringWriter implements IHDF5StringWriter
             {
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int realMaxLength =
-                            ((baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength) + 1; // Trailing
-                                                                                                       // '\0'
+                    final int maxLengthNonZero = (maxLength == 0) ? 1 : maxLength;
+                    final byte[] bytes;
+                    final int maxBytes;
+                    if (lengthFitsValue)
+                    {
+                        bytes = StringUtils.toBytes(data, baseWriter.encoding);
+                        maxBytes = (bytes.length == 0) ? 1 : bytes.length;
+                    } else
+                    {
+                        bytes = StringUtils.toBytes(data, maxLengthNonZero, baseWriter.encoding);
+                        maxBytes =
+                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1)
+                                        * maxLengthNonZero;
+                    }
                     final int stringDataTypeId =
-                            baseWriter.h5.createDataTypeString(realMaxLength, registry);
+                            baseWriter.h5.createDataTypeString(maxBytes, registry);
                     if (features.requiresChunking() == false)
                     {
                         // If we do not want to compress, we can create a scalar dataset.
                         baseWriter.writeScalar(objectPath, stringDataTypeId, stringDataTypeId,
-                                StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding),
-                                features.allowsCompact() && (maxLength < MAX_COMPACT_SIZE),
+                                bytes, features.allowsCompact()
+                                        && (maxLengthNonZero < MAX_COMPACT_SIZE),
                                 baseWriter.keepDataIfExists(features), registry);
                     } else
                     {
                         final long[] chunkSizeOrNull =
-                                HDF5Utils.tryGetChunkSizeForString(realMaxLength,
+                                HDF5Utils.tryGetChunkSizeForString(maxBytes,
                                         features.requiresChunking());
                         final int dataSetId;
                         boolean exists = baseWriter.h5.exists(baseWriter.fileId, objectPath);
@@ -277,14 +272,28 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                             stringDataTypeId, features, objectPath, layout,
                                             baseWriter.fileFormat, registry);
                         }
-                        H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                                StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding));
+                        H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, bytes);
                     }
+                    // Explicit length attribute needed?
+                    final String stringLengthAttributeName =
+                            createObjectStringLengthAttributeName(objectPath,
+                                    baseWriter.houseKeepingNameSuffix);
+                    setOrRemoveStringLengthAttribute(objectPath, stringLengthAttributeName,
+                            bytes.length, data.contains("\0") || bytes.length == 0, registry);
                     return null; // Nothing to return.
                 }
 
             };
         baseWriter.runner.call(writeRunnable);
+    }
+
+    void setOrRemoveStringLengthAttribute(final String objectPath,
+            final String stringLengthAttributeName, final int stringLength,
+            final boolean saveExplicitLength, ICleanUpRegistry registry)
+    {
+        final int objectId = baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
+        baseWriter.setOrRemoveStringLengthAttribute(objectId, stringLengthAttributeName,
+                stringLength, saveExplicitLength, registry);
     }
 
     public void writeStringArray(final String objectPath, final String[] data,
@@ -293,7 +302,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         assert objectPath != null;
         assert data != null;
 
-        writeStringArray(objectPath, data, getMaxLength(data), features);
+        writeStringArray(objectPath, data, getMaxLength(data), true, features, false);
     }
 
     public void writeStringArray(final String objectPath, final String[] data)
@@ -301,14 +310,14 @@ public class HDF5StringWriter implements IHDF5StringWriter
         assert objectPath != null;
         assert data != null;
 
-        writeStringArray(objectPath, data, getMaxLength(data),
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        writeStringArray(objectPath, data, getMaxLength(data), true,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, false);
     }
 
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength)
     {
-        writeStringArray(objectPath, data, maxLength,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        writeStringArray(objectPath, data, maxLength, false,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, false);
     }
 
     private static int getMaxLength(String[] data)
@@ -326,12 +335,14 @@ public class HDF5StringWriter implements IHDF5StringWriter
     {
         assert maxLength >= 0;
 
-        writeStringArray(objectPath, data, maxLength, features, false);
+        writeStringArray(objectPath, data, maxLength, false, features, false);
     }
 
+    // TODO: add writeStringArrayVariableLength()
+
     private void writeStringArray(final String objectPath, final String[] data,
-            final int maxLength, final HDF5GenericStorageFeatures features,
-            final boolean variableLength)
+            final int maxLength, final boolean lengthFitsValue,
+            final HDF5GenericStorageFeatures features, final boolean variableLength)
     {
         assert objectPath != null;
         assert data != null;
@@ -341,36 +352,52 @@ public class HDF5StringWriter implements IHDF5StringWriter
             {
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int elementSize;
-                    final int stringDataTypeId;
                     if (variableLength)
                     {
-                        elementSize = 8; // 64bit pointers
-                        stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
-                    } else
-                    {
-                        elementSize =
-                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength) + 1; // Trailing
-                                                                                                           // '\0'
-                        stringDataTypeId =
-                                baseWriter.h5.createDataTypeString(elementSize, registry);
-                    }
-                    final int dataSetId =
-                            baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
-                                    new long[]
-                                        { data.length }, elementSize, features, registry);
-                    if (variableLength)
-                    {
+                        final int elementSize = 8; // 64bit pointers
+                        final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
+                        final int dataSetId =
+                                baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
+                                        new long[]
+                                            { data.length }, elementSize, features, registry);
                         baseWriter.writeStringVL(dataSetId, data);
                     } else
                     {
-                        writeStringArray(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL,
-                                H5P_DEFAULT, data, maxLength);
+                        final StringArrayBuffer array =
+                                baseWriter.new StringArrayBuffer(maxLength, lengthFitsValue);
+                        array.addAll(data);
+                        final byte[] arrData = array.toArray();
+                        final int elementSize = array.getMaxLengthInByte();
+                        final int stringDataTypeId =
+                                baseWriter.h5.createDataTypeString(elementSize, registry);
+                        final int dataSetId =
+                                baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
+                                        new long[]
+                                            { data.length }, elementSize, features, registry);
+                        H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                                arrData);
+                        // Explicit length attribute needed?
+                        final String stringLengthAttributeName =
+                                createObjectStringLengthAttributeName(objectPath,
+                                        baseWriter.houseKeepingNameSuffix);
+                        setOrRemoveStringLengthArrayAttribute(objectPath,
+                                stringLengthAttributeName, new int[]
+                                    { array.getLengths().length }, array.getLengths(),
+                                array.shouldSaveExplicitLength(), registry);
                     }
                     return null; // Nothing to return.
                 }
             };
         baseWriter.runner.call(writeRunnable);
+    }
+
+    void setOrRemoveStringLengthArrayAttribute(final String objectPath,
+            final String stringLengthAttributeName, final int[] dimensions,
+            final int[] stringLengths, final boolean saveExplicitLength, ICleanUpRegistry registry)
+    {
+        final int objectId = baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
+        baseWriter.setOrRemoveStringLengthArrayAttribute(objectId, stringLengthAttributeName,
+                dimensions, stringLengths, saveExplicitLength, registry);
     }
 
     public void createStringArray(final String objectPath, final int maxLength, final int size)
@@ -412,8 +439,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     } else
                     {
                         elementSize =
-                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength) + 1; // Trailing
-                                                                                                           // '\0'
+                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -462,8 +488,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     } else
                     {
                         elementSize =
-                                ((baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength) + 1; // Trailing
-                                                                                                           // '\0'
+                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -514,7 +539,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         baseWriter.writeStringVL(dataSetId, memorySpaceId, dataSpaceId, data);
                     } else
                     {
-                        final int maxLength = baseWriter.h5.getDataTypeSize(stringDataTypeId) - 1;
+                        // FIXME: explicit strings lengths.
+                        final int maxLength = baseWriter.h5.getDataTypeSize(stringDataTypeId);
                         writeStringArray(dataSetId, stringDataTypeId, memorySpaceId, dataSpaceId,
                                 H5P_DEFAULT, data, maxLength);
                     }
@@ -527,8 +553,16 @@ public class HDF5StringWriter implements IHDF5StringWriter
     public void writeStringMDArray(final String objectPath, final MDArray<String> data)
             throws HDF5JavaException
     {
-        writeStringMDArray(objectPath, data, getMaxLength(data.getAsFlatArray()),
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        writeStringMDArray(objectPath, data, getMaxLength(data.getAsFlatArray()), true,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, false);
+    }
+
+    // TODO: add this method to the interface
+    public void writeStringMDArray(final String objectPath, final MDArray<String> data,
+            final HDF5GenericStorageFeatures features) throws HDF5JavaException
+    {
+        writeStringMDArray(objectPath, data, getMaxLength(data.getAsFlatArray()), true, features,
+                false);
     }
 
     public void writeStringMDArray(final String objectPath, final MDArray<String> data,
@@ -542,6 +576,15 @@ public class HDF5StringWriter implements IHDF5StringWriter
             final int maxLength, final HDF5GenericStorageFeatures features)
             throws HDF5JavaException
     {
+        writeStringMDArray(objectPath, data, maxLength, false, features, false);
+    }
+
+    // TODO: add writeStringMDArrayVariableLength()
+
+    private void writeStringMDArray(final String objectPath, final MDArray<String> data,
+            final int maxLength, final boolean lengthFitsValue,
+            final HDF5GenericStorageFeatures features, final boolean variableLength)
+    {
         assert objectPath != null;
         assert data != null;
         assert maxLength >= 0;
@@ -551,14 +594,36 @@ public class HDF5StringWriter implements IHDF5StringWriter
             {
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int realMaxLength = maxLength + 1; // Trailing '\0'
-                    final int stringDataTypeId =
-                            baseWriter.h5.createDataTypeString(realMaxLength, registry);
-                    final int dataSetId =
-                            baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
-                                    data.longDimensions(), realMaxLength, features, registry);
-                    writeStringArray(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            data.getAsFlatArray(), maxLength);
+                    if (variableLength)
+                    {
+                        final int elementSize = 8; // 64bit pointers
+                        final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
+                        final int dataSetId =
+                                baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
+                                        data.longDimensions(), elementSize, features, registry);
+                        baseWriter.writeStringVL(dataSetId, data.getAsFlatArray());
+                    } else
+                    {
+                        final StringArrayBuffer array =
+                                baseWriter.new StringArrayBuffer(maxLength, lengthFitsValue);
+                        array.addAll(data.getAsFlatArray());
+                        final byte[] arrData = array.toArray();
+                        final int elementSize = array.getMaxLengthInByte();
+                        final int stringDataTypeId =
+                                baseWriter.h5.createDataTypeString(elementSize, registry);
+                        final int dataSetId =
+                                baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
+                                        data.longDimensions(), elementSize, features, registry);
+                        H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                                arrData);
+                        // Explicit length attribute needed?
+                        final String stringLengthAttributeName =
+                                createObjectStringLengthAttributeName(objectPath,
+                                        baseWriter.houseKeepingNameSuffix);
+                        setOrRemoveStringLengthArrayAttribute(objectPath,
+                                stringLengthAttributeName, data.dimensions(), array.getLengths(),
+                                array.shouldSaveExplicitLength(), registry);
+                    }
                     return null; // Nothing to return.
                 }
             };
@@ -605,7 +670,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize = maxLength + 1;
+                        elementSize =
+                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -653,7 +719,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize = maxLength + 1;
+                        elementSize =
+                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -715,7 +782,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                 data.getAsFlatArray());
                     } else
                     {
-                        final int maxLength = baseWriter.h5.getDataTypeSize(stringDataTypeId) - 1;
+                        // FIXME: explicit strings lengths.
+                        final int maxLength = baseWriter.h5.getDataTypeSize(stringDataTypeId);
                         writeStringArray(dataSetId, stringDataTypeId, memorySpaceId, dataSpaceId,
                                 H5P_DEFAULT, data.getAsFlatArray(), maxLength);
                     }
@@ -764,7 +832,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     public void writeStringVariableLengthArray(final String objectPath, final String[] data,
             final HDF5GenericStorageFeatures features)
     {
-        writeStringArray(objectPath, data, -1, features, true);
+        writeStringArray(objectPath, data, -1, false, features, true);
     }
 
     public void createStringVariableLengthArray(final String objectPath, final int size)
@@ -865,7 +933,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
             final String[] obj, final int maxLength) throws HDF5Exception, HDF5LibraryException,
             NullPointerException
     {
-        final byte[] buf = StringUtils.toBytes0Term(obj, maxLength, baseWriter.encoding);
+        final byte[] buf = StringUtils.toBytes(obj, maxLength, baseWriter.encoding);
 
         /* will raise exception on error */
         final int status =

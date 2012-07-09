@@ -153,6 +153,10 @@ public class HDF5RoundtripTest
         test.testReadStringVLAsByteArray();
         test.testStringAttributeFixedLength();
         test.testStringAttributeFixedLengthExplicitlySaveLength();
+        test.testStringExplicitlySaveLength();
+        test.testStringAttributeArrayFixedLengthExplicitlySaveLength();
+        test.testStringAttributeLength0();
+        test.testStringAttributeMDArrayFixedLengthExplicitlySaveLength();
         test.testStringAttributeFixedLengthExplicitlySaveLengthNonDefaultHouseKeepingSuffix();
         test.testStringAttributeFixedLengthOverwriteWithShorter();
         test.testStringAttributeUTF8FixedLength();
@@ -160,6 +164,9 @@ public class HDF5RoundtripTest
         test.testStringArrayAttributeFixedLength();
         test.testStringArrayAttributeUTF8LengthFitsValue();
         test.testStringArrayAttributeUTF8FixedLength();
+        test.testStringMDArrayAttributeFixedLength();
+        test.testStringMDArrayAttributeUTF8LengthFitsValue();
+        test.testStringMDArrayAttributeUTF8FixedLength();
         test.testVeryLargeString();
         test.testOverwriteString();
         test.testOverwriteStringWithLarge();
@@ -169,7 +176,12 @@ public class HDF5RoundtripTest
         test.testStringUnicode();
         test.testStringVariableLength();
         test.testStringArray();
+        test.testStringArrayUTF8();
+        test.testStringArrayUTF8WithZeroChar();
+        test.testStringArrayWithNullStrings();
+        test.testStringMDArrayWithNullStrings();
         test.testStringArrayBlock();
+        test.testStringArrayBlockWithZeroChar();
         test.testStringArrayBlockCompact();
         test.testStringArrayCompact();
         test.testStringCompression();
@@ -2264,6 +2276,53 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
+    @Test
+    public void testStringArrayUTF8()
+    {
+        final File stringArrayFile = new File(workingDirectory, "stringArrayUTF8.h5");
+        stringArrayFile.delete();
+        assertFalse(stringArrayFile.exists());
+        stringArrayFile.deleteOnExit();
+        final IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(stringArrayFile).useUTF8CharacterEncoding()
+                        .writer();
+        final String[] data = new String[]
+            { "abc", "ABCxxx", "\u00b6\u00bc\u09ab" };
+        final String dataSetName = "/aStringArray";
+        writer.writeStringArray(dataSetName, data);
+        writer.close();
+        final IHDF5Reader reader =
+                HDF5FactoryProvider.get().configureForReading(stringArrayFile)
+                        .useUTF8CharacterEncoding().reader();
+        final String[] dataStored = reader.readStringArray(dataSetName);
+        assertTrue(Arrays.equals(data, dataStored));
+        reader.close();
+    }
+
+    @Test
+    public void testStringArrayUTF8WithZeroChar()
+    {
+        final File stringArrayFile = new File(workingDirectory, "stringArrayUTF8WithZeroChar.h5");
+        stringArrayFile.delete();
+        assertFalse(stringArrayFile.exists());
+        stringArrayFile.deleteOnExit();
+        final IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(stringArrayFile).useUTF8CharacterEncoding()
+                        .writer();
+        final String[] data = new String[]
+            { "abc", "ABCxxx", "\u00b6\000\u00bc\u09ab" };
+        final String dataSetName = "/aStringArray";
+        writer.writeStringArray(dataSetName, data);
+        writer.close();
+        final IHDF5Reader reader =
+                HDF5FactoryProvider.get().configureForReading(stringArrayFile)
+                        .useUTF8CharacterEncoding().reader();
+        final String[] dataStored = reader.readStringArray(dataSetName);
+        assertTrue(Arrays.equals(data, dataStored));
+        reader.close();
+    }
+
+    @Test
     public void testStringArrayBlock()
     {
         final File stringArrayFile = new File(workingDirectory, "stringArrayBlock.h5");
@@ -2275,6 +2334,36 @@ public class HDF5RoundtripTest
             { "abc", "ABCxxx", "xyz" };
         final String dataSetName = "/aStringArray";
         writer.createStringArray(dataSetName, 6, 5, 3);
+        writer.writeStringArrayBlock(dataSetName, data, 1);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
+        String[] dataStored = reader.readStringArray(dataSetName);
+        assertTrue(Arrays.equals(new String[]
+            { "", "", "", data[0], data[1], data[2] }, dataStored));
+        dataStored = reader.readStringArrayBlock(dataSetName, 3, 0);
+        assertTrue(Arrays.equals(new String[]
+            { "", "", "" }, dataStored));
+        dataStored = reader.readStringArrayBlock(dataSetName, 3, 1);
+        assertTrue(Arrays.equals(data, dataStored));
+        dataStored = reader.readStringArrayBlockWithOffset(dataSetName, 3, 2);
+        assertTrue(Arrays.equals(new String[]
+            { "", data[0], data[1] }, dataStored));
+        reader.close();
+    }
+
+    @Test(groups = "broken")
+    public void testStringArrayBlockWithZeroChar()
+    {
+        final File stringArrayFile = new File(workingDirectory, "stringArrayBlockWithZeroChar.h5");
+        stringArrayFile.delete();
+        assertFalse(stringArrayFile.exists());
+        stringArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
+        final String[] data = new String[]
+            { "abc", "ABCxxx", "\0xyz" };
+        final String dataSetName = "/aStringArray";
+        writer.createStringArray(dataSetName, 6, 5, 3);
+        // FIXME: this method does not yet store the string size explicitly.
         writer.writeStringArrayBlock(dataSetName, data, 1);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
@@ -2610,7 +2699,7 @@ public class HDF5RoundtripTest
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
         final byte[] b = r.readAsByteArray("a");
-        assertEquals("abc\0", new String(b));
+        assertEquals("abc", new String(b));
         r.close();
     }
 
@@ -2663,6 +2752,22 @@ public class HDF5RoundtripTest
     }
 
     @Test
+    public void testStringAttributeLength0()
+    {
+        final File file = new File(workingDirectory, "stringAttributeLength0.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        w.setStringAttribute("/", "a", "");
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final String b = r.getStringAttribute("/", "a");
+        assertEquals("", b);
+        r.close();
+    }
+
+    @Test
     public void testStringAttributeFixedLengthExplicitlySaveLength()
     {
         final File file =
@@ -2671,19 +2776,89 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer w = HDF5Factory.open(file);
+        // As the value contains \0, it will explicitly save the length of the attribute.
         w.setStringAttribute("/", "a", "a\0c");
-        w.setStringAttributeExplicitLength("/", "a", 3);
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
-        final String b = r.getStringAttributeFixedLength("/", "a");
-        assertEquals("a\0c", b);
+        final String b1 = r.getStringAttributeFixedLength("/", "a");
+        assertEquals("a\0c", b1);
+        final String b2 = r.getStringAttribute("/", "a");
+        assertEquals("a\0c", b2);
         assertEquals(3, r.getStringAttributeExplicitLength("/", "a"));
+        r.close();
+    }
+
+    @Test
+    public void testStringExplicitlySaveLength()
+    {
+        final File file = new File(workingDirectory, "stringExplicitlySaveLength.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        // As the value contains \0, it will explicitly save the length of the attribute.
+        w.writeString("a", "a\0c");
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        assertEquals(3, r.getIntAttribute("a", "__STRING_LENGTH__a__"));
+        final String b1 = r.readString("a");
+        assertEquals("a\0c", b1);
+        r.close();
+    }
+
+    @Test
+    public void testStringAttributeArrayFixedLengthExplicitlySaveLength()
+    {
+        final File file =
+                new File(workingDirectory, "stringAttributeArrayFixedLengthExplicitlySaveLength.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        // As the value contains \0, it will explicitly save the length of the attribute.
+        w.setStringArrayAttribute("/", "a", new String[]
+            { "abc", "a\0c", "\0abcd" });
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final String[] b = r.getStringArrayAttribute("/", "a");
+        assertEquals(3, b.length);
+        assertEquals("abc", b[0]);
+        assertEquals("a\0c", b[1]);
+        assertEquals("\0abcd", b[2]);
+        r.close();
+    }
+
+    @Test
+    public void testStringAttributeMDArrayFixedLengthExplicitlySaveLength()
+    {
+        final File file =
+                new File(workingDirectory,
+                        "stringAttributeMDArrayFixedLengthExplicitlySaveLength.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        // As the value contains \0, it will explicitly save the length of the attribute.
+        w.setStringMDArrayAttribute("/", "a", new MDArray<String>(new String[]
+            { "abc", "a\0c", "\0abcd", "1234" }, new int[]
+            { 2, 2 }));
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final MDArray<String> b = r.getStringMDArrayAttribute("/", "a");
+        assertTrue(Arrays.equals(new int[]
+            { 2, 2 }, b.dimensions()));
+        assertEquals("abc", b.getAsFlatArray()[0]);
+        assertEquals("a\0c", b.getAsFlatArray()[1]);
+        assertEquals("\0abcd", b.getAsFlatArray()[2]);
+        assertEquals("1234", b.getAsFlatArray()[3]);
         r.close();
     }
 
     @Test
     public void testStringAttributeFixedLengthExplicitlySaveLengthNonDefaultHouseKeepingSuffix()
     {
+        // TODO: check if this test still makes sense: we deleted the explicit setting of the
+        // length...
         final File file =
                 new File(workingDirectory,
                         "stringAttributeFixedLengthExplicitlySaveLengthNonDefaultHouseKeepingSuffix.h5");
@@ -2692,7 +2867,6 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer w = HDF5Factory.configure(file).houseKeepingNameSuffix("\0\0").writer();
         w.setStringAttribute("/", "a", "a\0c");
-        w.setStringAttributeExplicitLength("/", "a", 3);
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
         final String b = r.getStringAttributeFixedLength("/", "a");
@@ -2721,6 +2895,7 @@ public class HDF5RoundtripTest
         final String a = r.getStringAttributeFixedLength("/", "a");
         assertEquals("ghi", a);
         final String b = r.getStringAttributeFixedLength("/", "b");
+        System.err.println(b);
         assertEquals("jkl\0\0\0", b);
         r.close();
     }
@@ -2756,7 +2931,7 @@ public class HDF5RoundtripTest
         final String[] s0Term = r.getStringArrayAttribute("/", "a");
         final String[] sFixed = r.getStringArrayAttributeFixedLength("/", "a");
         assertTrue(Arrays.equals(new String[]
-            { "12", "a", "QWERTY" }, s0Term));
+            { "12", "a\0c", "QWERTY" }, s0Term));
         assertTrue(Arrays.equals(new String[]
             { "12\0\0\0\0", "a\0c\0\0\0", "QWERTY" }, sFixed));
         r.close();
@@ -2777,7 +2952,7 @@ public class HDF5RoundtripTest
         final String[] s0Term = r.getStringArrayAttribute("/", "a");
         final String[] sFixed = r.getStringArrayAttributeFixedLength("/", "a");
         assertTrue(Arrays.equals(new String[]
-            { "12", "a", "QWERTY" }, s0Term));
+            { "12", "a\0c", "QWERTY" }, s0Term));
         assertTrue(Arrays.equals(new String[]
             { "12\0\0\0\0\0", "a\0c\0\0\0\0", "QWERTY\0" }, sFixed));
         r.close();
@@ -2820,7 +2995,89 @@ public class HDF5RoundtripTest
                     org.apache.commons.lang.StringUtils.rightPad("a\0c", 7 * 4, '\0'),
                     org.apache.commons.lang.StringUtils.rightPad("QWERTY", 7 * 4, '\0') }, sFixed));
         assertTrue(Arrays.equals(new String[]
-            { "12", "a", "QWERTY" }, s0Term));
+            { "12", "a\0c", "QWERTY" }, s0Term));
+        r.close();
+    }
+
+    @Test
+    public void testStringMDArrayAttributeFixedLength()
+    {
+        final File file = new File(workingDirectory, "stringMDArrayAttributeFixedLength.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.open(file);
+        final MDArray<String> array = new MDArray<String>(new String[]
+            { "12", "a\0c", "QWERTY", "" }, new int[]
+            { 2, 2 });
+        w.setStringMDArrayAttribute("/", "a", array, 7);
+        w.close();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
+        final MDArray<String> s0Term = r.getStringMDArrayAttribute("/", "a");
+        final MDArray<String> sFixed = r.getStringMDArrayAttributeFixedLength("/", "a");
+        assertEquals(array, s0Term);
+        assertEquals(new MDArray<String>(new String[]
+            { "12\0\0\0\0\0", "a\0c\0\0\0\0", "QWERTY\0", "\0\0\0\0\0\0\0" }, new int[]
+            { 2, 2 }), sFixed);
+        r.close();
+    }
+
+    @Test
+    public void testStringMDArrayAttributeUTF8LengthFitsValue()
+    {
+        final File file =
+                new File(workingDirectory, "stringMDArrayAttributeUTF8LengthFitsValue.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.configure(file).useUTF8CharacterEncoding().writer();
+        final MDArray<String> array = new MDArray<String>(new String[]
+            { "\u00b6\u00bc\u09ab", "a\0c", "QWERTY", "" }, new int[]
+            { 2, 2 });
+        w.setStringMDArrayAttribute("/", "a", array);
+        w.close();
+        // FIXME: it should not be necessary to specify the encoding when opening the reader. JHDF5
+        // should use the encoding stored for the dataset.
+        final IHDF5Reader r =
+                HDF5Factory.configureForReading(file).useUTF8CharacterEncoding().reader();
+        final MDArray<String> b1 = r.getStringMDArrayAttribute("/", "a");
+        assertEquals(array, b1);
+        final MDArray<String> b2 = r.getStringMDArrayAttributeFixedLength("/", "a");
+        assertEquals(new MDArray<String>(new String[]
+            { "\u00b6\u00bc\u09ab", "a\0c\0\0\0\0", "QWERTY\0", "\0\0\0\0\0\0\0" }, new int[]
+            { 2, 2 }), b2);
+        r.close();
+    }
+
+    @Test
+    public void testStringMDArrayAttributeUTF8FixedLength()
+    {
+        final File file = new File(workingDirectory, "stringMDArrayAttributeUTF8FixedLength.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer w = HDF5Factory.configure(file).useUTF8CharacterEncoding().writer();
+        final MDArray<String> array = new MDArray<String>(new String[]
+            { "\u00b6\u00bc\u09ab", "a\0c", "QWERTY", "" }, new int[]
+            { 2, 2 });
+        w.setStringMDArrayAttribute("/", "a", array, 7);
+        w.close();
+        // FIXME: it should not be necessary to specify the encoding when opening the reader. JHDF5
+        // should use the encoding stored for the dataset.
+        final IHDF5Reader r =
+                HDF5Factory.configureForReading(file).useUTF8CharacterEncoding().reader();
+        final MDArray<String> b1 = r.getStringMDArrayAttribute("/", "a");
+        assertEquals(array, b1);
+        final MDArray<String> b2 = r.getStringMDArrayAttributeFixedLength("/", "a");
+        // Note: the first string contains 28 bytes, but uses 7 bytes to encode 3 characters, thus
+        // it has
+        // only 28 - (7-3) = 24 characters.
+        assertEquals(new MDArray<String>(new String[]
+            { org.apache.commons.lang.StringUtils.rightPad("\u00b6\u00bc\u09ab", 7 * 4 - 4, '\0'),
+                    org.apache.commons.lang.StringUtils.rightPad("a\0c", 7 * 4, '\0'),
+                    org.apache.commons.lang.StringUtils.rightPad("QWERTY", 7 * 4, '\0'),
+                    org.apache.commons.lang.StringUtils.rightPad("", 7 * 4, '\0') }, new int[]
+            { 2, 2 }), b2);
         r.close();
     }
 
@@ -3564,6 +3821,46 @@ public class HDF5RoundtripTest
             maybeAnArray = Array.get(maybeAnArray, 0);
         } while (maybeAnArray.getClass().isArray());
         return false;
+    }
+
+    @Test
+    public void testStringArrayWithNullStrings()
+    {
+        final File datasetFile = new File(workingDirectory, "stringArrayWithNullStrings.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "/vector";
+        final String[] array = new String[]
+            { "a\0c", "b", "" };
+        writer.writeStringArray(dsName, array);
+        writer.close();
+        IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final String[] arrayRead = reader.readStringArray(dsName);
+        reader.close();
+        assertTrue(Arrays.equals(array, arrayRead));
+    }
+
+    @Test
+    public void testStringMDArrayWithNullStrings()
+    {
+        final File datasetFile = new File(workingDirectory, "stringMDArrayWithNullStrings.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "/vector";
+        final String[] array = new String[]
+            { "a\0c", "b", "", "\000123456" };
+        final MDArray<String> mdArray = new MDArray<String>(array, new int[]
+            { 2, 2 });
+        writer.writeStringMDArray(dsName, mdArray);
+        writer.close();
+        IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final MDArray<String> arrayRead = reader.readStringMDArray(dsName);
+        reader.close();
+        assertEquals(mdArray, arrayRead);
     }
 
     @Test
@@ -4538,7 +4835,7 @@ public class HDF5RoundtripTest
         assertChunkSizes(info, 2, 3);
         final HDF5DataSetInformation stringInfo = reader.getDataSetInformation("stringDS");
         assertEquals(HDF5DataClass.STRING, stringInfo.getTypeInformation().getDataClass());
-        assertEquals(s.length() + 1, stringInfo.getTypeInformation().getElementSize());
+        assertEquals(s.length(), stringInfo.getTypeInformation().getElementSize());
         assertEquals(0, stringInfo.getDimensions().length);
         assertEquals(0, stringInfo.getMaxDimensions().length);
         assertEquals(HDF5StorageLayout.COMPACT, stringInfo.getStorageLayout());

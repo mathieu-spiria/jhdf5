@@ -59,20 +59,6 @@ public interface IHDF5StringWriter
             final int maxLength);
 
     /**
-    /**
-     * Sets the length of a string attribute on the referenced object.
-     * <p>
-     * The referenced object must exist, that is it need to have been written before by one of the
-     * <code>write()</code> methods.
-     * 
-     * @param objectPath The name of the object to add the attribute to.
-     * @param name The name of the attribute.
-     * @param stringLength The length of the attribute.
-     */
-    public void setStringAttributeExplicitLength(final String objectPath, final String name,
-            final int stringLength);
-    
-    /**
      * Sets a string array attribute on the referenced object. The length of the array is taken to
      * be the longest string in <var>value</var>.
      * <p>
@@ -227,13 +213,24 @@ public interface IHDF5StringWriter
 
     /**
      * Writes out a <code>String</code> array (of rank N). Each element of the array will have a
-     * fixed maximal length which is given by <var>maxLength</var>.
+     * fixed maximal length which is defined by the longest string in <var>data</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
     public void writeStringMDArray(final String objectPath, final MDArray<String> data)
             throws HDF5JavaException;
+
+    /**
+     * Writes out a <code>String</code> array (of rank N). Each element of the array will have a
+     * fixed maximal length which is defined by the longest string in <var>data</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param features The storage features of the data set.
+     */
+    public void writeStringMDArray(final String objectPath, final MDArray<String> data,
+            final HDF5GenericStorageFeatures features) throws HDF5JavaException;
 
     /**
      * Writes out a <code>String</code> array (of rank N). Each element of the array will have a

@@ -889,11 +889,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         stringWriter.setStringAttribute(objectPath, name, value, maxLength);
     }
 
-    public void setStringAttributeExplicitLength(String objectPath, String name, int stringLength)
-    {
-        stringWriter.setStringAttributeExplicitLength(objectPath, name, stringLength);
-    }
-
     public void setStringArrayAttribute(String objectPath, String name, String[] value,
             int maxLength)
     {
@@ -997,6 +992,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             throws HDF5JavaException
     {
         stringWriter.writeStringMDArray(objectPath, data);
+    }
+
+    public void writeStringMDArray(String objectPath, MDArray<String> data,
+            HDF5GenericStorageFeatures features) throws HDF5JavaException
+    {
+        stringWriter.writeStringMDArray(objectPath, data, features);
     }
 
     public void writeStringMDArray(String objectPath, MDArray<String> data, int maxLength,

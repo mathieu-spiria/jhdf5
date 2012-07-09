@@ -29,8 +29,10 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_UNLIMITED;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;
 
 import java.io.File;
@@ -45,6 +47,8 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang.math.NumberUtils;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatasetInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5FileNotFoundException;
@@ -386,9 +390,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
                                     HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME,
                                     houseKeepingNameSuffix, houseKeepingNameSuffix.length(), false,
                                     registry);
-                            setExplicitStringLengthAttribute(objectId,
-                                    HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME,
-                                    houseKeepingNameSuffix.length(), "", registry);
+                            final String stringLengthAttributeName =
+                                    createAttributeStringLengthAttributeName(
+                                            HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, "");
+                            setIntAttributeAutoSize(objectId, stringLengthAttributeName,
+                                    houseKeepingNameSuffix.length(), registry);
                             return null; // Nothing to return.
                         }
                     };
@@ -396,40 +402,69 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     /**
-     * Saves the <var>stringLength</var. for attribute <var>attributeName</var> of
-     * <var>objectId</var> explicitly.
+     * Saves the <var>value</var> as integer attribute <var>attributeName</var> of
+     * <var>objectId</var>, choosing the size of the integer type automatically based on the
+     * <var>value</var>.
      * 
      * @param objectId The id of the data set object in the file.
      */
-    void setExplicitStringLengthAttribute(final int objectId, final String attributeName,
-            final int stringLength, ICleanUpRegistry registry)
+    private void setIntAttributeAutoSize(final int objectId, final String attributeName,
+            final int value, ICleanUpRegistry registry)
     {
-        setExplicitStringLengthAttribute(objectId, attributeName, stringLength,
-                houseKeepingNameSuffix, registry);
+        if (value > Short.MAX_VALUE)
+        {
+            setAttribute(objectId, attributeName, H5T_STD_I32LE, H5T_NATIVE_INT32, new int[]
+                { value }, registry);
+        } else if (value > Byte.MAX_VALUE)
+        {
+            setAttribute(objectId, attributeName, H5T_STD_I16LE, H5T_NATIVE_INT16, new int[]
+                { value }, registry);
+        } else
+        {
+            setAttribute(objectId, attributeName, H5T_STD_I8LE, H5T_NATIVE_INT8, new byte[]
+                { (byte) value }, registry);
+        }
     }
 
     /**
-     * Saves the <var>stringLength</var. for attribute <var>attributeName</var> of
-     * <var>objectId</var> explicitly.
+     * Saves the <var>value</var> as integer attribute <var>attributeName</var> of
+     * <var>objectId</var>, choosing the size of the integer type automatically based on the
+     * <var>value</var>.
      * 
      * @param objectId The id of the data set object in the file.
      */
-    private void setExplicitStringLengthAttribute(final int objectId, final String attributeName,
-            final int stringLength, final String suffix, ICleanUpRegistry registry)
+    private void setIntArrayAttributeAutoSize(final int objectId, final String attributeName,
+            final int[] dimensions, final int[] value, ICleanUpRegistry registry)
     {
-        final String stringLengthAttributeName =
-                createAttributeStringLengthAttributeName(attributeName, suffix);
-        if (stringLength > 127)
+        final int maxLength = NumberUtils.max(value);
+        if (maxLength > Short.MAX_VALUE)
         {
-            setAttribute(objectId, stringLengthAttributeName, H5T_STD_I32LE, H5T_NATIVE_INT32,
-                    new int[]
-                        { stringLength }, registry);
+            final int memoryTypeId = h5.createArrayType(H5T_NATIVE_INT32, dimensions, registry);
+            final int storageTypeId = h5.createArrayType(H5T_STD_I32LE, dimensions, registry);
+            setAttribute(objectId, attributeName, storageTypeId, memoryTypeId, value, registry);
+        } else if (maxLength > Byte.MAX_VALUE)
+        {
+            final int memoryTypeId = h5.createArrayType(H5T_NATIVE_INT16, dimensions, registry);
+            final int storageTypeId = h5.createArrayType(H5T_STD_I16LE, dimensions, registry);
+            setAttribute(objectId, attributeName, storageTypeId, memoryTypeId, value, registry);
         } else
         {
-            setAttribute(objectId, stringLengthAttributeName, H5T_STD_I8LE, H5T_NATIVE_INT8,
-                    new byte[]
-                        { (byte) stringLength }, registry);
+            final int memoryTypeId = h5.createArrayType(H5T_NATIVE_INT8, dimensions, registry);
+            final int storageTypeId = h5.createArrayType(H5T_STD_I8LE, dimensions, registry);
+            setAttribute(objectId, attributeName, storageTypeId, memoryTypeId, toByteArray(value),
+                    registry);
         }
+    }
+
+    private static byte[] toByteArray(int[] values)
+    {
+        final byte[] result = new byte[values.length];
+        int idx = 0;
+        for (int v : values)
+        {
+            result[idx++] = (byte) v;
+        }
+        return result;
     }
 
     @Override
@@ -1452,16 +1487,17 @@ final class HDF5BaseWriter extends HDF5BaseReader
     void setStringAttribute(final int objectId, final String name, final String value,
             final int maxLength, final boolean lengthFitsValue, ICleanUpRegistry registry)
     {
+        final int maxLengthNonZero = (maxLength == 0) ? 1 : maxLength;
         final byte[] bytes;
         final int realMaxLengthInBytes;
         if (lengthFitsValue)
         {
             bytes = StringUtils.toBytes(value, encoding);
-            realMaxLengthInBytes = bytes.length;
+            realMaxLengthInBytes = (bytes.length == 0) ? 1 : bytes.length;
         } else
         {
-            bytes = StringUtils.toBytes(value, maxLength, encoding);
-            realMaxLengthInBytes = (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
+            bytes = StringUtils.toBytes(value, maxLengthNonZero, encoding);
+            realMaxLengthInBytes = (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLengthNonZero;
         }
         final int storageDataTypeId = h5.createDataTypeString(realMaxLengthInBytes, registry);
         int attributeId;
@@ -1478,7 +1514,29 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
-        h5.writeAttribute(attributeId, storageDataTypeId, bytes);
+        h5.writeAttribute(attributeId, storageDataTypeId,
+                StringUtils.cutOrPadBytes(bytes, realMaxLengthInBytes));
+        // Explicit length attribute needed?
+        final String stringLengthAttributeName =
+                createAttributeStringLengthAttributeName(name, houseKeepingNameSuffix);
+        setOrRemoveStringLengthAttribute(objectId, stringLengthAttributeName, bytes.length,
+                value.contains("\0") || bytes.length == 0, registry);
+    }
+
+    void setOrRemoveStringLengthAttribute(final int objectId,
+            final String stringLengthAttributeName, final int stringLength,
+            final boolean saveExplicitLength, ICleanUpRegistry registry)
+    {
+        if (saveExplicitLength)
+        {
+            setIntAttributeAutoSize(objectId, stringLengthAttributeName, stringLength, registry);
+        } else
+        {
+            if (h5.existsAttribute(objectId, stringLengthAttributeName))
+            {
+                h5.deleteAttribute(objectId, stringLengthAttributeName);
+            }
+        }
     }
 
     class StringArrayBuffer
@@ -1488,6 +1546,10 @@ final class HDF5BaseWriter extends HDF5BaseReader
         private int len;
 
         private int realMaxLengthPerString;
+
+        private boolean valueContainsChar0;
+
+        private int[] lengths;
 
         private final int maxLengthPerString;
 
@@ -1515,6 +1577,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
             this.realMaxLengthPerString =
                     (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLengthPerString;
             this.buf = new byte[realMaxLengthPerString * array.length];
+            this.lengths = new int[array.length];
+            int idx = 0;
             for (String s : array)
             {
                 final byte[] data = StringUtils.toBytes(s, maxLengthPerString, encoding);
@@ -1522,18 +1586,30 @@ final class HDF5BaseWriter extends HDF5BaseReader
                 final int newLen = len + realMaxLengthPerString;
                 System.arraycopy(data, 0, buf, len, dataLen);
                 len = newLen;
+                if (valueContainsChar0 == false)
+                {
+                    valueContainsChar0 |= s.contains("\0");
+                }
+                lengths[idx++] = dataLen;
             }
         }
 
         private void addAllLengthFitsValue(String[] array)
         {
             final byte[][] data = new byte[array.length][];
+            this.lengths = new int[array.length];
             int idx = 0;
             for (String s : array)
             {
                 final byte[] bytes = StringUtils.toBytes(s, encoding);
                 realMaxLengthPerString = Math.max(realMaxLengthPerString, bytes.length);
-                data[idx++] = bytes;
+                data[idx] = bytes;
+                lengths[idx] = bytes.length;
+                if (valueContainsChar0 == false)
+                {
+                    valueContainsChar0 |= s.contains("\0");
+                }
+                ++idx;
             }
             this.buf = new byte[realMaxLengthPerString * array.length];
             for (byte[] bytes : data)
@@ -1545,20 +1621,39 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         byte[] toArray()
         {
-            if (len < buf.length)
-            {
-                final byte[] arr = new byte[len];
-                System.arraycopy(buf, 0, arr, 0, len);
-                return arr;
-            } else
-            {
-                return buf;
-            }
+            return StringUtils.cutOrPadBytes(buf, len);
         }
 
         int getMaxLengthInByte()
         {
-            return realMaxLengthPerString;
+            return (realMaxLengthPerString == 0) ? 1 : realMaxLengthPerString;
+        }
+
+        boolean shouldSaveExplicitLength()
+        {
+            return valueContainsChar0 || (realMaxLengthPerString == 0);
+        }
+
+        int[] getLengths()
+        {
+            return lengths;
+        }
+    }
+
+    void setOrRemoveStringLengthArrayAttribute(final int objectId,
+            final String stringLengthAttributeName, final int[] dimensions,
+            final int[] stringLengths, final boolean saveExplicitLength, ICleanUpRegistry registry)
+    {
+        if (saveExplicitLength)
+        {
+            setIntArrayAttributeAutoSize(objectId, stringLengthAttributeName, dimensions,
+                    stringLengths, registry);
+        } else
+        {
+            if (h5.existsAttribute(objectId, stringLengthAttributeName))
+            {
+                h5.deleteAttribute(objectId, stringLengthAttributeName);
+            }
         }
     }
 
@@ -1585,6 +1680,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
             attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
         h5.writeAttribute(attributeId, storageDataTypeId, arrData);
+        // Explicit length attribute needed?
+        final String stringLengthAttributeName =
+                createAttributeStringLengthAttributeName(name, houseKeepingNameSuffix);
+        setOrRemoveStringLengthArrayAttribute(objectId, stringLengthAttributeName, new int[]
+            { arrData.length }, array.getLengths(), array.shouldSaveExplicitLength(), registry);
     }
 
     void setStringArrayAttribute(final int objectId, final String name,
@@ -1612,6 +1712,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
             attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
         h5.writeAttribute(attributeId, storageDataTypeId, arrData);
+        // Explicit length attribute needed?
+        final String stringLengthAttributeName =
+                createAttributeStringLengthAttributeName(name, houseKeepingNameSuffix);
+        setOrRemoveStringLengthArrayAttribute(objectId, stringLengthAttributeName,
+                value.dimensions(), array.getLengths(), array.shouldSaveExplicitLength(), registry);
     }
 
     void setStringAttributeVariableLength(final int objectId, final String name,

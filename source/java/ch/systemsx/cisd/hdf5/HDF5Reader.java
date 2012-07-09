@@ -95,6 +95,7 @@ class HDF5Reader implements IHDF5Reader
         this.byteReader = new HDF5ByteReader(baseReader);
         this.shortReader = new HDF5ShortReader(baseReader);
         this.intReader = new HDF5IntReader(baseReader);
+        this.baseReader.setIntReader((HDF5IntReader) this.intReader);
         this.longReader = new HDF5LongReader(baseReader);
         this.floatReader = new HDF5FloatReader(baseReader);
         this.doubleReader = new HDF5DoubleReader(baseReader);

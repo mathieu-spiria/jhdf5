@@ -49,17 +49,16 @@ public final class StringUtils
 
     /**
      * Converts string <var>s</var> to a byte array of a string, using <var>encoding</var> and
-     * cutting it to <var>length</var> characters or padding it (with '\0') to this
-     * <var>length</var>, if necessary.
+     * cutting it to <var>maxLength</var> characters.
      */
-    static byte[] toBytes(String s, int length, CharacterEncoding encoding)
+    static byte[] toBytes(String s, int maxLength, CharacterEncoding encoding)
     {
         try
         {
-            return (cutOrPad(s, length)).getBytes(encoding.getCharSetName());
+            return (cut(s, maxLength)).getBytes(encoding.getCharSetName());
         } catch (UnsupportedEncodingException ex)
         {
-            return (cutOrPad(s, length)).getBytes();
+            return (cut(s, maxLength)).getBytes();
         }
     }
 
@@ -78,6 +77,25 @@ public final class StringUtils
     }
 
     /**
+     * Converts string array <var>in</var> to a byte array, using
+     * <var>encoding</var> and cutting it to <var>maxLength</var< if necessary.
+     */
+    static byte[] toBytes(final String[] in, final int maxLength,
+            final CharacterEncoding encoding)
+    {
+        final int nelems = in.length;
+        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
+        final byte[] out = new byte[nelems * realMaxLength];
+
+        for (int i = 0; i < nelems; i++)
+        {
+            final byte[] bytes = toBytes(in[i], maxLength, encoding);
+            System.arraycopy(bytes, 0, out, i * realMaxLength, bytes.length);
+        }
+        return out;
+    }
+
+    /**
      * Converts string array <var>in</var> to a byte array of a 0-terminated string, using
      * <var>encoding</var> and cutting it to <var>maxLength</var< if necessary.
      */
@@ -85,7 +103,7 @@ public final class StringUtils
             final CharacterEncoding encoding)
     {
         final int nelems = in.length;
-        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 2 : 1) * maxLength + 1;
+        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength + 1;
         final byte[] out = new byte[nelems * realMaxLength];
 
         for (int i = 0; i < nelems; i++)
@@ -126,6 +144,15 @@ public final class StringUtils
     }
 
     /**
+     * Converts the first <var>length</var> bytes of byte array <var>data</var> containing a string
+     * using <var>encoding</var> to a string.
+     */
+    static String fromBytes(byte[] data, int length, CharacterEncoding encoding)
+    {
+        return fromBytes(data, 0, length, encoding);
+    }
+
+    /**
      * Converts byte array <var>data</var> containing a string using <var>encoding</var> to a
      * string.
      */
@@ -160,17 +187,19 @@ public final class StringUtils
         }
     }
 
-    private static String cutOrPad(String s, int length)
+    /**
+     * Cuts or pads <var>value</var> to <var>length</var>.
+     */
+    static byte[] cutOrPadBytes(byte[] value, int length)
     {
-        if (s.length() > length)
+        if (value.length == length)
         {
-            return s.substring(0, length);
-        } else if (s.length() < length)
-        {
-            return org.apache.commons.lang.StringUtils.rightPad(s, length, '\0');
+            return value;
         } else
         {
-            return s;
+            final byte[] newValue = new byte[length];
+            System.arraycopy(value, 0, newValue, 0, Math.min(value.length, length));
+            return newValue;
         }
     }
 

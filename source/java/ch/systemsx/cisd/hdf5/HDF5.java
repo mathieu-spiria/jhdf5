@@ -56,6 +56,7 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_OPAQUE_TAG_MAX;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STR_NULLPAD;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_VARIABLE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5Z_SO_FLOAT_DSCALE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5Z_SO_INT;
@@ -1185,7 +1186,9 @@ class HDF5
 
     public int createDataTypeString(int length, ICleanUpRegistry registry)
     {
-        final int dataTypeId = createDataTypeString(length);
+        assert length > 0;
+
+        final int dataTypeId = H5Tcopy(H5T_C_S1);
         registry.registerCleanUp(new Runnable()
             {
                 public void run()
@@ -1193,19 +1196,12 @@ class HDF5
                     H5Tclose(dataTypeId);
                 }
             });
+        H5Tset_size(dataTypeId, length);
+        H5Tset_strpad(dataTypeId, H5T_STR_NULLPAD);
         if (useUTF8CharEncoding)
         {
             setCharacterEncodingDataType(dataTypeId, CharacterEncoding.UTF8);
         }
-        return dataTypeId;
-    }
-
-    private int createDataTypeString(int length)
-    {
-        assert length >= 0;
-
-        int dataTypeId = H5Tcopy(H5T_C_S1);
-        H5Tset_size(dataTypeId, length);
         return dataTypeId;
     }
 
