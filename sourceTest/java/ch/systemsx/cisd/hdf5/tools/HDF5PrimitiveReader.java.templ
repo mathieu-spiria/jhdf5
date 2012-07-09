@@ -88,38 +88,7 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
                             final int objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            final int attributeId =
-                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
-                            final int attributeTypeId =
-                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                            final int memoryTypeId;
-                            final int len;
-                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
-                            {
-                                final int[] arrayDimensions =
-                                        baseReader.h5.getArrayDimensions(attributeTypeId);
-                                if (arrayDimensions.length != 1)
-                                {
-                                    throw new HDF5JavaException(
-                                            "Array needs to be of rank 1, but is of rank "
-                                                    + arrayDimensions.length);
-                                }
-                                len = arrayDimensions[0];
-                                memoryTypeId =
-                                        baseReader.h5.createArrayType(__Memorytype__, len,
-                                                registry);
-                            } else
-                            {
-                                final long[] arrayDimensions =
-                                        baseReader.h5.getDataDimensionsForAttribute(attributeId,
-                                                registry);
-                                memoryTypeId = __Memorytype__;
-                                len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
-                            }
-                            final __name__[] data =
-                                    baseReader.h5.readAttributeAs__Name__Array(attributeId,
-                                            memoryTypeId, len);
-                            return data;
+                            return get__Name__ArrayAttribute(objectId, attributeName, registry);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
@@ -137,39 +106,10 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
                     {
                         public MD__Name__Array call(ICleanUpRegistry registry)
                         {
-                            try
-                            {
-                                final int objectId =
-                                        baseReader.h5.openObject(baseReader.fileId, objectPath,
-                                                registry);
-                                final int attributeId =
-                                        baseReader.h5.openAttribute(objectId, attributeName, registry);
-                                final int attributeTypeId =
-                                        baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                                final int memoryTypeId;
-                                final int[] arrayDimensions;
-                                if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
-                                {
-                                    arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
-                                    memoryTypeId =
-                                            baseReader.h5.createArrayType(__Memorytype__,
-                                                    arrayDimensions, registry);
-                                } else
-                                {
-                                    arrayDimensions =
-                                            MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
-                                                    attributeId, registry));
-                                    memoryTypeId = __Memorytype__;
-                                }
-                                final int len = MDArray.getLength(arrayDimensions);
-                                final __name__[] data =
-                                        baseReader.h5.readAttributeAs__Name__Array(attributeId,
-                                                memoryTypeId, len);
-                                return new MD__Name__Array(data, arrayDimensions);
-                            } catch (IllegalArgumentException ex)
-                            {
-                                throw new HDF5JavaException(ex.getMessage());
-                            }
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            return get__Name__MDArrayAttribute(objectId, attributeName, registry);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
@@ -556,5 +496,77 @@ class HDF5__Name__Reader implements IHDF5__Name__Reader
                         };
                 }
             };
+    }
+
+    __name__[] get__Name__ArrayAttribute(final int objectId, final String attributeName,
+            ICleanUpRegistry registry)
+    {
+        final int attributeId =
+                baseReader.h5.openAttribute(objectId, attributeName, registry);
+        final int attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+        final int memoryTypeId;
+        final int len;
+        if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+        {
+            final int[] arrayDimensions =
+                    baseReader.h5.getArrayDimensions(attributeTypeId);
+            if (arrayDimensions.length != 1)
+            {
+                throw new HDF5JavaException(
+                        "Array needs to be of rank 1, but is of rank "
+                                + arrayDimensions.length);
+            }
+            len = arrayDimensions[0];
+            memoryTypeId =
+                    baseReader.h5.createArrayType(__Memorytype__, len,
+                            registry);
+        } else
+        {
+            final long[] arrayDimensions =
+                    baseReader.h5.getDataDimensionsForAttribute(attributeId,
+                            registry);
+            memoryTypeId = __Memorytype__;
+            len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
+        }
+        final __name__[] data =
+                baseReader.h5.readAttributeAs__Name__Array(attributeId,
+                        memoryTypeId, len);
+        return data;
+    }
+
+    MD__Name__Array get__Name__MDArrayAttribute(final int objectId,
+            final String attributeName, ICleanUpRegistry registry)
+    {
+        try
+        {
+            final int attributeId =
+                    baseReader.h5.openAttribute(objectId, attributeName, registry);
+            final int attributeTypeId =
+                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+            final int memoryTypeId;
+            final int[] arrayDimensions;
+            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+            {
+                arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
+                memoryTypeId =
+                        baseReader.h5.createArrayType(__Memorytype__,
+                                arrayDimensions, registry);
+            } else
+            {
+                arrayDimensions =
+                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                                attributeId, registry));
+                memoryTypeId = __Memorytype__;
+            }
+            final int len = MDArray.getLength(arrayDimensions);
+            final __name__[] data =
+                    baseReader.h5.readAttributeAs__Name__Array(attributeId,
+                            memoryTypeId, len);
+            return new MD__Name__Array(data, arrayDimensions);
+        } catch (IllegalArgumentException ex)
+        {
+            throw new HDF5JavaException(ex.getMessage());
+        }
     }
 }

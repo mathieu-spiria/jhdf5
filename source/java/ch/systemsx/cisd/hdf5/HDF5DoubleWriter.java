@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_NO_COMPRESSION;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
@@ -54,8 +55,8 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
         assert name != null;
 
         baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath, name, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, new double[]
-            { value });
+        baseWriter.setAttribute(objectPath, name, H5T_IEEE_F64LE, H5T_NATIVE_DOUBLE, 
+        		new double[] { value });
     }
 
     public void setDoubleArrayAttribute(final String objectPath, final String name,
@@ -71,8 +72,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int memoryTypeId =
-                            baseWriter.h5
-                                    .createArrayType(H5T_NATIVE_DOUBLE, value.length, registry);
+                            baseWriter.h5.createArrayType(H5T_NATIVE_DOUBLE, value.length, registry);
                     final int storageTypeId =
                             baseWriter.h5.createArrayType(H5T_IEEE_F64LE, value.length, registry);
                     baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId, value);
@@ -113,7 +113,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
     {
         setDoubleMDArrayAttribute(objectPath, name, new MDDoubleArray(value));
     }
-
+    
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -142,9 +142,11 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F64LE, new long[]
+                            baseWriter.getOrCreateDataSetId(objectPath, 
+                                H5T_IEEE_F64LE, new long[]
                                 { data.length }, 8, features, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
+                            data);
                     return null; // Nothing to return.
                 }
             };
@@ -174,14 +176,13 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 {
                     if (features.requiresChunking())
                     {
-                        baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features, new long[]
-                            { 0 }, new long[]
-                            { size }, 8, registry);
+                        baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, 
+                            features, new long[] { 0 }, new long[] { size }, 8, registry);
 
                     } else
                     {
-                        baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features, new long[]
-                            { size }, null, 8, registry);
+                        baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, 
+                            features, new long[] { size }, null, 8, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -201,8 +202,8 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features, new long[]
-                        { size }, new long[]
+                    baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, 
+                        features, new long[] { size }, new long[]
                         { blockSize }, 8, registry);
                     return null; // Nothing to return.
                 }
@@ -235,13 +236,13 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
-                    final int dataSpaceId =
+                    final int dataSpaceId = 
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final int memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                            data);
+                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId, 
+                            H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
             };
@@ -260,7 +261,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
         writeDoubleMatrix(objectPath, data, FLOAT_NO_COMPRESSION);
     }
 
-    public void writeDoubleMatrix(final String objectPath, final double[][] data,
+    public void writeDoubleMatrix(final String objectPath, final double[][] data, 
             final HDF5FloatStorageFeatures features)
     {
         assert objectPath != null;
@@ -270,7 +271,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
         writeDoubleMDArray(objectPath, new MDDoubleArray(data), features);
     }
 
-    public void createDoubleMatrix(final String objectPath, final int blockSizeX,
+    public void createDoubleMatrix(final String objectPath, final int blockSizeX, 
             final int blockSizeY)
     {
         createDoubleMatrix(objectPath, 0, 0, blockSizeX, blockSizeY, FLOAT_NO_COMPRESSION);
@@ -300,8 +301,9 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                         { sizeX, sizeY };
                     final long[] blockDimensions = new long[]
                         { blockSizeX, blockSizeY };
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features, dimensions,
-                            blockDimensions, 8, registry);
+                    baseWriter
+                            .createDataSet(objectPath, H5T_IEEE_F64LE, 
+                            features, dimensions, blockDimensions, 8, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -357,9 +359,9 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
-                            baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F64LE,
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F64LE, 
                                     data.longDimensions(), 8, features, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
                             data.getAsFlatArray());
                     return null; // Nothing to return.
                 }
@@ -392,12 +394,13 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                     if (features.requiresChunking())
                     {
                         final long[] nullDimensions = new long[dimensions.length];
-                        baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features,
+                        baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, 
+                                features,
                                 nullDimensions, MDArray.toLong(dimensions), 8, registry);
                     } else
                     {
-                        baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features,
-                                MDArray.toLong(dimensions), null, 8, registry);
+                        baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, 
+                                features, MDArray.toLong(dimensions), null, 8, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -417,7 +420,8 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
             {
                 public Void call(ICleanUpRegistry registry)
                 {
-                    baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, features, dimensions,
+                    baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, 
+                            features, dimensions, 
                             MDArray.toLong(blockDimensions), 8, registry);
                     return null; // Nothing to return.
                 }
@@ -439,8 +443,8 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
         writeDoubleMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
-    public void writeDoubleMDArrayBlockWithOffset(final String objectPath,
-            final MDDoubleArray data, final long[] offset)
+    public void writeDoubleMDArrayBlockWithOffset(final String objectPath, final MDDoubleArray data,
+            final long[] offset)
     {
         assert objectPath != null;
         assert data != null;
@@ -461,22 +465,21 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                     final int dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final int dataSpaceId = 
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
+                    final int memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                            data.getAsFlatArray());
+                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId, 
+                            H5P_DEFAULT, data.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };
         baseWriter.runner.call(writeRunnable);
     }
 
-    public void writeDoubleMDArrayBlockWithOffset(final String objectPath,
-            final MDDoubleArray data, final int[] blockDimensions, final long[] offset,
-            final int[] memoryOffset)
+    public void writeDoubleMDArrayBlockWithOffset(final String objectPath, final MDDoubleArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
     {
         assert objectPath != null;
         assert data != null;
@@ -499,15 +502,15 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                     final int dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final int dataSpaceId = 
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
+                    final int memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
                     baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
                             longBlockDimensions);
-                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId, H5P_DEFAULT,
-                            data.getAsFlatArray());
+                    H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
                     return null; // Nothing to return.
                 }
             };

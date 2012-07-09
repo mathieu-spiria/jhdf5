@@ -88,38 +88,7 @@ class HDF5FloatReader implements IHDF5FloatReader
                             final int objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            final int attributeId =
-                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
-                            final int attributeTypeId =
-                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                            final int memoryTypeId;
-                            final int len;
-                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
-                            {
-                                final int[] arrayDimensions =
-                                        baseReader.h5.getArrayDimensions(attributeTypeId);
-                                if (arrayDimensions.length != 1)
-                                {
-                                    throw new HDF5JavaException(
-                                            "Array needs to be of rank 1, but is of rank "
-                                                    + arrayDimensions.length);
-                                }
-                                len = arrayDimensions[0];
-                                memoryTypeId =
-                                        baseReader.h5.createArrayType(H5T_NATIVE_FLOAT, len,
-                                                registry);
-                            } else
-                            {
-                                final long[] arrayDimensions =
-                                        baseReader.h5.getDataDimensionsForAttribute(attributeId,
-                                                registry);
-                                memoryTypeId = H5T_NATIVE_FLOAT;
-                                len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
-                            }
-                            final float[] data =
-                                    baseReader.h5.readAttributeAsFloatArray(attributeId,
-                                            memoryTypeId, len);
-                            return data;
+                            return getFloatArrayAttribute(objectId, attributeName, registry);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
@@ -137,39 +106,10 @@ class HDF5FloatReader implements IHDF5FloatReader
                     {
                         public MDFloatArray call(ICleanUpRegistry registry)
                         {
-                            try
-                            {
-                                final int objectId =
-                                        baseReader.h5.openObject(baseReader.fileId, objectPath,
-                                                registry);
-                                final int attributeId =
-                                        baseReader.h5.openAttribute(objectId, attributeName, registry);
-                                final int attributeTypeId =
-                                        baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                                final int memoryTypeId;
-                                final int[] arrayDimensions;
-                                if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
-                                {
-                                    arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
-                                    memoryTypeId =
-                                            baseReader.h5.createArrayType(H5T_NATIVE_FLOAT,
-                                                    arrayDimensions, registry);
-                                } else
-                                {
-                                    arrayDimensions =
-                                            MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
-                                                    attributeId, registry));
-                                    memoryTypeId = H5T_NATIVE_FLOAT;
-                                }
-                                final int len = MDArray.getLength(arrayDimensions);
-                                final float[] data =
-                                        baseReader.h5.readAttributeAsFloatArray(attributeId,
-                                                memoryTypeId, len);
-                                return new MDFloatArray(data, arrayDimensions);
-                            } catch (IllegalArgumentException ex)
-                            {
-                                throw new HDF5JavaException(ex.getMessage());
-                            }
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            return getFloatMDArrayAttribute(objectId, attributeName, registry);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
@@ -556,5 +496,77 @@ class HDF5FloatReader implements IHDF5FloatReader
                         };
                 }
             };
+    }
+
+    float[] getFloatArrayAttribute(final int objectId, final String attributeName,
+            ICleanUpRegistry registry)
+    {
+        final int attributeId =
+                baseReader.h5.openAttribute(objectId, attributeName, registry);
+        final int attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+        final int memoryTypeId;
+        final int len;
+        if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+        {
+            final int[] arrayDimensions =
+                    baseReader.h5.getArrayDimensions(attributeTypeId);
+            if (arrayDimensions.length != 1)
+            {
+                throw new HDF5JavaException(
+                        "Array needs to be of rank 1, but is of rank "
+                                + arrayDimensions.length);
+            }
+            len = arrayDimensions[0];
+            memoryTypeId =
+                    baseReader.h5.createArrayType(H5T_NATIVE_FLOAT, len,
+                            registry);
+        } else
+        {
+            final long[] arrayDimensions =
+                    baseReader.h5.getDataDimensionsForAttribute(attributeId,
+                            registry);
+            memoryTypeId = H5T_NATIVE_FLOAT;
+            len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
+        }
+        final float[] data =
+                baseReader.h5.readAttributeAsFloatArray(attributeId,
+                        memoryTypeId, len);
+        return data;
+    }
+
+    MDFloatArray getFloatMDArrayAttribute(final int objectId,
+            final String attributeName, ICleanUpRegistry registry)
+    {
+        try
+        {
+            final int attributeId =
+                    baseReader.h5.openAttribute(objectId, attributeName, registry);
+            final int attributeTypeId =
+                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
+            final int memoryTypeId;
+            final int[] arrayDimensions;
+            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
+            {
+                arrayDimensions = baseReader.h5.getArrayDimensions(attributeTypeId);
+                memoryTypeId =
+                        baseReader.h5.createArrayType(H5T_NATIVE_FLOAT,
+                                arrayDimensions, registry);
+            } else
+            {
+                arrayDimensions =
+                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                                attributeId, registry));
+                memoryTypeId = H5T_NATIVE_FLOAT;
+            }
+            final int len = MDArray.getLength(arrayDimensions);
+            final float[] data =
+                    baseReader.h5.readAttributeAsFloatArray(attributeId,
+                            memoryTypeId, len);
+            return new MDFloatArray(data, arrayDimensions);
+        } catch (IllegalArgumentException ex)
+        {
+            throw new HDF5JavaException(ex.getMessage());
+        }
     }
 }
