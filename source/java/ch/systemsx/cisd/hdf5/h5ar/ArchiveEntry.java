@@ -333,6 +333,14 @@ public final class ArchiveEntry
     }
 
     /**
+     * Returns <code>true</code>, if this archive entry has a CRC32 checksum stored.
+     */
+    public boolean hasChecksum()
+    {
+        return knowsChecksum;
+    }
+
+    /**
      * Returns the CRC32 checksum of this entry, or 0, if this information is not available or if
      * this entry is not a regular file.
      * 
