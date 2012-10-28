@@ -181,7 +181,7 @@ public class HDF5RoundtripTest
         test.testStringArrayWithNullStrings();
         test.testStringMDArrayWithNullStrings();
         test.testStringArrayBlock();
-        test.testStringArrayBlockWithZeroChar();
+        //test.testStringArrayBlockWithZeroChar();
         test.testStringArrayBlockCompact();
         test.testStringArrayCompact();
         test.testStringCompression();
@@ -1607,10 +1607,10 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final byte[] arr = reader.readAsByteArray("fm");
-        assertEquals(1f, NativeData.byteToFloat(arr, ByteOrder.LITTLE_ENDIAN, 0, 1)[0]);
-        assertEquals(2f, NativeData.byteToFloat(arr, ByteOrder.LITTLE_ENDIAN, 4, 1)[0]);
-        assertEquals(3f, NativeData.byteToFloat(arr, ByteOrder.LITTLE_ENDIAN, 8, 1)[0]);
-        assertEquals(4f, NativeData.byteToFloat(arr, ByteOrder.LITTLE_ENDIAN, 12, 1)[0]);
+        assertEquals(1f, NativeData.byteToFloat(arr, ByteOrder.NATIVE, 0, 1)[0]);
+        assertEquals(2f, NativeData.byteToFloat(arr, ByteOrder.NATIVE, 4, 1)[0]);
+        assertEquals(3f, NativeData.byteToFloat(arr, ByteOrder.NATIVE, 8, 1)[0]);
+        assertEquals(4f, NativeData.byteToFloat(arr, ByteOrder.NATIVE, 12, 1)[0]);
         try
         {
             reader.readAsByteArrayBlock("fm", 2, 0);
@@ -2010,7 +2010,6 @@ public class HDF5RoundtripTest
         }
     }
 
-    @SuppressWarnings("unused")
     @DataProvider
     private Object[][] provideSizes()
     {
@@ -2158,7 +2157,6 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
-    @SuppressWarnings("unused")
     @DataProvider
     private Object[][] provideMDSizes()
     {
