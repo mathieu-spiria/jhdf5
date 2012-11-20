@@ -33,6 +33,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * <b>See also:</b> ncsa.hdf.hdf5lib.HDFArray.
  */
 
+@SuppressWarnings("all")
 public class HDFNativeData {
 
     static {
@@ -391,7 +392,7 @@ public class HDFNativeData {
      */
     public synchronized static byte[] floatToByte(Float data) {
         return floatToByte(data.floatValue());
-    }
+    };
 
     /**
      * Convert a single long into an array of 8 bytes.
@@ -445,7 +446,7 @@ public class HDFNativeData {
      */
     public synchronized static Object byteToNumber(byte[] barray, Object obj)
             throws HDF5Exception {
-        Class<?> theClass = obj.getClass();
+        Class theClass = obj.getClass();
         String type = theClass.getName();
         Object retobj = null;
 

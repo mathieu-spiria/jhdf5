@@ -13,8 +13,10 @@
 
 package ncsa.hdf.hdf5lib;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Vector;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import ncsa.hdf.hdf5lib.callbacks.H5D_iterate_cb;
@@ -250,7 +252,7 @@ public class H5 implements java.io.Serializable {
      * 
      * Make sure to update the verions number when a different library is used.
      */
-    public final static int LIB_VERSION[] = { 1, 8, 8 };
+    public final static int LIB_VERSION[] = { 1, 8, 10 };
 
     public final static String H5PATH_PROPERTY_KEY = "ncsa.hdf.hdf5lib.H5.hdf5lib";
 
@@ -430,7 +432,7 @@ public synchronized static native int H5set_free_list_limits(
 public static int H5Aclose(int attr_id) throws HDF5LibraryException
 {
     if (attr_id < 0)
-        throw new HDF5LibraryException("Negative ID");
+        throw new HDF5LibraryException("Negative ID");;
     
     OPEN_IDS.removeElement(attr_id);
     return _H5Aclose(attr_id);
@@ -3419,47 +3421,57 @@ public synchronized static int H5Gget_obj_info_all(int loc_id, String name,
         String[] oname, int[] otype, int[] ltype, long[] ref, int indx_type)
         throws HDF5LibraryException, NullPointerException
 {
-    return H5Gget_obj_info_all(loc_id, name, oname, otype, ltype, null, ref, indx_type );
+    return H5Gget_obj_info_full(loc_id, name, oname, otype, ltype, null, ref, indx_type, -1);
 }
 
 public synchronized static int H5Gget_obj_info_all(int loc_id, String name,
         String[] oname, int[] otype, int[] ltype, long[] fno, long[] ref, int indx_type)
         throws HDF5LibraryException, NullPointerException
 {
+    return H5Gget_obj_info_full(loc_id, name, oname, otype, ltype, fno, ref, oname.length, indx_type, -1);
+}
+
+public synchronized static int H5Gget_obj_info_full(int loc_id, String name,
+        String[] oname, int[] otype, int[] ltype, long[] fno, long[] ref, int indx_type, int indx_order)
+        throws HDF5LibraryException, NullPointerException
+{
     if (oname == null) {
         throw new NullPointerException(
-                "H5Gget_obj_info_all(): name array is null");
+                "H5Gget_obj_info_full(): name array is null");
     }
 
     if (otype == null) {
         throw new NullPointerException(
-                "H5Gget_obj_info_all(): object type array is null");
+                "H5Gget_obj_info_full(): object type array is null");
     }
 
     if (oname.length == 0) {
         throw new HDF5LibraryException(
-                "H5Gget_obj_info_all(): array size is zero");
+                "H5Gget_obj_info_full(): array size is zero");
     }
 
     if (oname.length != otype.length) {
         throw new HDF5LibraryException(
-                "H5Gget_obj_info_all(): name and type array sizes are different");
+                "H5Gget_obj_info_full(): name and type array sizes are different");
     }
     
     if (ltype == null)
-    	ltype = new int[otype.length];
+        ltype = new int[otype.length];
 
     if (fno == null)
-    	fno = new long[ref.length];
+        fno = new long[ref.length];
     
     if (indx_type < 0)
-    	indx_type = HDF5Constants.H5_INDEX_NAME;
+        indx_type = HDF5Constants.H5_INDEX_NAME;
     
-    return H5Gget_obj_info_all(loc_id, name, oname, otype, ltype, fno, ref, oname.length, indx_type );
+    if (indx_order < 0)
+        indx_order = HDF5Constants.H5_ITER_INC;
+    
+    return H5Gget_obj_info_full(loc_id, name, oname, otype, ltype, fno, ref, oname.length, indx_type, indx_order);
 }
 
-private synchronized static native int H5Gget_obj_info_all(int loc_id,
-        String name, String[] oname, int[] otype, int[] ltype, long[] fno, long[] ref, int n, int indx_type)
+private synchronized static native int H5Gget_obj_info_full(int loc_id,
+        String name, String[] oname, int[] otype, int[] ltype, long[] fno, long[] ref, int n, int indx_type, int indx_order)
         throws HDF5LibraryException, NullPointerException;
 
 /**

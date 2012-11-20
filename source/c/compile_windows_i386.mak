@@ -8,8 +8,8 @@
 # Visual C++ directory, for example
 VCPPDIR=C:\Program Files\Microsoft Visual Studio 9.0\VC
 
-# Directory where JDK is installed (We require JDK 1.5 or above), for example
-JAVADIR=C:\Program Files\Java\jdk1.5.0_22
+# Directory where JDK is installed (We require JDK 1.6)
+JAVADIR=C:\Program Files\Java\jdk1.6.0_37
 
 # Common parent directory
 HDFPARENTDIR=C:\JHDF5
@@ -18,7 +18,7 @@ HDFPARENTDIR=C:\JHDF5
 HDFJAVADIR=$(HDFPARENTDIR)\jhdf5_src\
 
 # The directory where HDF5 has been compiled
-HDFDIR=$(HDFPARENTDIR)\hdf5\hdf5-1.8.10-pre1
+HDFDIR=$(HDFPARENTDIR)\hdf5\hdf5-1.8.10
 
 # The directory where HDF library is located
 HDFLIBDIR=$(HDFDIR)\proj\hdf5\Release
@@ -188,6 +188,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\h5aImp.obj" \
 	"$(INTDIR)\h5Constants.obj" \
 	"$(INTDIR)\h5dImp.obj" \
+	"$(INTDIR)\h5eImp.obj" \
 	"$(INTDIR)\h5fImp.obj" \
 	"$(INTDIR)\h5gImp.obj" \
 	"$(INTDIR)\h5iImp.obj" \
@@ -199,7 +200,8 @@ LINK32_OBJS= \
 	"$(INTDIR)\h5sImp.obj" \
 	"$(INTDIR)\h5tImp.obj" \
 	"$(INTDIR)\h5util.obj" \
-	"$(INTDIR)\h5zImp.obj"
+	"$(INTDIR)\h5zImp.obj" \
+	"$(INTDIR)\nativeData.obj"
 
 "$(OUTDIR)\jhdf5.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
     $(LINK32) @<<
@@ -322,6 +324,12 @@ SOURCE=$(SRCDIR2)\h5dImp.c
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
+SOURCE=$(SRCDIR2)\h5eImp.c
+
+"$(INTDIR)\h5eImp.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
 SOURCE=$(SRCDIR2)\h5fImp.c
 
 "$(INTDIR)\h5fImp.obj" : $(SOURCE) "$(INTDIR)"
@@ -394,6 +402,12 @@ SOURCE=$(SRCDIR2)\h5zImp.c
 	$(CPP) $(CPP_PROJ) $(SOURCE)
 
 
+SOURCE=$(SRCDIR2)\nativeData.c
+
+"$(INTDIR)\nativeData.obj" : $(SOURCE) "$(INTDIR)"
+	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
 
 CLEAN :
 	-@erase "$(INTDIR)\exceptionImpJHDF5.obj"
@@ -415,6 +429,7 @@ CLEAN :
 	-@erase "$(INTDIR)\h5aImp.obj"
 	-@erase "$(INTDIR)\h5Constants.obj"
 	-@erase "$(INTDIR)\h5dImp.obj"
+	-@erase "$(INTDIR)\h5eImp.obj"
 	-@erase "$(INTDIR)\h5fImp.obj"
 	-@erase "$(INTDIR)\h5gImp.obj"
 	-@erase "$(INTDIR)\h5iImp.obj"
@@ -427,6 +442,7 @@ CLEAN :
 	-@erase "$(INTDIR)\h5oImp.obj"
 	-@erase "$(INTDIR)\h5zImp.obj"
 	-@erase "$(INTDIR)\h5util.obj"
+	-@erase "$(INTDIR)\nativeData.obj"
 	-@erase "$(INTDIR)\vc90.idb"
 	-@erase "$(INTDIR)\jhdf5.exp"
 	-@erase "$(INTDIR)\jhdf5.lib"

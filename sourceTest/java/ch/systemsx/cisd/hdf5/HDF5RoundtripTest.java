@@ -2893,7 +2893,6 @@ public class HDF5RoundtripTest
         final String a = r.getStringAttributeFixedLength("/", "a");
         assertEquals("ghi", a);
         final String b = r.getStringAttributeFixedLength("/", "b");
-        System.err.println(b);
         assertEquals("jkl\0\0\0", b);
         r.close();
     }
@@ -3156,8 +3155,6 @@ public class HDF5RoundtripTest
         final String dataRead = reader.readString(dataSetName);
         final String attributeDataRead = reader.getStringAttribute(dataSetName, attributeName);
         assertEquals(uniCodeData, dataRead);
-        System.out.println(Arrays.toString(reader.getAttributeAsByteArray(dataSetName,
-                attributeName)));
         assertEquals(uniCodeAttributeData, attributeDataRead);
         reader.close();
     }

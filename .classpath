@@ -14,5 +14,6 @@
 	<classpathentry kind="lib" path="/libraries/jmock/jmock.jar"/>
 	<classpathentry kind="lib" path="/libraries/jmock/hamcrest/hamcrest-core.jar"/>
 	<classpathentry kind="lib" path="/libraries/jmock/hamcrest/hamcrest-library.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="output" path="targets/classes"/>
 </classpath>

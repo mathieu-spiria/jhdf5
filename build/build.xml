@@ -1,6 +1,6 @@
 <project name="jhdf5" default="dist" basedir="..">
 	<import file="../../build_resources/ant/build-common.xml" />
-	<project-classpath name="ecp" classes="${classes}" />
+	<project-classpath name="ecp" classes="${classes}:${lib}/junit4/junit.jar" />
 
 	<property name="mainfolder" value="cisd-${ant.project.name}" />
 	<property name="distfolder" value="${ant.project.name}" />
@@ -54,7 +54,12 @@
 				<include name="native/**/*.jnilib" />
 				<include name="native/**/*.dll" />
 			</fileset>
+			<fileset dir="${sources.test}/test/hdf5lib">
+				<include name="*.hdf" />
+			</fileset>
 			<zipfileset src="${lib}/testng/testng-jdk15.jar" />
+			<zipfileset src="${lib}/junit4/junit.jar" />
+			<zipfileset src="${lib}/jmock/hamcrest/hamcrest-core.jar" />
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar" />
 			<zipfileset src="${lib}/cisd-args4j/cisd-args4j.jar" />
 			<zipfileset src="${lib}/commons-lang/commons-lang.jar" />
@@ -259,7 +264,8 @@
 		</jar>
 	</target>
 
-	<target name="jar-all" depends="jar-complete, src-zip, examples-src-zip, jar-core, jar-tools, jar-platforms" />
+	<target name="jar-all"
+	        depends="jar-complete, src-zip, examples-src-zip, jar-core, jar-tools, jar-platforms" />
 
 	<target name="jar-platforms"
 	        depends="jar-linux-intel, jar-solaris-intel, jar-solaris-sparc, jar-macosx-intel, jar-windows-intel" />
@@ -451,20 +457,20 @@
 		         overview="overview.html"
 		         access="public">
 			<fileset dir="source/java" defaultexcludes="yes">
-			  <include name="ch/systemsx/cisd/hdf5/**/*.java"/>
-			  <include name="ncsa/hdf/hdf5lib/exceptions/**/*.java"/>
+				<include name="ch/systemsx/cisd/hdf5/**/*.java" />
+				<include name="ncsa/hdf/hdf5lib/exceptions/**/*.java" />
 				<exclude name="ch/systemsx/cisd/hdf5/hdf5lib/**/*.java" />
-			  <exclude name="ch/systemsx/cisd/hdf5/MatrixUtils.java"/>
-			  <exclude name="ch/systemsx/cisd/hdf5/StringUtils.java"/>
-			  <exclude name="ch/systemsx/cisd/hdf5/ReflectionUtils.java"/>
-			  <exclude name="ch/systemsx/cisd/hdf5/BitSetConversionUtils.java"/>
+				<exclude name="ch/systemsx/cisd/hdf5/MatrixUtils.java" />
+				<exclude name="ch/systemsx/cisd/hdf5/StringUtils.java" />
+				<exclude name="ch/systemsx/cisd/hdf5/ReflectionUtils.java" />
+				<exclude name="ch/systemsx/cisd/hdf5/BitSetConversionUtils.java" />
 			</fileset>
 			<fileset dir="${targets}/source-base" defaultexcludes="yes">
-			  <include name="ch/systemsx/cisd/base/mdarray/**/*.java"/>
+				<include name="ch/systemsx/cisd/base/mdarray/**/*.java" />
 			</fileset>
 		</javadoc>
 		<copy todir="${targets}/doc">
-			<fileset dir="${sources.examples}"/>
+			<fileset dir="${sources.examples}" />
 		</copy>
 		<copy file="${original.dist}/doc/JHDF5.pdf" todir="${targets}/doc" />
 	</target>
