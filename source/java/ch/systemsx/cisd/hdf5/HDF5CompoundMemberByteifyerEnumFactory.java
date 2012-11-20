@@ -42,6 +42,7 @@ import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
+    @Override
     public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
         if (memberInfoOrNull != null)
@@ -56,12 +57,14 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
         }
     }
 
+    @Override
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
             HDF5DataTypeVariant typeVariantOrNull)
     {
         return null;
     }
 
+    @Override
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
             final HDF5CompoundMemberMapping member,
             final HDF5CompoundMemberInformation compoundMemberInfoOrNull,

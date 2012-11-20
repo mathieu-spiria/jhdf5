@@ -21,11 +21,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.CRC32;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
@@ -68,6 +68,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
         this.groupCache = new GroupCache();
     }
 
+    @Override
     public boolean process(String dir, String path, LinkRecord link, IHDF5Reader reader,
             IdCache idCache, IErrorStrategy errorStrategy) throws IOException
     {
@@ -154,6 +155,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
         return true;
     }
 
+    @Override
     public void postProcessDirectory(String dir, String path, LinkRecord link, IHDF5Reader reader,
             IdCache idCache, IErrorStrategy errorStrategy) throws IOException, HDF5Exception
     {
@@ -255,21 +257,25 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
         }
     }
 
+    @Override
     public ArchiverException createException(String objectPath, String detailedMsg)
     {
         return new UnarchivingException(objectPath, detailedMsg);
     }
 
+    @Override
     public ArchiverException createException(String objectPath, HDF5Exception cause)
     {
         return new UnarchivingException(objectPath, cause);
     }
 
+    @Override
     public ArchiverException createException(String objectPath, RuntimeException cause)
     {
         return new UnarchivingException(objectPath, cause);
     }
 
+    @Override
     public ArchiverException createException(File file, IOException cause)
     {
         return new UnarchivingException(file, cause);

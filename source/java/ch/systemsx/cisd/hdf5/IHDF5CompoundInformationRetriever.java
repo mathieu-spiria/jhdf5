@@ -18,9 +18,9 @@ package ch.systemsx.cisd.hdf5;
 
 import java.util.List;
 
-import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 
 /**
  * An interface to get information about HDF5 compound data sets and types and map to map compound

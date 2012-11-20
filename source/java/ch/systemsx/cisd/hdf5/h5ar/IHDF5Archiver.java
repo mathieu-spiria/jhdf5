@@ -345,47 +345,63 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
 
     // Method overridden from IHDF5ArchiveReader, see there for javadoc.
 
+    @Override
     public IHDF5Archiver list(String fileOrDir, IArchiveEntryVisitor visitor);
 
+    @Override
     public IHDF5Archiver list(String fileOrDir, IArchiveEntryVisitor visitor, ListParameters params);
 
+    @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             IArchiveEntryVisitor visitor);
 
+    @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             IArchiveEntryVisitor visitor, VerifyParameters params);
 
+    @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive, IArchiveEntryVisitor visitor, VerifyParameters params);
 
+    @Override
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive, VerifyParameters params);
 
+    @Override
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive);
 
+    @Override
     public IHDF5Archiver extractFile(String path, OutputStream out) throws IOExceptionUnchecked;
 
+    @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory);
 
+    @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory, String path)
             throws IllegalStateException;
 
+    @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory, String path,
             IArchiveEntryVisitor visitor) throws IllegalStateException;
 
+    @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory, String path,
             ArchivingStrategy strategy, IArchiveEntryVisitor visitor) throws IllegalStateException;
 
+    @Override
     public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
             String rootPathInArchive);
     
+    @Override
     public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
             String rootPathInArchive, IArchiveEntryVisitor visitorOrNull);
 
+    @Override
     public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
             String rootPathInArchive, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull);
 
+    @Override
     public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory, String rootPathInArchive,
             String path, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull)
             throws IllegalStateException;

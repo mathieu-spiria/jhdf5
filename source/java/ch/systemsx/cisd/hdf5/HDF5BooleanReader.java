@@ -48,6 +48,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
     // Attributes
     // /////////////////////
 
+    @Override
     public boolean getBooleanAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
@@ -57,6 +58,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<Boolean> writeRunnable = new ICallableWithCleanUp<Boolean>()
             {
+                @Override
                 public Boolean call(ICleanUpRegistry registry)
                 {
                     final int objectId =
@@ -85,6 +87,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
     // Data Sets
     // /////////////////////
 
+    @Override
     public boolean readBoolean(final String objectPath) throws HDF5JavaException
     {
         assert objectPath != null;
@@ -92,6 +95,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<Boolean> writeRunnable = new ICallableWithCleanUp<Boolean>()
             {
+                @Override
                 public Boolean call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -112,6 +116,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
         return baseReader.runner.call(writeRunnable);
     }
 
+    @Override
     public BitSet readBitField(final String objectPath) throws HDF5DatatypeInterfaceException
     {
         baseReader.checkOpen();
@@ -124,6 +129,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
 
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
+                @Override
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -139,6 +145,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public BitSet readBitFieldBlock(String objectPath, int blockSize, long blockNumber)
     {
         return readBitFieldBlockWithOffset(objectPath, blockSize, blockSize * blockNumber);
@@ -152,6 +159,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
+                @Override
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -172,6 +180,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public BitSet readBitFieldBlockWithOffset(String objectPath, int blockSize, long offset)
     {
         baseReader.checkOpen();
@@ -179,6 +188,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
                 offset, false));
     }
 
+    @Override
     public boolean isBitSetInBitField(String objectPath, int bitIndex)
     {
         final int wordIndex = BitSetConversionUtils.getWordIndex(bitIndex);

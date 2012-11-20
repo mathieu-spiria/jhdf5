@@ -25,7 +25,7 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -50,6 +50,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
     // Attributes
     // /////////////////////
 
+    @Override
     public void setShortAttribute(final String objectPath, final String name, final short value)
     {
         assert objectPath != null;
@@ -60,6 +61,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         		new short[] { value });
     }
 
+    @Override
     public void setShortArrayAttribute(final String objectPath, final String name,
             final short[] value)
     {
@@ -70,6 +72,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int memoryTypeId =
@@ -83,6 +86,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.runner.call(setAttributeRunnable);
     }
 
+    @Override
     public void setShortMDArrayAttribute(final String objectPath, final String name,
             final MDShortArray value)
     {
@@ -93,6 +97,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int memoryTypeId =
@@ -109,6 +114,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.runner.call(addAttributeRunnable);
     }
 
+    @Override
     public void setShortMatrixAttribute(final String objectPath, final String name,
             final short[][] value)
     {
@@ -119,6 +125,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
     // Data Sets
     // /////////////////////
 
+    @Override
     public void writeShort(final String objectPath, final short value)
     {
         assert objectPath != null;
@@ -127,11 +134,13 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.writeScalar(objectPath, H5T_STD_I16LE, H5T_NATIVE_INT16, value);
     }
 
+    @Override
     public void writeShortArray(final String objectPath, final short[] data)
     {
         writeShortArray(objectPath, data, INT_NO_COMPRESSION);
     }
 
+    @Override
     public void writeShortArray(final String objectPath, final short[] data,
             final HDF5IntStorageFeatures features)
     {
@@ -140,6 +149,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -154,16 +164,19 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void createShortArray(final String objectPath, final int size)
     {
         createShortArray(objectPath, size, INT_NO_COMPRESSION);
     }
 
+    @Override
     public void createShortArray(final String objectPath, final long size, final int blockSize)
     {
         createShortArray(objectPath, size, blockSize, INT_NO_COMPRESSION);
     }
 
+    @Override
     public void createShortArray(final String objectPath, final int size,
             final HDF5IntStorageFeatures features)
     {
@@ -173,6 +186,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     if (features.requiresChunking())
@@ -191,6 +205,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.runner.call(createRunnable);
     }
 
+    @Override
     public void createShortArray(final String objectPath, final long size, final int blockSize,
             final HDF5IntStorageFeatures features)
     {
@@ -201,6 +216,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I16LE : H5T_STD_U16LE, 
@@ -212,12 +228,14 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.runner.call(createRunnable);
     }
 
+    @Override
     public void writeShortArrayBlock(final String objectPath, final short[] data,
             final long blockNumber)
     {
         writeShortArrayBlockWithOffset(objectPath, data, data.length, data.length * blockNumber);
     }
 
+    @Override
     public void writeShortArrayBlockWithOffset(final String objectPath, final short[] data,
             final int dataSize, final long offset)
     {
@@ -227,6 +245,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] blockDimensions = new long[]
@@ -257,11 +276,13 @@ class HDF5ShortWriter implements IHDF5ShortWriter
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      */
+    @Override
     public void writeShortMatrix(final String objectPath, final short[][] data)
     {
         writeShortMatrix(objectPath, data, INT_NO_COMPRESSION);
     }
 
+    @Override
     public void writeShortMatrix(final String objectPath, final short[][] data, 
             final HDF5IntStorageFeatures features)
     {
@@ -272,18 +293,21 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         writeShortMDArray(objectPath, new MDShortArray(data), features);
     }
 
+    @Override
     public void createShortMatrix(final String objectPath, final int blockSizeX, 
             final int blockSizeY)
     {
         createShortMatrix(objectPath, 0, 0, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
     }
 
+    @Override
     public void createShortMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY)
     {
         createShortMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
     }
 
+    @Override
     public void createShortMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY, final HDF5IntStorageFeatures features)
     {
@@ -296,6 +320,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] dimensions = new long[]
@@ -311,6 +336,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.runner.call(createRunnable);
     }
 
+    @Override
     public void writeShortMatrixBlock(final String objectPath, final short[][] data,
             final long blockNumberX, final long blockNumberY)
     {
@@ -321,6 +347,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
             { blockNumberX, blockNumberY });
     }
 
+    @Override
     public void writeShortMatrixBlockWithOffset(final String objectPath, final short[][] data,
             final long offsetX, final long offsetY)
     {
@@ -332,6 +359,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
             { offsetX, offsetY });
     }
 
+    @Override
     public void writeShortMatrixBlockWithOffset(final String objectPath, final short[][] data,
             final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
     {
@@ -343,11 +371,13 @@ class HDF5ShortWriter implements IHDF5ShortWriter
             { offsetX, offsetY });
     }
 
+    @Override
     public void writeShortMDArray(final String objectPath, final MDShortArray data)
     {
         writeShortMDArray(objectPath, data, INT_NO_COMPRESSION);
     }
 
+    @Override
     public void writeShortMDArray(final String objectPath, final MDShortArray data,
             final HDF5IntStorageFeatures features)
     {
@@ -357,6 +387,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -370,17 +401,20 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void createShortMDArray(final String objectPath, final int[] dimensions)
     {
         createShortMDArray(objectPath, dimensions, INT_NO_COMPRESSION);
     }
 
+    @Override
     public void createShortMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions)
     {
         createShortMDArray(objectPath, dimensions, blockDimensions, INT_NO_COMPRESSION);
     }
 
+    @Override
     public void createShortMDArray(final String objectPath, final int[] dimensions,
             final HDF5IntStorageFeatures features)
     {
@@ -390,6 +424,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     if (features.requiresChunking())
@@ -397,11 +432,11 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                         final long[] nullDimensions = new long[dimensions.length];
                         baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I16LE : H5T_STD_U16LE, 
                                 features,
-                                nullDimensions, MDArray.toLong(dimensions), 2, registry);
+                                nullDimensions, MDAbstractArray.toLong(dimensions), 2, registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I16LE : H5T_STD_U16LE, 
-                                features, MDArray.toLong(dimensions), null, 2, registry);
+                                features, MDAbstractArray.toLong(dimensions), null, 2, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -409,6 +444,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.runner.call(createRunnable);
     }
 
+    @Override
     public void createShortMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions, final HDF5IntStorageFeatures features)
     {
@@ -419,17 +455,19 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I16LE : H5T_STD_U16LE, 
                             features, dimensions, 
-                            MDArray.toLong(blockDimensions), 2, registry);
+                            MDAbstractArray.toLong(blockDimensions), 2, registry);
                     return null; // Nothing to return.
                 }
             };
         baseWriter.runner.call(createRunnable);
     }
 
+    @Override
     public void writeShortMDArrayBlock(final String objectPath, final MDShortArray data,
             final long[] blockNumber)
     {
@@ -444,6 +482,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         writeShortMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
+    @Override
     public void writeShortMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
             final long[] offset)
     {
@@ -454,6 +493,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] dimensions = data.longDimensions();
@@ -479,6 +519,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void writeShortMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
             final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
     {
@@ -489,11 +530,12 @@ class HDF5ShortWriter implements IHDF5ShortWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] memoryDimensions = data.longDimensions();
                     assert memoryDimensions.length == offset.length;
-                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    final long[] longBlockDimensions = MDAbstractArray.toLong(blockDimensions);
                     assert longBlockDimensions.length == offset.length;
                     final long[] dataSetDimensions = new long[blockDimensions.length];
                     for (int i = 0; i < offset.length; ++i)
@@ -508,7 +550,7 @@ class HDF5ShortWriter implements IHDF5ShortWriter
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
                     final int memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset),
                             longBlockDimensions);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT16, memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data.getAsFlatArray());

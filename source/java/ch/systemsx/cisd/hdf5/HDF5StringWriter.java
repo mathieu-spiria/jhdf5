@@ -27,6 +27,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseWriter.StringArrayBuffer;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -55,6 +56,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     // Attributes
     // /////////////////////
 
+    @Override
     public void setStringAttributeVariableLength(final String objectPath, final String name,
             final String value)
     {
@@ -65,6 +67,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
+                        @Override
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -78,11 +81,13 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(addAttributeRunnable);
     }
 
+    @Override
     public void setStringAttribute(final String objectPath, final String name, final String value)
     {
         setStringAttribute(objectPath, name, value, value.length(), true);
     }
 
+    @Override
     public void setStringAttribute(final String objectPath, final String name, final String value,
             final int maxLength)
     {
@@ -100,6 +105,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
+                        @Override
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -113,12 +119,14 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(addAttributeRunnable);
     }
 
+    @Override
     public void setStringArrayAttribute(final String objectPath, final String name,
             final String[] value)
     {
         setStringArrayAttribute(objectPath, name, value, -1, true);
     }
 
+    @Override
     public void setStringArrayAttribute(final String objectPath, final String name,
             final String[] value, final int maxLength)
     {
@@ -135,6 +143,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int objectId =
@@ -147,12 +156,14 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(setAttributeRunnable);
     }
 
+    @Override
     public void setStringMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> value)
     {
         setStringMDArrayAttribute(objectPath, name, value, -1, true);
     }
 
+    @Override
     public void setStringMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> value, final int maxLength)
     {
@@ -169,6 +180,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int objectId =
@@ -185,23 +197,27 @@ public class HDF5StringWriter implements IHDF5StringWriter
     // Data Sets
     // /////////////////////
 
+    @Override
     public void writeString(final String objectPath, final String data, final int maxLength)
     {
         writeString(objectPath, data, maxLength, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void writeString(final String objectPath, final String data)
     {
         writeString(objectPath, data, data.length(),
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void writeString(final String objectPath, final String data,
             final HDF5GenericStorageFeatures features)
     {
         writeString(objectPath, data, data.length(), features);
     }
 
+    @Override
     public void writeString(final String objectPath, final String data, final int maxLength,
             final HDF5GenericStorageFeatures features)
     {
@@ -219,6 +235,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int maxLengthNonZero = (maxLength == 0) ? 1 : maxLength;
@@ -296,6 +313,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 stringLength, saveExplicitLength, registry);
     }
 
+    @Override
     public void writeStringArray(final String objectPath, final String[] data,
             final HDF5GenericStorageFeatures features)
     {
@@ -305,6 +323,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         writeStringArray(objectPath, data, getMaxLength(data), true, features, false);
     }
 
+    @Override
     public void writeStringArray(final String objectPath, final String[] data)
     {
         assert objectPath != null;
@@ -314,6 +333,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, false);
     }
 
+    @Override
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength)
     {
         writeStringArray(objectPath, data, maxLength, false,
@@ -330,6 +350,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         return maxLength;
     }
 
+    @Override
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength,
             final HDF5GenericStorageFeatures features) throws HDF5JavaException
     {
@@ -350,6 +371,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     if (variableLength)
@@ -400,17 +422,20 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 dimensions, stringLengths, saveExplicitLength, registry);
     }
 
+    @Override
     public void createStringArray(final String objectPath, final int maxLength, final int size)
     {
         createStringArray(objectPath, maxLength, size, GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void createStringArray(final String objectPath, final int maxLength, final long size,
             final int blockSize)
     {
         createStringArray(objectPath, maxLength, size, blockSize, GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void createStringArray(final String objectPath, final int maxLength, final int size,
             final HDF5GenericStorageFeatures features)
     {
@@ -428,6 +453,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int elementSize;
@@ -459,6 +485,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void createStringArray(final String objectPath, final int maxLength, final long size,
             final int blockSize, final HDF5GenericStorageFeatures features)
     {
@@ -477,6 +504,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int elementSize;
@@ -501,6 +529,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void writeStringArrayBlock(final String objectPath, final String[] data,
             final long blockNumber)
     {
@@ -508,6 +537,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         writeStringArrayBlockWithOffset(objectPath, data, data.length, data.length * blockNumber);
     }
 
+    @Override
     public void writeStringArrayBlockWithOffset(final String objectPath, final String[] data,
             final int dataSize, final long offset)
     {
@@ -517,6 +547,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] blockDimensions = new long[]
@@ -550,6 +581,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void writeStringMDArray(final String objectPath, final MDArray<String> data)
             throws HDF5JavaException
     {
@@ -558,6 +590,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     // TODO: add this method to the interface
+    @Override
     public void writeStringMDArray(final String objectPath, final MDArray<String> data,
             final HDF5GenericStorageFeatures features) throws HDF5JavaException
     {
@@ -565,6 +598,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 false);
     }
 
+    @Override
     public void writeStringMDArray(final String objectPath, final MDArray<String> data,
             final int maxLength) throws HDF5JavaException
     {
@@ -572,6 +606,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void writeStringMDArray(final String objectPath, final MDArray<String> data,
             final int maxLength, final HDF5GenericStorageFeatures features)
             throws HDF5JavaException
@@ -592,6 +627,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     if (variableLength)
@@ -630,18 +666,21 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void createStringMDArray(final String objectPath, final int maxLength,
             final int[] dimensions)
     {
         createStringMDArray(objectPath, maxLength, dimensions, GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void createStringMDArray(final String objectPath, final int maxLength,
             final long[] dimensions, final int[] blockSize)
     {
         createStringMDArray(objectPath, maxLength, dimensions, blockSize, GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void createStringMDArray(final String objectPath, final int maxLength,
             final int[] dimensions, final HDF5GenericStorageFeatures features)
     {
@@ -660,6 +699,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int elementSize;
@@ -678,11 +718,11 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     if (features.requiresChunking())
                     {
                         baseWriter.createDataSet(objectPath, stringDataTypeId, features, new long[]
-                            { 0 }, MDArray.toLong(dimensions), maxLength, registry);
+                            { 0 }, MDAbstractArray.toLong(dimensions), maxLength, registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, stringDataTypeId, features,
-                                MDArray.toLong(dimensions), null, maxLength, registry);
+                                MDAbstractArray.toLong(dimensions), null, maxLength, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -690,6 +730,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void createStringMDArray(final String objectPath, final int maxLength,
             final long[] dimensions, final int[] blockSize,
             final HDF5GenericStorageFeatures features)
@@ -709,6 +750,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int elementSize;
@@ -725,13 +767,14 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
                     baseWriter.createDataSet(objectPath, stringDataTypeId, features, dimensions,
-                            MDArray.toLong(blockSize), elementSize, registry);
+                            MDAbstractArray.toLong(blockSize), elementSize, registry);
                     return null; // Nothing to return.
                 }
             };
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void writeStringMDArrayBlock(final String objectPath, final MDArray<String> data,
             final long[] blockNumber)
     {
@@ -747,6 +790,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         writeStringMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
+    @Override
     public void writeStringMDArrayBlockWithOffset(final String objectPath,
             final MDArray<String> data, final long[] offset)
     {
@@ -757,6 +801,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] dimensions = data.longDimensions();
@@ -793,6 +838,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void writeStringVariableLength(final String objectPath, final String data)
     {
         assert objectPath != null;
@@ -801,6 +847,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int dataSetId;
@@ -824,23 +871,27 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void writeStringVariableLengthArray(final String objectPath, final String[] data)
     {
         writeStringVariableLengthArray(objectPath, data, GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void writeStringVariableLengthArray(final String objectPath, final String[] data,
             final HDF5GenericStorageFeatures features)
     {
         writeStringArray(objectPath, data, -1, false, features, true);
     }
 
+    @Override
     public void createStringVariableLengthArray(final String objectPath, final int size)
     {
         createStringVariableLengthArray(objectPath, size,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void createStringVariableLengthArray(final String objectPath, final long size,
             final int blockSize) throws HDF5JavaException
     {
@@ -848,41 +899,48 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void createStringVariableLengthArray(final String objectPath, final long size,
             final int blockSize, final HDF5GenericStorageFeatures features)
     {
         createStringArray(objectPath, -1, size, blockSize, features, true);
     }
 
+    @Override
     public void createStringVariableLengthArray(final String objectPath, final int size,
             final HDF5GenericStorageFeatures features)
     {
         createStringArray(objectPath, -1, size, features, true);
     }
 
+    @Override
     public void createStringVariableLengthMDArray(final String objectPath, final int[] dimensions,
             final HDF5GenericStorageFeatures features)
     {
         createStringMDArray(objectPath, -1, dimensions, features, true);
     }
 
+    @Override
     public void createStringVariableLengthMDArray(final String objectPath, final int[] dimensions)
     {
         createStringMDArray(objectPath, -1, dimensions, GENERIC_NO_COMPRESSION, true);
     }
 
+    @Override
     public void createStringVariableLengthMDArray(final String objectPath, final long[] dimensions,
             final int[] blockSize, final HDF5GenericStorageFeatures features)
     {
         createStringMDArray(objectPath, -1, dimensions, blockSize, features, true);
     }
 
+    @Override
     public void createStringVariableLengthMDArray(final String objectPath, final long[] dimensions,
             final int[] blockSize)
     {
         createStringMDArray(objectPath, -1, dimensions, blockSize, GENERIC_NO_COMPRESSION, true);
     }
 
+    @Override
     public void writeStringVariableLengthMDArray(final String objectPath,
             final MDArray<String> data, final HDF5GenericStorageFeatures features)
     {
@@ -892,13 +950,14 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Object> writeRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int pointerSize = 8; // 64bit pointers
                     final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
-                                    MDArray.toLong(data.dimensions()), pointerSize, features,
+                                    MDAbstractArray.toLong(data.dimensions()), pointerSize, features,
                                     registry);
                     baseWriter.writeStringVL(dataSetId, data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -907,6 +966,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void writeStringVariableLengthMDArray(final String objectPath, final MDArray<String> data)
     {
         writeStringVariableLengthMDArray(objectPath, data, GENERIC_NO_COMPRESSION);

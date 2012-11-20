@@ -44,12 +44,14 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
         this.hdf5File = hdf5File.getAbsoluteFile();
     }
 
+    @Override
     public boolean platformSupportsNumericConversions()
     {
         // Note: code in here any known exceptions of platforms not supporting numeric conversions.
         return true;
     }
 
+    @Override
     public HDF5ReaderConfigurator performNumericConversions()
     {
         if (platformSupportsNumericConversions())
@@ -59,18 +61,21 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
         return this;
     }
 
+    @Override
     public HDF5ReaderConfigurator useUTF8CharacterEncoding()
     {
         this.useUTF8CharEncoding = true;
         return this;
     }
 
+    @Override
     public HDF5ReaderConfigurator noAutoDereference()
     {
         this.autoDereference = false;
         return this;
     }
     
+    @Override
     public IHDF5Reader reader()
     {
         if (readerWriterOrNull == null)

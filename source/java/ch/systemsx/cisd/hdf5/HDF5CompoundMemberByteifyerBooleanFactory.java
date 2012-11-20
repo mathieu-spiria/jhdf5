@@ -16,10 +16,17 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.*;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getArray;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getList;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getMap;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.putMap;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setArray;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setList;
 
 import java.lang.reflect.Field;
 
+import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
+import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
@@ -32,6 +39,7 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
+    @Override
     public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
         if (memberInfoOrNull != null)
@@ -45,12 +53,14 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
         }
     }
 
+    @Override
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
             HDF5DataTypeVariant typeVariantOrNull)
     {
         return null;
     }
 
+    @Override
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
             final HDF5CompoundMemberMapping member,
             final HDF5CompoundMemberInformation compoundMemberInfoOrNull,

@@ -42,6 +42,7 @@ class DirectoryIndexProvider implements IDirectoryIndexProvider
         this.errorStrategy = errorStrategy;
     }
 
+    @Override
     public IDirectoryIndex get(String normalizedGroupPath, boolean withLinkTargets)
     {
         final String nonEmptyGroupPath =
@@ -58,11 +59,13 @@ class DirectoryIndexProvider implements IDirectoryIndexProvider
         return index;
     }
 
+    @Override
     public IErrorStrategy getErrorStrategy()
     {
         return errorStrategy;
     }
 
+    @Override
     public void close() throws IOExceptionUnchecked
     {
         IOExceptionUnchecked exeptionOrNull = null;

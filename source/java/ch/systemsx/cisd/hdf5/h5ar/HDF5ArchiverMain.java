@@ -93,11 +93,13 @@ public class HDF5ArchiverMain
 
     private final static IErrorStrategy ERROR_STRATEGY_CONTINUE = new IErrorStrategy()
         {
+            @Override
             public void dealWithError(Throwable th) throws ArchiverException
             {
                 System.err.println(th.getMessage());
             }
 
+            @Override
             public void warning(String message)
             {
                 System.err.println(message);
@@ -370,6 +372,7 @@ public class HDF5ArchiverMain
             this.suppressDirectoryEntries = suppressDirectoryEntries;
         }
 
+        @Override
         public void visit(ArchiveEntry entry)
         {
             if (suppressDirectoryEntries && entry.isDirectory())

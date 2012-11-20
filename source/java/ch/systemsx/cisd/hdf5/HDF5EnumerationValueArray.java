@@ -578,22 +578,26 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     // Iterable
     //
 
+    @Override
     public Iterator<String> iterator()
     {
         return new Iterator<String>()
             {
                 private int index = 0;
 
+                @Override
                 public boolean hasNext()
                 {
                     return index < length;
                 }
 
+                @Override
                 public String next()
                 {
                     return getValue(index++);
                 }
 
+                @Override
                 public void remove() throws UnsupportedOperationException
                 {
                     throw new UnsupportedOperationException();

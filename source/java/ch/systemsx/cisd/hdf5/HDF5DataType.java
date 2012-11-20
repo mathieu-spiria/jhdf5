@@ -46,6 +46,7 @@ public abstract class HDF5DataType
         this.baseReader = baseReader;
         baseReader.fileRegistry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     HDF5DataType.this.fileId = -1;

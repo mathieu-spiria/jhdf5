@@ -57,6 +57,7 @@ interface IDirectoryIndex extends Iterable<LinkRecord>, Closeable, Flushable
      */
     public boolean hasLinkTargets();
 
+    @Override
     public Iterator<LinkRecord> iterator();
 
     /**
@@ -64,6 +65,7 @@ interface IDirectoryIndex extends Iterable<LinkRecord>, Closeable, Flushable
      * <p>
      * Works on the list data structure.
      */
+    @Override
     public void flush();
 
     /**
@@ -94,6 +96,7 @@ interface IDirectoryIndex extends Iterable<LinkRecord>, Closeable, Flushable
     
     public boolean removeFlushable(Flushable flushable);
     
+    @Override
     public void close() throws IOExceptionUnchecked;
 
 }

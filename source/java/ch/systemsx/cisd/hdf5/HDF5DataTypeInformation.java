@@ -18,7 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import org.apache.commons.lang.ObjectUtils;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 
 /**
  * A class that holds relevant information about a data type.
@@ -225,7 +225,7 @@ public final class HDF5DataTypeInformation
         this.dataClass = dataClass;
         this.elementSize = elementSize;
         this.dimensions = dimensions;
-        this.numberOfElements = MDArray.getLength(dimensions);
+        this.numberOfElements = MDAbstractArray.getLength(dimensions);
         this.encoding = encoding;
         this.opaqueTagOrNull = opaqueTagOrNull;
         this.options = options;
@@ -297,7 +297,7 @@ public final class HDF5DataTypeInformation
     void setDimensions(int[] dimensions)
     {
         this.dimensions = dimensions;
-        this.numberOfElements = MDArray.getLength(dimensions);
+        this.numberOfElements = MDAbstractArray.getLength(dimensions);
     }
 
     /**

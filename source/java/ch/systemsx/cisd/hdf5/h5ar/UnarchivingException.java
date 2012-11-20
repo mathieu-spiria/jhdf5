@@ -19,9 +19,9 @@ package ch.systemsx.cisd.hdf5.h5ar;
 import java.io.File;
 import java.io.IOException;
 
-import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
+
+import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 
 /**
  * Exception thrown when unarchiving a file / directory fails.

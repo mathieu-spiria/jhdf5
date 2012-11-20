@@ -25,6 +25,7 @@ public interface IArchiveEntryVisitor
 {
     public final static IArchiveEntryVisitor DEFAULT_VISITOR = new IArchiveEntryVisitor()
     {
+        @Override
         public void visit(ArchiveEntry entry)
         {
             System.out.println(entry.describeLink());
@@ -33,6 +34,7 @@ public interface IArchiveEntryVisitor
 
     public final static IArchiveEntryVisitor NONVERBOSE_VISITOR = new IArchiveEntryVisitor()
     {
+        @Override
         public void visit(ArchiveEntry entry)
         {
             System.out.println(entry.describeLink(false));

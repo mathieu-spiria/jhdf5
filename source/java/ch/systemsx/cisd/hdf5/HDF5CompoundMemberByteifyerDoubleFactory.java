@@ -90,6 +90,7 @@ class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMemberByt
         }
     }
 
+    @Override
     public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
         final Rank rankOrNull = classToRankMap.get(clazz);
@@ -112,12 +113,14 @@ class HDF5CompoundMemberByteifyerDoubleFactory implements IHDF5CompoundMemberByt
         }
     }
 
+    @Override
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
             HDF5DataTypeVariant typeVariantOrNull)
     {
         return null;
     }
 
+    @Override
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
             HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull,

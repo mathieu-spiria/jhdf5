@@ -44,11 +44,13 @@ public class HDF5GenericReader implements IHDF5GenericReader
         this.baseReader = baseReader;
     }
 
+    @Override
     public String tryGetOpaqueTag(final String objectPath)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<String> readTagCallable = new ICallableWithCleanUp<String>()
             {
+                @Override
                 public String call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -60,12 +62,14 @@ public class HDF5GenericReader implements IHDF5GenericReader
         return baseReader.runner.call(readTagCallable);
     }
 
+    @Override
     public HDF5OpaqueType tryGetOpaqueType(final String objectPath)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5OpaqueType> readTagCallable =
                 new ICallableWithCleanUp<HDF5OpaqueType>()
                     {
+                        @Override
                         public HDF5OpaqueType call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
@@ -89,11 +93,13 @@ public class HDF5GenericReader implements IHDF5GenericReader
         return baseReader.runner.call(readTagCallable);
     }
 
+    @Override
     public byte[] readAsByteArray(final String objectPath)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
+                @Override
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -137,11 +143,13 @@ public class HDF5GenericReader implements IHDF5GenericReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public byte[] getAttributeAsByteArray(final String objectPath, final String attributeName)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
+                @Override
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int objectId =
@@ -152,12 +160,14 @@ public class HDF5GenericReader implements IHDF5GenericReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public byte[] readAsByteArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber) throws HDF5JavaException
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
+                @Override
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -178,12 +188,14 @@ public class HDF5GenericReader implements IHDF5GenericReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public byte[] readAsByteArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset) throws HDF5JavaException
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
+                @Override
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -203,6 +215,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public int readAsByteArrayToBlockWithOffset(final String objectPath, final byte[] buffer,
             final int blockSize, final long offset, final int memoryOffset)
             throws HDF5JavaException
@@ -214,6 +227,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<Integer> readCallable = new ICallableWithCleanUp<Integer>()
             {
+                @Override
                 public Integer call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -238,6 +252,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public Iterable<HDF5DataBlock<byte[]>> getAsByteArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
@@ -246,6 +261,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
 
         return new Iterable<HDF5DataBlock<byte[]>>()
             {
+                @Override
                 public Iterator<HDF5DataBlock<byte[]>> iterator()
                 {
                     return new Iterator<HDF5DataBlock<byte[]>>()
@@ -253,11 +269,13 @@ public class HDF5GenericReader implements IHDF5GenericReader
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5DataBlock<byte[]> next()
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
@@ -268,6 +286,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
                                         offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();

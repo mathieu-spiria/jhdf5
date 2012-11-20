@@ -70,6 +70,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * Closes this object and the file referenced by this object. This object must not be used after
      * being closed. Calling this method for a second time is a no-op.
      */
+    @Override
     public void close();
 
     /**
@@ -123,6 +124,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * If <var>objectPath</var> is a symbolic link, the method will return <code>true</code> if the
      * link target exists, that is, this method will follow symbolic links.
      */
+    @Override
     public boolean exists(final String objectPath);
 
     /**
@@ -144,6 +146,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * method will return <code>true</code> if the link target of the symbolic link is a group, that
      * is, this method will follow symbolic links.
      */
+    @Override
     public boolean isGroup(final String objectPath);
 
     /**
@@ -263,6 +266,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * @param dataSetPath The name (including path information) of the data set to return
      *            information about.
      */
+    @Override
     public HDF5DataSetInformation getDataSetInformation(final String dataSetPath);
 
     /**
@@ -321,6 +325,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * @param groupPath The path of the group to get the members for.
      * @throws IllegalArgumentException If <var>groupPath</var> is not a group.
      */
+    @Override
     public List<String> getGroupMembers(final String groupPath);
 
     /**

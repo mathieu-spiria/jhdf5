@@ -41,12 +41,14 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
         this.baseWriter = baseWriter;
     }
 
+    @Override
     public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data)
     {
         writeOpaqueByteArray(objectPath, tag, data,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data,
             final HDF5GenericStorageFeatures features)
     {
@@ -57,6 +59,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataTypeId = getOrCreateOpaqueTypeId(tag);
@@ -70,12 +73,14 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, int size)
     {
         return createOpaqueByteArray(objectPath, tag, size,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
             final long size, final int blockSize)
     {
@@ -83,6 +88,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
             final int size, final HDF5GenericStorageFeatures features)
     {
@@ -94,6 +100,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
         final int dataTypeId = getOrCreateOpaqueTypeId(tag);
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     if (features.requiresChunking())
@@ -113,6 +120,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
         return new HDF5OpaqueType(baseWriter.fileId, dataTypeId, tag, baseWriter);
     }
 
+    @Override
     public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
             final long size, final int blockSize, final HDF5GenericStorageFeatures features)
     {
@@ -125,6 +133,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
         final int dataTypeId = getOrCreateOpaqueTypeId(tag);
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, dataTypeId, features, new long[]
@@ -137,6 +146,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
         return new HDF5OpaqueType(baseWriter.fileId, dataTypeId, tag, baseWriter);
     }
 
+    @Override
     public void writeOpaqueByteArrayBlock(final String objectPath, final HDF5OpaqueType dataType,
             final byte[] data, final long blockNumber)
     {
@@ -148,6 +158,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
         dataType.check(baseWriter.fileId);
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] blockDimensions = new long[]
@@ -171,6 +182,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void writeOpaqueByteArrayBlockWithOffset(final String objectPath,
             final HDF5OpaqueType dataType, final byte[] data, final int dataSize, final long offset)
     {
@@ -182,6 +194,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
         dataType.check(baseWriter.fileId);
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] blockDimensions = new long[]

@@ -50,36 +50,42 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
         super(hdf5File);
     }
 
+    @Override
     public HDF5WriterConfigurator overwrite()
     {
         this.overwriteFile = true;
         return this;
     }
 
+    @Override
     public HDF5WriterConfigurator keepDataSetsIfTheyExist()
     {
         this.keepDataSetIfExists = true;
         return this;
     }
 
+    @Override
     public HDF5WriterConfigurator dontUseExtendableDataTypes()
     {
         this.useExtentableDataTypes = false;
         return this;
     }
 
+    @Override
     public HDF5WriterConfigurator fileFormat(FileFormat newFileFormat)
     {
         this.fileFormat = newFileFormat;
         return this;
     }
 
+    @Override
     public HDF5WriterConfigurator syncMode(SyncMode newSyncMode)
     {
         this.syncMode = newSyncMode;
         return this;
     }
 
+    @Override
     public IHDF5WriterConfigurator houseKeepingNameSuffix(@SuppressWarnings("hiding")
     String houseKeepingNameSuffix)
     {
@@ -106,6 +112,7 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
         return (HDF5WriterConfigurator) super.noAutoDereference();
     }
     
+    @Override
     public IHDF5Writer writer()
     {
         if (readerWriterOrNull == null)

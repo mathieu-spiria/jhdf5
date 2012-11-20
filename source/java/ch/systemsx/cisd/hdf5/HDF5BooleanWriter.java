@@ -49,6 +49,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
     // Attributes
     // /////////////////////
 
+    @Override
     public void setBooleanAttribute(final String objectPath, final String name, final boolean value)
     {
         baseWriter.checkOpen();
@@ -61,6 +62,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
     // Data Sets
     // /////////////////////
 
+    @Override
     public void writeBoolean(final String objectPath, final boolean value)
     {
         baseWriter.checkOpen();
@@ -68,11 +70,13 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
                 baseWriter.booleanDataTypeId, HDFNativeData.byteToByte((byte) (value ? 1 : 0)));
     }
 
+    @Override
     public void writeBitField(final String objectPath, final BitSet data)
     {
         writeBitField(objectPath, data, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
+    @Override
     public void writeBitField(final String objectPath, final BitSet data,
             final HDF5GenericStorageFeatures features)
     {
@@ -82,6 +86,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int longBytes = 8;
@@ -99,17 +104,20 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void createBitField(String objectPath, int size)
     {
         createBitField(objectPath, size, INT_NO_COMPRESSION);
 
     }
 
+    @Override
     public void createBitField(String objectPath, long size, int blockSize)
     {
         createBitField(objectPath, size, blockSize, INT_NO_COMPRESSION);
     }
 
+    @Override
     public void createBitField(final String objectPath, final int size,
             final HDF5IntStorageFeatures features)
     {
@@ -119,6 +127,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     if (features.requiresChunking())
@@ -138,6 +147,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
         baseWriter.runner.call(createRunnable);
     }
 
+    @Override
     public void createBitField(final String objectPath, final long size, final int blockSize,
             final HDF5IntStorageFeatures features)
     {
@@ -148,6 +158,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, H5T_STD_B64LE, features, new long[]
@@ -159,11 +170,13 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
         baseWriter.runner.call(createRunnable);
     }
 
+    @Override
     public void writeBitFieldBlock(String objectPath, BitSet data, int dataSize, long blockNumber)
     {
         writeBitFieldBlockWithOffset(objectPath, data, dataSize, dataSize * blockNumber);
     }
 
+    @Override
     public void writeBitFieldBlockWithOffset(final String objectPath, final BitSet data,
             final int dataSize, final long offset)
     {
@@ -173,6 +186,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] blockDimensions = new long[]

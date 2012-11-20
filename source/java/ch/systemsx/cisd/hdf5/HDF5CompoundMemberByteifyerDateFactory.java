@@ -41,6 +41,7 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
+    @Override
     public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
         if (memberInfoOrNull != null)
@@ -53,6 +54,7 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
         }
     }
 
+    @Override
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
             HDF5DataTypeVariant typeVariantOrNull)
     {
@@ -68,6 +70,7 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
         }
     }
 
+    @Override
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
             HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull,

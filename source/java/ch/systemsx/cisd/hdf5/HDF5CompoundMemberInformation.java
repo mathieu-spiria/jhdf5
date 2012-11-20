@@ -233,6 +233,7 @@ public final class HDF5CompoundMemberInformation implements
     // Comparable<HDF5CompoundMemberInformation>
     //
 
+    @Override
     public int compareTo(HDF5CompoundMemberInformation o)
     {
         return memberName.compareTo(o.memberName);

@@ -137,6 +137,7 @@ public enum HDF5DataClass
             this.javaTypeMDArrayOrNull = javaTypeMDArrayOrNull;
         }
 
+        @Override
         public Class<?> tryGetJavaType(int rank, int elementSize,
                 HDF5DataTypeVariant typeVariantOrNull)
         {
@@ -158,6 +159,7 @@ public enum HDF5DataClass
 
     private static class IntJavaTypeProvider implements IHDF5JavaTypeProvider
     {
+        @Override
         public Class<?> tryGetJavaType(int rank, int elementSize,
                 HDF5DataTypeVariant typeVariantOrNull)
         {
@@ -227,6 +229,7 @@ public enum HDF5DataClass
 
     private static class FloatJavaTypeProvider implements IHDF5JavaTypeProvider
     {
+        @Override
         public Class<?> tryGetJavaType(int rank, int elementSize,
                 HDF5DataTypeVariant typeVariantOrNull)
         {

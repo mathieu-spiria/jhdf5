@@ -49,6 +49,7 @@ public class CleanUpRegistry implements ICleanUpRegistry
             };
     }
     
+    @Override
     public void registerCleanUp(Runnable cleanUp)
     {
         cleanUpList.add(cleanUp);

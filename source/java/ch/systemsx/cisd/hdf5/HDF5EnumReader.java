@@ -49,6 +49,7 @@ class HDF5EnumReader implements IHDF5EnumReader
     // Types
     // /////////////////////
 
+    @Override
     public HDF5EnumerationType getType(final String name)
     {
         baseReader.checkOpen();
@@ -59,36 +60,42 @@ class HDF5EnumReader implements IHDF5EnumReader
                 baseReader.fileRegistry);
     }
 
+    @Override
     public HDF5EnumerationType getType(final String name, final String[] values)
             throws HDF5JavaException
     {
         return getType(name, values, true);
     }
 
+    @Override
     public <T extends Enum<?>> HDF5EnumerationType getType(final Class<T> enumClass)
             throws HDF5JavaException
     {
         return getType(enumClass.getSimpleName(), ReflectionUtils.getEnumOptions(enumClass), true);
     }
 
+    @Override
     public HDF5EnumerationType getType(final Class<? extends Enum<?>> enumClass, final boolean check)
             throws HDF5JavaException
     {
         return getType(enumClass.getSimpleName(), ReflectionUtils.getEnumOptions(enumClass), check);
     }
 
+    @Override
     public HDF5EnumerationType getType(final String name, final Class<? extends Enum<?>> enumClass)
             throws HDF5JavaException
     {
         return getType(name, ReflectionUtils.getEnumOptions(enumClass), true);
     }
 
+    @Override
     public <T extends Enum<?>> HDF5EnumerationType getType(final String name,
             final Class<T> enumClass, final boolean check) throws HDF5JavaException
     {
         return getType(name, ReflectionUtils.getEnumOptions(enumClass), check);
     }
 
+    @Override
     public HDF5EnumerationType getType(final String name, final String[] values, final boolean check)
             throws HDF5JavaException
     {
@@ -101,12 +108,14 @@ class HDF5EnumReader implements IHDF5EnumReader
         return dataType;
     }
 
+    @Override
     public HDF5EnumerationType getDataSetType(final String dataSetPath)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5EnumerationType> readEnumTypeCallable =
                 new ICallableWithCleanUp<HDF5EnumerationType>()
                     {
+                        @Override
                         public HDF5EnumerationType call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
@@ -137,12 +146,14 @@ class HDF5EnumReader implements IHDF5EnumReader
         }
     }
 
+    @Override
     public HDF5EnumerationType getAttributeType(final String dataSetPath, final String attributeName)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5EnumerationType> readEnumTypeCallable =
                 new ICallableWithCleanUp<HDF5EnumerationType>()
                     {
+                        @Override
                         public HDF5EnumerationType call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
@@ -165,6 +176,7 @@ class HDF5EnumReader implements IHDF5EnumReader
     // Attributes
     // /////////////////////
 
+    @Override
     public String getAttrAsString(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
@@ -174,6 +186,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
             {
+                @Override
                 public String call(ICleanUpRegistry registry)
                 {
                     final int objectId =
@@ -205,6 +218,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
+    @Override
     public HDF5EnumerationValue getAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
@@ -215,6 +229,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         final ICallableWithCleanUp<HDF5EnumerationValue> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValue>()
                     {
+                        @Override
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -252,6 +267,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
+    @Override
     public <T extends Enum<T>> T getAttr(String objectPath, String attributeName, Class<T> enumClass)
             throws HDF5JavaException
     {
@@ -266,6 +282,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         }
     }
 
+    @Override
     public HDF5EnumerationValueArray getArrayAttr(final String objectPath,
             final String attributeName) throws HDF5JavaException
     {
@@ -276,6 +293,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         final ICallableWithCleanUp<HDF5EnumerationValueArray> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValueArray>()
                     {
+                        @Override
                         public HDF5EnumerationValueArray call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -298,6 +316,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return array.toStringArray();
     }
 
+    @Override
     public HDF5EnumerationValueMDArray getMDArrayAttr(final String objectPath,
             final String attributeName) throws HDF5JavaException
     {
@@ -308,6 +327,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         final ICallableWithCleanUp<HDF5EnumerationValueMDArray> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValueMDArray>()
                     {
+                        @Override
                         public HDF5EnumerationValueMDArray call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -327,6 +347,7 @@ class HDF5EnumReader implements IHDF5EnumReader
     // Data Sets
     // /////////////////////
 
+    @Override
     public String readAsString(final String objectPath) throws HDF5JavaException
     {
         assert objectPath != null;
@@ -334,6 +355,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<String> writeRunnable = new ICallableWithCleanUp<String>()
             {
+                @Override
                 public String call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -358,6 +380,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(writeRunnable);
     }
 
+    @Override
     public <T extends Enum<T>> T read(String objectPath, Class<T> enumClass)
             throws HDF5JavaException
     {
@@ -372,6 +395,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         }
     }
 
+    @Override
     public HDF5EnumerationValue read(final String objectPath) throws HDF5JavaException
     {
         assert objectPath != null;
@@ -380,6 +404,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         final ICallableWithCleanUp<HDF5EnumerationValue> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValue>()
                     {
+                        @Override
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
@@ -394,6 +419,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
+    @Override
     public HDF5EnumerationValue read(final String objectPath, final HDF5EnumerationType enumType)
             throws HDF5JavaException
     {
@@ -405,6 +431,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         final ICallableWithCleanUp<HDF5EnumerationValue> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValue>()
                     {
+                        @Override
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
@@ -425,6 +452,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return new HDF5EnumerationValue(enumType, HDF5EnumerationType.fromStorageForm(data));
     }
 
+    @Override
     public HDF5EnumerationValueArray readArray(final String objectPath,
             final HDF5EnumerationType enumTypeOrNull) throws HDF5JavaException
     {
@@ -438,6 +466,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         final ICallableWithCleanUp<HDF5EnumerationValueArray> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValueArray>()
                     {
+                        @Override
                         public HDF5EnumerationValueArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
@@ -469,11 +498,13 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
+    @Override
     public HDF5EnumerationValueArray readArray(final String objectPath) throws HDF5JavaException
     {
         return readArray(objectPath, (HDF5EnumerationType) null);
     }
 
+    @Override
     public HDF5EnumerationValueArray readArrayBlockWithOffset(final String objectPath,
             final HDF5EnumerationType enumTypeOrNull, final int blockSize, final long offset)
     {
@@ -487,6 +518,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         final ICallableWithCleanUp<HDF5EnumerationValueArray> readRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValueArray>()
                     {
+                        @Override
                         public HDF5EnumerationValueArray call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
@@ -522,12 +554,14 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
+    @Override
     public HDF5EnumerationValueArray readArrayBlockWithOffset(final String objectPath,
             final int blockSize, final long offset)
     {
         return readArrayBlockWithOffset(objectPath, (HDF5EnumerationType) null, blockSize, offset);
     }
 
+    @Override
     public HDF5EnumerationValueArray readArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
@@ -535,24 +569,28 @@ class HDF5EnumReader implements IHDF5EnumReader
                 blockNumber * blockSize);
     }
 
+    @Override
     public HDF5EnumerationValueArray readArrayBlock(final String objectPath,
             final HDF5EnumerationType enumType, final int blockSize, final long blockNumber)
     {
         return readArrayBlockWithOffset(objectPath, enumType, blockSize, blockNumber * blockSize);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray readMDArray(final String objectPath)
             throws HDF5JavaException
     {
         return readMDArray(objectPath, (HDF5EnumerationType) null);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray readMDArray(final String objectPath,
             final HDF5EnumerationType enumTypeOrNull) throws HDF5JavaException
     {
         return readMDArrayBlockWithOffset(objectPath, enumTypeOrNull, null, null);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray readMDArrayBlockWithOffset(final String objectPath,
             final HDF5EnumerationType enumTypeOrNull, final int[] blockDimensionsOrNull,
             final long[] offsetOrNull)
@@ -567,6 +605,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         final ICallableWithCleanUp<HDF5EnumerationValueMDArray> writeRunnable =
                 new ICallableWithCleanUp<HDF5EnumerationValueMDArray>()
                     {
+                        @Override
                         public HDF5EnumerationValueMDArray call(final ICleanUpRegistry registry)
                         {
                             final int dataSetId =
@@ -603,6 +642,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(writeRunnable);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray readMDArrayBlock(String objectPath,
             HDF5EnumerationType type, int[] blockDimensions, long[] blockNumber)
             throws HDF5JavaException
@@ -615,18 +655,21 @@ class HDF5EnumReader implements IHDF5EnumReader
         return readMDArrayBlockWithOffset(objectPath, type, blockDimensions, offset);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray readMDArrayBlock(String objectPath, int[] blockDimensions,
             long[] blockNumber) throws HDF5JavaException
     {
         return readMDArrayBlock(objectPath, null, blockDimensions, blockNumber);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray readMDArrayBlockWithOffset(String objectPath,
             int[] blockDimensions, long[] offset) throws HDF5JavaException
     {
         return readMDArrayBlockWithOffset(objectPath, null, blockDimensions, offset);
     }
 
+    @Override
     public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getArrayBlocks(
             final String objectPath, final HDF5EnumerationType enumTypeOrNull)
             throws HDF5JavaException
@@ -637,6 +680,7 @@ class HDF5EnumReader implements IHDF5EnumReader
 
         return new Iterable<HDF5DataBlock<HDF5EnumerationValueArray>>()
             {
+                @Override
                 public Iterator<HDF5DataBlock<HDF5EnumerationValueArray>> iterator()
                 {
                     return new Iterator<HDF5DataBlock<HDF5EnumerationValueArray>>()
@@ -644,11 +688,13 @@ class HDF5EnumReader implements IHDF5EnumReader
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5DataBlock<HDF5EnumerationValueArray> next()
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
@@ -659,6 +705,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                                         index.getAndIncIndex(), offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -668,12 +715,14 @@ class HDF5EnumReader implements IHDF5EnumReader
             };
     }
 
+    @Override
     public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getArrayBlocks(final String objectPath)
             throws HDF5JavaException
     {
         return getArrayBlocks(objectPath, (HDF5EnumerationType) null);
     }
 
+    @Override
     public Iterable<HDF5MDEnumBlock> getMDArrayBlocks(final String objectPath,
             final HDF5EnumerationType enumTypeOrNull) throws HDF5JavaException
     {
@@ -682,6 +731,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                         DataTypeInfoOptions.MINIMAL));
         return new Iterable<HDF5MDEnumBlock>()
             {
+                @Override
                 public Iterator<HDF5MDEnumBlock> iterator()
                 {
                     return new Iterator<HDF5MDEnumBlock>()
@@ -689,11 +739,13 @@ class HDF5EnumReader implements IHDF5EnumReader
                             final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5MDEnumBlock next()
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
@@ -703,6 +755,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                                 return new HDF5MDEnumBlock(block, index.getIndexClone(), offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -712,6 +765,7 @@ class HDF5EnumReader implements IHDF5EnumReader
             };
     }
 
+    @Override
     public Iterable<HDF5MDEnumBlock> getMDArrayBlocks(String objectPath) throws HDF5JavaException
     {
         return getMDArrayBlocks(objectPath, null);

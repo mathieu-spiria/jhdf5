@@ -16,7 +16,12 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.*;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getArray;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getList;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getMap;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.putMap;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setArray;
+import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setList;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.getEnumReturnType;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberByteifyerEnumFactory.getEnumReturnTypeFromField;
 
@@ -25,6 +30,8 @@ import java.lang.reflect.Field;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
+import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.EnumReturnType;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 
@@ -37,6 +44,7 @@ import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
+    @Override
     public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
         if (memberInfoOrNull != null)
@@ -54,12 +62,14 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
         }
     }
 
+    @Override
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
             HDF5DataTypeVariant typeVariantOrNull)
     {
         return null;
     }
 
+    @Override
     public HDF5MemberByteifyer createBytifyer(final AccessType accessType, final Field fieldOrNull,
             final HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull,

@@ -330,17 +330,20 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
      * {@link Iterator#remove()} is not allowed and will throw an
      * {@link UnsupportedOperationException}.
      */
+    @Override
     public Iterator<String> iterator()
     {
         return new Iterator<String>()
             {
                 private int index = 0;
 
+                @Override
                 public boolean hasNext()
                 {
                     return index < values.length;
                 }
 
+                @Override
                 public String next()
                 {
                     return values[index++];
@@ -349,6 +352,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
                 /**
                  * @throws UnsupportedOperationException As this iterator doesn't support removal.
                  */
+                @Override
                 public void remove() throws UnsupportedOperationException
                 {
                     throw new UnsupportedOperationException();

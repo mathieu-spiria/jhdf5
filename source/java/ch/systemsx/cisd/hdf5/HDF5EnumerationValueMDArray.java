@@ -637,6 +637,7 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
     // Iterable
     //
 
+    @Override
     public Iterator<MDArray<String>.ArrayEntry> iterator()
     {
         return toStringArray().iterator();

@@ -30,26 +30,31 @@ public final class HDF5FactoryProvider
     private static class HDF5Factory implements IHDF5Factory
     {
 
+        @Override
         public IHDF5WriterConfigurator configure(File file)
         {
             return new HDF5WriterConfigurator(file);
         }
 
+        @Override
         public IHDF5ReaderConfigurator configureForReading(File file)
         {
             return new HDF5ReaderConfigurator(file);
         }
 
+        @Override
         public IHDF5Writer open(File file)
         {
             return new HDF5WriterConfigurator(file).writer();
         }
 
+        @Override
         public IHDF5Reader openForReading(File file)
         {
             return new HDF5ReaderConfigurator(file).reader();
         }
 
+        @Override
         public boolean isHDF5File(File file)
         {
             return H5F.H5Fis_hdf5(file.getPath());

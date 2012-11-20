@@ -69,7 +69,7 @@ import java.util.List;
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
@@ -145,6 +145,7 @@ class HDF5
                 H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, fileAccessPropertyListId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Fclose(fileId);
@@ -161,6 +162,7 @@ class HDF5
             final int fapl = H5Pcreate(H5P_FILE_ACCESS);
             registry.registerCleanUp(new Runnable()
                 {
+                    @Override
                     public void run()
                     {
                         H5Pclose(fapl);
@@ -177,6 +179,7 @@ class HDF5
         final int fileId = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Fclose(fileId);
@@ -197,6 +200,7 @@ class HDF5
         final int fileId = H5Fopen(fileName, H5F_ACC_RDWR, fileAccessPropertyListId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Fclose(fileId);
@@ -222,6 +226,7 @@ class HDF5
                         : H5Oopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Oclose(objectId);
@@ -275,6 +280,7 @@ class HDF5
         final int gcplId = H5Pcreate(H5P_GROUP_CREATE);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Pclose(gcplId);
@@ -293,6 +299,7 @@ class HDF5
         final int gcplId = H5Pcreate(H5P_GROUP_CREATE);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Pclose(gcplId);
@@ -312,6 +319,7 @@ class HDF5
                         : H5Gopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Gclose(groupId);
@@ -326,6 +334,7 @@ class HDF5
         final int groupId = H5Gopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Gclose(groupId);
@@ -368,7 +377,7 @@ class HDF5
             return HDF5ObjectType.GROUP;
         }
         final int typeId = H5Lget_link_info(fileId, objectName, null, exceptionWhenNonExistent);
-        return HDF5LinkInformation.objectTypeIdToObjectType(typeId);
+        return HDF5CommonInformation.objectTypeIdToObjectType(typeId);
     }
 
     public HDF5ObjectInformation getObjectInfo(final int fileId, final String objectName,
@@ -378,7 +387,7 @@ class HDF5
         final long[] info = new long[5];
         final int typeId = H5Oget_info_by_name(fileId, objectName, info, exceptionWhenNonExistent);
         return new HDF5ObjectInformation(objectName,
-                HDF5LinkInformation.objectTypeIdToObjectType(typeId), info);
+                HDF5CommonInformation.objectTypeIdToObjectType(typeId), info);
     }
 
     public int getObjectTypeId(final int fileId, final String objectName,
@@ -395,7 +404,7 @@ class HDF5
     public HDF5ObjectType getObjectTypeInfo(final int fileId, final String objectName,
             boolean exceptionWhenNonExistent)
     {
-        return HDF5LinkInformation.objectTypeIdToObjectType(getObjectTypeId(fileId, objectName,
+        return HDF5CommonInformation.objectTypeIdToObjectType(getObjectTypeId(fileId, objectName,
                 exceptionWhenNonExistent));
     }
 
@@ -405,6 +414,7 @@ class HDF5
         final ICallableWithCleanUp<String[]> dataDimensionRunnable =
                 new ICallableWithCleanUp<String[]>()
                     {
+                        @Override
                         public String[] call(ICleanUpRegistry registry)
                         {
                             final int groupId = openGroup(fileId, groupName, registry);
@@ -431,6 +441,7 @@ class HDF5
         final ICallableWithCleanUp<List<HDF5LinkInformation>> dataDimensionRunnable =
                 new ICallableWithCleanUp<List<HDF5LinkInformation>>()
                     {
+                        @Override
                         public List<HDF5LinkInformation> call(ICleanUpRegistry registry)
                         {
                             final int groupId = openGroup(fileId, groupName, registry);
@@ -473,6 +484,7 @@ class HDF5
         final ICallableWithCleanUp<List<HDF5LinkInformation>> dataDimensionRunnable =
                 new ICallableWithCleanUp<List<HDF5LinkInformation>>()
                     {
+                        @Override
                         public List<HDF5LinkInformation> call(ICleanUpRegistry registry)
                         {
                             final int groupId = openGroup(fileId, groupName, registry);
@@ -560,6 +572,7 @@ class HDF5
                         createMaxDimensions(dimensions, (layout == HDF5StorageLayout.CHUNKED)));
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Sclose(dataSpaceId);
@@ -606,6 +619,7 @@ class HDF5
                         lcplCreateIntermediateGroups, dataSetCreationPropertyListId, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Dclose(dataSetId);
@@ -620,6 +634,7 @@ class HDF5
         final int dataSetCreationPropertyListId = H5Pcreate(H5P_DATASET_CREATE);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Pclose(dataSetCreationPropertyListId);
@@ -653,6 +668,7 @@ class HDF5
         final int dataSetCreationPropertyListId = H5Dget_create_plist(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Pclose(dataSetCreationPropertyListId);
@@ -702,6 +718,7 @@ class HDF5
         final int dataSpaceId = H5Screate(H5S_SCALAR);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Sclose(dataSpaceId);
@@ -718,6 +735,7 @@ class HDF5
                                 : dataSetCreationPropertyListFillTimeAlloc, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Dclose(dataSetId);
@@ -734,6 +752,7 @@ class HDF5
                         : H5Dopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Dclose(dataSetId);
@@ -761,6 +780,7 @@ class HDF5
                         : H5Dopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Dclose(dataSetId);
@@ -982,6 +1002,7 @@ class HDF5
         final int dataSpaceId = H5Screate(H5S_SCALAR);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Sclose(dataSpaceId);
@@ -1001,6 +1022,7 @@ class HDF5
                         H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Aclose(attributeId);
@@ -1022,6 +1044,7 @@ class HDF5
         final int attributeId = H5Aopen_name(locationId, attributeName);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Aclose(attributeId);
@@ -1039,6 +1062,7 @@ class HDF5
             final int attributeId = H5Aopen_idx(locationId, i);
             registry.registerCleanUp(new Runnable()
                 {
+                    @Override
                     public void run()
                     {
                         H5Aclose(attributeId);
@@ -1152,6 +1176,7 @@ class HDF5
         final int copiedDataTypeId = H5Tcopy(dataTypeId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(copiedDataTypeId);
@@ -1165,6 +1190,7 @@ class HDF5
         final int dataTypeId = createDataTypeStringVariableLength();
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1191,6 +1217,7 @@ class HDF5
         final int dataTypeId = H5Tcopy(H5T_C_S1);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1216,6 +1243,7 @@ class HDF5
             { length });
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1229,6 +1257,7 @@ class HDF5
         final int dataTypeId = H5Tarray_create(baseTypeId, dimensions.length, dimensions);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1269,6 +1298,7 @@ class HDF5
         final int dataTypeId = H5Tenum_create(baseDataTypeId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1401,6 +1431,7 @@ class HDF5
         registry.registerCleanUp(new Runnable()
             {
 
+                @Override
                 public void run()
                 {
                     H5Tclose(memberTypeId);
@@ -1443,6 +1474,7 @@ class HDF5
         final int dataTypeId = H5Tcreate(H5T_COMPOUND, lengthInBytes);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1457,6 +1489,7 @@ class HDF5
         final int dataTypeId = H5Tcreate(H5T_OPAQUE, lengthInBytes);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1481,6 +1514,7 @@ class HDF5
                         : H5Topen(fileId, name, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1499,6 +1533,7 @@ class HDF5
         final int dataTypeId = H5Dget_type(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1512,6 +1547,7 @@ class HDF5
         final int dataTypeId = H5Aget_type(attributeId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1530,6 +1566,7 @@ class HDF5
         final int nativeDataTypeId = H5Tget_native_type(dataTypeId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(nativeDataTypeId);
@@ -1543,6 +1580,7 @@ class HDF5
         final int dataTypeId = H5Dget_type(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1556,6 +1594,7 @@ class HDF5
         final int dataTypeId = H5Aget_type(attributeId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(dataTypeId);
@@ -1594,6 +1633,7 @@ class HDF5
         final int baseDataTypeId = H5Tget_super(dataTypeId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Tclose(baseDataTypeId);
@@ -1626,6 +1666,7 @@ class HDF5
         final int dataTypeId = H5Dget_space(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Sclose(dataTypeId);
@@ -1639,6 +1680,7 @@ class HDF5
         final int dataSpaceId = H5Aget_space(attributeId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Sclose(dataSpaceId);
@@ -1653,6 +1695,7 @@ class HDF5
         final int dataSpaceId = H5Dget_space(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Sclose(dataSpaceId);
@@ -1672,6 +1715,7 @@ class HDF5
     {
         ICallableWithCleanUp<long[]> dataDimensionRunnable = new ICallableWithCleanUp<long[]>()
             {
+                @Override
                 public long[] call(ICleanUpRegistry registry)
                 {
                     return getDataMaxDimensions(dataSetId, registry);
@@ -1686,6 +1730,7 @@ class HDF5
         final int dataSpaceId = H5Dget_space(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Sclose(dataSpaceId);
@@ -1739,6 +1784,7 @@ class HDF5
     {
         ICallableWithCleanUp<Object> dataDimensionRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public long[][] call(ICleanUpRegistry registry)
                 {
                     final int dataSpaceId =
@@ -1746,6 +1792,7 @@ class HDF5
                                     : H5Dget_space(dataSetOrAttributeId);
                     registry.registerCleanUp(new Runnable()
                         {
+                            @Override
                             public void run()
                             {
                                 H5Sclose(dataSpaceId);
@@ -1772,7 +1819,7 @@ class HDF5
                         if (layout == HDF5StorageLayout.CHUNKED)
                         {
                             H5Pget_chunk(creationPropertyList, rank, chunkSizes);
-                            dataSetInfo.setChunkSizes(MDArray.toInt(chunkSizes));
+                            dataSetInfo.setChunkSizes(MDAbstractArray.toInt(chunkSizes));
                         }
                     }
                     return null; // Nothing to return
@@ -1799,6 +1846,7 @@ class HDF5
         final int dataSpaceId = H5Screate_simple(dimensions.length, dimensions, null);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Sclose(dataSpaceId);
@@ -1826,6 +1874,7 @@ class HDF5
         final int linkCreationPropertyList = H5Pcreate(H5P_LINK_CREATE);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Pclose(linkCreationPropertyList);
@@ -1855,6 +1904,7 @@ class HDF5
         final int datasetXferPropertyList = H5Pcreate_xfer_abort_overflow();
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Pclose(datasetXferPropertyList);
@@ -1868,6 +1918,7 @@ class HDF5
         final int datasetXferPropertyList = H5Pcreate_xfer_abort();
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Pclose(datasetXferPropertyList);

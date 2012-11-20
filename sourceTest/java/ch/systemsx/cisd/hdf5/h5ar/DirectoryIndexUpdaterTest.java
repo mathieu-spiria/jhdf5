@@ -122,6 +122,7 @@ public class DirectoryIndexUpdaterTest
             return new LinkEntryEntryMatcher(FileLinkType.DIRECTORY, name, 0, lastModified);
         }
 
+        @Override
         public void describeTo(Description description)
         {
             description.appendText(toString());

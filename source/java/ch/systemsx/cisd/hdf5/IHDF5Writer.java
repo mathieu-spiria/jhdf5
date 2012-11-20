@@ -181,6 +181,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * Removes an object from the file. If there is more than one link to the object, only the
      * specified link will be removed.
      */
+    @Override
     public void delete(String objectPath);
 
     /**
@@ -324,6 +325,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     /**
      * Returns the full writer for enums.
      */
+    @Override
     public IHDF5EnumWriter enums();
 
     // /////////////////////
@@ -333,6 +335,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     /**
      * Returns the full writer for compounds.
      */
+    @Override
     public IHDF5CompoundWriter compounds();
 
 }

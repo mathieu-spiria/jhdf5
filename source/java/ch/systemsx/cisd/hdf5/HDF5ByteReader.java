@@ -16,20 +16,20 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 
 import java.util.Iterator;
 
+import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
-import ncsa.hdf.hdf5lib.HDF5Constants;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
+import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 
 /**
  * The implementation of {@link IHDF5ByteReader}.
@@ -51,6 +51,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     // Attributes
     // /////////////////////
 
+    @Override
     public byte getByteAttribute(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
@@ -59,6 +60,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<Byte> getAttributeRunnable = new ICallableWithCleanUp<Byte>()
             {
+                @Override
                 public Byte call(ICleanUpRegistry registry)
                 {
                     final int objectId =
@@ -74,6 +76,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    @Override
     public byte[] getByteArrayAttribute(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
@@ -83,6 +86,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         final ICallableWithCleanUp<byte[]> getAttributeRunnable =
                 new ICallableWithCleanUp<byte[]>()
                     {
+                        @Override
                         public byte[] call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -94,6 +98,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    @Override
     public MDByteArray getByteMDArrayAttribute(final String objectPath,
             final String attributeName)
     {
@@ -104,6 +109,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         final ICallableWithCleanUp<MDByteArray> getAttributeRunnable =
                 new ICallableWithCleanUp<MDByteArray>()
                     {
+                        @Override
                         public MDByteArray call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -115,6 +121,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    @Override
     public byte[][] getByteMatrixAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
@@ -131,6 +138,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     // Data Sets
     // /////////////////////
 
+    @Override
     public byte readByte(final String objectPath)
     {
         assert objectPath != null;
@@ -138,6 +146,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<Byte> readCallable = new ICallableWithCleanUp<Byte>()
             {
+                @Override
                 public Byte call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -150,6 +159,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public byte[] readByteArray(final String objectPath)
     {
         assert objectPath != null;
@@ -157,6 +167,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
+                @Override
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -205,6 +216,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return data;
     }
 
+    @Override
     public int[] readToByteMDArrayWithOffset(final String objectPath, final MDByteArray array,
             final int[] memoryOffset)
     {
@@ -213,6 +225,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
+                @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -225,12 +238,13 @@ class HDF5ByteReader implements IHDF5ByteReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array.
                             getAsFlatArray());
-                    return MDArray.toInt(spaceParams.dimensions);
+                    return MDAbstractArray.toInt(spaceParams.dimensions);
                 }
             };
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public int[] readToByteMDArrayBlockWithOffset(final String objectPath,
             final MDByteArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
@@ -240,6 +254,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
+                @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -252,18 +267,20 @@ class HDF5ByteReader implements IHDF5ByteReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
                             .getAsFlatArray());
-                    return MDArray.toInt(spaceParams.dimensions);
+                    return MDAbstractArray.toInt(spaceParams.dimensions);
                 }
             };
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public byte[] readByteArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
         return readByteArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
+    @Override
     public byte[] readByteArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset)
     {
@@ -272,6 +289,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
             {
+                @Override
                 public byte[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -287,6 +305,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public byte[][] readByteMatrix(final String objectPath) throws HDF5JavaException
     {
         final MDByteArray array = readByteMDArray(objectPath);
@@ -298,6 +317,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return array.toMatrix();
     }
 
+    @Override
     public byte[][] readByteMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException
@@ -313,6 +333,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return array.toMatrix();
     }
 
+    @Override
     public byte[][] readByteMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
@@ -327,6 +348,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return array.toMatrix();
     }
 
+    @Override
     public MDByteArray readByteMDArray(final String objectPath)
     {
         assert objectPath != null;
@@ -334,6 +356,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<MDByteArray> readCallable = new ICallableWithCleanUp<MDByteArray>()
             {
+                @Override
                 public MDByteArray call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -375,13 +398,14 @@ class HDF5ByteReader implements IHDF5ByteReader
     {
         final int spaceId = baseReader.h5.createScalarDataSpace();
         final int[] dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
-        final byte[] data = new byte[MDArray.getLength(dimensions)];
+        final byte[] data = new byte[MDAbstractArray.getLength(dimensions)];
         final int memoryDataTypeId =
                 baseReader.h5.createArrayType(H5T_NATIVE_INT8, dimensions, registry);
         baseReader.h5.readDataSet(dataSetId, memoryDataTypeId, spaceId, spaceId, data);
         return new MDByteArray(data, dimensions);
     }
 
+    @Override
     public MDByteArray readByteMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
@@ -393,6 +417,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return readByteMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
+    @Override
     public MDByteArray readByteMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
     {
@@ -403,6 +428,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<MDByteArray> readCallable = new ICallableWithCleanUp<MDByteArray>()
             {
+                @Override
                 public MDByteArray call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -419,6 +445,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return baseReader.runner.call(readCallable);
     }
     
+    @Override
     public Iterable<HDF5DataBlock<byte[]>> getByteArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
@@ -428,6 +455,7 @@ class HDF5ByteReader implements IHDF5ByteReader
 
         return new Iterable<HDF5DataBlock<byte[]>>()
             {
+                @Override
                 public Iterator<HDF5DataBlock<byte[]>> iterator()
                 {
                     return new Iterator<HDF5DataBlock<byte[]>>()
@@ -435,11 +463,13 @@ class HDF5ByteReader implements IHDF5ByteReader
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5DataBlock<byte[]> next()
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
@@ -450,6 +480,7 @@ class HDF5ByteReader implements IHDF5ByteReader
                                         offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -459,6 +490,7 @@ class HDF5ByteReader implements IHDF5ByteReader
             };
     }
 
+    @Override
     public Iterable<HDF5MDDataBlock<MDByteArray>> getByteMDArrayNaturalBlocks(final String dataSetPath)
     {
         baseReader.checkOpen();
@@ -467,6 +499,7 @@ class HDF5ByteReader implements IHDF5ByteReader
 
         return new Iterable<HDF5MDDataBlock<MDByteArray>>()
             {
+                @Override
                 public Iterator<HDF5MDDataBlock<MDByteArray>> iterator()
                 {
                     return new Iterator<HDF5MDDataBlock<MDByteArray>>()
@@ -474,11 +507,13 @@ class HDF5ByteReader implements IHDF5ByteReader
                             final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5MDDataBlock<MDByteArray> next()
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
@@ -489,6 +524,7 @@ class HDF5ByteReader implements IHDF5ByteReader
                                         .getIndexClone(), offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -555,11 +591,11 @@ class HDF5ByteReader implements IHDF5ByteReader
             } else
             {
                 arrayDimensions =
-                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                        MDAbstractArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
                                 attributeId, registry));
                 memoryTypeId = H5T_NATIVE_INT8;
             }
-            final int len = MDArray.getLength(arrayDimensions);
+            final int len = MDAbstractArray.getLength(arrayDimensions);
             final byte[] data =
                     baseReader.h5.readAttributeAsByteArray(attributeId,
                             memoryTypeId, len);

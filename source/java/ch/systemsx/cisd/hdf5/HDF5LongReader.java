@@ -16,20 +16,20 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 
 import java.util.Iterator;
 
+import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
-import ncsa.hdf.hdf5lib.HDF5Constants;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
+import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 
 /**
  * The implementation of {@link IHDF5LongReader}.
@@ -51,6 +51,7 @@ class HDF5LongReader implements IHDF5LongReader
     // Attributes
     // /////////////////////
 
+    @Override
     public long getLongAttribute(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
@@ -59,6 +60,7 @@ class HDF5LongReader implements IHDF5LongReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<Long> getAttributeRunnable = new ICallableWithCleanUp<Long>()
             {
+                @Override
                 public Long call(ICleanUpRegistry registry)
                 {
                     final int objectId =
@@ -74,6 +76,7 @@ class HDF5LongReader implements IHDF5LongReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    @Override
     public long[] getLongArrayAttribute(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
@@ -83,6 +86,7 @@ class HDF5LongReader implements IHDF5LongReader
         final ICallableWithCleanUp<long[]> getAttributeRunnable =
                 new ICallableWithCleanUp<long[]>()
                     {
+                        @Override
                         public long[] call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -94,6 +98,7 @@ class HDF5LongReader implements IHDF5LongReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    @Override
     public MDLongArray getLongMDArrayAttribute(final String objectPath,
             final String attributeName)
     {
@@ -104,6 +109,7 @@ class HDF5LongReader implements IHDF5LongReader
         final ICallableWithCleanUp<MDLongArray> getAttributeRunnable =
                 new ICallableWithCleanUp<MDLongArray>()
                     {
+                        @Override
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -115,6 +121,7 @@ class HDF5LongReader implements IHDF5LongReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    @Override
     public long[][] getLongMatrixAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
@@ -131,6 +138,7 @@ class HDF5LongReader implements IHDF5LongReader
     // Data Sets
     // /////////////////////
 
+    @Override
     public long readLong(final String objectPath)
     {
         assert objectPath != null;
@@ -138,6 +146,7 @@ class HDF5LongReader implements IHDF5LongReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<Long> readCallable = new ICallableWithCleanUp<Long>()
             {
+                @Override
                 public Long call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -150,6 +159,7 @@ class HDF5LongReader implements IHDF5LongReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public long[] readLongArray(final String objectPath)
     {
         assert objectPath != null;
@@ -157,6 +167,7 @@ class HDF5LongReader implements IHDF5LongReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
+                @Override
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -205,6 +216,7 @@ class HDF5LongReader implements IHDF5LongReader
         return data;
     }
 
+    @Override
     public int[] readToLongMDArrayWithOffset(final String objectPath, final MDLongArray array,
             final int[] memoryOffset)
     {
@@ -213,6 +225,7 @@ class HDF5LongReader implements IHDF5LongReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
+                @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -225,12 +238,13 @@ class HDF5LongReader implements IHDF5LongReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array.
                             getAsFlatArray());
-                    return MDArray.toInt(spaceParams.dimensions);
+                    return MDAbstractArray.toInt(spaceParams.dimensions);
                 }
             };
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public int[] readToLongMDArrayBlockWithOffset(final String objectPath,
             final MDLongArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
@@ -240,6 +254,7 @@ class HDF5LongReader implements IHDF5LongReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
+                @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -252,18 +267,20 @@ class HDF5LongReader implements IHDF5LongReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
                             .getAsFlatArray());
-                    return MDArray.toInt(spaceParams.dimensions);
+                    return MDAbstractArray.toInt(spaceParams.dimensions);
                 }
             };
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public long[] readLongArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
         return readLongArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
+    @Override
     public long[] readLongArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset)
     {
@@ -272,6 +289,7 @@ class HDF5LongReader implements IHDF5LongReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<long[]> readCallable = new ICallableWithCleanUp<long[]>()
             {
+                @Override
                 public long[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -287,6 +305,7 @@ class HDF5LongReader implements IHDF5LongReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public long[][] readLongMatrix(final String objectPath) throws HDF5JavaException
     {
         final MDLongArray array = readLongMDArray(objectPath);
@@ -298,6 +317,7 @@ class HDF5LongReader implements IHDF5LongReader
         return array.toMatrix();
     }
 
+    @Override
     public long[][] readLongMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException
@@ -313,6 +333,7 @@ class HDF5LongReader implements IHDF5LongReader
         return array.toMatrix();
     }
 
+    @Override
     public long[][] readLongMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
@@ -327,6 +348,7 @@ class HDF5LongReader implements IHDF5LongReader
         return array.toMatrix();
     }
 
+    @Override
     public MDLongArray readLongMDArray(final String objectPath)
     {
         assert objectPath != null;
@@ -334,6 +356,7 @@ class HDF5LongReader implements IHDF5LongReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<MDLongArray> readCallable = new ICallableWithCleanUp<MDLongArray>()
             {
+                @Override
                 public MDLongArray call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -375,13 +398,14 @@ class HDF5LongReader implements IHDF5LongReader
     {
         final int spaceId = baseReader.h5.createScalarDataSpace();
         final int[] dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
-        final long[] data = new long[MDArray.getLength(dimensions)];
+        final long[] data = new long[MDAbstractArray.getLength(dimensions)];
         final int memoryDataTypeId =
                 baseReader.h5.createArrayType(H5T_NATIVE_INT64, dimensions, registry);
         baseReader.h5.readDataSet(dataSetId, memoryDataTypeId, spaceId, spaceId, data);
         return new MDLongArray(data, dimensions);
     }
 
+    @Override
     public MDLongArray readLongMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
@@ -393,6 +417,7 @@ class HDF5LongReader implements IHDF5LongReader
         return readLongMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
+    @Override
     public MDLongArray readLongMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
     {
@@ -403,6 +428,7 @@ class HDF5LongReader implements IHDF5LongReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<MDLongArray> readCallable = new ICallableWithCleanUp<MDLongArray>()
             {
+                @Override
                 public MDLongArray call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -419,6 +445,7 @@ class HDF5LongReader implements IHDF5LongReader
         return baseReader.runner.call(readCallable);
     }
     
+    @Override
     public Iterable<HDF5DataBlock<long[]>> getLongArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
@@ -428,6 +455,7 @@ class HDF5LongReader implements IHDF5LongReader
 
         return new Iterable<HDF5DataBlock<long[]>>()
             {
+                @Override
                 public Iterator<HDF5DataBlock<long[]>> iterator()
                 {
                     return new Iterator<HDF5DataBlock<long[]>>()
@@ -435,11 +463,13 @@ class HDF5LongReader implements IHDF5LongReader
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5DataBlock<long[]> next()
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
@@ -450,6 +480,7 @@ class HDF5LongReader implements IHDF5LongReader
                                         offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -459,6 +490,7 @@ class HDF5LongReader implements IHDF5LongReader
             };
     }
 
+    @Override
     public Iterable<HDF5MDDataBlock<MDLongArray>> getLongMDArrayNaturalBlocks(final String dataSetPath)
     {
         baseReader.checkOpen();
@@ -467,6 +499,7 @@ class HDF5LongReader implements IHDF5LongReader
 
         return new Iterable<HDF5MDDataBlock<MDLongArray>>()
             {
+                @Override
                 public Iterator<HDF5MDDataBlock<MDLongArray>> iterator()
                 {
                     return new Iterator<HDF5MDDataBlock<MDLongArray>>()
@@ -474,11 +507,13 @@ class HDF5LongReader implements IHDF5LongReader
                             final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5MDDataBlock<MDLongArray> next()
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
@@ -489,6 +524,7 @@ class HDF5LongReader implements IHDF5LongReader
                                         .getIndexClone(), offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -555,11 +591,11 @@ class HDF5LongReader implements IHDF5LongReader
             } else
             {
                 arrayDimensions =
-                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                        MDAbstractArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
                                 attributeId, registry));
                 memoryTypeId = H5T_NATIVE_INT64;
             }
-            final int len = MDArray.getLength(arrayDimensions);
+            final int len = MDAbstractArray.getLength(arrayDimensions);
             final long[] data =
                     baseReader.h5.readAttributeAsLongArray(attributeId,
                             memoryTypeId, len);

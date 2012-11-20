@@ -49,6 +49,7 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
         this.checkArchive = checkArchive;
     }
 
+    @Override
     public boolean process(String dir, String path, LinkRecord link, IHDF5Reader reader,
             IdCache idCache, IErrorStrategy errorStrategy) throws IOException
     {
@@ -76,6 +77,7 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
         return true;
     }
 
+    @Override
     public void postProcessDirectory(String dir, String path, LinkRecord link, IHDF5Reader reader,
             IdCache idCache, IErrorStrategy errorStrategy) throws IOException, HDF5Exception
     {
@@ -96,11 +98,13 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
         return (int) crc32Digest.getValue();
     }
 
+    @Override
     public ArchiverException createException(String objectPath, String detailedMsg)
     {
         return new ListArchiveException(objectPath, detailedMsg);
     }
 
+    @Override
     public ArchiverException createException(String objectPath, HDF5Exception cause)
     {
         if (isTooManySymlinksError(cause))
@@ -118,11 +122,13 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
                         .getMinorError());
     }
 
+    @Override
     public ArchiverException createException(String objectPath, RuntimeException cause)
     {
         return new ListArchiveException(objectPath, cause);
     }
 
+    @Override
     public ArchiverException createException(File file, IOException cause)
     {
         return new ListArchiveException(file, cause);

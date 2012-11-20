@@ -16,20 +16,20 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 
 import java.util.Iterator;
 
+import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
-import ncsa.hdf.hdf5lib.HDF5Constants;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
+import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 
 /**
  * The implementation of {@link IHDF5ShortReader}.
@@ -51,6 +51,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     // Attributes
     // /////////////////////
 
+    @Override
     public short getShortAttribute(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
@@ -59,6 +60,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<Short> getAttributeRunnable = new ICallableWithCleanUp<Short>()
             {
+                @Override
                 public Short call(ICleanUpRegistry registry)
                 {
                     final int objectId =
@@ -74,6 +76,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    @Override
     public short[] getShortArrayAttribute(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
@@ -83,6 +86,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         final ICallableWithCleanUp<short[]> getAttributeRunnable =
                 new ICallableWithCleanUp<short[]>()
                     {
+                        @Override
                         public short[] call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -94,6 +98,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    @Override
     public MDShortArray getShortMDArrayAttribute(final String objectPath,
             final String attributeName)
     {
@@ -104,6 +109,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         final ICallableWithCleanUp<MDShortArray> getAttributeRunnable =
                 new ICallableWithCleanUp<MDShortArray>()
                     {
+                        @Override
                         public MDShortArray call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -115,6 +121,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    @Override
     public short[][] getShortMatrixAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
@@ -131,6 +138,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     // Data Sets
     // /////////////////////
 
+    @Override
     public short readShort(final String objectPath)
     {
         assert objectPath != null;
@@ -138,6 +146,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<Short> readCallable = new ICallableWithCleanUp<Short>()
             {
+                @Override
                 public Short call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -150,6 +159,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public short[] readShortArray(final String objectPath)
     {
         assert objectPath != null;
@@ -157,6 +167,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<short[]> readCallable = new ICallableWithCleanUp<short[]>()
             {
+                @Override
                 public short[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -205,6 +216,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return data;
     }
 
+    @Override
     public int[] readToShortMDArrayWithOffset(final String objectPath, final MDShortArray array,
             final int[] memoryOffset)
     {
@@ -213,6 +225,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
+                @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -225,12 +238,13 @@ class HDF5ShortReader implements IHDF5ShortReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array.
                             getAsFlatArray());
-                    return MDArray.toInt(spaceParams.dimensions);
+                    return MDAbstractArray.toInt(spaceParams.dimensions);
                 }
             };
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public int[] readToShortMDArrayBlockWithOffset(final String objectPath,
             final MDShortArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
@@ -240,6 +254,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
             {
+                @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -252,18 +267,20 @@ class HDF5ShortReader implements IHDF5ShortReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
                             .getAsFlatArray());
-                    return MDArray.toInt(spaceParams.dimensions);
+                    return MDAbstractArray.toInt(spaceParams.dimensions);
                 }
             };
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public short[] readShortArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
         return readShortArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
+    @Override
     public short[] readShortArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset)
     {
@@ -272,6 +289,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<short[]> readCallable = new ICallableWithCleanUp<short[]>()
             {
+                @Override
                 public short[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -287,6 +305,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public short[][] readShortMatrix(final String objectPath) throws HDF5JavaException
     {
         final MDShortArray array = readShortMDArray(objectPath);
@@ -298,6 +317,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return array.toMatrix();
     }
 
+    @Override
     public short[][] readShortMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException
@@ -313,6 +333,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return array.toMatrix();
     }
 
+    @Override
     public short[][] readShortMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
@@ -327,6 +348,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return array.toMatrix();
     }
 
+    @Override
     public MDShortArray readShortMDArray(final String objectPath)
     {
         assert objectPath != null;
@@ -334,6 +356,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<MDShortArray> readCallable = new ICallableWithCleanUp<MDShortArray>()
             {
+                @Override
                 public MDShortArray call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -375,13 +398,14 @@ class HDF5ShortReader implements IHDF5ShortReader
     {
         final int spaceId = baseReader.h5.createScalarDataSpace();
         final int[] dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
-        final short[] data = new short[MDArray.getLength(dimensions)];
+        final short[] data = new short[MDAbstractArray.getLength(dimensions)];
         final int memoryDataTypeId =
                 baseReader.h5.createArrayType(H5T_NATIVE_INT16, dimensions, registry);
         baseReader.h5.readDataSet(dataSetId, memoryDataTypeId, spaceId, spaceId, data);
         return new MDShortArray(data, dimensions);
     }
 
+    @Override
     public MDShortArray readShortMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
@@ -393,6 +417,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return readShortMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
+    @Override
     public MDShortArray readShortMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
     {
@@ -403,6 +428,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<MDShortArray> readCallable = new ICallableWithCleanUp<MDShortArray>()
             {
+                @Override
                 public MDShortArray call(ICleanUpRegistry registry)
                 {
                     final int dataSetId = 
@@ -419,6 +445,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return baseReader.runner.call(readCallable);
     }
     
+    @Override
     public Iterable<HDF5DataBlock<short[]>> getShortArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
@@ -428,6 +455,7 @@ class HDF5ShortReader implements IHDF5ShortReader
 
         return new Iterable<HDF5DataBlock<short[]>>()
             {
+                @Override
                 public Iterator<HDF5DataBlock<short[]>> iterator()
                 {
                     return new Iterator<HDF5DataBlock<short[]>>()
@@ -435,11 +463,13 @@ class HDF5ShortReader implements IHDF5ShortReader
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5DataBlock<short[]> next()
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
@@ -450,6 +480,7 @@ class HDF5ShortReader implements IHDF5ShortReader
                                         offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -459,6 +490,7 @@ class HDF5ShortReader implements IHDF5ShortReader
             };
     }
 
+    @Override
     public Iterable<HDF5MDDataBlock<MDShortArray>> getShortMDArrayNaturalBlocks(final String dataSetPath)
     {
         baseReader.checkOpen();
@@ -467,6 +499,7 @@ class HDF5ShortReader implements IHDF5ShortReader
 
         return new Iterable<HDF5MDDataBlock<MDShortArray>>()
             {
+                @Override
                 public Iterator<HDF5MDDataBlock<MDShortArray>> iterator()
                 {
                     return new Iterator<HDF5MDDataBlock<MDShortArray>>()
@@ -474,11 +507,13 @@ class HDF5ShortReader implements IHDF5ShortReader
                             final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5MDDataBlock<MDShortArray> next()
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
@@ -489,6 +524,7 @@ class HDF5ShortReader implements IHDF5ShortReader
                                         .getIndexClone(), offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -555,11 +591,11 @@ class HDF5ShortReader implements IHDF5ShortReader
             } else
             {
                 arrayDimensions =
-                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                        MDAbstractArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
                                 attributeId, registry));
                 memoryTypeId = H5T_NATIVE_INT16;
             }
-            final int len = MDArray.getLength(arrayDimensions);
+            final int len = MDAbstractArray.getLength(arrayDimensions);
             final short[] data =
                     baseReader.h5.readAttributeAsShortArray(attributeId,
                             memoryTypeId, len);

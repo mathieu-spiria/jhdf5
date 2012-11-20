@@ -342,6 +342,7 @@ public class HDF5ArchiverTest
         HDF5ArchiverFactory.open(h5arfile)
                 .archiveFromFilesystemBelowDirectory("/", dir, new IArchiveEntryVisitor()
                     {
+                        @Override
                         public void visit(ArchiveEntry entry)
                         {
                             entryCount.incrementAndGet();
@@ -365,6 +366,7 @@ public class HDF5ArchiverTest
         entryCount.set(0);
         ar.list("/", new IArchiveEntryVisitor()
             {
+                @Override
                 public void visit(ArchiveEntry entry)
                 {
                     entryCount.incrementAndGet();
@@ -390,6 +392,7 @@ public class HDF5ArchiverTest
         entryCount.set(0);
         ar.extractToFilesystem(extracted, "/", new IArchiveEntryVisitor()
             {
+                @Override
                 public void visit(ArchiveEntry entry)
                 {
                     entryCount.incrementAndGet();
@@ -422,6 +425,7 @@ public class HDF5ArchiverTest
         ar.extractToFilesystemBelowDirectory(partiallyExtracted, "/dir_somedir",
                 new IArchiveEntryVisitor()
                     {
+                        @Override
                         public void visit(ArchiveEntry entry)
                         {
                             int idx = entryCount.getAndIncrement();

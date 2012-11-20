@@ -159,11 +159,13 @@ class DirectoryIndex implements IDirectoryIndex
         readIndex(readLinkTargets);
     }
 
+    @Override
     public boolean addFlushable(Flushable flushable)
     {
         return flushables.add(flushable);
     }
 
+    @Override
     public boolean removeFlushable(Flushable flushable)
     {
         return flushables.remove(flushable);
@@ -188,6 +190,7 @@ class DirectoryIndex implements IDirectoryIndex
      * Amend the index with link targets. If the links targets have already been read, this method
      * is a noop.
      */
+    @Override
     public void amendLinkTargets()
     {
         if (readLinkTargets)
@@ -227,6 +230,7 @@ class DirectoryIndex implements IDirectoryIndex
                         hdf5Reader.compounds().readArray(indexDataSetName, linkCompoundType,
                                 new IHDF5CompoundInformationRetriever.IByteArrayInspector()
                                     {
+                                        @Override
                                         public void inspect(byte[] byteArray)
                                         {
                                             crc32Digester.update(byteArray);
@@ -300,11 +304,13 @@ class DirectoryIndex implements IDirectoryIndex
         }
     }
 
+    @Override
     public boolean exists(String name)
     {
         return links.exists(name);
     }
 
+    @Override
     public boolean isDirectory(String name)
     {
         final LinkRecord link = links.tryGetLink(name);
@@ -315,6 +321,7 @@ class DirectoryIndex implements IDirectoryIndex
      * Returns the link with {@link LinkRecord#getLinkName()} equal to <var>name</var>, or
      * <code>null</code>, if there is no such link in the directory index.
      */
+    @Override
     public LinkRecord tryGetLink(String name)
     {
         final LinkRecord linkOrNull = links.tryGetLink(name);
@@ -328,6 +335,7 @@ class DirectoryIndex implements IDirectoryIndex
     /**
      * Returns <code>true</code>, if this class has link targets read.
      */
+    @Override
     public boolean hasLinkTargets()
     {
         return readLinkTargets;
@@ -337,6 +345,7 @@ class DirectoryIndex implements IDirectoryIndex
     // Iterable
     //
 
+    @Override
     public Iterator<LinkRecord> iterator()
     {
         return links.iterator();
@@ -351,6 +360,7 @@ class DirectoryIndex implements IDirectoryIndex
      * <p>
      * Works on the list data structure.
      */
+    @Override
     public void flush()
     {
         flushExternals();
@@ -378,6 +388,7 @@ class DirectoryIndex implements IDirectoryIndex
                     HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                     new IHDF5CompoundInformationRetriever.IByteArrayInspector()
                         {
+                            @Override
                             public void inspect(byte[] byteArray)
                             {
                                 crc32.update(byteArray);
@@ -396,6 +407,7 @@ class DirectoryIndex implements IDirectoryIndex
      * Add <var>entries</var> to the index. Any link that already exists in the index will be
      * replaced.
      */
+    @Override
     public void updateIndex(LinkRecord[] entries)
     {
         ensureWriteMode();
@@ -407,6 +419,7 @@ class DirectoryIndex implements IDirectoryIndex
      * Add <var>entries</var> to the index. Any link that already exists in the index will be
      * replaced.
      */
+    @Override
     public void updateIndex(Collection<LinkRecord> entries)
     {
         ensureWriteMode();
@@ -417,6 +430,7 @@ class DirectoryIndex implements IDirectoryIndex
     /**
      * Add <var>entry</var> to the index. If it already exists in the index, it will be replaced.
      */
+    @Override
     public void updateIndex(LinkRecord entry)
     {
         ensureWriteMode();
@@ -429,6 +443,7 @@ class DirectoryIndex implements IDirectoryIndex
      * 
      * @return <code>true</code>, if <var>linkName</var> was removed.
      */
+    @Override
     public boolean remove(String linkName)
     {
         ensureWriteMode();
@@ -456,6 +471,7 @@ class DirectoryIndex implements IDirectoryIndex
     // Closeable
     //
 
+    @Override
     public void close() throws IOExceptionUnchecked
     {
         flush();

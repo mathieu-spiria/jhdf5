@@ -123,6 +123,7 @@ final class LinkStore implements Iterable<LinkRecord>
      * Returns an iterator over all links in the list, in the order defined by
      * {@link LinkRecord#compareTo(LinkRecord)}.
      */
+    @Override
     public Iterator<LinkRecord> iterator()
     {
         final LinkRecord[] list = getLinkArray();

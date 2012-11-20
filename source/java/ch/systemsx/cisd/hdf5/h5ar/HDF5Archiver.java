@@ -127,6 +127,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         this.idCache = new IdCache();
         this.processor = new HDF5ArchiveTraverser(new HDF5ArchiveTraverser.IDirectoryChecker()
             {
+                @Override
                 public boolean isDirectoryFollowSymlinks(ArchiveEntry entry)
                 {
                     final ArchiveEntry resolvedEntry = tryResolveLink(entry);
@@ -164,6 +165,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         this.idCache = new IdCache();
         this.processor = new HDF5ArchiveTraverser(new HDF5ArchiveTraverser.IDirectoryChecker()
             {
+                @Override
                 public boolean isDirectoryFollowSymlinks(ArchiveEntry entry)
                 {
                     return tryResolveLink(entry).isDirectory();
@@ -185,6 +187,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     // Closeable
     //
 
+    @Override
     public void close()
     {
         if (isClosed() == false)
@@ -200,6 +203,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         }
     }
 
+    @Override
     public boolean isClosed()
     {
         return hdf5Reader.isClosed();
@@ -209,6 +213,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     // Flusheable
     //
 
+    @Override
     public void flush()
     {
         if (hdf5WriterOrNull != null)
@@ -221,6 +226,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     // IHDF5ArchiveInfo
     //
 
+    @Override
     public boolean exists(String path)
     {
         final String normalizedPath = Utils.normalizePath(path);
@@ -229,6 +235,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return indexProvider.get(parentPath, false).exists(name);
     }
 
+    @Override
     public boolean isDirectory(String path)
     {
         final String normalizedPath = Utils.normalizePath(path);
@@ -237,16 +244,19 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return indexProvider.get(parentPath, false).isDirectory(name);
     }
 
+    @Override
     public boolean isRegularFile(String path)
     {
         return isRegularFile(tryGetLink(path, false));
     }
 
+    @Override
     public boolean isSymLink(String path)
     {
         return isSymLink(tryGetLink(path, false));
     }
 
+    @Override
     public ArchiveEntry tryGetEntry(String path, boolean readLinkTarget)
     {
         final String normalizedPath = Utils.normalizePath(path);
@@ -269,6 +279,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return indexProvider.get(parentPath, readLinkTargets).tryGetLink(name);
     }
 
+    @Override
     public ArchiveEntry tryResolveLink(ArchiveEntry entry)
     {
         if (entry == null)
@@ -323,6 +334,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return workEntry;
     }
 
+    @Override
     public ArchiveEntry tryGetResolvedEntry(String path, boolean keepPath)
     {
         final ArchiveEntry entry = tryGetEntry(path, true);
@@ -352,21 +364,25 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     // IHDF5ArchiveReader
     //
 
+    @Override
     public List<ArchiveEntry> list()
     {
         return list("/", ListParameters.DEFAULT);
     }
 
+    @Override
     public List<ArchiveEntry> list(final String fileOrDir)
     {
         return list(fileOrDir, ListParameters.DEFAULT);
     }
 
+    @Override
     public List<ArchiveEntry> list(final String fileOrDir, final ListParameters params)
     {
         final List<ArchiveEntry> result = new ArrayList<ArchiveEntry>(100);
         list(fileOrDir, new IArchiveEntryVisitor()
             {
+                @Override
                 public void visit(ArchiveEntry entry)
                 {
                     result.add(entry);
@@ -375,11 +391,13 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return result;
     }
 
+    @Override
     public List<ArchiveEntry> test()
     {
         final List<ArchiveEntry> result = new ArrayList<ArchiveEntry>(100);
         list("/", new IArchiveEntryVisitor()
             {
+                @Override
                 public void visit(ArchiveEntry entry)
                 {
                     if (entry.isOK() == false)
@@ -391,17 +409,20 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return result;
     }
 
+    @Override
     public IHDF5Archiver list(String fileOrDir, IArchiveEntryVisitor visitor)
     {
         return list(fileOrDir, visitor, ListParameters.DEFAULT);
     }
 
+    @Override
     public IHDF5Archiver list(final String fileOrDir, final IArchiveEntryVisitor visitor,
             final ListParameters params)
     {
         final String normalizedPath = Utils.normalizePath(fileOrDir);
         final IArchiveEntryVisitor decoratedVisitor = new IArchiveEntryVisitor()
             {
+                @Override
                 public void visit(ArchiveEntry entry)
                 {
                     if (params.isIncludeTopLevelDirectoryEntry() == false
@@ -436,16 +457,19 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public List<ArchiveEntry> verifyAgainstFilesystem(File rootDirectoryOnFS)
     {
         return verifyAgainstFilesystem("/", rootDirectoryOnFS, VerifyParameters.DEFAULT);
     }
 
+    @Override
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS)
     {
         return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, VerifyParameters.DEFAULT);
     }
 
+    @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             IArchiveEntryVisitor visitor)
     {
@@ -453,12 +477,14 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
                 VerifyParameters.DEFAULT);
     }
 
+    @Override
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             VerifyParameters params)
     {
         final List<ArchiveEntry> verifyErrors = new ArrayList<ArchiveEntry>();
         verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, new IArchiveEntryVisitor()
             {
+                @Override
                 public void visit(ArchiveEntry entry)
                 {
                     if (entry.isOK() == false)
@@ -468,6 +494,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return verifyErrors;
     }
 
+    @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             IArchiveEntryVisitor visitor, VerifyParameters params)
     {
@@ -478,6 +505,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive, IArchiveEntryVisitor visitor, VerifyParameters params)
     {
@@ -488,6 +516,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive, VerifyParameters params)
     {
@@ -495,6 +524,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, rootDirectoryInArchive,
                 new IArchiveEntryVisitor()
                     {
+                        @Override
                         public void visit(ArchiveEntry entry)
                         {
                             if (entry.isOK() == false)
@@ -506,6 +536,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return verifyErrors;
     }
 
+    @Override
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive)
     {
@@ -513,6 +544,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
                 VerifyParameters.DEFAULT);
     }
 
+    @Override
     public IHDF5Archiver extractFile(String path, OutputStream out) throws IOExceptionUnchecked
     {
         if (hdf5Reader.isDataSet(path) == false)
@@ -533,6 +565,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public byte[] extractFileAsByteArray(String path) throws IOExceptionUnchecked
     {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -540,6 +573,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return out.toByteArray();
     }
 
+    @Override
     public IInputStream extractFileAsIInputStream(String path)
     {
         if (hdf5Reader.isDataSet(path) == false)
@@ -550,16 +584,19 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return HDF5IOAdapterFactory.asIInputStream(hdf5Reader, path);
     }
 
+    @Override
     public InputStream extractFileAsInputStream(String path)
     {
         return new AdapterIInputStreamToInputStream(extractFileAsIInputStream(path));
     }
 
+    @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory) throws IllegalStateException
     {
         return extractToFilesystemBelowDirectory(rootDirectory, "", "/", ArchivingStrategy.DEFAULT, null);
     }
 
+    @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory, String path)
             throws IllegalStateException
     {
@@ -567,6 +604,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
                 null);
     }
 
+    @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory, String path,
             IArchiveEntryVisitor visitorOrNull) throws IllegalStateException
     {
@@ -574,6 +612,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
                 visitorOrNull);
     }
 
+    @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory, String path,
             ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull)
             throws IllegalStateException
@@ -581,12 +620,14 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return extractToFilesystemBelowDirectory(rootDirectory, "", path, strategy, visitorOrNull);
     }
 
+    @Override
     public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory, String rootPathInArchive)
     {
         return extractToFilesystemBelowDirectory(rootDirectory, rootPathInArchive, "",
                 ArchivingStrategy.DEFAULT, null);
     }
 
+    @Override
     public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
             String rootPathInArchive, IArchiveEntryVisitor visitorOrNull)
     {
@@ -595,6 +636,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         
     }
 
+    @Override
     public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
             String rootPathInArchive, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull)
     {
@@ -602,6 +644,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
                 strategy, visitorOrNull);
     }
 
+    @Override
     public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory, String rootPathInArchive,
             String path, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull)
             throws IllegalStateException
@@ -617,24 +660,28 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     // IHDF5Archiver
     //
 
+    @Override
     public IHDF5Archiver archiveFromFilesystem(File path) throws IllegalStateException
     {
         return archiveFromFilesystem(path, ArchivingStrategy.DEFAULT, false,
                 (IArchiveEntryVisitor) null);
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy)
             throws IllegalStateException
     {
         return archiveFromFilesystem(path, strategy, false, (IArchiveEntryVisitor) null);
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystem(File path, IArchiveEntryVisitor entryVisitorOrNull)
             throws IllegalStateException
     {
         return archiveFromFilesystem(path, ArchivingStrategy.DEFAULT, false, entryVisitorOrNull);
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy,
             boolean keepNameFromPath, IArchiveEntryVisitor entryVisitorOrNull)
             throws IllegalStateException
@@ -645,18 +692,21 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystem(File parentDirToStrip, File path)
             throws IllegalStateException
     {
         return archiveFromFilesystem(parentDirToStrip, path, ArchivingStrategy.DEFAULT);
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystem(File parentDirToStrip, File path,
             ArchivingStrategy strategy) throws IllegalStateException
     {
         return archiveFromFilesystem(parentDirToStrip, path, strategy, null);
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystem(File parentDirToStrip, File path,
             ArchivingStrategy strategy, IArchiveEntryVisitor entryVisitorOrNull)
             throws IllegalStateException
@@ -667,17 +717,20 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystem(String rootInArchive, File path)
     {
         return archiveFromFilesystem(rootInArchive, path, ArchivingStrategy.DEFAULT, null);
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystem(String rootInArchive, File path,
             ArchivingStrategy strategy)
     {
         return archiveFromFilesystem(rootInArchive, path, strategy, null);
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystem(String rootInArchive, File path,
             ArchivingStrategy strategy, IArchiveEntryVisitor entryVisitorOrNull)
     {
@@ -686,18 +739,21 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory)
     {
         return archiveFromFilesystemBelowDirectory(rootInArchive, directory,
                 ArchivingStrategy.DEFAULT, null);
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
             ArchivingStrategy strategy)
     {
         return archiveFromFilesystemBelowDirectory(rootInArchive, directory, strategy, null);
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
             IArchiveEntryVisitor visitor)
     {
@@ -705,6 +761,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
                 ArchivingStrategy.DEFAULT, visitor);
     }
 
+    @Override
     public IHDF5Archiver archiveFromFilesystemBelowDirectory(String rootInArchive, File directory,
             ArchivingStrategy strategy, IArchiveEntryVisitor entryVisitorOrNull)
     {
@@ -714,26 +771,31 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public IHDF5Archiver archiveFile(String path, byte[] data) throws IllegalStateException
     {
         return archiveFile(NewArchiveEntry.file(path), new ByteArrayInputStream(data));
     }
 
+    @Override
     public IHDF5Archiver archiveFile(String path, InputStream input)
     {
         return archiveFile(NewArchiveEntry.file(path), input);
     }
 
+    @Override
     public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, byte[] data)
     {
         return archiveFile(entry, new ByteArrayInputStream(data));
     }
 
+    @Override
     public OutputStream archiveFileAsOutputStream(NewFileArchiveEntry entry)
     {
         return new AdapterIOutputStreamToOutputStream(archiveFileAsIOutputStream(entry));
     }
 
+    @Override
     public IOutputStream archiveFileAsIOutputStream(NewFileArchiveEntry entry)
     {
         checkReadWrite();
@@ -744,6 +806,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return stream;
     }
 
+    @Override
     public IHDF5Archiver archiveFile(NewFileArchiveEntry entry, InputStream input)
     {
         checkReadWrite();
@@ -754,11 +817,13 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public IHDF5Archiver archiveSymlink(String path, String linkTarget)
     {
         return archiveSymlink(NewArchiveEntry.symlink(path, linkTarget));
     }
 
+    @Override
     public IHDF5Archiver archiveSymlink(NewSymLinkArchiveEntry entry)
     {
         checkReadWrite();
@@ -767,11 +832,13 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public IHDF5Archiver archiveDirectory(String path)
     {
         return archiveDirectory(NewArchiveEntry.directory(path));
     }
 
+    @Override
     public IHDF5Archiver archiveDirectory(NewDirectoryArchiveEntry entry)
             throws IllegalStateException, IllegalArgumentException
     {
@@ -781,16 +848,19 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return this;
     }
 
+    @Override
     public IHDF5Archiver delete(String hdf5ObjectPath)
     {
         return delete(Collections.singletonList(hdf5ObjectPath), null);
     }
 
+    @Override
     public IHDF5Archiver delete(List<String> hdf5ObjectPaths)
     {
         return delete(hdf5ObjectPaths, null);
     }
 
+    @Override
     public IHDF5Archiver delete(List<String> hdf5ObjectPaths,
             IArchiveEntryVisitor entryVisitorOrNull)
     {

@@ -21,6 +21,7 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
@@ -47,171 +48,204 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     // Value creation
     // /////////////////////
 
+    @Override
     public HDF5EnumerationValue newVal(String typeName, String[] options, String value)
     {
         return new HDF5EnumerationValue(getType(typeName, options), value);
     }
 
+    @Override
     public HDF5EnumerationValue newVal(String typeName, String[] options, int value)
     {
         return new HDF5EnumerationValue(getType(typeName, options), value);
     }
 
+    @Override
     public HDF5EnumerationValue newVal(String typeName, String[] options, short value)
     {
         return new HDF5EnumerationValue(getType(typeName, options), value);
     }
 
+    @Override
     public HDF5EnumerationValue newVal(String typeName, String[] options, byte value)
     {
         return new HDF5EnumerationValue(getType(typeName, options), value);
     }
 
+    @Override
     public <T extends Enum<T>> HDF5EnumerationValue newVal(String typeName, Enum<T> value)
     {
         return new HDF5EnumerationValue(getType(typeName, getEnumClass(value)), value);
     }
 
+    @Override
     public HDF5EnumerationValueArray newArray(String typeName, String[] options, String[] values)
     {
         return new HDF5EnumerationValueArray(getType(typeName, options), values);
     }
 
+    @Override
     public HDF5EnumerationValueArray newArray(String typeName, String[] options, int[] values)
     {
         return new HDF5EnumerationValueArray(getType(typeName, options), values);
     }
 
+    @Override
     public HDF5EnumerationValueArray newArray(String typeName, String[] options, short[] values)
     {
         return new HDF5EnumerationValueArray(getType(typeName, options), values);
     }
 
+    @Override
     public HDF5EnumerationValueArray newArray(String typeName, String[] options, byte[] values)
     {
         return new HDF5EnumerationValueArray(getType(typeName, options), values);
     }
 
+    @Override
     public <T extends Enum<T>> HDF5EnumerationValueArray newArray(String typeName, Enum<T>[] values)
     {
         return new HDF5EnumerationValueArray(getType(typeName, getEnumClass(values)), values);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options,
             MDArray<String> values)
     {
         return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options,
             MDIntArray values)
     {
         return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options,
             MDShortArray values)
     {
         return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray newMDArray(String typeName, String[] options,
             MDByteArray values)
     {
         return new HDF5EnumerationValueMDArray(getType(typeName, options), values);
     }
 
+    @Override
     public <T extends Enum<T>> HDF5EnumerationValueMDArray newMDArray(String typeName,
             MDArray<Enum<T>> values)
     {
         return new HDF5EnumerationValueMDArray(getType(typeName, getEnumClass(values)), values);
     }
 
+    @Override
     public HDF5EnumerationValue newAnonVal(String[] options, String value)
     {
         return new HDF5EnumerationValue(getAnonType(options), value);
     }
 
+    @Override
     public HDF5EnumerationValue newAnonVal(String[] options, int value)
     {
         return new HDF5EnumerationValue(getAnonType(options), value);
     }
 
+    @Override
     public HDF5EnumerationValue newAnonVal(String[] options, short value)
     {
         return new HDF5EnumerationValue(getAnonType(options), value);
     }
 
+    @Override
     public HDF5EnumerationValue newAnonVal(String[] options, byte value)
     {
         return new HDF5EnumerationValue(getAnonType(options), value);
     }
 
+    @Override
     public <T extends Enum<T>> HDF5EnumerationValue newAnonVal(Enum<T> value)
     {
         return new HDF5EnumerationValue(getAnonType(getEnumClass(value)), value);
     }
 
+    @Override
     public <T extends Enum<T>> HDF5EnumerationValue newVal(Enum<T> value)
     {
         return new HDF5EnumerationValue(getType(getEnumClass(value)), value);
     }
 
+    @Override
     public HDF5EnumerationValueArray newAnonArray(String[] options, String[] values)
     {
         return new HDF5EnumerationValueArray(getAnonType(options), values);
     }
 
+    @Override
     public HDF5EnumerationValueArray newAnonArray(String[] options, int[] values)
     {
         return new HDF5EnumerationValueArray(getAnonType(options), values);
     }
 
+    @Override
     public HDF5EnumerationValueArray newAnonArray(String[] options, short[] values)
     {
         return new HDF5EnumerationValueArray(getAnonType(options), values);
     }
 
+    @Override
     public HDF5EnumerationValueArray newAnonArray(String[] options, byte[] values)
     {
         return new HDF5EnumerationValueArray(getAnonType(options), values);
     }
 
+    @Override
     public <T extends Enum<T>> HDF5EnumerationValueArray newAnonArray(Enum<T>[] values)
     {
         return new HDF5EnumerationValueArray(getAnonType(getEnumClass(values)), values);
     }
 
+    @Override
     public <T extends Enum<T>> HDF5EnumerationValueArray newArray(Enum<T>[] values)
     {
         return new HDF5EnumerationValueArray(getType(getEnumClass(values)), values);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray newAnonMDArray(String[] options, MDArray<String> values)
     {
         return new HDF5EnumerationValueMDArray(getAnonType(options), values);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray newAnonMDArray(String[] options, MDIntArray values)
     {
         return new HDF5EnumerationValueMDArray(getAnonType(options), values);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray newAnonMDArray(String[] options, MDShortArray values)
     {
         return new HDF5EnumerationValueMDArray(getAnonType(options), values);
     }
 
+    @Override
     public HDF5EnumerationValueMDArray newAnonMDArray(String[] options, MDByteArray values)
     {
         return new HDF5EnumerationValueMDArray(getAnonType(options), values);
     }
 
+    @Override
     public <T extends Enum<T>> HDF5EnumerationValueMDArray newAnonMDArray(MDArray<Enum<T>> values)
     {
         return new HDF5EnumerationValueMDArray(getAnonType(getEnumClass(values)), values);
     }
 
+    @Override
     public <T extends Enum<T>> HDF5EnumerationValueMDArray newMDArray(MDArray<Enum<T>> values)
     {
         return new HDF5EnumerationValueMDArray(getType(getEnumClass(values)), values);
@@ -239,11 +273,13 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     // Types
     // /////////////////////
 
+    @Override
     public HDF5EnumerationType getAnonType(String[] values) throws HDF5JavaException
     {
         return getType(null, values, false);
     }
 
+    @Override
     public HDF5EnumerationType getAnonType(final Class<? extends Enum<?>> enumClass)
             throws HDF5JavaException
     {
@@ -349,6 +385,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     // Attributes
     // /////////////////////
 
+    @Override
     public void setAttr(final String objectPath, final String name, final HDF5EnumerationValue value)
     {
         assert objectPath != null;
@@ -363,17 +400,20 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 value.toStorageForm());
     }
 
+    @Override
     public void setAttr(String objectPath, String name, Enum<?> value) throws HDF5JavaException
     {
         setAttr(objectPath, name, new HDF5EnumerationValue(getType(getEnumClass(value)), value));
     }
 
+    @Override
     public void setArrayAttr(final String objectPath, final String name,
             final HDF5EnumerationValueArray value)
     {
         baseWriter.setEnumArrayAttribute(objectPath, name, value);
     }
 
+    @Override
     public void setMDArrayAttr(String objectPath, String name, HDF5EnumerationValueMDArray value)
     {
         baseWriter.setEnumMDArrayAttribute(objectPath, name, value);
@@ -383,6 +423,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     // Data Sets
     // /////////////////////
 
+    @Override
     public void write(final String objectPath, final HDF5EnumerationValue value)
             throws HDF5JavaException
     {
@@ -397,17 +438,20 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 value.toStorageForm());
     }
 
+    @Override
     public void write(final String objectPath, final Enum<?> value) throws HDF5JavaException
     {
         write(objectPath, new HDF5EnumerationValue(getType(getEnumClass(value)), value));
     }
 
+    @Override
     public void writeArray(final String objectPath, final HDF5EnumerationValueArray data)
             throws HDF5JavaException
     {
         writeArray(objectPath, data, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
+    @Override
     public void writeArray(final String objectPath, final HDF5EnumerationValueArray data,
             final HDF5IntStorageFeatures features) throws HDF5JavaException
     {
@@ -418,6 +462,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         data.getType().check(baseWriter.fileId);
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     if (features.isScaling())
@@ -455,12 +500,14 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public HDF5EnumerationType createArray(final String objectPath,
             final HDF5EnumerationType enumType, final int size)
     {
         return createArray(objectPath, enumType, size, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
+    @Override
     public HDF5EnumerationType createArray(final String objectPath,
             final HDF5EnumerationType enumType, final long size, final int blockSize)
     {
@@ -468,6 +515,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
+    @Override
     public HDF5EnumerationType createArray(final String objectPath,
             final HDF5EnumerationType enumType, final long size, final int blockSize,
             final HDF5IntStorageFeatures features)
@@ -476,6 +524,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         enumType.check(baseWriter.fileId);
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     if (features.isScaling())
@@ -510,6 +559,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         return enumType;
     }
 
+    @Override
     public HDF5EnumerationType createArray(final String objectPath,
             final HDF5EnumerationType enumType, final long size,
             final HDF5IntStorageFeatures features)
@@ -518,6 +568,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         enumType.check(baseWriter.fileId);
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     if (features.requiresChunking())
@@ -563,6 +614,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         return enumType;
     }
 
+    @Override
     public void writeArrayBlock(final String objectPath, final HDF5EnumerationValueArray data,
             final long blockNumber)
     {
@@ -573,6 +625,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 * blockNumber);
     }
 
+    @Override
     public void writeArrayBlockWithOffset(final String objectPath,
             final HDF5EnumerationValueArray data, final int dataSize, final long offset)
     {
@@ -583,6 +636,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         data.getType().check(baseWriter.fileId);
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] blockDimensions = new long[]
@@ -618,12 +672,14 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void writeMDArray(final String objectPath, final HDF5EnumerationValueMDArray data)
             throws HDF5JavaException
     {
         writeMDArray(objectPath, data, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
+    @Override
     public void writeMDArray(final String objectPath, final HDF5EnumerationValueMDArray data,
             final HDF5IntStorageFeatures features) throws HDF5JavaException
     {
@@ -634,6 +690,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         data.getType().check(baseWriter.fileId);
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     if (features.isScaling())
@@ -683,6 +740,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         enumType.check(baseWriter.fileId);
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(final ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -701,6 +759,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
     public void writeMDArrayBlockWithOffset(final String objectPath,
             final HDF5EnumerationValueMDArray data, final long[] offset)
     {
@@ -714,6 +773,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 dimensions, offset, dataSetDimensions);
     }
 
+    @Override
     public void writeMDArrayBlock(String objectPath, HDF5EnumerationValueMDArray data,
             long[] blockNumber)
     {
@@ -729,6 +789,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 dimensions, offset, dataSetDimensions);
     }
 
+    @Override
     public HDF5EnumerationType createMDArray(String objectPath, HDF5EnumerationType enumType,
             int[] dimensions)
     {
@@ -736,6 +797,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
+    @Override
     public HDF5EnumerationType createMDArray(String objectPath, HDF5EnumerationType enumType,
             long[] dimensions, int[] blockDimensions)
     {
@@ -743,6 +805,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
+    @Override
     public HDF5EnumerationType createMDArray(final String objectPath,
             final HDF5EnumerationType enumType, final long[] dimensions,
             final int[] blockDimensions, final HDF5IntStorageFeatures features)
@@ -756,10 +819,11 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         enumType.check(baseWriter.fileId);
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(final ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
-                            dimensions, MDArray.toLong(blockDimensions), enumType.getStorageForm()
+                            dimensions, MDAbstractArray.toLong(blockDimensions), enumType.getStorageForm()
                                     .getStorageSize(), registry);
                     return null; // Nothing to return.
                 }
@@ -768,6 +832,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         return enumType;
     }
 
+    @Override
     public HDF5EnumerationType createMDArray(final String objectPath,
             final HDF5EnumerationType enumType, final int[] dimensions,
             final HDF5IntStorageFeatures features)
@@ -780,18 +845,19 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         enumType.check(baseWriter.fileId);
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(final ICleanUpRegistry registry)
                 {
                     if (features.requiresChunking())
                     {
                         final long[] nullDimensions = new long[dimensions.length];
                         baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
-                                nullDimensions, MDArray.toLong(dimensions), enumType
+                                nullDimensions, MDAbstractArray.toLong(dimensions), enumType
                                         .getStorageForm().getStorageSize(), registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, enumType.getStorageTypeId(), features,
-                                MDArray.toLong(dimensions), null, enumType.getStorageForm()
+                                MDAbstractArray.toLong(dimensions), null, enumType.getStorageForm()
                                         .getStorageSize(), registry);
                     }
                     return null; // Nothing to return.

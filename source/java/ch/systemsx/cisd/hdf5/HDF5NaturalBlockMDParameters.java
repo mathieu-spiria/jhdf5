@@ -18,7 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import java.util.NoSuchElementException;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 
 /**
  * A class for computing the parameters of multi-dimensional natural blocks.
@@ -100,7 +100,7 @@ final class HDF5NaturalBlockMDParameters
         final long[] dimensions = info.getDimensions();
         naturalBlockSize =
                 (info.getStorageLayout() == HDF5StorageLayout.CHUNKED) ? info.tryGetChunkSizes()
-                        : MDArray.toInt(dimensions);
+                        : MDAbstractArray.toInt(dimensions);
         numberOfBlocks = new long[rank];
         lastBlockSize = new int[rank];
         for (int i = 0; i < dimensions.length; ++i)

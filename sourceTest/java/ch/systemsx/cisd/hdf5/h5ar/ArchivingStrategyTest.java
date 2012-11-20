@@ -16,11 +16,13 @@
 
 package ch.systemsx.cisd.hdf5.h5ar;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
+
 import org.testng.annotations.Test;
 
 import ch.systemsx.cisd.hdf5.h5ar.ArchivingStrategy.CompressionStrategy;
-
-import static org.testng.AssertJUnit.*;
 
 /**
  * Test cases for {@link ArchivingStrategy}.

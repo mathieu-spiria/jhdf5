@@ -703,6 +703,7 @@ public final class HDF5CompoundMemberMapping
                 inferMapping(compoundMap.size(), compoundMap.entrySet());
         Collections.sort(result, new Comparator<HDF5CompoundMemberMapping>()
             {
+                @Override
                 public int compare(HDF5CompoundMemberMapping o1, HDF5CompoundMemberMapping o2)
                 {
                     return o1.memberName.compareTo(o2.memberName);
@@ -780,32 +781,38 @@ public final class HDF5CompoundMemberMapping
     {
         return new Iterable<Map.Entry<String, Object>>()
             {
+                @Override
                 public Iterator<Entry<String, Object>> iterator()
                 {
                     return new Iterator<Map.Entry<String, Object>>()
                         {
                             int idx = -1;
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return idx < memberNames.size() - 1;
                             }
 
+                            @Override
                             public Entry<String, Object> next()
                             {
                                 ++idx;
                                 return new Entry<String, Object>()
                                     {
+                                        @Override
                                         public String getKey()
                                         {
                                             return memberNames.get(idx);
                                         }
 
+                                        @Override
                                         public Object getValue()
                                         {
                                             return memberValues.get(idx);
                                         }
 
+                                        @Override
                                         public Object setValue(Object value)
                                         {
                                             throw new UnsupportedOperationException();
@@ -813,6 +820,7 @@ public final class HDF5CompoundMemberMapping
                                     };
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -827,32 +835,38 @@ public final class HDF5CompoundMemberMapping
     {
         return new Iterable<Map.Entry<String, Object>>()
             {
+                @Override
                 public Iterator<Entry<String, Object>> iterator()
                 {
                     return new Iterator<Map.Entry<String, Object>>()
                         {
                             int idx = -1;
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return idx < memberNames.length - 1;
                             }
 
+                            @Override
                             public Entry<String, Object> next()
                             {
                                 ++idx;
                                 return new Entry<String, Object>()
                                     {
+                                        @Override
                                         public String getKey()
                                         {
                                             return memberNames[idx];
                                         }
 
+                                        @Override
                                         public Object getValue()
                                         {
                                             return memberValues[idx];
                                         }
 
+                                        @Override
                                         public Object setValue(Object value)
                                         {
                                             throw new UnsupportedOperationException();
@@ -860,6 +874,7 @@ public final class HDF5CompoundMemberMapping
                                     };
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -1158,7 +1173,7 @@ public final class HDF5CompoundMemberMapping
         this.enumTypeOrNull = enumTypeOrNull;
         this.enumTypeName = enumTypeName;
         this.memberTypeDimensions = memberTypeDimensions;
-        this.memberTypeLength = MDArray.getLength(memberTypeDimensions);
+        this.memberTypeLength = MDAbstractArray.getLength(memberTypeDimensions);
         this.storageDataTypeId = storageMemberTypeId;
         if (typeVariantMap.containsKey(typeVariantOrNull))
         {
@@ -1298,7 +1313,7 @@ public final class HDF5CompoundMemberMapping
     {
         this.memberTypeDimensions = new int[]
             { memberTypeDimensionX, memberTypeDimensionY };
-        this.memberTypeLength = MDArray.getLength(memberTypeDimensions);
+        this.memberTypeLength = MDAbstractArray.getLength(memberTypeDimensions);
         return this;
     }
 
@@ -1310,7 +1325,7 @@ public final class HDF5CompoundMemberMapping
     public HDF5CompoundMemberMapping dimensions(int[] memberTypeDimensions)
     {
         this.memberTypeDimensions = memberTypeDimensions;
-        this.memberTypeLength = MDArray.getLength(memberTypeDimensions);
+        this.memberTypeLength = MDAbstractArray.getLength(memberTypeDimensions);
         if (enumTypeOrNull != null)
         {
             checkEnumArrayRank();

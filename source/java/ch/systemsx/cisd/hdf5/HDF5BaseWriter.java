@@ -18,8 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeStringLengthAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeTypeVariantAttributeName;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getVariableLengthStringDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
@@ -28,12 +28,12 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_UNLIMITED;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,11 +48,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang.math.NumberUtils;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatasetInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5FileNotFoundException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
+import org.apache.commons.lang.math.NumberUtils;
 
 import ch.systemsx.cisd.base.exceptions.CheckedExceptionTunnel;
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
@@ -171,6 +171,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
     {
         syncExecutor.execute(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     while (true)
@@ -383,6 +384,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
+                        @Override
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, "/", registry);
@@ -508,6 +510,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         checkOpen();
         final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int baseMemoryTypeId = value.getType().getNativeTypeId();
@@ -534,6 +537,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         checkOpen();
         final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int baseMemoryTypeId = value.getType().getNativeTypeId();
@@ -562,6 +566,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         type.check(fileId);
         final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final byte[] byteArray =
@@ -595,6 +600,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         type.check(fileId);
         final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final byte[] byteArray =
@@ -654,6 +660,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
@@ -703,6 +710,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
@@ -753,6 +761,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
@@ -803,6 +812,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
@@ -853,6 +863,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
@@ -903,6 +914,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
@@ -953,6 +965,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         final ICallableWithCleanUp<Object> writeScalarRunnable = new ICallableWithCleanUp<Object>()
             {
+                @Override
                 public Object call(ICleanUpRegistry registry)
                 {
                     writeScalar(dataSetPath, storageDataTypeId, nativeDataTypeId, value, true,
@@ -1196,6 +1209,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
+                        @Override
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);
@@ -1239,6 +1253,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
+                        @Override
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);
@@ -1282,6 +1297,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
+                        @Override
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);
@@ -1325,6 +1341,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
+                        @Override
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);
@@ -1349,6 +1366,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
+                        @Override
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);
@@ -1393,6 +1411,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
+                        @Override
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);
@@ -1436,6 +1455,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
+                        @Override
                         public Object call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);

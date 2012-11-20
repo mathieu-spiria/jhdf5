@@ -24,6 +24,7 @@ import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -51,6 +52,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
     // Specific
     // /////////////////////
 
+    @Override
     public String resolvePath(String reference)
     {
         assert reference != null;
@@ -111,11 +113,13 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
     // Attributes
     // /////////////////////
 
+    @Override
     public String getObjectReferenceAttribute(final String objectPath, final String attributeName)
     {
         return getObjectReferenceAttribute(objectPath, attributeName, true);
     }
 
+    @Override
     public String getObjectReferenceAttribute(final String objectPath, final String attributeName,
             final boolean resolveName)
     {
@@ -125,6 +129,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
             {
+                @Override
                 public String call(ICleanUpRegistry registry)
                 {
                     final int objectId =
@@ -143,12 +148,14 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         return baseReader.runner.call(readRunnable);
     }
 
+    @Override
     public String[] getObjectReferenceArrayAttribute(final String objectPath,
             final String attributeName)
     {
         return getObjectReferenceArrayAttribute(objectPath, attributeName, true);
     }
 
+    @Override
     public String[] getObjectReferenceArrayAttribute(final String objectPath,
             final String attributeName, final boolean resolveName)
     {
@@ -159,6 +166,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         final ICallableWithCleanUp<String[]> getAttributeRunnable =
                 new ICallableWithCleanUp<String[]>()
                     {
+                        @Override
                         public String[] call(ICleanUpRegistry registry)
                         {
                             final int objectId =
@@ -202,12 +210,14 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         return baseReader.runner.call(getAttributeRunnable);
     }
 
+    @Override
     public MDArray<String> getObjectReferenceMDArrayAttribute(final String objectPath,
             final String attributeName)
     {
         return getObjectReferenceMDArrayAttribute(objectPath, attributeName, true);
     }
 
+    @Override
     public MDArray<String> getObjectReferenceMDArrayAttribute(final String objectPath,
             final String attributeName, final boolean resolveName)
     {
@@ -218,6 +228,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         final ICallableWithCleanUp<MDArray<String>> getAttributeRunnable =
                 new ICallableWithCleanUp<MDArray<String>>()
                     {
+                        @Override
                         public MDArray<String> call(ICleanUpRegistry registry)
                         {
                             try
@@ -248,13 +259,13 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                 {
                                     checkReference(attributeId, objectPath);
                                     arrayDimensions =
-                                            MDArray.toInt(baseReader.h5
+                                            MDAbstractArray.toInt(baseReader.h5
                                                     .getDataDimensionsForAttribute(attributeId,
                                                             registry));
                                     memoryTypeId = H5T_STD_REF_OBJ;
                                 }
                                 final int len;
-                                len = MDArray.getLength(arrayDimensions);
+                                len = MDAbstractArray.getLength(arrayDimensions);
                                 final long[] references =
                                         baseReader.h5.readAttributeAsLongArray(attributeId,
                                                 memoryTypeId, len);
@@ -275,11 +286,13 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
     // Data Sets
     // /////////////////////
 
+    @Override
     public String readObjectReference(final String objectPath)
     {
         return readObjectReference(objectPath, true);
     }
 
+    @Override
     public String readObjectReference(final String objectPath, final boolean resolveName)
     {
         assert objectPath != null;
@@ -287,6 +300,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
             {
+                @Override
                 public String call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -303,11 +317,13 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         return baseReader.runner.call(readRunnable);
     }
 
+    @Override
     public String[] readObjectReferenceArray(final String objectPath)
     {
         return readObjectReferenceArray(objectPath, true);
     }
 
+    @Override
     public String[] readObjectReferenceArray(final String objectPath, final boolean resolveName)
     {
         assert objectPath != null;
@@ -315,6 +331,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<String[]> readCallable = new ICallableWithCleanUp<String[]>()
             {
+                @Override
                 public String[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -354,6 +371,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public String[] readObjectReferenceArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
@@ -361,6 +379,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                 * blockSize, true);
     }
 
+    @Override
     public String[] readObjectReferenceArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber, final boolean resolveName)
     {
@@ -368,12 +387,14 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                 * blockSize, resolveName);
     }
 
+    @Override
     public String[] readObjectReferenceArrayBlockWithOffset(final String objectPath,
             final int blockSize, final long offset)
     {
         return readObjectReferenceArrayBlockWithOffset(objectPath, blockSize, offset, true);
     }
 
+    @Override
     public String[] readObjectReferenceArrayBlockWithOffset(final String objectPath,
             final int blockSize, final long offset, final boolean resolveName)
     {
@@ -382,6 +403,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         baseReader.checkOpen();
         final ICallableWithCleanUp<String[]> readCallable = new ICallableWithCleanUp<String[]>()
             {
+                @Override
                 public String[] call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -398,11 +420,13 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public MDArray<String> readObjectReferenceMDArray(final String objectPath)
     {
         return readObjectReferenceMDArray(objectPath, true);
     }
 
+    @Override
     public MDArray<String> readObjectReferenceMDArray(final String objectPath,
             final boolean resolveName)
     {
@@ -412,6 +436,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         final ICallableWithCleanUp<MDArray<String>> readCallable =
                 new ICallableWithCleanUp<MDArray<String>>()
                     {
+                        @Override
                         public MDArray<String> call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
@@ -425,7 +450,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                             {
                                 final DataSpaceParameters spaceParams =
                                         baseReader.getSpaceParameters(dataSetId, registry);
-                                dimensions = MDArray.toInt(spaceParams.dimensions);
+                                dimensions = MDAbstractArray.toInt(spaceParams.dimensions);
                                 references = new long[spaceParams.blockSize];
                                 baseReader.h5.readDataSet(dataSetId, dataTypeId,
                                         spaceParams.memorySpaceId, spaceParams.dataSpaceId,
@@ -436,7 +461,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                             {
                                 final int spaceId = baseReader.h5.createScalarDataSpace();
                                 dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
-                                final int len = MDArray.getLength(dimensions);
+                                final int len = MDAbstractArray.getLength(dimensions);
                                 references = new long[len];
                                 final int memoryTypeId =
                                         baseReader.h5.createArrayType(H5T_STD_REF_OBJ, len,
@@ -457,12 +482,14 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public MDArray<String> readObjectReferenceMDArrayBlock(final String objectPath,
             final int[] blockDimensions, final long[] blockNumber)
     {
         return readObjectReferenceMDArrayBlock(objectPath, blockDimensions, blockNumber, true);
     }
 
+    @Override
     public MDArray<String> readObjectReferenceMDArrayBlock(final String objectPath,
             final int[] blockDimensions, final long[] blockNumber, final boolean resolveName)
     {
@@ -475,12 +502,14 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                 resolveName);
     }
 
+    @Override
     public MDArray<String> readObjectReferenceMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
     {
         return readObjectReferenceMDArrayBlockWithOffset(objectPath, blockDimensions, offset, true);
     }
 
+    @Override
     public MDArray<String> readObjectReferenceMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset, final boolean resolveName)
     {
@@ -492,6 +521,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         final ICallableWithCleanUp<MDArray<String>> readCallable =
                 new ICallableWithCleanUp<MDArray<String>>()
                     {
+                        @Override
                         public MDArray<String> call(ICleanUpRegistry registry)
                         {
                             final int dataSetId =
@@ -514,12 +544,14 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
     public Iterable<HDF5DataBlock<String[]>> getObjectReferenceArrayNaturalBlocks(
             final String dataSetPath) throws HDF5JavaException
     {
         return getObjectReferenceArrayNaturalBlocks(dataSetPath, true);
     }
     
+    @Override
     public Iterable<HDF5DataBlock<String[]>> getObjectReferenceArrayNaturalBlocks(
             final String dataSetPath, final boolean resolveName) throws HDF5JavaException
     {
@@ -529,6 +561,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
 
         return new Iterable<HDF5DataBlock<String[]>>()
             {
+                @Override
                 public Iterator<HDF5DataBlock<String[]>> iterator()
                 {
                     return new Iterator<HDF5DataBlock<String[]>>()
@@ -536,11 +569,13 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5DataBlock<String[]> next()
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
@@ -551,6 +586,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                         index.getAndIncIndex(), offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();
@@ -560,12 +596,14 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
             };
     }
 
+    @Override
     public Iterable<HDF5MDDataBlock<MDArray<String>>> getObjectReferenceMDArrayNaturalBlocks(
             final String dataSetPath)
     {
         return getObjectReferenceMDArrayNaturalBlocks(dataSetPath, true);
     }
     
+    @Override
     public Iterable<HDF5MDDataBlock<MDArray<String>>> getObjectReferenceMDArrayNaturalBlocks(
             final String dataSetPath, final boolean resolveName)
     {
@@ -575,6 +613,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
 
         return new Iterable<HDF5MDDataBlock<MDArray<String>>>()
             {
+                @Override
                 public Iterator<HDF5MDDataBlock<MDArray<String>>> iterator()
                 {
                     return new Iterator<HDF5MDDataBlock<MDArray<String>>>()
@@ -582,11 +621,13 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                             final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
                                     params.getNaturalBlockIndex();
 
+                            @Override
                             public boolean hasNext()
                             {
                                 return index.hasNext();
                             }
 
+                            @Override
                             public HDF5MDDataBlock<MDArray<String>> next()
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
@@ -597,6 +638,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                         index.getIndexClone(), offset);
                             }
 
+                            @Override
                             public void remove()
                             {
                                 throw new UnsupportedOperationException();

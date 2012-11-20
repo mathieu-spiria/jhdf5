@@ -16,9 +16,9 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.base.mdarray.MDArray;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
+import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * An interface that provides methods for reading <code>String</code> values from HDF5 files.

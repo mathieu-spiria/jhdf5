@@ -57,6 +57,7 @@ public class HDF5ArrayTypeFloatWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -77,6 +78,7 @@ public class HDF5ArrayTypeFloatWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int dataSetId =
@@ -97,6 +99,7 @@ public class HDF5ArrayTypeFloatWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int memoryTypeId =
@@ -121,6 +124,7 @@ public class HDF5ArrayTypeFloatWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int memoryTypeId =
@@ -150,6 +154,7 @@ public class HDF5ArrayTypeFloatWriter
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
             {
+                @Override
                 public Void call(ICleanUpRegistry registry)
                 {
                     final long[] dimensions = new long[]
@@ -158,6 +163,7 @@ public class HDF5ArrayTypeFloatWriter
                             H5Screate_simple(dimensions.length, dimensions, dimensions);
                     registry.registerCleanUp(new Runnable()
                         {
+                            @Override
                             public void run()
                             {
                                 H5Sclose(dataSpaceId);
@@ -183,6 +189,7 @@ public class HDF5ArrayTypeFloatWriter
                         H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
+                @Override
                 public void run()
                 {
                     H5Aclose(attributeId);

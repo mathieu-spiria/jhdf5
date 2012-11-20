@@ -109,6 +109,7 @@ class HDF5ArchiveUpdater
             indexProvider.get(normalizedDirectory, false).addFlushable(this);
         }
 
+        @Override
         public void write(int b) throws IOExceptionUnchecked
         {
             crc32.update(b);
@@ -116,6 +117,7 @@ class HDF5ArchiveUpdater
             delegate.write(b);
         }
 
+        @Override
         public void write(byte[] b) throws IOExceptionUnchecked
         {
             crc32.update(b);
@@ -123,6 +125,7 @@ class HDF5ArchiveUpdater
             delegate.write(b);
         }
 
+        @Override
         public void write(byte[] b, int off, int len) throws IOExceptionUnchecked
         {
             crc32.update(b, off, len);
@@ -130,6 +133,7 @@ class HDF5ArchiveUpdater
             delegate.write(b, off, len);
         }
 
+        @Override
         public void flush() throws IOExceptionUnchecked
         {
             link.setCrc32((int) crc32.getValue());
@@ -139,11 +143,13 @@ class HDF5ArchiveUpdater
             delegate.flush();
         }
 
+        @Override
         public void synchronize() throws IOExceptionUnchecked
         {
             delegate.synchronize();
         }
 
+        @Override
         public void close() throws IOExceptionUnchecked
         {
             flush();

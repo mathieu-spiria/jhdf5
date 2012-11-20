@@ -31,5 +31,6 @@ interface IDirectoryIndexProvider extends Closeable
 
     public IErrorStrategy getErrorStrategy();
  
+    @Override
     public void close();
 }

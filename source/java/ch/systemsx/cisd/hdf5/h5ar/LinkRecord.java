@@ -424,6 +424,7 @@ final class LinkRecord implements Comparable<LinkRecord>
     // Comparable
     //
 
+    @Override
     public int compareTo(LinkRecord o)
     {
         // We put all directories before all files.

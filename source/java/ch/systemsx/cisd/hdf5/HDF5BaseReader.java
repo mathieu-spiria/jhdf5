@@ -16,22 +16,22 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeStringLengthAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeTypeVariantAttributeName;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.getBooleanDataTypePath;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createCompoundElementStringLengthAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectStringLengthAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectTypeVariantAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getBooleanDataTypePath;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantMembersAttributeName;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectStringLengthAttributeName;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeStringLengthAttributeName;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createCompoundElementStringLengthAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STRING;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STRING;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -44,6 +44,7 @@ import java.util.Map;
 import ncsa.hdf.hdf5lib.exceptions.HDF5FileNotFoundException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
@@ -230,6 +231,7 @@ class HDF5BaseReader
     {
         final ICallableWithCleanUp<String> readRunnable = new ICallableWithCleanUp<String>()
             {
+                @Override
                 public String call(ICleanUpRegistry registry)
                 {
                     final int objectId = h5.openObject(fileId, "/", registry);
@@ -264,7 +266,7 @@ class HDF5BaseReader
         final int size;
         if (dataClass == H5T_ARRAY)
         {
-            final int numberOfElements = MDArray.getLength(h5.getArrayDimensions(nativeDataTypeId));
+            final int numberOfElements = MDAbstractArray.getLength(h5.getArrayDimensions(nativeDataTypeId));
             final int baseDataType = h5.getBaseDataType(nativeDataTypeId, registry);
             final int elementSize = h5.getDataTypeSize(baseDataType);
             size = numberOfElements * elementSize;
@@ -281,7 +283,7 @@ class HDF5BaseReader
         } else
         {
             final int numberOfElements =
-                    MDArray.getLength(h5.getDataDimensionsForAttribute(attributeId, registry));
+                    MDAbstractArray.getLength(h5.getDataDimensionsForAttribute(attributeId, registry));
             final int elementSize = h5.getDataTypeSize(nativeDataTypeId);
             size = numberOfElements * elementSize;
         }
@@ -451,7 +453,7 @@ class HDF5BaseReader
     DataSpaceParameters getSpaceParameters(final int dataSetId, ICleanUpRegistry registry)
     {
         long[] dimensions = h5.getDataDimensions(dataSetId, registry);
-        return new DataSpaceParameters(H5S_ALL, H5S_ALL, MDArray.getLength(dimensions), dimensions);
+        return new DataSpaceParameters(H5S_ALL, H5S_ALL, MDAbstractArray.getLength(dimensions), dimensions);
     }
 
     /**
@@ -573,7 +575,7 @@ class HDF5BaseReader
             effectiveBlockDimensions = h5.getDataDimensions(dataSetId, registry);
         }
         return new DataSpaceParameters(memorySpaceId, dataSpaceId,
-                MDArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
+                MDAbstractArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
     }
 
     /**
@@ -589,7 +591,7 @@ class HDF5BaseReader
 
         final long[] dimensions = h5.getDataDimensions(dataSetId, registry);
         final int memorySpaceId =
-                h5.createSimpleDataSpace(MDArray.toLong(memoryDimensions), registry);
+                h5.createSimpleDataSpace(MDAbstractArray.toLong(memoryDimensions), registry);
         for (int i = 0; i < dimensions.length; ++i)
         {
             if (dimensions[i] + memoryOffset[i] > memoryDimensions[i])
@@ -598,8 +600,8 @@ class HDF5BaseReader
                         + memoryOffset[i] + " >= memory buffer " + memoryDimensions[i]);
             }
         }
-        h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset), dimensions);
-        return new DataSpaceParameters(memorySpaceId, H5S_ALL, MDArray.getLength(dimensions),
+        h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset), dimensions);
+        return new DataSpaceParameters(memorySpaceId, H5S_ALL, MDAbstractArray.getLength(dimensions),
                 dimensions);
     }
 
@@ -648,10 +650,10 @@ class HDF5BaseReader
                     Math.min(blockDimensions[i], Math.min(maxMemoryBlockSize, maxFileBlockSize));
         }
         h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
-        memorySpaceId = h5.createSimpleDataSpace(MDArray.toLong(memoryDimensions), registry);
-        h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset), effectiveBlockDimensions);
+        memorySpaceId = h5.createSimpleDataSpace(MDAbstractArray.toLong(memoryDimensions), registry);
+        h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset), effectiveBlockDimensions);
         return new DataSpaceParameters(memorySpaceId, dataSpaceId,
-                MDArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
+                MDAbstractArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
     }
 
     /**
@@ -746,6 +748,7 @@ class HDF5BaseReader
         final ICallableWithCleanUp<HDF5DataSetInformation> informationDeterminationRunnable =
                 new ICallableWithCleanUp<HDF5DataSetInformation>()
                     {
+                        @Override
                         public HDF5DataSetInformation call(ICleanUpRegistry registry)
                         {
                             final int dataSetId = h5.openDataSet(fileId, dataSetPath, registry);
@@ -779,6 +782,7 @@ class HDF5BaseReader
         final ICallableWithCleanUp<HDF5DataTypeVariant> readRunnable =
                 new ICallableWithCleanUp<HDF5DataTypeVariant>()
                     {
+                        @Override
                         public HDF5DataTypeVariant call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);
@@ -796,6 +800,7 @@ class HDF5BaseReader
         final ICallableWithCleanUp<HDF5DataTypeVariant> readRunnable =
                 new ICallableWithCleanUp<HDF5DataTypeVariant>()
                     {
+                        @Override
                         public HDF5DataTypeVariant call(ICleanUpRegistry registry)
                         {
                             final int objectId = h5.openObject(fileId, objectPath, registry);
@@ -862,7 +867,7 @@ class HDF5BaseReader
         if (h5.getClassType(storageDataTypeId) == H5T_ARRAY)
         {
             arrayDimensions = h5.getArrayDimensions(storageDataTypeId);
-            len = MDArray.getLength(arrayDimensions);
+            len = MDAbstractArray.getLength(arrayDimensions);
             enumTypeId = h5.getBaseDataType(storageDataTypeId, registry);
             if (h5.getClassType(enumTypeId) != H5T_ENUM)
             {
@@ -878,8 +883,8 @@ class HDF5BaseReader
             }
             enumTypeId = storageDataTypeId;
             arrayDimensions =
-                    MDArray.toInt(h5.getDataDimensionsForAttribute(attributeId, registry));
-            len = MDArray.getLength(arrayDimensions);
+                    MDAbstractArray.toInt(h5.getDataDimensionsForAttribute(attributeId, registry));
+            len = MDAbstractArray.getLength(arrayDimensions);
         }
         final HDF5EnumerationType enumType =
                 getEnumTypeForEnumDataType(null, enumTypeId, true, fileRegistry);
@@ -1189,6 +1194,7 @@ class HDF5BaseReader
         final ICallableWithCleanUp<HDF5DataTypeInformation> informationDeterminationRunnable =
                 new ICallableWithCleanUp<HDF5DataTypeInformation>()
                     {
+                        @Override
                         public HDF5DataTypeInformation call(ICleanUpRegistry registry)
                         {
                             final HDF5DataTypeInformation dataTypeInfo =
@@ -1217,7 +1223,7 @@ class HDF5BaseReader
         {
             dataClass = getElementClassForArrayDataType(dataTypeId);
             final int[] arrayDimensions = h5.getArrayDimensions(dataTypeId);
-            final int numberOfElements = MDArray.getLength(arrayDimensions);
+            final int numberOfElements = MDAbstractArray.getLength(arrayDimensions);
             final int size = totalSize / numberOfElements;
             final int baseTypeId = h5.getBaseDataType(dataTypeId, registry);
             final String dataTypePathOrNull =
@@ -1282,11 +1288,13 @@ class HDF5BaseReader
                 new HDF5ValueObjectByteifyer<T>(compoundClazz,
                         new HDF5ValueObjectByteifyer.FileInfoProvider()
                             {
+                                @Override
                                 public int getBooleanDataTypeId()
                                 {
                                     return booleanDataTypeId;
                                 }
 
+                                @Override
                                 public int getStringDataTypeId(int maxLength)
                                 {
                                     final int typeId =
@@ -1294,6 +1302,7 @@ class HDF5BaseReader
                                     return typeId;
                                 }
 
+                                @Override
                                 public int getArrayTypeId(int baseTypeId, int length)
                                 {
                                     final int typeId =
@@ -1301,6 +1310,7 @@ class HDF5BaseReader
                                     return typeId;
                                 }
 
+                                @Override
                                 public int getArrayTypeId(int baseTypeId, int[] dimensions)
                                 {
                                     final int typeId =
@@ -1308,11 +1318,13 @@ class HDF5BaseReader
                                     return typeId;
                                 }
 
+                                @Override
                                 public CharacterEncoding getCharacterEncoding()
                                 {
                                     return encoding;
                                 }
 
+                                @Override
                                 public HDF5EnumerationType getEnumType(String[] options)
                                 {
                                     final int storageDataTypeId =
@@ -1553,7 +1565,7 @@ class HDF5BaseReader
             byte[] data = h5.readAttributeAsByteArray(attributeId, stringArrayDataTypeId, size);
             final int[] arrayDimensions = h5.getArrayDimensions(stringArrayDataTypeId);
             final int lengthPerElement = h5.getDataTypeSize(stringDataTypeId);
-            final int numberOfElements = MDArray.getLength(arrayDimensions);
+            final int numberOfElements = MDAbstractArray.getLength(arrayDimensions);
             final String[] result = new String[numberOfElements];
             final MDIntArray lengthsOrNull =
                     readRaw ? null : tryGetAttributeMDArrayExplicitStringLength(objectId,

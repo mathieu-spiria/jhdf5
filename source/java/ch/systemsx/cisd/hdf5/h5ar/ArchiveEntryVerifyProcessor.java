@@ -70,6 +70,7 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
         this.numeric = numeric;
     }
 
+    @Override
     public boolean process(String dir, String path, LinkRecord link, IHDF5Reader reader,
             IdCache idCache, IErrorStrategy errorStrategy) throws IOException
     {
@@ -78,6 +79,7 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
         return true;
     }
 
+    @Override
     public void postProcessDirectory(String dir, String path, LinkRecord link, IHDF5Reader reader,
             IdCache idCache, IErrorStrategy errorStrategy) throws IOException, HDF5Exception
     {
@@ -255,21 +257,25 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
         }
     }
 
+    @Override
     public ArchiverException createException(String objectPath, String detailedMsg)
     {
         return new VerifyArchiveException(objectPath, detailedMsg);
     }
 
+    @Override
     public ArchiverException createException(String objectPath, HDF5Exception cause)
     {
         return new VerifyArchiveException(objectPath, cause);
     }
 
+    @Override
     public ArchiverException createException(String objectPath, RuntimeException cause)
     {
         return new VerifyArchiveException(objectPath, cause);
     }
 
+    @Override
     public ArchiverException createException(File file, IOException cause)
     {
         return new VerifyArchiveException(file, cause);

@@ -42,6 +42,7 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
         IHDF5CompoundMemberBytifyerFactory
 {
 
+    @Override
     public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
         if (memberInfoOrNull != null)
@@ -54,6 +55,7 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
         }
     }
 
+    @Override
     public Class<?> tryGetOverrideJavaType(HDF5DataClass dataClass, int rank, int elementSize,
             HDF5DataTypeVariant typeVariantOrNull)
     {
@@ -67,6 +69,7 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
         }
     }
 
+    @Override
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
             HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull, HDF5EnumerationType enumTypeOrNull,
