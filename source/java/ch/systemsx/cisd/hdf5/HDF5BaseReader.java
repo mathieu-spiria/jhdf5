@@ -245,7 +245,7 @@ class HDF5BaseReader
                         final boolean explicitLengthStored = (suffixLen >= 0);
                         final String rawSuffix =
                                 getStringAttribute(objectId, "/",
-                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, true,
+                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, explicitLengthStored,
                                         registry);
                         return explicitLengthStored ? rawSuffix.substring(0, suffixLen) : rawSuffix;
                     } else
