@@ -589,7 +589,6 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, false);
     }
 
-    // TODO: add this method to the interface
     @Override
     public void writeStringMDArray(final String objectPath, final MDArray<String> data,
             final HDF5GenericStorageFeatures features) throws HDF5JavaException
