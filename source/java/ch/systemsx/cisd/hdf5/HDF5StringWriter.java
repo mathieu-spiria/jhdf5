@@ -217,17 +217,11 @@ public class HDF5StringWriter implements IHDF5StringWriter
         writeString(objectPath, data, data.length(), features);
     }
 
+    // Implementation note: this needs special treatment as we want to create a (possibly chunked)
+    // data set with max dimension 1 instead of infinity.
     @Override
     public void writeString(final String objectPath, final String data, final int maxLength,
             final HDF5GenericStorageFeatures features)
-    {
-        writeString(objectPath, data, maxLength, false, features);
-    }
-
-    // Implementation note: this needs special treatment as we want to create a (possibly chunked)
-    // data set with max dimension 1 instead of infinity.
-    void writeString(final String objectPath, final String data, final int maxLength,
-            final boolean lengthFitsValue, final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
@@ -239,19 +233,10 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int maxLengthNonZero = (maxLength == 0) ? 1 : maxLength;
-                    final byte[] bytes;
-                    final int maxBytes;
-                    if (lengthFitsValue)
-                    {
-                        bytes = StringUtils.toBytes(data, baseWriter.encoding);
-                        maxBytes = (bytes.length == 0) ? 1 : bytes.length;
-                    } else
-                    {
-                        bytes = StringUtils.toBytes(data, maxLengthNonZero, baseWriter.encoding);
-                        maxBytes =
-                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1)
-                                        * maxLengthNonZero;
-                    }
+                    final byte[] bytes = StringUtils.toBytes(data, maxLengthNonZero, baseWriter.encoding);
+                    final int maxBytes =
+                            (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1)
+                                    * maxLengthNonZero;
                     final int stringDataTypeId =
                             baseWriter.h5.createDataTypeString(maxBytes, registry);
                     if (features.requiresChunking() == false)
@@ -259,7 +244,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         // If we do not want to compress, we can create a scalar dataset.
                         baseWriter.writeScalar(objectPath, stringDataTypeId, stringDataTypeId,
                                 bytes, features.allowsCompact()
-                                        && (maxLengthNonZero < MAX_COMPACT_SIZE),
+                                        && (maxBytes < MAX_COMPACT_SIZE),
                                 baseWriter.keepDataIfExists(features), registry);
                     } else
                     {
