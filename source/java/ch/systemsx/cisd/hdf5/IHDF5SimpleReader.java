@@ -252,8 +252,8 @@ public interface IHDF5SimpleReader
             throws HDF5JavaException;
 
     /**
-     * Reads a <code>String</code> from the data set <var>objectPath</var>. This needs to be a
-     * string type.
+     * Reads a <code>String</code> from the data set <var>objectPath</var>. Considers '\0' as end of
+     * string. This needs to be a string type.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.

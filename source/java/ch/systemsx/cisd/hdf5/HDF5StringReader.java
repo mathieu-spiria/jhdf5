@@ -57,7 +57,7 @@ public class HDF5StringReader implements IHDF5StringReader
     }
 
     @Override
-    public String getStringAttributeFixedLength(final String objectPath, final String attributeName)
+    public String getStringAttributeRaw(final String objectPath, final String attributeName)
     {
         return getStringAttribute(objectPath, attributeName, true);
     }
@@ -78,27 +78,6 @@ public class HDF5StringReader implements IHDF5StringReader
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     return baseReader.getStringAttribute(objectId, objectPath, attributeName,
                             readRaw, registry);
-                }
-            };
-        return baseReader.runner.call(readRunnable);
-    }
-
-    @Override
-    public int getStringAttributeExplicitLength(final String objectPath, final String attributeName)
-    {
-        assert objectPath != null;
-        assert attributeName != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Integer> readRunnable = new ICallableWithCleanUp<Integer>()
-            {
-                @Override
-                public Integer call(ICleanUpRegistry registry)
-                {
-                    final int objectId =
-                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    return baseReader.getAttributeExplicitStringLength(objectId, attributeName,
-                            registry);
                 }
             };
         return baseReader.runner.call(readRunnable);
@@ -185,6 +164,12 @@ public class HDF5StringReader implements IHDF5StringReader
         return readString(objectPath, false);
     }
 
+    @Override
+    public String readStringRaw(String objectPath) throws HDF5JavaException
+    {
+        return readString(objectPath, true);
+    }
+
     String readString(final String objectPath, final boolean readRaw) throws HDF5JavaException
     {
         assert objectPath != null;
@@ -214,13 +199,8 @@ public class HDF5StringReader implements IHDF5StringReader
                         final int size = baseReader.h5.getDataTypeSize(dataTypeId);
                         byte[] data = new byte[size];
                         baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId, data);
-                        final int length =
-                                readRaw ? -1 : baseReader.getObjectExplicitStringLength(objectPath,
-                                        registry);
-                        return (length >= 0) ? StringUtils.fromBytes(data, length,
-                                baseReader.encoding) : (readRaw ? StringUtils.fromBytes(data,
-                                baseReader.encoding) : StringUtils.fromBytes0Term(data,
-                                baseReader.encoding));
+                        return readRaw ? StringUtils.fromBytes(data, baseReader.encoding)
+                                : StringUtils.fromBytes0Term(data, baseReader.encoding);
                     }
                 }
             };
@@ -364,7 +344,7 @@ public class HDF5StringReader implements IHDF5StringReader
     {
         return readStringMDArray(objectPath, false);
     }
-    
+
     MDArray<String> readStringMDArray(final String objectPath, final boolean readRaw)
     {
         assert objectPath != null;
@@ -387,8 +367,7 @@ public class HDF5StringReader implements IHDF5StringReader
                             if (baseReader.h5.isVariableLengthString(dataTypeId))
                             {
                                 baseReader.h5.readDataSetVL(dataSetId, dataTypeId,
-                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId,
-                                        data);
+                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                             } else
                             {
                                 final boolean isString =
@@ -398,16 +377,18 @@ public class HDF5StringReader implements IHDF5StringReader
                                     throw new HDF5JavaException(objectPath
                                             + " needs to be a String.");
                                 }
-                                
+
                                 final MDIntArray lengths =
-                                        readRaw ? null : baseReader.tryGetObjectMDArrayExplicitStringLength(
-                                                objectPath, registry);
+                                        readRaw ? null : baseReader
+                                                .tryGetObjectMDArrayExplicitStringLength(
+                                                        objectPath, registry);
                                 final int strLength = baseReader.h5.getDataTypeSize(dataTypeId);
                                 byte[] bdata = null;
                                 if (readRaw || lengths != null)
                                 {
                                     bdata = new byte[spaceParams.blockSize * strLength];
-                                    baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId, bdata);
+                                    baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId,
+                                            bdata);
                                 } else
                                 {
                                     baseReader.h5.readDataSetString(dataSetId, dataTypeId, data);
@@ -420,7 +401,8 @@ public class HDF5StringReader implements IHDF5StringReader
                                         {
                                             throw new HDF5JavaException(
                                                     "Size mismatch in string array: string array size = "
-                                                            + data.length + ", length array size = "
+                                                            + data.length
+                                                            + ", length array size = "
                                                             + lengths.size());
                                         }
                                         for (int i = 0, startIdx = 0; i < spaceParams.blockSize; ++i, startIdx +=
@@ -428,7 +410,8 @@ public class HDF5StringReader implements IHDF5StringReader
                                         {
                                             data[i] =
                                                     StringUtils.fromBytes(bdata, startIdx, startIdx
-                                                            + lengths.getAsFlatArray()[i], baseReader.encoding);
+                                                            + lengths.getAsFlatArray()[i],
+                                                            baseReader.encoding);
                                         }
                                     } else if (readRaw)
                                     {
@@ -596,4 +579,5 @@ public class HDF5StringReader implements IHDF5StringReader
                 }
             };
     }
+
 }

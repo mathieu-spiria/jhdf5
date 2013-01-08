@@ -200,13 +200,13 @@ public class HDF5StringWriter implements IHDF5StringWriter
     @Override
     public void writeString(final String objectPath, final String data, final int maxLength)
     {
-        writeString(objectPath, data, maxLength, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        writeString(objectPath, data, maxLength, true, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
     public void writeString(final String objectPath, final String data)
     {
-        writeString(objectPath, data, data.length(),
+        writeString(objectPath, data, data.length(), true,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
@@ -214,14 +214,20 @@ public class HDF5StringWriter implements IHDF5StringWriter
     public void writeString(final String objectPath, final String data,
             final HDF5GenericStorageFeatures features)
     {
-        writeString(objectPath, data, data.length(), features);
+        writeString(objectPath, data, data.length(), true, features);
+    }
+
+    @Override
+    public void writeString(final String objectPath, final String data, final int maxLength,
+            final HDF5GenericStorageFeatures features)
+    {
+        writeString(objectPath, data, maxLength, false, features);
     }
 
     // Implementation note: this needs special treatment as we want to create a (possibly chunked)
     // data set with max dimension 1 instead of infinity.
-    @Override
-    public void writeString(final String objectPath, final String data, final int maxLength,
-            final HDF5GenericStorageFeatures features)
+    void writeString(final String objectPath, final String data, final int maxLength,
+            final boolean lengthFitsValue, final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
@@ -232,37 +238,47 @@ public class HDF5StringWriter implements IHDF5StringWriter
                 @Override
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int maxLengthNonZero = (maxLength == 0) ? 1 : maxLength;
-                    final byte[] bytes = StringUtils.toBytes(data, maxLengthNonZero, baseWriter.encoding);
-                    final int maxBytes =
-                            (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1)
-                                    * maxLengthNonZero;
+                    final byte[] bytes;
+                    final int realMaxLengthInBytes;
+                    if (lengthFitsValue)
+                    {
+                        bytes = StringUtils.toBytes0Term(data, baseWriter.encoding);
+                        realMaxLengthInBytes = (bytes.length == 1) ? 1 : bytes.length - 1;
+                    } else
+                    {
+                        bytes = StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding);
+                        realMaxLengthInBytes =
+                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1)
+                                        * ((maxLength == 0) ? 1 : maxLength);
+                    }
+
+                    boolean exists = baseWriter.h5.exists(baseWriter.fileId, objectPath);
+                    if (exists && baseWriter.keepDataIfExists(features) == false)
+                    {
+                        baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
+                        exists = false;
+                    }
                     final int stringDataTypeId =
-                            baseWriter.h5.createDataTypeString(maxBytes, registry);
+                            baseWriter.h5.createDataTypeString(realMaxLengthInBytes, registry);
                     if (features.requiresChunking() == false)
                     {
                         // If we do not want to compress, we can create a scalar dataset.
                         baseWriter.writeScalar(objectPath, stringDataTypeId, stringDataTypeId,
                                 bytes, features.allowsCompact()
-                                        && (maxBytes < MAX_COMPACT_SIZE),
+                                        && (realMaxLengthInBytes < MAX_COMPACT_SIZE),
                                 baseWriter.keepDataIfExists(features), registry);
                     } else
                     {
                         final long[] chunkSizeOrNull =
-                                HDF5Utils.tryGetChunkSizeForString(maxBytes,
+                                HDF5Utils.tryGetChunkSizeForString(realMaxLengthInBytes,
                                         features.requiresChunking());
                         final int dataSetId;
-                        boolean exists = baseWriter.h5.exists(baseWriter.fileId, objectPath);
-                        if (exists && baseWriter.keepDataIfExists(features) == false)
-                        {
-                            baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
-                            exists = false;
-                        }
                         if (exists)
                         {
                             dataSetId =
                                     baseWriter.h5.openDataSet(baseWriter.fileId, objectPath,
                                             registry);
+
                         } else
                         {
                             final HDF5StorageLayout layout =
@@ -276,26 +292,11 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         }
                         H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, bytes);
                     }
-                    // Explicit length attribute needed?
-                    final String stringLengthAttributeName =
-                            createObjectStringLengthAttributeName(objectPath,
-                                    baseWriter.houseKeepingNameSuffix);
-                    setOrRemoveStringLengthAttribute(objectPath, stringLengthAttributeName,
-                            bytes.length, data.contains("\0") || bytes.length == 0, registry);
                     return null; // Nothing to return.
                 }
 
             };
         baseWriter.runner.call(writeRunnable);
-    }
-
-    void setOrRemoveStringLengthAttribute(final String objectPath,
-            final String stringLengthAttributeName, final int stringLength,
-            final boolean saveExplicitLength, ICleanUpRegistry registry)
-    {
-        final int objectId = baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
-        baseWriter.setOrRemoveStringLengthAttribute(objectId, stringLengthAttributeName,
-                stringLength, saveExplicitLength, registry);
     }
 
     @Override
@@ -941,8 +942,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
-                                    MDAbstractArray.toLong(data.dimensions()), pointerSize, features,
-                                    registry);
+                                    MDAbstractArray.toLong(data.dimensions()), pointerSize,
+                                    features, registry);
                     baseWriter.writeStringVL(dataSetId, data.getAsFlatArray());
                     return null; // Nothing to return.
                 }

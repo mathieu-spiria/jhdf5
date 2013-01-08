@@ -448,6 +448,7 @@ final class HDF5Utils
                 houseKeepingNameSuffix);
     }
 
+    //TODO: remove
     /** Returns the attribute to denote the real length of a string. */
     static String createObjectStringLengthAttributeName(String objectName, String suffix)
     {
@@ -459,6 +460,7 @@ final class HDF5Utils
     /**
      * Returns the string length attribute for the given <var>attributeName</var>.
      */
+    //TODO: remove
     static String createAttributeStringLengthAttributeName(String attributeName, String suffix)
     {
         final boolean noSuffix = "".equals(suffix);
@@ -469,6 +471,7 @@ final class HDF5Utils
     /**
      * Returns the string length attribute for the given <var>compoundElementName</var>.
      */
+    //TODO: remove
     static String createCompoundElementStringLengthAttributeName(String compoundElementName,
             String suffix)
     {

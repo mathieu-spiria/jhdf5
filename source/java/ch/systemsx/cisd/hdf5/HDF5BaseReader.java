@@ -97,7 +97,7 @@ class HDF5BaseReader
     }
 
     private final List<DataTypeContainer> namedDataTypeList;
-    
+
     // Use with care to avoid infinite loops!
     private HDF5IntReader intReader;
 
@@ -245,8 +245,8 @@ class HDF5BaseReader
                         final boolean explicitLengthStored = (suffixLen >= 0);
                         final String rawSuffix =
                                 getStringAttribute(objectId, "/",
-                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, explicitLengthStored,
-                                        registry);
+                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME,
+                                        explicitLengthStored, registry);
                         return explicitLengthStored ? rawSuffix.substring(0, suffixLen) : rawSuffix;
                     } else
                     {
@@ -266,7 +266,8 @@ class HDF5BaseReader
         final int size;
         if (dataClass == H5T_ARRAY)
         {
-            final int numberOfElements = MDAbstractArray.getLength(h5.getArrayDimensions(nativeDataTypeId));
+            final int numberOfElements =
+                    MDAbstractArray.getLength(h5.getArrayDimensions(nativeDataTypeId));
             final int baseDataType = h5.getBaseDataType(nativeDataTypeId, registry);
             final int elementSize = h5.getDataTypeSize(baseDataType);
             size = numberOfElements * elementSize;
@@ -283,7 +284,8 @@ class HDF5BaseReader
         } else
         {
             final int numberOfElements =
-                    MDAbstractArray.getLength(h5.getDataDimensionsForAttribute(attributeId, registry));
+                    MDAbstractArray.getLength(h5.getDataDimensionsForAttribute(attributeId,
+                            registry));
             final int elementSize = h5.getDataTypeSize(nativeDataTypeId);
             size = numberOfElements * elementSize;
         }
@@ -453,7 +455,8 @@ class HDF5BaseReader
     DataSpaceParameters getSpaceParameters(final int dataSetId, ICleanUpRegistry registry)
     {
         long[] dimensions = h5.getDataDimensions(dataSetId, registry);
-        return new DataSpaceParameters(H5S_ALL, H5S_ALL, MDAbstractArray.getLength(dimensions), dimensions);
+        return new DataSpaceParameters(H5S_ALL, H5S_ALL, MDAbstractArray.getLength(dimensions),
+                dimensions);
     }
 
     /**
@@ -601,8 +604,8 @@ class HDF5BaseReader
             }
         }
         h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset), dimensions);
-        return new DataSpaceParameters(memorySpaceId, H5S_ALL, MDAbstractArray.getLength(dimensions),
-                dimensions);
+        return new DataSpaceParameters(memorySpaceId, H5S_ALL,
+                MDAbstractArray.getLength(dimensions), dimensions);
     }
 
     /**
@@ -650,8 +653,10 @@ class HDF5BaseReader
                     Math.min(blockDimensions[i], Math.min(maxMemoryBlockSize, maxFileBlockSize));
         }
         h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
-        memorySpaceId = h5.createSimpleDataSpace(MDAbstractArray.toLong(memoryDimensions), registry);
-        h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset), effectiveBlockDimensions);
+        memorySpaceId =
+                h5.createSimpleDataSpace(MDAbstractArray.toLong(memoryDimensions), registry);
+        h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset),
+                effectiveBlockDimensions);
         return new DataSpaceParameters(memorySpaceId, dataSpaceId,
                 MDAbstractArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
     }
@@ -1011,59 +1016,6 @@ class HDF5BaseReader
     }
 
     /**
-     * Returns the explicitly saved string length for <var>objectPath</var>, or <code>-1</code>, if
-     * no explicit string length is defined for this object.
-     * 
-     * @param objectPath The path of the data set object in the file.
-     * @return The explicitly set length of the string data set, or -1, if no length was set
-     *         explicitly.
-     */
-    int getObjectExplicitStringLength(final String objectPath, ICleanUpRegistry registry)
-    {
-        final String stringLengthAttributeName =
-                createObjectStringLengthAttributeName(objectPath, houseKeepingNameSuffix);
-        final int objectId = h5.openObject(fileId, objectPath, registry);
-        if (h5.existsAttribute(objectId, stringLengthAttributeName) == false)
-        {
-            return -1;
-        }
-        final int attributeId = h5.openAttribute(objectId, stringLengthAttributeName, registry);
-        final int[] data = h5.readAttributeAsIntArray(attributeId, H5T_NATIVE_INT32, 1);
-        return data[0];
-    }
-
-    /**
-     * Returns the explicitly saved string length for attribute <var>attributeName</var> of
-     * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
-     * attribute.
-     * 
-     * @param objectId The id of the data set object in the file.
-     * @return The ordinal of the type variant or <code>null</code>.
-     */
-    int getAttributeExplicitStringLength(final int objectId, final String attributeName,
-            ICleanUpRegistry registry)
-    {
-        return getAttributeExplicitStringLength(objectId, attributeName, houseKeepingNameSuffix,
-                registry);
-    }
-
-    /**
-     * Returns the explicitly saved string length for attribute <var>attributeName</var> of
-     * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
-     * attribute.
-     * 
-     * @param objectId The id of the data set object in the file.
-     * @return The ordinal of the type variant or <code>null</code>.
-     */
-    boolean hasAttributeExplicitStringLength(final int objectId, final String attributeName,
-            ICleanUpRegistry registry)
-    {
-        final String name =
-                createAttributeStringLengthAttributeName(attributeName, houseKeepingNameSuffix);
-        return h5.existsAttribute(objectId, name);
-    }
-
-    /**
      * Returns the explicitly saved string length for attribute <var>attributeName</var> of
      * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
      * attribute.
@@ -1071,7 +1023,7 @@ class HDF5BaseReader
      * @param objectId The id of the data set object in the file.
      * @return The length of the string attribute or -1.
      */
-    int getAttributeExplicitStringLength(final int objectId, final String attributeName,
+    private int getAttributeExplicitStringLength(final int objectId, final String attributeName,
             final String suffix, ICleanUpRegistry registry)
     {
         final String name = createAttributeStringLengthAttributeName(attributeName, suffix);
@@ -1472,12 +1424,8 @@ class HDF5BaseReader
         } else
         {
             final byte[] data = h5.readAttributeAsByteArray(attributeId, stringDataTypeId, size);
-            final int length =
-                    readRaw ? -1 : getAttributeExplicitStringLength(objectId, attributeName,
-                            registry);
-            return (length >= 0) ? StringUtils.fromBytes(data, length, encoding)
-                    : (readRaw ? StringUtils.fromBytes(data, encoding) : StringUtils
-                            .fromBytes0Term(data, encoding));
+            return (readRaw ? StringUtils.fromBytes(data, encoding) : StringUtils.fromBytes0Term(
+                    data, encoding));
         }
     }
 

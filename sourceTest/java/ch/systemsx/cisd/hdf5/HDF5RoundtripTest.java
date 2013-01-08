@@ -153,11 +153,9 @@ public class HDF5RoundtripTest
         test.testReadStringVLAsByteArray();
         test.testStringAttributeFixedLength();
         test.testStringAttributeFixedLengthExplicitlySaveLength();
-        test.testStringExplicitlySaveLength();
         test.testStringAttributeArrayFixedLengthExplicitlySaveLength();
         test.testStringAttributeLength0();
         test.testStringAttributeMDArrayFixedLengthExplicitlySaveLength();
-        test.testStringAttributeFixedLengthExplicitlySaveLengthNonDefaultHouseKeepingSuffix();
         test.testStringAttributeFixedLengthOverwriteWithShorter();
         test.testStringAttributeUTF8FixedLength();
         test.testStringArrayAttributeLengthFitsValue();
@@ -181,7 +179,6 @@ public class HDF5RoundtripTest
         test.testStringArrayWithNullStrings();
         test.testStringMDArrayWithNullStrings();
         test.testStringArrayBlock();
-        //test.testStringArrayBlockWithZeroChar();
         test.testStringArrayBlockCompact();
         test.testStringArrayCompact();
         test.testStringCompression();
@@ -302,6 +299,10 @@ public class HDF5RoundtripTest
         {
             // Expected.
         }
+        test.testOverwriteKeepWithEmptyString();
+        test.testOverwriteKeepWithShorterString();
+        test.testOverwriteKeepWithLongerString();
+        test.testReplaceWithLongerString();
         test.testNullOnGetSymbolicLinkTargetForNoLink();
         test.testUpdateSoftLink();
         test.testExternalLink();
@@ -539,7 +540,7 @@ public class HDF5RoundtripTest
         final File datasetFile = new File(workingDirectory, "values.h5");
         datasetFile.delete();
         assertFalse(datasetFile.exists());
-        datasetFile.deleteOnExit();
+        // datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         final String booleanDatasetName = "/boolean";
         writer.writeBoolean(booleanDatasetName, true);
@@ -557,6 +558,8 @@ public class HDF5RoundtripTest
         writer.writeDouble(doubleDatasetName, 1.0E100);
         final String stringDatasetName = "/string";
         writer.writeString(stringDatasetName, "some string");
+        final String stringWithZeroDatasetName = "/stringWithZero";
+        writer.writeString(stringWithZeroDatasetName, "some string\0with zero");
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertTrue(reader.readBoolean(booleanDatasetName));
@@ -567,6 +570,8 @@ public class HDF5RoundtripTest
         assertEquals(0.001f, reader.readFloat(floatDatasetName));
         assertEquals(1.0E100, reader.readDouble(doubleDatasetName));
         assertEquals("some string", reader.readString(stringDatasetName));
+        assertEquals("some string", reader.readString(stringWithZeroDatasetName));
+        assertEquals("some string\0with zero", reader.readStringRaw(stringWithZeroDatasetName));
         reader.close();
     }
 
@@ -2349,36 +2354,6 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
-    @Test(groups = "broken")
-    public void testStringArrayBlockWithZeroChar()
-    {
-        final File stringArrayFile = new File(workingDirectory, "stringArrayBlockWithZeroChar.h5");
-        stringArrayFile.delete();
-        assertFalse(stringArrayFile.exists());
-        stringArrayFile.deleteOnExit();
-        final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
-        final String[] data = new String[]
-            { "abc", "ABCxxx", "\0xyz" };
-        final String dataSetName = "/aStringArray";
-        writer.createStringArray(dataSetName, 6, 5, 3);
-        // FIXME: this method does not yet store the string size explicitly.
-        writer.writeStringArrayBlock(dataSetName, data, 1);
-        writer.close();
-        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
-        String[] dataStored = reader.readStringArray(dataSetName);
-        assertTrue(Arrays.equals(new String[]
-            { "", "", "", data[0], data[1], data[2] }, dataStored));
-        dataStored = reader.readStringArrayBlock(dataSetName, 3, 0);
-        assertTrue(Arrays.equals(new String[]
-            { "", "", "" }, dataStored));
-        dataStored = reader.readStringArrayBlock(dataSetName, 3, 1);
-        assertTrue(Arrays.equals(data, dataStored));
-        dataStored = reader.readStringArrayBlockWithOffset(dataSetName, 3, 2);
-        assertTrue(Arrays.equals(new String[]
-            { "", data[0], data[1] }, dataStored));
-        reader.close();
-    }
-
     @Test
     public void testStringArrayBlockCompact()
     {
@@ -2744,7 +2719,7 @@ public class HDF5RoundtripTest
         w.setStringAttribute("/", "a", "a\0c");
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
-        final String b = r.getStringAttributeFixedLength("/", "a");
+        final String b = r.getStringAttributeRaw("/", "a");
         assertEquals("a\0c", b);
         r.close();
     }
@@ -2774,33 +2749,11 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer w = HDF5Factory.open(file);
-        // As the value contains \0, it will explicitly save the length of the attribute.
         w.setStringAttribute("/", "a", "a\0c");
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
-        final String b1 = r.getStringAttributeFixedLength("/", "a");
-        assertEquals("a\0c", b1);
-        final String b2 = r.getStringAttribute("/", "a");
-        assertEquals("a\0c", b2);
-        assertEquals(3, r.getStringAttributeExplicitLength("/", "a"));
-        r.close();
-    }
-
-    @Test
-    public void testStringExplicitlySaveLength()
-    {
-        final File file = new File(workingDirectory, "stringExplicitlySaveLength.h5");
-        file.delete();
-        assertFalse(file.exists());
-        file.deleteOnExit();
-        final IHDF5Writer w = HDF5Factory.open(file);
-        // As the value contains \0, it will explicitly save the length of the attribute.
-        w.writeString("a", "a\0c");
-        w.close();
-        final IHDF5Reader r = HDF5Factory.openForReading(file);
-        assertEquals(3, r.getIntAttribute("a", "__STRING_LENGTH__a__"));
-        final String b1 = r.readString("a");
-        assertEquals("a\0c", b1);
+        assertEquals("a\0c", r.getStringAttributeRaw("/", "a"));
+        assertEquals("a", r.getStringAttribute("/", "a"));
         r.close();
     }
 
@@ -2853,27 +2806,6 @@ public class HDF5RoundtripTest
     }
 
     @Test
-    public void testStringAttributeFixedLengthExplicitlySaveLengthNonDefaultHouseKeepingSuffix()
-    {
-        // TODO: check if this test still makes sense: we deleted the explicit setting of the
-        // length...
-        final File file =
-                new File(workingDirectory,
-                        "stringAttributeFixedLengthExplicitlySaveLengthNonDefaultHouseKeepingSuffix.h5");
-        file.delete();
-        assertFalse(file.exists());
-        file.deleteOnExit();
-        final IHDF5Writer w = HDF5Factory.configure(file).houseKeepingNameSuffix("\0\0").writer();
-        w.setStringAttribute("/", "a", "a\0c");
-        w.close();
-        final IHDF5Reader r = HDF5Factory.openForReading(file);
-        final String b = r.getStringAttributeFixedLength("/", "a");
-        assertEquals("a\0c", b);
-        assertEquals(3, r.getStringAttributeExplicitLength("/", "a"));
-        r.close();
-    }
-
-    @Test
     public void testStringAttributeFixedLengthOverwriteWithShorter()
     {
         final File file =
@@ -2890,10 +2822,8 @@ public class HDF5RoundtripTest
         w.setStringAttribute("/", "b", "jkl", 6);
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
-        final String a = r.getStringAttributeFixedLength("/", "a");
-        assertEquals("ghi", a);
-        final String b = r.getStringAttributeFixedLength("/", "b");
-        assertEquals("jkl\0\0\0", b);
+        assertEquals("ghi", r.getStringAttributeRaw("/", "a"));
+        assertEquals("jkl\0\0\0", r.getStringAttributeRaw("/", "b"));
         r.close();
     }
 
@@ -2908,8 +2838,7 @@ public class HDF5RoundtripTest
         w.setStringAttribute("/", "a", "a\0c");
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
-        final String b = r.getStringAttributeFixedLength("/", "a");
-        assertEquals("a\0c", b);
+        assertEquals("a\0c", r.getStringAttributeRaw("/", "a"));
         r.close();
     }
 
@@ -3732,9 +3661,69 @@ public class HDF5RoundtripTest
     }
 
     @Test
-    public void testOverwriteWithEmptyString()
+    public void testOverwriteKeepWithEmptyString()
     {
-        final File datasetFile = new File(workingDirectory, "overwriteString.h5");
+        final File datasetFile = new File(workingDirectory, "overwriteWithEmtpyString.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "/string";
+        writer.writeString(dsName, "non-empty");
+        writer.close();
+        writer = HDF5FactoryProvider.get().configure(datasetFile).keepDataSetsIfTheyExist().writer();
+        writer.writeString(dsName, "");
+        writer.close();
+        IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final String stringRead = reader.readString(dsName);
+        reader.close();
+        assertEquals("", stringRead);
+    }
+
+    @Test
+    public void testOverwriteKeepWithShorterString()
+    {
+        final File datasetFile = new File(workingDirectory, "overwriteWithShorterString.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "/string";
+        writer.writeString(dsName, "non-empty");
+        writer.close();
+        writer = HDF5FactoryProvider.get().configure(datasetFile).keepDataSetsIfTheyExist().writer();
+        writer.writeString(dsName, "non");
+        writer.close();
+        IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final String stringRead = reader.readString(dsName);
+        reader.close();
+        assertEquals("non", stringRead);
+    }
+
+    @Test
+    public void testOverwriteKeepWithLongerString()
+    {
+        final File datasetFile = new File(workingDirectory, "overwriteWithLongerString.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "/string";
+        writer.writeString(dsName, "non-empty");
+        writer.close();
+        writer = HDF5FactoryProvider.get().configure(datasetFile).keepDataSetsIfTheyExist().writer();
+        writer.writeString(dsName, "0123456789");
+        writer.close();
+        IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final String stringRead = reader.readString(dsName);
+        reader.close();
+        assertEquals("012345678", stringRead);
+    }
+
+    @Test
+    public void testReplaceWithLongerString()
+    {
+        final File datasetFile = new File(workingDirectory, "replaceWithLongerString.h5");
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
@@ -3743,12 +3732,12 @@ public class HDF5RoundtripTest
         writer.writeString(dsName, "non-empty");
         writer.close();
         writer = HDF5FactoryProvider.get().open(datasetFile);
-        writer.writeString(dsName, "");
+        writer.writeString(dsName, "0123456789");
         writer.close();
         IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final String stringRead = reader.readString(dsName);
         reader.close();
-        assertEquals("", stringRead);
+        assertEquals("0123456789", stringRead);
     }
 
     @Test

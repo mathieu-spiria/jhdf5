@@ -1507,7 +1507,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
     void setStringAttribute(final int objectId, final String name, final String value,
             final int maxLength, final boolean lengthFitsValue, ICleanUpRegistry registry)
     {
-        final int maxLengthNonZero = (maxLength == 0) ? 1 : maxLength;
         final byte[] bytes;
         final int realMaxLengthInBytes;
         if (lengthFitsValue)
@@ -1516,8 +1515,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
             realMaxLengthInBytes = (bytes.length == 0) ? 1 : bytes.length;
         } else
         {
-            bytes = StringUtils.toBytes(value, maxLengthNonZero, encoding);
-            realMaxLengthInBytes = (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLengthNonZero;
+            bytes = StringUtils.toBytes(value, maxLength, encoding);
+            realMaxLengthInBytes = (encoding == CharacterEncoding.UTF8 ? 4 : 1) * ((maxLength == 0) ? 1 : maxLength);
         }
         final int storageDataTypeId = h5.createDataTypeString(realMaxLengthInBytes, registry);
         int attributeId;
@@ -1536,27 +1535,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
         h5.writeAttribute(attributeId, storageDataTypeId,
                 StringUtils.cutOrPadBytes(bytes, realMaxLengthInBytes));
-        // Explicit length attribute needed?
-        final String stringLengthAttributeName =
-                createAttributeStringLengthAttributeName(name, houseKeepingNameSuffix);
-        setOrRemoveStringLengthAttribute(objectId, stringLengthAttributeName, bytes.length,
-                value.contains("\0") || bytes.length == 0, registry);
-    }
-
-    void setOrRemoveStringLengthAttribute(final int objectId,
-            final String stringLengthAttributeName, final int stringLength,
-            final boolean saveExplicitLength, ICleanUpRegistry registry)
-    {
-        if (saveExplicitLength)
-        {
-            setIntAttributeAutoSize(objectId, stringLengthAttributeName, stringLength, registry);
-        } else
-        {
-            if (h5.existsAttribute(objectId, stringLengthAttributeName))
-            {
-                h5.deleteAttribute(objectId, stringLengthAttributeName);
-            }
-        }
     }
 
     class StringArrayBuffer

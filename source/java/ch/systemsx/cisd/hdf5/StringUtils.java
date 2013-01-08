@@ -48,6 +48,21 @@ public final class StringUtils
     }
 
     /**
+     * Converts string <var>s</var> to a byte array of a 0-terminated string, using
+     * <var>encoding</var>.
+     */
+    public static byte[] toBytes0Term(String s, CharacterEncoding encoding)
+    {
+        try
+        {
+            return (s + '\0').getBytes(encoding.getCharSetName());
+        } catch (UnsupportedEncodingException ex)
+        {
+            return (s + '\0').getBytes();
+        }
+    }
+
+    /**
      * Converts string <var>s</var> to a byte array of a string, using <var>encoding</var> and
      * cutting it to <var>maxLength</var> characters.
      */

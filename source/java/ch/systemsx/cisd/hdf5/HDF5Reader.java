@@ -1173,9 +1173,9 @@ class HDF5Reader implements IHDF5Reader
     }
 
     @Override
-    public int getStringAttributeExplicitLength(String objectPath, String attributeName)
+    public String getStringAttributeRaw(String objectPath, String attributeName)
     {
-        return stringReader.getStringAttributeExplicitLength(objectPath, attributeName);
+        return stringReader.getStringAttributeRaw(objectPath, attributeName);
     }
 
     @Override
@@ -1188,12 +1188,6 @@ class HDF5Reader implements IHDF5Reader
     public MDArray<String> getStringMDArrayAttribute(String objectPath, String attributeName)
     {
         return stringReader.getStringMDArrayAttribute(objectPath, attributeName);
-    }
-
-    @Override
-    public String getStringAttributeFixedLength(String objectPath, String attributeName)
-    {
-        return stringReader.getStringAttributeFixedLength(objectPath, attributeName);
     }
 
     @Override
@@ -1213,6 +1207,12 @@ class HDF5Reader implements IHDF5Reader
     public String readString(String objectPath) throws HDF5JavaException
     {
         return stringReader.readString(objectPath);
+    }
+
+    @Override
+    public String readStringRaw(String objectPath) throws HDF5JavaException
+    {
+        return stringReader.readStringRaw(objectPath);
     }
 
     @Override
