@@ -218,8 +218,6 @@ public class TestH5Fbasic {
         assertEquals(freeSpace, 0);
     }
 
-    // TODO add/and delete objects and test freespace
-
     @Test
     public void testH5Fget_filesize() {
         long fileSize = 0;
@@ -232,8 +230,6 @@ public class TestH5Fbasic {
         }
         assertTrue(fileSize > 0);
     }
-
-    // TODO add/and delete objects and test freespace
 
     @Test
     public void testH5Fget_mdc_hit_rate() {
@@ -260,8 +256,6 @@ public class TestH5Fbasic {
         }
         assertTrue("H5.H5Fget_mdc_size #:" + nentries, nentries == 4);
     }
-
-    // TODO: test more cases of different cache sizes.
 
     @Test
     public void testH5Freset_mdc_hit_rate_stats() {
