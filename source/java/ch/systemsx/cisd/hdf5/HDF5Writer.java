@@ -1091,19 +1091,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
-    public void writeStringArrayVariableLength(String objectPath, String[] data,
-            HDF5GenericStorageFeatures features)
-    {
-        stringWriter.writeStringArrayVariableLength(objectPath, data, features);
-    }
-
-    @Override
-    public void writeStringArrayVariableLength(String objectPath, String[] data)
-    {
-        stringWriter.writeStringArrayVariableLength(objectPath, data);
-    }
-
-    @Override
     public void createStringMDArray(String objectPath, int maxLength, int[] dimensions,
             HDF5GenericStorageFeatures features)
     {
@@ -1154,19 +1141,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
             HDF5GenericStorageFeatures features)
     {
         stringWriter.writeStringMDArray(objectPath, data, maxLength, features);
-    }
-
-    @Override
-    public void writeStringMDArrayVariableLength(String objectPath, MDArray<String> data,
-            HDF5GenericStorageFeatures features)
-    {
-        stringWriter.writeStringMDArrayVariableLength(objectPath, data, features);
-    }
-
-    @Override
-    public void writeStringMDArrayVariableLength(String objectPath, MDArray<String> data)
-    {
-        stringWriter.writeStringMDArrayVariableLength(objectPath, data);
     }
 
     @Override

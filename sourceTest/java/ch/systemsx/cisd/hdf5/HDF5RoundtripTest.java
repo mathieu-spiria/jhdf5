@@ -181,10 +181,9 @@ public class HDF5RoundtripTest
         test.testStringArrayCompact();
         test.testStringCompression();
         test.testStringArrayCompression();
-        test.testStringArrayVL();
+        test.testStringVLArray();
         test.testStringArrayBlockVL();
         test.testStringArrayMD();
-        test.testStringArrayMDVL();
         test.testStringArrayMDBlocks();
         test.testStringMDArrayVL();
         test.testStringMDArrayVLBlocks();
@@ -2436,28 +2435,6 @@ public class HDF5RoundtripTest
     }
 
     @Test
-    public void testStringArrayMDVL()
-    {
-        final File stringArrayFile = new File(workingDirectory, "variableLengthStringMDArray.h5");
-        stringArrayFile.delete();
-        assertFalse(stringArrayFile.exists());
-        stringArrayFile.deleteOnExit();
-        final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
-        final MDArray<String> data = new MDArray<String>(new String[]
-            { "abc", "ABCxxx", "xyz", "DEF" }, new long[]
-            { 2, 2 });
-        final String dataSetName = "/aStringArray";
-        writer.writeStringMDArrayVariableLength(dataSetName, data);
-        writer.close();
-        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
-        final MDArray<String> dataStored = reader.readStringMDArray(dataSetName);
-        assertTrue(Arrays.equals(data.getAsFlatArray(), dataStored.getAsFlatArray()));
-        assertTrue(Arrays.equals(data.dimensions(), dataStored.dimensions()));
-        assertTrue(reader.getDataSetInformation(dataSetName).getTypeInformation().isVariableLengthType());
-        reader.close();
-    }
-
-    @Test
     public void testStringArrayMDBlocks()
     {
         final File stringArrayFile = new File(workingDirectory, "stringMDArrayBlocks.h5");
@@ -3131,10 +3108,10 @@ public class HDF5RoundtripTest
     }
 
     @Test
-    public void testStringArrayVL()
+    public void testStringVLArray()
     {
         final File compressedStringArrayFile =
-                new File(workingDirectory, "variableLengthStringArray.h5");
+                new File(workingDirectory, "StringVLArray.h5");
         compressedStringArrayFile.delete();
         assertFalse(compressedStringArrayFile.exists());
         compressedStringArrayFile.deleteOnExit();
@@ -3144,7 +3121,7 @@ public class HDF5RoundtripTest
         final String[] data = new String[]
             { longMonotonousString, longMonotonousString, longMonotonousString };
         final String dataSetName = "/aHopeFullyCompressedStringArray";
-        writer.writeStringArrayVariableLength(dataSetName, data);
+        writer.writeStringVariableLengthArray(dataSetName, data);
         writer.close();
         final IHDF5Reader reader =
                 HDF5FactoryProvider.get().openForReading(compressedStringArrayFile);
