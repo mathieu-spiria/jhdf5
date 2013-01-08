@@ -71,8 +71,8 @@ final class HDF5Utils
     /**
      * The length of the suffix for housekeeping files and groups.
      */
-    private static final String HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME =
-            createAttributeStringLengthAttributeName(HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, "");
+    static final String HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME = "__"
+            + STRING_LENGTH_ATTRIBUTE_NAME + "__" + HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME + "__";
 
     /**
      * The legacy attribute to signal that a data set is empty (for backward compatibility with
@@ -446,39 +446,6 @@ final class HDF5Utils
                 + toHouseKeepingName(objectPath.substring(lastPathSeparator),
                         houseKeepingNameSuffix) : toHouseKeepingName(objectPath,
                 houseKeepingNameSuffix);
-    }
-
-    //TODO: remove
-    /** Returns the attribute to denote the real length of a string. */
-    static String createObjectStringLengthAttributeName(String objectName, String suffix)
-    {
-        final boolean noSuffix = "".equals(suffix);
-        return noSuffix ? ("__" + STRING_LENGTH_ATTRIBUTE_NAME + "__" + objectName + "__")
-                : (STRING_LENGTH_ATTRIBUTE_NAME + "__" + objectName + suffix);
-    }
-
-    /**
-     * Returns the string length attribute for the given <var>attributeName</var>.
-     */
-    //TODO: remove
-    static String createAttributeStringLengthAttributeName(String attributeName, String suffix)
-    {
-        final boolean noSuffix = "".equals(suffix);
-        return (noSuffix ? "__" : "") + STRING_LENGTH_ATTRIBUTE_NAME + "__" + attributeName
-                + (noSuffix ? "__" : suffix);
-    }
-
-    /**
-     * Returns the string length attribute for the given <var>compoundElementName</var>.
-     */
-    //TODO: remove
-    static String createCompoundElementStringLengthAttributeName(String compoundElementName,
-            String suffix)
-    {
-        final boolean noSuffix = "".equals(suffix);
-        return noSuffix ? ("__" + STRING_LENGTH_ATTRIBUTE_NAME + "__CompoundElement__"
-                + compoundElementName + "__") : (STRING_LENGTH_ATTRIBUTE_NAME
-                + "__CompoundElement__" + compoundElementName + suffix);
     }
 
     /**

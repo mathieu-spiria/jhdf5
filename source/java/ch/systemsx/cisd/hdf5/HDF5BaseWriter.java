@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeStringLengthAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
@@ -390,10 +390,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
                                     HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME,
                                     houseKeepingNameSuffix, houseKeepingNameSuffix.length(), false,
                                     registry);
-                            final String stringLengthAttributeName =
-                                    createAttributeStringLengthAttributeName(
-                                            HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, "");
-                            setIntAttributeAutoSize(objectId, stringLengthAttributeName,
+                            setIntAttributeAutoSize(objectId,
+                                    HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME,
                                     houseKeepingNameSuffix.length(), registry);
                             return null; // Nothing to return.
                         }
@@ -1473,7 +1471,9 @@ final class HDF5BaseWriter extends HDF5BaseReader
         } else
         {
             bytes = StringUtils.toBytes(value, maxLength, encoding);
-            realMaxLengthInBytes = (encoding == CharacterEncoding.UTF8 ? 4 : 1) * ((maxLength == 0) ? 1 : maxLength);
+            realMaxLengthInBytes =
+                    (encoding == CharacterEncoding.UTF8 ? 4 : 1)
+                            * ((maxLength == 0) ? 1 : maxLength);
         }
         final int storageDataTypeId = h5.createDataTypeString(realMaxLengthInBytes, registry);
         int attributeId;

@@ -16,9 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeStringLengthAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeTypeVariantAttributeName;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createCompoundElementStringLengthAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getBooleanDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
@@ -229,9 +228,7 @@ class HDF5BaseReader
                             HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME))
                     {
                         final int suffixLen =
-                                getAttributeExplicitStringLength(objectId,
-                                        HDF5Utils.HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME, "",
-                                        registry);
+                                getHousekeepingAttributeExplicitStringLength(objectId, registry);
                         final boolean explicitLengthStored = (suffixLen >= 0);
                         final String rawSuffix =
                                 getStringAttribute(objectId, "/",
@@ -1006,46 +1003,23 @@ class HDF5BaseReader
     }
 
     /**
-     * Returns the explicitly saved string length for attribute <var>attributeName</var> of
-     * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
-     * attribute.
+     * Returns the explicitly saved string length for attribute
+     * <var>HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME</var> of <var>objectId</var>, or <code>-1</code>
+     * , if no explicit string length is defined for this attribute.
      * 
      * @param objectId The id of the data set object in the file.
      * @return The length of the string attribute or -1.
      */
-    private int getAttributeExplicitStringLength(final int objectId, final String attributeName,
-            final String suffix, ICleanUpRegistry registry)
+    private int getHousekeepingAttributeExplicitStringLength(final int objectId,
+            ICleanUpRegistry registry)
     {
-        final String name = createAttributeStringLengthAttributeName(attributeName, suffix);
-        if (h5.existsAttribute(objectId, name) == false)
+        if (h5.existsAttribute(objectId, HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME) == false)
         {
             return -1;
         }
-        final int attributeId = h5.openAttribute(objectId, name, registry);
-        final int[] data = h5.readAttributeAsIntArray(attributeId, H5T_NATIVE_INT32, 1);
-        return data[0];
-    }
-
-    /**
-     * Returns the explicitly saved string length for <var>compoundElementName</var> of
-     * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
-     * compound element.
-     * 
-     * @param objectId The id of the data set object in the file.
-     * @return The ordinal of the type variant or <code>null</code>.
-     */
-    int getCompoundElementExplicitStringLength(final int objectId,
-            final String compoundElementName, final ICleanUpRegistry registry)
-    {
-        checkOpen();
-        final String stringLengthAttributeName =
-                createCompoundElementStringLengthAttributeName(compoundElementName,
-                        houseKeepingNameSuffix);
-        if (h5.existsAttribute(objectId, stringLengthAttributeName) == false)
-        {
-            return -1;
-        }
-        final int attributeId = h5.openAttribute(objectId, stringLengthAttributeName, registry);
+        final int attributeId =
+                h5.openAttribute(objectId, HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME,
+                        registry);
         final int[] data = h5.readAttributeAsIntArray(attributeId, H5T_NATIVE_INT32, 1);
         return data[0];
     }
