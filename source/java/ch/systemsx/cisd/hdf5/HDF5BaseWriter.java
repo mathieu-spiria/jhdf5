@@ -52,8 +52,6 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5DatasetInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5FileNotFoundException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import org.apache.commons.lang.math.NumberUtils;
-
 import ch.systemsx.cisd.base.exceptions.CheckedExceptionTunnel;
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -426,47 +424,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
             setAttribute(objectId, attributeName, H5T_STD_I8LE, H5T_NATIVE_INT8, new byte[]
                 { (byte) value }, registry);
         }
-    }
-
-    /**
-     * Saves the <var>value</var> as integer attribute <var>attributeName</var> of
-     * <var>objectId</var>, choosing the size of the integer type automatically based on the
-     * <var>value</var>.
-     * 
-     * @param objectId The id of the data set object in the file.
-     */
-    private void setIntArrayAttributeAutoSize(final int objectId, final String attributeName,
-            final int[] dimensions, final int[] value, ICleanUpRegistry registry)
-    {
-        final int maxLength = NumberUtils.max(value);
-        if (maxLength > Short.MAX_VALUE)
-        {
-            final int memoryTypeId = h5.createArrayType(H5T_NATIVE_INT32, dimensions, registry);
-            final int storageTypeId = h5.createArrayType(H5T_STD_I32LE, dimensions, registry);
-            setAttribute(objectId, attributeName, storageTypeId, memoryTypeId, value, registry);
-        } else if (maxLength > Byte.MAX_VALUE)
-        {
-            final int memoryTypeId = h5.createArrayType(H5T_NATIVE_INT16, dimensions, registry);
-            final int storageTypeId = h5.createArrayType(H5T_STD_I16LE, dimensions, registry);
-            setAttribute(objectId, attributeName, storageTypeId, memoryTypeId, value, registry);
-        } else
-        {
-            final int memoryTypeId = h5.createArrayType(H5T_NATIVE_INT8, dimensions, registry);
-            final int storageTypeId = h5.createArrayType(H5T_STD_I8LE, dimensions, registry);
-            setAttribute(objectId, attributeName, storageTypeId, memoryTypeId, toByteArray(value),
-                    registry);
-        }
-    }
-
-    private static byte[] toByteArray(int[] values)
-    {
-        final byte[] result = new byte[values.length];
-        int idx = 0;
-        for (int v : values)
-        {
-            result[idx++] = (byte) v;
-        }
-        return result;
     }
 
     @Override
@@ -1638,23 +1595,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
         }
     }
 
-    void setOrRemoveStringLengthArrayAttribute(final int objectId,
-            final String stringLengthAttributeName, final int[] dimensions,
-            final int[] stringLengths, final boolean saveExplicitLength, ICleanUpRegistry registry)
-    {
-        if (saveExplicitLength)
-        {
-            setIntArrayAttributeAutoSize(objectId, stringLengthAttributeName, dimensions,
-                    stringLengths, registry);
-        } else
-        {
-            if (h5.existsAttribute(objectId, stringLengthAttributeName))
-            {
-                h5.deleteAttribute(objectId, stringLengthAttributeName);
-            }
-        }
-    }
-
     void setStringArrayAttribute(final int objectId, final String name, final String[] value,
             final int maxLength, final boolean lengthFitsValue, ICleanUpRegistry registry)
     {
@@ -1678,11 +1618,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
             attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
         h5.writeAttribute(attributeId, storageDataTypeId, arrData);
-        // Explicit length attribute needed?
-        final String stringLengthAttributeName =
-                createAttributeStringLengthAttributeName(name, houseKeepingNameSuffix);
-        setOrRemoveStringLengthArrayAttribute(objectId, stringLengthAttributeName, new int[]
-            { arrData.length }, array.getLengths(), array.shouldSaveExplicitLength(), registry);
     }
 
     void setStringArrayAttribute(final int objectId, final String name,
@@ -1710,11 +1645,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
             attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
         }
         h5.writeAttribute(attributeId, storageDataTypeId, arrData);
-        // Explicit length attribute needed?
-        final String stringLengthAttributeName =
-                createAttributeStringLengthAttributeName(name, houseKeepingNameSuffix);
-        setOrRemoveStringLengthArrayAttribute(objectId, stringLengthAttributeName,
-                value.dimensions(), array.getLengths(), array.shouldSaveExplicitLength(), registry);
     }
 
     void setStringAttributeVariableLength(final int objectId, final String name,

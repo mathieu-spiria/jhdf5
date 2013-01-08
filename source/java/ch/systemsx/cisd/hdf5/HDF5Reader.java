@@ -96,7 +96,6 @@ class HDF5Reader implements IHDF5Reader
         this.byteReader = new HDF5ByteReader(baseReader);
         this.shortReader = new HDF5ShortReader(baseReader);
         this.intReader = new HDF5IntReader(baseReader);
-        this.baseReader.setIntReader((HDF5IntReader) this.intReader);
         this.longReader = new HDF5LongReader(baseReader);
         this.floatReader = new HDF5FloatReader(baseReader);
         this.doubleReader = new HDF5DoubleReader(baseReader);
@@ -1191,16 +1190,16 @@ class HDF5Reader implements IHDF5Reader
     }
 
     @Override
-    public String[] getStringArrayAttributeFixedLength(String objectPath, String attributeName)
+    public String[] getStringArrayAttributeRaw(String objectPath, String attributeName)
     {
-        return stringReader.getStringArrayAttributeFixedLength(objectPath, attributeName);
+        return stringReader.getStringArrayAttributeRaw(objectPath, attributeName);
     }
 
     @Override
-    public MDArray<String> getStringMDArrayAttributeFixedLength(String objectPath,
+    public MDArray<String> getStringMDArrayAttributeRaw(String objectPath,
             String attributeName)
     {
-        return stringReader.getStringMDArrayAttributeFixedLength(objectPath, attributeName);
+        return stringReader.getStringMDArrayAttributeRaw(objectPath, attributeName);
     }
 
     @Override
@@ -1222,6 +1221,12 @@ class HDF5Reader implements IHDF5Reader
     }
 
     @Override
+    public String[] readStringArrayRaw(String objectPath) throws HDF5JavaException
+    {
+        return stringReader.readStringArrayRaw(objectPath);
+    }
+
+    @Override
     public String[] readStringArrayBlock(String objectPath, int blockSize, long blockNumber)
     {
         return stringReader.readStringArrayBlock(objectPath, blockSize, blockNumber);
@@ -1237,6 +1242,12 @@ class HDF5Reader implements IHDF5Reader
     public MDArray<String> readStringMDArray(String objectPath)
     {
         return stringReader.readStringMDArray(objectPath);
+    }
+
+    @Override
+    public MDArray<String> readStringMDArrayRaw(String objectPath)
+    {
+        return stringReader.readStringMDArrayRaw(objectPath);
     }
 
     @Override

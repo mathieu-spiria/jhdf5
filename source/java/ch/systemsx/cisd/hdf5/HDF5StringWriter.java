@@ -17,7 +17,6 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectStringLengthAttributeName;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5DwriteString;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
@@ -384,28 +383,11 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                             { data.length }, elementSize, features, registry);
                         H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                                 arrData);
-                        // Explicit length attribute needed?
-                        final String stringLengthAttributeName =
-                                createObjectStringLengthAttributeName(objectPath,
-                                        baseWriter.houseKeepingNameSuffix);
-                        setOrRemoveStringLengthArrayAttribute(objectPath,
-                                stringLengthAttributeName, new int[]
-                                    { array.getLengths().length }, array.getLengths(),
-                                array.shouldSaveExplicitLength(), registry);
                     }
                     return null; // Nothing to return.
                 }
             };
         baseWriter.runner.call(writeRunnable);
-    }
-
-    void setOrRemoveStringLengthArrayAttribute(final String objectPath,
-            final String stringLengthAttributeName, final int[] dimensions,
-            final int[] stringLengths, final boolean saveExplicitLength, ICleanUpRegistry registry)
-    {
-        final int objectId = baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
-        baseWriter.setOrRemoveStringLengthArrayAttribute(objectId, stringLengthAttributeName,
-                dimensions, stringLengths, saveExplicitLength, registry);
     }
 
     @Override
@@ -556,7 +538,6 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         baseWriter.writeStringVL(dataSetId, memorySpaceId, dataSpaceId, data);
                     } else
                     {
-                        // FIXME: explicit strings lengths.
                         final int maxLength = baseWriter.h5.getDataTypeSize(stringDataTypeId);
                         writeStringArray(dataSetId, stringDataTypeId, memorySpaceId, dataSpaceId,
                                 H5P_DEFAULT, data, maxLength);
@@ -637,13 +618,6 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                         data.longDimensions(), elementSize, features, registry);
                         H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                                 arrData);
-                        // Explicit length attribute needed?
-                        final String stringLengthAttributeName =
-                                createObjectStringLengthAttributeName(objectPath,
-                                        baseWriter.houseKeepingNameSuffix);
-                        setOrRemoveStringLengthArrayAttribute(objectPath,
-                                stringLengthAttributeName, data.dimensions(), array.getLengths(),
-                                array.shouldSaveExplicitLength(), registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -812,7 +786,6 @@ public class HDF5StringWriter implements IHDF5StringWriter
                                 data.getAsFlatArray());
                     } else
                     {
-                        // FIXME: explicit strings lengths.
                         final int maxLength = baseWriter.h5.getDataTypeSize(stringDataTypeId);
                         writeStringArray(dataSetId, stringDataTypeId, memorySpaceId, dataSpaceId,
                                 H5P_DEFAULT, data.getAsFlatArray(), maxLength);

@@ -19,7 +19,6 @@ package ch.systemsx.cisd.hdf5;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeStringLengthAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createCompoundElementStringLengthAttributeName;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectStringLengthAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getBooleanDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
@@ -46,7 +45,6 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
-import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
@@ -98,9 +96,6 @@ class HDF5BaseReader
 
     private final List<DataTypeContainer> namedDataTypeList;
 
-    // Use with care to avoid infinite loops!
-    private HDF5IntReader intReader;
-
     protected final HDF5 h5;
 
     protected final int fileId;
@@ -142,11 +137,6 @@ class HDF5BaseReader
         readNamedDataTypes();
         booleanDataTypeId = openOrCreateBooleanDataType();
         typeVariantDataType = openOrCreateTypeVariantDataType();
-    }
-
-    void setIntReader(HDF5IntReader intReader)
-    {
-        this.intReader = intReader;
     }
 
     void copyObject(String srcPath, int dstFileId, String dstPath)
@@ -1037,86 +1027,6 @@ class HDF5BaseReader
     }
 
     /**
-     * Returns the explicitly saved string length for attribute <var>attributeName</var> of
-     * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
-     * attribute.
-     * 
-     * @param objectId The id of the data set object in the file.
-     * @return The length of the string attribute or <code>null</code>.
-     */
-    int[] tryGetAttributeArrayExplicitStringLength(final int objectId, final String attributeName,
-            ICleanUpRegistry registry)
-    {
-        final String name =
-                createAttributeStringLengthAttributeName(attributeName, houseKeepingNameSuffix);
-        if (h5.existsAttribute(objectId, name) == false)
-        {
-            return null;
-        }
-        return intReader.getIntArrayAttribute(objectId, name, registry);
-    }
-
-    /**
-     * Returns the explicitly saved string length for dataset <var>objectPath</var>, or
-     * <code>null</code>, if no explicit string length is defined for this attribute.
-     * 
-     * @param objectPath The path of the data set object in the file.
-     * @return The length of the string attribute or <code>null</code>.
-     */
-    int[] tryGetObjectArrayExplicitStringLength(final String objectPath, ICleanUpRegistry registry)
-    {
-        final String name =
-                createObjectStringLengthAttributeName(objectPath, houseKeepingNameSuffix);
-        final int objectId = h5.openObject(fileId, objectPath, registry);
-        if (h5.existsAttribute(objectId, name) == false)
-        {
-            return null;
-        }
-        return intReader.getIntArrayAttribute(objectId, name, registry);
-    }
-
-    /**
-     * Returns the explicitly saved string length for attribute <var>attributeName</var> of
-     * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
-     * attribute.
-     * 
-     * @param objectId The id of the data set object in the file.
-     * @return The length of the string attribute or <code>null</code>.
-     */
-    MDIntArray tryGetAttributeMDArrayExplicitStringLength(final int objectId,
-            final String attributeName, ICleanUpRegistry registry)
-    {
-        final String name =
-                createAttributeStringLengthAttributeName(attributeName, houseKeepingNameSuffix);
-        if (h5.existsAttribute(objectId, name) == false)
-        {
-            return null;
-        }
-        return intReader.getIntMDArrayAttribute(objectId, name, registry);
-    }
-
-    /**
-     * Returns the explicitly saved string length for attribute <var>objectPath</var> of
-     * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
-     * attribute.
-     * 
-     * @param objectPath The path of the data set object in the file.
-     * @return The length of the string attribute or <code>null</code>.
-     */
-    MDIntArray tryGetObjectMDArrayExplicitStringLength(final String objectPath,
-            ICleanUpRegistry registry)
-    {
-        final String name =
-                createObjectStringLengthAttributeName(objectPath, houseKeepingNameSuffix);
-        final int objectId = h5.openObject(fileId, objectPath, registry);
-        if (h5.existsAttribute(objectId, name) == false)
-        {
-            return null;
-        }
-        return intReader.getIntMDArrayAttribute(objectId, name, registry);
-    }
-
-    /**
      * Returns the explicitly saved string length for <var>compoundElementName</var> of
      * <var>objectId</var>, or <code>-1</code>, if no explicit string length is defined for this
      * compound element.
@@ -1465,19 +1375,12 @@ class HDF5BaseReader
             final int lengthPerElement = h5.getDataTypeSize(stringDataTypeId);
             final int numberOfElements = arrayDimensions[0];
             final String[] result = new String[numberOfElements];
-            final int[] lengthsOrNull =
-                    readRaw ? null : tryGetAttributeArrayExplicitStringLength(objectId,
-                            attributeName, registry);
-            final boolean lengthKnown = readRaw || (lengthsOrNull != null);
-            for (int i = 0; i < numberOfElements; ++i)
+            for (int i = 0, startIdx = 0, endIdx = lengthPerElement; i < numberOfElements; ++i, startIdx +=
+                    lengthPerElement, endIdx += lengthPerElement)
             {
-                final int startIdx = i * lengthPerElement;
-                final int maxEndIdx =
-                        (lengthsOrNull != null) ? startIdx + lengthsOrNull[i] : startIdx
-                                + lengthPerElement;
                 result[i] =
-                        lengthKnown ? StringUtils.fromBytes(data, startIdx, maxEndIdx, encoding)
-                                : StringUtils.fromBytes0Term(data, startIdx, maxEndIdx, encoding);
+                        readRaw ? StringUtils.fromBytes(data, startIdx, endIdx, encoding)
+                                : StringUtils.fromBytes0Term(data, startIdx, endIdx, encoding);
             }
             return result;
         }
@@ -1515,27 +1418,12 @@ class HDF5BaseReader
             final int lengthPerElement = h5.getDataTypeSize(stringDataTypeId);
             final int numberOfElements = MDAbstractArray.getLength(arrayDimensions);
             final String[] result = new String[numberOfElements];
-            final MDIntArray lengthsOrNull =
-                    readRaw ? null : tryGetAttributeMDArrayExplicitStringLength(objectId,
-                            attributeName, registry);
-            if (lengthsOrNull != null
-                    && Arrays.equals(arrayDimensions, lengthsOrNull.dimensions()) == false)
+            for (int i = 0, startIdx = 0, endIdx = lengthPerElement; i < numberOfElements; ++i, startIdx +=
+                    lengthPerElement, endIdx += lengthPerElement)
             {
-                throw new HDF5JavaException(
-                        "Dimensions mismatch between string attribute and string length attribute. Expected: "
-                                + Arrays.toString(arrayDimensions) + ", found: "
-                                + Arrays.toString(lengthsOrNull.dimensions()));
-            }
-            final boolean lengthKnown = readRaw || (lengthsOrNull != null);
-            for (int i = 0; i < numberOfElements; ++i)
-            {
-                final int startIdx = i * lengthPerElement;
-                final int maxEndIdx =
-                        (lengthsOrNull != null) ? startIdx + lengthsOrNull.getAsFlatArray()[i]
-                                : startIdx + lengthPerElement;
                 result[i] =
-                        lengthKnown ? StringUtils.fromBytes(data, startIdx, maxEndIdx, encoding)
-                                : StringUtils.fromBytes0Term(data, startIdx, maxEndIdx, encoding);
+                        readRaw ? StringUtils.fromBytes(data, startIdx, endIdx, encoding)
+                                : StringUtils.fromBytes0Term(data, startIdx, endIdx, encoding);
             }
             return new MDArray<String>(result, arrayDimensions);
         }

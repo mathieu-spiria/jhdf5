@@ -55,7 +55,7 @@ public interface IHDF5StringReader
 
     /**
      * Reads a string array attribute named <var>attributeName</var> from the object
-     * <var>objectPath</var>.
+     * <var>objectPath</var>. Considers '\0' as end of string.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
@@ -65,19 +65,17 @@ public interface IHDF5StringReader
 
     /**
      * Reads a string array attribute named <var>attributeName</var> from the object
-     * <var>objectPath</var>. Does not assume a 0-terminated string but reads the full length of the
-     * fixed-length string.
+     * <var>objectPath</var>. Does not consider '\0' as end of string but reads the full length.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public String[] getStringArrayAttributeFixedLength(final String objectPath,
-            final String attributeName);
+    public String[] getStringArrayAttributeRaw(final String objectPath, final String attributeName);
 
     /**
      * Reads a multi-dimensional string array attribute named <var>attributeName</var> from the
-     * object <var>objectPath</var>.
+     * object <var>objectPath</var>. Considers '\0' as end of string.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
@@ -88,14 +86,14 @@ public interface IHDF5StringReader
 
     /**
      * Reads a multi-dimensional string array attribute named <var>attributeName</var> from the
-     * object <var>objectPath</var>. Does not assume a 0-terminated string but reads the full length
-     * of the fixed-length string.
+     * object <var>objectPath</var>. Does not consider '\0' as end of string but reads the full
+     * length.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public MDArray<String> getStringMDArrayAttributeFixedLength(final String objectPath,
+    public MDArray<String> getStringMDArrayAttributeRaw(final String objectPath,
             final String attributeName);
 
     // /////////////////////
@@ -124,13 +122,24 @@ public interface IHDF5StringReader
 
     /**
      * Reads a string array (of rank 1) from the data set <var>objectPath</var>. The elements of
-     * this data set need to be a string type.
+     * this data set need to be a string type. Considers '\0' as end of string.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
      */
     public String[] readStringArray(final String objectPath) throws HDF5JavaException;
+
+    /**
+     * Reads a string array (of rank 1) from the data set <var>objectPath</var>. The elements of
+     * this data set need to be a string type. Does not consider '\0' as end of string but reads the
+     * full length.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
+     */
+    public String[] readStringArrayRaw(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a block of a string array (of rank 1) from the data set <var>objectPath</var>. The
@@ -161,13 +170,24 @@ public interface IHDF5StringReader
 
     /**
      * Reads a string array (of rank N) from the data set <var>objectPath</var>. The elements of
-     * this data set need to be a string type.
+     * this data set need to be a string type. Considers '\0' as end of string.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
      */
     public MDArray<String> readStringMDArray(final String objectPath);
+
+    /**
+     * Reads a string array (of rank N) from the data set <var>objectPath</var>. The elements of
+     * this data set need to be a string type. Does not considers '\0' as end of string but reads
+     * the full length.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
+     */
+    public MDArray<String> readStringMDArrayRaw(final String objectPath);
 
     /**
      * Reads a block of a string array (of rank N) from the data set <var>objectPath</var>. The
