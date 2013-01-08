@@ -99,7 +99,7 @@ public final class StringUtils
             final CharacterEncoding encoding)
     {
         final int nelems = in.length;
-        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
+        final int realMaxLength = encoding.getMaxBytesPerChar() * maxLength;
         final byte[] out = new byte[nelems * realMaxLength];
 
         for (int i = 0; i < nelems; i++)
@@ -118,7 +118,7 @@ public final class StringUtils
             final CharacterEncoding encoding)
     {
         final int nelems = in.length;
-        final int realMaxLength = (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength + 1;
+        final int realMaxLength = encoding.getMaxBytesPerChar() * maxLength + 1;
         final byte[] out = new byte[nelems * realMaxLength];
 
         for (int i = 0; i < nelems; i++)

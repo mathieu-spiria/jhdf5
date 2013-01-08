@@ -86,8 +86,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
 
     static IHDF5Reader createHDF5Reader(File archiveFile)
     {
-        return HDF5FactoryProvider.get().configureForReading(archiveFile)
-                .useUTF8CharacterEncoding().reader();
+        return HDF5FactoryProvider.get().openForReading(archiveFile);
     }
 
     static IHDF5Writer createHDF5Writer(File archiveFile, FileFormat fileFormat, boolean noSync)

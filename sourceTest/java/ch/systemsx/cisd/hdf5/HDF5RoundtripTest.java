@@ -2292,9 +2292,7 @@ public class HDF5RoundtripTest
         final String dataSetName = "/aStringArray";
         writer.writeStringArray(dataSetName, data);
         writer.close();
-        final IHDF5Reader reader =
-                HDF5FactoryProvider.get().configureForReading(stringArrayFile)
-                        .useUTF8CharacterEncoding().reader();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
         final String[] dataStored = reader.readStringArray(dataSetName);
         assertTrue(Arrays.equals(data, dataStored));
         reader.close();
@@ -2315,9 +2313,7 @@ public class HDF5RoundtripTest
         final String dataSetName = "/aStringArray";
         writer.writeStringArray(dataSetName, data);
         writer.close();
-        final IHDF5Reader reader =
-                HDF5FactoryProvider.get().configureForReading(stringArrayFile)
-                        .useUTF8CharacterEncoding().reader();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
         final String[] dataStored = reader.readStringArrayRaw(dataSetName);
         assertEquals(3, dataStored.length);
         assertEquals(StringUtils.rightPad("abc", 8, "\0"), dataStored[0]);
@@ -2916,14 +2912,11 @@ public class HDF5RoundtripTest
             { 2, 2 });
         w.setStringMDArrayAttribute("/", "a", array);
         w.close();
-        // FIXME: it should not be necessary to specify the encoding when opening the reader. JHDF5
-        // should use the encoding stored for the dataset.
-        final IHDF5Reader r =
-                HDF5Factory.configureForReading(file).useUTF8CharacterEncoding().reader();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
         final MDArray<String> b1 = r.getStringMDArrayAttribute("/", "a");
         assertEquals(new MDArray<String>(new String[]
-                { "\u00b6\u00bc\u09ab", "a", "QWERTY", "" }, new int[]
-                { 2, 2 }), b1);
+            { "\u00b6\u00bc\u09ab", "a", "QWERTY", "" }, new int[]
+            { 2, 2 }), b1);
         final MDArray<String> b2 = r.getStringMDArrayAttributeRaw("/", "a");
         assertEquals(new MDArray<String>(new String[]
             { "\u00b6\u00bc\u09ab", "a\0c\0\0\0\0", "QWERTY\0", "\0\0\0\0\0\0\0" }, new int[]
@@ -2944,10 +2937,7 @@ public class HDF5RoundtripTest
             { 2, 2 });
         w.setStringMDArrayAttribute("/", "a", array, 7);
         w.close();
-        // FIXME: it should not be necessary to specify the encoding when opening the reader. JHDF5
-        // should use the encoding stored for the dataset.
-        final IHDF5Reader r =
-                HDF5Factory.configureForReading(file).useUTF8CharacterEncoding().reader();
+        final IHDF5Reader r = HDF5Factory.openForReading(file);
         final MDArray<String> b1 = r.getStringMDArrayAttribute("/", "a");
         assertEquals(new MDArray<String>(new String[]
             { "\u00b6\u00bc\u09ab", "a", "QWERTY", "" }, new int[]
@@ -3036,9 +3026,7 @@ public class HDF5RoundtripTest
         writer.writeString(dataSetName, uniCodeData);
         writer.setStringAttribute(dataSetName, attributeName, uniCodeAttributeData);
         writer.close();
-        final IHDF5Reader reader =
-                HDF5FactoryProvider.get().configureForReading(stringUnicodeFile)
-                        .useUTF8CharacterEncoding().reader();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringUnicodeFile);
         final String dataRead = reader.readString(dataSetName);
         final String attributeDataRead = reader.getStringAttribute(dataSetName, attributeName);
         assertEquals(uniCodeData, dataRead);
@@ -6661,8 +6649,7 @@ public class HDF5RoundtripTest
         writer.compounds().write("cpd", map);
         writer.close();
 
-        final IHDF5Reader reader =
-                HDF5Factory.configureForReading(file).useUTF8CharacterEncoding().reader();
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
         final HDF5CompoundType<HDF5CompoundDataMap> typeRead =
                 reader.compounds().getDataSetType("cpd", HDF5CompoundDataMap.class);
         assertEquals("a:b:c:d:e:f:g:h:i", typeRead.getName());

@@ -146,27 +146,10 @@ public final class HDF5DataTypeInformation
                     { 1 }, false, null);
     }
 
-    HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
-            int elementSize)
-    {
-        this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
-                new int[]
-                    { 1 }, false, null);
-    }
-
     HDF5DataTypeInformation(HDF5DataClass dataClass, String houseKeepingNameSuffix, int elementSize)
     {
         this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
                 houseKeepingNameSuffix, elementSize, new int[]
-                    { 1 }, false, null);
-    }
-
-    HDF5DataTypeInformation(HDF5DataClass dataClass, CharacterEncoding encoding,
-            String houseKeepingNameSuffix, int elementSize)
-    {
-        this(null, DataTypeInfoOptions.ALL, dataClass, encoding, houseKeepingNameSuffix,
-                elementSize, new int[]
                     { 1 }, false, null);
     }
 
@@ -175,15 +158,6 @@ public final class HDF5DataTypeInformation
     {
         this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
                 houseKeepingNameSuffix, elementSize, new int[]
-                    { numberOfElements }, false, null);
-
-    }
-
-    HDF5DataTypeInformation(HDF5DataClass dataClass, CharacterEncoding encoding,
-            String houseKeepingNameSuffix, int elementSize, int numberOfElements)
-    {
-        this(null, DataTypeInfoOptions.ALL, dataClass, encoding, houseKeepingNameSuffix,
-                elementSize, new int[]
                     { numberOfElements }, false, null);
 
     }
@@ -249,14 +223,13 @@ public final class HDF5DataTypeInformation
 
     /**
      * The length that is usable. Usually equals to {@link #getElementSize()}, except for Strings,
-     * where it takes into account the terminating '\0' and the character encoding.
+     * where it takes into account the character encoding.
      */
     public int getUsableLength()
     {
         if (dataClass == HDF5DataClass.STRING && elementSize > 0)
         {
-            return (encoding == CharacterEncoding.UTF8) ? ((elementSize - 1) / 2)
-                    : (elementSize - 1);
+            return elementSize / encoding.getMaxBytesPerChar();
         } else
         {
             return elementSize;
@@ -462,7 +435,8 @@ public final class HDF5DataTypeInformation
     public int hashCode()
     {
         final HDF5DataTypeVariant typeVariant = tryGetTypeVariant();
-        return ((((((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + encoding.ordinal()) * 59 + numberOfElements) * 59 + ObjectUtils
+        return ((((((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + ObjectUtils
+                .hashCode(encoding)) * 59 + numberOfElements) * 59 + ObjectUtils
                 .hashCode(nameOrNull)) * 59 + ObjectUtils.hashCode(dataTypePathOrNull) * 59)
                 + ObjectUtils.hashCode(typeVariant);
     }

@@ -74,7 +74,7 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
         this.autoDereference = false;
         return this;
     }
-    
+
     @Override
     public IHDF5Reader reader()
     {
@@ -82,8 +82,8 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
         {
             readerWriterOrNull =
                     new HDF5Reader(new HDF5BaseReader(hdf5File, performNumericConversions,
-                            useUTF8CharEncoding, autoDereference,
-                            IHDF5WriterConfigurator.FileFormat.ALLOW_1_8, false, ""));
+                            autoDereference, IHDF5WriterConfigurator.FileFormat.ALLOW_1_8, false,
+                            ""));
         }
         return readerWriterOrNull;
     }

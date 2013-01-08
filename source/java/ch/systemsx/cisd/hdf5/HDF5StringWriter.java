@@ -199,7 +199,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
     @Override
     public void writeString(final String objectPath, final String data, final int maxLength)
     {
-        writeString(objectPath, data, maxLength, true, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        writeString(objectPath, data, maxLength, true,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
@@ -241,13 +242,13 @@ public class HDF5StringWriter implements IHDF5StringWriter
                     final int realMaxLengthInBytes;
                     if (lengthFitsValue)
                     {
-                        bytes = StringUtils.toBytes0Term(data, baseWriter.encoding);
+                        bytes = StringUtils.toBytes0Term(data, baseWriter.encodingForNewDataSets);
                         realMaxLengthInBytes = (bytes.length == 1) ? 1 : bytes.length - 1;
                     } else
                     {
-                        bytes = StringUtils.toBytes0Term(data, maxLength, baseWriter.encoding);
+                        bytes = StringUtils.toBytes0Term(data, maxLength, baseWriter.encodingForNewDataSets);
                         realMaxLengthInBytes =
-                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1)
+                                baseWriter.encodingForNewDataSets.getMaxBytesPerChar()
                                         * ((maxLength == 0) ? 1 : maxLength);
                     }
 
@@ -432,8 +433,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize =
-                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
+                        elementSize = baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -483,8 +483,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize =
-                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
+                        elementSize = baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -669,8 +668,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize =
-                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
+                        elementSize = baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -720,8 +718,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize =
-                                (baseWriter.encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLength;
+                        elementSize = baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -951,7 +948,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
             final String[] obj, final int maxLength) throws HDF5Exception, HDF5LibraryException,
             NullPointerException
     {
-        final byte[] buf = StringUtils.toBytes(obj, maxLength, baseWriter.encoding);
+        final byte[] buf = StringUtils.toBytes(obj, maxLength, baseWriter.encodingForNewDataSets);
 
         /* will raise exception on error */
         final int status =

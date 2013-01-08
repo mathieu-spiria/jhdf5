@@ -1623,6 +1623,21 @@ class HDF5
         return H5Tget_class(dataTypeId);
     }
 
+    public CharacterEncoding getCharacterEncoding(int dataTypeId)
+    {
+        final int cValue = H5Tget_cset(dataTypeId);
+        if (cValue == CharacterEncoding.ASCII.getCValue())
+        {
+            return CharacterEncoding.ASCII;
+        } else if (cValue == CharacterEncoding.UTF8.getCValue())
+        {
+            return CharacterEncoding.UTF8;
+        } else
+        {
+            throw new HDF5JavaException("Unknown character encoding cValue " + cValue);
+        }
+    }
+
     public boolean hasClassType(int dataTypeId, int classTypeId)
     {
         return H5Tdetect_class(dataTypeId, classTypeId);

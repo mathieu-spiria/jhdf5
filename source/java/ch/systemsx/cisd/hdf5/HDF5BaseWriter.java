@@ -1466,14 +1466,13 @@ final class HDF5BaseWriter extends HDF5BaseReader
         final int realMaxLengthInBytes;
         if (lengthFitsValue)
         {
-            bytes = StringUtils.toBytes(value, encoding);
+            bytes = StringUtils.toBytes(value, encodingForNewDataSets);
             realMaxLengthInBytes = (bytes.length == 0) ? 1 : bytes.length;
         } else
         {
-            bytes = StringUtils.toBytes(value, maxLength, encoding);
+            bytes = StringUtils.toBytes(value, maxLength, encodingForNewDataSets);
             realMaxLengthInBytes =
-                    (encoding == CharacterEncoding.UTF8 ? 4 : 1)
-                            * ((maxLength == 0) ? 1 : maxLength);
+                    encodingForNewDataSets.getMaxBytesPerChar() * ((maxLength == 0) ? 1 : maxLength);
         }
         final int storageDataTypeId = h5.createDataTypeString(realMaxLengthInBytes, registry);
         int attributeId;
@@ -1529,14 +1528,13 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         private void addAllLengthFixedLength(String[] array)
         {
-            this.realMaxLengthPerString =
-                    (encoding == CharacterEncoding.UTF8 ? 4 : 1) * maxLengthPerString;
+            this.realMaxLengthPerString = encodingForNewDataSets.getMaxBytesPerChar() * maxLengthPerString;
             this.buf = new byte[realMaxLengthPerString * array.length];
             this.lengths = new int[array.length];
             int idx = 0;
             for (String s : array)
             {
-                final byte[] data = StringUtils.toBytes(s, maxLengthPerString, encoding);
+                final byte[] data = StringUtils.toBytes(s, maxLengthPerString, encodingForNewDataSets);
                 final int dataLen = Math.min(data.length, realMaxLengthPerString);
                 final int newLen = len + realMaxLengthPerString;
                 System.arraycopy(data, 0, buf, len, dataLen);
@@ -1556,7 +1554,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             int idx = 0;
             for (String s : array)
             {
-                final byte[] bytes = StringUtils.toBytes(s, encoding);
+                final byte[] bytes = StringUtils.toBytes(s, encodingForNewDataSets);
                 realMaxLengthPerString = Math.max(realMaxLengthPerString, bytes.length);
                 data[idx] = bytes;
                 lengths[idx] = bytes.length;

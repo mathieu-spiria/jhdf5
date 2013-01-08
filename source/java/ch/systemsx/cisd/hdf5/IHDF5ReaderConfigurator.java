@@ -43,7 +43,10 @@ public interface IHDF5ReaderConfigurator
     /**
      * Sets UTF8 character encoding for all paths and all strings in this file. (The default is
      * ASCII.)
+     * 
+     * @deprecated Should not be used for the reader as it will figure that out by looking at the HDF5 file.
      */
+    @Deprecated
     public IHDF5ReaderConfigurator useUTF8CharacterEncoding();
 
     /**

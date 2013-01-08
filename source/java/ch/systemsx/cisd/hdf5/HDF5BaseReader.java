@@ -105,9 +105,16 @@ class HDF5BaseReader
 
     protected State state;
 
-    final CharacterEncoding encoding;
-
     final String houseKeepingNameSuffix;
+
+    final CharacterEncoding encodingForNewDataSets;
+
+    HDF5BaseReader(File hdf5File, boolean performNumericConversions, boolean autoDereference,
+            FileFormat fileFormat, boolean overwrite, String preferredHouseKeepingNameSuffix)
+    {
+        this(hdf5File, performNumericConversions, false, autoDereference, fileFormat, overwrite,
+                preferredHouseKeepingNameSuffix);
+    }
 
     HDF5BaseReader(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
             boolean autoDereference, FileFormat fileFormat, boolean overwrite,
@@ -117,17 +124,18 @@ class HDF5BaseReader
         assert preferredHouseKeepingNameSuffix != null;
 
         this.performNumericConversions = performNumericConversions;
-        this.encoding = useUTF8CharEncoding ? CharacterEncoding.UTF8 : CharacterEncoding.ASCII;
         this.hdf5File = hdf5File.getAbsoluteFile();
         this.runner = new CleanUpCallable();
         this.fileRegistry = CleanUpRegistry.createSynchonized();
         this.namedDataTypeMap = new HashMap<String, Integer>();
         this.namedDataTypeList = new ArrayList<DataTypeContainer>();
-        h5 =
+        this.encodingForNewDataSets =
+                useUTF8CharEncoding ? CharacterEncoding.UTF8 : CharacterEncoding.ASCII;
+        this.h5 =
                 new HDF5(fileRegistry, performNumericConversions, useUTF8CharEncoding,
                         autoDereference);
-        fileId = openFile(fileFormat, overwrite);
-        state = State.OPEN;
+        this.fileId = openFile(fileFormat, overwrite);
+        this.state = State.OPEN;
 
         final String houseKeepingNameSuffixFromFileOrNull = tryGetHouseKeepingNameSuffix();
         this.houseKeepingNameSuffix =
@@ -1064,8 +1072,11 @@ class HDF5BaseReader
             final int baseTypeId = h5.getBaseDataType(dataTypeId, registry);
             final String dataTypePathOrNull =
                     options.knowsDataTypePath() ? tryGetDataTypePath(baseTypeId) : null;
-            return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass, encoding,
-                    houseKeepingNameSuffix, size, arrayDimensions, true);
+            final CharacterEncoding dataSetEncoding =
+                    (dataClass == HDF5DataClass.STRING) ? h5.getCharacterEncoding(baseTypeId)
+                            : CharacterEncoding.ASCII;
+            return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass,
+                    dataSetEncoding, houseKeepingNameSuffix, size, arrayDimensions, true);
         } else
         {
             dataClass = getDataClassForClassType(classTypeId, dataTypeId);
@@ -1079,8 +1090,11 @@ class HDF5BaseReader
             }
             final String dataTypePathOrNull =
                     options.knowsDataTypePath() ? tryGetDataTypePath(dataTypeId) : null;
-            return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass, encoding,
-                    houseKeepingNameSuffix, totalSize, 1, opaqueTagOrNull);
+            final CharacterEncoding dataSetEncoding =
+                    (dataClass == HDF5DataClass.STRING) ? h5.getCharacterEncoding(dataTypeId)
+                            : CharacterEncoding.ASCII;
+            return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass,
+                    dataSetEncoding, houseKeepingNameSuffix, totalSize, 1, opaqueTagOrNull);
         }
     }
 
@@ -1155,9 +1169,10 @@ class HDF5BaseReader
                                 }
 
                                 @Override
-                                public CharacterEncoding getCharacterEncoding()
+                                public CharacterEncoding getCharacterEncoding(int dataTypeId)
                                 {
-                                    return encoding;
+                                    return (dataTypeId < 0) ? encodingForNewDataSets : h5
+                                            .getCharacterEncoding(dataTypeId);
                                 }
 
                                 @Override
@@ -1307,9 +1322,10 @@ class HDF5BaseReader
             return data[0];
         } else
         {
+            final CharacterEncoding dataSetEncoding = h5.getCharacterEncoding(stringDataTypeId);
             final byte[] data = h5.readAttributeAsByteArray(attributeId, stringDataTypeId, size);
-            return (readRaw ? StringUtils.fromBytes(data, encoding) : StringUtils.fromBytes0Term(
-                    data, encoding));
+            return (readRaw ? StringUtils.fromBytes(data, dataSetEncoding) : StringUtils
+                    .fromBytes0Term(data, dataSetEncoding));
         }
     }
 
@@ -1339,6 +1355,8 @@ class HDF5BaseReader
             return data;
         } else
         {
+            final CharacterEncoding dataSetEncoding =
+                    h5.getCharacterEncoding(stringArrayDataTypeId);
             byte[] data = h5.readAttributeAsByteArray(attributeId, stringArrayDataTypeId, size);
             final int[] arrayDimensions = h5.getArrayDimensions(stringArrayDataTypeId);
             if (arrayDimensions.length != 1)
@@ -1353,8 +1371,9 @@ class HDF5BaseReader
                     lengthPerElement, endIdx += lengthPerElement)
             {
                 result[i] =
-                        readRaw ? StringUtils.fromBytes(data, startIdx, endIdx, encoding)
-                                : StringUtils.fromBytes0Term(data, startIdx, endIdx, encoding);
+                        readRaw ? StringUtils.fromBytes(data, startIdx, endIdx, dataSetEncoding)
+                                : StringUtils.fromBytes0Term(data, startIdx, endIdx,
+                                        dataSetEncoding);
             }
             return result;
         }
@@ -1387,7 +1406,10 @@ class HDF5BaseReader
                 { 1 });
         } else
         {
-            byte[] data = h5.readAttributeAsByteArray(attributeId, stringArrayDataTypeId, size);
+            final byte[] data =
+                    h5.readAttributeAsByteArray(attributeId, stringArrayDataTypeId, size);
+            final CharacterEncoding dataSetEncoding =
+                    h5.getCharacterEncoding(stringArrayDataTypeId);
             final int[] arrayDimensions = h5.getArrayDimensions(stringArrayDataTypeId);
             final int lengthPerElement = h5.getDataTypeSize(stringDataTypeId);
             final int numberOfElements = MDAbstractArray.getLength(arrayDimensions);
@@ -1396,8 +1418,9 @@ class HDF5BaseReader
                     lengthPerElement, endIdx += lengthPerElement)
             {
                 result[i] =
-                        readRaw ? StringUtils.fromBytes(data, startIdx, endIdx, encoding)
-                                : StringUtils.fromBytes0Term(data, startIdx, endIdx, encoding);
+                        readRaw ? StringUtils.fromBytes(data, startIdx, endIdx, dataSetEncoding)
+                                : StringUtils.fromBytes0Term(data, startIdx, endIdx,
+                                        dataSetEncoding);
             }
             return new MDArray<String>(result, arrayDimensions);
         }

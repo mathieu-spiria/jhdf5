@@ -26,17 +26,20 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_CSET_UTF8;
  */
 public enum CharacterEncoding
 {
-    ASCII("ASCII", H5T_CSET_ASCII), 
-    UTF8("UTF8", H5T_CSET_UTF8);
+    ASCII("ASCII", H5T_CSET_ASCII, 1), 
+    UTF8("UTF8", H5T_CSET_UTF8, 4);
 
-    private String charSetName;
+    private final String charSetName;
     
-    private int cValue;
+    private final int cValue;
     
-    private CharacterEncoding(String charSetName, int cValue)
+    private final int maxBytesPerChar;
+    
+    private CharacterEncoding(String charSetName, int cValue, int maxBytesPerChar)
     {
         this.charSetName = charSetName;
         this.cValue = cValue;
+        this.maxBytesPerChar = maxBytesPerChar;
     }
     
     int getCValue()
@@ -48,7 +51,15 @@ public enum CharacterEncoding
     {
         return charSetName;
     }
-    
+
+    /**
+     * Returns the maximum number of bytes per character.
+     */
+    int getMaxBytesPerChar()
+    {
+        return maxBytesPerChar;
+    }
+
     static CharacterEncoding fromCValue(int cValue) throws IllegalArgumentException
     {
         if (cValue == H5T_CSET_ASCII)

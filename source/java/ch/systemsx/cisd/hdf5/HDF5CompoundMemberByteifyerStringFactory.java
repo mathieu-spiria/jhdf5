@@ -69,10 +69,11 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
         // May be -1 if not known
         final int memberTypeId = member.getStorageDataTypeId();
         final int maxLengthChars = member.getMemberTypeLength();
+        final CharacterEncoding encoding = fileInfoProvider.getCharacterEncoding(memberTypeId); 
         final int maxLengthBytes =
                 (compoundMemberInfoOrNull != null) ? compoundMemberInfoOrNull.getType().getSize()
-                        : (fileInfoProvider.getCharacterEncoding() == CharacterEncoding.UTF8 ? 2
-                                : 1) * ((memberTypeId < 0) ? maxLengthChars + 1 : maxLengthChars);
+                        : encoding.getMaxBytesPerChar()
+                                * ((memberTypeId < 0) ? maxLengthChars + 1 : maxLengthChars);
         final int stringDataTypeId =
                 (memberTypeId < 0) ? fileInfoProvider.getStringDataTypeId(maxLengthBytes)
                         : memberTypeId;
@@ -81,19 +82,16 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
         {
             case FIELD:
                 return createByteifyerForField(fieldOrNull, memberName, offset, stringDataTypeId,
-                        maxLengthChars, maxLengthBytes, fileInfoProvider.getCharacterEncoding(),
-                        isCharArray);
+                        maxLengthChars, maxLengthBytes, encoding, isCharArray);
             case MAP:
                 return createByteifyerForMap(memberName, offset, stringDataTypeId, maxLengthChars,
-                        maxLengthBytes, fileInfoProvider.getCharacterEncoding(), isCharArray);
+                        maxLengthBytes, encoding, isCharArray);
             case LIST:
                 return createByteifyerForList(memberName, index, offset, stringDataTypeId,
-                        maxLengthChars, maxLengthBytes, fileInfoProvider.getCharacterEncoding(),
-                        isCharArray);
+                        maxLengthChars, maxLengthBytes, encoding, isCharArray);
             case ARRAY:
                 return createByteifyerForArray(memberName, index, offset, stringDataTypeId,
-                        maxLengthChars, maxLengthBytes, fileInfoProvider.getCharacterEncoding(),
-                        isCharArray);
+                        maxLengthChars, maxLengthBytes, encoding, isCharArray);
             default:
                 throw new Error("Unknown access type");
         }

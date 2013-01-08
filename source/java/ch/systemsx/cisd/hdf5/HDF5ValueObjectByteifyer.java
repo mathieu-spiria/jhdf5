@@ -75,7 +75,7 @@ class HDF5ValueObjectByteifyer<T>
         
         public HDF5EnumerationType getEnumType(String[] options);
 
-        public CharacterEncoding getCharacterEncoding();
+        public CharacterEncoding getCharacterEncoding(int dataTypeId);
     }
 
     HDF5ValueObjectByteifyer(Class<T> clazz, FileInfoProvider fileInfoProvider,

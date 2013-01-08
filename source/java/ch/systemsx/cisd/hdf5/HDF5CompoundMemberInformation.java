@@ -120,8 +120,8 @@ public final class HDF5CompoundMemberInformation implements
         {
             info[i] =
                     new HDF5CompoundMemberInformation(members[i].getMemberName(),
-                            getTypeInformation(compoundClass, houseKeepingNameSuffix,
-                                    CharacterEncoding.ASCII, members[i]), offset);
+                            getTypeInformation(compoundClass, houseKeepingNameSuffix, members[i]),
+                            offset);
             offset += info[i].getType().getSize();
         }
         Arrays.sort(info);
@@ -129,31 +129,35 @@ public final class HDF5CompoundMemberInformation implements
     }
 
     private static HDF5DataTypeInformation getTypeInformation(Class<?> compoundClass,
-            String houseKeepingNameSuffix, CharacterEncoding encoding,
-            final HDF5CompoundMemberMapping member)
+            String houseKeepingNameSuffix, final HDF5CompoundMemberMapping member)
     {
         final Field fieldOrNull = member.tryGetField(compoundClass);
         final Class<?> fieldTypeOrNull = (fieldOrNull == null) ? null : fieldOrNull.getType();
         final HDF5DataTypeInformation typeInfo;
         if (fieldTypeOrNull == boolean.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.BOOLEAN, houseKeepingNameSuffix, 1);
+            typeInfo =
+                    new HDF5DataTypeInformation(HDF5DataClass.BOOLEAN, houseKeepingNameSuffix, 1);
         } else if (fieldTypeOrNull == byte.class || fieldTypeOrNull == byte[].class
                 || fieldTypeOrNull == byte[][].class || fieldTypeOrNull == MDByteArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 1);
+            typeInfo =
+                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 1);
         } else if (fieldTypeOrNull == short.class || fieldTypeOrNull == short[].class
                 || fieldTypeOrNull == short[][].class || fieldTypeOrNull == MDShortArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 2);
+            typeInfo =
+                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 2);
         } else if (fieldTypeOrNull == int.class || fieldTypeOrNull == int[].class
                 || fieldTypeOrNull == int[][].class || fieldTypeOrNull == MDIntArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 4);
+            typeInfo =
+                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 4);
         } else if (fieldTypeOrNull == long.class || fieldTypeOrNull == long[].class
                 || fieldTypeOrNull == long[][].class || fieldTypeOrNull == MDLongArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 8);
+            typeInfo =
+                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 8);
         } else if (fieldTypeOrNull == BitSet.class)
         {
             typeInfo =
@@ -171,7 +175,7 @@ public final class HDF5CompoundMemberInformation implements
         } else if (fieldTypeOrNull == String.class || fieldTypeOrNull == char[].class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.STRING, encoding, houseKeepingNameSuffix, 
+                    new HDF5DataTypeInformation(HDF5DataClass.STRING, houseKeepingNameSuffix,
                             member.getMemberTypeLength() + 1);
         } else if (fieldTypeOrNull == HDF5EnumerationValue.class)
         {
@@ -181,8 +185,9 @@ public final class HDF5CompoundMemberInformation implements
             typeInfo =
                     new HDF5DataTypeInformation(
                             options.knowsDataTypePath() ? HDF5Utils.createDataTypePath(
-                                    HDF5Utils.ENUM_PREFIX, houseKeepingNameSuffix, member.tryGetEnumerationType().getName())
-                                    : null, options, HDF5DataClass.ENUM, houseKeepingNameSuffix, member
+                                    HDF5Utils.ENUM_PREFIX, houseKeepingNameSuffix, member
+                                            .tryGetEnumerationType().getName()) : null, options,
+                            HDF5DataClass.ENUM, houseKeepingNameSuffix, member
                                     .tryGetEnumerationType().getStorageForm().getStorageSize());
             if (options.knowsDataTypeVariant())
             {
