@@ -246,7 +246,9 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         realMaxLengthInBytes = (bytes.length == 1) ? 1 : bytes.length - 1;
                     } else
                     {
-                        bytes = StringUtils.toBytes0Term(data, maxLength, baseWriter.encodingForNewDataSets);
+                        bytes =
+                                StringUtils.toBytes0Term(data, maxLength,
+                                        baseWriter.encodingForNewDataSets);
                         realMaxLengthInBytes =
                                 baseWriter.encodingForNewDataSets.getMaxBytesPerChar()
                                         * ((maxLength == 0) ? 1 : maxLength);
@@ -337,7 +339,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringArray(final String objectPath, final String[] data, final int maxLength,
+    public void writeStringArray(final String objectPath, final String[] data, int maxLength,
             final HDF5GenericStorageFeatures features) throws HDF5JavaException
     {
         assert maxLength >= 0;
@@ -345,7 +347,19 @@ public class HDF5StringWriter implements IHDF5StringWriter
         writeStringArray(objectPath, data, maxLength, false, features, false);
     }
 
-    // TODO: add writeStringArrayVariableLength()
+    @Override
+    public void writeStringArrayVariableLength(String objectPath, String[] data,
+            HDF5GenericStorageFeatures features)
+    {
+        writeStringArray(objectPath, data, 0, false, features, true);
+    }
+
+    @Override
+    public void writeStringArrayVariableLength(String objectPath, String[] data)
+    {
+        writeStringArray(objectPath, data, 0, false,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, true);
+    }
 
     private void writeStringArray(final String objectPath, final String[] data,
             final int maxLength, final boolean lengthFitsValue,
@@ -433,7 +447,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize = baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
+                        elementSize =
+                                baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -483,7 +498,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize = baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
+                        elementSize =
+                                baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -579,7 +595,19 @@ public class HDF5StringWriter implements IHDF5StringWriter
         writeStringMDArray(objectPath, data, maxLength, false, features, false);
     }
 
-    // TODO: add writeStringMDArrayVariableLength()
+    @Override
+    public void writeStringMDArrayVariableLength(String objectPath, MDArray<String> data,
+            HDF5GenericStorageFeatures features)
+    {
+        writeStringMDArray(objectPath, data, 0, false, features, true);
+    }
+
+    @Override
+    public void writeStringMDArrayVariableLength(String objectPath, MDArray<String> data)
+    {
+        writeStringMDArray(objectPath, data, 0, false,
+                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, true);
+    }
 
     private void writeStringMDArray(final String objectPath, final MDArray<String> data,
             final int maxLength, final boolean lengthFitsValue,
@@ -668,7 +696,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize = baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
+                        elementSize =
+                                baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }
@@ -718,7 +747,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
                         stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
                     } else
                     {
-                        elementSize = baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
+                        elementSize =
+                                baseWriter.encodingForNewDataSets.getMaxBytesPerChar() * maxLength;
                         stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
                     }

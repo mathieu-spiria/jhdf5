@@ -16,8 +16,6 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
-
 import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
@@ -212,14 +210,35 @@ public interface IHDF5StringWriter
             final HDF5GenericStorageFeatures features);
 
     /**
+     * Writes out a <code>String</code> array (of rank 1). Each element of the array will be a
+     * variable-length string.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param features The storage features of the data set. Note that only
+     *            {@link HDF5GenericStorageFeatures#GENERIC_NO_COMPRESSION_KEEP} and
+     *            {@link HDF5GenericStorageFeatures#GENERIC_NO_COMPRESSION_DELETE} make sense here.
+     */
+    public void writeStringArrayVariableLength(final String objectPath, final String[] data,
+            final HDF5GenericStorageFeatures features);
+
+    /**
+     * Writes out a <code>String</code> array (of rank 1). Each element of the array will be a
+     * variable-length string.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     */
+    public void writeStringArrayVariableLength(final String objectPath, final String[] data);
+
+    /**
      * Writes out a <code>String</code> array (of rank N). Each element of the array will have a
      * fixed maximal length which is defined by the longest string in <var>data</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
-    public void writeStringMDArray(final String objectPath, final MDArray<String> data)
-            throws HDF5JavaException;
+    public void writeStringMDArray(final String objectPath, final MDArray<String> data);
 
     /**
      * Writes out a <code>String</code> array (of rank N). Each element of the array will have a
@@ -230,7 +249,7 @@ public interface IHDF5StringWriter
      * @param features The storage features of the data set.
      */
     public void writeStringMDArray(final String objectPath, final MDArray<String> data,
-            final HDF5GenericStorageFeatures features) throws HDF5JavaException;
+            final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a <code>String</code> array (of rank N). Each element of the array will have a
@@ -241,7 +260,7 @@ public interface IHDF5StringWriter
      * @param maxLength The maximal length of any of the strings in <var>data</var>.
      */
     public void writeStringMDArray(final String objectPath, final MDArray<String> data,
-            final int maxLength) throws HDF5JavaException;
+            final int maxLength);
 
     /**
      * Writes out a <code>String</code> array (of rank N). Each element of the array will have a
@@ -253,8 +272,29 @@ public interface IHDF5StringWriter
      * @param features The storage features of the data set.
      */
     public void writeStringMDArray(final String objectPath, final MDArray<String> data,
-            final int maxLength, final HDF5GenericStorageFeatures features)
-            throws HDF5JavaException;
+            final int maxLength, final HDF5GenericStorageFeatures features);
+
+    /**
+     * Writes out a <code>String</code> array (of rank N). Each element of the array will be a
+     * variable-length string.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param features The storage features of the data set. Note that only
+     *            {@link HDF5GenericStorageFeatures#GENERIC_NO_COMPRESSION_KEEP} and
+     *            {@link HDF5GenericStorageFeatures#GENERIC_NO_COMPRESSION_DELETE} make sense here.
+     */
+    public void writeStringMDArrayVariableLength(final String objectPath,
+            final MDArray<String> data, final HDF5GenericStorageFeatures features);
+
+    /**
+     * Writes out a <code>String</code> array (of rank N). Each element of the array will be a
+     * variable-length string.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     */
+    public void writeStringMDArrayVariableLength(final String objectPath, final MDArray<String> data);
 
     /**
      * Creates a <code>String</code> array (of rank 1) for Strings of length <var>maxLength</var>.
