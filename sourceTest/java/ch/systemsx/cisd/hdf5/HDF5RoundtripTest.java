@@ -2332,25 +2332,23 @@ public class HDF5RoundtripTest
         stringArrayFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
         final String[] data = new String[]
-            { "abc", "ABCxxx", "xyz" };
-        final String[] dataWithZero = new String[]
-            { "abc\0A", "ABCxxx\0" + "1", "xyz\0;" };
-        final String[] dataWithZeroPadded = new String[]
-            { "abc\0A\0\0\0", "ABCxxx\0" + "1", "xyz\0;\0\0\0" };
-        final String emptyPadded = "\0\0\0\0\0\0\0\0";
+                { "abc\0A", "ABCxxx\0" + "1", "xyz\0;" };
+        final String[] dataZeroTerm = zeroTerm(data);
+        final String[] dataPadded = pad(data, 8);
+        final String emptyPadded = StringUtils.rightPad("",  8,  '\0');
         final String dataSetName = "/aStringArray";
         writer.strings().createArray(dataSetName, 8, 5, 3);
-        writer.strings().writeArrayBlock(dataSetName, dataWithZero, 1);
+        writer.strings().writeArrayBlock(dataSetName, data, 1);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
         String[] dataStored = reader.strings().readArray(dataSetName);
         assertTrue(Arrays.equals(new String[]
-            { "", "", "", data[0], data[1], data[2] }, dataStored));
+            { "", "", "", dataZeroTerm[0], dataZeroTerm[1], dataZeroTerm[2] }, dataStored));
 
         dataStored = reader.strings().readArrayRaw(dataSetName);
         assertTrue(Arrays.equals(new String[]
-            { emptyPadded, emptyPadded, emptyPadded, dataWithZeroPadded[0], dataWithZeroPadded[1],
-                    dataWithZeroPadded[2] }, dataStored));
+            { emptyPadded, emptyPadded, emptyPadded, dataPadded[0], dataPadded[1],
+                    dataPadded[2] }, dataStored));
 
         dataStored = reader.strings().readArrayBlock(dataSetName, 3, 0);
         assertTrue(Arrays.equals(new String[]
@@ -2359,15 +2357,15 @@ public class HDF5RoundtripTest
         assertTrue(Arrays.equals(new String[]
             { emptyPadded, emptyPadded, emptyPadded }, dataStored));
         dataStored = reader.strings().readArrayBlock(dataSetName, 3, 1);
-        assertTrue(Arrays.equals(data, dataStored));
+        assertTrue(Arrays.equals(dataZeroTerm, dataStored));
         dataStored = reader.strings().readArrayBlockRaw(dataSetName, 3, 1);
-        assertTrue(Arrays.equals(dataWithZeroPadded, dataStored));
+        assertTrue(Arrays.equals(dataPadded, dataStored));
         dataStored = reader.strings().readArrayBlockWithOffset(dataSetName, 3, 2);
         assertTrue(Arrays.equals(new String[]
-            { "", data[0], data[1] }, dataStored));
+            { "", dataZeroTerm[0], dataZeroTerm[1] }, dataStored));
         dataStored = reader.strings().readArrayBlockWithOffsetRaw(dataSetName, 3, 2);
         assertTrue(Arrays.equals(new String[]
-            { emptyPadded, dataWithZeroPadded[0], dataWithZeroPadded[1] }, dataStored));
+            { emptyPadded, dataPadded[0], dataPadded[1] }, dataStored));
         reader.close();
     }
 
@@ -2462,12 +2460,16 @@ public class HDF5RoundtripTest
         stringArrayFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
         final String dataSetName = "/aStringArray";
-        writer.strings().createMDArray(dataSetName, 6, new long[]
+        writer.strings().createMDArray(dataSetName, 8, new long[]
             { 4, 4 }, new int[]
             { 2, 2 });
         final MDArray<String> data = new MDArray<String>(new String[]
-            { "abc", "ABCxxx", "xyz", "DEF" }, new long[]
+            { "abc", "ABCxxx\0" + 1, "xyz\0;", "DEF\0" + 8 }, new long[]
             { 2, 2 });
+        final MDArray<String> dataZeroTerm =
+                new MDArray<String>(zeroTerm(data.getAsFlatArray()), data.dimensions());
+        final MDArray<String> dataPadded =
+                new MDArray<String>(pad(data.getAsFlatArray(), 8), data.dimensions());
         for (int i = 0; i < 2; ++i)
         {
             for (int j = 0; j < 2; ++j)
@@ -2483,8 +2485,24 @@ public class HDF5RoundtripTest
         for (HDF5MDDataBlock<MDArray<String>> block : reader.strings().getMDArrayNaturalBlocks(
                 dataSetName))
         {
-            assertTrue(Arrays.equals(data.getAsFlatArray(), block.getData().getAsFlatArray()));
-            assertTrue(Arrays.equals(data.dimensions(), block.getData().dimensions()));
+            assertTrue(Arrays.equals(dataZeroTerm.getAsFlatArray(), block.getData().getAsFlatArray()));
+            assertTrue(Arrays.equals(dataZeroTerm.dimensions(), block.getData().dimensions()));
+            assertTrue(Arrays.equals(new long[]
+                { i, j }, block.getIndex()));
+            if (++j > 1)
+            {
+                j = 0;
+                ++i;
+            }
+        }
+
+        i = 0;
+        j = 0;
+        for (HDF5MDDataBlock<MDArray<String>> block : reader.strings().getMDArrayNaturalBlocksRaw(
+                dataSetName))
+        {
+            assertTrue(Arrays.equals(dataPadded.getAsFlatArray(), block.getData().getAsFlatArray()));
+            assertTrue(Arrays.equals(dataPadded.dimensions(), block.getData().dimensions()));
             assertTrue(Arrays.equals(new long[]
                 { i, j }, block.getIndex()));
             if (++j > 1)
@@ -2494,6 +2512,38 @@ public class HDF5RoundtripTest
             }
         }
         reader.close();
+    }
+    
+    private String[] pad(String[] data, int len)
+    {
+        final String[] result = new String[data.length];
+        for (int i = 0; i < result.length; ++i)
+        {
+            result[i] = StringUtils.rightPad(data[i], len, '\0');
+        }
+        return result;
+    }
+    
+    private String[] zeroTerm(String[] data)
+    {
+        final String[] result = new String[data.length];
+        for (int i = 0; i < result.length; ++i)
+        {
+            result[i] = zeroTerm(data[i]);
+        }
+        return result;
+    }
+    
+    private String zeroTerm(String s)
+    {
+        int idx = s.indexOf('\0');
+        if (idx < 0)
+        {
+            return s;
+        } else
+        {
+            return s.substring(0,  idx);
+        }
     }
 
     @Test
