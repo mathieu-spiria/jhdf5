@@ -2333,22 +2333,41 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(stringArrayFile);
         final String[] data = new String[]
             { "abc", "ABCxxx", "xyz" };
+        final String[] dataWithZero = new String[]
+            { "abc\0A", "ABCxxx\0" + "1", "xyz\0;" };
+        final String[] dataWithZeroPadded = new String[]
+            { "abc\0A\0\0\0", "ABCxxx\0" + "1", "xyz\0;\0\0\0" };
+        final String emptyPadded = "\0\0\0\0\0\0\0\0";
         final String dataSetName = "/aStringArray";
-        writer.strings().createArray(dataSetName, 6, 5, 3);
-        writer.strings().writeArrayBlock(dataSetName, data, 1);
+        writer.strings().createArray(dataSetName, 8, 5, 3);
+        writer.strings().writeArrayBlock(dataSetName, dataWithZero, 1);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
-        String[] dataStored = reader.readStringArray(dataSetName);
+        String[] dataStored = reader.strings().readArray(dataSetName);
         assertTrue(Arrays.equals(new String[]
             { "", "", "", data[0], data[1], data[2] }, dataStored));
+
+        dataStored = reader.strings().readArrayRaw(dataSetName);
+        assertTrue(Arrays.equals(new String[]
+            { emptyPadded, emptyPadded, emptyPadded, dataWithZeroPadded[0], dataWithZeroPadded[1],
+                    dataWithZeroPadded[2] }, dataStored));
+
         dataStored = reader.strings().readArrayBlock(dataSetName, 3, 0);
         assertTrue(Arrays.equals(new String[]
             { "", "", "" }, dataStored));
+        dataStored = reader.strings().readArrayBlockRaw(dataSetName, 3, 0);
+        assertTrue(Arrays.equals(new String[]
+            { emptyPadded, emptyPadded, emptyPadded }, dataStored));
         dataStored = reader.strings().readArrayBlock(dataSetName, 3, 1);
         assertTrue(Arrays.equals(data, dataStored));
+        dataStored = reader.strings().readArrayBlockRaw(dataSetName, 3, 1);
+        assertTrue(Arrays.equals(dataWithZeroPadded, dataStored));
         dataStored = reader.strings().readArrayBlockWithOffset(dataSetName, 3, 2);
         assertTrue(Arrays.equals(new String[]
             { "", data[0], data[1] }, dataStored));
+        dataStored = reader.strings().readArrayBlockWithOffsetRaw(dataSetName, 3, 2);
+        assertTrue(Arrays.equals(new String[]
+            { emptyPadded, dataWithZeroPadded[0], dataWithZeroPadded[1] }, dataStored));
         reader.close();
     }
 
@@ -2461,8 +2480,8 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringArrayFile);
         int i = 0;
         int j = 0;
-        for (HDF5MDDataBlock<MDArray<String>> block : reader
-                .strings().getMDArrayNaturalBlocks(dataSetName))
+        for (HDF5MDDataBlock<MDArray<String>> block : reader.strings().getMDArrayNaturalBlocks(
+                dataSetName))
         {
             assertTrue(Arrays.equals(data.getAsFlatArray(), block.getData().getAsFlatArray()));
             assertTrue(Arrays.equals(data.dimensions(), block.getData().dimensions()));
@@ -2534,14 +2553,17 @@ public class HDF5RoundtripTest
         assertTrue(Arrays.equals(data.getAsFlatArray(), dataStored.getAsFlatArray()));
         assertTrue(Arrays.equals(data.dimensions(), dataStored.dimensions()));
         assertTrue(Arrays.equals(new String[]
-            { "", "", "", "" }, reader.strings().readMDArrayBlock(dataSetName, blockSize, new long[]
-            { 1, 0 }).getAsFlatArray()));
+            { "", "", "", "" },
+                reader.strings().readMDArrayBlock(dataSetName, blockSize, new long[]
+                    { 1, 0 }).getAsFlatArray()));
         assertTrue(Arrays.equals(new String[]
-            { "", "", "", "" }, reader.strings().readMDArrayBlock(dataSetName, blockSize, new long[]
-            { 0, 1 }).getAsFlatArray()));
+            { "", "", "", "" },
+                reader.strings().readMDArrayBlock(dataSetName, blockSize, new long[]
+                    { 0, 1 }).getAsFlatArray()));
         assertTrue(Arrays.equals(new String[]
-            { "", "", "", "" }, reader.strings().readMDArrayBlock(dataSetName, blockSize, new long[]
-            { 2, 2 }).getAsFlatArray()));
+            { "", "", "", "" },
+                reader.strings().readMDArrayBlock(dataSetName, blockSize, new long[]
+                    { 2, 2 }).getAsFlatArray()));
         final HDF5DataSetInformation info = reader.getDataSetInformation(dataSetName);
         reader.close();
         assertTrue(info.getTypeInformation().isVariableLengthType());
@@ -2993,10 +3015,12 @@ public class HDF5RoundtripTest
         IHDF5Writer writer = HDF5FactoryProvider.get().configure(stringCompactFile).writer();
         final String smallData = "abc1234";
         final String dataSetName1 = "/aString";
-        writer.strings().write(dataSetName1, smallData, HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS);
+        writer.strings().write(dataSetName1, smallData,
+                HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS);
         final String dataSetName2 = "/anotherString";
         final String largeData = StringUtils.repeat("a", 64 * 1024 - 13);
-        writer.strings().write(dataSetName2, largeData, HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS);
+        writer.strings().write(dataSetName2, largeData,
+                HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(stringCompactFile);
         final String dataRead1 = reader.readString(dataSetName1);
@@ -3110,8 +3134,7 @@ public class HDF5RoundtripTest
     @Test
     public void testStringVLArray()
     {
-        final File compressedStringArrayFile =
-                new File(workingDirectory, "StringVLArray.h5");
+        final File compressedStringArrayFile = new File(workingDirectory, "StringVLArray.h5");
         compressedStringArrayFile.delete();
         assertFalse(compressedStringArrayFile.exists());
         compressedStringArrayFile.deleteOnExit();
@@ -3127,7 +3150,8 @@ public class HDF5RoundtripTest
                 HDF5FactoryProvider.get().openForReading(compressedStringArrayFile);
         final String[] dataStored = reader.readStringArray(dataSetName);
         assertTrue(Arrays.equals(data, dataStored));
-        assertTrue(reader.getDataSetInformation(dataSetName).getTypeInformation().isVariableLengthType());
+        assertTrue(reader.getDataSetInformation(dataSetName).getTypeInformation()
+                .isVariableLengthType());
         reader.close();
     }
 

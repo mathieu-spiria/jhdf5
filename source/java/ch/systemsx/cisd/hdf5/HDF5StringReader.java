@@ -116,15 +116,13 @@ public class HDF5StringReader implements IHDF5StringReader
     }
 
     @Override
-    public MDArray<String> getMDArrayAttr(final String objectPath,
-            final String attributeName)
+    public MDArray<String> getMDArrayAttr(final String objectPath, final String attributeName)
     {
         return getStringMDArrayAttribute(objectPath, attributeName, false);
     }
 
     @Override
-    public MDArray<String> getMDArrayAttrRaw(final String objectPath,
-            final String attributeName)
+    public MDArray<String> getMDArrayAttrRaw(final String objectPath, final String attributeName)
     {
         return getStringMDArrayAttribute(objectPath, attributeName, true);
     }
@@ -248,14 +246,17 @@ public class HDF5StringReader implements IHDF5StringReader
                         {
                             throw new HDF5JavaException(objectPath + " needs to be a String.");
                         }
-                        final int strLength = baseReader.h5.getDataTypeSize(dataTypeId);
-                        byte[] bdata = null;
+                        final int strLength;
+                        final byte[] bdata;
                         if (readRaw)
                         {
+                            strLength = baseReader.h5.getDataTypeSize(dataTypeId);
                             bdata = new byte[oneDimSize * strLength];
                             baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId, bdata);
                         } else
                         {
+                            strLength = -1;
+                            bdata = null;
                             baseReader.h5.readDataSetString(dataSetId, dataTypeId, data);
                         }
                         if (bdata != null && readRaw)
@@ -285,8 +286,13 @@ public class HDF5StringReader implements IHDF5StringReader
     }
 
     @Override
-    public String[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
-            final long offset)
+    public String[] readArrayBlockRaw(String objectPath, int blockSize, long blockNumber)
+    {
+        return readArrayBlockWithOffsetRaw(objectPath, blockSize, blockSize * blockNumber);
+    }
+
+    String[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
+            final long offset, final boolean readRaw)
     {
         assert objectPath != null;
 
@@ -315,13 +321,51 @@ public class HDF5StringReader implements IHDF5StringReader
                         {
                             throw new HDF5JavaException(objectPath + " needs to be a String.");
                         }
-                        baseReader.h5.readDataSetString(dataSetId, dataTypeId,
-                                spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+
+                        final int strLength;
+                        final byte[] bdata;
+                        if (readRaw)
+                        {
+                            strLength = baseReader.h5.getDataTypeSize(dataTypeId);
+                            bdata = new byte[spaceParams.blockSize * strLength];
+                            baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId,
+                                    spaceParams.memorySpaceId, spaceParams.dataSpaceId, bdata);
+                        } else
+                        {
+                            strLength = -1;
+                            bdata = null;
+                            baseReader.h5.readDataSetString(dataSetId, dataTypeId,
+                                    spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                        }
+                        if (bdata != null && readRaw)
+                        {
+                            final CharacterEncoding encoding =
+                                    baseReader.h5.getCharacterEncoding(dataTypeId);
+                            for (int i = 0, startIdx = 0; i < spaceParams.blockSize; ++i, startIdx +=
+                                    strLength)
+                            {
+                                data[i] =
+                                        StringUtils.fromBytes(bdata, startIdx,
+                                                startIdx + strLength, encoding);
+                            }
+                        }
                     }
                     return data;
                 }
             };
         return baseReader.runner.call(readCallable);
+    }
+
+    @Override
+    public String[] readArrayBlockWithOffset(String objectPath, int blockSize, long offset)
+    {
+        return readArrayBlockWithOffset(objectPath, blockSize, offset, false);
+    }
+
+    @Override
+    public String[] readArrayBlockWithOffsetRaw(String objectPath, int blockSize, long offset)
+    {
+        return readArrayBlockWithOffset(objectPath, blockSize, offset, true);
     }
 
     @Override
@@ -369,15 +413,18 @@ public class HDF5StringReader implements IHDF5StringReader
                                             + " needs to be a String.");
                                 }
 
-                                final int strLength = baseReader.h5.getDataTypeSize(dataTypeId);
-                                byte[] bdata = null;
+                                final int strLength;
+                                final byte[] bdata;
                                 if (readRaw)
                                 {
+                                    strLength = baseReader.h5.getDataTypeSize(dataTypeId);
                                     bdata = new byte[spaceParams.blockSize * strLength];
                                     baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId,
                                             bdata);
                                 } else
                                 {
+                                    strLength = -1;
+                                    bdata = null;
                                     baseReader.h5.readDataSetString(dataSetId, dataTypeId, data);
                                 }
                                 if (bdata != null && readRaw)
@@ -399,9 +446,8 @@ public class HDF5StringReader implements IHDF5StringReader
         return baseReader.runner.call(readCallable);
     }
 
-    @Override
-    public MDArray<String> readMDArrayBlockWithOffset(final String objectPath,
-            final int[] blockDimensions, final long[] offset)
+    MDArray<String> readMDArrayBlockWithOffset(final String objectPath,
+            final int[] blockDimensions, final long[] offset, final boolean readRaw)
     {
         assert objectPath != null;
 
@@ -435,9 +481,35 @@ public class HDF5StringReader implements IHDF5StringReader
                                     throw new HDF5JavaException(objectPath
                                             + " needs to be a String.");
                                 }
-                                baseReader.h5.readDataSetString(dataSetId, dataTypeId,
-                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId,
-                                        dataBlock);
+
+                                final int strLength;
+                                byte[] bdata = null;
+                                if (readRaw)
+                                {
+                                    strLength = baseReader.h5.getDataTypeSize(dataTypeId);
+                                    bdata = new byte[spaceParams.blockSize * strLength];
+                                    baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId,
+                                            spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                            bdata);
+                                } else
+                                {
+                                    strLength = -1;
+                                    baseReader.h5.readDataSetString(dataSetId, dataTypeId,
+                                            spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                            dataBlock);
+                                }
+                                if (bdata != null && readRaw)
+                                {
+                                    final CharacterEncoding encoding =
+                                            baseReader.h5.getCharacterEncoding(dataTypeId);
+                                    for (int i = 0, startIdx = 0; i < spaceParams.blockSize; ++i, startIdx +=
+                                            strLength)
+                                    {
+                                        dataBlock[i] =
+                                                StringUtils.fromBytes(bdata, startIdx, startIdx
+                                                        + strLength, encoding);
+                                    }
+                                }
                             }
                             return new MDArray<String>(dataBlock, blockDimensions);
                         }
@@ -446,8 +518,22 @@ public class HDF5StringReader implements IHDF5StringReader
     }
 
     @Override
-    public MDArray<String> readMDArrayBlock(final String objectPath,
-            final int[] blockDimensions, final long[] blockNumber)
+    public MDArray<String> readMDArrayBlockWithOffset(final String objectPath,
+            final int[] blockDimensions, final long[] offset)
+    {
+        return readMDArrayBlockWithOffset(objectPath, blockDimensions, offset, false);
+    }
+
+    @Override
+    public MDArray<String> readMDArrayBlockWithOffsetRaw(String objectPath, int[] blockDimensions,
+            long[] offset)
+    {
+        return readMDArrayBlockWithOffset(objectPath, blockDimensions, offset, true);
+    }
+
+    @Override
+    public MDArray<String> readMDArrayBlock(final String objectPath, final int[] blockDimensions,
+            final long[] blockNumber)
     {
         final long[] offset = new long[blockDimensions.length];
         for (int i = 0; i < offset.length; ++i)
@@ -458,8 +544,19 @@ public class HDF5StringReader implements IHDF5StringReader
     }
 
     @Override
-    public Iterable<HDF5DataBlock<String[]>> getArrayNaturalBlocks(final String dataSetPath)
-            throws HDF5JavaException
+    public MDArray<String> readMDArrayBlockRaw(String objectPath, int[] blockDimensions,
+            long[] blockNumber)
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readMDArrayBlockWithOffsetRaw(objectPath, blockDimensions, offset);
+    }
+
+    Iterable<HDF5DataBlock<String[]>> getArrayNaturalBlocks(final String dataSetPath,
+            final boolean readRaw) throws HDF5JavaException
     {
         baseReader.checkOpen();
         final HDF5NaturalBlock1DParameters params =
@@ -486,8 +583,10 @@ public class HDF5StringReader implements IHDF5StringReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final String[] block =
-                                        readArrayBlockWithOffset(dataSetPath,
-                                                index.getBlockSize(), offset);
+                                        readRaw ? readArrayBlockWithOffsetRaw(dataSetPath,
+                                                index.getBlockSize(), offset)
+                                                : readArrayBlockWithOffset(dataSetPath,
+                                                        index.getBlockSize(), offset);
                                 return new HDF5DataBlock<String[]>(block, index.getAndIncIndex(),
                                         offset);
                             }
@@ -503,8 +602,21 @@ public class HDF5StringReader implements IHDF5StringReader
     }
 
     @Override
-    public Iterable<HDF5MDDataBlock<MDArray<String>>> getMDArrayNaturalBlocks(
-            final String objectPath)
+    public Iterable<HDF5DataBlock<String[]>> getArrayNaturalBlocks(final String dataSetPath)
+            throws HDF5JavaException
+    {
+        return getArrayNaturalBlocks(dataSetPath, false);
+    }
+
+    @Override
+    public Iterable<HDF5DataBlock<String[]>> getArrayNaturalBlocksRaw(String dataSetPath)
+            throws HDF5JavaException
+    {
+        return getArrayNaturalBlocks(dataSetPath, true);
+    }
+
+    Iterable<HDF5MDDataBlock<MDArray<String>>> getMDArrayNaturalBlocks(final String objectPath,
+            final boolean readRaw)
     {
         baseReader.checkOpen();
         final HDF5NaturalBlockMDParameters params =
@@ -531,8 +643,10 @@ public class HDF5StringReader implements IHDF5StringReader
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
                                 final MDArray<String> data =
-                                        readMDArrayBlockWithOffset(objectPath,
-                                                index.getBlockSize(), offset);
+                                        readRaw ? readMDArrayBlockWithOffsetRaw(objectPath,
+                                                index.getBlockSize(), offset)
+                                                : readMDArrayBlockWithOffset(objectPath,
+                                                        index.getBlockSize(), offset);
                                 return new HDF5MDDataBlock<MDArray<String>>(data,
                                         index.getIndexClone(), offset);
                             }
@@ -545,6 +659,19 @@ public class HDF5StringReader implements IHDF5StringReader
                         };
                 }
             };
+    }
+
+    @Override
+    public Iterable<HDF5MDDataBlock<MDArray<String>>> getMDArrayNaturalBlocks(
+            final String objectPath)
+    {
+        return getMDArrayNaturalBlocks(objectPath, false);
+    }
+
+    @Override
+    public Iterable<HDF5MDDataBlock<MDArray<String>>> getMDArrayNaturalBlocksRaw(String objectPath)
+    {
+        return getMDArrayNaturalBlocks(objectPath, true);
     }
 
 }
