@@ -37,7 +37,7 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-public class HDF5StringWriter implements IHDF5StringWriter
+public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWriter
 {
 
     private static final int MAX_COMPACT_SIZE = 64 * 1024 - 12;
@@ -46,6 +46,8 @@ public class HDF5StringWriter implements IHDF5StringWriter
 
     HDF5StringWriter(HDF5BaseWriter baseWriter)
     {
+        super(baseWriter);
+
         assert baseWriter != null;
 
         this.baseWriter = baseWriter;
@@ -56,7 +58,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     // /////////////////////
 
     @Override
-    public void setStringAttributeVariableLength(final String objectPath, final String name,
+    public void setAttrVL(final String objectPath, final String name,
             final String value)
     {
         assert name != null;
@@ -81,13 +83,13 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void setStringAttribute(final String objectPath, final String name, final String value)
+    public void setAttr(final String objectPath, final String name, final String value)
     {
         setStringAttribute(objectPath, name, value, value.length(), true);
     }
 
     @Override
-    public void setStringAttribute(final String objectPath, final String name, final String value,
+    public void setAttr(final String objectPath, final String name, final String value,
             final int maxLength)
     {
         setStringAttribute(objectPath, name, value, maxLength, false);
@@ -119,14 +121,14 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void setStringArrayAttribute(final String objectPath, final String name,
+    public void setArrayAttr(final String objectPath, final String name,
             final String[] value)
     {
         setStringArrayAttribute(objectPath, name, value, -1, true);
     }
 
     @Override
-    public void setStringArrayAttribute(final String objectPath, final String name,
+    public void setArrayAttr(final String objectPath, final String name,
             final String[] value, final int maxLength)
     {
         setStringArrayAttribute(objectPath, name, value, maxLength, false);
@@ -156,14 +158,14 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void setStringMDArrayAttribute(final String objectPath, final String name,
+    public void setMDArrayAttr(final String objectPath, final String name,
             final MDArray<String> value)
     {
         setStringMDArrayAttribute(objectPath, name, value, -1, true);
     }
 
     @Override
-    public void setStringMDArrayAttribute(final String objectPath, final String name,
+    public void setMDArrayAttr(final String objectPath, final String name,
             final MDArray<String> value, final int maxLength)
     {
         setStringMDArrayAttribute(objectPath, name, value, maxLength, false);
@@ -197,28 +199,28 @@ public class HDF5StringWriter implements IHDF5StringWriter
     // /////////////////////
 
     @Override
-    public void writeString(final String objectPath, final String data, final int maxLength)
+    public void write(final String objectPath, final String data, final int maxLength)
     {
         writeString(objectPath, data, maxLength, true,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void writeString(final String objectPath, final String data)
+    public void write(final String objectPath, final String data)
     {
         writeString(objectPath, data, data.length(), true,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void writeString(final String objectPath, final String data,
+    public void write(final String objectPath, final String data,
             final HDF5GenericStorageFeatures features)
     {
         writeString(objectPath, data, data.length(), true, features);
     }
 
     @Override
-    public void writeString(final String objectPath, final String data, final int maxLength,
+    public void write(final String objectPath, final String data, final int maxLength,
             final HDF5GenericStorageFeatures features)
     {
         writeString(objectPath, data, maxLength, false, features);
@@ -302,7 +304,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringArray(final String objectPath, final String[] data,
+    public void writeArray(final String objectPath, final String[] data,
             final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
@@ -312,7 +314,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringArray(final String objectPath, final String[] data)
+    public void writeArray(final String objectPath, final String[] data)
     {
         assert objectPath != null;
         assert data != null;
@@ -322,7 +324,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringArray(final String objectPath, final String[] data, final int maxLength)
+    public void writeArray(final String objectPath, final String[] data, final int maxLength)
     {
         writeStringArray(objectPath, data, maxLength, false,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION, false);
@@ -339,7 +341,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringArray(final String objectPath, final String[] data, int maxLength,
+    public void writeArray(final String objectPath, final String[] data, int maxLength,
             final HDF5GenericStorageFeatures features) throws HDF5JavaException
     {
         assert maxLength >= 0;
@@ -392,20 +394,20 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void createStringArray(final String objectPath, final int maxLength, final int size)
+    public void createArray(final String objectPath, final int maxLength, final int size)
     {
-        createStringArray(objectPath, maxLength, size, GENERIC_NO_COMPRESSION);
+        createArray(objectPath, maxLength, size, GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void createStringArray(final String objectPath, final int maxLength, final long size,
+    public void createArray(final String objectPath, final int maxLength, final long size,
             final int blockSize)
     {
-        createStringArray(objectPath, maxLength, size, blockSize, GENERIC_NO_COMPRESSION);
+        createArray(objectPath, maxLength, size, blockSize, GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void createStringArray(final String objectPath, final int maxLength, final int size,
+    public void createArray(final String objectPath, final int maxLength, final int size,
             final HDF5GenericStorageFeatures features)
     {
         assert maxLength > 0;
@@ -455,7 +457,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void createStringArray(final String objectPath, final int maxLength, final long size,
+    public void createArray(final String objectPath, final int maxLength, final long size,
             final int blockSize, final HDF5GenericStorageFeatures features)
     {
         assert maxLength > 0;
@@ -499,15 +501,15 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringArrayBlock(final String objectPath, final String[] data,
+    public void writeArrayBlock(final String objectPath, final String[] data,
             final long blockNumber)
     {
         assert data != null;
-        writeStringArrayBlockWithOffset(objectPath, data, data.length, data.length * blockNumber);
+        writeArrayBlockWithOffset(objectPath, data, data.length, data.length * blockNumber);
     }
 
     @Override
-    public void writeStringArrayBlockWithOffset(final String objectPath, final String[] data,
+    public void writeArrayBlockWithOffset(final String objectPath, final String[] data,
             final int dataSize, final long offset)
     {
         assert objectPath != null;
@@ -550,7 +552,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringMDArray(final String objectPath, final MDArray<String> data)
+    public void writeMDArray(final String objectPath, final MDArray<String> data)
             throws HDF5JavaException
     {
         writeStringMDArray(objectPath, data, getMaxLength(data.getAsFlatArray()), true,
@@ -558,7 +560,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringMDArray(final String objectPath, final MDArray<String> data,
+    public void writeMDArray(final String objectPath, final MDArray<String> data,
             final HDF5GenericStorageFeatures features) throws HDF5JavaException
     {
         writeStringMDArray(objectPath, data, getMaxLength(data.getAsFlatArray()), true, features,
@@ -566,15 +568,15 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringMDArray(final String objectPath, final MDArray<String> data,
+    public void writeMDArray(final String objectPath, final MDArray<String> data,
             final int maxLength) throws HDF5JavaException
     {
-        writeStringMDArray(objectPath, data, maxLength,
+        writeMDArray(objectPath, data, maxLength,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void writeStringMDArray(final String objectPath, final MDArray<String> data,
+    public void writeMDArray(final String objectPath, final MDArray<String> data,
             final int maxLength, final HDF5GenericStorageFeatures features)
             throws HDF5JavaException
     {
@@ -625,21 +627,21 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void createStringMDArray(final String objectPath, final int maxLength,
+    public void createMDArray(final String objectPath, final int maxLength,
             final int[] dimensions)
     {
-        createStringMDArray(objectPath, maxLength, dimensions, GENERIC_NO_COMPRESSION);
+        createMDArray(objectPath, maxLength, dimensions, GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void createStringMDArray(final String objectPath, final int maxLength,
+    public void createMDArray(final String objectPath, final int maxLength,
             final long[] dimensions, final int[] blockSize)
     {
-        createStringMDArray(objectPath, maxLength, dimensions, blockSize, GENERIC_NO_COMPRESSION);
+        createMDArray(objectPath, maxLength, dimensions, blockSize, GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void createStringMDArray(final String objectPath, final int maxLength,
+    public void createMDArray(final String objectPath, final int maxLength,
             final int[] dimensions, final HDF5GenericStorageFeatures features)
     {
         assert maxLength > 0;
@@ -689,7 +691,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void createStringMDArray(final String objectPath, final int maxLength,
+    public void createMDArray(final String objectPath, final int maxLength,
             final long[] dimensions, final int[] blockSize,
             final HDF5GenericStorageFeatures features)
     {
@@ -733,7 +735,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringMDArrayBlock(final String objectPath, final MDArray<String> data,
+    public void writeMDArrayBlock(final String objectPath, final MDArray<String> data,
             final long[] blockNumber)
     {
         assert data != null;
@@ -745,11 +747,11 @@ public class HDF5StringWriter implements IHDF5StringWriter
         {
             offset[i] = blockNumber[i] * dimensions[i];
         }
-        writeStringMDArrayBlockWithOffset(objectPath, data, offset);
+        writeMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
     @Override
-    public void writeStringMDArrayBlockWithOffset(final String objectPath,
+    public void writeMDArrayBlockWithOffset(final String objectPath,
             final MDArray<String> data, final long[] offset)
     {
         assert objectPath != null;
@@ -796,7 +798,7 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringVariableLength(final String objectPath, final String data)
+    public void writeVL(final String objectPath, final String data)
     {
         assert objectPath != null;
         assert data != null;
@@ -829,76 +831,76 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringVariableLengthArray(final String objectPath, final String[] data)
+    public void writeArrayVL(final String objectPath, final String[] data)
     {
-        writeStringVariableLengthArray(objectPath, data, GENERIC_NO_COMPRESSION);
+        writeArrayVL(objectPath, data, GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void writeStringVariableLengthArray(final String objectPath, final String[] data,
+    public void writeArrayVL(final String objectPath, final String[] data,
             final HDF5GenericStorageFeatures features)
     {
         writeStringArray(objectPath, data, -1, false, features, true);
     }
 
     @Override
-    public void createStringVariableLengthArray(final String objectPath, final int size)
+    public void createArrayVL(final String objectPath, final int size)
     {
-        createStringVariableLengthArray(objectPath, size,
+        createArrayVL(objectPath, size,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void createStringVariableLengthArray(final String objectPath, final long size,
+    public void createArrayVL(final String objectPath, final long size,
             final int blockSize) throws HDF5JavaException
     {
-        createStringVariableLengthArray(objectPath, size, blockSize,
+        createArrayVL(objectPath, size, blockSize,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void createStringVariableLengthArray(final String objectPath, final long size,
+    public void createArrayVL(final String objectPath, final long size,
             final int blockSize, final HDF5GenericStorageFeatures features)
     {
         createStringArray(objectPath, -1, size, blockSize, features, true);
     }
 
     @Override
-    public void createStringVariableLengthArray(final String objectPath, final int size,
+    public void createArrayVL(final String objectPath, final int size,
             final HDF5GenericStorageFeatures features)
     {
         createStringArray(objectPath, -1, size, features, true);
     }
 
     @Override
-    public void createStringVariableLengthMDArray(final String objectPath, final int[] dimensions,
+    public void createMDArrayVL(final String objectPath, final int[] dimensions,
             final HDF5GenericStorageFeatures features)
     {
         createStringMDArray(objectPath, -1, dimensions, features, true);
     }
 
     @Override
-    public void createStringVariableLengthMDArray(final String objectPath, final int[] dimensions)
+    public void createMDArrayVL(final String objectPath, final int[] dimensions)
     {
         createStringMDArray(objectPath, -1, dimensions, GENERIC_NO_COMPRESSION, true);
     }
 
     @Override
-    public void createStringVariableLengthMDArray(final String objectPath, final long[] dimensions,
+    public void createMDArrayVL(final String objectPath, final long[] dimensions,
             final int[] blockSize, final HDF5GenericStorageFeatures features)
     {
         createStringMDArray(objectPath, -1, dimensions, blockSize, features, true);
     }
 
     @Override
-    public void createStringVariableLengthMDArray(final String objectPath, final long[] dimensions,
+    public void createMDArrayVL(final String objectPath, final long[] dimensions,
             final int[] blockSize)
     {
         createStringMDArray(objectPath, -1, dimensions, blockSize, GENERIC_NO_COMPRESSION, true);
     }
 
     @Override
-    public void writeStringVariableLengthMDArray(final String objectPath,
+    public void writeMDArrayVL(final String objectPath,
             final MDArray<String> data, final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
@@ -924,9 +926,9 @@ public class HDF5StringWriter implements IHDF5StringWriter
     }
 
     @Override
-    public void writeStringVariableLengthMDArray(final String objectPath, final MDArray<String> data)
+    public void writeMDArrayVL(final String objectPath, final MDArray<String> data)
     {
-        writeStringVariableLengthMDArray(objectPath, data, GENERIC_NO_COMPRESSION);
+        writeMDArrayVL(objectPath, data, GENERIC_NO_COMPRESSION);
     }
 
     /**

@@ -54,7 +54,7 @@ public class HDF5WriteTest
             // writer.write("/Group1/MyDataSet", new int[] { 4, 3, 2, 1 });
             writer.createHardLink("/Group1/MyDataSet", "/Group1/SubGroup1/MyDataSet");
             writer.writeString("/Group1/MyString", "Und schon wieder die Geschichte vom Pferd!");
-            writer.setStringAttribute("/Group1/MyDataSet", "foo", "Die Geschichte vom Pferd");
+            writer.strings().setAttr("/Group1/MyDataSet", "foo", "Die Geschichte vom Pferd");
             // writer.addAttribute("/Group1/SubGroup1/MyDataSet", "foo", "No story");
             writer.setDoubleAttribute("/", "version", 17.0);
             writer.setBooleanAttribute("/Group1", "active", true);

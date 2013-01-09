@@ -21,11 +21,11 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
- * An interface that provides methods for reading <code>String</code> values from HDF5 files.
+ * An interface that provides basic methods for reading <code>String</code> values from HDF5 files.
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5StringReader
+public interface IHDF5StringBasicReader
 {
 
     // /////////////////////
@@ -39,19 +39,10 @@ public interface IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#strings()} instead.
      */
-    public String getAttr(final String objectPath, final String attributeName);
-
-    /**
-     * Reads a string attribute named <var>attributeName</var> from the object
-     * <var>objectPath</var>. Does not consider '\0' as end of string but reads the full length of
-     * the attribute.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param attributeName The name of the attribute to read.
-     * @return The attribute value read from the data set.
-     */
-    public String getAttrRaw(final String objectPath, final String attributeName);
+    @Deprecated
+    public String getStringAttribute(final String objectPath, final String attributeName);
 
     /**
      * Reads a string array attribute named <var>attributeName</var> from the object
@@ -60,18 +51,10 @@ public interface IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#strings()} instead.
      */
-    public String[] getArrayAttr(final String objectPath, final String attributeName);
-
-    /**
-     * Reads a string array attribute named <var>attributeName</var> from the object
-     * <var>objectPath</var>. Does not consider '\0' as end of string but reads the full length.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param attributeName The name of the attribute to read.
-     * @return The attribute value read from the data set.
-     */
-    public String[] getArrayAttrRaw(final String objectPath, final String attributeName);
+    @Deprecated
+    public String[] getStringArrayAttribute(final String objectPath, final String attributeName);
 
     /**
      * Reads a multi-dimensional string array attribute named <var>attributeName</var> from the
@@ -80,20 +63,10 @@ public interface IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#strings()} instead.
      */
-    public MDArray<String> getMDArrayAttr(final String objectPath,
-            final String attributeName);
-
-    /**
-     * Reads a multi-dimensional string array attribute named <var>attributeName</var> from the
-     * object <var>objectPath</var>. Does not consider '\0' as end of string but reads the full
-     * length.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param attributeName The name of the attribute to read.
-     * @return The attribute value read from the data set.
-     */
-    public MDArray<String> getMDArrayAttrRaw(final String objectPath,
+    @Deprecated
+    public MDArray<String> getStringMDArrayAttribute(final String objectPath,
             final String attributeName);
 
     // /////////////////////
@@ -108,17 +81,7 @@ public interface IHDF5StringReader
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
      */
-    public String read(final String objectPath) throws HDF5JavaException;
-
-    /**
-     * Reads a <code>String</code> from the data set <var>objectPath</var>. Does not consider '\0'
-     * as end of string but reads the full length of the string. This needs to be a string type.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
-     */
-    public String readRaw(final String objectPath) throws HDF5JavaException;
+    public String readString(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a string array (of rank 1) from the data set <var>objectPath</var>. The elements of
@@ -128,18 +91,7 @@ public interface IHDF5StringReader
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
      */
-    public String[] readArray(final String objectPath) throws HDF5JavaException;
-
-    /**
-     * Reads a string array (of rank 1) from the data set <var>objectPath</var>. The elements of
-     * this data set need to be a string type. Does not consider '\0' as end of string but reads the
-     * full length.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
-     */
-    public String[] readArrayRaw(final String objectPath) throws HDF5JavaException;
+    public String[] readStringArray(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a block of a string array (of rank 1) from the data set <var>objectPath</var>. The
@@ -151,8 +103,10 @@ public interface IHDF5StringReader
      *            <code>blockSize * blockNumber</code>).
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#strings()} instead.
      */
-    public String[] readArrayBlock(final String objectPath, final int blockSize,
+    @Deprecated
+    public String[] readStringArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber);
 
     /**
@@ -164,8 +118,10 @@ public interface IHDF5StringReader
      * @param offset The offset of the block in the data set.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#strings()} instead.
      */
-    public String[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
+    @Deprecated
+    public String[] readStringArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset);
 
     /**
@@ -175,19 +131,10 @@ public interface IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#strings()} instead.
      */
-    public MDArray<String> readMDArray(final String objectPath);
-
-    /**
-     * Reads a string array (of rank N) from the data set <var>objectPath</var>. The elements of
-     * this data set need to be a string type. Does not considers '\0' as end of string but reads
-     * the full length.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @return The data read from the data set.
-     * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
-     */
-    public MDArray<String> readMDArrayRaw(final String objectPath);
+    @Deprecated
+    public MDArray<String> readStringMDArray(final String objectPath);
 
     /**
      * Reads a block of a string array (of rank N) from the data set <var>objectPath</var>. The
@@ -200,8 +147,10 @@ public interface IHDF5StringReader
      *            dimension i is <code>blockSize[i] * blockNumber[i]</code>).
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#strings()} instead.
      */
-    public MDArray<String> readMDArrayBlock(final String objectPath,
+    @Deprecated
+    public MDArray<String> readStringMDArrayBlock(final String objectPath,
             final int[] blockDimensions, final long[] blockNumber);
 
     /**
@@ -214,8 +163,10 @@ public interface IHDF5StringReader
      * @param offset The offset of the block in the data set.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a string type.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#strings()} instead.
      */
-    public MDArray<String> readMDArrayBlockWithOffset(final String objectPath,
+    @Deprecated
+    public MDArray<String> readStringMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset);
 
     /**
@@ -224,16 +175,20 @@ public interface IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#strings()} instead.
      */
-    public Iterable<HDF5DataBlock<String[]>> getArrayNaturalBlocks(final String objectPath)
+    @Deprecated
+    public Iterable<HDF5DataBlock<String[]>> getStringArrayNaturalBlocks(final String objectPath)
             throws HDF5JavaException;
 
     /**
      * Provides all natural blocks of this multi-dimensional string data set to iterate over.
      * 
      * @see HDF5MDDataBlock
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#strings()} instead.
      */
-    public Iterable<HDF5MDDataBlock<MDArray<String>>> getMDArrayNaturalBlocks(
+    @Deprecated
+    public Iterable<HDF5MDDataBlock<MDArray<String>>> getStringMDArrayNaturalBlocks(
             final String objectPath);
 
 }

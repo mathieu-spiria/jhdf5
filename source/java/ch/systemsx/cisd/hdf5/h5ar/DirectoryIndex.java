@@ -378,7 +378,7 @@ class DirectoryIndex implements IDirectoryIndex
             }
             final String indexNamesDataSetName = getIndexNamesDataSetName();
             final String concatenatedNamesStr = concatenatedNames.toString();
-            hdf5WriterOrNull.writeStringVariableLength(indexNamesDataSetName, concatenatedNamesStr);
+            hdf5WriterOrNull.strings().writeVL(indexNamesDataSetName, concatenatedNamesStr);
             hdf5WriterOrNull.setIntAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME,
                     calcCrc32(concatenatedNamesStr));
             final String indexDataSetName = getIndexDataSetName();

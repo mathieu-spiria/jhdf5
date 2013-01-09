@@ -849,6 +849,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     //
 
     @Override
+    public IHDF5StringWriter strings()
+    {
+        return stringWriter;
+    }
+
+    @Override
     public void setObjectReferenceMDArrayAttribute(String objectPath, String name,
             MDArray<String> referencedObjectPaths)
     {
@@ -946,286 +952,286 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     @Override
     public void createStringArray(String objectPath, int maxLength, int size)
     {
-        stringWriter.createStringArray(objectPath, maxLength, size);
+        stringWriter.createArray(objectPath, maxLength, size);
     }
 
     @Override
     public void createStringArray(String objectPath, int maxLength, long size, int blockSize)
     {
-        stringWriter.createStringArray(objectPath, maxLength, size, blockSize);
+        stringWriter.createArray(objectPath, maxLength, size, blockSize);
     }
 
     @Override
     public void createStringArray(String objectPath, int maxLength, int size,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.createStringArray(objectPath, maxLength, size, features);
+        stringWriter.createArray(objectPath, maxLength, size, features);
     }
 
     @Override
     public void createStringArray(String objectPath, int maxLength, long size, int blockSize,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.createStringArray(objectPath, maxLength, size, blockSize, features);
+        stringWriter.createArray(objectPath, maxLength, size, blockSize, features);
     }
 
     @Override
     public void createStringVariableLengthArray(String objectPath, int size)
     {
-        stringWriter.createStringVariableLengthArray(objectPath, size);
+        stringWriter.createArrayVL(objectPath, size);
     }
 
     @Override
     public void createStringVariableLengthArray(String objectPath, long size, int blockSize)
     {
-        stringWriter.createStringVariableLengthArray(objectPath, size, blockSize);
+        stringWriter.createArrayVL(objectPath, size, blockSize);
     }
 
     @Override
     public void createStringVariableLengthArray(String objectPath, long size, int blockSize,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.createStringVariableLengthArray(objectPath, size, blockSize, features);
+        stringWriter.createArrayVL(objectPath, size, blockSize, features);
     }
 
     @Override
     public void createStringVariableLengthArray(String objectPath, int size,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.createStringVariableLengthArray(objectPath, size, features);
+        stringWriter.createArrayVL(objectPath, size, features);
     }
 
     @Override
     public void setStringAttribute(String objectPath, String name, String value)
     {
-        stringWriter.setStringAttribute(objectPath, name, value);
+        stringWriter.setAttr(objectPath, name, value);
     }
 
     @Override
     public void setStringAttribute(String objectPath, String name, String value, int maxLength)
     {
-        stringWriter.setStringAttribute(objectPath, name, value, maxLength);
+        stringWriter.setAttr(objectPath, name, value, maxLength);
     }
 
     @Override
     public void setStringArrayAttribute(String objectPath, String name, String[] value,
             int maxLength)
     {
-        stringWriter.setStringArrayAttribute(objectPath, name, value, maxLength);
+        stringWriter.setArrayAttr(objectPath, name, value, maxLength);
     }
 
     @Override
     public void setStringArrayAttribute(String objectPath, String name, String[] value)
     {
-        stringWriter.setStringArrayAttribute(objectPath, name, value);
+        stringWriter.setArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setStringMDArrayAttribute(String objectPath, String name, MDArray<String> value)
     {
-        stringWriter.setStringMDArrayAttribute(objectPath, name, value);
+        stringWriter.setMDArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setStringMDArrayAttribute(String objectPath, String name, MDArray<String> value,
             int maxLength)
     {
-        stringWriter.setStringMDArrayAttribute(objectPath, name, value, maxLength);
+        stringWriter.setMDArrayAttr(objectPath, name, value, maxLength);
     }
 
     @Override
     public void setStringAttributeVariableLength(String objectPath, String name, String value)
     {
-        stringWriter.setStringAttributeVariableLength(objectPath, name, value);
+        stringWriter.setAttrVL(objectPath, name, value);
     }
 
     @Override
     public void writeString(String objectPath, String data, int maxLength)
     {
-        stringWriter.writeString(objectPath, data, maxLength);
+        stringWriter.write(objectPath, data, maxLength);
     }
 
     @Override
     public void writeString(String objectPath, String data)
     {
-        stringWriter.writeString(objectPath, data);
+        stringWriter.write(objectPath, data);
     }
 
     @Override
     public void writeString(String objectPath, String data, HDF5GenericStorageFeatures features)
     {
-        stringWriter.writeString(objectPath, data, features);
+        stringWriter.write(objectPath, data, features);
     }
 
     @Override
     public void writeString(String objectPath, String data, int maxLength,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.writeString(objectPath, data, maxLength, features);
+        stringWriter.write(objectPath, data, maxLength, features);
     }
 
     @Override
     public void writeStringArray(String objectPath, String[] data,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.writeStringArray(objectPath, data, features);
+        stringWriter.writeArray(objectPath, data, features);
     }
 
     @Override
     public void writeStringArray(String objectPath, String[] data)
     {
-        stringWriter.writeStringArray(objectPath, data);
+        stringWriter.writeArray(objectPath, data);
     }
 
     @Override
     public void writeStringArray(String objectPath, String[] data, int maxLength)
     {
-        stringWriter.writeStringArray(objectPath, data, maxLength);
+        stringWriter.writeArray(objectPath, data, maxLength);
     }
 
     @Override
     public void writeStringArray(String objectPath, String[] data, int maxLength,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.writeStringArray(objectPath, data, maxLength, features);
+        stringWriter.writeArray(objectPath, data, maxLength, features);
     }
 
     @Override
     public void createStringMDArray(String objectPath, int maxLength, int[] dimensions,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.createStringMDArray(objectPath, maxLength, dimensions, features);
+        stringWriter.createMDArray(objectPath, maxLength, dimensions, features);
     }
 
     @Override
     public void createStringMDArray(String objectPath, int maxLength, int[] dimensions)
     {
-        stringWriter.createStringMDArray(objectPath, maxLength, dimensions);
+        stringWriter.createMDArray(objectPath, maxLength, dimensions);
     }
 
     @Override
     public void createStringMDArray(String objectPath, int maxLength, long[] dimensions,
             int[] blockSize, HDF5GenericStorageFeatures features)
     {
-        stringWriter.createStringMDArray(objectPath, maxLength, dimensions, blockSize, features);
+        stringWriter.createMDArray(objectPath, maxLength, dimensions, blockSize, features);
     }
 
     @Override
     public void createStringMDArray(String objectPath, int maxLength, long[] dimensions,
             int[] blockSize)
     {
-        stringWriter.createStringMDArray(objectPath, maxLength, dimensions, blockSize);
+        stringWriter.createMDArray(objectPath, maxLength, dimensions, blockSize);
     }
 
     @Override
     public void writeStringMDArray(String objectPath, MDArray<String> data, int maxLength)
     {
-        stringWriter.writeStringMDArray(objectPath, data, maxLength);
+        stringWriter.writeMDArray(objectPath, data, maxLength);
     }
 
     @Override
     public void writeStringMDArray(String objectPath, MDArray<String> data)
     {
-        stringWriter.writeStringMDArray(objectPath, data);
+        stringWriter.writeMDArray(objectPath, data);
     }
 
     @Override
     public void writeStringMDArray(String objectPath, MDArray<String> data,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.writeStringMDArray(objectPath, data, features);
+        stringWriter.writeMDArray(objectPath, data, features);
     }
 
     @Override
     public void writeStringMDArray(String objectPath, MDArray<String> data, int maxLength,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.writeStringMDArray(objectPath, data, maxLength, features);
+        stringWriter.writeMDArray(objectPath, data, maxLength, features);
     }
 
     @Override
     public void writeStringArrayBlock(String objectPath, String[] data, long blockNumber)
     {
-        stringWriter.writeStringArrayBlock(objectPath, data, blockNumber);
+        stringWriter.writeArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeStringArrayBlockWithOffset(String objectPath, String[] data, int dataSize,
             long offset)
     {
-        stringWriter.writeStringArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        stringWriter.writeArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     @Override
     public void writeStringMDArrayBlock(String objectPath, MDArray<String> data, long[] blockNumber)
     {
-        stringWriter.writeStringMDArrayBlock(objectPath, data, blockNumber);
+        stringWriter.writeMDArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeStringMDArrayBlockWithOffset(String objectPath, MDArray<String> data,
             long[] offset)
     {
-        stringWriter.writeStringMDArrayBlockWithOffset(objectPath, data, offset);
+        stringWriter.writeMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
     @Override
     public void writeStringVariableLength(String objectPath, String data)
     {
-        stringWriter.writeStringVariableLength(objectPath, data);
+        stringWriter.writeVL(objectPath, data);
     }
 
     @Override
     public void writeStringVariableLengthArray(String objectPath, String[] data)
     {
-        stringWriter.writeStringVariableLengthArray(objectPath, data);
+        stringWriter.writeArrayVL(objectPath, data);
     }
 
     @Override
     public void writeStringVariableLengthArray(String objectPath, String[] data,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.writeStringVariableLengthArray(objectPath, data, features);
+        stringWriter.writeArrayVL(objectPath, data, features);
     }
 
     @Override
     public void writeStringVariableLengthMDArray(String objectPath, MDArray<String> data,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.writeStringVariableLengthMDArray(objectPath, data, features);
+        stringWriter.writeMDArrayVL(objectPath, data, features);
     }
 
     @Override
     public void writeStringVariableLengthMDArray(String objectPath, MDArray<String> data)
     {
-        stringWriter.writeStringVariableLengthMDArray(objectPath, data);
+        stringWriter.writeMDArrayVL(objectPath, data);
     }
 
     @Override
     public void createStringVariableLengthMDArray(String objectPath, int[] dimensions,
             HDF5GenericStorageFeatures features)
     {
-        stringWriter.createStringVariableLengthMDArray(objectPath, dimensions, features);
+        stringWriter.createMDArrayVL(objectPath, dimensions, features);
     }
 
     @Override
     public void createStringVariableLengthMDArray(String objectPath, int[] dimensions)
     {
-        stringWriter.createStringVariableLengthMDArray(objectPath, dimensions);
+        stringWriter.createMDArrayVL(objectPath, dimensions);
     }
 
     @Override
     public void createStringVariableLengthMDArray(String objectPath, long[] dimensions,
             int[] blockSize, HDF5GenericStorageFeatures features)
     {
-        stringWriter.createStringVariableLengthMDArray(objectPath, dimensions, blockSize, features);
+        stringWriter.createMDArrayVL(objectPath, dimensions, blockSize, features);
     }
 
     @Override
     public void createStringVariableLengthMDArray(String objectPath, long[] dimensions,
             int[] blockSize)
     {
-        stringWriter.createStringVariableLengthMDArray(objectPath, dimensions, blockSize);
+        stringWriter.createMDArrayVL(objectPath, dimensions, blockSize);
     }
 
     //

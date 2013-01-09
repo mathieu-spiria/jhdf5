@@ -23,7 +23,7 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5StringWriter extends IHDF5StringReader
+public interface IHDF5StringBasicWriter extends IHDF5StringBasicReader
 {
 
     // /////////////////////
@@ -39,8 +39,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void setAttr(final String objectPath, final String name, final String value);
+    @Deprecated
+    public void setStringAttribute(final String objectPath, final String name, final String value);
 
     /**
      * Sets a string attribute on the referenced object.
@@ -52,8 +54,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      * @param maxLength The maximal length of the value.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void setAttr(final String objectPath, final String name, final String value,
+    @Deprecated
+    public void setStringAttribute(final String objectPath, final String name, final String value,
             final int maxLength);
 
     /**
@@ -66,8 +70,11 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void setArrayAttr(final String objectPath, final String name, final String[] value);
+    @Deprecated
+    public void setStringArrayAttribute(final String objectPath, final String name,
+            final String[] value);
 
     /**
      * Sets a string array attribute on the referenced object.
@@ -79,9 +86,11 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      * @param maxLength The maximal length of any element in <var>value</var>.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void setArrayAttr(final String objectPath, final String name, final String[] value,
-            final int maxLength);
+    @Deprecated
+    public void setStringArrayAttribute(final String objectPath, final String name,
+            final String[] value, final int maxLength);
 
     /**
      * Sets a multi-dimensional string array attribute on the referenced object. The length of the
@@ -93,8 +102,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
+    @Deprecated
+    public void setStringMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> value);
 
     /**
@@ -107,8 +118,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      * @param maxLength The maximal length of the value.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
+    @Deprecated
+    public void setStringMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> value, final int maxLength);
 
     /**
@@ -120,8 +133,11 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void setAttrVL(final String objectPath, final String name, final String value);
+    @Deprecated
+    public void setStringAttributeVariableLength(final String objectPath, final String name,
+            final String value);
 
     // /////////////////////
     // Data Sets
@@ -133,8 +149,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param maxLength The maximal length of the <var>data</var>.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void write(final String objectPath, final String data, final int maxLength);
+    @Deprecated
+    public void writeString(final String objectPath, final String data, final int maxLength);
 
     /**
      * Writes out a <code>String</code> with a fixed maximal length (which is the length of the
@@ -143,7 +161,7 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
-    public void write(final String objectPath, final String data);
+    public void writeString(final String objectPath, final String data);
 
     /**
      * Writes out a <code>String</code> with a fixed maximal length.
@@ -151,8 +169,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void write(final String objectPath, final String data,
+    @Deprecated
+    public void writeString(final String objectPath, final String data,
             final HDF5GenericStorageFeatures features);
 
     /**
@@ -162,8 +182,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param data The data to write. Must not be <code>null</code>.
      * @param maxLength The maximal length of the <var>data</var>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void write(final String objectPath, final String data, final int maxLength,
+    @Deprecated
+    public void writeString(final String objectPath, final String data, final int maxLength,
             final HDF5GenericStorageFeatures features);
 
     /**
@@ -172,8 +194,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeArray(final String objectPath, final String[] data,
+    @Deprecated
+    public void writeStringArray(final String objectPath, final String[] data,
             final HDF5GenericStorageFeatures features);
 
     /**
@@ -183,7 +207,7 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
-    public void writeArray(final String objectPath, final String[] data);
+    public void writeStringArray(final String objectPath, final String[] data);
 
     /**
      * Writes out a <code>String</code> array (of rank 1). Each element of the array will have a
@@ -192,8 +216,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param maxLength The maximal length of any of the strings in <var>data</var>.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeArray(final String objectPath, final String[] data, final int maxLength);
+    @Deprecated
+    public void writeStringArray(final String objectPath, final String[] data, final int maxLength);
 
     /**
      * Writes out a <code>String</code> array (of rank 1). Each element of the array will have a
@@ -203,8 +229,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param data The data to write. Must not be <code>null</code>.
      * @param maxLength The maximal length of any of the strings in <var>data</var>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeArray(final String objectPath, final String[] data, final int maxLength,
+    @Deprecated
+    public void writeStringArray(final String objectPath, final String[] data, final int maxLength,
             final HDF5GenericStorageFeatures features);
 
     /**
@@ -213,8 +241,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeMDArray(final String objectPath, final MDArray<String> data);
+    @Deprecated
+    public void writeStringMDArray(final String objectPath, final MDArray<String> data);
 
     /**
      * Writes out a <code>String</code> array (of rank N). Each element of the array will have a
@@ -223,8 +253,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeMDArray(final String objectPath, final MDArray<String> data,
+    @Deprecated
+    public void writeStringMDArray(final String objectPath, final MDArray<String> data,
             final HDF5GenericStorageFeatures features);
 
     /**
@@ -234,8 +266,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param maxLength The maximal length of any of the strings in <var>data</var>.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeMDArray(final String objectPath, final MDArray<String> data,
+    @Deprecated
+    public void writeStringMDArray(final String objectPath, final MDArray<String> data,
             final int maxLength);
 
     /**
@@ -246,8 +280,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param data The data to write. Must not be <code>null</code>.
      * @param maxLength The maximal length of any of the strings in <var>data</var>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeMDArray(final String objectPath, final MDArray<String> data,
+    @Deprecated
+    public void writeStringMDArray(final String objectPath, final MDArray<String> data,
             final int maxLength, final HDF5GenericStorageFeatures features);
 
     /**
@@ -259,8 +295,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      *            non-extendable data sets and the size of one chunk for extendable (chunked) data
      *            sets. For extendable data sets the initial size of the array will be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createArray(final String objectPath, final int maxLength, final int size);
+    @Deprecated
+    public void createStringArray(final String objectPath, final int maxLength, final int size);
 
     /**
      * Creates a <code>String</code> array (of rank 1) for Strings of length <var>maxLength</var>.
@@ -272,8 +310,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      *            smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createArray(final String objectPath, final int maxLength, final long size,
+    @Deprecated
+    public void createStringArray(final String objectPath, final int maxLength, final long size,
             final int blockSize);
 
     /**
@@ -285,8 +325,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      *            data sets and the size of one chunk for extendable (chunked) data sets. For
      *            extendable data sets the initial size of the array will be 0, see
      *            {@link HDF5GenericStorageFeatures}.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createArray(final String objectPath, final int maxLength, final int size,
+    @Deprecated
+    public void createStringArray(final String objectPath, final int maxLength, final int size,
             final HDF5GenericStorageFeatures features);
 
     /**
@@ -300,39 +342,43 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createArray(final String objectPath, final int maxLength, final long size,
+    @Deprecated
+    public void createStringArray(final String objectPath, final int maxLength, final long size,
             final int blockSize, final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a block of a <code>String</code> array (of rank 1). The data set needs to have
      * been created by
-     * {@link #createArray(String, int, long, int, HDF5GenericStorageFeatures)} beforehand.
+     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createArray(String, int, long, int, HDF5GenericStorageFeatures)} call that was
+     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeArrayBlock(final String objectPath, final String[] data,
+    @Deprecated
+    public void writeStringArrayBlock(final String objectPath, final String[] data,
             final long blockNumber);
 
     /**
      * Writes out a block of a <code>String</code> array (of rank 1). The data set needs to have
      * been created by
-     * {@link #createArray(String, int, long, int, HDF5GenericStorageFeatures)} beforehand.
+     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeArrayBlock(String, String[], long)} if the
+     * Use this method instead of {@link #writeStringArrayBlock(String, String[], long)} if the
      * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createArray(String, int, long, int, HDF5GenericStorageFeatures)} call that was
+     * {@link #createStringArray(String, int, long, int, HDF5GenericStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -341,8 +387,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
      *            )
      * @param offset The offset in the data set to start writing to.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeArrayBlockWithOffset(final String objectPath, final String[] data,
+    @Deprecated
+    public void writeStringArrayBlockWithOffset(final String objectPath, final String[] data,
             final int dataSize, final long offset);
 
     /**
@@ -353,8 +401,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param dimensions The size of the String array to create. When using extendable data sets
      *            ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data
      *            set smaller than this size can be created, however data sets may be larger.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createMDArray(final String objectPath, final int maxLength,
+    @Deprecated
+    public void createStringMDArray(final String objectPath, final int maxLength,
             final int[] dimensions);
 
     /**
@@ -368,8 +418,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param blockSize The size of one block in each dimension (for block-wise IO). Ignored if no
      *            extendable data sets are used (see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createMDArray(final String objectPath, final int maxLength,
+    @Deprecated
+    public void createStringMDArray(final String objectPath, final int maxLength,
             final long[] dimensions, final int[] blockSize);
 
     /**
@@ -381,8 +433,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      *            ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data
      *            set smaller than this size can be created, however data sets may be larger.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createMDArray(final String objectPath, final int maxLength,
+    @Deprecated
+    public void createStringMDArray(final String objectPath, final int maxLength,
             final int[] dimensions, final HDF5GenericStorageFeatures features);
 
     /**
@@ -397,81 +451,91 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      *            extendable data sets are used (see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createMDArray(final String objectPath, final int maxLength,
+    @Deprecated
+    public void createStringMDArray(final String objectPath, final int maxLength,
             final long[] dimensions, final int[] blockSize,
             final HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a block of a <code>String</code> array (of rank N). The data set needs to have
      * been created by
-     * {@link #createMDArray(String, int, long[], int[], HDF5GenericStorageFeatures)}
+     * {@link #createStringMDArray(String, int, long[], int[], HDF5GenericStorageFeatures)}
      * beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createMDArray(String, int, long[], int[], HDF5GenericStorageFeatures)} call
+     * {@link #createStringMDArray(String, int, long[], int[], HDF5GenericStorageFeatures)} call
      * that was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write in each dimension.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeMDArrayBlock(final String objectPath, final MDArray<String> data,
+    @Deprecated
+    public void writeStringMDArrayBlock(final String objectPath, final MDArray<String> data,
             final long[] blockNumber);
 
     /**
      * Writes out a block of a <code>String</code> array (of rank N). The data set needs to have
      * been created by
-     * {@link #createMDArray(String, int, long[], int[], HDF5GenericStorageFeatures)}
+     * {@link #createStringMDArray(String, int, long[], int[], HDF5GenericStorageFeatures)}
      * beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createMDArray(String, int, long[], int[], HDF5GenericStorageFeatures)} call
+     * {@link #createStringMDArray(String, int, long[], int[], HDF5GenericStorageFeatures)} call
      * that was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param offset The offset in the data set to start writing to.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeMDArrayBlockWithOffset(final String objectPath,
+    @Deprecated
+    public void writeStringMDArrayBlockWithOffset(final String objectPath,
             final MDArray<String> data, final long[] offset);
 
     /**
      * Writes out a <code>String</code> with variable maximal length.
      * <p>
-     * The advantage of this method over {@link #write(String, String)} is that when writing a
+     * The advantage of this method over {@link #writeString(String, String)} is that when writing a
      * new string later it can have a different (also greater) length. The disadvantage is that it
      * it is more time consuming to read and write this kind of string and that it can't be
      * compressed.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeVL(final String objectPath, final String data);
+    @Deprecated
+    public void writeStringVariableLength(final String objectPath, final String data);
 
     /**
      * Writes out a <code>String[]</code> where each String of the array has a variable maximal
      * length.
      * <p>
-     * The advantage of this method over {@link #writeArray(String, String[])} is that when
+     * The advantage of this method over {@link #writeStringArray(String, String[])} is that when
      * writing a new string later it can have a different (also greater) length. The disadvantage is
      * that it it is more time consuming to read and write this kind of string and that it can't be
      * compressed.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeArrayVL(final String objectPath, final String[] data);
+    @Deprecated
+    public void writeStringVariableLengthArray(final String objectPath, final String[] data);
 
     /**
      * Writes out a <code>String[]</code> where each String of the array has a variable maximal
      * length.
      * <p>
-     * The advantage of this method over {@link #writeArray(String, String[])} is that when
+     * The advantage of this method over {@link #writeStringArray(String, String[])} is that when
      * writing a new string later it can have a different (also greater) length. The disadvantage is
      * that it it is more time consuming to read and write this kind of string and that it can't be
      * compressed.
@@ -479,8 +543,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeArrayVL(final String objectPath, final String[] data,
+    @Deprecated
+    public void writeStringVariableLengthArray(final String objectPath, final String[] data,
             final HDF5GenericStorageFeatures features);
 
     /**
@@ -491,8 +557,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      *            non-extendable data sets and the size of one chunk for extendable (chunked) data
      *            sets. For extendable data sets the initial size of the array will be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createArrayVL(final String objectPath, final int size);
+    @Deprecated
+    public void createStringVariableLengthArray(final String objectPath, final int size);
 
     /**
      * Creates a <code>String[]</code> where each String of the array has a variable maximal length.
@@ -500,8 +568,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The intial size of the array.
      * @param blockSize The size of block in the array.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createArrayVL(final String objectPath, final long size,
+    @Deprecated
+    public void createStringVariableLengthArray(final String objectPath, final long size,
             final int blockSize);
 
     /**
@@ -511,8 +581,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param size The initial size of the array.
      * @param blockSize The size of block in the array.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createArrayVL(final String objectPath, final long size,
+    @Deprecated
+    public void createStringVariableLengthArray(final String objectPath, final long size,
             final int blockSize, final HDF5GenericStorageFeatures features);
 
     /**
@@ -524,8 +596,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      *            sets. For extendable data sets the initial size of the array will be 0, see
      *            {@link HDF5GenericStorageFeatures}.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createArrayVL(final String objectPath, final int size,
+    @Deprecated
+    public void createStringVariableLengthArray(final String objectPath, final int size,
             final HDF5GenericStorageFeatures features);
 
     /**
@@ -535,8 +609,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The initial dimensions (along each axis) of the array.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createMDArrayVL(final String objectPath, final int[] dimensions,
+    @Deprecated
+    public void createStringVariableLengthMDArray(final String objectPath, final int[] dimensions,
             final HDF5GenericStorageFeatures features);
 
     /**
@@ -545,8 +621,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The initial dimensions (along each axis) of the array.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createMDArrayVL(final String objectPath, final int[] dimensions);
+    @Deprecated
+    public void createStringVariableLengthMDArray(final String objectPath, final int[] dimensions);
 
     /**
      * Creates a multi-dimensional <code>String</code> array where each String of the array has a
@@ -556,8 +634,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param dimensions The initial dimensions (along each axis) of the array.
      * @param blockSize The size of a contiguously stored block (along each axis) in the array.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createMDArrayVL(final String objectPath, final long[] dimensions,
+    @Deprecated
+    public void createStringVariableLengthMDArray(final String objectPath, final long[] dimensions,
             final int[] blockSize, final HDF5GenericStorageFeatures features);
 
     /**
@@ -567,8 +647,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The initial dimensions (along each axis) of the array.
      * @param blockSize The size of a contiguously stored block (along each axis) in the array.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void createMDArrayVL(final String objectPath, final long[] dimensions,
+    @Deprecated
+    public void createStringVariableLengthMDArray(final String objectPath, final long[] dimensions,
             final int[] blockSize);
 
     /**
@@ -577,8 +659,10 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeMDArrayVL(final String objectPath, final MDArray<String> data);
+    @Deprecated
+    public void writeStringVariableLengthMDArray(final String objectPath, final MDArray<String> data);
 
     /**
      * Writes out a <code>String</code> array (of rank N). Each element of the array will have a
@@ -587,7 +671,9 @@ public interface IHDF5StringWriter extends IHDF5StringReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#strings()} instead.
      */
-    public void writeMDArrayVL(final String objectPath,
+    @Deprecated
+    public void writeStringVariableLengthMDArray(final String objectPath,
             final MDArray<String> data, final HDF5GenericStorageFeatures features);
 }

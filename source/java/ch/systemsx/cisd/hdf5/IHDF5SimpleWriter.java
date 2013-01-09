@@ -246,8 +246,18 @@ public interface IHDF5SimpleWriter extends IHDF5SimpleReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param maxLength The maximal length of the <var>data</var>.
+     * @deprecated Use {@link #writeString(String, String)} instead.
      */
+    @Deprecated
     public void writeString(final String objectPath, final String data, final int maxLength);
+
+    /**
+     * Writes out a <code>String</code> with a fixed maximal length.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     */
+    public void writeString(final String objectPath, final String data);
 
     /**
      * Writes out a <code>String</code> array (of rank 1). Each element of the array will have a
@@ -255,9 +265,19 @@ public interface IHDF5SimpleWriter extends IHDF5SimpleReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
-     * @param maxLength The maximal length of any of the strings in <var>data</var>.
+     * @deprecated Use {@link #writeStringArray(String, String[])} instead.
      */
+    @Deprecated
     public void writeStringArray(final String objectPath, final String[] data, final int maxLength);
+
+    /**
+     * Writes out a <code>String</code> array (of rank 1). Each element of the array will have a
+     * fixed maximal length which is given by the longest element.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     */
+    public void writeStringArray(final String objectPath, final String[] data);
 
     /**
      * Writes out a compound value. The type is inferred based on the values.

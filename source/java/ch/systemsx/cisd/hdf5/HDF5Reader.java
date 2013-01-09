@@ -1166,116 +1166,85 @@ class HDF5Reader implements IHDF5Reader
     //
 
     @Override
-    public String getStringAttribute(String objectPath, String attributeName)
+    public IHDF5StringReader strings()
     {
-        return stringReader.getStringAttribute(objectPath, attributeName);
+        return stringReader;
     }
 
     @Override
-    public String getStringAttributeRaw(String objectPath, String attributeName)
+    public String getStringAttribute(String objectPath, String attributeName)
     {
-        return stringReader.getStringAttributeRaw(objectPath, attributeName);
+        return stringReader.getAttr(objectPath, attributeName);
     }
 
     @Override
     public String[] getStringArrayAttribute(String objectPath, String attributeName)
     {
-        return stringReader.getStringArrayAttribute(objectPath, attributeName);
+        return stringReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public MDArray<String> getStringMDArrayAttribute(String objectPath, String attributeName)
     {
-        return stringReader.getStringMDArrayAttribute(objectPath, attributeName);
-    }
-
-    @Override
-    public String[] getStringArrayAttributeRaw(String objectPath, String attributeName)
-    {
-        return stringReader.getStringArrayAttributeRaw(objectPath, attributeName);
-    }
-
-    @Override
-    public MDArray<String> getStringMDArrayAttributeRaw(String objectPath,
-            String attributeName)
-    {
-        return stringReader.getStringMDArrayAttributeRaw(objectPath, attributeName);
+        return stringReader.getMDArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public String readString(String objectPath) throws HDF5JavaException
     {
-        return stringReader.readString(objectPath);
-    }
-
-    @Override
-    public String readStringRaw(String objectPath) throws HDF5JavaException
-    {
-        return stringReader.readStringRaw(objectPath);
+        return stringReader.read(objectPath);
     }
 
     @Override
     public String[] readStringArray(String objectPath) throws HDF5JavaException
     {
-        return stringReader.readStringArray(objectPath);
-    }
-
-    @Override
-    public String[] readStringArrayRaw(String objectPath) throws HDF5JavaException
-    {
-        return stringReader.readStringArrayRaw(objectPath);
+        return stringReader.readArray(objectPath);
     }
 
     @Override
     public String[] readStringArrayBlock(String objectPath, int blockSize, long blockNumber)
     {
-        return stringReader.readStringArrayBlock(objectPath, blockSize, blockNumber);
+        return stringReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
     public String[] readStringArrayBlockWithOffset(String objectPath, int blockSize, long offset)
     {
-        return stringReader.readStringArrayBlockWithOffset(objectPath, blockSize, offset);
+        return stringReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     @Override
     public MDArray<String> readStringMDArray(String objectPath)
     {
-        return stringReader.readStringMDArray(objectPath);
-    }
-
-    @Override
-    public MDArray<String> readStringMDArrayRaw(String objectPath)
-    {
-        return stringReader.readStringMDArrayRaw(objectPath);
+        return stringReader.readMDArray(objectPath);
     }
 
     @Override
     public MDArray<String> readStringMDArrayBlock(String objectPath, int[] blockDimensions,
             long[] blockNumber)
     {
-        return stringReader.readStringMDArrayBlock(objectPath, blockDimensions, blockNumber);
+        return stringReader.readMDArrayBlock(objectPath, blockDimensions, blockNumber);
     }
 
     @Override
     public MDArray<String> readStringMDArrayBlockWithOffset(String objectPath,
             int[] blockDimensions, long[] offset)
     {
-        return stringReader.readStringMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return stringReader.readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
     public Iterable<HDF5DataBlock<String[]>> getStringArrayNaturalBlocks(String objectPath)
             throws HDF5JavaException
     {
-        return stringReader.getStringArrayNaturalBlocks(objectPath);
+        return stringReader.getArrayNaturalBlocks(objectPath);
     }
 
     @Override
     public Iterable<HDF5MDDataBlock<MDArray<String>>> getStringMDArrayNaturalBlocks(
             String objectPath)
     {
-        return stringReader.getStringMDArrayNaturalBlocks(objectPath);
+        return stringReader.getMDArrayNaturalBlocks(objectPath);
     }
 
     //
