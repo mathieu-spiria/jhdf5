@@ -54,8 +54,7 @@ public interface IHDF5TimeDurationReader
      * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
      *             corresponds to a time duration.
      */
-    public HDF5TimeDuration getAttr(final String objectPath,
-            final String attributeName);
+    public HDF5TimeDuration getAttr(final String objectPath, final String attributeName);
 
     /**
      * Reads a time duration array attribute named <var>attributeName</var> from the data set
@@ -67,7 +66,19 @@ public interface IHDF5TimeDurationReader
      * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
      *             corresponds to a time duration.
      */
-    public HDF5TimeDurationArray getArrayAttr(final String objectPath,
+    public HDF5TimeDurationArray getArrayAttr(final String objectPath, final String attributeName);
+
+    /**
+     * Reads a multi-dimension time duration array attribute named <var>attributeName</var> from the
+     * data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The time duration.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     */
+    public HDF5TimeDurationMDArray getMDArrayAttr(final String objectPath,
             final String attributeName);
 
     // /////////////////////
@@ -121,8 +132,7 @@ public interface IHDF5TimeDurationReader
      * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
      *             corresponds to a time duration.
      */
-    public HDF5TimeDurationArray readArray(final String objectPath)
-            throws HDF5JavaException;
+    public HDF5TimeDurationArray readArray(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a block of a time duration array (of rank 1) from the data set <var>objectPath</var>.
@@ -149,8 +159,8 @@ public interface IHDF5TimeDurationReader
      * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
      *             corresponds to a time duration.
      */
-    public HDF5TimeDurationArray readArrayBlock(final String objectPath,
-            final int blockSize, final long blockNumber) throws HDF5JavaException;
+    public HDF5TimeDurationArray readArrayBlock(final String objectPath, final int blockSize,
+            final long blockNumber) throws HDF5JavaException;
 
     /**
      * Reads a block of a time duration array (of rank 1) from the data set <var>objectPath</var>.

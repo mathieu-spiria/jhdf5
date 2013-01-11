@@ -28,25 +28,25 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * Implementation of {@link IHDF5TimeDurationWriter}.
- *
+ * 
  * @author Bernd Rinn
  */
-public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements IHDF5TimeDurationWriter
+public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
+        IHDF5TimeDurationWriter
 {
     private final HDF5BaseWriter baseWriter;
 
-    HDF5TimeDurationWriter(HDF5BaseWriter baseWriter)
+    HDF5TimeDurationWriter(HDF5BaseWriter baseWriter, HDF5LongReader longReader)
     {
-        super(baseWriter);
-        
+        super(baseWriter, longReader);
+
         assert baseWriter != null;
 
         this.baseWriter = baseWriter;
     }
 
     @Override
-    public void setAttr(String objectPath, String name, long timeDuration,
-            HDF5TimeUnit timeUnit)
+    public void setAttr(String objectPath, String name, long timeDuration, HDF5TimeUnit timeUnit)
     {
         baseWriter.checkOpen();
         baseWriter.setAttribute(objectPath, name, timeUnit.getTypeVariant(), H5T_STD_I64LE,
@@ -55,8 +55,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements IH
     }
 
     @Override
-    public void setAttr(String objectPath, String name,
-            HDF5TimeDuration timeDuration)
+    public void setAttr(String objectPath, String name, HDF5TimeDuration timeDuration)
     {
         setAttr(objectPath, name, timeDuration.getValue(), timeDuration.getUnit());
     }
@@ -90,14 +89,42 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements IH
         baseWriter.runner.call(setAttributeRunnable);
     }
 
+    @Override
+    public void setMDArrayAttr(final String objectPath, final String attributeName,
+            final HDF5TimeDurationMDArray timeDurations)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+        assert timeDurations != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> setAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(H5T_NATIVE_INT64,
+                                    timeDurations.timeDurations.dimensions(), registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(H5T_STD_I64LE,
+                                    timeDurations.timeDurations.dimensions(), registry);
+                    baseWriter.setAttribute(objectPath, attributeName,
+                            timeDurations.timeUnit.getTypeVariant(), storageTypeId, memoryTypeId,
+                            timeDurations.timeDurations.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(setAttributeRunnable);
+    }
+
     public void writeTimeDuration(final String objectPath, final long timeDuration)
     {
         write(objectPath, timeDuration, HDF5TimeUnit.SECONDS);
     }
 
     @Override
-    public void write(final String objectPath, final long timeDuration,
-            final HDF5TimeUnit timeUnit)
+    public void write(final String objectPath, final long timeDuration, final HDF5TimeUnit timeUnit)
     {
         assert objectPath != null;
 
@@ -126,21 +153,20 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements IH
     @Override
     public void createArray(String objectPath, int size, HDF5TimeUnit timeUnit)
     {
-        createArray(objectPath, size, timeUnit,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        createArray(objectPath, size, timeUnit, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void createArray(final String objectPath, final long size,
-            final int blockSize, final HDF5TimeUnit timeUnit)
+    public void createArray(final String objectPath, final long size, final int blockSize,
+            final HDF5TimeUnit timeUnit)
     {
         createArray(objectPath, size, blockSize, timeUnit,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void createArray(final String objectPath, final int size,
-            final HDF5TimeUnit timeUnit, final HDF5GenericStorageFeatures features)
+    public void createArray(final String objectPath, final int size, final HDF5TimeUnit timeUnit,
+            final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
         assert size >= 0;
@@ -175,9 +201,8 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements IH
     }
 
     @Override
-    public void createArray(final String objectPath, final long size,
-            final int blockSize, final HDF5TimeUnit timeUnit,
-            final HDF5GenericStorageFeatures features)
+    public void createArray(final String objectPath, final long size, final int blockSize,
+            final HDF5TimeUnit timeUnit, final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
         assert size >= 0;
@@ -214,8 +239,8 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements IH
     }
 
     @Override
-    public void writeArray(final String objectPath,
-            final HDF5TimeDurationArray timeDurations, final HDF5IntStorageFeatures features)
+    public void writeArray(final String objectPath, final HDF5TimeDurationArray timeDurations,
+            final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert timeDurations != null;
@@ -275,8 +300,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements IH
     }
 
     @Override
-    public void writeArrayBlock(String objectPath, HDF5TimeDurationArray data,
-            long blockNumber)
+    public void writeArrayBlock(String objectPath, HDF5TimeDurationArray data, long blockNumber)
     {
         writeArrayBlockWithOffset(objectPath, data, data.getLength(), data.getLength()
                 * blockNumber);
@@ -328,8 +352,8 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements IH
     public void writeTimeDurationArrayBlockWithOffset(final String objectPath, final long[] data,
             final int dataSize, final long offset, final HDF5TimeUnit timeUnit)
     {
-        writeArrayBlockWithOffset(objectPath,
-                new HDF5TimeDurationArray(data, timeUnit), dataSize, offset);
+        writeArrayBlockWithOffset(objectPath, new HDF5TimeDurationArray(data, timeUnit), dataSize,
+                offset);
     }
 
     public void writeTimeDurationArrayBlock(final String objectPath, final HDF5TimeDuration[] data,
@@ -342,8 +366,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements IH
     public void writeTimeDurationArrayBlockWithOffset(final String objectPath,
             final HDF5TimeDuration[] data, final int dataSize, final long offset)
     {
-        writeArrayBlockWithOffset(objectPath, HDF5TimeDurationArray.create(data),
-                dataSize, offset);
+        writeArrayBlockWithOffset(objectPath, HDF5TimeDurationArray.create(data), dataSize, offset);
     }
 
 }

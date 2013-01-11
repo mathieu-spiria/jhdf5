@@ -16,20 +16,20 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 
 import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * Implementation of {@Link IHDF5TimeDurationReader}.
- *
+ * 
  * @author Bernd Rinn
  */
 class HDF5TimeDurationReader implements IHDF5TimeDurationReader
@@ -37,16 +37,19 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
 
     private final HDF5BaseReader baseReader;
 
-    HDF5TimeDurationReader(HDF5BaseReader baseReader)
+    private final HDF5LongReader longReader;
+
+    HDF5TimeDurationReader(HDF5BaseReader baseReader, HDF5LongReader longReader)
     {
         assert baseReader != null;
+        assert longReader != null;
 
         this.baseReader = baseReader;
+        this.longReader = longReader;
     }
 
     @Override
-    public HDF5TimeDuration getAttr(final String objectPath,
-            final String attributeName)
+    public HDF5TimeDuration getAttr(final String objectPath, final String attributeName)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<HDF5TimeDuration> getAttributeRunnable =
@@ -90,8 +93,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
     }
 
     @Override
-    public HDF5TimeDurationArray getArrayAttr(final String objectPath,
-            final String attributeName)
+    public HDF5TimeDurationArray getArrayAttr(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -106,41 +108,39 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                             final int objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            final int attributeId =
-                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
                             final HDF5TimeUnit storedUnit =
                                     baseReader.checkIsTimeDuration(objectPath, attributeName,
                                             objectId, registry);
-                            final int attributeTypeId =
-                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                            final int memoryTypeId;
-                            final int len;
-                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
-                            {
-                                final int[] arrayDimensions =
-                                        baseReader.h5.getArrayDimensions(attributeTypeId);
-                                if (arrayDimensions.length != 1)
-                                {
-                                    throw new HDF5JavaException(
-                                            "Array needs to be of rank 1, but is of rank "
-                                                    + arrayDimensions.length);
-                                }
-                                len = arrayDimensions[0];
-                                memoryTypeId =
-                                        baseReader.h5.createArrayType(H5T_NATIVE_INT64, len,
-                                                registry);
-                            } else
-                            {
-                                final long[] arrayDimensions =
-                                        baseReader.h5.getDataDimensionsForAttribute(attributeId,
-                                                registry);
-                                memoryTypeId = H5T_NATIVE_INT64;
-                                len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
-                            }
                             final long[] data =
-                                    baseReader.h5.readAttributeAsLongArray(attributeId,
-                                            memoryTypeId, len);
+                                    longReader.getLongArrayAttribute(objectPath, attributeName);
                             return new HDF5TimeDurationArray(data, storedUnit);
+                        }
+                    };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    @Override
+    public HDF5TimeDurationMDArray getMDArrayAttr(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5TimeDurationMDArray> getAttributeRunnable =
+                new ICallableWithCleanUp<HDF5TimeDurationMDArray>()
+                    {
+                        @Override
+                        public HDF5TimeDurationMDArray call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            final HDF5TimeUnit storedUnit =
+                                    baseReader.checkIsTimeDuration(objectPath, attributeName,
+                                            objectId, registry);
+                            final MDLongArray data =
+                                    longReader.getLongMDArrayAttribute(objectPath, attributeName);
+                            return new HDF5TimeDurationMDArray(data, storedUnit);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
@@ -198,8 +198,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
     }
 
     @Override
-    public HDF5TimeDurationArray readArray(final String objectPath)
-            throws HDF5JavaException
+    public HDF5TimeDurationArray readArray(final String objectPath) throws HDF5JavaException
     {
         assert objectPath != null;
 
@@ -246,8 +245,8 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
     }
 
     @Override
-    public HDF5TimeDurationArray readArrayBlock(final String objectPath,
-            final int blockSize, final long blockNumber)
+    public HDF5TimeDurationArray readArrayBlock(final String objectPath, final int blockSize,
+            final long blockNumber)
     {
         return readArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
@@ -285,8 +284,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
     public long[] readTimeDurationArrayBlockWithOffset(final String objectPath,
             final int blockSize, final long offset, final HDF5TimeUnit timeUnit)
     {
-        return timeUnit
-                .convert(readArrayBlockWithOffset(objectPath, blockSize, offset));
+        return timeUnit.convert(readArrayBlockWithOffset(objectPath, blockSize, offset));
     }
 
     public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlock(final String objectPath,
@@ -375,8 +373,8 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final HDF5TimeDurationArray block =
-                                        readArrayBlockWithOffset(objectPath,
-                                                index.getBlockSize(), offset);
+                                        readArrayBlockWithOffset(objectPath, index.getBlockSize(),
+                                                offset);
                                 return new HDF5DataBlock<HDF5TimeDurationArray>(block,
                                         index.getAndIncIndex(), offset);
                             }

@@ -4552,10 +4552,14 @@ public class HDF5RoundtripTest
         assertEquals(now, reader.times().getArrayAttr(datasetName, lastChangedAttr)[0]);
         assertFalse(reader.times().isTimeStamp(datasetName, someLongAttr));
         assertTrue(reader.times().isTimeStamp(datasetName, someDates));
-        assertEquals(now.getTime(), reader.times().getMDArrayAttrAsLong(datasetName, someDates).get(0, 0));
-        assertEquals(now.getTime() - 1000L, reader.times().getMDArrayAttrAsLong(datasetName, someDates).get(0, 1));
-        assertEquals(now.getTime() - 2000L, reader.times().getMDArrayAttrAsLong(datasetName, someDates).get(1, 0));
-        assertEquals(now.getTime() - 3000L, reader.times().getMDArrayAttrAsLong(datasetName, someDates).get(1, 1));
+        assertEquals(now.getTime(), reader.times().getMDArrayAttrAsLong(datasetName, someDates)
+                .get(0, 0));
+        assertEquals(now.getTime() - 1000L,
+                reader.times().getMDArrayAttrAsLong(datasetName, someDates).get(0, 1));
+        assertEquals(now.getTime() - 2000L,
+                reader.times().getMDArrayAttrAsLong(datasetName, someDates).get(1, 0));
+        assertEquals(now.getTime() - 3000L,
+                reader.times().getMDArrayAttrAsLong(datasetName, someDates).get(1, 1));
         try
         {
             reader.times().getArrayAttrAsLong(datasetName, someLongAttr);
@@ -4578,10 +4582,15 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5Factory.open(attributeFile);
         final String datasetName = "SomeDataSet";
         final String validUntilAttr = "validUtil";
+        final String someDurations = "someDurations";
         final String someLongAttr = "someLong";
         writer.writeIntArray(datasetName, new int[0]);
         writer.durations().setArrayAttr(datasetName, validUntilAttr,
                 HDF5TimeDurationArray.create(HDF5TimeUnit.MINUTES, 10));
+        final HDF5TimeDurationMDArray someDurationValues = new HDF5TimeDurationMDArray(new long[]
+            { 1, 2, 3, 4 }, new int[]
+            { 2, 2 }, HDF5TimeUnit.MINUTES);
+        writer.durations().setMDArrayAttr(datasetName, someDurations, someDurationValues);
         writer.setLongArrayAttribute(datasetName, someLongAttr, new long[]
             { 115L });
         writer.close();
@@ -4599,6 +4608,9 @@ public class HDF5RoundtripTest
         assertEquals(10 * 60, reader.durations().getArrayAttr(datasetName, validUntilAttr)
                 .getValue(0, HDF5TimeUnit.SECONDS));
         assertFalse(reader.durations().isTimeDuration(datasetName, someLongAttr));
+        assertTrue(reader.durations().isTimeDuration(datasetName, someDurations));
+        assertEquals(someDurationValues,
+                reader.durations().getMDArrayAttr(datasetName, someDurations));
         try
         {
             reader.durations().getArrayAttr(datasetName, someLongAttr);
