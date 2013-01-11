@@ -41,7 +41,7 @@ import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
  */
 public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IHDF5StringBasicReader,
         IHDF5EnumBasicReader, IHDF5CompoundBasicReader, IHDF5BooleanReader, IHDF5GenericReader,
-        IHDF5DateTimeReader, IHDF5ReferenceReader
+        IHDF5DateTimeBasicReader, IHDF5ReferenceReader
 {
 
     // /////////////////////
@@ -435,5 +435,19 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
      * Returns the full reader for strings.
      */
     public IHDF5StringReader strings();
+
+    // /////////////////////
+    // Date & Time
+    // /////////////////////
+
+    /**
+     * Returns the full reader for date and times.
+     */
+    public IHDF5DateTimeReader times();
+    
+    /**
+     * Returns the full reader for time durations.
+     */
+    public IHDF5TimeDurationReader durations();
 
 }

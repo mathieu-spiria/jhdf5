@@ -84,6 +84,8 @@ class HDF5Reader implements IHDF5Reader
 
     private final IHDF5DateTimeReader dateTimeReader;
 
+    private final HDF5TimeDurationReader timeDurationReader;
+
     private final IHDF5ReferenceReader referenceReader;
 
     private final IHDF5GenericReader genericReader;
@@ -104,6 +106,7 @@ class HDF5Reader implements IHDF5Reader
         this.enumReader = new HDF5EnumReader(baseReader);
         this.compoundReader = new HDF5CompoundReader(baseReader, enumReader);
         this.dateTimeReader = new HDF5DateTimeReader(baseReader);
+        this.timeDurationReader = new HDF5TimeDurationReader(baseReader);
         this.referenceReader = new HDF5ReferenceReader(baseReader);
         this.genericReader = new HDF5GenericReader(baseReader);
     }
@@ -749,15 +752,27 @@ class HDF5Reader implements IHDF5Reader
     //
 
     @Override
+    public IHDF5DateTimeReader times()
+    {
+        return dateTimeReader;
+    }
+
+    @Override
+    public IHDF5TimeDurationReader durations()
+    {
+        return timeDurationReader;
+    }
+
+    @Override
     public long getTimeStampAttribute(String objectPath, String attributeName)
     {
-        return dateTimeReader.getTimeStampAttribute(objectPath, attributeName);
+        return dateTimeReader.getAttrAsLong(objectPath, attributeName);
     }
 
     @Override
     public Date getDateAttribute(String objectPath, String attributeName)
     {
-        return dateTimeReader.getDateAttribute(objectPath, attributeName);
+        return dateTimeReader.getAttr(objectPath, attributeName);
     }
 
     @Override
@@ -769,13 +784,13 @@ class HDF5Reader implements IHDF5Reader
     @Override
     public HDF5TimeDuration getTimeDurationAttribute(String objectPath, String attributeName)
     {
-        return dateTimeReader.getTimeDurationAttribute(objectPath, attributeName);
+        return timeDurationReader.getAttr(objectPath, attributeName);
     }
 
     @Override
     public boolean isTimeDuration(String objectPath) throws HDF5JavaException
     {
-        return dateTimeReader.isTimeDuration(objectPath);
+        return timeDurationReader.isTimeDuration(objectPath);
     }
 
     @Override
@@ -787,39 +802,39 @@ class HDF5Reader implements IHDF5Reader
     @Override
     public boolean isTimeDuration(String objectPath, String attributeName) throws HDF5JavaException
     {
-        return dateTimeReader.isTimeDuration(objectPath, attributeName);
+        return timeDurationReader.isTimeDuration(objectPath, attributeName);
     }
 
     @Override
     public HDF5TimeUnit tryGetTimeUnit(String objectPath, String attributeName)
             throws HDF5JavaException
     {
-        return dateTimeReader.tryGetTimeUnit(objectPath, attributeName);
+        return timeDurationReader.tryGetTimeUnit(objectPath, attributeName);
     }
 
     @Override
     public long[] getTimeStampArrayAttribute(String objectPath, String attributeName)
     {
-        return dateTimeReader.getTimeStampArrayAttribute(objectPath, attributeName);
+        return dateTimeReader.getArrayAttrAsLong(objectPath, attributeName);
     }
 
     @Override
     public Date[] getDateArrayAttribute(String objectPath, String attributeName)
     {
-        return dateTimeReader.getDateArrayAttribute(objectPath, attributeName);
+        return dateTimeReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public HDF5TimeDurationArray getTimeDurationArrayAttribute(String objectPath,
             String attributeName)
     {
-        return dateTimeReader.getTimeDurationArrayAttribute(objectPath, attributeName);
+        return timeDurationReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public HDF5TimeUnit tryGetTimeUnit(String objectPath) throws HDF5JavaException
     {
-        return dateTimeReader.tryGetTimeUnit(objectPath);
+        return timeDurationReader.tryGetTimeUnit(objectPath);
     }
 
     @Override
@@ -827,7 +842,7 @@ class HDF5Reader implements IHDF5Reader
     public Iterable<HDF5DataBlock<long[]>> getTimeDurationArrayNaturalBlocks(String dataSetPath,
             HDF5TimeUnit timeUnit) throws HDF5JavaException
     {
-        return dateTimeReader.getTimeDurationArrayNaturalBlocks(dataSetPath, timeUnit);
+        return timeDurationReader.getTimeDurationArrayNaturalBlocks(dataSetPath, timeUnit);
     }
 
     @Override
@@ -835,7 +850,7 @@ class HDF5Reader implements IHDF5Reader
     public Iterable<HDF5DataBlock<HDF5TimeDuration[]>> getTimeDurationAndUnitArrayNaturalBlocks(
             String objectPath) throws HDF5JavaException
     {
-        return dateTimeReader.getTimeDurationAndUnitArrayNaturalBlocks(objectPath);
+        return timeDurationReader.getTimeDurationAndUnitArrayNaturalBlocks(objectPath);
     }
 
     @Override
@@ -861,20 +876,20 @@ class HDF5Reader implements IHDF5Reader
     @Deprecated
     public long readTimeDuration(String objectPath, HDF5TimeUnit timeUnit) throws HDF5JavaException
     {
-        return dateTimeReader.readTimeDuration(objectPath, timeUnit);
+        return timeDurationReader.readTimeDuration(objectPath, timeUnit);
     }
 
     @Override
     public HDF5TimeDuration readTimeDuration(String objectPath) throws HDF5JavaException
     {
-        return dateTimeReader.readTimeDuration(objectPath);
+        return timeDurationReader.read(objectPath);
     }
 
     @Override
     @Deprecated
     public HDF5TimeDuration readTimeDurationAndUnit(String objectPath) throws HDF5JavaException
     {
-        return dateTimeReader.readTimeDurationAndUnit(objectPath);
+        return timeDurationReader.readTimeDurationAndUnit(objectPath);
     }
 
     @Override
@@ -882,13 +897,13 @@ class HDF5Reader implements IHDF5Reader
     public long[] readTimeDurationArray(String objectPath, HDF5TimeUnit timeUnit)
             throws HDF5JavaException
     {
-        return dateTimeReader.readTimeDurationArray(objectPath, timeUnit);
+        return timeDurationReader.readTimeDurationArray(objectPath, timeUnit);
     }
 
     @Override
     public HDF5TimeDurationArray readTimeDurationArray(String objectPath) throws HDF5JavaException
     {
-        return dateTimeReader.readTimeDurationArray(objectPath);
+        return timeDurationReader.readArray(objectPath);
     }
 
     @Override
@@ -896,7 +911,7 @@ class HDF5Reader implements IHDF5Reader
     public HDF5TimeDuration[] readTimeDurationAndUnitArray(String objectPath)
             throws HDF5JavaException
     {
-        return dateTimeReader.readTimeDurationAndUnitArray(objectPath);
+        return timeDurationReader.readTimeDurationAndUnitArray(objectPath);
     }
 
     @Override
@@ -904,7 +919,7 @@ class HDF5Reader implements IHDF5Reader
     public long[] readTimeDurationArrayBlock(String objectPath, int blockSize, long blockNumber,
             HDF5TimeUnit timeUnit)
     {
-        return dateTimeReader.readTimeDurationArrayBlock(objectPath, blockSize, blockNumber,
+        return timeDurationReader.readTimeDurationArrayBlock(objectPath, blockSize, blockNumber,
                 timeUnit);
     }
 
@@ -913,7 +928,7 @@ class HDF5Reader implements IHDF5Reader
     public long[] readTimeDurationArrayBlockWithOffset(String objectPath, int blockSize,
             long offset, HDF5TimeUnit timeUnit)
     {
-        return dateTimeReader.readTimeDurationArrayBlockWithOffset(objectPath, blockSize, offset,
+        return timeDurationReader.readTimeDurationArrayBlockWithOffset(objectPath, blockSize, offset,
                 timeUnit);
     }
 
@@ -922,7 +937,7 @@ class HDF5Reader implements IHDF5Reader
     public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlock(String objectPath, int blockSize,
             long blockNumber) throws HDF5JavaException
     {
-        return dateTimeReader.readTimeDurationAndUnitArrayBlock(objectPath, blockSize, blockNumber);
+        return timeDurationReader.readTimeDurationAndUnitArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
@@ -930,7 +945,7 @@ class HDF5Reader implements IHDF5Reader
     public HDF5TimeDuration[] readTimeDurationAndUnitArrayBlockWithOffset(String objectPath,
             int blockSize, long offset) throws HDF5JavaException
     {
-        return dateTimeReader.readTimeDurationAndUnitArrayBlockWithOffset(objectPath, blockSize,
+        return timeDurationReader.readTimeDurationAndUnitArrayBlockWithOffset(objectPath, blockSize,
                 offset);
     }
 
@@ -1071,21 +1086,21 @@ class HDF5Reader implements IHDF5Reader
     public HDF5TimeDurationArray readTimeDurationArrayBlock(String objectPath, int blockSize,
             long blockNumber) throws HDF5JavaException
     {
-        return dateTimeReader.readTimeDurationArrayBlock(objectPath, blockSize, blockNumber);
+        return timeDurationReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
     public HDF5TimeDurationArray readTimeDurationArrayBlockWithOffset(String objectPath,
             int blockSize, long offset) throws HDF5JavaException
     {
-        return dateTimeReader.readTimeDurationArrayBlockWithOffset(objectPath, blockSize, offset);
+        return timeDurationReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     @Override
     public Iterable<HDF5DataBlock<HDF5TimeDurationArray>> getTimeDurationArrayNaturalBlocks(
             String objectPath) throws HDF5JavaException
     {
-        return dateTimeReader.getTimeDurationArrayNaturalBlocks(objectPath);
+        return timeDurationReader.getArrayNaturalBlocks(objectPath);
     }
 
     //

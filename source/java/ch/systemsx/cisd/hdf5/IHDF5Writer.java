@@ -44,7 +44,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  */
 public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5PrimitiveWriter,
         IHDF5StringBasicWriter, IHDF5EnumBasicWriter, IHDF5CompoundBasicWriter, IHDF5BooleanWriter,
-        IHDF5OpaqueWriter, IHDF5DateTimeWriter, IHDF5ReferenceWriter
+        IHDF5OpaqueWriter, IHDF5DateTimeBasicWriter, IHDF5ReferenceWriter
 {
 
     // /////////////////////
@@ -348,4 +348,19 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     @Override
     public IHDF5StringWriter strings();
 
+    // /////////////////////
+    // Date & Time
+    // /////////////////////
+
+    /**
+     * Returns the full writer for date and times.
+     */
+    @Override
+    public IHDF5DateTimeWriter times();
+
+    /**
+     * Returns the full writer for time durations.
+     */
+    @Override
+    public IHDF5TimeDurationWriter durations();
 }

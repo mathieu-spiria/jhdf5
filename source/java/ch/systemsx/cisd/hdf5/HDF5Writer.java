@@ -82,6 +82,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     private final IHDF5CompoundWriter compoundWriter;
 
     private final IHDF5DateTimeWriter dateTimeWriter;
+    
+    private final HDF5TimeDurationWriter timeDurationWriter;
 
     private final IHDF5ReferenceWriter referenceWriter;
 
@@ -102,6 +104,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         this.enumWriter = new HDF5EnumWriter(baseWriter);
         this.compoundWriter = new HDF5CompoundWriter(baseWriter, enumWriter);
         this.dateTimeWriter = new HDF5DateTimeWriter(baseWriter);
+        this.timeDurationWriter = new HDF5TimeDurationWriter(baseWriter);
         this.referenceWriter = new HDF5ReferenceWriter(baseWriter);
         this.opaqueWriter = new HDF5OpaqueWriter(baseWriter);
     }
@@ -527,124 +530,136 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     //
 
     @Override
+    public IHDF5DateTimeWriter times()
+    {
+        return dateTimeWriter;
+    }
+
+    @Override
+    public IHDF5TimeDurationWriter durations()
+    {
+        return timeDurationWriter;
+    }
+
+    @Override
     public void createTimeStampArray(String objectPath, int size,
             HDF5GenericStorageFeatures features)
     {
-        dateTimeWriter.createTimeStampArray(objectPath, size, features);
+        dateTimeWriter.createArray(objectPath, size, features);
     }
 
     @Override
     public void setTimeStampAttribute(String objectPath, String name, long value)
     {
-        dateTimeWriter.setTimeStampAttribute(objectPath, name, value);
+        dateTimeWriter.setAttr(objectPath, name, value);
     }
 
     @Override
     public void setDateAttribute(String objectPath, String name, Date date)
     {
-        dateTimeWriter.setDateAttribute(objectPath, name, date);
+        dateTimeWriter.setAttr(objectPath, name, date);
     }
 
     @Override
     public void setTimeDurationAttribute(String objectPath, String name,
             HDF5TimeDuration timeDuration)
     {
-        dateTimeWriter.setTimeDurationAttribute(objectPath, name, timeDuration);
+        timeDurationWriter.setAttr(objectPath, name, timeDuration);
     }
 
     @Override
     public void setTimeDurationAttribute(String objectPath, String name, long timeDuration,
             HDF5TimeUnit timeUnit)
     {
-        dateTimeWriter.setTimeDurationAttribute(objectPath, name, timeDuration, timeUnit);
+        timeDurationWriter.setAttr(objectPath, name, timeDuration, timeUnit);
     }
 
     @Override
     public void setDateArrayAttribute(String objectPath, String name, Date[] dates)
     {
-        dateTimeWriter.setDateArrayAttribute(objectPath, name, dates);
+        dateTimeWriter.setArrayAttr(objectPath, name, dates);
     }
 
     @Override
     public void setTimeStampArrayAttribute(String objectPath, String name, long[] timeStamps)
     {
-        dateTimeWriter.setTimeStampArrayAttribute(objectPath, name, timeStamps);
+        dateTimeWriter.setArrayAttr(objectPath, name, timeStamps);
     }
 
     @Override
     public void setTimeDurationArrayAttribute(String objectPath, String name,
             HDF5TimeDurationArray timeDurations)
     {
-        dateTimeWriter.setTimeDurationArrayAttribute(objectPath, name, timeDurations);
+        timeDurationWriter.setArrayAttr(objectPath, name, timeDurations);
     }
 
     @Override
     public void createTimeStampArray(String objectPath, int size)
     {
-        dateTimeWriter.createTimeStampArray(objectPath, size);
+        dateTimeWriter.createArray(objectPath, size);
     }
 
     @Override
     public void createTimeStampArray(String objectPath, long size, int blockSize,
             HDF5GenericStorageFeatures features)
     {
-        dateTimeWriter.createTimeStampArray(objectPath, size, blockSize, features);
+        dateTimeWriter.createArray(objectPath, size, blockSize, features);
     }
 
     @Override
     public void createTimeStampArray(String objectPath, long size, int blockSize)
     {
-        dateTimeWriter.createTimeStampArray(objectPath, size, blockSize);
+        dateTimeWriter.createArray(objectPath, size, blockSize);
     }
 
     @Override
     public void writeDate(String objectPath, Date date)
     {
-        dateTimeWriter.writeDate(objectPath, date);
+        dateTimeWriter.write(objectPath, date);
     }
 
     @Override
     public void writeDateArray(String objectPath, Date[] dates, HDF5GenericStorageFeatures features)
     {
-        dateTimeWriter.writeDateArray(objectPath, dates, features);
+        dateTimeWriter.writeArray(objectPath, dates, features);
     }
 
     @Override
     public void writeDateArray(String objectPath, Date[] dates)
     {
-        dateTimeWriter.writeDateArray(objectPath, dates);
+        dateTimeWriter.writeArray(objectPath, dates);
     }
 
     @Override
     public void writeTimeStamp(String objectPath, long timeStamp)
     {
-        dateTimeWriter.writeTimeStamp(objectPath, timeStamp);
+        dateTimeWriter.write(objectPath, timeStamp);
     }
 
     @Override
     public void writeTimeStampArray(String objectPath, long[] timeStamps,
             HDF5GenericStorageFeatures features)
     {
-        dateTimeWriter.writeTimeStampArray(objectPath, timeStamps, features);
+        dateTimeWriter.writeArray(objectPath, timeStamps, features);
     }
 
     @Override
     public void writeTimeStampArray(String objectPath, long[] timeStamps)
     {
-        dateTimeWriter.writeTimeStampArray(objectPath, timeStamps);
+        dateTimeWriter.writeArray(objectPath, timeStamps);
     }
 
     @Override
     public void writeTimeStampArrayBlock(String objectPath, long[] data, long blockNumber)
     {
-        dateTimeWriter.writeTimeStampArrayBlock(objectPath, data, blockNumber);
+        dateTimeWriter.writeArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeTimeStampArrayBlockWithOffset(String objectPath, long[] data, int dataSize,
             long offset)
     {
-        dateTimeWriter.writeTimeStampArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        dateTimeWriter.writeArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     //
@@ -655,46 +670,46 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void createTimeDurationArray(String objectPath, int size, HDF5TimeUnit timeUnit,
             HDF5GenericStorageFeatures features)
     {
-        dateTimeWriter.createTimeDurationArray(objectPath, size, timeUnit, features);
+        timeDurationWriter.createArray(objectPath, size, timeUnit, features);
     }
 
     @Override
     public void createTimeDurationArray(String objectPath, int size, HDF5TimeUnit timeUnit)
     {
-        dateTimeWriter.createTimeDurationArray(objectPath, size, timeUnit);
+        timeDurationWriter.createArray(objectPath, size, timeUnit);
     }
 
     @Override
     public void createTimeDurationArray(String objectPath, long size, int blockSize,
             HDF5TimeUnit timeUnit, HDF5GenericStorageFeatures features)
     {
-        dateTimeWriter.createTimeDurationArray(objectPath, size, blockSize, timeUnit, features);
+        timeDurationWriter.createArray(objectPath, size, blockSize, timeUnit, features);
     }
 
     @Override
     public void createTimeDurationArray(String objectPath, long size, int blockSize,
             HDF5TimeUnit timeUnit)
     {
-        dateTimeWriter.createTimeDurationArray(objectPath, size, blockSize, timeUnit);
+        timeDurationWriter.createArray(objectPath, size, blockSize, timeUnit);
     }
 
     @Override
     public void writeTimeDuration(String objectPath, long timeDuration, HDF5TimeUnit timeUnit)
     {
-        dateTimeWriter.writeTimeDuration(objectPath, timeDuration, timeUnit);
+        timeDurationWriter.write(objectPath, timeDuration, timeUnit);
     }
 
     @Override
     public void writeTimeDuration(String objectPath, HDF5TimeDuration timeDuration)
     {
-        dateTimeWriter.writeTimeDuration(objectPath, timeDuration);
+        timeDurationWriter.write(objectPath, timeDuration);
     }
 
     @Override
     @Deprecated
     public void writeTimeDuration(String objectPath, long timeDuration)
     {
-        dateTimeWriter.writeTimeDuration(objectPath, timeDuration);
+        timeDurationWriter.writeTimeDuration(objectPath, timeDuration);
     }
 
     @Override
@@ -702,20 +717,20 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeTimeDurationArray(String objectPath, long[] timeDurations,
             HDF5TimeUnit timeUnit, HDF5IntStorageFeatures features)
     {
-        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, timeUnit, features);
+        timeDurationWriter.writeTimeDurationArray(objectPath, timeDurations, timeUnit, features);
     }
 
     @Override
     public void writeTimeDurationArray(String objectPath, HDF5TimeDurationArray timeDurations)
     {
-        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations);
+        timeDurationWriter.writeArray(objectPath, timeDurations);
     }
 
     @Override
     public void writeTimeDurationArray(String objectPath, HDF5TimeDurationArray timeDurations,
             HDF5IntStorageFeatures features)
     {
-        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, features);
+        timeDurationWriter.writeArray(objectPath, timeDurations, features);
     }
 
     @Override
@@ -723,21 +738,21 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeTimeDurationArray(String objectPath, long[] timeDurations,
             HDF5TimeUnit timeUnit)
     {
-        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, timeUnit);
+        timeDurationWriter.writeTimeDurationArray(objectPath, timeDurations, timeUnit);
     }
 
     @Override
     @Deprecated
     public void writeTimeDurationArray(String objectPath, long[] timeDurations)
     {
-        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations);
+        timeDurationWriter.writeTimeDurationArray(objectPath, timeDurations);
     }
 
     @Override
     @Deprecated
     public void writeTimeDurationArray(String objectPath, HDF5TimeDuration[] timeDurations)
     {
-        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations);
+        timeDurationWriter.writeTimeDurationArray(objectPath, timeDurations);
     }
 
     @Override
@@ -745,21 +760,21 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeTimeDurationArray(String objectPath, HDF5TimeDuration[] timeDurations,
             HDF5IntStorageFeatures features)
     {
-        dateTimeWriter.writeTimeDurationArray(objectPath, timeDurations, features);
+        timeDurationWriter.writeTimeDurationArray(objectPath, timeDurations, features);
     }
 
     @Override
     public void writeTimeDurationArrayBlock(String objectPath, HDF5TimeDurationArray data,
             long blockNumber)
     {
-        dateTimeWriter.writeTimeDurationArrayBlock(objectPath, data, blockNumber);
+        timeDurationWriter.writeArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeTimeDurationArrayBlockWithOffset(String objectPath,
             HDF5TimeDurationArray data, int dataSize, long offset)
     {
-        dateTimeWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        timeDurationWriter.writeArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     @Override
@@ -767,7 +782,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeTimeDurationArrayBlock(String objectPath, long[] data, long blockNumber,
             HDF5TimeUnit timeUnit)
     {
-        dateTimeWriter.writeTimeDurationArrayBlock(objectPath, data, blockNumber, timeUnit);
+        timeDurationWriter.writeTimeDurationArrayBlock(objectPath, data, blockNumber, timeUnit);
     }
 
     @Override
@@ -775,7 +790,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeTimeDurationArrayBlockWithOffset(String objectPath, long[] data, int dataSize,
             long offset, HDF5TimeUnit timeUnit)
     {
-        dateTimeWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset,
+        timeDurationWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset,
                 timeUnit);
     }
 
@@ -784,7 +799,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeTimeDurationArrayBlock(String objectPath, HDF5TimeDuration[] data,
             long blockNumber)
     {
-        dateTimeWriter.writeTimeDurationArrayBlock(objectPath, data, blockNumber);
+        timeDurationWriter.writeTimeDurationArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
@@ -792,7 +807,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeTimeDurationArrayBlockWithOffset(String objectPath, HDF5TimeDuration[] data,
             int dataSize, long offset)
     {
-        dateTimeWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        timeDurationWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     //

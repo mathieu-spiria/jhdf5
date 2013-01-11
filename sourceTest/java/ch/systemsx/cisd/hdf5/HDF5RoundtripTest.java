@@ -3914,7 +3914,7 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        writer.writeTimeStamp(timeStampDS, timestampValue);
+        writer.times().write(timeStampDS, timestampValue);
         writer.writeLong(noTimestampDS, someLong);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
@@ -3931,11 +3931,11 @@ public class HDF5RoundtripTest
                 info.tryGetTypeVariant());
         assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, info
                 .getTypeInformation().tryGetTypeVariant());
-        assertEquals(timestampValue, reader.readTimeStamp(timeStampDS));
-        assertEquals(timestampValue, reader.readDate(timeStampDS).getTime());
+        assertEquals(timestampValue, reader.times().readTimeStamp(timeStampDS));
+        assertEquals(timestampValue, reader.times().readDate(timeStampDS).getTime());
         try
         {
-            reader.readTimeStamp(noTimestampDS);
+            reader.times().readTimeStamp(noTimestampDS);
             fail("Failed to detect non-timestamp value.");
         } catch (HDF5JavaException ex)
         {
@@ -3964,7 +3964,7 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        writer.writeTimeStampArray(timeSeriesDS, timeSeries);
+        writer.times().writeArray(timeSeriesDS, timeSeries);
         writer.writeLongArray(noTimeseriesDS, notATimeSeries);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
@@ -3972,7 +3972,7 @@ public class HDF5RoundtripTest
         assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                 info.tryGetTypeVariant());
         assertChunkSizes(info, 10);
-        assertTrue(Arrays.equals(timeSeries, reader.readTimeStampArray(timeSeriesDS)));
+        assertTrue(Arrays.equals(timeSeries, reader.times().readTimeStampArray(timeSeriesDS)));
         final Date[] datesRead = reader.readDateArray(timeSeriesDS);
         final long[] timeStampsRead = new long[datesRead.length];
         for (int i = 0; i < timeStampsRead.length; ++i)
@@ -3982,7 +3982,7 @@ public class HDF5RoundtripTest
         assertTrue(Arrays.equals(timeSeries, timeStampsRead));
         try
         {
-            reader.readTimeStampArray(noTimeseriesDS);
+            reader.times().readTimeStampArray(noTimeseriesDS);
             fail("Failed to detect non-timestamp array.");
         } catch (HDF5JavaException ex)
         {
@@ -4009,10 +4009,10 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        writer.createTimeStampArray(timeSeriesDS, 0, 10, GENERIC_DEFLATE);
+        writer.times().createArray(timeSeriesDS, 0, 10, GENERIC_DEFLATE);
         for (int i = 0; i < 10; ++i)
         {
-            writer.writeTimeStampArrayBlock(timeSeriesDS, timeSeries, i);
+            writer.times().writeArrayBlock(timeSeriesDS, timeSeries, i);
         }
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
@@ -4023,7 +4023,7 @@ public class HDF5RoundtripTest
         for (int i = 0; i < 10; ++i)
         {
             assertTrue(Arrays.equals(timeSeries,
-                    reader.readTimeStampArrayBlock(timeSeriesDS, 10, i)));
+                    reader.times().readTimeStampArrayBlock(timeSeriesDS, 10, i)));
         }
         reader.close();
     }
@@ -4043,7 +4043,7 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        writer.writeTimeDuration(timeDurationDS, timeDurationInSeconds, HDF5TimeUnit.SECONDS);
+        writer.durations().write(timeDurationDS, timeDurationInSeconds, HDF5TimeUnit.SECONDS);
         final HDF5TimeDuration timeDurationWithUnit =
                 new HDF5TimeDuration(timeDurationInHoursRounded, HDF5TimeUnit.HOURS);
         writer.writeTimeDuration(timeDurationDS2, timeDurationWithUnit);
@@ -4057,7 +4057,7 @@ public class HDF5RoundtripTest
         assertEquals(HDF5DataClass.INTEGER, info.getTypeInformation().getDataClass());
         assertTrue(info.isTimeDuration());
         assertFalse(info.isTimeStamp());
-        assertEquals(HDF5TimeUnit.SECONDS, reader.tryGetTimeUnit(timeDurationDS));
+        assertEquals(HDF5TimeUnit.SECONDS, reader.durations().tryGetTimeUnit(timeDurationDS));
         assertEquals(HDF5DataTypeVariant.TIME_DURATION_SECONDS, info.tryGetTypeVariant());
         assertEquals(HDF5TimeUnit.SECONDS, info.tryGetTimeUnit());
         assertEquals(timeDurationInSeconds,
@@ -4108,7 +4108,7 @@ public class HDF5RoundtripTest
         assertEquals(NativeData.SHORT_SIZE, info.getTypeInformation().getElementSize());
         assertTrue(info.isTimeDuration());
         assertFalse(info.isTimeStamp());
-        assertEquals(HDF5TimeUnit.SECONDS, reader.tryGetTimeUnit(timeDurationDS));
+        assertEquals(HDF5TimeUnit.SECONDS, reader.durations().tryGetTimeUnit(timeDurationDS));
         assertEquals(HDF5DataTypeVariant.TIME_DURATION_SECONDS, info.tryGetTypeVariant());
         assertEquals(HDF5TimeUnit.SECONDS, info.tryGetTimeUnit());
         assertEquals(timeDurationInSeconds,
@@ -4167,14 +4167,14 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        writer.createTimeDurationArray(timeDurationSeriesDS, 100, 10, HDF5TimeUnit.MILLISECONDS,
+        writer.durations().createArray(timeDurationSeriesDS, 100, 10, HDF5TimeUnit.MILLISECONDS,
                 GENERIC_DEFLATE);
         for (int i = 0; i < 10; ++i)
         {
-            writer.writeTimeDurationArrayBlock(timeDurationSeriesDS, new HDF5TimeDurationArray(
+            writer.durations().writeArrayBlock(timeDurationSeriesDS, new HDF5TimeDurationArray(
                     timeDurationSeriesMicros, HDF5TimeUnit.MICROSECONDS), i);
         }
-        writer.createTimeDurationArray(timeDurationSeriesDS2, 100, 10, HDF5TimeUnit.SECONDS,
+        writer.durations().createArray(timeDurationSeriesDS2, 100, 10, HDF5TimeUnit.SECONDS,
                 GENERIC_DEFLATE);
         final HDF5TimeDuration[] timeDurationSeries =
                 new HDF5TimeDuration[]
@@ -4197,7 +4197,7 @@ public class HDF5RoundtripTest
                             new HDF5TimeDuration(9, HDF5TimeUnit.DAYS) };
         for (int i = 0; i < 10; ++i)
         {
-            writer.writeTimeDurationArrayBlock(timeDurationSeriesDS2,
+            writer.durations().writeArrayBlock(timeDurationSeriesDS2,
                     HDF5TimeDurationArray.create(timeDurationSeries), i);
         }
         writer.close();
@@ -4208,7 +4208,7 @@ public class HDF5RoundtripTest
         for (int i = 0; i < 10; ++i)
         {
             assertTrue(Arrays.equals(timeDurationSeriesMicros, HDF5TimeUnit.MICROSECONDS
-                    .convert(reader.readTimeDurationArrayBlock(timeDurationSeriesDS, 10, i))));
+                    .convert(reader.durations().readArrayBlock(timeDurationSeriesDS, 10, i))));
         }
         final HDF5DataSetInformation info2 = reader.getDataSetInformation(timeDurationSeriesDS2);
         assertEquals(HDF5DataTypeVariant.TIME_DURATION_SECONDS, info2.tryGetTypeVariant());
@@ -4216,7 +4216,7 @@ public class HDF5RoundtripTest
         for (int i = 0; i < 10; ++i)
         {
             final long[] block =
-                    HDF5TimeUnit.MICROSECONDS.convert(reader.readTimeDurationArrayBlock(
+                    HDF5TimeUnit.MICROSECONDS.convert(reader.durations().readArrayBlock(
                             timeDurationSeriesDS2, 10, i));
             for (int j = 0; j < block.length; ++j)
             {
@@ -4226,14 +4226,14 @@ public class HDF5RoundtripTest
         for (int i = 0; i < 10; ++i)
         {
             final HDF5TimeDurationArray block =
-                    reader.readTimeDurationArrayBlock(timeDurationSeriesDS2, 10, i);
+                    reader.durations().readArrayBlock(timeDurationSeriesDS2, 10, i);
             for (int j = 0; j < block.getLength(); ++j)
             {
                 assertTrue(block.get(j).isEquivalent(timeDurationSeries[j]));
             }
         }
         for (HDF5DataBlock<HDF5TimeDurationArray> block : reader
-                .getTimeDurationArrayNaturalBlocks(timeDurationSeriesDS2))
+                .durations().getArrayNaturalBlocks(timeDurationSeriesDS2))
         {
             final HDF5TimeDurationArray data = block.getData();
             for (int j = 0; j < data.getLength(); ++j)
@@ -4448,19 +4448,19 @@ public class HDF5RoundtripTest
         final Date now = new Date();
         writer.writeIntArray(datasetName, new int[0]);
         writer.setLongAttribute(datasetName, someLongAttr, 115L);
-        writer.setDateAttribute(datasetName, lastChangedAttr, now);
+        writer.times().setAttr(datasetName, lastChangedAttr, now);
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(attributeFile);
         assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                 reader.tryGetTypeVariant(datasetName, lastChangedAttr));
-        assertFalse(reader.isTimeStamp(datasetName));
-        assertTrue(reader.isTimeStamp(datasetName, lastChangedAttr));
-        assertFalse(reader.isTimeDuration(datasetName, lastChangedAttr));
-        assertEquals(now, reader.getDateAttribute(datasetName, lastChangedAttr));
-        assertFalse(reader.isTimeStamp(datasetName, someLongAttr));
+        assertFalse(reader.times().isTimeStamp(datasetName));
+        assertTrue(reader.times().isTimeStamp(datasetName, lastChangedAttr));
+        assertFalse(reader.durations().isTimeDuration(datasetName, lastChangedAttr));
+        assertEquals(now, reader.times().getAttr(datasetName, lastChangedAttr));
+        assertFalse(reader.times().isTimeStamp(datasetName, someLongAttr));
         try
         {
-            reader.getTimeStampAttribute(datasetName, someLongAttr);
+            reader.times().getAttrAsLong(datasetName, someLongAttr);
             fail("Did not detect non-time-stamp attribute.");
         } catch (HDF5JavaException ex)
         {
@@ -4482,24 +4482,24 @@ public class HDF5RoundtripTest
         final String validUntilAttr = "validUtil";
         final String someLongAttr = "someLong";
         writer.writeIntArray(datasetName, new int[0]);
-        writer.setTimeDurationAttribute(datasetName, validUntilAttr, 10, HDF5TimeUnit.MINUTES);
+        writer.durations().setAttr(datasetName, validUntilAttr, 10, HDF5TimeUnit.MINUTES);
         writer.setLongAttribute(datasetName, someLongAttr, 115L);
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(attributeFile);
         assertEquals(HDF5DataTypeVariant.TIME_DURATION_MINUTES,
                 reader.tryGetTypeVariant(datasetName, validUntilAttr));
-        assertFalse(reader.isTimeStamp(datasetName));
-        assertFalse(reader.isTimeStamp(datasetName, validUntilAttr));
-        assertTrue(reader.isTimeDuration(datasetName, validUntilAttr));
-        assertEquals(HDF5TimeUnit.MINUTES, reader.tryGetTimeUnit(datasetName, validUntilAttr));
+        assertFalse(reader.times().isTimeStamp(datasetName));
+        assertFalse(reader.times().isTimeStamp(datasetName, validUntilAttr));
+        assertTrue(reader.durations().isTimeDuration(datasetName, validUntilAttr));
+        assertEquals(HDF5TimeUnit.MINUTES, reader.durations().tryGetTimeUnit(datasetName, validUntilAttr));
         assertEquals(new HDF5TimeDuration(10, HDF5TimeUnit.MINUTES),
-                reader.getTimeDurationAttribute(datasetName, validUntilAttr));
-        assertEquals(10 * 60, reader.getTimeDurationAttribute(datasetName, validUntilAttr)
+                reader.durations().getAttr(datasetName, validUntilAttr));
+        assertEquals(10 * 60, reader.durations().getAttr(datasetName, validUntilAttr)
                 .getValue(HDF5TimeUnit.SECONDS));
-        assertFalse(reader.isTimeDuration(datasetName, someLongAttr));
+        assertFalse(reader.durations().isTimeDuration(datasetName, someLongAttr));
         try
         {
-            reader.getTimeDurationAttribute(datasetName, someLongAttr);
+            reader.durations().getAttr(datasetName, someLongAttr);
             fail("Did not detect non-time-duration attribute.");
         } catch (HDF5JavaException ex)
         {
@@ -4524,21 +4524,21 @@ public class HDF5RoundtripTest
         writer.writeIntArray(datasetName, new int[0]);
         writer.setLongArrayAttribute(datasetName, someLongAttr, new long[]
             { 115L });
-        writer.setDateArrayAttribute(datasetName, lastChangedAttr, new Date[]
+        writer.times().setArrayAttr(datasetName, lastChangedAttr, new Date[]
             { now });
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(attributeFile);
         assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
                 reader.tryGetTypeVariant(datasetName, lastChangedAttr));
-        assertFalse(reader.isTimeStamp(datasetName));
-        assertTrue(reader.isTimeStamp(datasetName, lastChangedAttr));
-        assertFalse(reader.isTimeDuration(datasetName, lastChangedAttr));
-        assertEquals(1, reader.getDateArrayAttribute(datasetName, lastChangedAttr).length);
-        assertEquals(now, reader.getDateArrayAttribute(datasetName, lastChangedAttr)[0]);
-        assertFalse(reader.isTimeStamp(datasetName, someLongAttr));
+        assertFalse(reader.times().isTimeStamp(datasetName));
+        assertTrue(reader.times().isTimeStamp(datasetName, lastChangedAttr));
+        assertFalse(reader.durations().isTimeDuration(datasetName, lastChangedAttr));
+        assertEquals(1, reader.times().getArrayAttr(datasetName, lastChangedAttr).length);
+        assertEquals(now, reader.times().getArrayAttr(datasetName, lastChangedAttr)[0]);
+        assertFalse(reader.times().isTimeStamp(datasetName, someLongAttr));
         try
         {
-            reader.getTimeStampArrayAttribute(datasetName, someLongAttr);
+            reader.times().getArrayAttrAsLong(datasetName, someLongAttr);
             fail("Did not detect non-time-stamp attribute.");
         } catch (HDF5JavaException ex)
         {
@@ -4560,7 +4560,7 @@ public class HDF5RoundtripTest
         final String validUntilAttr = "validUtil";
         final String someLongAttr = "someLong";
         writer.writeIntArray(datasetName, new int[0]);
-        writer.setTimeDurationArrayAttribute(datasetName, validUntilAttr,
+        writer.durations().setArrayAttr(datasetName, validUntilAttr,
                 HDF5TimeDurationArray.create(HDF5TimeUnit.MINUTES, 10));
         writer.setLongArrayAttribute(datasetName, someLongAttr, new long[]
             { 115L });
@@ -4568,20 +4568,20 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5Factory.openForReading(attributeFile);
         assertEquals(HDF5DataTypeVariant.TIME_DURATION_MINUTES,
                 reader.tryGetTypeVariant(datasetName, validUntilAttr));
-        assertFalse(reader.isTimeStamp(datasetName));
-        assertFalse(reader.isTimeStamp(datasetName, validUntilAttr));
-        assertTrue(reader.isTimeDuration(datasetName, validUntilAttr));
-        assertEquals(HDF5TimeUnit.MINUTES, reader.tryGetTimeUnit(datasetName, validUntilAttr));
-        assertEquals(1, reader.getTimeDurationArrayAttribute(datasetName, validUntilAttr)
+        assertFalse(reader.times().isTimeStamp(datasetName));
+        assertFalse(reader.times().isTimeStamp(datasetName, validUntilAttr));
+        assertTrue(reader.durations().isTimeDuration(datasetName, validUntilAttr));
+        assertEquals(HDF5TimeUnit.MINUTES, reader.durations().tryGetTimeUnit(datasetName, validUntilAttr));
+        assertEquals(1, reader.durations().getArrayAttr(datasetName, validUntilAttr)
                 .getLength());
         assertEquals(new HDF5TimeDuration(10, HDF5TimeUnit.MINUTES), reader
-                .getTimeDurationArrayAttribute(datasetName, validUntilAttr).get(0));
-        assertEquals(10 * 60, reader.getTimeDurationArrayAttribute(datasetName, validUntilAttr)
+                .durations().getArrayAttr(datasetName, validUntilAttr).get(0));
+        assertEquals(10 * 60, reader.durations().getArrayAttr(datasetName, validUntilAttr)
                 .getValue(0, HDF5TimeUnit.SECONDS));
-        assertFalse(reader.isTimeDuration(datasetName, someLongAttr));
+        assertFalse(reader.durations().isTimeDuration(datasetName, someLongAttr));
         try
         {
-            reader.getTimeDurationArrayAttribute(datasetName, someLongAttr);
+            reader.durations().getArrayAttr(datasetName, someLongAttr);
             fail("Did not detect non-time-duration attribute.");
         } catch (HDF5JavaException ex)
         {
@@ -5040,8 +5040,8 @@ public class HDF5RoundtripTest
         final String dataSetName1 = "creationTime1";
         final String dataSetName2 = "creationTime2";
         final String linkName = "time";
-        writer.writeTimeStamp(dataSetName1, now);
-        writer.writeTimeStamp(dataSetName2, now);
+        writer.times().write(dataSetName1, now);
+        writer.times().write(dataSetName2, now);
         writer.createSoftLink(dataSetName1, linkName);
         writer.createOrUpdateSoftLink(dataSetName2, linkName);
         try
