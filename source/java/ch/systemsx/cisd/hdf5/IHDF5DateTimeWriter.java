@@ -18,6 +18,9 @@ package ch.systemsx.cisd.hdf5;
 
 import java.util.Date;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
+
 /**
  * An interface that provides methods for writing time and date values from HDF5 files.
  * 
@@ -81,6 +84,32 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      */
     public void setArrayAttr(final String objectPath, final String attributeName,
             final long[] timeStamps);
+
+    /**
+     * Sets a multi-dimensional timestamp array attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setMDArrayAttr(final String objectPath, final String name,
+            final MDLongArray value);
+
+    /**
+     * Sets a multi-dimensional timestamp array attribute on the referenced object.
+     * <p>
+     * The referenced object must exist, that is it need to have been written before by one of the
+     * <code>write()</code> methods.
+     * 
+     * @param objectPath The name of the object to add the attribute to.
+     * @param name The name of the attribute.
+     * @param value The value of the attribute.
+     */
+    public void setMDArrayAttr(final String objectPath, final String name,
+            final MDArray<Date> value);
 
     // /////////////////////
     // Data Sets

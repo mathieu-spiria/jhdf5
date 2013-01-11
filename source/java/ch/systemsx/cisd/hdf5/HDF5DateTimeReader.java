@@ -16,7 +16,6 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 
 import java.util.Date;
@@ -24,6 +23,8 @@ import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -37,12 +38,16 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
 {
 
     private final HDF5BaseReader baseReader;
+    
+    private final HDF5LongReader longReader;
 
-    HDF5DateTimeReader(HDF5BaseReader baseReader)
+    HDF5DateTimeReader(HDF5BaseReader baseReader, HDF5LongReader longReader)
     {
         assert baseReader != null;
+        assert longReader != null;
 
         this.baseReader = baseReader;
+        this.longReader = longReader;
     }
 
     @Override
@@ -93,40 +98,33 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                             final int objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            final int attributeId =
-                                    baseReader.h5.openAttribute(objectId, attributeName, registry);
                             baseReader.checkIsTimeStamp(objectPath, attributeName, objectId,
                                     registry);
-                            final int attributeTypeId =
-                                    baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                            final int memoryTypeId;
-                            final int len;
-                            if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
-                            {
-                                final int[] arrayDimensions =
-                                        baseReader.h5.getArrayDimensions(attributeTypeId);
-                                if (arrayDimensions.length != 1)
-                                {
-                                    throw new HDF5JavaException(
-                                            "Array needs to be of rank 1, but is of rank "
-                                                    + arrayDimensions.length);
-                                }
-                                len = arrayDimensions[0];
-                                memoryTypeId =
-                                        baseReader.h5.createArrayType(H5T_NATIVE_INT64, len,
-                                                registry);
-                            } else
-                            {
-                                final long[] arrayDimensions =
-                                        baseReader.h5.getDataDimensionsForAttribute(attributeId,
-                                                registry);
-                                memoryTypeId = H5T_NATIVE_INT64;
-                                len = HDF5Utils.getOneDimensionalArraySize(arrayDimensions);
-                            }
-                            final long[] data =
-                                    baseReader.h5.readAttributeAsLongArray(attributeId,
-                                            memoryTypeId, len);
-                            return data;
+                            return longReader.getLongArrayAttribute(objectId, attributeName, registry);
+                        }
+                    };
+        return baseReader.runner.call(getAttributeRunnable);
+    }
+
+    @Override
+    public MDLongArray getMDArrayAttrAsLong(final String objectPath, final String attributeName)
+    {
+        assert objectPath != null;
+        assert attributeName != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDLongArray> getAttributeRunnable =
+                new ICallableWithCleanUp<MDLongArray>()
+                    {
+                        @Override
+                        public MDLongArray call(ICleanUpRegistry registry)
+                        {
+                            final int objectId =
+                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
+                                            registry);
+                            baseReader.checkIsTimeStamp(objectPath, attributeName, objectId,
+                                    registry);
+                            return longReader.getLongMDArrayAttribute(objectId, attributeName, registry);
                         }
                     };
         return baseReader.runner.call(getAttributeRunnable);
@@ -136,6 +134,13 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
     public Date[] getArrayAttr(String objectPath, String attributeName)
     {
         final long[] timeStampArray = getArrayAttrAsLong(objectPath, attributeName);
+        return timeStampsToDates(timeStampArray);
+    }
+
+    @Override
+    public MDArray<Date> getMDArrayAttr(String objectPath, String attributeName)
+    {
+        final MDLongArray timeStampArray = getMDArrayAttrAsLong(objectPath, attributeName);
         return timeStampsToDates(timeStampArray);
     }
 
@@ -320,6 +325,20 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
         for (int i = 0; i < dateArray.length; ++i)
         {
             dateArray[i] = new Date(timeStampArray[i]);
+        }
+        return dateArray;
+    }
+
+    private static MDArray<Date> timeStampsToDates(final MDLongArray timeStampArray)
+    {
+        assert timeStampArray != null;
+
+        final long[] timeStampsFlat = timeStampArray.getAsFlatArray();
+        final MDArray<Date> dateArray = new MDArray<Date>(Date.class, timeStampArray.dimensions());
+        final Date[] datesFlat = dateArray.getAsFlatArray();
+        for (int i = 0; i < datesFlat.length; ++i)
+        {
+            datesFlat[i] = new Date(timeStampsFlat[i]);
         }
         return dateArray;
     }

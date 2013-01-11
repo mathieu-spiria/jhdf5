@@ -68,7 +68,7 @@ class HDF5Reader implements IHDF5Reader
 
     private final IHDF5IntReader intReader;
 
-    private final IHDF5LongReader longReader;
+    protected final IHDF5LongReader longReader;
 
     private final IHDF5FloatReader floatReader;
 
@@ -105,7 +105,7 @@ class HDF5Reader implements IHDF5Reader
         this.stringReader = new HDF5StringReader(baseReader);
         this.enumReader = new HDF5EnumReader(baseReader);
         this.compoundReader = new HDF5CompoundReader(baseReader, enumReader);
-        this.dateTimeReader = new HDF5DateTimeReader(baseReader);
+        this.dateTimeReader = new HDF5DateTimeReader(baseReader, (HDF5LongReader) longReader);
         this.timeDurationReader = new HDF5TimeDurationReader(baseReader);
         this.referenceReader = new HDF5ReferenceReader(baseReader);
         this.genericReader = new HDF5GenericReader(baseReader);

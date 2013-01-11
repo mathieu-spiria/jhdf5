@@ -20,6 +20,9 @@ import java.util.Date;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
+
 /**
  * An interface that provides methods for reading time and date values from HDF5 files.
  * 
@@ -67,12 +70,26 @@ public interface IHDF5DateTimeReader
     public long[] getArrayAttrAsLong(final String objectPath, final String attributeName);
 
     /**
+     * Reads a multi-dimension time stamp array attribute named <var>attributeName</var> from the
+     * data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The time stamp array; each element is a number of milliseconds since January 1, 1970,
+     *         00:00:00 GMT.
+     * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
+     *             <var>objectPath</var> is not defined as type variant
+     *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     */
+    public MDLongArray getMDArrayAttrAsLong(final String objectPath, final String attributeName);
+
+    /**
      * Reads a time stamp attribute named <var>attributeName</var> from the data set
      * <var>objectPath</var> and returns it as a <code>Date</code>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
-     * @return The time stamp as number of milliseconds since January 1, 1970, 00:00:00 GMT.
+     * @return The time stamp as {@link java.util.Date}.
      * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
@@ -85,12 +102,25 @@ public interface IHDF5DateTimeReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
-     * @return The time stamp as number of milliseconds since January 1, 1970, 00:00:00 GMT.
+     * @return The time stamp as {@link java.util.Date}.
      * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      */
     public Date[] getArrayAttr(final String objectPath, final String attributeName);
+
+    /**
+     * Reads a multi-dimension time stamp array attribute named <var>attributeName</var> from the
+     * data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param attributeName The name of the attribute to read.
+     * @return The time stamp as {@link java.util.Date}.
+     * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
+     *             <var>objectPath</var> is not defined as type variant
+     *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     */
+    public MDArray<Date> getMDArrayAttr(final String objectPath, final String attributeName);
 
     // /////////////////////
     // Data Sets

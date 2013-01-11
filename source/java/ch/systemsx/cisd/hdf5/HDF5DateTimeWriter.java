@@ -24,6 +24,8 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 
 import java.util.Date;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
@@ -37,10 +39,10 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
 {
     private final HDF5BaseWriter baseWriter;
 
-    HDF5DateTimeWriter(HDF5BaseWriter baseWriter)
+    HDF5DateTimeWriter(HDF5BaseWriter baseWriter, HDF5LongReader longReader)
     {
-        super(baseWriter);
-        
+        super(baseWriter, longReader);
+
         assert baseWriter != null;
 
         this.baseWriter = baseWriter;
@@ -76,8 +78,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
     }
 
     @Override
-    public void setArrayAttr(final String objectPath, final String name,
-            final long[] timeStamps)
+    public void setArrayAttr(final String objectPath, final String name, final long[] timeStamps)
     {
         assert objectPath != null;
         assert name != null;
@@ -102,6 +103,40 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 }
             };
         baseWriter.runner.call(setAttributeRunnable);
+    }
+
+    @Override
+    public void setMDArrayAttr(final String objectPath, final String name, final MDLongArray value)
+    {
+        assert objectPath != null;
+        assert name != null;
+        assert value != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(H5T_NATIVE_INT64, value.dimensions(),
+                                    registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(H5T_STD_I64LE, value.dimensions(),
+                                    registry);
+                    baseWriter.setAttribute(objectPath, name,
+                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                            storageTypeId, memoryTypeId, value.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(addAttributeRunnable);
+    }
+
+    @Override
+    public void setMDArrayAttr(String objectPath, String name, MDArray<Date> value)
+    {
+        setMDArrayAttr(objectPath, name, datesToTimeStamps(value));
     }
 
     @Override
@@ -136,8 +171,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
     @Override
     public void createArray(final String objectPath, final long size, final int blockSize)
     {
-        createArray(objectPath, size, blockSize,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        createArray(objectPath, size, blockSize, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
@@ -179,8 +213,8 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
     }
 
     @Override
-    public void createArray(final String objectPath, final long length,
-            final int blockSize, final HDF5GenericStorageFeatures features)
+    public void createArray(final String objectPath, final long length, final int blockSize,
+            final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
         assert length >= 0;
@@ -209,8 +243,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
     @Override
     public void writeArray(final String objectPath, final long[] timeStamps)
     {
-        writeArray(objectPath, timeStamps,
-                HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        writeArray(objectPath, timeStamps, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
@@ -241,8 +274,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
     }
 
     @Override
-    public void writeArrayBlock(final String objectPath, final long[] data,
-            final long blockNumber)
+    public void writeArrayBlock(final String objectPath, final long[] data, final long blockNumber)
     {
         assert objectPath != null;
         assert data != null;
@@ -337,6 +369,20 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
         for (int i = 0; i < timestamps.length; ++i)
         {
             timestamps[i] = dates[i].getTime();
+        }
+        return timestamps;
+    }
+
+    private static MDLongArray datesToTimeStamps(MDArray<Date> dates)
+    {
+        assert dates != null;
+
+        final Date[] datesFlat = dates.getAsFlatArray(); 
+        final MDLongArray timestamps = new MDLongArray(dates.dimensions());
+        final long[] timestampsFlat = timestamps.getAsFlatArray();
+        for (int i = 0; i < timestampsFlat.length; ++i)
+        {
+            timestampsFlat[i] = datesFlat[i].getTime();
         }
         return timestamps;
     }
