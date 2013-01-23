@@ -21,10 +21,10 @@ import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_NO_COMPRESSIO
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F64LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F64LE;
 
-import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -431,11 +431,11 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                         final long[] nullDimensions = new long[dimensions.length];
                         baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, 
                                 features,
-                                nullDimensions, MDAbstractArray.toLong(dimensions), 8, registry);
+                                nullDimensions, MDArray.toLong(dimensions), 8, registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, 
-                                features, MDAbstractArray.toLong(dimensions), null, 8, registry);
+                                features, MDArray.toLong(dimensions), null, 8, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -459,7 +459,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 {
                     baseWriter.createDataSet(objectPath, H5T_IEEE_F64LE, 
                             features, dimensions, 
-                            MDAbstractArray.toLong(blockDimensions), 8, registry);
+                            MDArray.toLong(blockDimensions), 8, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -534,7 +534,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                 {
                     final long[] memoryDimensions = data.longDimensions();
                     assert memoryDimensions.length == offset.length;
-                    final long[] longBlockDimensions = MDAbstractArray.toLong(blockDimensions);
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
                     assert longBlockDimensions.length == offset.length;
                     final long[] dataSetDimensions = new long[blockDimensions.length];
                     for (int i = 0; i < offset.length; ++i)
@@ -549,7 +549,7 @@ class HDF5DoubleWriter implements IHDF5DoubleWriter
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
                     final int memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset),
+                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
                             longBlockDimensions);
                     H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data.getAsFlatArray());

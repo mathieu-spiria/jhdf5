@@ -16,20 +16,20 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
-import static ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
 
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.HDF5Constants;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 
-import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
-import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 
 /**
  * The implementation of {@link IHDF5LongReader}.
@@ -238,7 +238,7 @@ class HDF5LongReader implements IHDF5LongReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array.
                             getAsFlatArray());
-                    return MDAbstractArray.toInt(spaceParams.dimensions);
+                    return MDArray.toInt(spaceParams.dimensions);
                 }
             };
         return baseReader.runner.call(readCallable);
@@ -267,7 +267,7 @@ class HDF5LongReader implements IHDF5LongReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array
                             .getAsFlatArray());
-                    return MDAbstractArray.toInt(spaceParams.dimensions);
+                    return MDArray.toInt(spaceParams.dimensions);
                 }
             };
         return baseReader.runner.call(readCallable);
@@ -398,7 +398,7 @@ class HDF5LongReader implements IHDF5LongReader
     {
         final int spaceId = baseReader.h5.createScalarDataSpace();
         final int[] dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
-        final long[] data = new long[MDAbstractArray.getLength(dimensions)];
+        final long[] data = new long[MDArray.getLength(dimensions)];
         final int memoryDataTypeId =
                 baseReader.h5.createArrayType(H5T_NATIVE_INT64, dimensions, registry);
         baseReader.h5.readDataSet(dataSetId, memoryDataTypeId, spaceId, spaceId, data);
@@ -591,11 +591,11 @@ class HDF5LongReader implements IHDF5LongReader
             } else
             {
                 arrayDimensions =
-                        MDAbstractArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
+                        MDArray.toInt(baseReader.h5.getDataDimensionsForAttribute(
                                 attributeId, registry));
                 memoryTypeId = H5T_NATIVE_INT64;
             }
-            final int len = MDAbstractArray.getLength(arrayDimensions);
+            final int len = MDArray.getLength(arrayDimensions);
             final long[] data =
                     baseReader.h5.readAttributeAsLongArray(attributeId,
                             memoryTypeId, len);

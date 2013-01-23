@@ -9494,28 +9494,28 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         int fileId =
                 ch.systemsx.cisd.hdf5.hdf5lib.H5F.H5Fcreate(file.getAbsolutePath(),
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_TRUNC,
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_ACC_TRUNC,
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT);
         int groupId =
                 ch.systemsx.cisd.hdf5.hdf5lib.H5GLO.H5Gcreate(fileId, "constants",
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT);
         int spcId =
                 ch.systemsx.cisd.hdf5.hdf5lib.H5S
-                        .H5Screate(ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR);
+                        .H5Screate(ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR);
         int dsId =
                 ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dcreate(groupId, "pi",
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE, spcId,
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32LE, spcId,
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT);
         ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite(dsId,
-                ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT,
-                ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR,
-                ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR,
-                ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT, new float[]
+                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT,
+                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR,
+                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR,
+                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT, new float[]
                     { 3.14159f });
         ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dclose(dsId);
         ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Sclose(spcId);
@@ -9524,19 +9524,19 @@ public class HDF5RoundtripTest
 
         fileId =
                 ch.systemsx.cisd.hdf5.hdf5lib.H5F.H5Fopen(file.getAbsolutePath(),
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5F_ACC_RDONLY,
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_ACC_RDONLY,
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT);
         spcId =
                 ch.systemsx.cisd.hdf5.hdf5lib.H5S
-                        .H5Screate(ncsa.hdf.hdf5lib.HDF5Constants.H5S_SCALAR);
+                        .H5Screate(ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR);
         dsId =
                 ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dopen(fileId, "/constants/pi",
-                        ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT);
         final float[] data = new float[1];
         ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dread(dsId,
-                ncsa.hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT,
-                ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL, ncsa.hdf.hdf5lib.HDF5Constants.H5S_ALL,
-                ncsa.hdf.hdf5lib.HDF5Constants.H5P_DEFAULT, data);
+                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT,
+                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL, ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL,
+                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT, data);
         assertEquals(3.14159f, data[0], 0f);
 
         ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dclose(dsId);

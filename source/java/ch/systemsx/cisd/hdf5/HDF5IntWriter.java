@@ -25,7 +25,7 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U32LE;
 
-import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -432,11 +432,11 @@ class HDF5IntWriter implements IHDF5IntWriter
                         final long[] nullDimensions = new long[dimensions.length];
                         baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I32LE : H5T_STD_U32LE, 
                                 features,
-                                nullDimensions, MDAbstractArray.toLong(dimensions), 4, registry);
+                                nullDimensions, MDArray.toLong(dimensions), 4, registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I32LE : H5T_STD_U32LE, 
-                                features, MDAbstractArray.toLong(dimensions), null, 4, registry);
+                                features, MDArray.toLong(dimensions), null, 4, registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -460,7 +460,7 @@ class HDF5IntWriter implements IHDF5IntWriter
                 {
                     baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I32LE : H5T_STD_U32LE, 
                             features, dimensions, 
-                            MDAbstractArray.toLong(blockDimensions), 4, registry);
+                            MDArray.toLong(blockDimensions), 4, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -535,7 +535,7 @@ class HDF5IntWriter implements IHDF5IntWriter
                 {
                     final long[] memoryDimensions = data.longDimensions();
                     assert memoryDimensions.length == offset.length;
-                    final long[] longBlockDimensions = MDAbstractArray.toLong(blockDimensions);
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
                     assert longBlockDimensions.length == offset.length;
                     final long[] dataSetDimensions = new long[blockDimensions.length];
                     for (int i = 0; i < offset.length; ++i)
@@ -550,7 +550,7 @@ class HDF5IntWriter implements IHDF5IntWriter
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
                     final int memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset),
+                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
                             longBlockDimensions);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT32, memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data.getAsFlatArray());
