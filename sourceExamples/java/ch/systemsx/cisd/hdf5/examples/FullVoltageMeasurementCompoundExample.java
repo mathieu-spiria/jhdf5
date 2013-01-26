@@ -173,10 +173,10 @@ public class FullVoltageMeasurementCompoundExample
                 Arrays.<Object> asList(measurementDate, measuredTemperature, measuredVoltage);
         // The compound type name is optional
         HDF5CompoundType<List<?>> type =
-                hdf5Writer.compounds().getInferredType("Measurement",
+                hdf5Writer.compound().getInferredType("Measurement",
                         Arrays.asList("date", "temperatureInDegreeCelsius", "voltageInMilliVolts"),
                         list);
-        hdf5Writer.compounds().write(datasetName, type, list);
+        hdf5Writer.compound().write(datasetName, type, list);
     }
 
     /**
@@ -194,9 +194,9 @@ public class FullVoltageMeasurementCompoundExample
             { measurementDate, measuredTemperature, measuredVoltage };
         // The compound type name is optional
         HDF5CompoundType<Object[]> type =
-                hdf5Writer.compounds().getInferredType("Measurement", new String[]
+                hdf5Writer.compound().getInferredType("Measurement", new String[]
                     { "date", "temperatureInDegreeCelsius", "voltageInMilliVolts" }, array);
-        hdf5Writer.compounds().write(datasetName, type, array);
+        hdf5Writer.compound().write(datasetName, type, array);
     }
 
     /**

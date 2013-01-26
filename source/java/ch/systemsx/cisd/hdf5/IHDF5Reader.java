@@ -415,8 +415,15 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
 
     /**
      * Returns the full reader for enums.
+     * @deprecated Use {@link #enumeration()} instead.
      */
+    @Deprecated
     public IHDF5EnumReader enums();
+
+    /**
+     * Returns the full reader for enumerations
+     */
+    public IHDF5EnumReader enumeration();
 
     // /////////////////////
     // Compounds
@@ -424,8 +431,15 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
 
     /**
      * Returns the full reader for compounds.
+     * @deprecated Use {@link #compound()} instead.
      */
+    @Deprecated
     public IHDF5CompoundReader compounds();
+
+    /**
+     * Returns the full reader for compounds.
+     */
+    public IHDF5CompoundReader compound();
 
     // /////////////////////
     // Strings
@@ -434,7 +448,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
     /**
      * Returns the full reader for strings.
      */
-    public IHDF5StringReader strings();
+    public IHDF5StringReader string();
 
     // /////////////////////
     // Date & Time
@@ -443,11 +457,11 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
     /**
      * Returns the full reader for date and times.
      */
-    public IHDF5DateTimeReader times();
+    public IHDF5DateTimeReader time();
     
     /**
      * Returns the full reader for time durations.
      */
-    public IHDF5TimeDurationReader durations();
+    public IHDF5TimeDurationReader duration();
 
 }

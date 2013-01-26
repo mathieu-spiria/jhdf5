@@ -35,7 +35,7 @@ public interface IHDF5DateTimeBasicReader
     /**
      * Returns <code>true</code>, if the attribute <var>attributeName</var> of data set
      * <var>objectPath</var> is a time stamp and <code>false</code> otherwise.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public boolean isTimeStamp(final String objectPath, String attributeName)
@@ -51,7 +51,7 @@ public interface IHDF5DateTimeBasicReader
      * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public long getTimeStampAttribute(final String objectPath, final String attributeName);
@@ -67,7 +67,7 @@ public interface IHDF5DateTimeBasicReader
      * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public long[] getTimeStampArrayAttribute(final String objectPath, final String attributeName);
@@ -82,7 +82,7 @@ public interface IHDF5DateTimeBasicReader
      * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public Date getDateAttribute(final String objectPath, final String attributeName);
@@ -97,7 +97,7 @@ public interface IHDF5DateTimeBasicReader
      * @throws HDF5JavaException If the attribute <var>attributeName</var> of objct
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public Date[] getDateArrayAttribute(final String objectPath, final String attributeName);
@@ -105,7 +105,7 @@ public interface IHDF5DateTimeBasicReader
     /**
      * Returns <code>true</code>, if the attribute <var>attributeName</var> of data set
      * <var>objectPath</var> is a time duration and <code>false</code> otherwise.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#durations()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#duration()} instead.
      */
     @Deprecated
     public boolean isTimeDuration(final String objectPath, String attributeName)
@@ -120,7 +120,7 @@ public interface IHDF5DateTimeBasicReader
      * @return The time duration.
      * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
      *             corresponds to a time duration.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#durations()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#duration()} instead.
      */
     @Deprecated
     public HDF5TimeDuration getTimeDurationAttribute(final String objectPath,
@@ -135,7 +135,7 @@ public interface IHDF5DateTimeBasicReader
      * @return The time duration.
      * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
      *             corresponds to a time duration.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#durations()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#duration()} instead.
      */
     @Deprecated
     public HDF5TimeDurationArray getTimeDurationArrayAttribute(final String objectPath,
@@ -144,7 +144,7 @@ public interface IHDF5DateTimeBasicReader
     /**
      * Returns the time unit, if the attribute given by <var>attributeName</var> of object
      * <var>objectPath</var> is a time duration and <code>null</code> otherwise.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#durations()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#duration()} instead.
      */
     @Deprecated
     public HDF5TimeUnit tryGetTimeUnit(final String objectPath, final String attributeName)
@@ -157,7 +157,7 @@ public interface IHDF5DateTimeBasicReader
     /**
      * Returns <code>true</code>, if the data set given by <var>objectPath</var> is a time stamp and
      * <code>false</code> otherwise.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public boolean isTimeStamp(final String objectPath) throws HDF5JavaException;
@@ -165,7 +165,7 @@ public interface IHDF5DateTimeBasicReader
     /**
      * Returns <code>true</code>, if the data set given by <var>objectPath</var> is a time duration
      * and <code>false</code> otherwise.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#durations()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#duration()} instead.
      */
     @Deprecated
     public boolean isTimeDuration(final String objectPath) throws HDF5JavaException;
@@ -173,7 +173,7 @@ public interface IHDF5DateTimeBasicReader
     /**
      * Returns the time unit, if the data set given by <var>objectPath</var> is a time duration and
      * <code>null</code> otherwise.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#durations()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#duration()} instead.
      */
     @Deprecated
     public HDF5TimeUnit tryGetTimeUnit(final String objectPath) throws HDF5JavaException;
@@ -187,7 +187,7 @@ public interface IHDF5DateTimeBasicReader
      * @return The time stamp as number of milliseconds since January 1, 1970, 00:00:00 GMT.
      * @throws HDF5JavaException If the <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public long readTimeStamp(final String objectPath) throws HDF5JavaException;
@@ -201,7 +201,7 @@ public interface IHDF5DateTimeBasicReader
      * @return The time stamp as number of milliseconds since January 1, 1970, 00:00:00 GMT.
      * @throws HDF5JavaException If the <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public long[] readTimeStampArray(final String objectPath) throws HDF5JavaException;
@@ -218,7 +218,7 @@ public interface IHDF5DateTimeBasicReader
      *            <var>blockSize</var>).
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public long[] readTimeStampArrayBlock(final String objectPath, final int blockSize,
@@ -235,7 +235,7 @@ public interface IHDF5DateTimeBasicReader
      * @param offset The offset of the block in the data set to start reading from (starting with
      *            0).
      * @return The data block read from the data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public long[] readTimeStampArrayBlockWithOffset(final String objectPath, final int blockSize,
@@ -246,7 +246,7 @@ public interface IHDF5DateTimeBasicReader
      * 
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#time()} instead.
      */
     @Deprecated
     public Iterable<HDF5DataBlock<long[]>> getTimeStampArrayNaturalBlocks(final String dataSetPath)
@@ -414,7 +414,7 @@ public interface IHDF5DateTimeBasicReader
      *         blockSize)</code>.
      * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
      *             corresponds to a time duration.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#durations()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#duration()} instead.
      */
     @Deprecated
     public HDF5TimeDurationArray readTimeDurationArrayBlock(final String objectPath,
@@ -461,7 +461,7 @@ public interface IHDF5DateTimeBasicReader
      * @return The data block read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
      *             corresponds to a time duration.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#durations()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#duration()} instead.
      */
     @Deprecated
     public HDF5TimeDurationArray readTimeDurationArrayBlockWithOffset(final String objectPath,
@@ -548,7 +548,7 @@ public interface IHDF5DateTimeBasicReader
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of a time duration data type or not of rank
      *             1.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#durations()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#duration()} instead.
      */
     @Deprecated
     public Iterable<HDF5DataBlock<HDF5TimeDurationArray>> getTimeDurationArrayNaturalBlocks(

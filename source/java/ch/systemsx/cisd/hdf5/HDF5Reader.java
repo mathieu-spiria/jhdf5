@@ -752,13 +752,13 @@ class HDF5Reader implements IHDF5Reader
     //
 
     @Override
-    public IHDF5DateTimeReader times()
+    public IHDF5DateTimeReader time()
     {
         return dateTimeReader;
     }
 
     @Override
-    public IHDF5TimeDurationReader durations()
+    public IHDF5TimeDurationReader duration()
     {
         return timeDurationReader;
     }
@@ -1181,7 +1181,7 @@ class HDF5Reader implements IHDF5Reader
     //
 
     @Override
-    public IHDF5StringReader strings()
+    public IHDF5StringReader string()
     {
         return stringReader;
     }
@@ -1268,6 +1268,12 @@ class HDF5Reader implements IHDF5Reader
 
     @Override
     public IHDF5EnumReader enums()
+    {
+        return enumReader;
+    }
+
+    @Override
+    public IHDF5EnumReader enumeration()
     {
         return enumReader;
     }
@@ -1372,6 +1378,12 @@ class HDF5Reader implements IHDF5Reader
 
     @Override
     public IHDF5CompoundReader compounds()
+    {
+        return compoundReader;
+    }
+
+    @Override
+    public IHDF5CompoundReader compound()
     {
         return compoundReader;
     }

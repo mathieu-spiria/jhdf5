@@ -103,7 +103,7 @@ class DirectoryIndex implements IDirectoryIndex
 
     private static HDF5EnumerationType getHDF5LinkTypeEnumeration(IHDF5Reader reader)
     {
-        return reader.enums().getType("linkType", getFileLinkTypeValues());
+        return reader.enumeration().getType("linkType", getFileLinkTypeValues());
     }
 
     private static HDF5CompoundType<LinkRecord> getHDF5LinkCompoundType(IHDF5Reader reader)
@@ -114,7 +114,7 @@ class DirectoryIndex implements IDirectoryIndex
     private static HDF5CompoundType<LinkRecord> getHDF5LinkCompoundType(IHDF5Reader reader,
             HDF5EnumerationType hdf5LinkTypeEnumeration)
     {
-        return reader.compounds().getType(LinkRecord.class, getMapping(hdf5LinkTypeEnumeration));
+        return reader.compound().getType(LinkRecord.class, getMapping(hdf5LinkTypeEnumeration));
     }
 
     private static String[] getFileLinkTypeValues()
@@ -227,7 +227,7 @@ class DirectoryIndex implements IDirectoryIndex
                 final CRC32 crc32Digester = new CRC32();
                 final String indexDataSetName = getIndexDataSetName();
                 final LinkRecord[] work =
-                        hdf5Reader.compounds().readArray(indexDataSetName, linkCompoundType,
+                        hdf5Reader.compound().readArray(indexDataSetName, linkCompoundType,
                                 new IHDF5CompoundInformationRetriever.IByteArrayInspector()
                                     {
                                         @Override
@@ -378,12 +378,12 @@ class DirectoryIndex implements IDirectoryIndex
             }
             final String indexNamesDataSetName = getIndexNamesDataSetName();
             final String concatenatedNamesStr = concatenatedNames.toString();
-            hdf5WriterOrNull.strings().write(indexNamesDataSetName, concatenatedNamesStr, HDF5GenericStorageFeatures.GENERIC_DEFLATE);
+            hdf5WriterOrNull.string().write(indexNamesDataSetName, concatenatedNamesStr, HDF5GenericStorageFeatures.GENERIC_DEFLATE);
             hdf5WriterOrNull.setIntAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME,
                     calcCrc32(concatenatedNamesStr));
             final String indexDataSetName = getIndexDataSetName();
             final CRC32 crc32 = new CRC32();
-            hdf5WriterOrNull.compounds().writeArray(indexDataSetName,
+            hdf5WriterOrNull.compound().writeArray(indexDataSetName,
                     getHDF5LinkCompoundType(hdf5WriterOrNull), links.getLinkArray(),
                     HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                     new IHDF5CompoundInformationRetriever.IByteArrayInspector()

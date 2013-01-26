@@ -324,9 +324,18 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Returns the full writer for enums.
+     * 
+     * @deprecated Use {@link #enumeration()} instead.
      */
+    @Deprecated
     @Override
     public IHDF5EnumWriter enums();
+
+    /**
+     * Returns the full writer for enumerations.
+     */
+    @Override
+    public IHDF5EnumWriter enumeration();
 
     // /////////////////////
     // Compounds
@@ -334,9 +343,18 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
 
     /**
      * Returns the full writer for compounds.
+     * 
+     * @deprecated Use {@link #compound()} instead.
      */
+    @Deprecated
     @Override
     public IHDF5CompoundWriter compounds();
+
+    /**
+     * Returns the full reader for compounds.
+     */
+    @Override
+    public IHDF5CompoundWriter compound();
 
     // /////////////////////
     // Strings
@@ -346,7 +364,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * Returns the full writer for strings.
      */
     @Override
-    public IHDF5StringWriter strings();
+    public IHDF5StringWriter string();
 
     // /////////////////////
     // Date & Time
@@ -356,11 +374,11 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * Returns the full writer for date and times.
      */
     @Override
-    public IHDF5DateTimeWriter times();
+    public IHDF5DateTimeWriter time();
 
     /**
      * Returns the full writer for time durations.
      */
     @Override
-    public IHDF5TimeDurationWriter durations();
+    public IHDF5TimeDurationWriter duration();
 }

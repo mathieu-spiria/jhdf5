@@ -530,13 +530,13 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     //
 
     @Override
-    public IHDF5DateTimeWriter times()
+    public IHDF5DateTimeWriter time()
     {
         return dateTimeWriter;
     }
 
     @Override
-    public IHDF5TimeDurationWriter durations()
+    public IHDF5TimeDurationWriter duration()
     {
         return timeDurationWriter;
     }
@@ -864,7 +864,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     //
 
     @Override
-    public IHDF5StringWriter strings()
+    public IHDF5StringWriter string()
     {
         return stringWriter;
     }
@@ -1260,6 +1260,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
+    public IHDF5EnumWriter enumeration()
+    {
+        return enumWriter;
+    }
+
+    @Override
     public HDF5EnumerationType getEnumType(final String name, final String[] values)
             throws HDF5JavaException
     {
@@ -1386,6 +1392,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     @Override
     public IHDF5CompoundWriter compounds()
+    {
+        return compoundWriter;
+    }
+
+    @Override
+    public IHDF5CompoundWriter compound()
     {
         return compoundWriter;
     }

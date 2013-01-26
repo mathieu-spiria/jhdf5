@@ -39,7 +39,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param objectPath The name of the object to add the attribute to.
      * @param attributeName The name of the attribute.
      * @param date The value of the attribute.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void setDateAttribute(final String objectPath, final String attributeName,
@@ -54,7 +54,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param objectPath The name of the object to add the attribute to.
      * @param attributeName The name of the attribute.
      * @param dates The value of the attribute.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void setDateArrayAttribute(final String objectPath, final String attributeName,
@@ -69,7 +69,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param objectPath The name of the object to add the attribute to.
      * @param attributeName The name of the attribute.
      * @param timeStamp The value of the attribute.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void setTimeStampAttribute(final String objectPath, final String attributeName,
@@ -84,7 +84,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param objectPath The name of the object to add the attribute to.
      * @param attributeName The name of the attribute.
      * @param timeStamps The value of the attribute.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void setTimeStampArrayAttribute(final String objectPath, final String attributeName,
@@ -100,7 +100,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param attributeName The name of the attribute.
      * @param timeDuration The value of the attribute.
      * @param timeUnit The unit of the attribute.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void setTimeDurationAttribute(final String objectPath, final String attributeName,
@@ -115,7 +115,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param objectPath The name of the object to add the attribute to.
      * @param attributeName The name of the attribute.
      * @param timeDuration The value of the attribute.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void setTimeDurationAttribute(final String objectPath, final String attributeName,
@@ -133,7 +133,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param objectPath The name of the object to add the attribute to.
      * @param attributeName The name of the attribute.
      * @param timeDurations The value of the attribute.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void setTimeDurationArrayAttribute(final String objectPath, final String attributeName,
@@ -152,7 +152,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeStamp The timestamp to write as number of milliseconds since January 1, 1970,
      *            00:00:00 GMT.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void writeTimeStamp(final String objectPath, final long timeStamp);
@@ -167,7 +167,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void createTimeStampArray(final String objectPath, final long size, final int blockSize);
@@ -182,7 +182,7 @@ public interface IHDF5DateTimeBasicWriter
      *            non-extendable data sets and the size of one chunk for extendable (chunked) data
      *            sets. For extendable data sets the initial size of the array will be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void createTimeStampArray(final String objectPath, final int size);
@@ -198,7 +198,7 @@ public interface IHDF5DateTimeBasicWriter
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      * @param features The storage features of the data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void createTimeStampArray(final String objectPath, final long size, final int blockSize,
@@ -215,7 +215,7 @@ public interface IHDF5DateTimeBasicWriter
      *            extendable data sets the initial size of the array will be 0, see
      *            {@link HDF5GenericStorageFeatures}.
      * @param features The storage features of the data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void createTimeStampArray(final String objectPath, final int size,
@@ -230,7 +230,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
      *            00:00:00 GMT.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void writeTimeStampArray(final String objectPath, final long[] timeStamps);
@@ -245,7 +245,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
      *            00:00:00 GMT.
      * @param features The storage features of the data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void writeTimeStampArray(final String objectPath, final long[] timeStamps,
@@ -265,7 +265,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void writeTimeStampArrayBlock(final String objectPath, final long[] data,
@@ -290,7 +290,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
      *            )
      * @param offset The offset in the data set to start writing to.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void writeTimeStampArrayBlockWithOffset(final String objectPath, final long[] data,
@@ -330,7 +330,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param dates The dates to write.
      * @param features The storage features of the data set.
      * @see #writeTimeStampArray(String, long[], HDF5GenericStorageFeatures)
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void writeDateArray(final String objectPath, final Date[] dates,
@@ -358,7 +358,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeDuration The duration of time to write in the given <var>timeUnit</var>.
      * @param timeUnit The unit of the time duration.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void writeTimeDuration(final String objectPath, final long timeDuration,
@@ -386,7 +386,7 @@ public interface IHDF5DateTimeBasicWriter
      *            sets. For extendable data sets the initial size of the array will be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @param timeUnit The unit of the time duration.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void createTimeDurationArray(final String objectPath, final int size,
@@ -404,7 +404,7 @@ public interface IHDF5DateTimeBasicWriter
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      * @param timeUnit The unit of the time duration.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void createTimeDurationArray(final String objectPath, final long size,
@@ -423,7 +423,7 @@ public interface IHDF5DateTimeBasicWriter
      *            and <code>deflate == false</code>.
      * @param timeUnit The unit of the time duration.
      * @param features The storage features of the data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void createTimeDurationArray(final String objectPath, final long size,
@@ -443,7 +443,7 @@ public interface IHDF5DateTimeBasicWriter
      *            {@link HDF5GenericStorageFeatures}.
      * @param timeUnit The unit of the time duration.
      * @param features The storage features of the data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void createTimeDurationArray(final String objectPath, final int size,
@@ -556,7 +556,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeDurations The time durations to write.
      * @param features The storage features used to store the array.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void writeTimeDurationArray(final String objectPath,
@@ -576,7 +576,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void writeTimeDurationArrayBlock(final String objectPath,
@@ -602,7 +602,7 @@ public interface IHDF5DateTimeBasicWriter
      * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
      *            )
      * @param offset The offset in the data set to start writing to.
-     * @deprecated Use the corresponding method in {@link IHDF5Writer#times()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#time()} instead.
      */
     @Deprecated
     public void writeTimeDurationArrayBlockWithOffset(final String objectPath,
