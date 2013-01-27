@@ -181,6 +181,35 @@ public enum HDF5TimeUnit
      * saturate to <code>Long.MIN_VALUE</code> if negative or <code>Long.MAX_VALUE</code> if
      * positive.
      * 
+     * @param durations The time durations.
+     * @return The converted duration in this unit, or <code>Long.MIN_VALUE</code> if conversion
+     *         would negatively overflow, or <code>Long.MAX_VALUE</code> if it would positively
+     *         overflow.
+     */
+    public HDF5TimeDurationMDArray convert(final HDF5TimeDurationMDArray durations)
+    {
+        if (this != durations.timeUnit)
+        {
+            final long[] originalData = durations.getAsFlatArray();
+            final long[] convertedData = new long[originalData.length];
+            for (int i = 0; i < originalData.length; ++i)
+            {
+                convertedData[i] = this.convert(originalData[i], durations.timeUnit);
+            }
+            return new HDF5TimeDurationMDArray(convertedData, durations.dimensions(), this);
+        } else
+        {
+            return durations;
+        }
+    }
+
+    /**
+     * Convert the given time <var>durations</var> in the given time <var>unit</var> to this unit.
+     * Conversions from smaller to larger units perform rounding, so they lose precision.
+     * Conversions from larger to smaller units with arguments that would numerically overflow
+     * saturate to <code>Long.MIN_VALUE</code> if negative or <code>Long.MAX_VALUE</code> if
+     * positive.
+     * 
      * @param durations The time duration in the given <code>unit</code>.
      * @param unit The unit of the <code>duration</code> argument.
      * @return The converted duration in this unit, or <code>Long.MIN_VALUE</code> if conversion

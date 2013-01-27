@@ -288,4 +288,36 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
     public void writeArray(final String objectPath, final Date[] dates,
             final HDF5GenericStorageFeatures features);
 
+    public void writeMDArray(final String objectPath, final MDLongArray data,
+            final HDF5IntStorageFeatures features);
+    
+    public void createMDArray(final String objectPath, final int[] dimensions);
+    
+    public void createMDArray(final String objectPath, final long[] dimensions,
+            final int[] blockDimensions);
+
+    public void createMDArray(final String objectPath, final int[] dimensions,
+            final HDF5IntStorageFeatures features);
+    
+    public void createMDArray(final String objectPath, final long[] dimensions,
+            final int[] blockDimensions, final HDF5IntStorageFeatures features);
+    
+    public void writeMDArrayBlock(final String objectPath, final MDLongArray data,
+            final long[] blockNumber);
+    
+    public void writeMDArrayBlockWithOffset(final String objectPath, final MDLongArray data,
+            final long[] offset);
+    
+    public void writeMDArrayBlockWithOffset(final String objectPath, final MDLongArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset);
+    
+    public void writeMDArray(final String objectPath, final MDArray<Date> data,
+            final HDF5IntStorageFeatures features);
+    
+    public void writeMDArrayBlock(final String objectPath, final MDArray<Date> data,
+            final long[] blockNumber);
+    
+    public void writeMDArrayBlockWithOffset(final String objectPath, final MDArray<Date> data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset);
+
 }

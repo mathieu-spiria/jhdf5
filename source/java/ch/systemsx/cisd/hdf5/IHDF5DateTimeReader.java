@@ -274,4 +274,14 @@ public interface IHDF5DateTimeReader
      */
     public Date[] readDateArray(final String objectPath) throws HDF5JavaException;
 
+    public MDLongArray readTimeStampMDArray(final String objectPath);
+    
+    public MDLongArray readTimeStampMDArrayBlock(final String objectPath, final int[] blockDimensions,
+            final long[] blockNumber);
+
+    public MDLongArray readTimeStampMDArrayBlockWithOffset(final String objectPath,
+            final int[] blockDimensions, final long[] offset);
+    
+    public Iterable<HDF5MDDataBlock<MDLongArray>> getTimeStampMDArrayNaturalBlocks(final String dataSetPath);
+
 }

@@ -367,7 +367,7 @@ class HDF5LongReader implements IHDF5LongReader
         return baseReader.runner.call(readCallable);
     }
 
-    private MDLongArray readLongMDArray(int dataSetId, ICleanUpRegistry registry)
+    MDLongArray readLongMDArray(int dataSetId, ICleanUpRegistry registry)
     {
         try
         {

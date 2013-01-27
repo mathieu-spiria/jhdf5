@@ -16,6 +16,9 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.util.Iterator;
+
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
@@ -23,8 +26,10 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
  * 
  * @author Bernd Rinn
  */
-public class HDF5TimeDurationMDArray
+public class HDF5TimeDurationMDArray extends MDAbstractArray<Long>
 {
+    private static final long serialVersionUID = 1L;
+
     final MDLongArray timeDurations;
 
     final HDF5TimeUnit timeUnit;
@@ -34,6 +39,7 @@ public class HDF5TimeDurationMDArray
      */
     public HDF5TimeDurationMDArray(MDLongArray timeDurations, HDF5TimeUnit timeUnit)
     {
+        super(timeDurations.dimensions(), timeDurations.getAsFlatArray().length, 0);
         this.timeDurations = timeDurations;
         this.timeUnit = timeUnit;
     }
@@ -43,6 +49,7 @@ public class HDF5TimeDurationMDArray
      */
     public HDF5TimeDurationMDArray(long[] timeDurations, int[] dimensions, HDF5TimeUnit timeUnit)
     {
+        super(dimensions, timeDurations.length, 0);
         this.timeDurations = new MDLongArray(timeDurations, dimensions, true);
         this.timeUnit = timeUnit;
     }
@@ -53,6 +60,7 @@ public class HDF5TimeDurationMDArray
     public HDF5TimeDurationMDArray(HDF5TimeDuration[] timeDurations, int[] dimensions,
             HDF5TimeUnit timeUnit)
     {
+        super(dimensions, timeDurations.length, 0);
         HDF5TimeUnit smallestTimeUnit = getSmallestUnit(timeDurations);
         final long[] durations = new long[timeDurations.length];
         if (timeUnit != smallestTimeUnit)
@@ -77,6 +85,7 @@ public class HDF5TimeDurationMDArray
      */
     public HDF5TimeDurationMDArray(HDF5TimeDuration[] timeDurations, int[] dimensions)
     {
+        super(dimensions, timeDurations.length, 0);
         HDF5TimeUnit smallestTimeUnit = getSmallestUnit(timeDurations);
         final long[] durations = new long[timeDurations.length];
         for (int i = 0; i < timeDurations.length; ++i)
@@ -113,19 +122,30 @@ public class HDF5TimeDurationMDArray
     }
 
     /**
-     * Returns the time duration values.
+     * Returns the time duration values as a flat array.
      */
-    public MDLongArray getValues()
+    @Override
+    public long[] getAsFlatArray()
     {
-        return timeDurations;
+        return timeDurations.getAsFlatArray();
     }
 
     /**
      * Returns the number of elements.
      */
-    public int[] getDimensions()
+    @Override
+    public int[] dimensions()
     {
         return timeDurations.dimensions();
+    }
+
+    /**
+     * Returns the number of elements.
+     */
+    @Override
+    public long[] longDimensions()
+    {
+        return timeDurations.longDimensions();
     }
 
     /**
@@ -155,43 +175,11 @@ public class HDF5TimeDurationMDArray
     }
 
     /**
-     * Returns the value of array at the position defined by <var>indices</var>.
+     * Returns the time duration values as a flat array in the given <var>targetUnit</var>.
      */
-    public HDF5TimeDuration get(int... indices)
+    public long[] getAsFlatArray(HDF5TimeUnit targetUnit)
     {
-        return new HDF5TimeDuration(timeDurations.get(indices), timeUnit);
-    }
-
-    /**
-     * Returns the value of a one-dimensional array at the position defined by <var>index</var>.
-     * <p>
-     * <b>Do not call for arrays other than one-dimensional!</b>
-     */
-    public HDF5TimeDuration get(int index)
-    {
-        return new HDF5TimeDuration(timeDurations.get(index), timeUnit);
-    }
-
-    /**
-     * Returns the value of a two-dimensional array at the position defined by <var>indexX</var> and
-     * <var>indexY</var>.
-     * <p>
-     * <b>Do not call for arrays other than two-dimensional!</b>
-     */
-    public HDF5TimeDuration get(int indexX, int indexY)
-    {
-        return new HDF5TimeDuration(timeDurations.get(indexX, indexY), timeUnit);
-    }
-
-    /**
-     * Returns the value of a three-dimensional array at the position defined by <var>indexX</var>,
-     * <var>indexY</var> and <var>indexZ</var>.
-     * <p>
-     * <b>Do not call for arrays other than three-dimensional!</b>
-     */
-    public HDF5TimeDuration get(int indexX, int indexY, int indexZ)
-    {
-        return new HDF5TimeDuration(timeDurations.get(indexX, indexY, indexZ), timeUnit);
+        return getValues(targetUnit).getAsFlatArray();
     }
 
     /**
@@ -389,4 +377,185 @@ public class HDF5TimeDurationMDArray
         return "HDF5TimeDurationArray [timeDurations=" + timeDurations.toString() + ", timeUnit="
                 + timeUnit + "]";
     }
+
+    @Override
+    public Long getAsObject(int linearIndex)
+    {
+        return timeDurations.getAsObject(linearIndex);
+    }
+
+    @Override
+    public Long getAsObject(int... indices)
+    {
+        return timeDurations.getAsObject(indices);
+    }
+
+    @Override
+    public void setToObject(Long value, int... indices)
+    {
+        timeDurations.setToObject(value, indices);
+    }
+
+    @Override
+    public void setToObject(Long value, int linearIndex)
+    {
+        timeDurations.setToObject(value, linearIndex);
+    }
+
+    @Override
+    public long[] getCopyAsFlatArray()
+    {
+        return timeDurations.getCopyAsFlatArray();
+    }
+
+    @Override
+    protected void adaptCapacityHyperRows()
+    {
+        // Noop
+    }
+
+    @Override
+    public int capacity()
+    {
+        return timeDurations.capacity();
+    }
+
+    @Override
+    public int incNumberOfHyperRows(int count)
+    {
+        return timeDurations.incNumberOfHyperRows(count);
+    }
+
+    @Override
+    public int rank()
+    {
+        return timeDurations.rank();
+    }
+
+    @Override
+    public int size(int dim)
+    {
+        return timeDurations.size(dim);
+    }
+
+    @Override
+    public int size()
+    {
+        return timeDurations.size();
+    }
+
+    @Override
+    public int numberOfHyperRows()
+    {
+        return timeDurations.numberOfHyperRows();
+    }
+
+    @Override
+    public int decNumberOfHyperRows(int count)
+    {
+        return timeDurations.decNumberOfHyperRows(count);
+    }
+
+    @Override
+    public int computeIndex(int... indices)
+    {
+        return timeDurations.computeIndex(indices);
+    }
+
+    @Override
+    public int[] computeReverseIndex(int linearIndex)
+    {
+        return timeDurations.computeReverseIndex(linearIndex);
+    }
+
+    @Override
+    public int computeIndex(int indexX, int indexY)
+    {
+        return timeDurations.computeIndex(indexX, indexY);
+    }
+
+    @Override
+    public int computeIndex(int indexX, int indexY, int indexZ)
+    {
+        return timeDurations.computeIndex(indexX, indexY, indexZ);
+    }
+
+    @Override
+    public Iterator<ch.systemsx.cisd.base.mdarray.MDAbstractArray<Long>.ArrayEntry> iterator()
+    {
+        return timeDurations.iterator();
+    }
+
+    /**
+     * @see MDLongArray#get(int)
+     */
+    public long get(int index)
+    {
+        return timeDurations.get(index);
+    }
+
+    /**
+     * @see MDLongArray#get(int, int)
+     */
+    public long get(int indexX, int indexY)
+    {
+        return timeDurations.get(indexX, indexY);
+    }
+
+    /**
+     * @see MDLongArray#get(int, int, int)
+     */
+    public long get(int indexX, int indexY, int indexZ)
+    {
+        return timeDurations.get(indexX, indexY, indexZ);
+    }
+
+    /**
+     * @see MDLongArray#get(int[])
+     */
+    public long get(int... indices)
+    {
+        return timeDurations.get(indices);
+    }
+
+    /**
+     * @see MDLongArray#set(long, int)
+     */
+    public void set(long value, int index)
+    {
+        timeDurations.set(value, index);
+    }
+
+    /**
+     * @see MDLongArray#set(long, int, int)
+     */
+    public void set(long value, int indexX, int indexY)
+    {
+        timeDurations.set(value, indexX, indexY);
+    }
+
+    /**
+     * @see MDLongArray#set(long, int, int, int)
+     */
+    public void set(long value, int indexX, int indexY, int indexZ)
+    {
+        timeDurations.set(value, indexX, indexY, indexZ);
+    }
+
+    /**
+     * @see MDLongArray#set(long, int[])
+     */
+    public void set(long value, int... indices)
+    {
+        timeDurations.set(value, indices);
+    }
+
+    /**
+     * @see MDLongArray#toMatrix()
+     */
+    public long[][] toMatrix()
+    {
+        return timeDurations.toMatrix();
+    }
+
 }

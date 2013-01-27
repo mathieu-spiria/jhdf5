@@ -120,7 +120,8 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
     }
 
     @Override
-    public HDF5TimeDurationMDArray getMDArrayAttr(final String objectPath, final String attributeName)
+    public HDF5TimeDurationMDArray getMDArrayAttr(final String objectPath,
+            final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -346,6 +347,75 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
     }
 
     @Override
+    public HDF5TimeDurationMDArray readMDArray(final String objectPath)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5TimeDurationMDArray> readCallable =
+                new ICallableWithCleanUp<HDF5TimeDurationMDArray>()
+                    {
+                        @Override
+                        public HDF5TimeDurationMDArray call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final HDF5TimeUnit storedUnit =
+                                    baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
+                            return new HDF5TimeDurationMDArray(longReader.readLongMDArray(
+                                    dataSetId, registry), storedUnit);
+                        }
+                    };
+        return baseReader.runner.call(readCallable);
+    }
+
+    @Override
+    public HDF5TimeDurationMDArray readMDArrayBlock(final String objectPath,
+            final int[] blockDimensions, final long[] blockNumber)
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
+    @Override
+    public HDF5TimeDurationMDArray readMDArrayBlockWithOffset(final String objectPath,
+            final int[] blockDimensions, final long[] offset)
+    {
+        assert objectPath != null;
+        assert blockDimensions != null;
+        assert offset != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<HDF5TimeDurationMDArray> readCallable =
+                new ICallableWithCleanUp<HDF5TimeDurationMDArray>()
+                    {
+                        @Override
+                        public HDF5TimeDurationMDArray call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final HDF5TimeUnit storedUnit =
+                                    baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, offset,
+                                            blockDimensions, registry);
+                            final long[] dataBlock = new long[spaceParams.blockSize];
+                            baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64,
+                                    spaceParams.memorySpaceId, spaceParams.dataSpaceId, dataBlock);
+                            return new HDF5TimeDurationMDArray(new MDLongArray(dataBlock,
+                                    blockDimensions), storedUnit);
+                        }
+                    };
+        return baseReader.runner.call(readCallable);
+    }
+
+    @Override
     public Iterable<HDF5DataBlock<HDF5TimeDurationArray>> getArrayNaturalBlocks(
             final String objectPath) throws HDF5JavaException
     {
@@ -420,6 +490,51 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                                                 index.getBlockSize(), offset, timeUnit);
                                 return new HDF5DataBlock<long[]>(block, index.getAndIncIndex(),
                                         offset);
+                            }
+
+                            @Override
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
+    }
+
+    @Override
+    public Iterable<HDF5MDDataBlock<HDF5TimeDurationMDArray>> getMDArrayNaturalBlocks(
+            final String dataSetPath)
+    {
+        baseReader.checkOpen();
+        final HDF5NaturalBlockMDParameters params =
+                new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(dataSetPath));
+
+        return new Iterable<HDF5MDDataBlock<HDF5TimeDurationMDArray>>()
+            {
+                @Override
+                public Iterator<HDF5MDDataBlock<HDF5TimeDurationMDArray>> iterator()
+                {
+                    return new Iterator<HDF5MDDataBlock<HDF5TimeDurationMDArray>>()
+                        {
+                            final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
+                                    params.getNaturalBlockIndex();
+
+                            @Override
+                            public boolean hasNext()
+                            {
+                                return index.hasNext();
+                            }
+
+                            @Override
+                            public HDF5MDDataBlock<HDF5TimeDurationMDArray> next()
+                            {
+                                final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
+                                final HDF5TimeDurationMDArray data =
+                                        readMDArrayBlockWithOffset(dataSetPath,
+                                                index.getBlockSize(), offset);
+                                return new HDF5MDDataBlock<HDF5TimeDurationMDArray>(data,
+                                        index.getIndexClone(), offset);
                             }
 
                             @Override

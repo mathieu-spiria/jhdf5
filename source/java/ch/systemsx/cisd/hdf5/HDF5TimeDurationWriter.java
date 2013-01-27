@@ -16,12 +16,15 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
@@ -367,6 +370,212 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
             final HDF5TimeDuration[] data, final int dataSize, final long offset)
     {
         writeArrayBlockWithOffset(objectPath, HDF5TimeDurationArray.create(data), dataSize, offset);
+    }
+
+    @Override
+    public void writeMDArray(final String objectPath, final HDF5TimeDurationMDArray data,
+            final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseWriter.getOrCreateDataSetId(objectPath,
+                                    features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE,
+                                    data.longDimensions(), 8, features, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            data.getAsFlatArray());
+                    baseWriter.setTypeVariant(dataSetId, data.timeUnit.getTypeVariant(),
+                            registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    @Override
+    public void writeMDArray(final String objectPath, final HDF5TimeDurationMDArray data)
+    {
+        writeMDArray(objectPath, data, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+    }
+    
+    @Override
+    public void createMDArray(final String objectPath, final int[] dimensions, final HDF5TimeUnit timeUnit)
+    {
+        createMDArray(objectPath, dimensions, timeUnit, INT_NO_COMPRESSION);
+    }
+
+    @Override
+    public void createMDArray(final String objectPath, final long[] dimensions,
+            final int[] blockDimensions, final HDF5TimeUnit timeUnit)
+    {
+        createMDArray(objectPath, dimensions, blockDimensions, timeUnit, INT_NO_COMPRESSION);
+    }
+
+    @Override
+    public void createMDArray(final String objectPath, final int[] dimensions,
+            final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert dimensions != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId;
+                    if (features.requiresChunking())
+                    {
+                        final long[] nullDimensions = new long[dimensions.length];
+                        dataSetId =
+                                baseWriter.createDataSet(objectPath,
+                                        features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE,
+                                        features, nullDimensions, MDArray.toLong(dimensions), 8,
+                                        registry);
+                    } else
+                    {
+                        dataSetId =
+                                baseWriter.createDataSet(objectPath,
+                                        features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE,
+                                        features, MDArray.toLong(dimensions), null, 8, registry);
+                    }
+                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(),
+                            registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
+    @Override
+    public void createMDArray(final String objectPath, final long[] dimensions,
+            final int[] blockDimensions, final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert dimensions != null;
+        assert blockDimensions != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseWriter.createDataSet(objectPath,
+                                    features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE, features,
+                                    dimensions, MDArray.toLong(blockDimensions), 8, registry);
+                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(),
+                            registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
+    @Override
+    public void writeMDArrayBlock(final String objectPath, final HDF5TimeDurationMDArray data,
+            final long[] blockNumber)
+    {
+        assert blockNumber != null;
+
+        final long[] dimensions = data.longDimensions();
+        final long[] offset = new long[dimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * dimensions[i];
+        }
+        writeMDArrayBlockWithOffset(objectPath, data, offset);
+    }
+
+    @Override
+    public void writeMDArrayBlockWithOffset(final String objectPath, final HDF5TimeDurationMDArray data,
+            final long[] offset)
+    {
+        assert objectPath != null;
+        assert data != null;
+        assert offset != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] dimensions = data.longDimensions();
+                    assert dimensions.length == offset.length;
+                    final long[] dataSetDimensions = new long[dimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        dataSetDimensions[i] = offset[i] + dimensions[i];
+                    }
+                    final int dataSetId =
+                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
+                    final HDF5TimeUnit storedUnit =
+                            baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
+                    final int dataSpaceId =
+                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
+                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
+                    final int memorySpaceId =
+                            baseWriter.h5.createSimpleDataSpace(dimensions, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data.getAsFlatArray(storedUnit));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    @Override
+    public void writeMDArrayBlockWithOffset(final String objectPath, final HDF5TimeDurationMDArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
+    {
+        assert objectPath != null;
+        assert data != null;
+        assert offset != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    assert memoryDimensions.length == offset.length;
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    assert longBlockDimensions.length == offset.length;
+                    final long[] dataSetDimensions = new long[blockDimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        dataSetDimensions[i] = offset[i] + blockDimensions[i];
+                    }
+                    final int dataSetId =
+                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
+                    final int dataSpaceId =
+                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
+                    final HDF5TimeUnit storedUnit =
+                            baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
+                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final int memorySpaceId =
+                            baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
+                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                            data.getAsFlatArray(storedUnit));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
     }
 
 }

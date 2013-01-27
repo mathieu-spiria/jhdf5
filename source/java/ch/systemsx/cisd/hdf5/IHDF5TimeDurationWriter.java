@@ -241,4 +241,29 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
     public void writeArrayBlockWithOffset(final String objectPath,
             final HDF5TimeDurationArray data, final int dataSize, final long offset);
 
+    public void writeMDArray(final String objectPath, final HDF5TimeDurationMDArray data,
+            final HDF5IntStorageFeatures features);
+    
+    public void writeMDArray(final String objectPath, final HDF5TimeDurationMDArray data);
+    
+    public void createMDArray(final String objectPath, final int[] dimensions, final HDF5TimeUnit timeUnit);
+    
+    public void createMDArray(final String objectPath, final long[] dimensions,
+            final int[] blockDimensions, final HDF5TimeUnit timeUnit);
+    
+    public void createMDArray(final String objectPath, final int[] dimensions,
+            final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features);
+
+    public void createMDArray(final String objectPath, final long[] dimensions,
+            final int[] blockDimensions, final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features);
+    
+    public void writeMDArrayBlock(final String objectPath, final HDF5TimeDurationMDArray data,
+            final long[] blockNumber);
+    
+    public void writeMDArrayBlockWithOffset(final String objectPath, final HDF5TimeDurationMDArray data,
+            final long[] offset);
+    
+    public void writeMDArrayBlockWithOffset(final String objectPath, final HDF5TimeDurationMDArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset);
+    
 }

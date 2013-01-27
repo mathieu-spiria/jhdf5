@@ -199,5 +199,16 @@ public interface IHDF5TimeDurationReader
      */
     public Iterable<HDF5DataBlock<HDF5TimeDurationArray>> getArrayNaturalBlocks(
             final String objectPath) throws HDF5JavaException;
+    
+    public HDF5TimeDurationMDArray readMDArray(final String objectPath);
+    
+    public HDF5TimeDurationMDArray readMDArrayBlock(final String objectPath,
+            final int[] blockDimensions, final long[] blockNumber);
+    
+    public HDF5TimeDurationMDArray readMDArrayBlockWithOffset(final String objectPath,
+            final int[] blockDimensions, final long[] offset);
+
+    public Iterable<HDF5MDDataBlock<HDF5TimeDurationMDArray>> getMDArrayNaturalBlocks(
+            final String dataSetPath);
 
 }

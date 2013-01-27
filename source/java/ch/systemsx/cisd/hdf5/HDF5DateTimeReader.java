@@ -261,6 +261,80 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
     }
 
     @Override
+    public Date readDate(final String objectPath) throws HDF5JavaException
+    {
+        return new Date(readTimeStamp(objectPath));
+    }
+
+    @Override
+    public Date[] readDateArray(final String objectPath) throws HDF5JavaException
+    {
+        final long[] timeStampArray = readTimeStampArray(objectPath);
+        return timeStampsToDates(timeStampArray);
+    }
+
+    @Override
+    public MDLongArray readTimeStampMDArray(final String objectPath)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDLongArray> readCallable = new ICallableWithCleanUp<MDLongArray>()
+            {
+                @Override
+                public MDLongArray call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    baseReader.checkIsTimeStamp(objectPath, dataSetId, registry);
+                    return longReader.readLongMDArray(dataSetId, registry);
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+
+    @Override
+    public MDLongArray readTimeStampMDArrayBlock(final String objectPath, final int[] blockDimensions,
+            final long[] blockNumber)
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readTimeStampMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
+    @Override
+    public MDLongArray readTimeStampMDArrayBlockWithOffset(final String objectPath,
+            final int[] blockDimensions, final long[] offset)
+    {
+        assert objectPath != null;
+        assert blockDimensions != null;
+        assert offset != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDLongArray> readCallable = new ICallableWithCleanUp<MDLongArray>()
+            {
+                @Override
+                public MDLongArray call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId = 
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    baseReader.checkIsTimeStamp(objectPath, dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getSpaceParameters(dataSetId, offset, blockDimensions, 
+                                    registry);
+                    final long[] dataBlock = new long[spaceParams.blockSize];
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, dataBlock);
+                    return new MDLongArray(dataBlock, blockDimensions);
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+    
+    @Override
     public Iterable<HDF5DataBlock<long[]>> getTimeStampArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
@@ -305,16 +379,47 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
     }
 
     @Override
-    public Date readDate(final String objectPath) throws HDF5JavaException
+    public Iterable<HDF5MDDataBlock<MDLongArray>> getTimeStampMDArrayNaturalBlocks(final String dataSetPath)
     {
-        return new Date(readTimeStamp(objectPath));
-    }
+        baseReader.checkOpen();
+        final HDF5NaturalBlockMDParameters params =
+                new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(dataSetPath));
 
-    @Override
-    public Date[] readDateArray(final String objectPath) throws HDF5JavaException
-    {
-        final long[] timeStampArray = readTimeStampArray(objectPath);
-        return timeStampsToDates(timeStampArray);
+        return new Iterable<HDF5MDDataBlock<MDLongArray>>()
+            {
+                @Override
+                public Iterator<HDF5MDDataBlock<MDLongArray>> iterator()
+                {
+                    return new Iterator<HDF5MDDataBlock<MDLongArray>>()
+                        {
+                            final HDF5NaturalBlockMDParameters.HDF5NaturalBlockMDIndex index =
+                                    params.getNaturalBlockIndex();
+
+                            @Override
+                            public boolean hasNext()
+                            {
+                                return index.hasNext();
+                            }
+
+                            @Override
+                            public HDF5MDDataBlock<MDLongArray> next()
+                            {
+                                final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
+                                final MDLongArray data =
+                                        readTimeStampMDArrayBlockWithOffset(dataSetPath, index
+                                                .getBlockSize(), offset);
+                                return new HDF5MDDataBlock<MDLongArray>(data, index
+                                        .getIndexClone(), offset);
+                            }
+
+                            @Override
+                            public void remove()
+                            {
+                                throw new UnsupportedOperationException();
+                            }
+                        };
+                }
+            };
     }
 
     private static Date[] timeStampsToDates(final long[] timeStampArray)
