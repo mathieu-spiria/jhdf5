@@ -14,6 +14,7 @@ while [ -n "${LINK}" ]; do
   else
     SCRIPT="${LINK}"
   fi
+  BINDIR="${SCRIPT%/*}"
   LINK="`readlink ${SCRIPT}`"
 done
 BINDIR="${SCRIPT%/*}"
