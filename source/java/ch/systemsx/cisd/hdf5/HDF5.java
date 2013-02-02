@@ -761,7 +761,7 @@ class HDF5
         return dataSetId;
     }
 
-    private boolean isReference(String path)
+    boolean isReference(String path)
     {
         return autoDereference && (path.charAt(0) == '\0');
     }

@@ -23,10 +23,13 @@ import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.convert.NativeData;
+import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.H5RI;
 
 /**
  * The implementation of {@link IHDF5StringReader}.
@@ -176,8 +179,7 @@ public class HDF5StringReader implements IHDF5StringReader
                 @Override
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
-                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final int dataSetId = openDataSetSavely(objectPath, registry);
                     final int dataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
@@ -199,6 +201,25 @@ public class HDF5StringReader implements IHDF5StringReader
                         baseReader.h5.readDataSetNonNumeric(dataSetId, dataTypeId, data);
                         return readRaw ? StringUtils.fromBytes(data, encoding) : StringUtils
                                 .fromBytes0Term(data, encoding);
+                    }
+                }
+
+                /** 
+                 * This is a workaround against a crash bug in HDF5 1.8 when the dataset name contains 
+                 * a NULL character. It is very hard to reproduce but we found it striking in long-running
+                 * server applications. 
+                 */
+                private int openDataSetSavely(final String datasetPath, ICleanUpRegistry registry)
+                {
+                    if (baseReader.h5.isReference(datasetPath) == false && datasetPath.contains("\0"))
+                    {
+                        final long reference =
+                                NativeData.byteToLong(baseReader.h5.createObjectReference(
+                                        baseReader.fileId, datasetPath), ByteOrder.NATIVE)[0];
+                        return H5RI.H5Rdereference(baseReader.fileId, reference);
+                    } else
+                    {
+                        return baseReader.h5.openDataSet(baseReader.fileId, datasetPath, registry);
                     }
                 }
             };
