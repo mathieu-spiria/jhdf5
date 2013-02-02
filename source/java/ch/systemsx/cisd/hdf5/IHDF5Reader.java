@@ -133,6 +133,11 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
     public String toHouseKeepingPath(final String objectPath);
     
     /**
+     * Returns <code>true</code> if <var>objectPath</var> denotes an internal (house-keeping) object.
+     */
+    public boolean isHouseKeepingObject(final String objectPath);
+    
+    /**
      * Returns <code>true</code> if the <var>objectPath</var> exists and represents a group and
      * <code>false</code> otherwise. Note that if <var>followLink</var> is <code>false</code> this
      * method will return <code>false</code> if <var>objectPath</var> is a symbolic link that points

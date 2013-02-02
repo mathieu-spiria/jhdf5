@@ -417,12 +417,29 @@ final class HDF5Utils
 
     /**
      * Returns <code>true</code>, if <var>name</var> denotes an internal name used by the library
-     * for house-keeping, given the <var>suffix</var>.
+     * for house-keeping, given the <var>houseKeepingNameSuffix</var>.
      */
     static boolean isInternalName(String name, String houseKeepingNameSuffix)
     {
         return "".equals(houseKeepingNameSuffix) ? isInternalName(name) : name
                 .endsWith(houseKeepingNameSuffix);
+    }
+
+    /**
+     * Returns <code>true</code> if the given <var>name</var> is an internal name.
+     */
+    static boolean isInternalName(final String name, final String houseKeepingNameSuffix,
+            final boolean filterRootAttributes)
+    {
+        if (filterRootAttributes)
+        {
+            return isInternalName(name, houseKeepingNameSuffix)
+                    || HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME.equals(name)
+                    || HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME.equals(name);
+        } else
+        {
+            return isInternalName(name, houseKeepingNameSuffix);
+        }
     }
 
     /**
@@ -456,27 +473,12 @@ final class HDF5Utils
     static List<String> removeInternalNames(final List<String> names,
             final String houseKeepingNameSuffix, final boolean filterRootAttributes)
     {
-        if (filterRootAttributes)
+        for (Iterator<String> iterator = names.iterator(); iterator.hasNext(); /**/)
         {
-            for (Iterator<String> iterator = names.iterator(); iterator.hasNext(); /**/)
+            final String memberName = iterator.next();
+            if (isInternalName(memberName, houseKeepingNameSuffix, filterRootAttributes))
             {
-                final String memberName = iterator.next();
-                if (isInternalName(memberName, houseKeepingNameSuffix)
-                        || HOUSEKEEPING_NAME_SUFFIX_ATTRIBUTE_NAME.equals(memberName)
-                        || HOUSEKEEPING_NAME_SUFFIX_STRINGLENGTH_ATTRIBUTE_NAME.equals(memberName))
-                {
-                    iterator.remove();
-                }
-            }
-        } else
-        {
-            for (Iterator<String> iterator = names.iterator(); iterator.hasNext(); /**/)
-            {
-                final String memberName = iterator.next();
-                if (isInternalName(memberName, houseKeepingNameSuffix))
-                {
-                    iterator.remove();
-                }
+                iterator.remove();
             }
         }
         return names;

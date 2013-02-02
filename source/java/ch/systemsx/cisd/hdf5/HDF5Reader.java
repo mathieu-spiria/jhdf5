@@ -239,6 +239,12 @@ class HDF5Reader implements IHDF5Reader
     }
 
     @Override
+    public boolean isHouseKeepingObject(String objectPath)
+    {
+        return HDF5Utils.isInternalName(objectPath, baseReader.houseKeepingNameSuffix);
+    }
+
+    @Override
     public boolean isGroup(final String objectPath, boolean followLink)
     {
         return HDF5ObjectType.isGroup(getObjectType(objectPath, followLink));
