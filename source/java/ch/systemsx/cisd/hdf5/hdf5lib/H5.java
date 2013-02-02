@@ -31,15 +31,14 @@ class H5
     /** Expected minor number of the library. */
     private final static int expectedMinnum = 8;
 
-    /** Expected release number of the library. */
+    /** Expected minimal release number of the library. */
     private final static int expectedRelnum = 8;
 
     static
     {
         if (NativeLibraryUtilities.loadNativeLibrary("jhdf5") == false)
         {
-            System.err.println("No suitable HDF5 native library found for this platform.");
-            System.exit(1);
+            throw new UnsupportedOperationException("No suitable HDF5 native library found for this platform.");
         }
 
         // Important! Exit quietly
