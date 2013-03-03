@@ -175,7 +175,7 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void createLongArray(final String objectPath, final long size, final int blockSize)
+    public void createObjectReferenceArray(final String objectPath, final long size, final int blockSize)
     {
         createObjectReferenceArray(objectPath, size, blockSize, INT_NO_COMPRESSION);
     }

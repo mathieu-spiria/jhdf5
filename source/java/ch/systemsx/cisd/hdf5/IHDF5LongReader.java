@@ -39,7 +39,7 @@ public interface IHDF5LongReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public long getLongAttribute(final String objectPath, final String attributeName);
+    public long getAttr(final String objectPath, final String attributeName);
 
     /**
      * Reads a <code>long[]</code> attribute named <var>attributeName</var> from the data set
@@ -49,7 +49,7 @@ public interface IHDF5LongReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public long[] getLongArrayAttribute(final String objectPath, final String attributeName);
+    public long[] getArrayAttr(final String objectPath, final String attributeName);
 
     /**
      * Reads a multi-dimensional array <code>long</code> attribute named <var>attributeName</var>
@@ -59,7 +59,7 @@ public interface IHDF5LongReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute array value read from the data set.
      */
-    public MDLongArray getLongMDArrayAttribute(final String objectPath,
+    public MDLongArray getMDArrayAttr(final String objectPath,
             final String attributeName);
 
     /**
@@ -70,7 +70,7 @@ public interface IHDF5LongReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute matrix value read from the data set.
      */
-    public long[][] getLongMatrixAttribute(final String objectPath, final String attributeName)
+    public long[][] getMatrixAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException;
 
     // /////////////////////
@@ -84,7 +84,7 @@ public interface IHDF5LongReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The value read from the data set.
      */
-    public long readLong(final String objectPath);
+    public long read(final String objectPath);
 
     /**
      * Reads a <code>long</code> array (of rank 1) from the data set <var>objectPath</var>.
@@ -92,7 +92,7 @@ public interface IHDF5LongReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public long[] readLongArray(final String objectPath);
+    public long[] readArray(final String objectPath);
 
     /**
      * Reads a multi-dimensional <code>long</code> array data set <var>objectPath</var>
@@ -103,7 +103,7 @@ public interface IHDF5LongReader
      * @param memoryOffset The offset in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public int[] readToLongMDArrayWithOffset(final String objectPath, 
+    public int[] readToMDArrayWithOffset(final String objectPath, 
     				final MDLongArray array, final int[] memoryOffset);
 
     /**
@@ -117,7 +117,7 @@ public interface IHDF5LongReader
      * @param memoryOffset The offset of the block in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public int[] readToLongMDArrayBlockWithOffset(final String objectPath,
+    public int[] readToMDArrayBlockWithOffset(final String objectPath,
             final MDLongArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset);
 
@@ -133,7 +133,7 @@ public interface IHDF5LongReader
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
      */
-    public long[] readLongArrayBlock(final String objectPath, final int blockSize,
+    public long[] readArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber);
 
     /**
@@ -146,7 +146,7 @@ public interface IHDF5LongReader
      * @param offset The offset of the block in the data set to start reading from (starting with 0).
      * @return The data block read from the data set.
      */
-    public long[] readLongArrayBlockWithOffset(final String objectPath, final int blockSize,
+    public long[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset);
 
     /**
@@ -158,7 +158,7 @@ public interface IHDF5LongReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public long[][] readLongMatrix(final String objectPath) throws HDF5JavaException;
+    public long[][] readMatrix(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a <code>long</code> matrix (array of arrays) from the data set
@@ -175,7 +175,7 @@ public interface IHDF5LongReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public long[][] readLongMatrixBlock(final String objectPath, final int blockSizeX,
+    public long[][] readMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException;
 
@@ -192,7 +192,7 @@ public interface IHDF5LongReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public long[][] readLongMatrixBlockWithOffset(final String objectPath, 
+    public long[][] readMatrixBlockWithOffset(final String objectPath, 
     				final int blockSizeX, final int blockSizeY, final long offsetX, final long offsetY) 
     				throws HDF5JavaException;
 
@@ -203,7 +203,7 @@ public interface IHDF5LongReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public MDLongArray readLongMDArray(final String objectPath);
+    public MDLongArray readMDArray(final String objectPath);
 
     /**
      * Reads a multi-dimensional <code>long</code> array from the data set 
@@ -215,7 +215,7 @@ public interface IHDF5LongReader
      *            <var>blockDimensions</var> in the according dimension).
      * @return The data block read from the data set.
      */
-    public MDLongArray readLongMDArrayBlock(final String objectPath,
+    public MDLongArray readMDArrayBlock(final String objectPath,
     				final int[] blockDimensions, final long[] blockNumber);
 
     /**
@@ -227,7 +227,7 @@ public interface IHDF5LongReader
      * @param offset The offset in the data set to start reading from in each dimension.
      * @return The data block read from the data set.
      */
-    public MDLongArray readLongMDArrayBlockWithOffset(final String objectPath,
+    public MDLongArray readMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset);
     
     /**
@@ -236,7 +236,7 @@ public interface IHDF5LongReader
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
-    public Iterable<HDF5DataBlock<long[]>> getLongArrayNaturalBlocks(
+    public Iterable<HDF5DataBlock<long[]>> getArrayNaturalBlocks(
     									final String dataSetPath)
             throws HDF5JavaException;
 
@@ -245,6 +245,6 @@ public interface IHDF5LongReader
      * 
      * @see HDF5MDDataBlock
      */
-    public Iterable<HDF5MDDataBlock<MDLongArray>> getLongMDArrayNaturalBlocks(
+    public Iterable<HDF5MDDataBlock<MDLongArray>> getMDArrayNaturalBlocks(
     									final String dataSetPath);
 }

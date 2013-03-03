@@ -52,7 +52,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     // /////////////////////
 
     @Override
-    public byte getByteAttribute(final String objectPath, final String attributeName)
+    public byte getAttr(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -77,7 +77,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public byte[] getByteArrayAttribute(final String objectPath, final String attributeName)
+    public byte[] getArrayAttr(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -99,7 +99,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public MDByteArray getByteMDArrayAttribute(final String objectPath,
+    public MDByteArray getMDArrayAttr(final String objectPath,
             final String attributeName)
     {
         assert objectPath != null;
@@ -122,10 +122,10 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public byte[][] getByteMatrixAttribute(final String objectPath, final String attributeName)
+    public byte[][] getMatrixAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
-        final MDByteArray array = getByteMDArrayAttribute(objectPath, attributeName);
+        final MDByteArray array = getMDArrayAttr(objectPath, attributeName);
         if (array.rank() != 2)
         {
             throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
@@ -139,7 +139,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     // /////////////////////
 
     @Override
-    public byte readByte(final String objectPath)
+    public byte read(final String objectPath)
     {
         assert objectPath != null;
 
@@ -160,7 +160,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public byte[] readByteArray(final String objectPath)
+    public byte[] readArray(final String objectPath)
     {
         assert objectPath != null;
 
@@ -217,7 +217,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public int[] readToByteMDArrayWithOffset(final String objectPath, final MDByteArray array,
+    public int[] readToMDArrayWithOffset(final String objectPath, final MDByteArray array,
             final int[] memoryOffset)
     {
         assert objectPath != null;
@@ -245,7 +245,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public int[] readToByteMDArrayBlockWithOffset(final String objectPath,
+    public int[] readToMDArrayBlockWithOffset(final String objectPath,
             final MDByteArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
     {
@@ -274,14 +274,14 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public byte[] readByteArrayBlock(final String objectPath, final int blockSize,
+    public byte[] readArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
-        return readByteArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
+        return readArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
     @Override
-    public byte[] readByteArrayBlockWithOffset(final String objectPath, final int blockSize,
+    public byte[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset)
     {
         assert objectPath != null;
@@ -306,9 +306,9 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public byte[][] readByteMatrix(final String objectPath) throws HDF5JavaException
+    public byte[][] readMatrix(final String objectPath) throws HDF5JavaException
     {
-        final MDByteArray array = readByteMDArray(objectPath);
+        final MDByteArray array = readMDArray(objectPath);
         if (array.rank() != 2)
         {
             throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
@@ -318,11 +318,11 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public byte[][] readByteMatrixBlock(final String objectPath, final int blockSizeX,
+    public byte[][] readMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException
     {
-        final MDByteArray array = readByteMDArrayBlock(objectPath, new int[]
+        final MDByteArray array = readMDArrayBlock(objectPath, new int[]
             { blockSizeX, blockSizeY }, new long[]
             { blockNumberX, blockNumberY });
         if (array.rank() != 2)
@@ -334,10 +334,10 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public byte[][] readByteMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
+    public byte[][] readMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
-        final MDByteArray array = readByteMDArrayBlockWithOffset(objectPath, new int[]
+        final MDByteArray array = readMDArrayBlockWithOffset(objectPath, new int[]
             { blockSizeX, blockSizeY }, new long[]
             { offsetX, offsetY });
         if (array.rank() != 2)
@@ -349,7 +349,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public MDByteArray readByteMDArray(final String objectPath)
+    public MDByteArray readMDArray(final String objectPath)
     {
         assert objectPath != null;
 
@@ -367,7 +367,7 @@ class HDF5ByteReader implements IHDF5ByteReader
         return baseReader.runner.call(readCallable);
     }
 
-    private MDByteArray readByteMDArray(int dataSetId, ICleanUpRegistry registry)
+    MDByteArray readByteMDArray(int dataSetId, ICleanUpRegistry registry)
     {
         try
         {
@@ -406,7 +406,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public MDByteArray readByteMDArrayBlock(final String objectPath, final int[] blockDimensions,
+    public MDByteArray readMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
         final long[] offset = new long[blockDimensions.length];
@@ -414,11 +414,11 @@ class HDF5ByteReader implements IHDF5ByteReader
         {
             offset[i] = blockNumber[i] * blockDimensions[i];
         }
-        return readByteMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
-    public MDByteArray readByteMDArrayBlockWithOffset(final String objectPath,
+    public MDByteArray readMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
     {
         assert objectPath != null;
@@ -446,7 +446,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
     
     @Override
-    public Iterable<HDF5DataBlock<byte[]>> getByteArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5DataBlock<byte[]>> getArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
         baseReader.checkOpen();
@@ -474,7 +474,7 @@ class HDF5ByteReader implements IHDF5ByteReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final byte[] block =
-                                        readByteArrayBlockWithOffset(dataSetPath, index
+                                        readArrayBlockWithOffset(dataSetPath, index
                                                 .getBlockSize(), offset);
                                 return new HDF5DataBlock<byte[]>(block, index.getAndIncIndex(), 
                                         offset);
@@ -491,7 +491,7 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
-    public Iterable<HDF5MDDataBlock<MDByteArray>> getByteMDArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5MDDataBlock<MDByteArray>> getMDArrayNaturalBlocks(final String dataSetPath)
     {
         baseReader.checkOpen();
         final HDF5NaturalBlockMDParameters params =
@@ -518,7 +518,7 @@ class HDF5ByteReader implements IHDF5ByteReader
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
                                 final MDByteArray data =
-                                        readByteMDArrayBlockWithOffset(dataSetPath, index
+                                        readMDArrayBlockWithOffset(dataSetPath, index
                                                 .getBlockSize(), offset);
                                 return new HDF5MDDataBlock<MDByteArray>(data, index
                                         .getIndexClone(), offset);

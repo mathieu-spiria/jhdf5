@@ -18,59 +18,67 @@ package ch.systemsx.cisd.hdf5;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.systemsx.cisd.base.mdarray.MDByteArray;
+import ch.systemsx.cisd.base.mdarray.MDIntArray;
 
 /**
- * An interface that provides methods for reading <code>byte</code> values from HDF5 files.
+ * An interface that provides methods for reading <code>int</code> values from HDF5 files.
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5ByteReader
+public interface IHDF5IntBasicReader
 {
     // /////////////////////
     // Attributes
     // /////////////////////
 
     /**
-     * Reads a <code>byte</code> attribute named <var>attributeName</var> from the data set
+     * Reads a <code>int</code> attribute named <var>attributeName</var> from the data set
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public byte getAttr(final String objectPath, final String attributeName);
+    @Deprecated
+    public int getIntAttribute(final String objectPath, final String attributeName);
 
     /**
-     * Reads a <code>byte[]</code> attribute named <var>attributeName</var> from the data set
+     * Reads a <code>int[]</code> attribute named <var>attributeName</var> from the data set
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public byte[] getArrayAttr(final String objectPath, final String attributeName);
+    @Deprecated
+    public int[] getIntArrayAttribute(final String objectPath, final String attributeName);
 
     /**
-     * Reads a multi-dimensional array <code>byte</code> attribute named <var>attributeName</var>
+     * Reads a multi-dimensional array <code>int</code> attribute named <var>attributeName</var>
      * from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute array value read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public MDByteArray getMDArrayAttr(final String objectPath,
+    @Deprecated
+    public MDIntArray getIntMDArrayAttribute(final String objectPath,
             final String attributeName);
 
     /**
-     * Reads a <code>byte</code> matrix attribute named <var>attributeName</var>
+     * Reads a <code>int</code> matrix attribute named <var>attributeName</var>
      * from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param attributeName The name of the attribute to read.
      * @return The attribute matrix value read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public byte[][] getMatrixAttr(final String objectPath, final String attributeName)
+    @Deprecated
+    public int[][] getIntMatrixAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException;
 
     // /////////////////////
@@ -78,36 +86,38 @@ public interface IHDF5ByteReader
     // /////////////////////
 
     /**
-     * Reads a <code>byte</code> value from the data set <var>objectPath</var>. This method 
+     * Reads a <code>int</code> value from the data set <var>objectPath</var>. This method 
      * doesn't check the data space but simply reads the first value.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The value read from the data set.
      */
-    public byte read(final String objectPath);
+    public int readInt(final String objectPath);
 
     /**
-     * Reads a <code>byte</code> array (of rank 1) from the data set <var>objectPath</var>.
+     * Reads a <code>int</code> array (of rank 1) from the data set <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public byte[] readArray(final String objectPath);
+    public int[] readIntArray(final String objectPath);
 
     /**
-     * Reads a multi-dimensional <code>byte</code> array data set <var>objectPath</var>
+     * Reads a multi-dimensional <code>int</code> array data set <var>objectPath</var>
      * into a given <var>array</var> in memory.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param array The array to read the data into.
      * @param memoryOffset The offset in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public int[] readToMDArrayWithOffset(final String objectPath, 
-    				final MDByteArray array, final int[] memoryOffset);
+    @Deprecated
+    public int[] readToIntMDArrayWithOffset(final String objectPath, 
+    				final MDIntArray array, final int[] memoryOffset);
 
     /**
-     * Reads a block of the multi-dimensional <code>byte</code> array data set
+     * Reads a block of the multi-dimensional <code>int</code> array data set
      * <var>objectPath</var> into a given <var>array</var> in memory.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -116,41 +126,47 @@ public interface IHDF5ByteReader
      * @param offset The offset of the block in the data set.
      * @param memoryOffset The offset of the block in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public int[] readToMDArrayBlockWithOffset(final String objectPath,
-            final MDByteArray array, final int[] blockDimensions, final long[] offset,
+    @Deprecated
+    public int[] readToIntMDArrayBlockWithOffset(final String objectPath,
+            final MDIntArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset);
 
     /**
-     * Reads a block from a <code>byte</code> array (of rank 1) from the data set 
+     * Reads a block from a <code>int</code> array (of rank 1) from the data set 
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize The block size (this will be the length of the <code>byte[]</code> returned
+     * @param blockSize The block size (this will be the length of the <code>int[]</code> returned
      *            if the data set is long enough).
      * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
      *            <var>blockSize</var>).
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public byte[] readArrayBlock(final String objectPath, final int blockSize,
+    @Deprecated
+    public int[] readIntArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber);
 
     /**
-     * Reads a block from <code>byte</code> array (of rank 1) from the data set
+     * Reads a block from <code>int</code> array (of rank 1) from the data set
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param blockSize The block size (this will be the length of the <code>byte[]</code>
+     * @param blockSize The block size (this will be the length of the <code>int[]</code>
      *            returned).
      * @param offset The offset of the block in the data set to start reading from (starting with 0).
      * @return The data block read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public byte[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
+    @Deprecated
+    public int[] readIntArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset);
 
     /**
-     * Reads a <code>byte</code> matrix (array of arrays) from the data set
+     * Reads a <code>int</code> matrix (array of arrays) from the data set
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -158,10 +174,10 @@ public interface IHDF5ByteReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public byte[][] readMatrix(final String objectPath) throws HDF5JavaException;
+    public int[][] readIntMatrix(final String objectPath) throws HDF5JavaException;
 
     /**
-     * Reads a <code>byte</code> matrix (array of arrays) from the data set
+     * Reads a <code>int</code> matrix (array of arrays) from the data set
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -174,13 +190,15 @@ public interface IHDF5ByteReader
      * @return The data block read from the data set.
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
+    * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public byte[][] readMatrixBlock(final String objectPath, final int blockSizeX,
+    @Deprecated
+    public int[][] readIntMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException;
 
     /**
-     * Reads a <code>byte</code> matrix (array of arrays) from the data set
+     * Reads a <code>int</code> matrix (array of arrays) from the data set
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -191,22 +209,26 @@ public interface IHDF5ByteReader
      * @return The data block read from the data set.
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public byte[][] readMatrixBlockWithOffset(final String objectPath, 
+    @Deprecated
+    public int[][] readIntMatrixBlockWithOffset(final String objectPath, 
     				final int blockSizeX, final int blockSizeY, final long offsetX, final long offsetY) 
     				throws HDF5JavaException;
 
     /**
-     * Reads a multi-dimensional <code>byte</code> array from the data set
+     * Reads a multi-dimensional <code>int</code> array from the data set
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public MDByteArray readMDArray(final String objectPath);
+    @Deprecated
+    public MDIntArray readIntMDArray(final String objectPath);
 
     /**
-     * Reads a multi-dimensional <code>byte</code> array from the data set 
+     * Reads a multi-dimensional <code>int</code> array from the data set 
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -214,20 +236,24 @@ public interface IHDF5ByteReader
      * @param blockNumber The block number in each dimension (offset: multiply with the
      *            <var>blockDimensions</var> in the according dimension).
      * @return The data block read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public MDByteArray readMDArrayBlock(final String objectPath,
+    @Deprecated
+    public MDIntArray readIntMDArrayBlock(final String objectPath,
     				final int[] blockDimensions, final long[] blockNumber);
 
     /**
-     * Reads a multi-dimensional <code>byte</code> array from the data set
+     * Reads a multi-dimensional <code>int</code> array from the data set
      * <var>objectPath</var>.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockDimensions The extent of the block in each dimension.
      * @param offset The offset in the data set to start reading from in each dimension.
      * @return The data block read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public MDByteArray readMDArrayBlockWithOffset(final String objectPath,
+    @Deprecated
+    public MDIntArray readIntMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset);
     
     /**
@@ -235,8 +261,10 @@ public interface IHDF5ByteReader
      * 
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public Iterable<HDF5DataBlock<byte[]>> getArrayNaturalBlocks(
+    @Deprecated
+    public Iterable<HDF5DataBlock<int[]>> getIntArrayNaturalBlocks(
     									final String dataSetPath)
             throws HDF5JavaException;
 
@@ -244,7 +272,9 @@ public interface IHDF5ByteReader
      * Provides all natural blocks of this multi-dimensional data set to iterate over.
      * 
      * @see HDF5MDDataBlock
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#int32()}.
      */
-    public Iterable<HDF5MDDataBlock<MDByteArray>> getMDArrayNaturalBlocks(
+    @Deprecated
+    public Iterable<HDF5MDDataBlock<MDIntArray>> getIntMDArrayNaturalBlocks(
     									final String dataSetPath);
 }

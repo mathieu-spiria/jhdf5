@@ -23,7 +23,7 @@ import ch.systemsx.cisd.base.mdarray.MDIntArray;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5IntWriter
+public interface IHDF5IntWriter extends IHDF5IntReader
 {
     // /////////////////////
     // Attributes
@@ -39,7 +39,7 @@ public interface IHDF5IntWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setIntAttribute(final String objectPath, final String name, final int value);
+    public void setAttr(final String objectPath, final String name, final int value);
 
     /**
      * Set a <code>int[]</code> attribute on the referenced object.
@@ -51,7 +51,7 @@ public interface IHDF5IntWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setIntArrayAttribute(final String objectPath, final String name,
+    public void setArrayAttr(final String objectPath, final String name,
             final int[] value);
 
     /**
@@ -64,7 +64,7 @@ public interface IHDF5IntWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setIntMDArrayAttribute(final String objectPath, final String name,
+    public void setMDArrayAttr(final String objectPath, final String name,
             final MDIntArray value);
 
     /**
@@ -77,7 +77,7 @@ public interface IHDF5IntWriter
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setIntMatrixAttribute(final String objectPath, final String name,
+    public void setMatrixAttr(final String objectPath, final String name,
             final int[][] value);
     
     // /////////////////////
@@ -90,7 +90,7 @@ public interface IHDF5IntWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param value The value to write.
      */
-    public void writeInt(final String objectPath, final int value);
+    public void write(final String objectPath, final int value);
 
     /**
      * Writes out a <code>int</code> array (of rank 1).
@@ -98,7 +98,7 @@ public interface IHDF5IntWriter
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
-    public void writeIntArray(final String objectPath, final int[] data);
+    public void writeArray(final String objectPath, final int[] data);
 
     /**
      * Writes out a <code>int</code> array (of rank 1).
@@ -107,7 +107,7 @@ public interface IHDF5IntWriter
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
      */
-    public void writeIntArray(final String objectPath, final int[] data, 
+    public void writeArray(final String objectPath, final int[] data, 
             final HDF5IntStorageFeatures features);
 
     /**
@@ -119,7 +119,7 @@ public interface IHDF5IntWriter
      *          For extendable data sets the initial size of the array will be 0,
      *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
-    public void createIntArray(final String objectPath, final int size);
+    public void createArray(final String objectPath, final int size);
 
     /**
      * Creates a <code>int</code> array (of rank 1).
@@ -131,7 +131,7 @@ public interface IHDF5IntWriter
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      */
-    public void createIntArray(final String objectPath, final long size, final int blockSize);
+    public void createArray(final String objectPath, final long size, final int blockSize);
 
     /**
      * Creates a <code>int</code> array (of rank 1).
@@ -143,7 +143,7 @@ public interface IHDF5IntWriter
      *          see {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      */
-    public void createIntArray(final String objectPath, final int size,
+    public void createArray(final String objectPath, final int size,
             final HDF5IntStorageFeatures features);
     
     /**
@@ -158,17 +158,17 @@ public interface IHDF5IntWriter
      *                <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
      */
-    public void createIntArray(final String objectPath, final long size, final int blockSize,
+    public void createArray(final String objectPath, final long size, final int blockSize,
             final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a <code>int</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createIntArray(String, long, int, HDF5IntStorageFeatures)}
+     * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)}
      * beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createIntArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
+     * {@link #createArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
      * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -176,20 +176,20 @@ public interface IHDF5IntWriter
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
      */
-    public void writeIntArrayBlock(final String objectPath, final int[] data,
+    public void writeArrayBlock(final String objectPath, final int[] data,
             final long blockNumber);
 
     /**
      * Writes out a block of a <code>int</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createIntArray(String, long, int, HDF5IntStorageFeatures)}
+     * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)}
      * beforehand.
      * <p>
-     * Use this method instead of {@link #writeIntArrayBlock(String, int[], long)} if the
+     * Use this method instead of {@link #writeArrayBlock(String, int[], long)} if the
      * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createIntArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
+     * {@link #createArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
      * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -199,7 +199,7 @@ public interface IHDF5IntWriter
      *            )
      * @param offset The offset in the data set to start writing to.
      */
-    public void writeIntArrayBlockWithOffset(final String objectPath, final int[] data,
+    public void writeArrayBlockWithOffset(final String objectPath, final int[] data,
             final int dataSize, final long offset);
 
     /**
@@ -209,7 +209,7 @@ public interface IHDF5IntWriter
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      */
-    public void writeIntMatrix(final String objectPath, final int[][] data);
+    public void writeMatrix(final String objectPath, final int[][] data);
 
     /**
      * Writes out a <code>int</code> matrix (array of rank 2).
@@ -219,7 +219,7 @@ public interface IHDF5IntWriter
      *            same length.
      * @param features The storage features of the data set.
      */
-    public void writeIntMatrix(final String objectPath, final int[][] data, 
+    public void writeMatrix(final String objectPath, final int[][] data, 
             final HDF5IntStorageFeatures features);
 
     /**
@@ -229,7 +229,7 @@ public interface IHDF5IntWriter
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
      */
-    public void createIntMatrix(final String objectPath, final int blockSizeX, 
+    public void createMatrix(final String objectPath, final int blockSizeX, 
             final int blockSizeY);
 
     /**
@@ -241,7 +241,7 @@ public interface IHDF5IntWriter
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
      */
-    public void createIntMatrix(final String objectPath, final long sizeX, final long sizeY,
+    public void createMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY);
 
     /**
@@ -254,21 +254,21 @@ public interface IHDF5IntWriter
      * @param blockSizeY The size of one block in the y dimension.
      * @param features The storage features of the data set.
      */
-    public void createIntMatrix(final String objectPath, final long sizeX, final long sizeY,
+    public void createMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY, final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createIntMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
+     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of
-     * {@link #createIntMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} if the total
+     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} if the total
      * size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
      * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createIntMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
+     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -279,20 +279,20 @@ public interface IHDF5IntWriter
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>data[0.length</code>).
      */
-    public void writeIntMatrixBlock(final String objectPath, final int[][] data,
+    public void writeMatrixBlock(final String objectPath, final int[][] data,
             final long blockNumberX, final long blockNumberY);
 
     /**
      * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createIntMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
+     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeIntMatrixBlock(String, int[][], long, long)} if
+     * Use this method instead of {@link #writeMatrixBlock(String, int[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createIntMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
+     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -300,20 +300,20 @@ public interface IHDF5IntWriter
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
-    public void writeIntMatrixBlockWithOffset(final String objectPath, final int[][] data,
+    public void writeMatrixBlockWithOffset(final String objectPath, final int[][] data,
             final long offsetX, final long offsetY);
 
     /**
      * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createIntMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
+     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeIntMatrixBlock(String, int[][], long, long)} if
+     * Use this method instead of {@link #writeMatrixBlock(String, int[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createIntMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
+     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -325,7 +325,7 @@ public interface IHDF5IntWriter
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
-    public void writeIntMatrixBlockWithOffset(final String objectPath, final int[][] data,
+    public void writeMatrixBlockWithOffset(final String objectPath, final int[][] data,
             final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY);
 
     /**
@@ -335,7 +335,7 @@ public interface IHDF5IntWriter
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      */
-    public void writeIntMDArray(final String objectPath, final MDIntArray data);
+    public void writeMDArray(final String objectPath, final MDIntArray data);
 
     /**
      * Writes out a multi-dimensional <code>int</code> array.
@@ -345,7 +345,7 @@ public interface IHDF5IntWriter
      *            same length.
      * @param features The storage features of the data set.
      */
-    public void writeIntMDArray(final String objectPath, final MDIntArray data,
+    public void writeMDArray(final String objectPath, final MDIntArray data,
             final HDF5IntStorageFeatures features);
 
     /**
@@ -358,7 +358,7 @@ public interface IHDF5IntWriter
      *          array along each axis will be 0, 
      *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
-    public void createIntMDArray(final String objectPath, final int[] dimensions);
+    public void createMDArray(final String objectPath, final int[] dimensions);
 
     /**
      * Creates a multi-dimensional <code>int</code> array.
@@ -367,7 +367,7 @@ public interface IHDF5IntWriter
      * @param dimensions The dimensions of the array.
      * @param blockDimensions The dimensions of one block (chunk) of the array.
      */
-    public void createIntMDArray(final String objectPath, final long[] dimensions,
+    public void createMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions);
 
     /**
@@ -380,7 +380,7 @@ public interface IHDF5IntWriter
      *       see {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      */
-    public void createIntMDArray(final String objectPath, final int[] dimensions,
+    public void createMDArray(final String objectPath, final int[] dimensions,
             final HDF5IntStorageFeatures features);
 
     /**
@@ -391,7 +391,7 @@ public interface IHDF5IntWriter
      * @param blockDimensions The dimensions of one block (chunk) of the array.
      * @param features The storage features of the data set.
      */
-    public void createIntMDArray(final String objectPath, final long[] dimensions,
+    public void createMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions, final HDF5IntStorageFeatures features);
 
     /**
@@ -403,7 +403,7 @@ public interface IHDF5IntWriter
      * @param blockNumber The block number in each dimension (offset: multiply with the extend in
      *            the according dimension).
      */
-    public void writeIntMDArrayBlock(final String objectPath, final MDIntArray data,
+    public void writeMDArrayBlock(final String objectPath, final MDIntArray data,
             final long[] blockNumber);
 
     /**
@@ -414,7 +414,7 @@ public interface IHDF5IntWriter
      *            same length.
      * @param offset The offset in the data set  to start writing to in each dimension.
      */
-    public void writeIntMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
+    public void writeMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
             final long[] offset);
 
    /**
@@ -426,6 +426,6 @@ public interface IHDF5IntWriter
      * @param offset The offset of the block in the data set to start writing to in each dimension.
      * @param memoryOffset The offset of the block in the <var>data</var> array.
      */
-    public void writeIntMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
+    public void writeMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
             final int[] blockDimensions, final long[] offset, final int[] memoryOffset);
 }

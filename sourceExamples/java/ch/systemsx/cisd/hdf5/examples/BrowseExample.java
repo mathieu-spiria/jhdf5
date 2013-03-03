@@ -62,16 +62,16 @@ public class BrowseExample
         writer.createGroup("groupA");
         writer.createGroup("groupB");
         writer.createGroup("groupA/groupC");
-        writer.writeString("/groupA/string", "Just some random string.");
-        writer.writeIntArray("/groupB/inarr", new int[]
+        writer.string().write("/groupA/string", "Just some random string.");
+        writer.int32().writeArray("/groupB/inarr", new int[]
             { 17, 42, -1 });
-        writer.writeDoubleMatrix("/groupB/dmat", new double[][]
+        writer.float64().writeMatrix("/groupB/dmat", new double[][]
             {
                 { 1.1, 2.2, 3.3 },
                 { 4.4, 5.5, 6.6 },
                 { 7.7, 8.8, 9.9 }, });
         writer.createSoftLink("/groupA/groupC", "/groupB/groupC");
-        writer.writeDate("/groupA/date", new Date());
+        writer.time().write("/groupA/date", new Date());
         writer.close();
 
         // Browse it.

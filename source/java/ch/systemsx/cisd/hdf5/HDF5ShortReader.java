@@ -52,7 +52,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     // /////////////////////
 
     @Override
-    public short getShortAttribute(final String objectPath, final String attributeName)
+    public short getAttr(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -77,7 +77,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public short[] getShortArrayAttribute(final String objectPath, final String attributeName)
+    public short[] getArrayAttr(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -99,7 +99,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public MDShortArray getShortMDArrayAttribute(final String objectPath,
+    public MDShortArray getMDArrayAttr(final String objectPath,
             final String attributeName)
     {
         assert objectPath != null;
@@ -122,10 +122,10 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public short[][] getShortMatrixAttribute(final String objectPath, final String attributeName)
+    public short[][] getMatrixAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
-        final MDShortArray array = getShortMDArrayAttribute(objectPath, attributeName);
+        final MDShortArray array = getMDArrayAttr(objectPath, attributeName);
         if (array.rank() != 2)
         {
             throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
@@ -139,7 +139,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     // /////////////////////
 
     @Override
-    public short readShort(final String objectPath)
+    public short read(final String objectPath)
     {
         assert objectPath != null;
 
@@ -160,7 +160,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public short[] readShortArray(final String objectPath)
+    public short[] readArray(final String objectPath)
     {
         assert objectPath != null;
 
@@ -217,7 +217,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public int[] readToShortMDArrayWithOffset(final String objectPath, final MDShortArray array,
+    public int[] readToMDArrayWithOffset(final String objectPath, final MDShortArray array,
             final int[] memoryOffset)
     {
         assert objectPath != null;
@@ -245,7 +245,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public int[] readToShortMDArrayBlockWithOffset(final String objectPath,
+    public int[] readToMDArrayBlockWithOffset(final String objectPath,
             final MDShortArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
     {
@@ -274,14 +274,14 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public short[] readShortArrayBlock(final String objectPath, final int blockSize,
+    public short[] readArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
-        return readShortArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
+        return readArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
     @Override
-    public short[] readShortArrayBlockWithOffset(final String objectPath, final int blockSize,
+    public short[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset)
     {
         assert objectPath != null;
@@ -306,9 +306,9 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public short[][] readShortMatrix(final String objectPath) throws HDF5JavaException
+    public short[][] readMatrix(final String objectPath) throws HDF5JavaException
     {
-        final MDShortArray array = readShortMDArray(objectPath);
+        final MDShortArray array = readMDArray(objectPath);
         if (array.rank() != 2)
         {
             throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
@@ -318,11 +318,11 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public short[][] readShortMatrixBlock(final String objectPath, final int blockSizeX,
+    public short[][] readMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException
     {
-        final MDShortArray array = readShortMDArrayBlock(objectPath, new int[]
+        final MDShortArray array = readMDArrayBlock(objectPath, new int[]
             { blockSizeX, blockSizeY }, new long[]
             { blockNumberX, blockNumberY });
         if (array.rank() != 2)
@@ -334,10 +334,10 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public short[][] readShortMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
+    public short[][] readMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
-        final MDShortArray array = readShortMDArrayBlockWithOffset(objectPath, new int[]
+        final MDShortArray array = readMDArrayBlockWithOffset(objectPath, new int[]
             { blockSizeX, blockSizeY }, new long[]
             { offsetX, offsetY });
         if (array.rank() != 2)
@@ -349,7 +349,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public MDShortArray readShortMDArray(final String objectPath)
+    public MDShortArray readMDArray(final String objectPath)
     {
         assert objectPath != null;
 
@@ -367,7 +367,7 @@ class HDF5ShortReader implements IHDF5ShortReader
         return baseReader.runner.call(readCallable);
     }
 
-    private MDShortArray readShortMDArray(int dataSetId, ICleanUpRegistry registry)
+    MDShortArray readShortMDArray(int dataSetId, ICleanUpRegistry registry)
     {
         try
         {
@@ -406,7 +406,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public MDShortArray readShortMDArrayBlock(final String objectPath, final int[] blockDimensions,
+    public MDShortArray readMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
         final long[] offset = new long[blockDimensions.length];
@@ -414,11 +414,11 @@ class HDF5ShortReader implements IHDF5ShortReader
         {
             offset[i] = blockNumber[i] * blockDimensions[i];
         }
-        return readShortMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
-    public MDShortArray readShortMDArrayBlockWithOffset(final String objectPath,
+    public MDShortArray readMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
     {
         assert objectPath != null;
@@ -446,7 +446,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
     
     @Override
-    public Iterable<HDF5DataBlock<short[]>> getShortArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5DataBlock<short[]>> getArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
         baseReader.checkOpen();
@@ -474,7 +474,7 @@ class HDF5ShortReader implements IHDF5ShortReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final short[] block =
-                                        readShortArrayBlockWithOffset(dataSetPath, index
+                                        readArrayBlockWithOffset(dataSetPath, index
                                                 .getBlockSize(), offset);
                                 return new HDF5DataBlock<short[]>(block, index.getAndIncIndex(), 
                                         offset);
@@ -491,7 +491,7 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
-    public Iterable<HDF5MDDataBlock<MDShortArray>> getShortMDArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5MDDataBlock<MDShortArray>> getMDArrayNaturalBlocks(final String dataSetPath)
     {
         baseReader.checkOpen();
         final HDF5NaturalBlockMDParameters params =
@@ -518,7 +518,7 @@ class HDF5ShortReader implements IHDF5ShortReader
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
                                 final MDShortArray data =
-                                        readShortMDArrayBlockWithOffset(dataSetPath, index
+                                        readMDArrayBlockWithOffset(dataSetPath, index
                                                 .getBlockSize(), offset);
                                 return new HDF5MDDataBlock<MDShortArray>(data, index
                                         .getIndexClone(), offset);

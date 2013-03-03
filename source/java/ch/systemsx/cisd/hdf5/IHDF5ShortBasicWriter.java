@@ -23,7 +23,7 @@ import ch.systemsx.cisd.base.mdarray.MDShortArray;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5ShortWriter extends IHDF5ShortReader
+public interface IHDF5ShortBasicWriter
 {
     // /////////////////////
     // Attributes
@@ -38,8 +38,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void setAttr(final String objectPath, final String name, final short value);
+    @Deprecated
+    public void setShortAttribute(final String objectPath, final String name, final short value);
 
     /**
      * Set a <code>short[]</code> attribute on the referenced object.
@@ -50,8 +52,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void setArrayAttr(final String objectPath, final String name,
+    @Deprecated
+    public void setShortArrayAttribute(final String objectPath, final String name,
             final short[] value);
 
     /**
@@ -63,8 +67,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
+    @Deprecated
+    public void setShortMDArrayAttribute(final String objectPath, final String name,
             final MDShortArray value);
 
     /**
@@ -76,8 +82,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void setMatrixAttr(final String objectPath, final String name,
+    @Deprecated
+    public void setShortMatrixAttribute(final String objectPath, final String name,
             final short[][] value);
     
     // /////////////////////
@@ -89,16 +97,20 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param value The value to write.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void write(final String objectPath, final short value);
+    @Deprecated
+    public void writeShort(final String objectPath, final short value);
 
     /**
      * Writes out a <code>short</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeArray(final String objectPath, final short[] data);
+    @Deprecated
+    public void writeShortArray(final String objectPath, final short[] data);
 
     /**
      * Writes out a <code>short</code> array (of rank 1).
@@ -106,8 +118,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeArray(final String objectPath, final short[] data, 
+    @Deprecated
+    public void writeShortArray(final String objectPath, final short[] data, 
             final HDF5IntStorageFeatures features);
 
     /**
@@ -118,8 +132,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets. 
      *          For extendable data sets the initial size of the array will be 0,
      *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createArray(final String objectPath, final int size);
+    @Deprecated
+    public void createShortArray(final String objectPath, final int size);
 
     /**
      * Creates a <code>short</code> array (of rank 1).
@@ -130,8 +146,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *          set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createArray(final String objectPath, final long size, final int blockSize);
+    @Deprecated
+    public void createShortArray(final String objectPath, final long size, final int blockSize);
 
     /**
      * Creates a <code>short</code> array (of rank 1).
@@ -142,8 +160,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *          For extendable data sets the initial size of the array will be 0,
      *          see {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createArray(final String objectPath, final int size,
+    @Deprecated
+    public void createShortArray(final String objectPath, final int size,
             final HDF5IntStorageFeatures features);
     
     /**
@@ -157,39 +177,43 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
      *                <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createArray(final String objectPath, final long size, final int blockSize,
+    @Deprecated
+    public void createShortArray(final String objectPath, final long size, final int blockSize,
             final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)}
+     * been created by {@link #createShortArray(String, long, int, HDF5IntStorageFeatures)}
      * beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
+     * {@link #createShortArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
      * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeArrayBlock(final String objectPath, final short[] data,
+    @Deprecated
+    public void writeShortArrayBlock(final String objectPath, final short[] data,
             final long blockNumber);
 
     /**
      * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)}
+     * been created by {@link #createShortArray(String, long, int, HDF5IntStorageFeatures)}
      * beforehand.
      * <p>
-     * Use this method instead of {@link #writeArrayBlock(String, short[], long)} if the
+     * Use this method instead of {@link #writeShortArrayBlock(String, short[], long)} if the
      * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
+     * {@link #createShortArray(String, long, int, HDF5IntStorageFeatures)} call that was used to
      * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -198,8 +222,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
      *            )
      * @param offset The offset in the data set to start writing to.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeArrayBlockWithOffset(final String objectPath, final short[] data,
+    @Deprecated
+    public void writeShortArrayBlockWithOffset(final String objectPath, final short[] data,
             final int dataSize, final long offset);
 
     /**
@@ -208,8 +234,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeMatrix(final String objectPath, final short[][] data);
+    @Deprecated
+    public void writeShortMatrix(final String objectPath, final short[][] data);
 
     /**
      * Writes out a <code>short</code> matrix (array of rank 2).
@@ -218,8 +246,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeMatrix(final String objectPath, final short[][] data, 
+    @Deprecated
+    public void writeShortMatrix(final String objectPath, final short[][] data, 
             final HDF5IntStorageFeatures features);
 
     /**
@@ -228,8 +258,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createMatrix(final String objectPath, final int blockSizeX, 
+    @Deprecated
+    public void createShortMatrix(final String objectPath, final int blockSizeX, 
             final int blockSizeY);
 
     /**
@@ -240,8 +272,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param sizeY The size of the y dimension of the short matrix to create.
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createMatrix(final String objectPath, final long sizeX, final long sizeY,
+    @Deprecated
+    public void createShortMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY);
 
     /**
@@ -253,22 +287,24 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createMatrix(final String objectPath, final long sizeX, final long sizeY,
+    @Deprecated
+    public void createShortMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY, final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of
-     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} if the total
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} if the total
      * size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
      * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -278,42 +314,46 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *            <code>data.length</code>).
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>data[0.length</code>).
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeMatrixBlock(final String objectPath, final short[][] data,
+    @Deprecated
+    public void writeShortMatrixBlock(final String objectPath, final short[][] data,
             final long blockNumberX, final long blockNumberY);
 
     /**
      * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeMatrixBlock(String, short[][], long, long)} if
+     * Use this method instead of {@link #writeShortMatrixBlock(String, short[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeMatrixBlockWithOffset(final String objectPath, final short[][] data,
+    @Deprecated
+    public void writeShortMatrixBlockWithOffset(final String objectPath, final short[][] data,
             final long offsetX, final long offsetY);
 
     /**
      * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeMatrixBlock(String, short[][], long, long)} if
+     * Use this method instead of {@link #writeShortMatrixBlock(String, short[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
      * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -324,8 +364,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *            <code><= data[0].length</code> )
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeMatrixBlockWithOffset(final String objectPath, final short[][] data,
+    @Deprecated
+    public void writeShortMatrixBlockWithOffset(final String objectPath, final short[][] data,
             final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY);
 
     /**
@@ -334,8 +376,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeMDArray(final String objectPath, final MDShortArray data);
+    @Deprecated
+    public void writeShortMDArray(final String objectPath, final MDShortArray data);
 
     /**
      * Writes out a multi-dimensional <code>short</code> array.
@@ -344,8 +388,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeMDArray(final String objectPath, final MDShortArray data,
+    @Deprecated
+    public void writeShortMDArray(final String objectPath, final MDShortArray data,
             final HDF5IntStorageFeatures features);
 
     /**
@@ -357,8 +403,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *          for extendable (chunked) data sets. For extendable data sets the initial size of the 
      *          array along each axis will be 0, 
      *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createMDArray(final String objectPath, final int[] dimensions);
+    @Deprecated
+    public void createShortMDArray(final String objectPath, final int[] dimensions);
 
     /**
      * Creates a multi-dimensional <code>short</code> array.
@@ -366,8 +414,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The dimensions of the array.
      * @param blockDimensions The dimensions of one block (chunk) of the array.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createMDArray(final String objectPath, final long[] dimensions,
+    @Deprecated
+    public void createShortMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions);
 
     /**
@@ -379,8 +429,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *       For extendable data sets the initial size of the array along each axis will be 0,
      *       see {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createMDArray(final String objectPath, final int[] dimensions,
+    @Deprecated
+    public void createShortMDArray(final String objectPath, final int[] dimensions,
             final HDF5IntStorageFeatures features);
 
     /**
@@ -390,8 +442,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param dimensions The dimensions of the array.
      * @param blockDimensions The dimensions of one block (chunk) of the array.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void createMDArray(final String objectPath, final long[] dimensions,
+    @Deprecated
+    public void createShortMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions, final HDF5IntStorageFeatures features);
 
     /**
@@ -402,8 +456,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *            same length.
      * @param blockNumber The block number in each dimension (offset: multiply with the extend in
      *            the according dimension).
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeMDArrayBlock(final String objectPath, final MDShortArray data,
+    @Deprecated
+    public void writeShortMDArrayBlock(final String objectPath, final MDShortArray data,
             final long[] blockNumber);
 
     /**
@@ -413,8 +469,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      * @param offset The offset in the data set  to start writing to in each dimension.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
+    @Deprecated
+    public void writeShortMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
             final long[] offset);
 
    /**
@@ -425,7 +483,9 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param blockDimensions The dimensions of the block to write to the data set.
      * @param offset The offset of the block in the data set to start writing to in each dimension.
      * @param memoryOffset The offset of the block in the <var>data</var> array.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
-    public void writeMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
+    @Deprecated
+    public void writeShortMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
             final int[] blockDimensions, final long[] offset, final int[] memoryOffset);
 }

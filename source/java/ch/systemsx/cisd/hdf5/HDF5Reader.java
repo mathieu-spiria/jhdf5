@@ -1694,102 +1694,102 @@ class HDF5Reader implements IHDF5Reader
     }
 
     // ------------------------------------------------------------------------------
-    // GENERATED CODE SECTION - START
+    // Primite types - START
     // ------------------------------------------------------------------------------
 
     @Override
     public byte[] getByteArrayAttribute(String objectPath, String attributeName)
     {
-        return byteReader.getByteArrayAttribute(objectPath, attributeName);
+        return byteReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5DataBlock<byte[]>> getByteArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
-        return byteReader.getByteArrayNaturalBlocks(dataSetPath);
+        return byteReader.getArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public byte getByteAttribute(String objectPath, String attributeName)
     {
-        return byteReader.getByteAttribute(objectPath, attributeName);
+        return byteReader.getAttr(objectPath, attributeName);
     }
 
     @Override
     public MDByteArray getByteMDArrayAttribute(String objectPath, String attributeName)
     {
-        return byteReader.getByteMDArrayAttribute(objectPath, attributeName);
+        return byteReader.getMDArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5MDDataBlock<MDByteArray>> getByteMDArrayNaturalBlocks(String dataSetPath)
     {
-        return byteReader.getByteMDArrayNaturalBlocks(dataSetPath);
+        return byteReader.getMDArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public byte[][] getByteMatrixAttribute(String objectPath, String attributeName)
             throws HDF5JavaException
     {
-        return byteReader.getByteMatrixAttribute(objectPath, attributeName);
+        return byteReader.getMatrixAttr(objectPath, attributeName);
     }
 
     @Override
     public byte readByte(String objectPath)
     {
-        return byteReader.readByte(objectPath);
+        return byteReader.read(objectPath);
     }
 
     @Override
     public byte[] readByteArray(String objectPath)
     {
-        return byteReader.readByteArray(objectPath);
+        return byteReader.readArray(objectPath);
     }
 
     @Override
     public byte[] readByteArrayBlock(String objectPath, int blockSize, long blockNumber)
     {
-        return byteReader.readByteArrayBlock(objectPath, blockSize, blockNumber);
+        return byteReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
     public byte[] readByteArrayBlockWithOffset(String objectPath, int blockSize, long offset)
     {
-        return byteReader.readByteArrayBlockWithOffset(objectPath, blockSize, offset);
+        return byteReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     @Override
     public MDByteArray readByteMDArray(String objectPath)
     {
-        return byteReader.readByteMDArray(objectPath);
+        return byteReader.readMDArray(objectPath);
     }
 
     @Override
     public MDByteArray readByteMDArrayBlock(String objectPath, int[] blockDimensions,
             long[] blockNumber)
     {
-        return byteReader.readByteMDArrayBlock(objectPath, blockDimensions, blockNumber);
+        return byteReader.readMDArrayBlock(objectPath, blockDimensions, blockNumber);
     }
 
     @Override
     public MDByteArray readByteMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
             long[] offset)
     {
-        return byteReader.readByteMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return byteReader.readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
     public byte[][] readByteMatrix(String objectPath) throws HDF5JavaException
     {
-        return byteReader.readByteMatrix(objectPath);
+        return byteReader.readMatrix(objectPath);
     }
 
     @Override
     public byte[][] readByteMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
             long blockNumberX, long blockNumberY) throws HDF5JavaException
     {
-        return byteReader.readByteMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+        return byteReader.readMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
                 blockNumberY);
     }
 
@@ -1797,7 +1797,7 @@ class HDF5Reader implements IHDF5Reader
     public byte[][] readByteMatrixBlockWithOffset(String objectPath, int blockSizeX,
             int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
     {
-        return byteReader.readByteMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
+        return byteReader.readMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
                 offsetX, offsetY);
     }
 
@@ -1805,7 +1805,7 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToByteMDArrayBlockWithOffset(String objectPath, MDByteArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        return byteReader.readToByteMDArrayBlockWithOffset(objectPath, array, blockDimensions,
+        return byteReader.readToMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
@@ -1813,102 +1813,102 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToByteMDArrayWithOffset(String objectPath, MDByteArray array,
             int[] memoryOffset)
     {
-        return byteReader.readToByteMDArrayWithOffset(objectPath, array, memoryOffset);
+        return byteReader.readToMDArrayWithOffset(objectPath, array, memoryOffset);
     }
 
     @Override
     public double[] getDoubleArrayAttribute(String objectPath, String attributeName)
     {
-        return doubleReader.getDoubleArrayAttribute(objectPath, attributeName);
+        return doubleReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5DataBlock<double[]>> getDoubleArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
-        return doubleReader.getDoubleArrayNaturalBlocks(dataSetPath);
+        return doubleReader.getArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public double getDoubleAttribute(String objectPath, String attributeName)
     {
-        return doubleReader.getDoubleAttribute(objectPath, attributeName);
+        return doubleReader.getAttr(objectPath, attributeName);
     }
 
     @Override
     public MDDoubleArray getDoubleMDArrayAttribute(String objectPath, String attributeName)
     {
-        return doubleReader.getDoubleMDArrayAttribute(objectPath, attributeName);
+        return doubleReader.getMDArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5MDDataBlock<MDDoubleArray>> getDoubleMDArrayNaturalBlocks(String dataSetPath)
     {
-        return doubleReader.getDoubleMDArrayNaturalBlocks(dataSetPath);
+        return doubleReader.getMDArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public double[][] getDoubleMatrixAttribute(String objectPath, String attributeName)
             throws HDF5JavaException
     {
-        return doubleReader.getDoubleMatrixAttribute(objectPath, attributeName);
+        return doubleReader.getMatrixAttr(objectPath, attributeName);
     }
 
     @Override
     public double readDouble(String objectPath)
     {
-        return doubleReader.readDouble(objectPath);
+        return doubleReader.read(objectPath);
     }
 
     @Override
     public double[] readDoubleArray(String objectPath)
     {
-        return doubleReader.readDoubleArray(objectPath);
+        return doubleReader.readArray(objectPath);
     }
 
     @Override
     public double[] readDoubleArrayBlock(String objectPath, int blockSize, long blockNumber)
     {
-        return doubleReader.readDoubleArrayBlock(objectPath, blockSize, blockNumber);
+        return doubleReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
     public double[] readDoubleArrayBlockWithOffset(String objectPath, int blockSize, long offset)
     {
-        return doubleReader.readDoubleArrayBlockWithOffset(objectPath, blockSize, offset);
+        return doubleReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     @Override
     public MDDoubleArray readDoubleMDArray(String objectPath)
     {
-        return doubleReader.readDoubleMDArray(objectPath);
+        return doubleReader.readMDArray(objectPath);
     }
 
     @Override
     public MDDoubleArray readDoubleMDArrayBlock(String objectPath, int[] blockDimensions,
             long[] blockNumber)
     {
-        return doubleReader.readDoubleMDArrayBlock(objectPath, blockDimensions, blockNumber);
+        return doubleReader.readMDArrayBlock(objectPath, blockDimensions, blockNumber);
     }
 
     @Override
     public MDDoubleArray readDoubleMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
             long[] offset)
     {
-        return doubleReader.readDoubleMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return doubleReader.readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
     public double[][] readDoubleMatrix(String objectPath) throws HDF5JavaException
     {
-        return doubleReader.readDoubleMatrix(objectPath);
+        return doubleReader.readMatrix(objectPath);
     }
 
     @Override
     public double[][] readDoubleMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
             long blockNumberX, long blockNumberY) throws HDF5JavaException
     {
-        return doubleReader.readDoubleMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+        return doubleReader.readMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
                 blockNumberY);
     }
 
@@ -1916,7 +1916,7 @@ class HDF5Reader implements IHDF5Reader
     public double[][] readDoubleMatrixBlockWithOffset(String objectPath, int blockSizeX,
             int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
     {
-        return doubleReader.readDoubleMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
+        return doubleReader.readMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
                 offsetX, offsetY);
     }
 
@@ -1924,7 +1924,7 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToDoubleMDArrayBlockWithOffset(String objectPath, MDDoubleArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        return doubleReader.readToDoubleMDArrayBlockWithOffset(objectPath, array, blockDimensions,
+        return doubleReader.readToMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
@@ -1932,102 +1932,102 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToDoubleMDArrayWithOffset(String objectPath, MDDoubleArray array,
             int[] memoryOffset)
     {
-        return doubleReader.readToDoubleMDArrayWithOffset(objectPath, array, memoryOffset);
+        return doubleReader.readToMDArrayWithOffset(objectPath, array, memoryOffset);
     }
 
     @Override
     public float[] getFloatArrayAttribute(String objectPath, String attributeName)
     {
-        return floatReader.getFloatArrayAttribute(objectPath, attributeName);
+        return floatReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5DataBlock<float[]>> getFloatArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
-        return floatReader.getFloatArrayNaturalBlocks(dataSetPath);
+        return floatReader.getArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public float getFloatAttribute(String objectPath, String attributeName)
     {
-        return floatReader.getFloatAttribute(objectPath, attributeName);
+        return floatReader.getAttr(objectPath, attributeName);
     }
 
     @Override
     public MDFloatArray getFloatMDArrayAttribute(String objectPath, String attributeName)
     {
-        return floatReader.getFloatMDArrayAttribute(objectPath, attributeName);
+        return floatReader.getMDArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5MDDataBlock<MDFloatArray>> getFloatMDArrayNaturalBlocks(String dataSetPath)
     {
-        return floatReader.getFloatMDArrayNaturalBlocks(dataSetPath);
+        return floatReader.getMDArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public float[][] getFloatMatrixAttribute(String objectPath, String attributeName)
             throws HDF5JavaException
     {
-        return floatReader.getFloatMatrixAttribute(objectPath, attributeName);
+        return floatReader.getMatrixAttr(objectPath, attributeName);
     }
 
     @Override
     public float readFloat(String objectPath)
     {
-        return floatReader.readFloat(objectPath);
+        return floatReader.read(objectPath);
     }
 
     @Override
     public float[] readFloatArray(String objectPath)
     {
-        return floatReader.readFloatArray(objectPath);
+        return floatReader.readArray(objectPath);
     }
 
     @Override
     public float[] readFloatArrayBlock(String objectPath, int blockSize, long blockNumber)
     {
-        return floatReader.readFloatArrayBlock(objectPath, blockSize, blockNumber);
+        return floatReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
     public float[] readFloatArrayBlockWithOffset(String objectPath, int blockSize, long offset)
     {
-        return floatReader.readFloatArrayBlockWithOffset(objectPath, blockSize, offset);
+        return floatReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     @Override
     public MDFloatArray readFloatMDArray(String objectPath)
     {
-        return floatReader.readFloatMDArray(objectPath);
+        return floatReader.readMDArray(objectPath);
     }
 
     @Override
     public MDFloatArray readFloatMDArrayBlock(String objectPath, int[] blockDimensions,
             long[] blockNumber)
     {
-        return floatReader.readFloatMDArrayBlock(objectPath, blockDimensions, blockNumber);
+        return floatReader.readMDArrayBlock(objectPath, blockDimensions, blockNumber);
     }
 
     @Override
     public MDFloatArray readFloatMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
             long[] offset)
     {
-        return floatReader.readFloatMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return floatReader.readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
     public float[][] readFloatMatrix(String objectPath) throws HDF5JavaException
     {
-        return floatReader.readFloatMatrix(objectPath);
+        return floatReader.readMatrix(objectPath);
     }
 
     @Override
     public float[][] readFloatMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
             long blockNumberX, long blockNumberY) throws HDF5JavaException
     {
-        return floatReader.readFloatMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+        return floatReader.readMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
                 blockNumberY);
     }
 
@@ -2035,7 +2035,7 @@ class HDF5Reader implements IHDF5Reader
     public float[][] readFloatMatrixBlockWithOffset(String objectPath, int blockSizeX,
             int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
     {
-        return floatReader.readFloatMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
+        return floatReader.readMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
                 offsetX, offsetY);
     }
 
@@ -2043,7 +2043,7 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToFloatMDArrayBlockWithOffset(String objectPath, MDFloatArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        return floatReader.readToFloatMDArrayBlockWithOffset(objectPath, array, blockDimensions,
+        return floatReader.readToMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
@@ -2051,102 +2051,102 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToFloatMDArrayWithOffset(String objectPath, MDFloatArray array,
             int[] memoryOffset)
     {
-        return floatReader.readToFloatMDArrayWithOffset(objectPath, array, memoryOffset);
+        return floatReader.readToMDArrayWithOffset(objectPath, array, memoryOffset);
     }
 
     @Override
     public int[] getIntArrayAttribute(String objectPath, String attributeName)
     {
-        return intReader.getIntArrayAttribute(objectPath, attributeName);
+        return intReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5DataBlock<int[]>> getIntArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
-        return intReader.getIntArrayNaturalBlocks(dataSetPath);
+        return intReader.getArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public int getIntAttribute(String objectPath, String attributeName)
     {
-        return intReader.getIntAttribute(objectPath, attributeName);
+        return intReader.getAttr(objectPath, attributeName);
     }
 
     @Override
     public MDIntArray getIntMDArrayAttribute(String objectPath, String attributeName)
     {
-        return intReader.getIntMDArrayAttribute(objectPath, attributeName);
+        return intReader.getMDArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5MDDataBlock<MDIntArray>> getIntMDArrayNaturalBlocks(String dataSetPath)
     {
-        return intReader.getIntMDArrayNaturalBlocks(dataSetPath);
+        return intReader.getMDArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public int[][] getIntMatrixAttribute(String objectPath, String attributeName)
             throws HDF5JavaException
     {
-        return intReader.getIntMatrixAttribute(objectPath, attributeName);
+        return intReader.getMatrixAttr(objectPath, attributeName);
     }
 
     @Override
     public int readInt(String objectPath)
     {
-        return intReader.readInt(objectPath);
+        return intReader.read(objectPath);
     }
 
     @Override
     public int[] readIntArray(String objectPath)
     {
-        return intReader.readIntArray(objectPath);
+        return intReader.readArray(objectPath);
     }
 
     @Override
     public int[] readIntArrayBlock(String objectPath, int blockSize, long blockNumber)
     {
-        return intReader.readIntArrayBlock(objectPath, blockSize, blockNumber);
+        return intReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
     public int[] readIntArrayBlockWithOffset(String objectPath, int blockSize, long offset)
     {
-        return intReader.readIntArrayBlockWithOffset(objectPath, blockSize, offset);
+        return intReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     @Override
     public MDIntArray readIntMDArray(String objectPath)
     {
-        return intReader.readIntMDArray(objectPath);
+        return intReader.readMDArray(objectPath);
     }
 
     @Override
     public MDIntArray readIntMDArrayBlock(String objectPath, int[] blockDimensions,
             long[] blockNumber)
     {
-        return intReader.readIntMDArrayBlock(objectPath, blockDimensions, blockNumber);
+        return intReader.readMDArrayBlock(objectPath, blockDimensions, blockNumber);
     }
 
     @Override
     public MDIntArray readIntMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
             long[] offset)
     {
-        return intReader.readIntMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return intReader.readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
     public int[][] readIntMatrix(String objectPath) throws HDF5JavaException
     {
-        return intReader.readIntMatrix(objectPath);
+        return intReader.readMatrix(objectPath);
     }
 
     @Override
     public int[][] readIntMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
             long blockNumberX, long blockNumberY) throws HDF5JavaException
     {
-        return intReader.readIntMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+        return intReader.readMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
                 blockNumberY);
     }
 
@@ -2154,7 +2154,7 @@ class HDF5Reader implements IHDF5Reader
     public int[][] readIntMatrixBlockWithOffset(String objectPath, int blockSizeX, int blockSizeY,
             long offsetX, long offsetY) throws HDF5JavaException
     {
-        return intReader.readIntMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY, offsetX,
+        return intReader.readMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY, offsetX,
                 offsetY);
     }
 
@@ -2162,109 +2162,109 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToIntMDArrayBlockWithOffset(String objectPath, MDIntArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        return intReader.readToIntMDArrayBlockWithOffset(objectPath, array, blockDimensions,
+        return intReader.readToMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
     @Override
     public int[] readToIntMDArrayWithOffset(String objectPath, MDIntArray array, int[] memoryOffset)
     {
-        return intReader.readToIntMDArrayWithOffset(objectPath, array, memoryOffset);
+        return intReader.readToMDArrayWithOffset(objectPath, array, memoryOffset);
     }
 
     @Override
     public long[] getLongArrayAttribute(String objectPath, String attributeName)
     {
-        return longReader.getLongArrayAttribute(objectPath, attributeName);
+        return longReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5DataBlock<long[]>> getLongArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
-        return longReader.getLongArrayNaturalBlocks(dataSetPath);
+        return longReader.getArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public long getLongAttribute(String objectPath, String attributeName)
     {
-        return longReader.getLongAttribute(objectPath, attributeName);
+        return longReader.getAttr(objectPath, attributeName);
     }
 
     @Override
     public MDLongArray getLongMDArrayAttribute(String objectPath, String attributeName)
     {
-        return longReader.getLongMDArrayAttribute(objectPath, attributeName);
+        return longReader.getMDArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5MDDataBlock<MDLongArray>> getLongMDArrayNaturalBlocks(String dataSetPath)
     {
-        return longReader.getLongMDArrayNaturalBlocks(dataSetPath);
+        return longReader.getMDArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public long[][] getLongMatrixAttribute(String objectPath, String attributeName)
             throws HDF5JavaException
     {
-        return longReader.getLongMatrixAttribute(objectPath, attributeName);
+        return longReader.getMatrixAttr(objectPath, attributeName);
     }
 
     @Override
     public long readLong(String objectPath)
     {
-        return longReader.readLong(objectPath);
+        return longReader.read(objectPath);
     }
 
     @Override
     public long[] readLongArray(String objectPath)
     {
-        return longReader.readLongArray(objectPath);
+        return longReader.readArray(objectPath);
     }
 
     @Override
     public long[] readLongArrayBlock(String objectPath, int blockSize, long blockNumber)
     {
-        return longReader.readLongArrayBlock(objectPath, blockSize, blockNumber);
+        return longReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
     public long[] readLongArrayBlockWithOffset(String objectPath, int blockSize, long offset)
     {
-        return longReader.readLongArrayBlockWithOffset(objectPath, blockSize, offset);
+        return longReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     @Override
     public MDLongArray readLongMDArray(String objectPath)
     {
-        return longReader.readLongMDArray(objectPath);
+        return longReader.readMDArray(objectPath);
     }
 
     @Override
     public MDLongArray readLongMDArrayBlock(String objectPath, int[] blockDimensions,
             long[] blockNumber)
     {
-        return longReader.readLongMDArrayBlock(objectPath, blockDimensions, blockNumber);
+        return longReader.readMDArrayBlock(objectPath, blockDimensions, blockNumber);
     }
 
     @Override
     public MDLongArray readLongMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
             long[] offset)
     {
-        return longReader.readLongMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return longReader.readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
     public long[][] readLongMatrix(String objectPath) throws HDF5JavaException
     {
-        return longReader.readLongMatrix(objectPath);
+        return longReader.readMatrix(objectPath);
     }
 
     @Override
     public long[][] readLongMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
             long blockNumberX, long blockNumberY) throws HDF5JavaException
     {
-        return longReader.readLongMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+        return longReader.readMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
                 blockNumberY);
     }
 
@@ -2272,7 +2272,7 @@ class HDF5Reader implements IHDF5Reader
     public long[][] readLongMatrixBlockWithOffset(String objectPath, int blockSizeX,
             int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
     {
-        return longReader.readLongMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
+        return longReader.readMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
                 offsetX, offsetY);
     }
 
@@ -2280,7 +2280,7 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToLongMDArrayBlockWithOffset(String objectPath, MDLongArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        return longReader.readToLongMDArrayBlockWithOffset(objectPath, array, blockDimensions,
+        return longReader.readToMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
@@ -2288,102 +2288,102 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToLongMDArrayWithOffset(String objectPath, MDLongArray array,
             int[] memoryOffset)
     {
-        return longReader.readToLongMDArrayWithOffset(objectPath, array, memoryOffset);
+        return longReader.readToMDArrayWithOffset(objectPath, array, memoryOffset);
     }
 
     @Override
     public short[] getShortArrayAttribute(String objectPath, String attributeName)
     {
-        return shortReader.getShortArrayAttribute(objectPath, attributeName);
+        return shortReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5DataBlock<short[]>> getShortArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
-        return shortReader.getShortArrayNaturalBlocks(dataSetPath);
+        return shortReader.getArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public short getShortAttribute(String objectPath, String attributeName)
     {
-        return shortReader.getShortAttribute(objectPath, attributeName);
+        return shortReader.getAttr(objectPath, attributeName);
     }
 
     @Override
     public MDShortArray getShortMDArrayAttribute(String objectPath, String attributeName)
     {
-        return shortReader.getShortMDArrayAttribute(objectPath, attributeName);
+        return shortReader.getMDArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public Iterable<HDF5MDDataBlock<MDShortArray>> getShortMDArrayNaturalBlocks(String dataSetPath)
     {
-        return shortReader.getShortMDArrayNaturalBlocks(dataSetPath);
+        return shortReader.getMDArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public short[][] getShortMatrixAttribute(String objectPath, String attributeName)
             throws HDF5JavaException
     {
-        return shortReader.getShortMatrixAttribute(objectPath, attributeName);
+        return shortReader.getMatrixAttr(objectPath, attributeName);
     }
 
     @Override
     public short readShort(String objectPath)
     {
-        return shortReader.readShort(objectPath);
+        return shortReader.read(objectPath);
     }
 
     @Override
     public short[] readShortArray(String objectPath)
     {
-        return shortReader.readShortArray(objectPath);
+        return shortReader.readArray(objectPath);
     }
 
     @Override
     public short[] readShortArrayBlock(String objectPath, int blockSize, long blockNumber)
     {
-        return shortReader.readShortArrayBlock(objectPath, blockSize, blockNumber);
+        return shortReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
     public short[] readShortArrayBlockWithOffset(String objectPath, int blockSize, long offset)
     {
-        return shortReader.readShortArrayBlockWithOffset(objectPath, blockSize, offset);
+        return shortReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     @Override
     public MDShortArray readShortMDArray(String objectPath)
     {
-        return shortReader.readShortMDArray(objectPath);
+        return shortReader.readMDArray(objectPath);
     }
 
     @Override
     public MDShortArray readShortMDArrayBlock(String objectPath, int[] blockDimensions,
             long[] blockNumber)
     {
-        return shortReader.readShortMDArrayBlock(objectPath, blockDimensions, blockNumber);
+        return shortReader.readMDArrayBlock(objectPath, blockDimensions, blockNumber);
     }
 
     @Override
     public MDShortArray readShortMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
             long[] offset)
     {
-        return shortReader.readShortMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return shortReader.readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
     public short[][] readShortMatrix(String objectPath) throws HDF5JavaException
     {
-        return shortReader.readShortMatrix(objectPath);
+        return shortReader.readMatrix(objectPath);
     }
 
     @Override
     public short[][] readShortMatrixBlock(String objectPath, int blockSizeX, int blockSizeY,
             long blockNumberX, long blockNumberY) throws HDF5JavaException
     {
-        return shortReader.readShortMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
+        return shortReader.readMatrixBlock(objectPath, blockSizeX, blockSizeY, blockNumberX,
                 blockNumberY);
     }
 
@@ -2391,7 +2391,7 @@ class HDF5Reader implements IHDF5Reader
     public short[][] readShortMatrixBlockWithOffset(String objectPath, int blockSizeX,
             int blockSizeY, long offsetX, long offsetY) throws HDF5JavaException
     {
-        return shortReader.readShortMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
+        return shortReader.readMatrixBlockWithOffset(objectPath, blockSizeX, blockSizeY,
                 offsetX, offsetY);
     }
 
@@ -2399,7 +2399,7 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToShortMDArrayBlockWithOffset(String objectPath, MDShortArray array,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        return shortReader.readToShortMDArrayBlockWithOffset(objectPath, array, blockDimensions,
+        return shortReader.readToMDArrayBlockWithOffset(objectPath, array, blockDimensions,
                 offset, memoryOffset);
     }
 
@@ -2407,11 +2407,47 @@ class HDF5Reader implements IHDF5Reader
     public int[] readToShortMDArrayWithOffset(String objectPath, MDShortArray array,
             int[] memoryOffset)
     {
-        return shortReader.readToShortMDArrayWithOffset(objectPath, array, memoryOffset);
+        return shortReader.readToMDArrayWithOffset(objectPath, array, memoryOffset);
+    }
+
+    @Override
+    public IHDF5ByteReader int8()
+    {
+        return byteReader;
+    }
+
+    @Override
+    public IHDF5ShortReader int16()
+    {
+        return shortReader;
+    }
+
+    @Override
+    public IHDF5IntReader int32()
+    {
+        return intReader;
+    }
+
+    @Override
+    public IHDF5LongReader int64()
+    {
+        return longReader;
+    }
+
+    @Override
+    public IHDF5FloatReader float32()
+    {
+        return floatReader;
+    }
+
+    @Override
+    public IHDF5DoubleReader float64()
+    {
+        return doubleReader;
     }
 
     // ------------------------------------------------------------------------------
-    // GENERATED CODE SECTION - END
+    // Primite types - END
     // ------------------------------------------------------------------------------
 
 }

@@ -52,7 +52,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     // /////////////////////
 
     @Override
-    public double getDoubleAttribute(final String objectPath, final String attributeName)
+    public double getAttr(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -77,7 +77,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public double[] getDoubleArrayAttribute(final String objectPath, final String attributeName)
+    public double[] getArrayAttr(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -99,7 +99,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public MDDoubleArray getDoubleMDArrayAttribute(final String objectPath,
+    public MDDoubleArray getMDArrayAttr(final String objectPath,
             final String attributeName)
     {
         assert objectPath != null;
@@ -122,10 +122,10 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public double[][] getDoubleMatrixAttribute(final String objectPath, final String attributeName)
+    public double[][] getMatrixAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
-        final MDDoubleArray array = getDoubleMDArrayAttribute(objectPath, attributeName);
+        final MDDoubleArray array = getMDArrayAttr(objectPath, attributeName);
         if (array.rank() != 2)
         {
             throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
@@ -139,7 +139,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     // /////////////////////
 
     @Override
-    public double readDouble(final String objectPath)
+    public double read(final String objectPath)
     {
         assert objectPath != null;
 
@@ -160,7 +160,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public double[] readDoubleArray(final String objectPath)
+    public double[] readArray(final String objectPath)
     {
         assert objectPath != null;
 
@@ -217,7 +217,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public int[] readToDoubleMDArrayWithOffset(final String objectPath, final MDDoubleArray array,
+    public int[] readToMDArrayWithOffset(final String objectPath, final MDDoubleArray array,
             final int[] memoryOffset)
     {
         assert objectPath != null;
@@ -245,7 +245,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public int[] readToDoubleMDArrayBlockWithOffset(final String objectPath,
+    public int[] readToMDArrayBlockWithOffset(final String objectPath,
             final MDDoubleArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
     {
@@ -274,14 +274,14 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public double[] readDoubleArrayBlock(final String objectPath, final int blockSize,
+    public double[] readArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
-        return readDoubleArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
+        return readArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
     @Override
-    public double[] readDoubleArrayBlockWithOffset(final String objectPath, final int blockSize,
+    public double[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset)
     {
         assert objectPath != null;
@@ -306,9 +306,9 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public double[][] readDoubleMatrix(final String objectPath) throws HDF5JavaException
+    public double[][] readMatrix(final String objectPath) throws HDF5JavaException
     {
-        final MDDoubleArray array = readDoubleMDArray(objectPath);
+        final MDDoubleArray array = readMDArray(objectPath);
         if (array.rank() != 2)
         {
             throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
@@ -318,11 +318,11 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public double[][] readDoubleMatrixBlock(final String objectPath, final int blockSizeX,
+    public double[][] readMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException
     {
-        final MDDoubleArray array = readDoubleMDArrayBlock(objectPath, new int[]
+        final MDDoubleArray array = readMDArrayBlock(objectPath, new int[]
             { blockSizeX, blockSizeY }, new long[]
             { blockNumberX, blockNumberY });
         if (array.rank() != 2)
@@ -334,10 +334,10 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public double[][] readDoubleMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
+    public double[][] readMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
-        final MDDoubleArray array = readDoubleMDArrayBlockWithOffset(objectPath, new int[]
+        final MDDoubleArray array = readMDArrayBlockWithOffset(objectPath, new int[]
             { blockSizeX, blockSizeY }, new long[]
             { offsetX, offsetY });
         if (array.rank() != 2)
@@ -349,7 +349,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public MDDoubleArray readDoubleMDArray(final String objectPath)
+    public MDDoubleArray readMDArray(final String objectPath)
     {
         assert objectPath != null;
 
@@ -367,7 +367,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
         return baseReader.runner.call(readCallable);
     }
 
-    private MDDoubleArray readDoubleMDArray(int dataSetId, ICleanUpRegistry registry)
+    MDDoubleArray readDoubleMDArray(int dataSetId, ICleanUpRegistry registry)
     {
         try
         {
@@ -406,7 +406,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public MDDoubleArray readDoubleMDArrayBlock(final String objectPath, final int[] blockDimensions,
+    public MDDoubleArray readMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
         final long[] offset = new long[blockDimensions.length];
@@ -414,11 +414,11 @@ class HDF5DoubleReader implements IHDF5DoubleReader
         {
             offset[i] = blockNumber[i] * blockDimensions[i];
         }
-        return readDoubleMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
-    public MDDoubleArray readDoubleMDArrayBlockWithOffset(final String objectPath,
+    public MDDoubleArray readMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
     {
         assert objectPath != null;
@@ -446,7 +446,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
     
     @Override
-    public Iterable<HDF5DataBlock<double[]>> getDoubleArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5DataBlock<double[]>> getArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
         baseReader.checkOpen();
@@ -474,7 +474,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final double[] block =
-                                        readDoubleArrayBlockWithOffset(dataSetPath, index
+                                        readArrayBlockWithOffset(dataSetPath, index
                                                 .getBlockSize(), offset);
                                 return new HDF5DataBlock<double[]>(block, index.getAndIncIndex(), 
                                         offset);
@@ -491,7 +491,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
     }
 
     @Override
-    public Iterable<HDF5MDDataBlock<MDDoubleArray>> getDoubleMDArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5MDDataBlock<MDDoubleArray>> getMDArrayNaturalBlocks(final String dataSetPath)
     {
         baseReader.checkOpen();
         final HDF5NaturalBlockMDParameters params =
@@ -518,7 +518,7 @@ class HDF5DoubleReader implements IHDF5DoubleReader
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
                                 final MDDoubleArray data =
-                                        readDoubleMDArrayBlockWithOffset(dataSetPath, index
+                                        readMDArrayBlockWithOffset(dataSetPath, index
                                                 .getBlockSize(), offset);
                                 return new HDF5MDDataBlock<MDDoubleArray>(data, index
                                         .getIndexClone(), offset);

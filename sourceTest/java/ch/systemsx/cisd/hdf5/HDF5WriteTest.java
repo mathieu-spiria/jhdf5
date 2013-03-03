@@ -43,22 +43,22 @@ public class HDF5WriteTest
             // writer.write("/Group1/MyDataSet", new float[] { 4.0f, 3.0f, 2.0f, 1.0f });
             // writer.write("/Group1/MyDataSet", new double[] { 4.0, 3.0, 2.0, 1.0 });
             writer.writeBitField("/Group1/MyBitSet", bs);
-            writer.writeFloatMatrix("/Group1/MyDataSet", new float[][]
+            writer.float32().writeMatrix("/Group1/MyDataSet", new float[][]
                 {
                     { 4, 3, 2, 1, 0, -1 },
                     { 0, 1, 2, 3, 4, 5 } });
-            writer.writeLongArray("/Group1/MyDataSet2", new long[]
+            writer.int64().writeArray("/Group1/MyDataSet2", new long[]
                 { 4, 3, 2, 1 });
-            writer.writeLongArray("/Group1/MyDataSet3", new long[]
+            writer.int64().writeArray("/Group1/MyDataSet3", new long[]
                 { 1 });
             // writer.write("/Group1/MyDataSet", new int[] { 4, 3, 2, 1 });
             writer.createHardLink("/Group1/MyDataSet", "/Group1/SubGroup1/MyDataSet");
-            writer.writeString("/Group1/MyString", "Und schon wieder die Geschichte vom Pferd!");
+            writer.string().write("/Group1/MyString", "Und schon wieder die Geschichte vom Pferd!");
             writer.string().setAttr("/Group1/MyDataSet", "foo", "Die Geschichte vom Pferd");
             // writer.addAttribute("/Group1/SubGroup1/MyDataSet", "foo", "No story");
-            writer.setDoubleAttribute("/", "version", 17.0);
+            writer.float64().setAttr("/", "version", 17.0);
             writer.setBooleanAttribute("/Group1", "active", true);
-            writer.writeByteArray("/empty", new byte[0]);
+            writer.int8().writeArray("/empty", new byte[0]);
             writer.close();
         } catch (HDF5LibraryException ex)
         {

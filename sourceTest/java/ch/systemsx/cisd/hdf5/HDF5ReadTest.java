@@ -49,7 +49,7 @@ public class HDF5ReadTest
             System.out.println();
             BitSet bs = reader.readBitField("/Group1/MyBitSet");
             System.out.println(bs);
-            System.out.println(reader.getDoubleAttribute("/", "version"));
+            System.out.println(reader.float64().getAttr("/", "version"));
             List<String> members = reader.getGroupMemberPaths("/Group1");
             for (String m : members)
             {
@@ -62,9 +62,9 @@ public class HDF5ReadTest
             System.out.println(reader.getBooleanAttribute("/Group1", "active"));
             System.out.println(reader.string().getAttr("/Group1/MyDataSet", "foo"));
             System.out.println(reader.string().getAttr("/Group1/SubGroup1/MyDataSet", "foo"));
-            System.out.println(reader.readDoubleMatrix("/Group1/MyDataSet")[1][0]);
-            System.out.println(reader.readFloatMatrix("/Group1/SubGroup1/MyDataSet")[1][2]);
-            System.out.println(reader.readString("/Group1/MyString").length());
+            System.out.println(reader.float64().readMatrix("/Group1/MyDataSet")[1][0]);
+            System.out.println(reader.float32().readMatrix("/Group1/SubGroup1/MyDataSet")[1][2]);
+            System.out.println(reader.string().read("/Group1/MyString").length());
             listAttributes(reader, "empty");
         } catch (HDF5LibraryException ex)
         {

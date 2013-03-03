@@ -883,8 +883,8 @@ public class HDF5ArchiverTest
         h5arfile.deleteOnExit();
         HDF5ArchiverFactory.open(h5arfile).archiveFromFilesystem("ttt", dir).close();
         IHDF5Writer w = HDF5Factory.open(h5arfile);
-        w.writeString("/ttt/test/file_test1.txt", "changed behind the back.");
-        w.writeByteArray("/ttt/test/dir_somedir/file_test2.txt", "A\nB\nD\n".getBytes());
+        w.string().write("/ttt/test/file_test1.txt", "changed behind the back.");
+        w.int8().writeArray("/ttt/test/dir_somedir/file_test2.txt", "A\nB\nD\n".getBytes());
         w.close();
         final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
         final List<ArchiveEntry> failed = ar.test();

@@ -66,7 +66,7 @@ public class HDF5SpeedTest
                 f2.delete();
                 final IHDF5Writer writer =
                         HDF5FactoryProvider.get().configure(f2).syncMode(SyncMode.NO_SYNC).writer();
-                writer.writeFloatArray("/f", arr);
+                writer.float32().writeArray("/f", arr);
                 writer.close();
             }
         } catch (HDF5LibraryException ex)
@@ -97,7 +97,7 @@ public class HDF5SpeedTest
             {
                 final IHDF5Reader reader =
                         HDF5FactoryProvider.get().configureForReading(f2).reader();
-                reader.readFloatArray("/f");
+                reader.float32().readArray("/f");
                 reader.close();
             }
         } catch (HDF5LibraryException ex)

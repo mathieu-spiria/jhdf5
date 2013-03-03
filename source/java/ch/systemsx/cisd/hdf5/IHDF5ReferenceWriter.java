@@ -142,7 +142,7 @@ public interface IHDF5ReferenceWriter
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      */
-    public void createLongArray(final String objectPath, final long size, final int blockSize);
+    public void createObjectReferenceArray(final String objectPath, final long size, final int blockSize);
 
     /**
      * Creates an array (of rank 1) of object references.

@@ -124,7 +124,7 @@ public class HDF5DataSetRandomAccessFileTest
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).dontUseExtendableDataTypes()
                         .writer();
-        writer.writeByteArray(dataSetName, referenceArray);
+        writer.int8().writeArray(dataSetName, referenceArray);
         assertEquals(HDF5StorageLayout.CONTIGUOUS, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -160,8 +160,8 @@ public class HDF5DataSetRandomAccessFileTest
         }
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArray.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArray);
+        writer.int8().createArray(dataSetName, referenceArray.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArray);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -197,7 +197,7 @@ public class HDF5DataSetRandomAccessFileTest
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).dontUseExtendableDataTypes()
                         .writer();
-        writer.writeByteArray(dataSetName, referenceArray);
+        writer.int8().writeArray(dataSetName, referenceArray);
         assertEquals(HDF5StorageLayout.CONTIGUOUS, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -234,8 +234,8 @@ public class HDF5DataSetRandomAccessFileTest
         }
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArray.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArray);
+        writer.int8().createArray(dataSetName, referenceArray.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArray);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -272,8 +272,8 @@ public class HDF5DataSetRandomAccessFileTest
         }
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArray.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArray);
+        writer.int8().createArray(dataSetName, referenceArray.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArray);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -318,8 +318,8 @@ public class HDF5DataSetRandomAccessFileTest
         }
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArray.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArray);
+        writer.int8().createArray(dataSetName, referenceArray.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArray);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -357,8 +357,8 @@ public class HDF5DataSetRandomAccessFileTest
         }
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArray.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArray);
+        writer.int8().createArray(dataSetName, referenceArray.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArray);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -429,7 +429,7 @@ public class HDF5DataSetRandomAccessFileTest
         assertEquals(HDF5StorageLayout.CHUNKED, dsInfo.getStorageLayout());
         assertEquals(referenceArray.length * 2, dsInfo.getSize());
         assertNull(dsInfo.getTypeInformation().tryGetOpaqueTag());
-        final byte[] arrayRead = writer.readByteArray(dataSetName);
+        final byte[] arrayRead = writer.int8().readArray(dataSetName);
         assertEquals(referenceArray.length * 2, arrayRead.length);
         for (int i = 0; i < referenceArray.length; ++i)
         {
@@ -468,7 +468,7 @@ public class HDF5DataSetRandomAccessFileTest
         assertEquals(HDF5StorageLayout.CHUNKED, dsInfo.getStorageLayout());
         assertEquals(referenceArray.length * 2, dsInfo.getSize());
         assertNull(dsInfo.getTypeInformation().tryGetOpaqueTag());
-        final byte[] arrayRead = writer.readByteArray(dataSetName);
+        final byte[] arrayRead = writer.int8().readArray(dataSetName);
         assertEquals(referenceArray.length * 2, arrayRead.length);
         for (int i = 0; i < referenceArray.length; ++i)
         {
@@ -529,8 +529,8 @@ public class HDF5DataSetRandomAccessFileTest
         }
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArray.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArray);
+        writer.int8().createArray(dataSetName, referenceArray.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArray);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -563,8 +563,8 @@ public class HDF5DataSetRandomAccessFileTest
         }
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArray.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArray);
+        writer.int8().createArray(dataSetName, referenceArray.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArray);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -593,8 +593,8 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = referenceArrayByte.length / 10;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArrayByte.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArrayByte);
+        writer.int8().createArray(dataSetName, referenceArrayByte.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArrayByte);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -632,8 +632,8 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = referenceArrayByte.length / 10;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArrayByte.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArrayByte);
+        writer.int8().createArray(dataSetName, referenceArrayByte.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArrayByte);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -672,8 +672,8 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = referenceArrayByte.length / 10;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArrayByte.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArrayByte);
+        writer.int8().createArray(dataSetName, referenceArrayByte.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArrayByte);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -711,8 +711,8 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = referenceArrayByte.length / 10;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, referenceArrayByte.length, chunkSize);
-        writer.writeByteArray(dataSetName, referenceArrayByte);
+        writer.int8().createArray(dataSetName, referenceArrayByte.length, chunkSize);
+        writer.int8().writeArray(dataSetName, referenceArrayByte);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -746,8 +746,8 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = 4;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, bytesReference.length, chunkSize);
-        writer.writeByteArray(dataSetName, bytesReference);
+        writer.int8().createArray(dataSetName, bytesReference.length, chunkSize);
+        writer.int8().writeArray(dataSetName, bytesReference);
         assertEquals(HDF5StorageLayout.CHUNKED, writer.getDataSetInformation(dataSetName)
                 .getStorageLayout());
         writer.close();
@@ -773,7 +773,7 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = 10;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, 0, chunkSize);
+        writer.int8().createArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
                 asRandomAccessFileReadWrite(dataSetFile, dataSetName);
@@ -805,7 +805,7 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = 10;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, 0, chunkSize);
+        writer.int8().createArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
                 asRandomAccessFileReadWrite(dataSetFile, dataSetName);
@@ -839,7 +839,7 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = 10;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, 0, chunkSize);
+        writer.int8().createArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
                 asRandomAccessFileReadWrite(dataSetFile, dataSetName);
@@ -869,7 +869,7 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = 10;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, 0, chunkSize);
+        writer.int8().createArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
                 asRandomAccessFileReadWrite(dataSetFile, dataSetName);
@@ -892,7 +892,7 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = 10;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, 0, chunkSize);
+        writer.int8().createArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
                 asRandomAccessFileReadWrite(dataSetFile, dataSetName);
@@ -915,7 +915,7 @@ public class HDF5DataSetRandomAccessFileTest
         final int chunkSize = 10;
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
-        writer.createByteArray(dataSetName, 0, chunkSize);
+        writer.int8().createArray(dataSetName, 0, chunkSize);
         writer.close();
         final HDF5DataSetRandomAccessFile raFile =
                 asRandomAccessFileReadWrite(dataSetFile, dataSetName);

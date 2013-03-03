@@ -319,6 +319,66 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
     public void deleteAttribute(final String objectPath, final String name);
 
     // /////////////////////
+    // Bytes
+    // /////////////////////
+
+    /**
+     * Returns the full writer for byte / int8.
+     */
+    @Override
+    public IHDF5ByteWriter int8();
+
+    // /////////////////////
+    // Short
+    // /////////////////////
+
+    /**
+     * Returns the full writer for short / int16.
+     */
+    @Override
+    public IHDF5ShortWriter int16();
+
+    // /////////////////////
+    // Int
+    // /////////////////////
+
+    /**
+     * Returns the full writer for int / int32.
+     */
+    @Override
+    public IHDF5IntWriter int32();
+
+    // /////////////////////
+    // Long
+    // /////////////////////
+
+    /**
+     * Returns the full writer for long / int64.
+     */
+    @Override
+    public IHDF5LongWriter int64();
+
+    // /////////////////////
+    // Float
+    // /////////////////////
+
+    /**
+     * Returns the full writer for float / float32.
+     */
+    @Override
+    public IHDF5FloatWriter float32();
+
+    // /////////////////////
+    // Double
+    // /////////////////////
+
+    /**
+     * Returns the full writer for long / float64.
+     */
+    @Override
+    public IHDF5DoubleWriter float64();
+
+    // /////////////////////
     // Enums
     // /////////////////////
 

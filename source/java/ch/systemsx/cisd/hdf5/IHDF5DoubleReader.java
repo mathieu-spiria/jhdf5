@@ -39,7 +39,7 @@ public interface IHDF5DoubleReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public double getDoubleAttribute(final String objectPath, final String attributeName);
+    public double getAttr(final String objectPath, final String attributeName);
 
     /**
      * Reads a <code>double[]</code> attribute named <var>attributeName</var> from the data set
@@ -49,7 +49,7 @@ public interface IHDF5DoubleReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public double[] getDoubleArrayAttribute(final String objectPath, final String attributeName);
+    public double[] getArrayAttr(final String objectPath, final String attributeName);
 
     /**
      * Reads a multi-dimensional array <code>double</code> attribute named <var>attributeName</var>
@@ -59,7 +59,7 @@ public interface IHDF5DoubleReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute array value read from the data set.
      */
-    public MDDoubleArray getDoubleMDArrayAttribute(final String objectPath,
+    public MDDoubleArray getMDArrayAttr(final String objectPath,
             final String attributeName);
 
     /**
@@ -70,7 +70,7 @@ public interface IHDF5DoubleReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute matrix value read from the data set.
      */
-    public double[][] getDoubleMatrixAttribute(final String objectPath, final String attributeName)
+    public double[][] getMatrixAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException;
 
     // /////////////////////
@@ -84,7 +84,7 @@ public interface IHDF5DoubleReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The value read from the data set.
      */
-    public double readDouble(final String objectPath);
+    public double read(final String objectPath);
 
     /**
      * Reads a <code>double</code> array (of rank 1) from the data set <var>objectPath</var>.
@@ -92,7 +92,7 @@ public interface IHDF5DoubleReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public double[] readDoubleArray(final String objectPath);
+    public double[] readArray(final String objectPath);
 
     /**
      * Reads a multi-dimensional <code>double</code> array data set <var>objectPath</var>
@@ -103,7 +103,7 @@ public interface IHDF5DoubleReader
      * @param memoryOffset The offset in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public int[] readToDoubleMDArrayWithOffset(final String objectPath, 
+    public int[] readToMDArrayWithOffset(final String objectPath, 
     				final MDDoubleArray array, final int[] memoryOffset);
 
     /**
@@ -117,7 +117,7 @@ public interface IHDF5DoubleReader
      * @param memoryOffset The offset of the block in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public int[] readToDoubleMDArrayBlockWithOffset(final String objectPath,
+    public int[] readToMDArrayBlockWithOffset(final String objectPath,
             final MDDoubleArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset);
 
@@ -133,7 +133,7 @@ public interface IHDF5DoubleReader
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
      */
-    public double[] readDoubleArrayBlock(final String objectPath, final int blockSize,
+    public double[] readArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber);
 
     /**
@@ -146,7 +146,7 @@ public interface IHDF5DoubleReader
      * @param offset The offset of the block in the data set to start reading from (starting with 0).
      * @return The data block read from the data set.
      */
-    public double[] readDoubleArrayBlockWithOffset(final String objectPath, final int blockSize,
+    public double[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset);
 
     /**
@@ -158,7 +158,7 @@ public interface IHDF5DoubleReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public double[][] readDoubleMatrix(final String objectPath) throws HDF5JavaException;
+    public double[][] readMatrix(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a <code>double</code> matrix (array of arrays) from the data set
@@ -175,7 +175,7 @@ public interface IHDF5DoubleReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public double[][] readDoubleMatrixBlock(final String objectPath, final int blockSizeX,
+    public double[][] readMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException;
 
@@ -192,7 +192,7 @@ public interface IHDF5DoubleReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public double[][] readDoubleMatrixBlockWithOffset(final String objectPath, 
+    public double[][] readMatrixBlockWithOffset(final String objectPath, 
     				final int blockSizeX, final int blockSizeY, final long offsetX, final long offsetY) 
     				throws HDF5JavaException;
 
@@ -203,7 +203,7 @@ public interface IHDF5DoubleReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public MDDoubleArray readDoubleMDArray(final String objectPath);
+    public MDDoubleArray readMDArray(final String objectPath);
 
     /**
      * Reads a multi-dimensional <code>double</code> array from the data set 
@@ -215,7 +215,7 @@ public interface IHDF5DoubleReader
      *            <var>blockDimensions</var> in the according dimension).
      * @return The data block read from the data set.
      */
-    public MDDoubleArray readDoubleMDArrayBlock(final String objectPath,
+    public MDDoubleArray readMDArrayBlock(final String objectPath,
     				final int[] blockDimensions, final long[] blockNumber);
 
     /**
@@ -227,7 +227,7 @@ public interface IHDF5DoubleReader
      * @param offset The offset in the data set to start reading from in each dimension.
      * @return The data block read from the data set.
      */
-    public MDDoubleArray readDoubleMDArrayBlockWithOffset(final String objectPath,
+    public MDDoubleArray readMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset);
     
     /**
@@ -236,7 +236,7 @@ public interface IHDF5DoubleReader
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
-    public Iterable<HDF5DataBlock<double[]>> getDoubleArrayNaturalBlocks(
+    public Iterable<HDF5DataBlock<double[]>> getArrayNaturalBlocks(
     									final String dataSetPath)
             throws HDF5JavaException;
 
@@ -245,6 +245,6 @@ public interface IHDF5DoubleReader
      * 
      * @see HDF5MDDataBlock
      */
-    public Iterable<HDF5MDDataBlock<MDDoubleArray>> getDoubleMDArrayNaturalBlocks(
+    public Iterable<HDF5MDDataBlock<MDDoubleArray>> getMDArrayNaturalBlocks(
     									final String dataSetPath);
 }

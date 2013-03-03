@@ -52,7 +52,7 @@ public interface IHDF5BooleanWriter
      * <p>
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
-     * back by {@link IHDF5LongReader#readLongArray(String)} but will throw a
+     * back by {@link IHDF5LongReader#readArray(String)} but will throw a
      * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -66,7 +66,7 @@ public interface IHDF5BooleanWriter
      * <p>
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
-     * back by {@link IHDF5LongReader#readLongArray(String)} but will throw a
+     * back by {@link IHDF5LongReader#readArray(String)} but will throw a
      * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.

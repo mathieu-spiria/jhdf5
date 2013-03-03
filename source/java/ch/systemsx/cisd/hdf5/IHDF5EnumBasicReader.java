@@ -35,7 +35,7 @@ public interface IHDF5EnumBasicReader
      * considered a data type path instead of a data type name.
      * 
      * @param dataTypeName The name of the enumeration in the HDF5 file.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public HDF5EnumerationType getEnumType(final String dataTypeName);
@@ -49,7 +49,7 @@ public interface IHDF5EnumBasicReader
      * @param values The values of the enumeration.
      * @throws HDF5JavaException If the data type exists and is not compatible with the
      *             <var>values</var> provided.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values)
@@ -66,7 +66,7 @@ public interface IHDF5EnumBasicReader
      *            compatible with the <var>values</var> provided.
      * @throws HDF5JavaException If <code>check = true</code>, the data type exists and is not
      *             compatible with the <var>values</var> provided.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public HDF5EnumerationType getEnumType(final String dataTypeName, final String[] values,
@@ -85,7 +85,7 @@ public interface IHDF5EnumBasicReader
      * Returns the enumeration type for the data set <var>dataSetPath</var>.
      * 
      * @param dataSetPath The name of data set to get the enumeration type for.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public HDF5EnumerationType getDataSetEnumType(final String dataSetPath);
@@ -102,7 +102,7 @@ public interface IHDF5EnumBasicReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set as a String.
      * @throws HDF5JavaException If the attribute is not an enum type.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public String getEnumAttributeAsString(final String objectPath, final String attributeName)
@@ -116,7 +116,7 @@ public interface IHDF5EnumBasicReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      * @throws HDF5JavaException If the attribute is not an enum type.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public HDF5EnumerationValue getEnumAttribute(final String objectPath, final String attributeName)
@@ -131,7 +131,7 @@ public interface IHDF5EnumBasicReader
      * @param enumClass the {@link Enum} class to represent the values of.
      * @return The attribute value read from the data set.
      * @throws HDF5JavaException If the attribute is not an enum type.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public <T extends Enum<T>> T getEnumAttribute(final String objectPath,
@@ -160,7 +160,7 @@ public interface IHDF5EnumBasicReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute values as read from the data set.
      * @throws HDF5JavaException If the attribute is not an enum type.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public HDF5EnumerationValueArray getEnumArrayAttribute(final String objectPath,
@@ -185,7 +185,7 @@ public interface IHDF5EnumBasicReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var>.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public HDF5EnumerationValue readEnum(final String objectPath) throws HDF5JavaException;
@@ -213,7 +213,7 @@ public interface IHDF5EnumBasicReader
      * @param enumType The enum type in the HDF5 file.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var>.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public HDF5EnumerationValue readEnum(final String objectPath, final HDF5EnumerationType enumType)
@@ -226,7 +226,7 @@ public interface IHDF5EnumBasicReader
      * @param enumType The enumeration type of this array.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var>.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public HDF5EnumerationValueArray readEnumArray(final String objectPath,
@@ -238,7 +238,7 @@ public interface IHDF5EnumBasicReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not of <var>enumType</var>.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()} instead.
      */
     @Deprecated
     public HDF5EnumerationValueArray readEnumArray(final String objectPath)
@@ -275,7 +275,7 @@ public interface IHDF5EnumBasicReader
      *            <var>blockSize</var>).
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()}} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()}} instead.
      */
     @Deprecated
     public HDF5EnumerationValueArray readEnumArrayBlock(final String objectPath,
@@ -293,7 +293,7 @@ public interface IHDF5EnumBasicReader
      *            <var>blockSize</var>).
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()}} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()}} instead.
      */
     @Deprecated
     public HDF5EnumerationValueArray readEnumArrayBlock(final String objectPath,
@@ -310,7 +310,7 @@ public interface IHDF5EnumBasicReader
      *            0).
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()}} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()}} instead.
      */
     @Deprecated
     public HDF5EnumerationValueArray readEnumArrayBlockWithOffset(final String objectPath,
@@ -328,7 +328,7 @@ public interface IHDF5EnumBasicReader
      *            0).
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()}} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()}} instead.
      */
     @Deprecated
     public HDF5EnumerationValueArray readEnumArrayBlockWithOffset(final String objectPath,
@@ -353,7 +353,7 @@ public interface IHDF5EnumBasicReader
      * @param enumType The enumeration type of this array.
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
-     * @deprecated Use respective method in {@link IHDF5Reader#enums()}} instead.
+     * @deprecated Use respective method in {@link IHDF5Reader#enumeration()}} instead.
      */
     @Deprecated
     public Iterable<HDF5DataBlock<HDF5EnumerationValueArray>> getEnumArrayNaturalBlocks(

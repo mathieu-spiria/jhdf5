@@ -415,6 +415,60 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
     public boolean hasAttribute(final String objectPath, final String attributeName);
 
     // /////////////////////
+    // Bytes
+    // /////////////////////
+
+    /**
+     * Returns the full reader for byte / int8.
+     */
+    public IHDF5ByteReader int8();
+
+    // /////////////////////
+    // Short
+    // /////////////////////
+
+    /**
+     * Returns the full reader for short / int16.
+     */
+    public IHDF5ShortReader int16();
+
+    // /////////////////////
+    // Int
+    // /////////////////////
+
+    /**
+     * Returns the full reader for int / int32.
+     */
+    public IHDF5IntReader int32();
+
+    // /////////////////////
+    // Long
+    // /////////////////////
+
+    /**
+     * Returns the full reader for long / int64.
+     */
+    public IHDF5LongReader int64();
+
+    // /////////////////////
+    // Float
+    // /////////////////////
+
+    /**
+     * Returns the full reader for float / float32.
+     */
+    public IHDF5FloatReader float32();
+
+    // /////////////////////
+    // Double
+    // /////////////////////
+
+    /**
+     * Returns the full reader for long / float64.
+     */
+    public IHDF5DoubleReader float64();
+
+    // /////////////////////
     // Enums
     // /////////////////////
 
@@ -426,7 +480,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IH
     public IHDF5EnumReader enums();
 
     /**
-     * Returns the full reader for enumerations
+     * Returns the full reader for enumerations.
      */
     public IHDF5EnumReader enumeration();
 

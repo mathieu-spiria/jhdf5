@@ -112,7 +112,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                                     baseReader.checkIsTimeDuration(objectPath, attributeName,
                                             objectId, registry);
                             final long[] data =
-                                    longReader.getLongArrayAttribute(objectPath, attributeName);
+                                    longReader.getArrayAttr(objectPath, attributeName);
                             return new HDF5TimeDurationArray(data, storedUnit);
                         }
                     };
@@ -140,7 +140,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                                     baseReader.checkIsTimeDuration(objectPath, attributeName,
                                             objectId, registry);
                             final MDLongArray data =
-                                    longReader.getLongMDArrayAttribute(objectPath, attributeName);
+                                    longReader.getMDArrayAttr(objectPath, attributeName);
                             return new HDF5TimeDurationMDArray(data, storedUnit);
                         }
                     };

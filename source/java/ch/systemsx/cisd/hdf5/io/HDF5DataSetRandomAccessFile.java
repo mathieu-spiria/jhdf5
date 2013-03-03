@@ -353,7 +353,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
                     long maxSize = requiresFixedMaxSize(creationStorageFeature) ? size : 0;
                     if (opaqueTagOrNull == null)
                     {
-                        writerOrNull.createByteArray(dataSetPath, maxSize, size,
+                        writerOrNull.int8().createArray(dataSetPath, maxSize, size,
                                 HDF5IntStorageFeatures.createFromGeneric(creationStorageFeature));
                     } else
                     {
@@ -701,7 +701,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
                             block, realBlockSize, blockOffset);
                 } else
                 {
-                    writerOrNull.writeByteArrayBlockWithOffset(dataSetPath, block, realBlockSize,
+                    writerOrNull.int8().writeArrayBlockWithOffset(dataSetPath, block, realBlockSize,
                             blockOffset);
                 }
             } catch (HDF5Exception ex)

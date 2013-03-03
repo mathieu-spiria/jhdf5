@@ -258,7 +258,7 @@ public interface IHDF5DateTimeBasicWriter
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link IHDF5LongWriter#createLongArray(String, long, int, HDF5IntStorageFeatures)} call that
+     * {@link IHDF5LongWriter#createArray(String, long, int, HDF5IntStorageFeatures)} call that
      * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -281,7 +281,7 @@ public interface IHDF5DateTimeBasicWriter
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link IHDF5LongWriter#createLongArray(String, long, int, HDF5IntStorageFeatures)} call that
+     * {@link IHDF5LongWriter#createArray(String, long, int, HDF5IntStorageFeatures)} call that
      * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.

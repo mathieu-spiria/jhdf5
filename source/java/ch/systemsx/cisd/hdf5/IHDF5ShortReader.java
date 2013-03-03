@@ -39,7 +39,7 @@ public interface IHDF5ShortReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public short getShortAttribute(final String objectPath, final String attributeName);
+    public short getAttr(final String objectPath, final String attributeName);
 
     /**
      * Reads a <code>short[]</code> attribute named <var>attributeName</var> from the data set
@@ -49,7 +49,7 @@ public interface IHDF5ShortReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public short[] getShortArrayAttribute(final String objectPath, final String attributeName);
+    public short[] getArrayAttr(final String objectPath, final String attributeName);
 
     /**
      * Reads a multi-dimensional array <code>short</code> attribute named <var>attributeName</var>
@@ -59,7 +59,7 @@ public interface IHDF5ShortReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute array value read from the data set.
      */
-    public MDShortArray getShortMDArrayAttribute(final String objectPath,
+    public MDShortArray getMDArrayAttr(final String objectPath,
             final String attributeName);
 
     /**
@@ -70,7 +70,7 @@ public interface IHDF5ShortReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute matrix value read from the data set.
      */
-    public short[][] getShortMatrixAttribute(final String objectPath, final String attributeName)
+    public short[][] getMatrixAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException;
 
     // /////////////////////
@@ -84,7 +84,7 @@ public interface IHDF5ShortReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The value read from the data set.
      */
-    public short readShort(final String objectPath);
+    public short read(final String objectPath);
 
     /**
      * Reads a <code>short</code> array (of rank 1) from the data set <var>objectPath</var>.
@@ -92,7 +92,7 @@ public interface IHDF5ShortReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public short[] readShortArray(final String objectPath);
+    public short[] readArray(final String objectPath);
 
     /**
      * Reads a multi-dimensional <code>short</code> array data set <var>objectPath</var>
@@ -103,7 +103,7 @@ public interface IHDF5ShortReader
      * @param memoryOffset The offset in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public int[] readToShortMDArrayWithOffset(final String objectPath, 
+    public int[] readToMDArrayWithOffset(final String objectPath, 
     				final MDShortArray array, final int[] memoryOffset);
 
     /**
@@ -117,7 +117,7 @@ public interface IHDF5ShortReader
      * @param memoryOffset The offset of the block in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public int[] readToShortMDArrayBlockWithOffset(final String objectPath,
+    public int[] readToMDArrayBlockWithOffset(final String objectPath,
             final MDShortArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset);
 
@@ -133,7 +133,7 @@ public interface IHDF5ShortReader
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
      */
-    public short[] readShortArrayBlock(final String objectPath, final int blockSize,
+    public short[] readArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber);
 
     /**
@@ -146,7 +146,7 @@ public interface IHDF5ShortReader
      * @param offset The offset of the block in the data set to start reading from (starting with 0).
      * @return The data block read from the data set.
      */
-    public short[] readShortArrayBlockWithOffset(final String objectPath, final int blockSize,
+    public short[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset);
 
     /**
@@ -158,7 +158,7 @@ public interface IHDF5ShortReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public short[][] readShortMatrix(final String objectPath) throws HDF5JavaException;
+    public short[][] readMatrix(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a <code>short</code> matrix (array of arrays) from the data set
@@ -175,7 +175,7 @@ public interface IHDF5ShortReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public short[][] readShortMatrixBlock(final String objectPath, final int blockSizeX,
+    public short[][] readMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException;
 
@@ -192,7 +192,7 @@ public interface IHDF5ShortReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public short[][] readShortMatrixBlockWithOffset(final String objectPath, 
+    public short[][] readMatrixBlockWithOffset(final String objectPath, 
     				final int blockSizeX, final int blockSizeY, final long offsetX, final long offsetY) 
     				throws HDF5JavaException;
 
@@ -203,7 +203,7 @@ public interface IHDF5ShortReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public MDShortArray readShortMDArray(final String objectPath);
+    public MDShortArray readMDArray(final String objectPath);
 
     /**
      * Reads a multi-dimensional <code>short</code> array from the data set 
@@ -215,7 +215,7 @@ public interface IHDF5ShortReader
      *            <var>blockDimensions</var> in the according dimension).
      * @return The data block read from the data set.
      */
-    public MDShortArray readShortMDArrayBlock(final String objectPath,
+    public MDShortArray readMDArrayBlock(final String objectPath,
     				final int[] blockDimensions, final long[] blockNumber);
 
     /**
@@ -227,7 +227,7 @@ public interface IHDF5ShortReader
      * @param offset The offset in the data set to start reading from in each dimension.
      * @return The data block read from the data set.
      */
-    public MDShortArray readShortMDArrayBlockWithOffset(final String objectPath,
+    public MDShortArray readMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset);
     
     /**
@@ -236,7 +236,7 @@ public interface IHDF5ShortReader
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
-    public Iterable<HDF5DataBlock<short[]>> getShortArrayNaturalBlocks(
+    public Iterable<HDF5DataBlock<short[]>> getArrayNaturalBlocks(
     									final String dataSetPath)
             throws HDF5JavaException;
 
@@ -245,6 +245,6 @@ public interface IHDF5ShortReader
      * 
      * @see HDF5MDDataBlock
      */
-    public Iterable<HDF5MDDataBlock<MDShortArray>> getShortMDArrayNaturalBlocks(
+    public Iterable<HDF5MDDataBlock<MDShortArray>> getMDArrayNaturalBlocks(
     									final String dataSetPath);
 }

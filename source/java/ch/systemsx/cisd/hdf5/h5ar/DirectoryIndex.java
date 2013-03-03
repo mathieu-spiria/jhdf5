@@ -238,7 +238,7 @@ class DirectoryIndex implements IDirectoryIndex
                                     });
                 int crc32 = (int) crc32Digester.getValue();
                 int crc32Stored =
-                        hdf5Reader.getIntAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME);
+                        hdf5Reader.int32().getAttr(indexDataSetName, CRC32_ATTRIBUTE_NAME);
                 if (crc32 != crc32Stored)
                 {
                     throw new ListArchiveException(groupPath,
@@ -250,7 +250,7 @@ class DirectoryIndex implements IDirectoryIndex
                 final String concatenatedNames = hdf5Reader.readString(indexNamesDataSetName);
                 crc32 = calcCrc32(concatenatedNames);
                 crc32Stored =
-                        hdf5Reader.getIntAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME);
+                        hdf5Reader.int32().getAttr(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME);
                 if (crc32 != crc32Stored)
                 {
                     throw new ListArchiveException(groupPath,
@@ -379,7 +379,7 @@ class DirectoryIndex implements IDirectoryIndex
             final String indexNamesDataSetName = getIndexNamesDataSetName();
             final String concatenatedNamesStr = concatenatedNames.toString();
             hdf5WriterOrNull.string().write(indexNamesDataSetName, concatenatedNamesStr, HDF5GenericStorageFeatures.GENERIC_DEFLATE);
-            hdf5WriterOrNull.setIntAttribute(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME,
+            hdf5WriterOrNull.int32().setAttr(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME,
                     calcCrc32(concatenatedNamesStr));
             final String indexDataSetName = getIndexDataSetName();
             final CRC32 crc32 = new CRC32();
@@ -394,7 +394,7 @@ class DirectoryIndex implements IDirectoryIndex
                                 crc32.update(byteArray);
                             }
                         });
-            hdf5WriterOrNull.setIntAttribute(indexDataSetName, CRC32_ATTRIBUTE_NAME,
+            hdf5WriterOrNull.int32().setAttr(indexDataSetName, CRC32_ATTRIBUTE_NAME,
                     (int) crc32.getValue());
         } catch (HDF5Exception ex)
         {

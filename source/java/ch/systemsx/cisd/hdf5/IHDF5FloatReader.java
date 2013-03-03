@@ -39,7 +39,7 @@ public interface IHDF5FloatReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public float getFloatAttribute(final String objectPath, final String attributeName);
+    public float getAttr(final String objectPath, final String attributeName);
 
     /**
      * Reads a <code>float[]</code> attribute named <var>attributeName</var> from the data set
@@ -49,7 +49,7 @@ public interface IHDF5FloatReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public float[] getFloatArrayAttribute(final String objectPath, final String attributeName);
+    public float[] getArrayAttr(final String objectPath, final String attributeName);
 
     /**
      * Reads a multi-dimensional array <code>float</code> attribute named <var>attributeName</var>
@@ -59,7 +59,7 @@ public interface IHDF5FloatReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute array value read from the data set.
      */
-    public MDFloatArray getFloatMDArrayAttribute(final String objectPath,
+    public MDFloatArray getMDArrayAttr(final String objectPath,
             final String attributeName);
 
     /**
@@ -70,7 +70,7 @@ public interface IHDF5FloatReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute matrix value read from the data set.
      */
-    public float[][] getFloatMatrixAttribute(final String objectPath, final String attributeName)
+    public float[][] getMatrixAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException;
 
     // /////////////////////
@@ -84,7 +84,7 @@ public interface IHDF5FloatReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The value read from the data set.
      */
-    public float readFloat(final String objectPath);
+    public float read(final String objectPath);
 
     /**
      * Reads a <code>float</code> array (of rank 1) from the data set <var>objectPath</var>.
@@ -92,7 +92,7 @@ public interface IHDF5FloatReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public float[] readFloatArray(final String objectPath);
+    public float[] readArray(final String objectPath);
 
     /**
      * Reads a multi-dimensional <code>float</code> array data set <var>objectPath</var>
@@ -103,7 +103,7 @@ public interface IHDF5FloatReader
      * @param memoryOffset The offset in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public int[] readToFloatMDArrayWithOffset(final String objectPath, 
+    public int[] readToMDArrayWithOffset(final String objectPath, 
     				final MDFloatArray array, final int[] memoryOffset);
 
     /**
@@ -117,7 +117,7 @@ public interface IHDF5FloatReader
      * @param memoryOffset The offset of the block in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public int[] readToFloatMDArrayBlockWithOffset(final String objectPath,
+    public int[] readToMDArrayBlockWithOffset(final String objectPath,
             final MDFloatArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset);
 
@@ -133,7 +133,7 @@ public interface IHDF5FloatReader
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
      */
-    public float[] readFloatArrayBlock(final String objectPath, final int blockSize,
+    public float[] readArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber);
 
     /**
@@ -146,7 +146,7 @@ public interface IHDF5FloatReader
      * @param offset The offset of the block in the data set to start reading from (starting with 0).
      * @return The data block read from the data set.
      */
-    public float[] readFloatArrayBlockWithOffset(final String objectPath, final int blockSize,
+    public float[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset);
 
     /**
@@ -158,7 +158,7 @@ public interface IHDF5FloatReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public float[][] readFloatMatrix(final String objectPath) throws HDF5JavaException;
+    public float[][] readMatrix(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a <code>float</code> matrix (array of arrays) from the data set
@@ -175,7 +175,7 @@ public interface IHDF5FloatReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public float[][] readFloatMatrixBlock(final String objectPath, final int blockSizeX,
+    public float[][] readMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException;
 
@@ -192,7 +192,7 @@ public interface IHDF5FloatReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public float[][] readFloatMatrixBlockWithOffset(final String objectPath, 
+    public float[][] readMatrixBlockWithOffset(final String objectPath, 
     				final int blockSizeX, final int blockSizeY, final long offsetX, final long offsetY) 
     				throws HDF5JavaException;
 
@@ -203,7 +203,7 @@ public interface IHDF5FloatReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public MDFloatArray readFloatMDArray(final String objectPath);
+    public MDFloatArray readMDArray(final String objectPath);
 
     /**
      * Reads a multi-dimensional <code>float</code> array from the data set 
@@ -215,7 +215,7 @@ public interface IHDF5FloatReader
      *            <var>blockDimensions</var> in the according dimension).
      * @return The data block read from the data set.
      */
-    public MDFloatArray readFloatMDArrayBlock(final String objectPath,
+    public MDFloatArray readMDArrayBlock(final String objectPath,
     				final int[] blockDimensions, final long[] blockNumber);
 
     /**
@@ -227,7 +227,7 @@ public interface IHDF5FloatReader
      * @param offset The offset in the data set to start reading from in each dimension.
      * @return The data block read from the data set.
      */
-    public MDFloatArray readFloatMDArrayBlockWithOffset(final String objectPath,
+    public MDFloatArray readMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset);
     
     /**
@@ -236,7 +236,7 @@ public interface IHDF5FloatReader
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
-    public Iterable<HDF5DataBlock<float[]>> getFloatArrayNaturalBlocks(
+    public Iterable<HDF5DataBlock<float[]>> getArrayNaturalBlocks(
     									final String dataSetPath)
             throws HDF5JavaException;
 
@@ -245,6 +245,6 @@ public interface IHDF5FloatReader
      * 
      * @see HDF5MDDataBlock
      */
-    public Iterable<HDF5MDDataBlock<MDFloatArray>> getFloatMDArrayNaturalBlocks(
+    public Iterable<HDF5MDDataBlock<MDFloatArray>> getMDArrayNaturalBlocks(
     									final String dataSetPath);
 }

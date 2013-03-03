@@ -35,12 +35,13 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-class HDF5IntWriter implements IHDF5IntWriter
+class HDF5IntWriter extends HDF5IntReader implements IHDF5IntWriter
 {
     private final HDF5BaseWriter baseWriter;
 
     HDF5IntWriter(HDF5BaseWriter baseWriter)
     {
+        super(baseWriter);
         assert baseWriter != null;
 
         this.baseWriter = baseWriter;
@@ -51,7 +52,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     // /////////////////////
 
     @Override
-    public void setIntAttribute(final String objectPath, final String name, final int value)
+    public void setAttr(final String objectPath, final String name, final int value)
     {
         assert objectPath != null;
         assert name != null;
@@ -62,7 +63,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void setIntArrayAttribute(final String objectPath, final String name,
+    public void setArrayAttr(final String objectPath, final String name,
             final int[] value)
     {
         assert objectPath != null;
@@ -87,7 +88,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void setIntMDArrayAttribute(final String objectPath, final String name,
+    public void setMDArrayAttr(final String objectPath, final String name,
             final MDIntArray value)
     {
         assert objectPath != null;
@@ -115,10 +116,10 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void setIntMatrixAttribute(final String objectPath, final String name,
+    public void setMatrixAttr(final String objectPath, final String name,
             final int[][] value)
     {
-        setIntMDArrayAttribute(objectPath, name, new MDIntArray(value));
+        setMDArrayAttr(objectPath, name, new MDIntArray(value));
     }
     
     // /////////////////////
@@ -126,7 +127,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     // /////////////////////
 
     @Override
-    public void writeInt(final String objectPath, final int value)
+    public void write(final String objectPath, final int value)
     {
         assert objectPath != null;
 
@@ -135,13 +136,13 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void writeIntArray(final String objectPath, final int[] data)
+    public void writeArray(final String objectPath, final int[] data)
     {
-        writeIntArray(objectPath, data, INT_NO_COMPRESSION);
+        writeArray(objectPath, data, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void writeIntArray(final String objectPath, final int[] data,
+    public void writeArray(final String objectPath, final int[] data,
             final HDF5IntStorageFeatures features)
     {
         assert data != null;
@@ -165,19 +166,19 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void createIntArray(final String objectPath, final int size)
+    public void createArray(final String objectPath, final int size)
     {
-        createIntArray(objectPath, size, INT_NO_COMPRESSION);
+        createArray(objectPath, size, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void createIntArray(final String objectPath, final long size, final int blockSize)
+    public void createArray(final String objectPath, final long size, final int blockSize)
     {
-        createIntArray(objectPath, size, blockSize, INT_NO_COMPRESSION);
+        createArray(objectPath, size, blockSize, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void createIntArray(final String objectPath, final int size,
+    public void createArray(final String objectPath, final int size,
             final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
@@ -206,7 +207,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void createIntArray(final String objectPath, final long size, final int blockSize,
+    public void createArray(final String objectPath, final long size, final int blockSize,
             final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
@@ -229,14 +230,14 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void writeIntArrayBlock(final String objectPath, final int[] data,
+    public void writeArrayBlock(final String objectPath, final int[] data,
             final long blockNumber)
     {
-        writeIntArrayBlockWithOffset(objectPath, data, data.length, data.length * blockNumber);
+        writeArrayBlockWithOffset(objectPath, data, data.length, data.length * blockNumber);
     }
 
     @Override
-    public void writeIntArrayBlockWithOffset(final String objectPath, final int[] data,
+    public void writeArrayBlockWithOffset(final String objectPath, final int[] data,
             final int dataSize, final long offset)
     {
         assert objectPath != null;
@@ -277,38 +278,38 @@ class HDF5IntWriter implements IHDF5IntWriter
      *            same length.
      */
     @Override
-    public void writeIntMatrix(final String objectPath, final int[][] data)
+    public void writeMatrix(final String objectPath, final int[][] data)
     {
-        writeIntMatrix(objectPath, data, INT_NO_COMPRESSION);
+        writeMatrix(objectPath, data, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void writeIntMatrix(final String objectPath, final int[][] data, 
+    public void writeMatrix(final String objectPath, final int[][] data, 
             final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
         assert HDF5Utils.areMatrixDimensionsConsistent(data);
 
-        writeIntMDArray(objectPath, new MDIntArray(data), features);
+        writeMDArray(objectPath, new MDIntArray(data), features);
     }
 
     @Override
-    public void createIntMatrix(final String objectPath, final int blockSizeX, 
+    public void createMatrix(final String objectPath, final int blockSizeX, 
             final int blockSizeY)
     {
-        createIntMatrix(objectPath, 0, 0, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
+        createMatrix(objectPath, 0, 0, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void createIntMatrix(final String objectPath, final long sizeX, final long sizeY,
+    public void createMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY)
     {
-        createIntMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
+        createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void createIntMatrix(final String objectPath, final long sizeX, final long sizeY,
+    public void createMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY, final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
@@ -337,48 +338,48 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void writeIntMatrixBlock(final String objectPath, final int[][] data,
+    public void writeMatrixBlock(final String objectPath, final int[][] data,
             final long blockNumberX, final long blockNumberY)
     {
         assert objectPath != null;
         assert data != null;
 
-        writeIntMDArrayBlock(objectPath, new MDIntArray(data), new long[]
+        writeMDArrayBlock(objectPath, new MDIntArray(data), new long[]
             { blockNumberX, blockNumberY });
     }
 
     @Override
-    public void writeIntMatrixBlockWithOffset(final String objectPath, final int[][] data,
+    public void writeMatrixBlockWithOffset(final String objectPath, final int[][] data,
             final long offsetX, final long offsetY)
     {
         assert objectPath != null;
         assert data != null;
 
-        writeIntMDArrayBlockWithOffset(objectPath, new MDIntArray(data, new int[]
+        writeMDArrayBlockWithOffset(objectPath, new MDIntArray(data, new int[]
             { data.length, data[0].length }), new long[]
             { offsetX, offsetY });
     }
 
     @Override
-    public void writeIntMatrixBlockWithOffset(final String objectPath, final int[][] data,
+    public void writeMatrixBlockWithOffset(final String objectPath, final int[][] data,
             final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY)
     {
         assert objectPath != null;
         assert data != null;
 
-        writeIntMDArrayBlockWithOffset(objectPath, new MDIntArray(data, new int[]
+        writeMDArrayBlockWithOffset(objectPath, new MDIntArray(data, new int[]
             { dataSizeX, dataSizeY }), new long[]
             { offsetX, offsetY });
     }
 
     @Override
-    public void writeIntMDArray(final String objectPath, final MDIntArray data)
+    public void writeMDArray(final String objectPath, final MDIntArray data)
     {
-        writeIntMDArray(objectPath, data, INT_NO_COMPRESSION);
+        writeMDArray(objectPath, data, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void writeIntMDArray(final String objectPath, final MDIntArray data,
+    public void writeMDArray(final String objectPath, final MDIntArray data,
             final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
@@ -402,20 +403,20 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void createIntMDArray(final String objectPath, final int[] dimensions)
+    public void createMDArray(final String objectPath, final int[] dimensions)
     {
-        createIntMDArray(objectPath, dimensions, INT_NO_COMPRESSION);
+        createMDArray(objectPath, dimensions, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void createIntMDArray(final String objectPath, final long[] dimensions,
+    public void createMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions)
     {
-        createIntMDArray(objectPath, dimensions, blockDimensions, INT_NO_COMPRESSION);
+        createMDArray(objectPath, dimensions, blockDimensions, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void createIntMDArray(final String objectPath, final int[] dimensions,
+    public void createMDArray(final String objectPath, final int[] dimensions,
             final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
@@ -445,7 +446,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void createIntMDArray(final String objectPath, final long[] dimensions,
+    public void createMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions, final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
@@ -468,7 +469,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void writeIntMDArrayBlock(final String objectPath, final MDIntArray data,
+    public void writeMDArrayBlock(final String objectPath, final MDIntArray data,
             final long[] blockNumber)
     {
         assert blockNumber != null;
@@ -479,11 +480,11 @@ class HDF5IntWriter implements IHDF5IntWriter
         {
             offset[i] = blockNumber[i] * dimensions[i];
         }
-        writeIntMDArrayBlockWithOffset(objectPath, data, offset);
+        writeMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
     @Override
-    public void writeIntMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
+    public void writeMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
             final long[] offset)
     {
         assert objectPath != null;
@@ -520,7 +521,7 @@ class HDF5IntWriter implements IHDF5IntWriter
     }
 
     @Override
-    public void writeIntMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
+    public void writeMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
             final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
     {
         assert objectPath != null;

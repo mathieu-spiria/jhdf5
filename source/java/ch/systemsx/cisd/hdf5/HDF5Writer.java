@@ -883,6 +883,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
+    public void createObjectReferenceArray(String objectPath, long size, int blockSize)
+    {
+        referenceWriter.createObjectReferenceArray(objectPath, size, blockSize);
+    }
+
+    @Override
     public void createObjectReferenceArray(String objectPath, int size,
             HDF5IntStorageFeatures features)
     {
@@ -1723,1170 +1729,1206 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     // ------------------------------------------------------------------------------
-    // GENERATED CODE SECTION - START
+    // Primitive types - START
     // ------------------------------------------------------------------------------
 
     @Override
     public void createByteArray(String objectPath, int blockSize)
     {
-        byteWriter.createByteArray(objectPath, blockSize);
+        byteWriter.createArray(objectPath, blockSize);
     }
 
     @Override
     public void createByteArray(String objectPath, long size, int blockSize)
     {
-        byteWriter.createByteArray(objectPath, size, blockSize);
+        byteWriter.createArray(objectPath, size, blockSize);
     }
 
     @Override
     public void createByteArray(String objectPath, int size, HDF5IntStorageFeatures features)
     {
-        byteWriter.createByteArray(objectPath, size, features);
+        byteWriter.createArray(objectPath, size, features);
     }
 
     @Override
     public void createByteArray(String objectPath, long size, int blockSize,
             HDF5IntStorageFeatures features)
     {
-        byteWriter.createByteArray(objectPath, size, blockSize, features);
+        byteWriter.createArray(objectPath, size, blockSize, features);
     }
 
     @Override
     public void createByteMDArray(String objectPath, int[] blockDimensions)
     {
-        byteWriter.createByteMDArray(objectPath, blockDimensions);
+        byteWriter.createMDArray(objectPath, blockDimensions);
     }
 
     @Override
     public void createByteMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
     {
-        byteWriter.createByteMDArray(objectPath, dimensions, blockDimensions);
+        byteWriter.createMDArray(objectPath, dimensions, blockDimensions);
     }
 
     @Override
     public void createByteMDArray(String objectPath, int[] dimensions,
             HDF5IntStorageFeatures features)
     {
-        byteWriter.createByteMDArray(objectPath, dimensions, features);
+        byteWriter.createMDArray(objectPath, dimensions, features);
     }
 
     @Override
     public void createByteMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
             HDF5IntStorageFeatures features)
     {
-        byteWriter.createByteMDArray(objectPath, dimensions, blockDimensions, features);
+        byteWriter.createMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     @Override
     public void createByteMatrix(String objectPath, int blockSizeX, int blockSizeY)
     {
-        byteWriter.createByteMatrix(objectPath, blockSizeX, blockSizeY);
+        byteWriter.createMatrix(objectPath, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createByteMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY)
     {
-        byteWriter.createByteMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+        byteWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createByteMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY, HDF5IntStorageFeatures features)
     {
-        byteWriter.createByteMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
+        byteWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     @Override
     public void setByteArrayAttribute(String objectPath, String name, byte[] value)
     {
-        byteWriter.setByteArrayAttribute(objectPath, name, value);
+        byteWriter.setArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setByteAttribute(String objectPath, String name, byte value)
     {
-        byteWriter.setByteAttribute(objectPath, name, value);
+        byteWriter.setAttr(objectPath, name, value);
     }
 
     @Override
     public void setByteMDArrayAttribute(String objectPath, String name, MDByteArray value)
     {
-        byteWriter.setByteMDArrayAttribute(objectPath, name, value);
+        byteWriter.setMDArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setByteMatrixAttribute(String objectPath, String name, byte[][] value)
     {
-        byteWriter.setByteMatrixAttribute(objectPath, name, value);
+        byteWriter.setMatrixAttr(objectPath, name, value);
     }
 
     @Override
     public void writeByte(String objectPath, byte value)
     {
-        byteWriter.writeByte(objectPath, value);
+        byteWriter.write(objectPath, value);
     }
 
     @Override
     public void writeByteArray(String objectPath, byte[] data)
     {
-        byteWriter.writeByteArray(objectPath, data);
+        byteWriter.writeArray(objectPath, data);
     }
 
     @Override
     public void writeByteArray(String objectPath, byte[] data, HDF5IntStorageFeatures features)
     {
-        byteWriter.writeByteArray(objectPath, data, features);
+        byteWriter.writeArray(objectPath, data, features);
     }
 
     @Override
     public void writeByteArrayBlock(String objectPath, byte[] data, long blockNumber)
     {
-        byteWriter.writeByteArrayBlock(objectPath, data, blockNumber);
+        byteWriter.writeArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeByteArrayBlockWithOffset(String objectPath, byte[] data, int dataSize,
             long offset)
     {
-        byteWriter.writeByteArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        byteWriter.writeArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     @Override
     public void writeByteMDArray(String objectPath, MDByteArray data)
     {
-        byteWriter.writeByteMDArray(objectPath, data);
+        byteWriter.writeMDArray(objectPath, data);
     }
 
     @Override
     public void writeByteMDArray(String objectPath, MDByteArray data,
             HDF5IntStorageFeatures features)
     {
-        byteWriter.writeByteMDArray(objectPath, data, features);
+        byteWriter.writeMDArray(objectPath, data, features);
     }
 
     @Override
     public void writeByteMDArrayBlock(String objectPath, MDByteArray data, long[] blockNumber)
     {
-        byteWriter.writeByteMDArrayBlock(objectPath, data, blockNumber);
+        byteWriter.writeMDArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeByteMDArrayBlockWithOffset(String objectPath, MDByteArray data, long[] offset)
     {
-        byteWriter.writeByteMDArrayBlockWithOffset(objectPath, data, offset);
+        byteWriter.writeMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
     @Override
     public void writeByteMDArrayBlockWithOffset(String objectPath, MDByteArray data,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        byteWriter.writeByteMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+        byteWriter.writeMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
                 memoryOffset);
     }
 
     @Override
     public void writeByteMatrix(String objectPath, byte[][] data)
     {
-        byteWriter.writeByteMatrix(objectPath, data);
+        byteWriter.writeMatrix(objectPath, data);
     }
 
     @Override
     public void writeByteMatrix(String objectPath, byte[][] data, HDF5IntStorageFeatures features)
     {
-        byteWriter.writeByteMatrix(objectPath, data, features);
+        byteWriter.writeMatrix(objectPath, data, features);
     }
 
     @Override
     public void writeByteMatrixBlock(String objectPath, byte[][] data, long blockNumberX,
             long blockNumberY)
     {
-        byteWriter.writeByteMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+        byteWriter.writeMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
     }
 
     @Override
     public void writeByteMatrixBlockWithOffset(String objectPath, byte[][] data, long offsetX,
             long offsetY)
     {
-        byteWriter.writeByteMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+        byteWriter.writeMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
     }
 
     @Override
     public void writeByteMatrixBlockWithOffset(String objectPath, byte[][] data, int dataSizeX,
             int dataSizeY, long offsetX, long offsetY)
     {
-        byteWriter.writeByteMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
+        byteWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
                 offsetY);
     }
 
     @Override
     public void createDoubleArray(String objectPath, int blockSize)
     {
-        doubleWriter.createDoubleArray(objectPath, blockSize);
+        doubleWriter.createArray(objectPath, blockSize);
     }
 
     @Override
     public void createDoubleArray(String objectPath, long size, int blockSize)
     {
-        doubleWriter.createDoubleArray(objectPath, size, blockSize);
+        doubleWriter.createArray(objectPath, size, blockSize);
     }
 
     @Override
     public void createDoubleArray(String objectPath, int size, HDF5FloatStorageFeatures features)
     {
-        doubleWriter.createDoubleArray(objectPath, size, features);
+        doubleWriter.createArray(objectPath, size, features);
     }
 
     @Override
     public void createDoubleArray(String objectPath, long size, int blockSize,
             HDF5FloatStorageFeatures features)
     {
-        doubleWriter.createDoubleArray(objectPath, size, blockSize, features);
+        doubleWriter.createArray(objectPath, size, blockSize, features);
     }
 
     @Override
     public void createDoubleMDArray(String objectPath, int[] blockDimensions)
     {
-        doubleWriter.createDoubleMDArray(objectPath, blockDimensions);
+        doubleWriter.createMDArray(objectPath, blockDimensions);
     }
 
     @Override
     public void createDoubleMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
     {
-        doubleWriter.createDoubleMDArray(objectPath, dimensions, blockDimensions);
+        doubleWriter.createMDArray(objectPath, dimensions, blockDimensions);
     }
 
     @Override
     public void createDoubleMDArray(String objectPath, int[] dimensions,
             HDF5FloatStorageFeatures features)
     {
-        doubleWriter.createDoubleMDArray(objectPath, dimensions, features);
+        doubleWriter.createMDArray(objectPath, dimensions, features);
     }
 
     @Override
     public void createDoubleMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
             HDF5FloatStorageFeatures features)
     {
-        doubleWriter.createDoubleMDArray(objectPath, dimensions, blockDimensions, features);
+        doubleWriter.createMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     @Override
     public void createDoubleMatrix(String objectPath, int blockSizeX, int blockSizeY)
     {
-        doubleWriter.createDoubleMatrix(objectPath, blockSizeX, blockSizeY);
+        doubleWriter.createMatrix(objectPath, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createDoubleMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY)
     {
-        doubleWriter.createDoubleMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+        doubleWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createDoubleMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY, HDF5FloatStorageFeatures features)
     {
-        doubleWriter.createDoubleMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
+        doubleWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     @Override
     public void setDoubleArrayAttribute(String objectPath, String name, double[] value)
     {
-        doubleWriter.setDoubleArrayAttribute(objectPath, name, value);
+        doubleWriter.setArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setDoubleAttribute(String objectPath, String name, double value)
     {
-        doubleWriter.setDoubleAttribute(objectPath, name, value);
+        doubleWriter.setAttr(objectPath, name, value);
     }
 
     @Override
     public void setDoubleMDArrayAttribute(String objectPath, String name, MDDoubleArray value)
     {
-        doubleWriter.setDoubleMDArrayAttribute(objectPath, name, value);
+        doubleWriter.setMDArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setDoubleMatrixAttribute(String objectPath, String name, double[][] value)
     {
-        doubleWriter.setDoubleMatrixAttribute(objectPath, name, value);
+        doubleWriter.setMatrixAttr(objectPath, name, value);
     }
 
     @Override
     public void writeDouble(String objectPath, double value)
     {
-        doubleWriter.writeDouble(objectPath, value);
+        doubleWriter.write(objectPath, value);
     }
 
     @Override
     public void writeDoubleArray(String objectPath, double[] data)
     {
-        doubleWriter.writeDoubleArray(objectPath, data);
+        doubleWriter.writeArray(objectPath, data);
     }
 
     @Override
     public void writeDoubleArray(String objectPath, double[] data, HDF5FloatStorageFeatures features)
     {
-        doubleWriter.writeDoubleArray(objectPath, data, features);
+        doubleWriter.writeArray(objectPath, data, features);
     }
 
     @Override
     public void writeDoubleArrayBlock(String objectPath, double[] data, long blockNumber)
     {
-        doubleWriter.writeDoubleArrayBlock(objectPath, data, blockNumber);
+        doubleWriter.writeArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeDoubleArrayBlockWithOffset(String objectPath, double[] data, int dataSize,
             long offset)
     {
-        doubleWriter.writeDoubleArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        doubleWriter.writeArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     @Override
     public void writeDoubleMDArray(String objectPath, MDDoubleArray data)
     {
-        doubleWriter.writeDoubleMDArray(objectPath, data);
+        doubleWriter.writeMDArray(objectPath, data);
     }
 
     @Override
     public void writeDoubleMDArray(String objectPath, MDDoubleArray data,
             HDF5FloatStorageFeatures features)
     {
-        doubleWriter.writeDoubleMDArray(objectPath, data, features);
+        doubleWriter.writeMDArray(objectPath, data, features);
     }
 
     @Override
     public void writeDoubleMDArrayBlock(String objectPath, MDDoubleArray data, long[] blockNumber)
     {
-        doubleWriter.writeDoubleMDArrayBlock(objectPath, data, blockNumber);
+        doubleWriter.writeMDArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeDoubleMDArrayBlockWithOffset(String objectPath, MDDoubleArray data,
             long[] offset)
     {
-        doubleWriter.writeDoubleMDArrayBlockWithOffset(objectPath, data, offset);
+        doubleWriter.writeMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
     @Override
     public void writeDoubleMDArrayBlockWithOffset(String objectPath, MDDoubleArray data,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        doubleWriter.writeDoubleMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+        doubleWriter.writeMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
                 memoryOffset);
     }
 
     @Override
     public void writeDoubleMatrix(String objectPath, double[][] data)
     {
-        doubleWriter.writeDoubleMatrix(objectPath, data);
+        doubleWriter.writeMatrix(objectPath, data);
     }
 
     @Override
     public void writeDoubleMatrix(String objectPath, double[][] data,
             HDF5FloatStorageFeatures features)
     {
-        doubleWriter.writeDoubleMatrix(objectPath, data, features);
+        doubleWriter.writeMatrix(objectPath, data, features);
     }
 
     @Override
     public void writeDoubleMatrixBlock(String objectPath, double[][] data, long blockNumberX,
             long blockNumberY)
     {
-        doubleWriter.writeDoubleMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+        doubleWriter.writeMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
     }
 
     @Override
     public void writeDoubleMatrixBlockWithOffset(String objectPath, double[][] data, long offsetX,
             long offsetY)
     {
-        doubleWriter.writeDoubleMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+        doubleWriter.writeMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
     }
 
     @Override
     public void writeDoubleMatrixBlockWithOffset(String objectPath, double[][] data, int dataSizeX,
             int dataSizeY, long offsetX, long offsetY)
     {
-        doubleWriter.writeDoubleMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
+        doubleWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
                 offsetX, offsetY);
     }
 
     @Override
     public void createFloatArray(String objectPath, int blockSize)
     {
-        floatWriter.createFloatArray(objectPath, blockSize);
+        floatWriter.createArray(objectPath, blockSize);
     }
 
     @Override
     public void createFloatArray(String objectPath, long size, int blockSize)
     {
-        floatWriter.createFloatArray(objectPath, size, blockSize);
+        floatWriter.createArray(objectPath, size, blockSize);
     }
 
     @Override
     public void createFloatArray(String objectPath, int size, HDF5FloatStorageFeatures features)
     {
-        floatWriter.createFloatArray(objectPath, size, features);
+        floatWriter.createArray(objectPath, size, features);
     }
 
     @Override
     public void createFloatArray(String objectPath, long size, int blockSize,
             HDF5FloatStorageFeatures features)
     {
-        floatWriter.createFloatArray(objectPath, size, blockSize, features);
+        floatWriter.createArray(objectPath, size, blockSize, features);
     }
 
     @Override
     public void createFloatMDArray(String objectPath, int[] blockDimensions)
     {
-        floatWriter.createFloatMDArray(objectPath, blockDimensions);
+        floatWriter.createMDArray(objectPath, blockDimensions);
     }
 
     @Override
     public void createFloatMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
     {
-        floatWriter.createFloatMDArray(objectPath, dimensions, blockDimensions);
+        floatWriter.createMDArray(objectPath, dimensions, blockDimensions);
     }
 
     @Override
     public void createFloatMDArray(String objectPath, int[] dimensions,
             HDF5FloatStorageFeatures features)
     {
-        floatWriter.createFloatMDArray(objectPath, dimensions, features);
+        floatWriter.createMDArray(objectPath, dimensions, features);
     }
 
     @Override
     public void createFloatMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
             HDF5FloatStorageFeatures features)
     {
-        floatWriter.createFloatMDArray(objectPath, dimensions, blockDimensions, features);
+        floatWriter.createMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     @Override
     public void createFloatMatrix(String objectPath, int blockSizeX, int blockSizeY)
     {
-        floatWriter.createFloatMatrix(objectPath, blockSizeX, blockSizeY);
+        floatWriter.createMatrix(objectPath, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createFloatMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY)
     {
-        floatWriter.createFloatMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+        floatWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createFloatMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY, HDF5FloatStorageFeatures features)
     {
-        floatWriter.createFloatMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
+        floatWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     @Override
     public void setFloatArrayAttribute(String objectPath, String name, float[] value)
     {
-        floatWriter.setFloatArrayAttribute(objectPath, name, value);
+        floatWriter.setArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setFloatAttribute(String objectPath, String name, float value)
     {
-        floatWriter.setFloatAttribute(objectPath, name, value);
+        floatWriter.setAttr(objectPath, name, value);
     }
 
     @Override
     public void setFloatMDArrayAttribute(String objectPath, String name, MDFloatArray value)
     {
-        floatWriter.setFloatMDArrayAttribute(objectPath, name, value);
+        floatWriter.setMDArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setFloatMatrixAttribute(String objectPath, String name, float[][] value)
     {
-        floatWriter.setFloatMatrixAttribute(objectPath, name, value);
+        floatWriter.setMatrixAttr(objectPath, name, value);
     }
 
     @Override
     public void writeFloat(String objectPath, float value)
     {
-        floatWriter.writeFloat(objectPath, value);
+        floatWriter.write(objectPath, value);
     }
 
     @Override
     public void writeFloatArray(String objectPath, float[] data)
     {
-        floatWriter.writeFloatArray(objectPath, data);
+        floatWriter.writeArray(objectPath, data);
     }
 
     @Override
     public void writeFloatArray(String objectPath, float[] data, HDF5FloatStorageFeatures features)
     {
-        floatWriter.writeFloatArray(objectPath, data, features);
+        floatWriter.writeArray(objectPath, data, features);
     }
 
     @Override
     public void writeFloatArrayBlock(String objectPath, float[] data, long blockNumber)
     {
-        floatWriter.writeFloatArrayBlock(objectPath, data, blockNumber);
+        floatWriter.writeArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeFloatArrayBlockWithOffset(String objectPath, float[] data, int dataSize,
             long offset)
     {
-        floatWriter.writeFloatArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        floatWriter.writeArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     @Override
     public void writeFloatMDArray(String objectPath, MDFloatArray data)
     {
-        floatWriter.writeFloatMDArray(objectPath, data);
+        floatWriter.writeMDArray(objectPath, data);
     }
 
     @Override
     public void writeFloatMDArray(String objectPath, MDFloatArray data,
             HDF5FloatStorageFeatures features)
     {
-        floatWriter.writeFloatMDArray(objectPath, data, features);
+        floatWriter.writeMDArray(objectPath, data, features);
     }
 
     @Override
     public void writeFloatMDArrayBlock(String objectPath, MDFloatArray data, long[] blockNumber)
     {
-        floatWriter.writeFloatMDArrayBlock(objectPath, data, blockNumber);
+        floatWriter.writeMDArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeFloatMDArrayBlockWithOffset(String objectPath, MDFloatArray data, long[] offset)
     {
-        floatWriter.writeFloatMDArrayBlockWithOffset(objectPath, data, offset);
+        floatWriter.writeMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
     @Override
     public void writeFloatMDArrayBlockWithOffset(String objectPath, MDFloatArray data,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        floatWriter.writeFloatMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+        floatWriter.writeMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
                 memoryOffset);
     }
 
     @Override
     public void writeFloatMatrix(String objectPath, float[][] data)
     {
-        floatWriter.writeFloatMatrix(objectPath, data);
+        floatWriter.writeMatrix(objectPath, data);
     }
 
     @Override
     public void writeFloatMatrix(String objectPath, float[][] data,
             HDF5FloatStorageFeatures features)
     {
-        floatWriter.writeFloatMatrix(objectPath, data, features);
+        floatWriter.writeMatrix(objectPath, data, features);
     }
 
     @Override
     public void writeFloatMatrixBlock(String objectPath, float[][] data, long blockNumberX,
             long blockNumberY)
     {
-        floatWriter.writeFloatMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+        floatWriter.writeMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
     }
 
     @Override
     public void writeFloatMatrixBlockWithOffset(String objectPath, float[][] data, long offsetX,
             long offsetY)
     {
-        floatWriter.writeFloatMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+        floatWriter.writeMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
     }
 
     @Override
     public void writeFloatMatrixBlockWithOffset(String objectPath, float[][] data, int dataSizeX,
             int dataSizeY, long offsetX, long offsetY)
     {
-        floatWriter.writeFloatMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
+        floatWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
                 offsetX, offsetY);
     }
 
     @Override
     public void createIntArray(String objectPath, int blockSize)
     {
-        intWriter.createIntArray(objectPath, blockSize);
+        intWriter.createArray(objectPath, blockSize);
     }
 
     @Override
     public void createIntArray(String objectPath, long size, int blockSize)
     {
-        intWriter.createIntArray(objectPath, size, blockSize);
+        intWriter.createArray(objectPath, size, blockSize);
     }
 
     @Override
     public void createIntArray(String objectPath, int size, HDF5IntStorageFeatures features)
     {
-        intWriter.createIntArray(objectPath, size, features);
+        intWriter.createArray(objectPath, size, features);
     }
 
     @Override
     public void createIntArray(String objectPath, long size, int blockSize,
             HDF5IntStorageFeatures features)
     {
-        intWriter.createIntArray(objectPath, size, blockSize, features);
+        intWriter.createArray(objectPath, size, blockSize, features);
     }
 
     @Override
     public void createIntMDArray(String objectPath, int[] blockDimensions)
     {
-        intWriter.createIntMDArray(objectPath, blockDimensions);
+        intWriter.createMDArray(objectPath, blockDimensions);
     }
 
     @Override
     public void createIntMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
     {
-        intWriter.createIntMDArray(objectPath, dimensions, blockDimensions);
+        intWriter.createMDArray(objectPath, dimensions, blockDimensions);
     }
 
     @Override
     public void createIntMDArray(String objectPath, int[] dimensions,
             HDF5IntStorageFeatures features)
     {
-        intWriter.createIntMDArray(objectPath, dimensions, features);
+        intWriter.createMDArray(objectPath, dimensions, features);
     }
 
     @Override
     public void createIntMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
             HDF5IntStorageFeatures features)
     {
-        intWriter.createIntMDArray(objectPath, dimensions, blockDimensions, features);
+        intWriter.createMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     @Override
     public void createIntMatrix(String objectPath, int blockSizeX, int blockSizeY)
     {
-        intWriter.createIntMatrix(objectPath, blockSizeX, blockSizeY);
+        intWriter.createMatrix(objectPath, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createIntMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY)
     {
-        intWriter.createIntMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+        intWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createIntMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY, HDF5IntStorageFeatures features)
     {
-        intWriter.createIntMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
+        intWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     @Override
     public void setIntArrayAttribute(String objectPath, String name, int[] value)
     {
-        intWriter.setIntArrayAttribute(objectPath, name, value);
+        intWriter.setArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setIntAttribute(String objectPath, String name, int value)
     {
-        intWriter.setIntAttribute(objectPath, name, value);
+        intWriter.setAttr(objectPath, name, value);
     }
 
     @Override
     public void setIntMDArrayAttribute(String objectPath, String name, MDIntArray value)
     {
-        intWriter.setIntMDArrayAttribute(objectPath, name, value);
+        intWriter.setMDArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setIntMatrixAttribute(String objectPath, String name, int[][] value)
     {
-        intWriter.setIntMatrixAttribute(objectPath, name, value);
+        intWriter.setMatrixAttr(objectPath, name, value);
     }
 
     @Override
     public void writeInt(String objectPath, int value)
     {
-        intWriter.writeInt(objectPath, value);
+        intWriter.write(objectPath, value);
     }
 
     @Override
     public void writeIntArray(String objectPath, int[] data)
     {
-        intWriter.writeIntArray(objectPath, data);
+        intWriter.writeArray(objectPath, data);
     }
 
     @Override
     public void writeIntArray(String objectPath, int[] data, HDF5IntStorageFeatures features)
     {
-        intWriter.writeIntArray(objectPath, data, features);
+        intWriter.writeArray(objectPath, data, features);
     }
 
     @Override
     public void writeIntArrayBlock(String objectPath, int[] data, long blockNumber)
     {
-        intWriter.writeIntArrayBlock(objectPath, data, blockNumber);
+        intWriter.writeArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeIntArrayBlockWithOffset(String objectPath, int[] data, int dataSize,
             long offset)
     {
-        intWriter.writeIntArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        intWriter.writeArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     @Override
     public void writeIntMDArray(String objectPath, MDIntArray data)
     {
-        intWriter.writeIntMDArray(objectPath, data);
+        intWriter.writeMDArray(objectPath, data);
     }
 
     @Override
     public void writeIntMDArray(String objectPath, MDIntArray data, HDF5IntStorageFeatures features)
     {
-        intWriter.writeIntMDArray(objectPath, data, features);
+        intWriter.writeMDArray(objectPath, data, features);
     }
 
     @Override
     public void writeIntMDArrayBlock(String objectPath, MDIntArray data, long[] blockNumber)
     {
-        intWriter.writeIntMDArrayBlock(objectPath, data, blockNumber);
+        intWriter.writeMDArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeIntMDArrayBlockWithOffset(String objectPath, MDIntArray data, long[] offset)
     {
-        intWriter.writeIntMDArrayBlockWithOffset(objectPath, data, offset);
+        intWriter.writeMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
     @Override
     public void writeIntMDArrayBlockWithOffset(String objectPath, MDIntArray data,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        intWriter.writeIntMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+        intWriter.writeMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
                 memoryOffset);
     }
 
     @Override
     public void writeIntMatrix(String objectPath, int[][] data)
     {
-        intWriter.writeIntMatrix(objectPath, data);
+        intWriter.writeMatrix(objectPath, data);
     }
 
     @Override
     public void writeIntMatrix(String objectPath, int[][] data, HDF5IntStorageFeatures features)
     {
-        intWriter.writeIntMatrix(objectPath, data, features);
+        intWriter.writeMatrix(objectPath, data, features);
     }
 
     @Override
     public void writeIntMatrixBlock(String objectPath, int[][] data, long blockNumberX,
             long blockNumberY)
     {
-        intWriter.writeIntMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+        intWriter.writeMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
     }
 
     @Override
     public void writeIntMatrixBlockWithOffset(String objectPath, int[][] data, long offsetX,
             long offsetY)
     {
-        intWriter.writeIntMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+        intWriter.writeMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
     }
 
     @Override
     public void writeIntMatrixBlockWithOffset(String objectPath, int[][] data, int dataSizeX,
             int dataSizeY, long offsetX, long offsetY)
     {
-        intWriter.writeIntMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
+        intWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
                 offsetY);
     }
 
     @Override
     public void createLongArray(String objectPath, int blockSize)
     {
-        longWriter.createLongArray(objectPath, blockSize);
+        longWriter.createArray(objectPath, blockSize);
     }
 
     @Override
     public void createLongArray(String objectPath, long size, int blockSize)
     {
-        longWriter.createLongArray(objectPath, size, blockSize);
+        longWriter.createArray(objectPath, size, blockSize);
     }
 
     @Override
     public void createLongArray(String objectPath, int size, HDF5IntStorageFeatures features)
     {
-        longWriter.createLongArray(objectPath, size, features);
+        longWriter.createArray(objectPath, size, features);
     }
 
     @Override
     public void createLongArray(String objectPath, long size, int blockSize,
             HDF5IntStorageFeatures features)
     {
-        longWriter.createLongArray(objectPath, size, blockSize, features);
+        longWriter.createArray(objectPath, size, blockSize, features);
     }
 
     @Override
     public void createLongMDArray(String objectPath, int[] blockDimensions)
     {
-        longWriter.createLongMDArray(objectPath, blockDimensions);
+        longWriter.createMDArray(objectPath, blockDimensions);
     }
 
     @Override
     public void createLongMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
     {
-        longWriter.createLongMDArray(objectPath, dimensions, blockDimensions);
+        longWriter.createMDArray(objectPath, dimensions, blockDimensions);
     }
 
     @Override
     public void createLongMDArray(String objectPath, int[] dimensions,
             HDF5IntStorageFeatures features)
     {
-        longWriter.createLongMDArray(objectPath, dimensions, features);
+        longWriter.createMDArray(objectPath, dimensions, features);
     }
 
     @Override
     public void createLongMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
             HDF5IntStorageFeatures features)
     {
-        longWriter.createLongMDArray(objectPath, dimensions, blockDimensions, features);
+        longWriter.createMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     @Override
     public void createLongMatrix(String objectPath, int blockSizeX, int blockSizeY)
     {
-        longWriter.createLongMatrix(objectPath, blockSizeX, blockSizeY);
+        longWriter.createMatrix(objectPath, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createLongMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY)
     {
-        longWriter.createLongMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+        longWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createLongMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY, HDF5IntStorageFeatures features)
     {
-        longWriter.createLongMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
+        longWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     @Override
     public void setLongArrayAttribute(String objectPath, String name, long[] value)
     {
-        longWriter.setLongArrayAttribute(objectPath, name, value);
+        longWriter.setArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setLongAttribute(String objectPath, String name, long value)
     {
-        longWriter.setLongAttribute(objectPath, name, value);
+        longWriter.setAttr(objectPath, name, value);
     }
 
     @Override
     public void setLongMDArrayAttribute(String objectPath, String name, MDLongArray value)
     {
-        longWriter.setLongMDArrayAttribute(objectPath, name, value);
+        longWriter.setMDArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setLongMatrixAttribute(String objectPath, String name, long[][] value)
     {
-        longWriter.setLongMatrixAttribute(objectPath, name, value);
+        longWriter.setMatrixAttr(objectPath, name, value);
     }
 
     @Override
     public void writeLong(String objectPath, long value)
     {
-        longWriter.writeLong(objectPath, value);
+        longWriter.write(objectPath, value);
     }
 
     @Override
     public void writeLongArray(String objectPath, long[] data)
     {
-        longWriter.writeLongArray(objectPath, data);
+        longWriter.writeArray(objectPath, data);
     }
 
     @Override
     public void writeLongArray(String objectPath, long[] data, HDF5IntStorageFeatures features)
     {
-        longWriter.writeLongArray(objectPath, data, features);
+        longWriter.writeArray(objectPath, data, features);
     }
 
     @Override
     public void writeLongArrayBlock(String objectPath, long[] data, long blockNumber)
     {
-        longWriter.writeLongArrayBlock(objectPath, data, blockNumber);
+        longWriter.writeArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeLongArrayBlockWithOffset(String objectPath, long[] data, int dataSize,
             long offset)
     {
-        longWriter.writeLongArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        longWriter.writeArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     @Override
     public void writeLongMDArray(String objectPath, MDLongArray data)
     {
-        longWriter.writeLongMDArray(objectPath, data);
+        longWriter.writeMDArray(objectPath, data);
     }
 
     @Override
     public void writeLongMDArray(String objectPath, MDLongArray data,
             HDF5IntStorageFeatures features)
     {
-        longWriter.writeLongMDArray(objectPath, data, features);
+        longWriter.writeMDArray(objectPath, data, features);
     }
 
     @Override
     public void writeLongMDArrayBlock(String objectPath, MDLongArray data, long[] blockNumber)
     {
-        longWriter.writeLongMDArrayBlock(objectPath, data, blockNumber);
+        longWriter.writeMDArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeLongMDArrayBlockWithOffset(String objectPath, MDLongArray data, long[] offset)
     {
-        longWriter.writeLongMDArrayBlockWithOffset(objectPath, data, offset);
+        longWriter.writeMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
     @Override
     public void writeLongMDArrayBlockWithOffset(String objectPath, MDLongArray data,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        longWriter.writeLongMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+        longWriter.writeMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
                 memoryOffset);
     }
 
     @Override
     public void writeLongMatrix(String objectPath, long[][] data)
     {
-        longWriter.writeLongMatrix(objectPath, data);
+        longWriter.writeMatrix(objectPath, data);
     }
 
     @Override
     public void writeLongMatrix(String objectPath, long[][] data, HDF5IntStorageFeatures features)
     {
-        longWriter.writeLongMatrix(objectPath, data, features);
+        longWriter.writeMatrix(objectPath, data, features);
     }
 
     @Override
     public void writeLongMatrixBlock(String objectPath, long[][] data, long blockNumberX,
             long blockNumberY)
     {
-        longWriter.writeLongMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+        longWriter.writeMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
     }
 
     @Override
     public void writeLongMatrixBlockWithOffset(String objectPath, long[][] data, long offsetX,
             long offsetY)
     {
-        longWriter.writeLongMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+        longWriter.writeMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
     }
 
     @Override
     public void writeLongMatrixBlockWithOffset(String objectPath, long[][] data, int dataSizeX,
             int dataSizeY, long offsetX, long offsetY)
     {
-        longWriter.writeLongMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
+        longWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
                 offsetY);
     }
 
     @Override
     public void createShortArray(String objectPath, int blockSize)
     {
-        shortWriter.createShortArray(objectPath, blockSize);
+        shortWriter.createArray(objectPath, blockSize);
     }
 
     @Override
     public void createShortArray(String objectPath, long size, int blockSize)
     {
-        shortWriter.createShortArray(objectPath, size, blockSize);
+        shortWriter.createArray(objectPath, size, blockSize);
     }
 
     @Override
     public void createShortArray(String objectPath, int size, HDF5IntStorageFeatures features)
     {
-        shortWriter.createShortArray(objectPath, size, features);
+        shortWriter.createArray(objectPath, size, features);
     }
 
     @Override
     public void createShortArray(String objectPath, long size, int blockSize,
             HDF5IntStorageFeatures features)
     {
-        shortWriter.createShortArray(objectPath, size, blockSize, features);
+        shortWriter.createArray(objectPath, size, blockSize, features);
     }
 
     @Override
     public void createShortMDArray(String objectPath, int[] blockDimensions)
     {
-        shortWriter.createShortMDArray(objectPath, blockDimensions);
+        shortWriter.createMDArray(objectPath, blockDimensions);
     }
 
     @Override
     public void createShortMDArray(String objectPath, long[] dimensions, int[] blockDimensions)
     {
-        shortWriter.createShortMDArray(objectPath, dimensions, blockDimensions);
+        shortWriter.createMDArray(objectPath, dimensions, blockDimensions);
     }
 
     @Override
     public void createShortMDArray(String objectPath, int[] dimensions,
             HDF5IntStorageFeatures features)
     {
-        shortWriter.createShortMDArray(objectPath, dimensions, features);
+        shortWriter.createMDArray(objectPath, dimensions, features);
     }
 
     @Override
     public void createShortMDArray(String objectPath, long[] dimensions, int[] blockDimensions,
             HDF5IntStorageFeatures features)
     {
-        shortWriter.createShortMDArray(objectPath, dimensions, blockDimensions, features);
+        shortWriter.createMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     @Override
     public void createShortMatrix(String objectPath, int blockSizeX, int blockSizeY)
     {
-        shortWriter.createShortMatrix(objectPath, blockSizeX, blockSizeY);
+        shortWriter.createMatrix(objectPath, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createShortMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY)
     {
-        shortWriter.createShortMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
+        shortWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY);
     }
 
     @Override
     public void createShortMatrix(String objectPath, long sizeX, long sizeY, int blockSizeX,
             int blockSizeY, HDF5IntStorageFeatures features)
     {
-        shortWriter.createShortMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
+        shortWriter.createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, features);
     }
 
     @Override
     public void setShortArrayAttribute(String objectPath, String name, short[] value)
     {
-        shortWriter.setShortArrayAttribute(objectPath, name, value);
+        shortWriter.setArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setShortAttribute(String objectPath, String name, short value)
     {
-        shortWriter.setShortAttribute(objectPath, name, value);
+        shortWriter.setAttr(objectPath, name, value);
     }
 
     @Override
     public void setShortMDArrayAttribute(String objectPath, String name, MDShortArray value)
     {
-        shortWriter.setShortMDArrayAttribute(objectPath, name, value);
+        shortWriter.setMDArrayAttr(objectPath, name, value);
     }
 
     @Override
     public void setShortMatrixAttribute(String objectPath, String name, short[][] value)
     {
-        shortWriter.setShortMatrixAttribute(objectPath, name, value);
+        shortWriter.setMatrixAttr(objectPath, name, value);
     }
 
     @Override
     public void writeShort(String objectPath, short value)
     {
-        shortWriter.writeShort(objectPath, value);
+        shortWriter.write(objectPath, value);
     }
 
     @Override
     public void writeShortArray(String objectPath, short[] data)
     {
-        shortWriter.writeShortArray(objectPath, data);
+        shortWriter.writeArray(objectPath, data);
     }
 
     @Override
     public void writeShortArray(String objectPath, short[] data, HDF5IntStorageFeatures features)
     {
-        shortWriter.writeShortArray(objectPath, data, features);
+        shortWriter.writeArray(objectPath, data, features);
     }
 
     @Override
     public void writeShortArrayBlock(String objectPath, short[] data, long blockNumber)
     {
-        shortWriter.writeShortArrayBlock(objectPath, data, blockNumber);
+        shortWriter.writeArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeShortArrayBlockWithOffset(String objectPath, short[] data, int dataSize,
             long offset)
     {
-        shortWriter.writeShortArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        shortWriter.writeArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     @Override
     public void writeShortMDArray(String objectPath, MDShortArray data)
     {
-        shortWriter.writeShortMDArray(objectPath, data);
+        shortWriter.writeMDArray(objectPath, data);
     }
 
     @Override
     public void writeShortMDArray(String objectPath, MDShortArray data,
             HDF5IntStorageFeatures features)
     {
-        shortWriter.writeShortMDArray(objectPath, data, features);
+        shortWriter.writeMDArray(objectPath, data, features);
     }
 
     @Override
     public void writeShortMDArrayBlock(String objectPath, MDShortArray data, long[] blockNumber)
     {
-        shortWriter.writeShortMDArrayBlock(objectPath, data, blockNumber);
+        shortWriter.writeMDArrayBlock(objectPath, data, blockNumber);
     }
 
     @Override
     public void writeShortMDArrayBlockWithOffset(String objectPath, MDShortArray data, long[] offset)
     {
-        shortWriter.writeShortMDArrayBlockWithOffset(objectPath, data, offset);
+        shortWriter.writeMDArrayBlockWithOffset(objectPath, data, offset);
     }
 
     @Override
     public void writeShortMDArrayBlockWithOffset(String objectPath, MDShortArray data,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        shortWriter.writeShortMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+        shortWriter.writeMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
                 memoryOffset);
     }
 
     @Override
     public void writeShortMatrix(String objectPath, short[][] data)
     {
-        shortWriter.writeShortMatrix(objectPath, data);
+        shortWriter.writeMatrix(objectPath, data);
     }
 
     @Override
     public void writeShortMatrix(String objectPath, short[][] data, HDF5IntStorageFeatures features)
     {
-        shortWriter.writeShortMatrix(objectPath, data, features);
+        shortWriter.writeMatrix(objectPath, data, features);
     }
 
     @Override
     public void writeShortMatrixBlock(String objectPath, short[][] data, long blockNumberX,
             long blockNumberY)
     {
-        shortWriter.writeShortMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
+        shortWriter.writeMatrixBlock(objectPath, data, blockNumberX, blockNumberY);
     }
 
     @Override
     public void writeShortMatrixBlockWithOffset(String objectPath, short[][] data, long offsetX,
             long offsetY)
     {
-        shortWriter.writeShortMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
+        shortWriter.writeMatrixBlockWithOffset(objectPath, data, offsetX, offsetY);
     }
 
     @Override
     public void writeShortMatrixBlockWithOffset(String objectPath, short[][] data, int dataSizeX,
             int dataSizeY, long offsetX, long offsetY)
     {
-        shortWriter.writeShortMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
+        shortWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
                 offsetX, offsetY);
     }
 
+    @Override
+    public IHDF5ByteWriter int8()
+    {
+        return byteWriter;
+    }
+
+    @Override
+    public IHDF5ShortWriter int16()
+    {
+        return shortWriter;
+    }
+
+    @Override
+    public IHDF5IntWriter int32()
+    {
+        return intWriter;
+    }
+
+    @Override
+    public IHDF5LongWriter int64()
+    {
+        return longWriter;
+    }
+
+    @Override
+    public IHDF5FloatWriter float32()
+    {
+        return floatWriter;
+    }
+
+    @Override
+    public IHDF5DoubleWriter float64()
+    {
+        return doubleWriter;
+    }
+
     // ------------------------------------------------------------------------------
-    // GENERATED CODE SECTION - END
+    // Primitive Types - END
     // ------------------------------------------------------------------------------
 }

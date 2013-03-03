@@ -52,7 +52,7 @@ class HDF5LongReader implements IHDF5LongReader
     // /////////////////////
 
     @Override
-    public long getLongAttribute(final String objectPath, final String attributeName)
+    public long getAttr(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -77,7 +77,7 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public long[] getLongArrayAttribute(final String objectPath, final String attributeName)
+    public long[] getArrayAttr(final String objectPath, final String attributeName)
     {
         assert objectPath != null;
         assert attributeName != null;
@@ -99,7 +99,7 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public MDLongArray getLongMDArrayAttribute(final String objectPath,
+    public MDLongArray getMDArrayAttr(final String objectPath,
             final String attributeName)
     {
         assert objectPath != null;
@@ -122,10 +122,10 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public long[][] getLongMatrixAttribute(final String objectPath, final String attributeName)
+    public long[][] getMatrixAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
-        final MDLongArray array = getLongMDArrayAttribute(objectPath, attributeName);
+        final MDLongArray array = getMDArrayAttr(objectPath, attributeName);
         if (array.rank() != 2)
         {
             throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
@@ -139,7 +139,7 @@ class HDF5LongReader implements IHDF5LongReader
     // /////////////////////
 
     @Override
-    public long readLong(final String objectPath)
+    public long read(final String objectPath)
     {
         assert objectPath != null;
 
@@ -160,7 +160,7 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public long[] readLongArray(final String objectPath)
+    public long[] readArray(final String objectPath)
     {
         assert objectPath != null;
 
@@ -217,7 +217,7 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public int[] readToLongMDArrayWithOffset(final String objectPath, final MDLongArray array,
+    public int[] readToMDArrayWithOffset(final String objectPath, final MDLongArray array,
             final int[] memoryOffset)
     {
         assert objectPath != null;
@@ -245,7 +245,7 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public int[] readToLongMDArrayBlockWithOffset(final String objectPath,
+    public int[] readToMDArrayBlockWithOffset(final String objectPath,
             final MDLongArray array, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
     {
@@ -274,14 +274,14 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public long[] readLongArrayBlock(final String objectPath, final int blockSize,
+    public long[] readArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber)
     {
-        return readLongArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
+        return readArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
     }
 
     @Override
-    public long[] readLongArrayBlockWithOffset(final String objectPath, final int blockSize,
+    public long[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset)
     {
         assert objectPath != null;
@@ -306,9 +306,9 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public long[][] readLongMatrix(final String objectPath) throws HDF5JavaException
+    public long[][] readMatrix(final String objectPath) throws HDF5JavaException
     {
-        final MDLongArray array = readLongMDArray(objectPath);
+        final MDLongArray array = readMDArray(objectPath);
         if (array.rank() != 2)
         {
             throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
@@ -318,11 +318,11 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public long[][] readLongMatrixBlock(final String objectPath, final int blockSizeX,
+    public long[][] readMatrixBlock(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long blockNumberX, final long blockNumberY) 
             throws HDF5JavaException
     {
-        final MDLongArray array = readLongMDArrayBlock(objectPath, new int[]
+        final MDLongArray array = readMDArrayBlock(objectPath, new int[]
             { blockSizeX, blockSizeY }, new long[]
             { blockNumberX, blockNumberY });
         if (array.rank() != 2)
@@ -334,10 +334,10 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public long[][] readLongMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
+    public long[][] readMatrixBlockWithOffset(final String objectPath, final int blockSizeX,
             final int blockSizeY, final long offsetX, final long offsetY) throws HDF5JavaException
     {
-        final MDLongArray array = readLongMDArrayBlockWithOffset(objectPath, new int[]
+        final MDLongArray array = readMDArrayBlockWithOffset(objectPath, new int[]
             { blockSizeX, blockSizeY }, new long[]
             { offsetX, offsetY });
         if (array.rank() != 2)
@@ -349,7 +349,7 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public MDLongArray readLongMDArray(final String objectPath)
+    public MDLongArray readMDArray(final String objectPath)
     {
         assert objectPath != null;
 
@@ -406,7 +406,7 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public MDLongArray readLongMDArrayBlock(final String objectPath, final int[] blockDimensions,
+    public MDLongArray readMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
         final long[] offset = new long[blockDimensions.length];
@@ -414,11 +414,11 @@ class HDF5LongReader implements IHDF5LongReader
         {
             offset[i] = blockNumber[i] * blockDimensions[i];
         }
-        return readLongMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+        return readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
     }
 
     @Override
-    public MDLongArray readLongMDArrayBlockWithOffset(final String objectPath,
+    public MDLongArray readMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
     {
         assert objectPath != null;
@@ -446,7 +446,7 @@ class HDF5LongReader implements IHDF5LongReader
     }
     
     @Override
-    public Iterable<HDF5DataBlock<long[]>> getLongArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5DataBlock<long[]>> getArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
         baseReader.checkOpen();
@@ -474,7 +474,7 @@ class HDF5LongReader implements IHDF5LongReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final long[] block =
-                                        readLongArrayBlockWithOffset(dataSetPath, index
+                                        readArrayBlockWithOffset(dataSetPath, index
                                                 .getBlockSize(), offset);
                                 return new HDF5DataBlock<long[]>(block, index.getAndIncIndex(), 
                                         offset);
@@ -491,7 +491,7 @@ class HDF5LongReader implements IHDF5LongReader
     }
 
     @Override
-    public Iterable<HDF5MDDataBlock<MDLongArray>> getLongMDArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5MDDataBlock<MDLongArray>> getMDArrayNaturalBlocks(final String dataSetPath)
     {
         baseReader.checkOpen();
         final HDF5NaturalBlockMDParameters params =
@@ -518,7 +518,7 @@ class HDF5LongReader implements IHDF5LongReader
                             {
                                 final long[] offset = index.computeOffsetAndSizeGetOffsetClone();
                                 final MDLongArray data =
-                                        readLongMDArrayBlockWithOffset(dataSetPath, index
+                                        readMDArrayBlockWithOffset(dataSetPath, index
                                                 .getBlockSize(), offset);
                                 return new HDF5MDDataBlock<MDLongArray>(data, index
                                         .getIndexClone(), offset);

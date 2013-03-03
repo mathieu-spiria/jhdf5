@@ -99,7 +99,7 @@ public interface IHDF5SimpleReader
      * <p>
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by
-     * {@link IHDF5Writer#writeLongArray(String, long[])} cannot be read back by this method but
+     * {@link IHDF5LongWriter#writeArray(String, long[])} cannot be read back by this method but
      * will throw a {@link HDF5DatatypeInterfaceException}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
