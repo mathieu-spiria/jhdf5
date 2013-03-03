@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 ETH Zuerich, CISD.
+ * Copyright 2013 ETH Zuerich, CISD.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@ import ch.systemsx.cisd.base.mdarray.MDShortArray;
 
 /**
  * An interface that provides methods for writing unsigned <code>short</code> values to HDF5 files.
+ * <p>
+ * Note: There is no reader for unsigned values. Use the methods in {@link UnsignedIntUtils} to convert 
+ * from and to unsigned values.
  * 
  * @author Bernd Rinn
  */

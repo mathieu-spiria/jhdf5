@@ -25,6 +25,7 @@ import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_SHUFFLE_DEFLATE;
+import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.*;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
@@ -547,7 +548,7 @@ public class HDF5RoundtripTest
         final String booleanDatasetName = "/boolean";
         writer.writeBoolean(booleanDatasetName, true);
         final String byteDatasetName = "/byte";
-        writer.int8().write(byteDatasetName, (byte) 17);
+        writer.int8().write(byteDatasetName, toInt8(17));
         final String unsignedByteOverflowDatasetName = "/ubyteOverflow";
         writer.uint8().write(unsignedByteOverflowDatasetName, (byte) 1024);
         final String shortDatasetName = "/short";
