@@ -51,8 +51,7 @@ public interface IHDF5LongWriter extends IHDF5LongReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setArrayAttr(final String objectPath, final String name,
-            final long[] value);
+    public void setArrayAttr(final String objectPath, final String name, final long[] value);
 
     /**
      * Set a multi-dimensional code>long</code> attribute on the referenced object.
@@ -64,8 +63,7 @@ public interface IHDF5LongWriter extends IHDF5LongReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
-            final MDLongArray value);
+    public void setMDArrayAttr(final String objectPath, final String name, final MDLongArray value);
 
     /**
      * Set a <code>long[][]</code> attribute on the referenced object.
@@ -77,8 +75,7 @@ public interface IHDF5LongWriter extends IHDF5LongReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMatrixAttr(final String objectPath, final String name,
-            final long[][] value);
+    public void setMatrixAttr(final String objectPath, final String name, final long[][] value);
     
     // /////////////////////
     // Data Sets

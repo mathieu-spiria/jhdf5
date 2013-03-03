@@ -54,9 +54,11 @@ public class HDF5CodeGenerator
 
         final String elementSize;
 
+        final boolean isUnsigned;
+
         TemplateParameters(String name, String capitalizedName, String capitalizedClassName,
                 String wrapperName, String storageType, String featureBasedStorageType,
-                String storageTypeImport, String memoryType, String elementSize)
+                String storageTypeImport, String memoryType, String elementSize, boolean isUnsigned)
         {
             this.name = name;
             this.capitalizedName = capitalizedName;
@@ -68,51 +70,111 @@ public class HDF5CodeGenerator
             this.storageTypeImport = storageTypeImport;
             this.memoryType = memoryType;
             this.elementSize = elementSize;
+            this.isUnsigned = isUnsigned;
         }
 
     }
 
     static TemplateParameters tp(String name, String capitalizedName, String capitalizedClassName,
             String wrapperName, String storageType, String featureBasedStorageType,
-            String storageTypeImport, String memoryType, String elementSize)
+            String storageTypeImport, String memoryType, String elementSize, boolean isUnsigned)
     {
         return new TemplateParameters(name, capitalizedName, capitalizedClassName, wrapperName,
-                storageType, featureBasedStorageType, storageTypeImport, memoryType, elementSize);
+                storageType, featureBasedStorageType, storageTypeImport, memoryType, elementSize,
+                isUnsigned);
     }
 
     static final TemplateParameters PLACEHOLDERS = tp("__name__", "__Name__", "__Classname__",
             "__Wrappername__", "__Storagetype__", "__FeatureBasedStoragetype__",
-            "__StoragetypeImport__", "__Memorytype__", "__elementsize__");
+            "__StoragetypeImport__", "__Memorytype__", "__elementsize__", false);
 
     static final TemplateParameters[] NUMERICAL_TYPES =
             new TemplateParameters[]
                 {
-                        tp("byte", "Byte", "Int", "Byte", "H5T_STD_I8LE",
+                        tp("byte",
+                                "Byte",
+                                "Int",
+                                "Byte",
+                                "H5T_STD_I8LE",
                                 "features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE",
-                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;\n" + 
-                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U8LE;", 
-                                "H5T_NATIVE_INT8", "1"),
-                        tp("short", "Short", "Int", "Short", "H5T_STD_I16LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;\n"
+                                        + "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U8LE;",
+                                "H5T_NATIVE_INT8", "1", false),
+                        tp("byte",
+                                "Byte",
+                                "Int",
+                                "Byte",
+                                "H5T_STD_U8LE",
+                                "H5T_STD_U8LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U8LE;",
+                                "H5T_NATIVE_UINT8", "1", true),
+                        tp("short",
+                                "Short",
+                                "Int",
+                                "Short",
+                                "H5T_STD_I16LE",
                                 "features.isSigned() ? H5T_STD_I16LE : H5T_STD_U16LE",
-                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;\n" + 
-                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;", 
-                                "H5T_NATIVE_INT16", "2"),
-                        tp("int", "Int", "Int", "Integer", "H5T_STD_I32LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;\n"
+                                        + "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;",
+                                "H5T_NATIVE_INT16", "2", false),
+                        tp("short",
+                                "Short",
+                                "Int",
+                                "Short",
+                                "H5T_STD_U16LE",
+                                "H5T_STD_U16LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;",
+                                "H5T_NATIVE_UINT16", "2", true),
+                        tp("int",
+                                "Int",
+                                "Int",
+                                "Integer",
+                                "H5T_STD_I32LE",
                                 "features.isSigned() ? H5T_STD_I32LE : H5T_STD_U32LE",
-                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;\n" + 
-                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U32LE;", 
-                                "H5T_NATIVE_INT32", "4"),
-                        tp("long", "Long", "Int", "Long", "H5T_STD_I64LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;\n"
+                                        + "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U32LE;",
+                                "H5T_NATIVE_INT32", "4", false),
+                        tp("int",
+                                "Int",
+                                "Int",
+                                "Integer",
+                                "H5T_STD_U32LE",
+                                "H5T_STD_U32LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U32LE;",
+                                "H5T_NATIVE_UINT32", "4", true),
+                        tp("long",
+                                "Long",
+                                "Int",
+                                "Long",
+                                "H5T_STD_I64LE",
                                 "features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE",
-                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;\n" + 
-                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;", 
-                                "H5T_NATIVE_INT64", "8"),
-                        tp("float", "Float", "Float", "Float", "H5T_IEEE_F32LE", "H5T_IEEE_F32LE",
-                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;", 
-                                "H5T_NATIVE_FLOAT", "4"),
-                        tp("double", "Double", "Float", "Double", "H5T_IEEE_F64LE", "H5T_IEEE_F64LE",
-                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F64LE;", 
-                                "H5T_NATIVE_DOUBLE", "8") };
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;\n"
+                                        + "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;",
+                                "H5T_NATIVE_INT64", "8", false),
+                        tp("long",
+                                "Long",
+                                "Int",
+                                "Long",
+                                "H5T_STD_U64LE",
+                                "H5T_STD_U64LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;",
+                                "H5T_NATIVE_UINT64", "8", true),
+                        tp("float",
+                                "Float",
+                                "Float",
+                                "Float",
+                                "H5T_IEEE_F32LE",
+                                "H5T_IEEE_F32LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;",
+                                "H5T_NATIVE_FLOAT", "4", false),
+                        tp("double",
+                                "Double",
+                                "Float",
+                                "Double",
+                                "H5T_IEEE_F64LE",
+                                "H5T_IEEE_F64LE",
+                                "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F64LE;",
+                                "H5T_NATIVE_DOUBLE", "8", false) };
 
     /**
      * Generate the code for all numerical types from <var>codeTemplate</var> and write it to
@@ -153,40 +215,45 @@ public class HDF5CodeGenerator
     {
         for (TemplateParameters t : NUMERICAL_TYPES)
         {
-            final String interfaceTemplateReader =
-                    FileUtils
-                            .readFileToString(new File(
-                                    "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5PrimitiveReader.java.templ"));
-            final PrintStream outInterfaceReader =
-                    new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/IHDF5"
-                            + t.capitalizedName + "Reader.java"));
-            generateCode(interfaceTemplateReader, t, outInterfaceReader);
-            outInterfaceReader.close();
-            final String classTemplateReader =
-                    FileUtils
-                            .readFileToString(new File(
-                                    "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveReader.java.templ"));
-            final PrintStream outclassReader =
-                    new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
-                            + t.capitalizedName + "Reader.java"));
-            generateCode(classTemplateReader, t, outclassReader);
-            outclassReader.close();
+            if (t.isUnsigned == false)
+            {
+                final String interfaceTemplateReader =
+                        FileUtils
+                                .readFileToString(new File(
+                                        "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5PrimitiveReader.java.templ"));
+                final PrintStream outInterfaceReader =
+                        new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/IHDF5"
+                                + t.capitalizedName + "Reader.java"));
+                generateCode(interfaceTemplateReader, t, outInterfaceReader);
+                outInterfaceReader.close();
+                final String classTemplateReader =
+                        FileUtils
+                                .readFileToString(new File(
+                                        "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveReader.java.templ"));
+                final PrintStream outclassReader =
+                        new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
+                                + t.capitalizedName + "Reader.java"));
+                generateCode(classTemplateReader, t, outclassReader);
+                outclassReader.close();
+            }
             final String interfaceTemplateWriter =
                     FileUtils
                             .readFileToString(new File(
-                                    "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5PrimitiveWriter.java.templ"));
+                                    t.isUnsigned ? "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5UnsignedPrimitiveWriter.java.templ"
+                                            : "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5PrimitiveWriter.java.templ"));
             final PrintStream outInterfaceWriter =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/IHDF5"
-                            + t.capitalizedName + "Writer.java"));
+                            + (t.isUnsigned ? "Unsigned" : "") + t.capitalizedName + "Writer.java"));
             generateCode(interfaceTemplateWriter, t, outInterfaceWriter);
             outInterfaceWriter.close();
             final String classTemplateWriter =
                     FileUtils
                             .readFileToString(new File(
-                                    "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveWriter.java.templ"));
+                                    t.isUnsigned ? "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5UnsignedPrimitiveWriter.java.templ"
+                                            : "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveWriter.java.templ"));
             final PrintStream outclassWriter =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
-                            + t.capitalizedName + "Writer.java"));
+                            + (t.isUnsigned ? "Unsigned" : "") + t.capitalizedName + "Writer.java"));
             generateCode(classTemplateWriter, t, outclassWriter);
             outclassWriter.close();
         }

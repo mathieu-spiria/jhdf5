@@ -16,21 +16,21 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.base.mdarray.MDShortArray;
+import ch.systemsx.cisd.base.mdarray.MDIntArray;
 
 /**
- * An interface that provides methods for writing <code>short</code> values to HDF5 files.
+ * An interface that provides methods for writing unsigned <code>int</code> values to HDF5 files.
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5ShortWriter extends IHDF5ShortReader
+public interface IHDF5UnsignedIntWriter
 {
     // /////////////////////
     // Attributes
     // /////////////////////
 
     /**
-     * Set a <code>short</code> attribute on the referenced object.
+     * Set a <code>int</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -39,10 +39,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setAttr(final String objectPath, final String name, final short value);
+    public void setAttr(final String objectPath, final String name, final int value);
 
     /**
-     * Set a <code>short[]</code> attribute on the referenced object.
+     * Set a <code>int[]</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -51,10 +51,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setArrayAttr(final String objectPath, final String name, final short[] value);
+    public void setArrayAttr(final String objectPath, final String name, final int[] value);
 
     /**
-     * Set a multi-dimensional code>short</code> attribute on the referenced object.
+     * Set a multi-dimensional code>int</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -63,10 +63,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMDArrayAttr(final String objectPath, final String name, final MDShortArray value);
+    public void setMDArrayAttr(final String objectPath, final String name, final MDIntArray value);
 
     /**
-     * Set a <code>short[][]</code> attribute on the referenced object.
+     * Set a <code>int[][]</code> attribute on the referenced object.
      * <p>
      * The referenced object must exist, that is it need to have been written before by one of the
      * <code>write()</code> methods.
@@ -75,43 +75,43 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMatrixAttr(final String objectPath, final String name, final short[][] value);
+    public void setMatrixAttr(final String objectPath, final String name, final int[][] value);
     
     // /////////////////////
     // Data Sets
     // /////////////////////
 
     /**
-     * Writes out a <code>short</code> value.
+     * Writes out a <code>int</code> value.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param value The value to write.
      */
-    public void write(final String objectPath, final short value);
+    public void write(final String objectPath, final int value);
 
     /**
-     * Writes out a <code>short</code> array (of rank 1).
+     * Writes out a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
-    public void writeArray(final String objectPath, final short[] data);
+    public void writeArray(final String objectPath, final int[] data);
 
     /**
-     * Writes out a <code>short</code> array (of rank 1).
+     * Writes out a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
      */
-    public void writeArray(final String objectPath, final short[] data, 
+    public void writeArray(final String objectPath, final int[] data, 
             final HDF5IntStorageFeatures features);
 
     /**
-     * Creates a <code>short</code> array (of rank 1).
+     * Creates a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the short array to create. This will be the total size for 
+     * @param size The size of the int array to create. This will be the total size for 
      *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets. 
      *          For extendable data sets the initial size of the array will be 0,
      *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
@@ -119,10 +119,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void createArray(final String objectPath, final int size);
 
     /**
-     * Creates a <code>short</code> array (of rank 1).
+     * Creates a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the short array to create. When using extendable data sets 
+     * @param size The size of the int array to create. When using extendable data sets 
      *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
      *          set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
@@ -131,10 +131,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void createArray(final String objectPath, final long size, final int blockSize);
 
     /**
-     * Creates a <code>short</code> array (of rank 1).
+     * Creates a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the short array to create. This will be the total size for 
+     * @param size The size of the int array to create. This will be the total size for 
      *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets.
      *          For extendable data sets the initial size of the array will be 0,
      *          see {@link HDF5IntStorageFeatures}.
@@ -144,10 +144,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             final HDF5IntStorageFeatures features);
     
     /**
-     * Creates a <code>short</code> array (of rank 1).
+     * Creates a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the short array to create. When using extendable data sets 
+     * @param size The size of the int array to create. When using extendable data sets 
      *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
      *          set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
@@ -159,7 +159,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             final HDF5IntStorageFeatures features);
 
     /**
-     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
+     * Writes out a block of a <code>int</code> array (of rank 1). The data set needs to have
      * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)}
      * beforehand.
      * <p>
@@ -173,15 +173,15 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
      */
-    public void writeArrayBlock(final String objectPath, final short[] data,
+    public void writeArrayBlock(final String objectPath, final int[] data,
             final long blockNumber);
 
     /**
-     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
+     * Writes out a block of a <code>int</code> array (of rank 1). The data set needs to have
      * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)}
      * beforehand.
      * <p>
-     * Use this method instead of {@link #writeArrayBlock(String, short[], long)} if the
+     * Use this method instead of {@link #writeArrayBlock(String, int[], long)} if the
      * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
@@ -196,31 +196,31 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *            )
      * @param offset The offset in the data set to start writing to.
      */
-    public void writeArrayBlockWithOffset(final String objectPath, final short[] data,
+    public void writeArrayBlockWithOffset(final String objectPath, final int[] data,
             final int dataSize, final long offset);
 
     /**
-     * Writes out a <code>short</code> matrix (array of rank 2).
+     * Writes out a <code>int</code> matrix (array of rank 2).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      */
-    public void writeMatrix(final String objectPath, final short[][] data);
+    public void writeMatrix(final String objectPath, final int[][] data);
 
     /**
-     * Writes out a <code>short</code> matrix (array of rank 2).
+     * Writes out a <code>int</code> matrix (array of rank 2).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      * @param features The storage features of the data set.
      */
-    public void writeMatrix(final String objectPath, final short[][] data, 
+    public void writeMatrix(final String objectPath, final int[][] data, 
             final HDF5IntStorageFeatures features);
 
     /**
-     * Creates a <code>short</code> matrix (array of rank 2). The initial size of the matrix is 0.
+     * Creates a <code>int</code> matrix (array of rank 2). The initial size of the matrix is 0.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param blockSizeX The size of one block in the x dimension.
@@ -230,11 +230,11 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             final int blockSizeY);
 
     /**
-     * Creates a <code>short</code> matrix (array of rank 2).
+     * Creates a <code>int</code> matrix (array of rank 2).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the short matrix to create.
-     * @param sizeY The size of the y dimension of the short matrix to create.
+     * @param sizeX The size of the x dimension of the int matrix to create.
+     * @param sizeY The size of the y dimension of the int matrix to create.
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
      */
@@ -242,11 +242,11 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             final int blockSizeX, final int blockSizeY);
 
     /**
-     * Creates a <code>short</code> matrix (array of rank 2).
+     * Creates a <code>int</code> matrix (array of rank 2).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param sizeX The size of the x dimension of the short matrix to create.
-     * @param sizeY The size of the y dimension of the short matrix to create.
+     * @param sizeX The size of the x dimension of the int matrix to create.
+     * @param sizeY The size of the y dimension of the int matrix to create.
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
      * @param features The storage features of the data set.
@@ -255,7 +255,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             final int blockSizeX, final int blockSizeY, final HDF5IntStorageFeatures features);
 
     /**
-     * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
+     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to
      * have been created by
      * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
@@ -276,15 +276,15 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>data[0.length</code>).
      */
-    public void writeMatrixBlock(final String objectPath, final short[][] data,
+    public void writeMatrixBlock(final String objectPath, final int[][] data,
             final long blockNumberX, final long blockNumberY);
 
     /**
-     * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
+     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to
      * have been created by
      * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeMatrixBlock(String, short[][], long, long)} if
+     * Use this method instead of {@link #writeMatrixBlock(String, int[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
@@ -297,15 +297,15 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
-    public void writeMatrixBlockWithOffset(final String objectPath, final short[][] data,
+    public void writeMatrixBlockWithOffset(final String objectPath, final int[][] data,
             final long offsetX, final long offsetY);
 
     /**
-     * Writes out a block of a <code>short</code> matrix (array of rank 2). The data set needs to
+     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to
      * have been created by
      * {@link #createMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeMatrixBlock(String, short[][], long, long)} if
+     * Use this method instead of {@link #writeMatrixBlock(String, int[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
@@ -322,34 +322,34 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
-    public void writeMatrixBlockWithOffset(final String objectPath, final short[][] data,
+    public void writeMatrixBlockWithOffset(final String objectPath, final int[][] data,
             final int dataSizeX, final int dataSizeY, final long offsetX, final long offsetY);
 
     /**
-     * Writes out a multi-dimensional <code>short</code> array.
+     * Writes out a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      */
-    public void writeMDArray(final String objectPath, final MDShortArray data);
+    public void writeMDArray(final String objectPath, final MDIntArray data);
 
     /**
-     * Writes out a multi-dimensional <code>short</code> array.
+     * Writes out a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      * @param features The storage features of the data set.
      */
-    public void writeMDArray(final String objectPath, final MDShortArray data,
+    public void writeMDArray(final String objectPath, final MDIntArray data,
             final HDF5IntStorageFeatures features);
 
     /**
-     * Creates a multi-dimensional <code>short</code> array.
+     * Creates a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the short array to create. This will be the total dimensions 
+     * @param dimensions The dimensions of the int array to create. This will be the total dimensions 
      *          for non-extendable data sets and the dimensions of one chunk (extent along each axis) 
      *          for extendable (chunked) data sets. For extendable data sets the initial size of the 
      *          array along each axis will be 0, 
@@ -358,7 +358,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void createMDArray(final String objectPath, final int[] dimensions);
 
     /**
-     * Creates a multi-dimensional <code>short</code> array.
+     * Creates a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The dimensions of the array.
@@ -368,7 +368,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             final int[] blockDimensions);
 
     /**
-     * Creates a multi-dimensional <code>short</code> array.
+     * Creates a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The dimensions of the array. Will be the total dimensions for non-extendable 
@@ -381,7 +381,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             final HDF5IntStorageFeatures features);
 
     /**
-     * Creates a multi-dimensional <code>short</code> array.
+     * Creates a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The dimensions of the array.
@@ -392,7 +392,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             final int[] blockDimensions, final HDF5IntStorageFeatures features);
 
     /**
-     * Writes out a block of a multi-dimensional <code>short</code> array.
+     * Writes out a block of a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
@@ -400,22 +400,22 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param blockNumber The block number in each dimension (offset: multiply with the extend in
      *            the according dimension).
      */
-    public void writeMDArrayBlock(final String objectPath, final MDShortArray data,
+    public void writeMDArrayBlock(final String objectPath, final MDIntArray data,
             final long[] blockNumber);
 
     /**
-     * Writes out a block of a multi-dimensional <code>short</code> array.
+     * Writes out a block of a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      * @param offset The offset in the data set  to start writing to in each dimension.
      */
-    public void writeMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
+    public void writeMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
             final long[] offset);
 
    /**
-     * Writes out a block of a multi-dimensional <code>short</code> array.
+     * Writes out a block of a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
@@ -423,6 +423,6 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * @param offset The offset of the block in the data set to start writing to in each dimension.
      * @param memoryOffset The offset of the block in the <var>data</var> array.
      */
-    public void writeMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
+    public void writeMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
             final int[] blockDimensions, final long[] offset, final int[] memoryOffset);
 }

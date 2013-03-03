@@ -51,8 +51,7 @@ public interface IHDF5FloatWriter extends IHDF5FloatReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setArrayAttr(final String objectPath, final String name,
-            final float[] value);
+    public void setArrayAttr(final String objectPath, final String name, final float[] value);
 
     /**
      * Set a multi-dimensional code>float</code> attribute on the referenced object.
@@ -64,8 +63,7 @@ public interface IHDF5FloatWriter extends IHDF5FloatReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
-            final MDFloatArray value);
+    public void setMDArrayAttr(final String objectPath, final String name, final MDFloatArray value);
 
     /**
      * Set a <code>float[][]</code> attribute on the referenced object.
@@ -77,8 +75,7 @@ public interface IHDF5FloatWriter extends IHDF5FloatReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMatrixAttr(final String objectPath, final String name,
-            final float[][] value);
+    public void setMatrixAttr(final String objectPath, final String name, final float[][] value);
     
     // /////////////////////
     // Data Sets

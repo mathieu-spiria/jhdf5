@@ -51,8 +51,7 @@ public interface IHDF5ByteWriter extends IHDF5ByteReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setArrayAttr(final String objectPath, final String name,
-            final byte[] value);
+    public void setArrayAttr(final String objectPath, final String name, final byte[] value);
 
     /**
      * Set a multi-dimensional code>byte</code> attribute on the referenced object.
@@ -64,8 +63,7 @@ public interface IHDF5ByteWriter extends IHDF5ByteReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
-            final MDByteArray value);
+    public void setMDArrayAttr(final String objectPath, final String name, final MDByteArray value);
 
     /**
      * Set a <code>byte[][]</code> attribute on the referenced object.
@@ -77,8 +75,7 @@ public interface IHDF5ByteWriter extends IHDF5ByteReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMatrixAttr(final String objectPath, final String name,
-            final byte[][] value);
+    public void setMatrixAttr(final String objectPath, final String name, final byte[][] value);
     
     // /////////////////////
     // Data Sets

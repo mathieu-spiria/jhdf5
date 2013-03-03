@@ -51,8 +51,7 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setArrayAttr(final String objectPath, final String name,
-            final double[] value);
+    public void setArrayAttr(final String objectPath, final String name, final double[] value);
 
     /**
      * Set a multi-dimensional code>double</code> attribute on the referenced object.
@@ -64,8 +63,7 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
-            final MDDoubleArray value);
+    public void setMDArrayAttr(final String objectPath, final String name, final MDDoubleArray value);
 
     /**
      * Set a <code>double[][]</code> attribute on the referenced object.
@@ -77,8 +75,7 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMatrixAttr(final String objectPath, final String name,
-            final double[][] value);
+    public void setMatrixAttr(final String objectPath, final String name, final double[][] value);
     
     // /////////////////////
     // Data Sets

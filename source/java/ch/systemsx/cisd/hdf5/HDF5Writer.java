@@ -63,11 +63,19 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     private final IHDF5ByteWriter byteWriter;
 
+    private final IHDF5UnsignedByteWriter ubyteWriter;
+
     private final IHDF5ShortWriter shortWriter;
+
+    private final IHDF5UnsignedShortWriter ushortWriter;
 
     private final IHDF5IntWriter intWriter;
 
+    private final IHDF5UnsignedIntWriter uintWriter;
+
     private final IHDF5LongWriter longWriter;
+
+    private final IHDF5UnsignedLongWriter ulongWriter;
 
     private final IHDF5FloatWriter floatWriter;
 
@@ -94,9 +102,13 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         super(baseWriter);
         this.baseWriter = baseWriter;
         this.byteWriter = new HDF5ByteWriter(baseWriter);
+        this.ubyteWriter = new HDF5UnsignedByteWriter(baseWriter);
         this.shortWriter = new HDF5ShortWriter(baseWriter);
+        this.ushortWriter = new HDF5UnsignedShortWriter(baseWriter);
         this.intWriter = new HDF5IntWriter(baseWriter);
+        this.uintWriter = new HDF5UnsignedIntWriter(baseWriter);
         this.longWriter = new HDF5LongWriter(baseWriter);
+        this.ulongWriter = new HDF5UnsignedLongWriter(baseWriter);
         this.floatWriter = new HDF5FloatWriter(baseWriter);
         this.doubleWriter = new HDF5DoubleWriter(baseWriter);
         this.booleanWriter = new HDF5BooleanWriter(baseWriter);
@@ -2917,9 +2929,21 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
+    public IHDF5UnsignedByteWriter uint8()
+    {
+        return ubyteWriter;
+    }
+
+    @Override
     public IHDF5ShortWriter int16()
     {
         return shortWriter;
+    }
+
+    @Override
+    public IHDF5UnsignedShortWriter uint16()
+    {
+        return ushortWriter;
     }
 
     @Override
@@ -2929,9 +2953,21 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
+    public IHDF5UnsignedIntWriter uint32()
+    {
+        return uintWriter;
+    }
+
+    @Override
     public IHDF5LongWriter int64()
     {
         return longWriter;
+    }
+
+    @Override
+    public IHDF5UnsignedLongWriter uint64()
+    {
+        return ulongWriter;
     }
 
     @Override

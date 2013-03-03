@@ -548,6 +548,8 @@ public class HDF5RoundtripTest
         writer.writeBoolean(booleanDatasetName, true);
         final String byteDatasetName = "/byte";
         writer.int8().write(byteDatasetName, (byte) 17);
+        final String unsignedByteOverflowDatasetName = "/ubyteOverflow";
+        writer.uint8().write(unsignedByteOverflowDatasetName, (byte) 1024);
         final String shortDatasetName = "/short";
         writer.int16().write(shortDatasetName, (short) 1000);
         final String intDatasetName = "/int";
@@ -566,6 +568,7 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertTrue(reader.readBoolean(booleanDatasetName));
         assertEquals(17, reader.int8().read(byteDatasetName));
+        assertEquals(0, reader.int16().read(unsignedByteOverflowDatasetName));
         assertEquals(1000, reader.int16().read(shortDatasetName));
         assertEquals(1000000, reader.int32().read(intDatasetName));
         assertEquals(10000000000L, reader.int64().read(longDatasetName));
@@ -1474,8 +1477,8 @@ public class HDF5RoundtripTest
         arr.incNumberOfHyperRows(1);
         arr.set(5, 2, 0);
         arr.set(255, 2, 1);
-        writer.int8().createMDArray("array", new int[]
-            { 3, 2 }, HDF5IntStorageFeatures.INT_NO_COMPRESSION_UNSIGNED);
+        writer.uint8().createMDArray("array", new int[]
+            { 3, 2 });
         writer.int32().writeMDArrayBlock("array", arr, new long[]
             { 0, 0 });
         writer.close();
@@ -4346,6 +4349,10 @@ public class HDF5RoundtripTest
         final String byteAttributeName = "Byte Attribute";
         final byte byteAttributeValueWritten = 17;
         writer.int8().setAttr(datasetName, byteAttributeName, byteAttributeValueWritten);
+        final String unsignedByteAttributeName = "Unsigned Byte Attribute";
+        final short unsignedByteAttributeValueWritten = 128;
+        writer.uint8().setAttr(datasetName, unsignedByteAttributeName,
+                (byte) unsignedByteAttributeValueWritten);
         final String stringAttributeName = "String Attribute";
         final String stringAttributeValueWritten = "Some String Value";
         writer.string().setAttr(datasetName, stringAttributeName, stringAttributeValueWritten);
@@ -4431,6 +4438,9 @@ public class HDF5RoundtripTest
         assertEquals(integerAttributeValueWritten, integerAttributeValueRead);
         final byte byteAttributeValueRead = reader.int8().getAttr(datasetName, byteAttributeName);
         assertEquals(byteAttributeValueWritten, byteAttributeValueRead);
+        final short unsignedByteAttributeValueRead =
+                reader.int16().getAttr(datasetName, unsignedByteAttributeName);
+        assertEquals(unsignedByteAttributeValueWritten, unsignedByteAttributeValueRead);
         HDF5DataTypeInformation info =
                 reader.getAttributeInformation(datasetName, integerAttributeName);
         assertEquals(HDF5DataClass.INTEGER, info.getDataClass());
@@ -9215,8 +9225,8 @@ public class HDF5RoundtripTest
         // SPARC CPUs need numeric conversion to be switched on for this to work.
         if (OSUtilities.getCPUArchitecture().startsWith("sparc") == false)
         {
-        	assertEquals(1, reader.int32().read("one"));
-        	assertEquals(Double.POSITIVE_INFINITY, reader.float64().read("INFINITY"));
+            assertEquals(1, reader.int32().read("one"));
+            assertEquals(Double.POSITIVE_INFINITY, reader.float64().read("INFINITY"));
         }
         assertEquals(1e-5f, reader.float32().getAttr("pi", "eps"), 1e-9);
         assertEquals(17, reader.int8().read("smallInteger"));
