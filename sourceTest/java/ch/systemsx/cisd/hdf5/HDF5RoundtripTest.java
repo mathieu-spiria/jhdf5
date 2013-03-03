@@ -9165,7 +9165,7 @@ public class HDF5RoundtripTest
         {
             assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
         }
-        // On HDF5 1.8.3, numeric conversions on sparc don't detect overflows
+        // In HDF5 up to 1.8.10, numeric conversions on sparc don't detect overflows
         // for INFINITY and DINFINITY values.
         if (OSUtilities.getCPUArchitecture().startsWith("sparc"))
         {
@@ -9215,8 +9215,8 @@ public class HDF5RoundtripTest
         // SPARC CPUs need numeric conversion to be switched on for this to work.
         if (OSUtilities.getCPUArchitecture().startsWith("sparc") == false)
         {
-            assertEquals(1, reader.int32().read("one"));
-            assertEquals(Double.POSITIVE_INFINITY, reader.float64().read("INFINITY"));
+        	assertEquals(1, reader.int32().read("one"));
+        	assertEquals(Double.POSITIVE_INFINITY, reader.float64().read("INFINITY"));
         }
         assertEquals(1e-5f, reader.float32().getAttr("pi", "eps"), 1e-9);
         assertEquals(17, reader.int8().read("smallInteger"));
@@ -9246,7 +9246,7 @@ public class HDF5RoundtripTest
         {
             assertEquals(HDF5Constants.H5E_CANTCONVERT, ex.getMinorErrorNumber());
         }
-        // On HDF5 1.8.3, numeric conversions on sparc don't detect overflows
+        // In HDF5 up to 1.8.10, numeric conversions on sparc don't detect overflows
         // for INFINITY and DINFINITY values.
         if (OSUtilities.getCPUArchitecture().startsWith("sparc"))
         {
