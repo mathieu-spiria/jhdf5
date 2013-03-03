@@ -21,7 +21,7 @@ package ch.systemsx.cisd.hdf5;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5PrimitiveReader extends IHDF5ByteBasicReader, IHDF5DoubleBasicReader,
+public interface IHDF5PrimitiveBasicReader extends IHDF5ByteBasicReader, IHDF5DoubleBasicReader,
         IHDF5FloatBasicReader, IHDF5IntBasicReader, IHDF5LongBasicReader, IHDF5ShortBasicReader
 {
     // No methods to add.

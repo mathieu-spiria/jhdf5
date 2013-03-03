@@ -39,7 +39,7 @@ import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveReader, IHDF5StringBasicReader,
+public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveBasicReader, IHDF5StringBasicReader,
         IHDF5EnumBasicReader, IHDF5CompoundBasicReader, IHDF5BooleanReader, IHDF5GenericReader,
         IHDF5DateTimeBasicReader, IHDF5ReferenceReader
 {
