@@ -40,7 +40,7 @@ import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
  * @author Bernd Rinn
  */
 public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveBasicReader, IHDF5StringBasicReader,
-        IHDF5EnumBasicReader, IHDF5CompoundBasicReader, IHDF5BooleanReader, IHDF5GenericReader,
+        IHDF5EnumBasicReader, IHDF5CompoundBasicReader, IHDF5BooleanBasicReader, IHDF5GenericReader,
         IHDF5DateTimeBasicReader, IHDF5ReferenceBasicReader
 {
 
@@ -413,6 +413,15 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5PrimitiveBasicReade
      * @return <code>true</code>, if the attribute exists for the object.
      */
     public boolean hasAttribute(final String objectPath, final String attributeName);
+
+    // /////////////////////
+    // Boolean
+    // /////////////////////
+
+    /**
+     * Returns the full reader for boolean values.
+     */
+    public IHDF5BooleanReader bool();
 
     // /////////////////////
     // Bytes

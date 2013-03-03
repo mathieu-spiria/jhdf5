@@ -652,25 +652,25 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         final String booleanDatasetName = "/booleanArray";
         final BitSet arrayWritten = new BitSet();
-        writer.createBitField(booleanDatasetName, 4L, 2);
+        writer.bool().createBitField(booleanDatasetName, 4L, 2);
         arrayWritten.set(32);
         arrayWritten.set(40);
-        writer.writeBitFieldBlock(booleanDatasetName, arrayWritten, 2, 0);
+        writer.bool().writeBitFieldBlock(booleanDatasetName, arrayWritten, 2, 0);
         arrayWritten.clear();
         arrayWritten.set(0);
-        writer.writeBitFieldBlock(booleanDatasetName, arrayWritten, 2, 1);
+        writer.bool().writeBitFieldBlock(booleanDatasetName, arrayWritten, 2, 1);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        final BitSet arrayBlockRead = reader.readBitFieldBlock(booleanDatasetName, 2, 1);
+        final BitSet arrayBlockRead = reader.bool().readBitFieldBlock(booleanDatasetName, 2, 1);
         assertEquals(1, arrayBlockRead.cardinality());
         assertTrue(arrayBlockRead.get(0));
-        assertTrue(reader.isBitSetInBitField(booleanDatasetName, 32));
-        assertTrue(reader.isBitSetInBitField(booleanDatasetName, 40));
-        assertTrue(reader.isBitSetInBitField(booleanDatasetName, 128));
-        assertFalse(reader.isBitSetInBitField(booleanDatasetName, 33));
-        assertFalse(reader.isBitSetInBitField(booleanDatasetName, 64));
-        assertFalse(reader.isBitSetInBitField(booleanDatasetName, 256));
-        assertFalse(reader.isBitSetInBitField(booleanDatasetName, 512));
+        assertTrue(reader.bool().isBitSet(booleanDatasetName, 32));
+        assertTrue(reader.bool().isBitSet(booleanDatasetName, 40));
+        assertTrue(reader.bool().isBitSet(booleanDatasetName, 128));
+        assertFalse(reader.bool().isBitSet(booleanDatasetName, 33));
+        assertFalse(reader.bool().isBitSet(booleanDatasetName, 64));
+        assertFalse(reader.bool().isBitSet(booleanDatasetName, 256));
+        assertFalse(reader.bool().isBitSet(booleanDatasetName, 512));
         reader.close();
     }
 
@@ -4338,7 +4338,7 @@ public class HDF5RoundtripTest
         writer.int32().writeArray(datasetName, new int[0]);
         final String booleanAttributeName = "Boolean Attribute";
         final boolean booleanAttributeValueWritten = true;
-        writer.setBooleanAttribute(datasetName, booleanAttributeName, booleanAttributeValueWritten);
+        writer.bool().setAttr(datasetName, booleanAttributeName, booleanAttributeValueWritten);
         assertTrue(writer.hasAttribute(datasetName, booleanAttributeName));
         final String integerAttributeName = "Integer Attribute";
         final int integerAttributeValueWritten = 17;
@@ -4424,7 +4424,7 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(attributeFile);
         assertTrue(reader.hasAttribute(datasetName, booleanAttributeName));
         final boolean booleanAttributeValueRead =
-                reader.getBooleanAttribute(datasetName, booleanAttributeName);
+                reader.bool().getAttr(datasetName, booleanAttributeName);
         assertEquals(booleanAttributeValueWritten, booleanAttributeValueRead);
         final int integerAttributeValueRead =
                 reader.int32().getAttr(datasetName, integerAttributeName);
@@ -4919,7 +4919,7 @@ public class HDF5RoundtripTest
         writer.createSoftLink("/some", "/linkToSome");
         writer.createSoftLink("/some/flag", "/linkToFlag");
         writer.createHardLink("/some/flag", "/some/flag2");
-        writer.setBooleanAttribute("/some/flag2", "test", true);
+        writer.bool().setAttr("/some/flag2", "test", true);
         assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/some"));
         assertEquals(HDF5ObjectType.SOFT_LINK, writer.getObjectType("/linkToSome", false));
         assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/some"));

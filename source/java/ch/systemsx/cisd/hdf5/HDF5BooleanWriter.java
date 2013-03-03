@@ -34,12 +34,13 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
  * 
  * @author Bernd Rinn
  */
-public class HDF5BooleanWriter implements IHDF5BooleanWriter
+public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5BooleanWriter
 {
     private final HDF5BaseWriter baseWriter;
 
     HDF5BooleanWriter(HDF5BaseWriter baseWriter)
     {
+        super(baseWriter);
         assert baseWriter != null;
 
         this.baseWriter = baseWriter;
@@ -50,7 +51,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
     // /////////////////////
 
     @Override
-    public void setBooleanAttribute(final String objectPath, final String name, final boolean value)
+    public void setAttr(final String objectPath, final String name, final boolean value)
     {
         baseWriter.checkOpen();
         baseWriter.setAttribute(objectPath, name, baseWriter.booleanDataTypeId,
@@ -63,7 +64,7 @@ public class HDF5BooleanWriter implements IHDF5BooleanWriter
     // /////////////////////
 
     @Override
-    public void writeBoolean(final String objectPath, final boolean value)
+    public void write(final String objectPath, final boolean value)
     {
         baseWriter.checkOpen();
         baseWriter.writeScalar(objectPath, baseWriter.booleanDataTypeId,

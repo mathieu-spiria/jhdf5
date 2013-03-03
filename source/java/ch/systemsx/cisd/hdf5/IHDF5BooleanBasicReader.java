@@ -26,7 +26,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5BooleanReader
+public interface IHDF5BooleanBasicReader
 {
 
     /**
@@ -37,8 +37,10 @@ public interface IHDF5BooleanReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      * @throws HDF5JavaException If the attribute is not a boolean type.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#bool()}.
      */
-    public boolean getAttr(final String objectPath, final String attributeName)
+    @Deprecated
+    public boolean getBooleanAttribute(final String objectPath, final String attributeName)
             throws HDF5JavaException;
 
     /**
@@ -48,7 +50,7 @@ public interface IHDF5BooleanReader
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a boolean type.
      */
-    public boolean read(final String objectPath) throws HDF5JavaException;
+    public boolean readBoolean(final String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a bit field (which can be considered the equivalent to a boolean array of rank 1) from
@@ -79,7 +81,9 @@ public interface IHDF5BooleanReader
      * @param blockNumber The number of the block to read.
      * @return The {@link BitSet} read from the data set.
      * @throws HDF5DatatypeInterfaceException If the <var>objectPath</var> is not of bit field type.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#bool()}.
      */
+    @Deprecated
     public BitSet readBitFieldBlock(final String objectPath, final int blockSize,
             final long blockNumber);
 
@@ -97,7 +101,9 @@ public interface IHDF5BooleanReader
      * @param offset The offset of the block (in 64 bit words) to start reading from.
      * @return The {@link BitSet} read from the data set.
      * @throws HDF5DatatypeInterfaceException If the <var>objectPath</var> is not of bit field type.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#bool()}.
      */
+    @Deprecated
     public BitSet readBitFieldBlockWithOffset(final String objectPath, final int blockSize,
             final long offset);
 
@@ -107,7 +113,9 @@ public interface IHDF5BooleanReader
      * <p>
      * Will also return <code>false</code>, if <var>bitIndex</var> is outside of the bitfield
      * dataset.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#bool()}.
      */
-    public boolean isBitSet(final String objectPath, final int bitIndex);
+    @Deprecated
+    public boolean isBitSetInBitField(final String objectPath, final int bitIndex);
 
 }

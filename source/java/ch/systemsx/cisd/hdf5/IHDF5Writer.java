@@ -43,7 +43,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  * @author Bernd Rinn
  */
 public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5PrimitiveWriter,
-        IHDF5StringBasicWriter, IHDF5EnumBasicWriter, IHDF5CompoundBasicWriter, IHDF5BooleanWriter,
+        IHDF5StringBasicWriter, IHDF5EnumBasicWriter, IHDF5CompoundBasicWriter, IHDF5BooleanBasicWriter,
         IHDF5OpaqueWriter, IHDF5DateTimeBasicWriter, IHDF5ReferenceBasicWriter
 {
 
@@ -317,6 +317,16 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param name The name of the attribute to delete.
      */
     public void deleteAttribute(final String objectPath, final String name);
+
+    // /////////////////////
+    // Boolean
+    // /////////////////////
+
+    /**
+     * Returns the full writer for boolean values.
+     */
+    @Override
+    public IHDF5BooleanWriter bool();
 
     // /////////////////////
     // Bytes

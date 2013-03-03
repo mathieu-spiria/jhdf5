@@ -600,7 +600,7 @@ class HDF5Reader implements IHDF5Reader
     public boolean getBooleanAttribute(String objectPath, String attributeName)
             throws HDF5JavaException
     {
-        return booleanReader.getBooleanAttribute(objectPath, attributeName);
+        return booleanReader.getAttr(objectPath, attributeName);
     }
 
     @Override
@@ -724,6 +724,12 @@ class HDF5Reader implements IHDF5Reader
     //
 
     @Override
+    public IHDF5BooleanReader bool()
+    {
+        return booleanReader;
+    }
+
+    @Override
     public BitSet readBitField(String objectPath) throws HDF5DatatypeInterfaceException
     {
         return booleanReader.readBitField(objectPath);
@@ -744,13 +750,13 @@ class HDF5Reader implements IHDF5Reader
     @Override
     public boolean isBitSetInBitField(String objectPath, int bitIndex)
     {
-        return booleanReader.isBitSetInBitField(objectPath, bitIndex);
+        return booleanReader.isBitSet(objectPath, bitIndex);
     }
 
     @Override
     public boolean readBoolean(String objectPath) throws HDF5JavaException
     {
-        return booleanReader.readBoolean(objectPath);
+        return booleanReader.read(objectPath);
     }
 
     //

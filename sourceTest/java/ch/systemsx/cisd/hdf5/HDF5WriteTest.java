@@ -57,7 +57,7 @@ public class HDF5WriteTest
             writer.string().setAttr("/Group1/MyDataSet", "foo", "Die Geschichte vom Pferd");
             // writer.addAttribute("/Group1/SubGroup1/MyDataSet", "foo", "No story");
             writer.float64().setAttr("/", "version", 17.0);
-            writer.setBooleanAttribute("/Group1", "active", true);
+            writer.bool().setAttr("/Group1", "active", true);
             writer.int8().writeArray("/empty", new byte[0]);
             writer.close();
         } catch (HDF5LibraryException ex)

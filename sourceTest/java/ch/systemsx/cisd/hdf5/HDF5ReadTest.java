@@ -59,7 +59,7 @@ public class HDF5ReadTest
             listAttributes(reader, "/Group1/MyDataSet");
             describe(reader, "/Group1/MyDataSet", "foo");
             describe(reader, "/Group1", "active");
-            System.out.println(reader.getBooleanAttribute("/Group1", "active"));
+            System.out.println(reader.bool().getAttr("/Group1", "active"));
             System.out.println(reader.string().getAttr("/Group1/MyDataSet", "foo"));
             System.out.println(reader.string().getAttr("/Group1/SubGroup1/MyDataSet", "foo"));
             System.out.println(reader.float64().readMatrix("/Group1/MyDataSet")[1][0]);

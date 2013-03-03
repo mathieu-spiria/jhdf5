@@ -33,14 +33,14 @@ public class AttributeExample
         IHDF5Writer writer = HDF5Factory.configure("attribute.h5").writer();
         writer.writeString("a string", "Just some random string.");
         // Set two attributes on it.
-        writer.setBooleanAttribute("a string", "important", false);
+        writer.bool().setAttr("a string", "important", false);
         writer.time().setAttr("a string", "timestamp", System.currentTimeMillis());
         writer.close();
 
         // Read the dataset and the attributes.
         IHDF5Reader reader = HDF5Factory.openForReading("attribute.h5");
         System.out.println(reader.readString("a string"));
-        System.out.println(reader.getBooleanAttribute("a string", "important"));
+        System.out.println(reader.bool().getAttr("a string", "important"));
         System.out.println(reader.time().getAttr("a string", "timestamp"));
         reader.close();
     }

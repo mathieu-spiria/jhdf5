@@ -49,7 +49,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
     // /////////////////////
 
     @Override
-    public boolean getBooleanAttribute(final String objectPath, final String attributeName)
+    public boolean getAttr(final String objectPath, final String attributeName)
             throws HDF5JavaException
     {
         assert objectPath != null;
@@ -88,7 +88,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
     // /////////////////////
 
     @Override
-    public boolean readBoolean(final String objectPath) throws HDF5JavaException
+    public boolean read(final String objectPath) throws HDF5JavaException
     {
         assert objectPath != null;
 
@@ -189,7 +189,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
     }
 
     @Override
-    public boolean isBitSetInBitField(String objectPath, int bitIndex)
+    public boolean isBitSet(String objectPath, int bitIndex)
     {
         final int wordIndex = BitSetConversionUtils.getWordIndex(bitIndex);
         final long[] storageFormOrNull = readBitFieldStorageForm(objectPath, 1, wordIndex, true);

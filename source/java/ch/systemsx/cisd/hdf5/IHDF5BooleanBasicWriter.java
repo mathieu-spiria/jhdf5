@@ -23,7 +23,7 @@ import java.util.BitSet;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5BooleanWriter extends IHDF5BooleanReader
+public interface IHDF5BooleanBasicWriter
 {
 
     /**
@@ -35,8 +35,10 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param value The value of the attribute.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#bool()}.
      */
-    public void setAttr(final String objectPath, final String name, final boolean value);
+    @Deprecated
+    public void setBooleanAttribute(final String objectPath, final String name, final boolean value);
 
     /**
      * Writes out a <code>boolean</code> value.
@@ -44,7 +46,7 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param value The value of the data set.
      */
-    public void write(final String objectPath, final boolean value);
+    public void writeBoolean(final String objectPath, final boolean value);
 
     /**
      * Writes out a bit field ((which can be considered the equivalent to a boolean array of rank
@@ -72,7 +74,9 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#bool()}.
      */
+    @Deprecated
     public void writeBitField(final String objectPath, final BitSet data,
             final HDF5GenericStorageFeatures features);
 
@@ -85,7 +89,9 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      *            (chunked) data sets. For extendable data sets the initial size of the array will
      *            be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#bool()}.
      */
+    @Deprecated
     public void createBitField(final String objectPath, final int size);
 
     /**
@@ -97,7 +103,9 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      *            data set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#bool()}.
      */
+    @Deprecated
     public void createBitField(final String objectPath, final long size, final int blockSize);
 
     /**
@@ -109,7 +117,9 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      *            (chunked) data sets. For extendable data sets the initial size of the array will
      *            be 0, see {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#bool()}.
      */
+    @Deprecated
     public void createBitField(final String objectPath, final int size,
             final HDF5IntStorageFeatures features);
 
@@ -124,7 +134,9 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#bool()}.
      */
+    @Deprecated
     public void createBitField(final String objectPath, final long size, final int blockSize,
             final HDF5IntStorageFeatures features);
 
@@ -142,7 +154,9 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      *            <code>null</code> or of length 0.
      * @param dataSize The (real) size of <code>data</code>
      * @param blockNumber The number of the block to write.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#bool()}.
      */
+    @Deprecated
     public void writeBitFieldBlock(final String objectPath, final BitSet data, final int dataSize,
             final long blockNumber);
 
@@ -164,7 +178,9 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      *            <code>null</code> or of length 0.
      * @param dataSize The (real) size of <code>data</code>
      * @param offset The offset in the data set to start writing to.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#bool()}.
      */
+    @Deprecated
     public void writeBitFieldBlockWithOffset(final String objectPath, BitSet data,
             final int dataSize, final long offset);
 

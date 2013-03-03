@@ -372,7 +372,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     @Override
     public void setBooleanAttribute(String objectPath, String name, boolean value)
     {
-        booleanWriter.setBooleanAttribute(objectPath, name, value);
+        booleanWriter.setAttr(objectPath, name, value);
     }
 
     // /////////////////////
@@ -411,6 +411,12 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     //
 
     @Override
+    public IHDF5BooleanWriter bool()
+    {
+        return booleanWriter;
+    }
+
+    @Override
     public void writeBitField(String objectPath, BitSet data, HDF5GenericStorageFeatures features)
     {
         booleanWriter.writeBitField(objectPath, data, features);
@@ -425,7 +431,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     @Override
     public void writeBoolean(String objectPath, boolean value)
     {
-        booleanWriter.writeBoolean(objectPath, value);
+        booleanWriter.write(objectPath, value);
     }
 
     //
