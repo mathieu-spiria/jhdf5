@@ -21,7 +21,7 @@ package ch.systemsx.cisd.hdf5;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5PrimitiveWriter extends IHDF5ByteBasicWriter, IHDF5DoubleBasicWriter,
+public interface IHDF5PrimitiveBasicWriter extends IHDF5ByteBasicWriter, IHDF5DoubleBasicWriter,
         IHDF5FloatBasicWriter, IHDF5IntBasicWriter, IHDF5LongBasicWriter, IHDF5ShortBasicWriter
 {
     // No methods to add.

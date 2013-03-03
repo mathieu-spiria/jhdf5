@@ -42,7 +42,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5PrimitiveWriter,
+public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5PrimitiveBasicWriter,
         IHDF5StringBasicWriter, IHDF5EnumBasicWriter, IHDF5CompoundBasicWriter, IHDF5BooleanBasicWriter,
         IHDF5OpaqueWriter, IHDF5DateTimeBasicWriter, IHDF5ReferenceBasicWriter
 {
