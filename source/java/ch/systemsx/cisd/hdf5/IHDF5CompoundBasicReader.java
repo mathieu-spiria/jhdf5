@@ -24,10 +24,12 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.IHDF5CompoundInformationRetriever.IByteArrayInspector;
 
 /**
- * An interface that provides basic methods for reading compound values from HDF5 files.
+ * An interface with legacy methods for reading compound values from HDF5 files. Do not use in any
+ * new code as it will be removed in a future version of JHDF5.
  * 
  * @author Bernd Rinn
  */
+@Deprecated
 public interface IHDF5CompoundBasicReader
 {
     // /////////////////////
@@ -38,7 +40,8 @@ public interface IHDF5CompoundBasicReader
      * Returns the member information for the committed compound data type <var>compoundClass</var>
      * (using its "simple name") in the order that the members appear in the compound type. It is a
      * failure condition if this compound data type does not exist.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * 
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundMemberInformation[] getCompoundMemberInformation(
@@ -51,7 +54,7 @@ public interface IHDF5CompoundBasicReader
      * considered a data type path instead of a data type name.
      * 
      * @param dataTypeName The name of the compound data type to get the member information for.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public HDF5CompoundMemberInformation[] getCompoundMemberInformation(final String dataTypeName);
@@ -65,7 +68,7 @@ public interface IHDF5CompoundBasicReader
      * names.
      * 
      * @throws HDF5JavaException If the data set is not of compound type.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public HDF5CompoundMemberInformation[] getCompoundDataSetInformation(final String dataSetPath)
@@ -97,7 +100,7 @@ public interface IHDF5CompoundBasicReader
      * @param name The name of the compound in the HDF5 file.
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
      * @param members The mapping from the Java compound type to the HDF5 type.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getCompoundType(final String name, Class<T> pojoClass,
@@ -109,7 +112,7 @@ public interface IHDF5CompoundBasicReader
      * 
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
      * @param members The mapping from the Java compound type to the HDF5 type.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getCompoundType(Class<T> pojoClass,
@@ -122,7 +125,7 @@ public interface IHDF5CompoundBasicReader
      * @param name The name of the compound in the HDF5 file.
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
      * @see HDF5CompoundMemberMapping#inferMapping
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getInferredCompoundType(final String name,
@@ -134,7 +137,7 @@ public interface IHDF5CompoundBasicReader
      * on the simple name of <var>pojoClass</var>.
      * 
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getInferredCompoundType(final Class<T> pojoClass);
@@ -147,7 +150,7 @@ public interface IHDF5CompoundBasicReader
      * @param template The compound to infer the HDF5 compound type from.
      * @param hints The hints to provide to the mapping procedure.
      * @see HDF5CompoundMemberMapping#inferMapping
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getInferredCompoundType(final String name, final T template,
@@ -160,7 +163,7 @@ public interface IHDF5CompoundBasicReader
      * @param name The name of the compound type in the HDF5 file.
      * @param template The compound to infer the HDF5 compound type from.
      * @see HDF5CompoundMemberMapping#inferMapping
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getInferredCompoundType(final String name, final T template);
@@ -172,7 +175,7 @@ public interface IHDF5CompoundBasicReader
      * 
      * @param template The compound to infer the HDF5 compound type from.
      * @see HDF5CompoundMemberMapping#inferMapping
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getInferredCompoundType(final T template);
@@ -186,7 +189,7 @@ public interface IHDF5CompoundBasicReader
      * @param template The compound to infer the HDF5 compound type from. Needs to have the same
      *            length as <var>memberNames</var>.
      * @see HDF5CompoundMemberMapping#inferMapping
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public HDF5CompoundType<List<?>> getInferredCompoundType(final String name,
@@ -200,7 +203,7 @@ public interface IHDF5CompoundBasicReader
      * @param template The compound to infer the HDF5 compound type from. Needs to have the same
      *            length as <var>memberNames</var>.
      * @see HDF5CompoundMemberMapping#inferMapping
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public HDF5CompoundType<List<?>> getInferredCompoundType(List<String> memberNames,
@@ -215,7 +218,7 @@ public interface IHDF5CompoundBasicReader
      * @param template The compound to infer the HDF5 compound type from. Needs to have the same
      *            length than <var>memberNames</var>.
      * @see HDF5CompoundMemberMapping#inferMapping
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public HDF5CompoundType<Object[]> getInferredCompoundType(final String name,
@@ -229,7 +232,7 @@ public interface IHDF5CompoundBasicReader
      * @param template The compound to infer the HDF5 compound type from. Needs to have the same
      *            length than <var>memberNames</var>.
      * @see HDF5CompoundMemberMapping#inferMapping
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public HDF5CompoundType<Object[]> getInferredCompoundType(String[] memberNames,
@@ -241,7 +244,7 @@ public interface IHDF5CompoundBasicReader
      * 
      * @param objectPath The path of the compound dataset to get the type from.
      * @param pojoClass The class to use for the mapping.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getDataSetCompoundType(String objectPath, Class<T> pojoClass);
@@ -252,7 +255,7 @@ public interface IHDF5CompoundBasicReader
      * 
      * @param objectPath The path of the compound dataset to get the type from.
      * @param pojoClass The class to use for the mapping.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getAttributeCompoundType(String objectPath,
@@ -271,7 +274,7 @@ public interface IHDF5CompoundBasicReader
      *            committed data type otherwise.
      * @param pojoClass The class to use for the mapping.
      * @return The compound data type.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getNamedCompoundType(String dataTypeName, Class<T> pojoClass);
@@ -285,7 +288,7 @@ public interface IHDF5CompoundBasicReader
      * @param pojoClass The class to use for the mapping and to get the name of named data type
      *            from.
      * @return The compound data type.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> HDF5CompoundType<T> getNamedCompoundType(Class<T> pojoClass);
@@ -301,7 +304,7 @@ public interface IHDF5CompoundBasicReader
      * @param type The type definition of this compound type.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> T readCompound(String objectPath, HDF5CompoundType<T> type) throws HDF5JavaException;
@@ -331,7 +334,7 @@ public interface IHDF5CompoundBasicReader
      *            file is translated back into a Java object.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> T readCompound(String objectPath, HDF5CompoundType<T> type,
@@ -344,7 +347,7 @@ public interface IHDF5CompoundBasicReader
      * @param type The type definition of this compound type.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> T[] readCompoundArray(String objectPath, HDF5CompoundType<T> type)
@@ -359,7 +362,7 @@ public interface IHDF5CompoundBasicReader
      *            file is translated back into Java objects.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> T[] readCompoundArray(String objectPath, HDF5CompoundType<T> type,
@@ -393,7 +396,7 @@ public interface IHDF5CompoundBasicReader
      *            <var>blockSize</var>).
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> T[] readCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type,
@@ -412,7 +415,7 @@ public interface IHDF5CompoundBasicReader
      *            file is translated back into Java objects.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> T[] readCompoundArrayBlock(String objectPath, HDF5CompoundType<T> type,
@@ -429,7 +432,7 @@ public interface IHDF5CompoundBasicReader
      * @param offset The offset of the block to read (starting with 0).
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> T[] readCompoundArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
@@ -447,7 +450,7 @@ public interface IHDF5CompoundBasicReader
      *            file is translated back into Java objects.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> T[] readCompoundArrayBlockWithOffset(String objectPath, HDF5CompoundType<T> type,
@@ -461,7 +464,7 @@ public interface IHDF5CompoundBasicReader
      * @param type The type definition of this compound type.
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(String objectPath,
@@ -476,7 +479,7 @@ public interface IHDF5CompoundBasicReader
      *            file is translated back into Java objects.
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(String objectPath,
@@ -494,7 +497,7 @@ public interface IHDF5CompoundBasicReader
      * @throws HDF5JavaException If the data set is not of rank 1 or not a compound data set.
      * @throws HDF5JavaException If the data set is not of rank 1, not a compound data set or if the
      *             mapping between the compound type and the POJO is not complete.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> Iterable<HDF5DataBlock<T[]>> getCompoundArrayNaturalBlocks(String objectPath,
@@ -507,7 +510,7 @@ public interface IHDF5CompoundBasicReader
      * @param type The type definition of this compound type.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> MDArray<T> readCompoundMDArray(String objectPath, HDF5CompoundType<T> type)
@@ -526,7 +529,7 @@ public interface IHDF5CompoundBasicReader
      *             mapping between the compound type and the POJO is not complete.
      * @see CompoundType
      * @see CompoundElement
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> MDArray<T> readCompoundMDArray(String objectPath, Class<T> pojoClass)
@@ -541,7 +544,7 @@ public interface IHDF5CompoundBasicReader
      *            file is translated back into Java objects.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> MDArray<T> readCompoundMDArray(String objectPath, HDF5CompoundType<T> type,
@@ -556,7 +559,7 @@ public interface IHDF5CompoundBasicReader
      * @param blockNumber The number of the block to write along each axis.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> MDArray<T> readCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
@@ -573,7 +576,7 @@ public interface IHDF5CompoundBasicReader
      *            file is translated back into Java objects.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound type.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> MDArray<T> readCompoundMDArrayBlock(String objectPath, HDF5CompoundType<T> type,
@@ -589,7 +592,7 @@ public interface IHDF5CompoundBasicReader
      * @param offset The offset of the block to write in the data set along each axis.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(String objectPath,
@@ -607,7 +610,7 @@ public interface IHDF5CompoundBasicReader
      *            file is translated back into Java objects.
      * @return The data read from the data set.
      * @throws HDF5JavaException If the <var>objectPath</var> is not a compound data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> MDArray<T> readCompoundMDArrayBlockWithOffset(String objectPath,
@@ -620,7 +623,7 @@ public interface IHDF5CompoundBasicReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param type The type definition of this compound type.
      * @see HDF5MDDataBlock
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
@@ -634,7 +637,7 @@ public interface IHDF5CompoundBasicReader
      * @param inspectorOrNull The inspector to be called before the byte array read from the HDF5
      *            file is translated back into Java objects.
      * @see HDF5MDDataBlock
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
@@ -653,7 +656,7 @@ public interface IHDF5CompoundBasicReader
      * @see CompoundElement
      * @throws HDF5JavaException If the data set is not a compound data set or if the mapping
      *             between the compound type and the POJO is not complete.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#compounds()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#compound()} instead.
      */
     @Deprecated
     public <T> Iterable<HDF5MDDataBlock<MDArray<T>>> getCompoundMDArrayNaturalBlocks(
