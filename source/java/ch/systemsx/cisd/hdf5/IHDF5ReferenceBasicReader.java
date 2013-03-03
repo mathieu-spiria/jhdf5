@@ -26,7 +26,7 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
  * @see IHDF5ReferenceWriter
  * @author Bernd Rinn
  */
-public interface IHDF5ReferenceReader
+public interface IHDF5ReferenceBasicReader
 {
     // //////////////////////////////
     // Specific to object references
@@ -37,9 +37,11 @@ public interface IHDF5ReferenceReader
      * 
      * @param reference Reference encoded as string.
      * @return The path in the HDF5 file.
-     * @see #readArray(String, boolean)
+     * @see #readObjectReferenceArray(String, boolean)
      * @throws HDF5JavaException if <var>reference</var> is not a string-encoded reference.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
+    @Deprecated
     public String resolvePath(final String reference) throws HDF5JavaException;
 
     // /////////////////////
@@ -58,8 +60,10 @@ public interface IHDF5ReferenceReader
      * @param attributeName The name of the attribute to read.
      * @return The path of the object that the reference refers to, or an empty string, if the
      *         object reference refers to an unnamed object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String getAttr(final String objectPath, final String attributeName);
+    @Deprecated
+    public String getObjectReferenceAttribute(final String objectPath, final String attributeName);
 
     /**
      * Reads an object reference attribute named <var>attributeName</var> from the object
@@ -75,8 +79,10 @@ public interface IHDF5ReferenceReader
      *            otherwise returns the references itself.
      * @return The path of the object that the reference refers to, or an empty string, if the
      *         object reference refers to an unnamed object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String getAttr(final String objectPath, final String attributeName,
+    @Deprecated
+    public String getObjectReferenceAttribute(final String objectPath, final String attributeName,
             final boolean resolveName);
 
     /**
@@ -91,8 +97,11 @@ public interface IHDF5ReferenceReader
      * @param attributeName The name of the attribute to read.
      * @return The paths of the objects that the references refers to. Each string may be empty, if
      *         the corresponding object reference refers to an unnamed object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String[] getArrayAttr(final String objectPath, final String attributeName);
+    @Deprecated
+    public String[] getObjectReferenceArrayAttribute(final String objectPath,
+            final String attributeName);
 
     /**
      * Reads a 1D object reference array attribute named <var>attributeName</var> from the object
@@ -108,9 +117,11 @@ public interface IHDF5ReferenceReader
      *            otherwise returns the references itself.
      * @return The paths of the objects that the references refers to. Each string may be empty, if
      *         the corresponding object reference refers to an unnamed object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String[] getArrayAttr(final String objectPath, final String attributeName,
-            final boolean resolveName);
+    @Deprecated
+    public String[] getObjectReferenceArrayAttribute(final String objectPath,
+            final String attributeName, final boolean resolveName);
 
     /**
      * Reads an object reference array attribute named <var>attributeName</var> from the object
@@ -124,8 +135,11 @@ public interface IHDF5ReferenceReader
      * @param attributeName The name of the attribute to read.
      * @return The paths of the objects that the references refers to. Each string may be empty, if
      *         the corresponding object reference refers to an unnamed object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public MDArray<String> getMDArrayAttr(final String objectPath, final String attributeName);
+    @Deprecated
+    public MDArray<String> getObjectReferenceMDArrayAttribute(final String objectPath,
+            final String attributeName);
 
     /**
      * Reads an object reference array attribute named <var>attributeName</var> from the object
@@ -141,9 +155,11 @@ public interface IHDF5ReferenceReader
      *            otherwise returns the references itself.
      * @return The paths of the objects that the references refers to. Each string may be empty, if
      *         the corresponding object reference refers to an unnamed object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public MDArray<String> getMDArrayAttr(final String objectPath, final String attributeName,
-            boolean resolveName);
+    @Deprecated
+    public MDArray<String> getObjectReferenceMDArrayAttribute(final String objectPath,
+            final String attributeName, boolean resolveName);
 
     // /////////////////////
     // Data Sets
@@ -160,8 +176,10 @@ public interface IHDF5ReferenceReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The path of the object that the reference refers to, or an empty string, if the
      *         object reference refers to an unnamed object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String read(final String objectPath);
+    @Deprecated
+    public String readObjectReference(final String objectPath);
 
     /**
      * Reads an object reference from the object <var>objectPath</var>. <br>
@@ -175,8 +193,10 @@ public interface IHDF5ReferenceReader
      *            otherwise returns the references itself.
      * @return The path of the object that the reference refers to, or an empty string, if the
      *         object reference refers to an unnamed object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String read(final String objectPath, final boolean resolveName);
+    @Deprecated
+    public String readObjectReference(final String objectPath, final boolean resolveName);
 
     /**
      * Reads an array of object references from the object <var>objectPath</var>, resolving the
@@ -189,8 +209,10 @@ public interface IHDF5ReferenceReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The array of the paths of objects that the references refers to. Each string may be
      *         empty, if the corresponding object reference refers to an unnamed object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String[] readArray(final String objectPath);
+    @Deprecated
+    public String[] readObjectReferenceArray(final String objectPath);
 
     /**
      * Reads an array of object references from the object <var>objectPath</var>. <br>
@@ -204,8 +226,10 @@ public interface IHDF5ReferenceReader
      *            otherwise returns the references itself.
      * @return The array of the paths of objects that the references refers to. Each string may be
      *         empty, if the corresponding object reference refers to an unnamed object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String[] readArray(final String objectPath, boolean resolveName);
+    @Deprecated
+    public String[] readObjectReferenceArray(final String objectPath, boolean resolveName);
 
     /**
      * Reads a block from an array (of rank 1) of object references from the data set
@@ -222,8 +246,10 @@ public interface IHDF5ReferenceReader
      *            <var>blockSize</var>).
      * @return The referenced data set paths read from the data set. The length will be min(size -
      *         blockSize*blockNumber, blockSize).
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String[] readArrayBlock(final String objectPath, final int blockSize,
+    @Deprecated
+    public String[] readObjectReferenceArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber);
 
     /**
@@ -243,8 +269,10 @@ public interface IHDF5ReferenceReader
      *            otherwise returns the references itself.
      * @return The referenced data set paths read from the data set. The length will be min(size -
      *         blockSize*blockNumber, blockSize).
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String[] readArrayBlock(final String objectPath, final int blockSize,
+    @Deprecated
+    public String[] readObjectReferenceArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber, final boolean resolveName);
 
     /**
@@ -261,9 +289,11 @@ public interface IHDF5ReferenceReader
      * @param offset The offset of the block in the data set to start reading from (starting with
      *            0).
      * @return The referenced data set paths block read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
-            final long offset);
+    @Deprecated
+    public String[] readObjectReferenceArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset);
 
     /**
      * Reads a block from an array (of rank 1) of object references from the data set
@@ -281,9 +311,11 @@ public interface IHDF5ReferenceReader
      * @param resolveName If <code>true</code>, resolves the names of the objects referenced,
      *            otherwise returns the references itself.
      * @return The referenced data set paths block read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public String[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
-            final long offset, final boolean resolveName);
+    @Deprecated
+    public String[] readObjectReferenceArrayBlockWithOffset(final String objectPath,
+            final int blockSize, final long offset, final boolean resolveName);
 
     /**
      * Reads an array (or rank N) of object references from the object <var>objectPath</var>,
@@ -297,8 +329,10 @@ public interface IHDF5ReferenceReader
      * @return The multi-dimensional array of the paths of objects that the references refers to.
      *         Each string may be empty, if the corresponding object reference refers to an unnamed
      *         object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public MDArray<String> readMDArray(final String objectPath);
+    @Deprecated
+    public MDArray<String> readObjectReferenceMDArray(final String objectPath);
 
     /**
      * Reads an array (or rank N) of object references from the object <var>objectPath</var>. <br>
@@ -313,8 +347,10 @@ public interface IHDF5ReferenceReader
      * @return The multi-dimensional array of the paths of objects that the references refers to.
      *         Each string may be empty, if the corresponding object reference refers to an unnamed
      *         object.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public MDArray<String> readMDArray(final String objectPath, boolean resolveName);
+    @Deprecated
+    public MDArray<String> readObjectReferenceMDArray(final String objectPath, boolean resolveName);
 
     /**
      * Reads a multi-dimensional array of object references from the data set <var>objectPath</var>,
@@ -329,9 +365,11 @@ public interface IHDF5ReferenceReader
      * @param blockNumber The block number in each dimension (offset: multiply with the
      *            <var>blockDimensions</var> in the according dimension).
      * @return The referenced data set paths block read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public MDArray<String> readMDArrayBlock(final String objectPath, final int[] blockDimensions,
-            final long[] blockNumber);
+    @Deprecated
+    public MDArray<String> readObjectReferenceMDArrayBlock(final String objectPath,
+            final int[] blockDimensions, final long[] blockNumber);
 
     /**
      * Reads a multi-dimensional array of object references from the data set <var>objectPath</var>. <br>
@@ -347,9 +385,11 @@ public interface IHDF5ReferenceReader
      * @param resolveName If <code>true</code>, resolves the names of the objects referenced,
      *            otherwise returns the references itself.
      * @return The referenced data set paths block read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public MDArray<String> readMDArrayBlock(final String objectPath, final int[] blockDimensions,
-            final long[] blockNumber, final boolean resolveName);
+    @Deprecated
+    public MDArray<String> readObjectReferenceMDArrayBlock(final String objectPath,
+            final int[] blockDimensions, final long[] blockNumber, final boolean resolveName);
 
     /**
      * Reads a multi-dimensional array of object references from the data set <var>objectPath</var>,
@@ -363,8 +403,10 @@ public interface IHDF5ReferenceReader
      * @param blockDimensions The extent of the block in each dimension.
      * @param offset The offset in the data set to start reading from in each dimension.
      * @return The referenced data set paths block read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public MDArray<String> readMDArrayBlockWithOffset(final String objectPath,
+    @Deprecated
+    public MDArray<String> readObjectReferenceMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset);
 
     /**
@@ -380,8 +422,10 @@ public interface IHDF5ReferenceReader
      * @param resolveName If <code>true</code>, resolves the names of the objects referenced,
      *            otherwise returns the references itself.
      * @return The referenced data set paths block read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public MDArray<String> readMDArrayBlockWithOffset(final String objectPath,
+    @Deprecated
+    public MDArray<String> readObjectReferenceMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset, final boolean resolveName);
 
     /**
@@ -389,31 +433,40 @@ public interface IHDF5ReferenceReader
      * 
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public Iterable<HDF5DataBlock<String[]>> getArrayNaturalBlocks(final String dataSetPath);
+    @Deprecated
+    public Iterable<HDF5DataBlock<String[]>> getObjectReferenceArrayNaturalBlocks(
+            final String dataSetPath);
 
     /**
      * Provides all natural blocks of this one-dimensional data set to iterate over.
      * 
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public Iterable<HDF5DataBlock<String[]>> getArrayNaturalBlocks(final String dataSetPath,
-            final boolean resolveName);
+    @Deprecated
+    public Iterable<HDF5DataBlock<String[]>> getObjectReferenceArrayNaturalBlocks(
+            final String dataSetPath, final boolean resolveName);
 
     /**
      * Provides all natural blocks of this multi-dimensional data set to iterate over.
      * 
      * @see HDF5MDDataBlock
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public Iterable<HDF5MDDataBlock<MDArray<String>>> getMDArrayNaturalBlocks(
+    @Deprecated
+    public Iterable<HDF5MDDataBlock<MDArray<String>>> getObjectReferenceMDArrayNaturalBlocks(
             final String dataSetPath);
 
     /**
      * Provides all natural blocks of this multi-dimensional data set to iterate over.
      * 
      * @see HDF5MDDataBlock
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#reference()}.
      */
-    public Iterable<HDF5MDDataBlock<MDArray<String>>> getMDArrayNaturalBlocks(
+    @Deprecated
+    public Iterable<HDF5MDDataBlock<MDArray<String>>> getObjectReferenceMDArrayNaturalBlocks(
             final String dataSetPath, final boolean resolveName);
 }

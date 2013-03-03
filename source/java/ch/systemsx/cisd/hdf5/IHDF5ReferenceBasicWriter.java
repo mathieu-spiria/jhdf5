@@ -38,7 +38,7 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
+public interface IHDF5ReferenceBasicWriter
 {
 
     // /////////////////////
@@ -55,8 +55,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param referencedObjectPath The path of the object to reference.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void setAttr(final String objectPath, final String name,
+    @Deprecated
+    public void setObjectReferenceAttribute(final String objectPath, final String name,
             final String referencedObjectPath);
 
     /**
@@ -69,8 +71,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param referencedObjectPaths The paths of the objects to reference.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void setArrayAttr(final String objectPath, final String name,
+    @Deprecated
+    public void setObjectReferenceArrayAttribute(final String objectPath, final String name,
             final String[] referencedObjectPaths);
 
     /**
@@ -83,8 +87,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * @param objectPath The name of the object to add the attribute to.
      * @param name The name of the attribute.
      * @param referencedObjectPaths The paths of the objects to reference.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
+    @Deprecated
+    public void setObjectReferenceMDArrayAttribute(final String objectPath, final String name,
             final MDArray<String> referencedObjectPaths);
 
     // /////////////////////
@@ -99,16 +105,21 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * 
      * @param objectPath The name of the object to write.
      * @param referencedObjectPath The path of the object to reference.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void write(String objectPath, String referencedObjectPath);
+    @Deprecated
+    public void writeObjectReference(String objectPath, String referencedObjectPath);
 
     /**
      * Writes an array (of rank 1) of object references.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param referencedObjectPath The names of the object to write.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void writeArray(final String objectPath, final String[] referencedObjectPath);
+    @Deprecated
+    public void writeObjectReferenceArray(final String objectPath,
+            final String[] referencedObjectPath);
 
     /**
      * Writes an array (of rank 1) of object references.
@@ -116,9 +127,11 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param referencedObjectPath The names of the object to write.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void writeArray(final String objectPath, final String[] referencedObjectPath,
-            final HDF5IntStorageFeatures features);
+    @Deprecated
+    public void writeObjectReferenceArray(final String objectPath,
+            final String[] referencedObjectPath, final HDF5IntStorageFeatures features);
 
     /**
      * Creates an array (of rank 1) of object references.
@@ -128,8 +141,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      *            data sets and the size of one chunk for extendable (chunked) data sets. For
      *            extendable data sets the initial size of the array will be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void createArray(final String objectPath, final int size);
+    @Deprecated
+    public void createObjectReferenceArray(final String objectPath, final int size);
 
     /**
      * Creates an array (of rank 1) of object references.
@@ -140,8 +155,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      *            smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void createArray(final String objectPath, final long size, final int blockSize);
+    @Deprecated
+    public void createObjectReferenceArray(final String objectPath, final long size, final int blockSize);
 
     /**
      * Creates an array (of rank 1) of object references.
@@ -152,8 +169,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      *            extendable data sets the initial size of the array will be 0, see
      *            {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void createArray(final String objectPath, final int size,
+    @Deprecated
+    public void createObjectReferenceArray(final String objectPath, final int size,
             final HDF5IntStorageFeatures features);
 
     /**
@@ -167,35 +186,41 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void createArray(final String objectPath, final long size, final int blockSize,
-            final HDF5IntStorageFeatures features);
+    @Deprecated
+    public void createObjectReferenceArray(final String objectPath, final long size,
+            final int blockSize, final HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of an array (of rank 1) of object references. The data set needs to have
-     * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
+     * been created by
+     * {@link #createObjectReferenceArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createArray(String, long, int, HDF5IntStorageFeatures)} call that was used to create
-     * the data set.
+     * {@link #createObjectReferenceArray(String, long, int, HDF5IntStorageFeatures)} call that was
+     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param referencedObjectPaths The paths of the referenced objects to write. The length defines
      *            the block size. Must not be <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void writeArrayBlock(final String objectPath, final String[] referencedObjectPaths,
-            final long blockNumber);
+    @Deprecated
+    public void writeObjectReferenceArrayBlock(final String objectPath,
+            final String[] referencedObjectPaths, final long blockNumber);
 
     /**
      * Writes out a block of an array (of rank 1) of object references. The data set needs to have
-     * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
+     * been created by
+     * {@link #createObjectReferenceArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createArray(String, long, int, HDF5IntStorageFeatures)} call that was used to create
-     * the data set.
+     * {@link #createObjectReferenceArray(String, long, int, HDF5IntStorageFeatures)} call that was
+     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param referencedObjectPaths The paths of the referenced objects to write. The length defines
@@ -203,8 +228,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * @param dataSize The (real) size of <code>data</code> (needs to be <code><= data.length</code>
      *            )
      * @param offset The offset in the data set to start writing to.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void writeArrayBlockWithOffset(final String objectPath,
+    @Deprecated
+    public void writeObjectReferenceArrayBlockWithOffset(final String objectPath,
             final String[] referencedObjectPaths, final int dataSize, final long offset);
 
     /**
@@ -212,8 +239,11 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param referencedObjectPaths The names of the object to write.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void writeMDArray(final String objectPath, final MDArray<String> referencedObjectPaths);
+    @Deprecated
+    public void writeObjectReferenceMDArray(final String objectPath,
+            final MDArray<String> referencedObjectPaths);
 
     /**
      * Writes an array (of rank N) of object references.
@@ -221,9 +251,11 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param referencedObjectPaths The names of the object to write.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void writeMDArray(final String objectPath, final MDArray<String> referencedObjectPaths,
-            final HDF5IntStorageFeatures features);
+    @Deprecated
+    public void writeObjectReferenceMDArray(final String objectPath,
+            final MDArray<String> referencedObjectPaths, final HDF5IntStorageFeatures features);
 
     /**
      * Creates a multi-dimensional array of object references.
@@ -234,8 +266,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      *            axis) for extendable (chunked) data sets. For extendable data sets the initial
      *            size of the array along each axis will be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void createMDArray(final String objectPath, final int[] dimensions);
+    @Deprecated
+    public void createObjectReferenceMDArray(final String objectPath, final int[] dimensions);
 
     /**
      * Creates a multi-dimensional array of object references.
@@ -243,8 +277,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions The dimensions of the array.
      * @param blockDimensions The dimensions of one block (chunk) of the array.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void createMDArray(final String objectPath, final long[] dimensions,
+    @Deprecated
+    public void createObjectReferenceMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions);
 
     /**
@@ -257,8 +293,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      *            size of the array along each axis will be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void createMDArray(final String objectPath, final int[] dimensions,
+    @Deprecated
+    public void createObjectReferenceMDArray(final String objectPath, final int[] dimensions,
             final HDF5IntStorageFeatures features);
 
     /**
@@ -268,8 +306,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * @param dimensions The dimensions of the array.
      * @param blockDimensions The dimensions of one block (chunk) of the array.
      * @param features The storage features of the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void createMDArray(final String objectPath, final long[] dimensions,
+    @Deprecated
+    public void createObjectReferenceMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions, final HDF5IntStorageFeatures features);
 
     /**
@@ -280,8 +320,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      *            <code>null</code>. All columns need to have the same length.
      * @param blockNumber The block number in each dimension (offset: multiply with the extend in
      *            the according dimension).
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void writeMDArrayBlock(final String objectPath,
+    @Deprecated
+    public void writeObjectReferenceMDArrayBlock(final String objectPath,
             final MDArray<String> referencedObjectPaths, final long[] blockNumber);
 
     /**
@@ -291,8 +333,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * @param referencedObjectPaths The paths of the object references to write. Must not be
      *            <code>null</code>.
      * @param offset The offset in the data set to start writing to in each dimension.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void writeMDArrayBlockWithOffset(final String objectPath,
+    @Deprecated
+    public void writeObjectReferenceMDArrayBlockWithOffset(final String objectPath,
             final MDArray<String> referencedObjectPaths, final long[] offset);
 
     /**
@@ -304,8 +348,10 @@ public interface IHDF5ReferenceWriter extends IHDF5ReferenceReader
      * @param blockDimensions The dimensions of the block to write to the data set.
      * @param offset The offset of the block in the data set to start writing to in each dimension.
      * @param memoryOffset The offset of the block in the <var>data</var> array.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
-    public void writeMDArrayBlockWithOffset(final String objectPath,
+    @Deprecated
+    public void writeObjectReferenceMDArrayBlockWithOffset(final String objectPath,
             final MDLongArray referencedObjectPaths, final int[] blockDimensions,
             final long[] offset, final int[] memoryOffset);
 }

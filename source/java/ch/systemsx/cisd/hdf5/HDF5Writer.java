@@ -815,48 +815,54 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     //
 
     @Override
+    public IHDF5ReferenceWriter reference()
+    {
+        return referenceWriter;
+    }
+
+    @Override
     public void writeObjectReference(String objectPath, String referencedObjectPath)
     {
-        referenceWriter.writeObjectReference(objectPath, referencedObjectPath);
+        referenceWriter.write(objectPath, referencedObjectPath);
     }
 
     @Override
     public void writeObjectReferenceArray(String objectPath, String[] referencedObjectPath)
     {
-        referenceWriter.writeObjectReferenceArray(objectPath, referencedObjectPath);
+        referenceWriter.writeArray(objectPath, referencedObjectPath);
     }
 
     @Override
     public void writeObjectReferenceArray(String objectPath, String[] referencedObjectPath,
             HDF5IntStorageFeatures features)
     {
-        referenceWriter.writeObjectReferenceArray(objectPath, referencedObjectPath, features);
+        referenceWriter.writeArray(objectPath, referencedObjectPath, features);
     }
 
     @Override
     public void writeObjectReferenceMDArray(String objectPath, MDArray<String> referencedObjectPaths)
     {
-        referenceWriter.writeObjectReferenceMDArray(objectPath, referencedObjectPaths);
+        referenceWriter.writeMDArray(objectPath, referencedObjectPaths);
     }
 
     @Override
     public void writeObjectReferenceMDArray(String objectPath,
             MDArray<String> referencedObjectPaths, HDF5IntStorageFeatures features)
     {
-        referenceWriter.writeObjectReferenceMDArray(objectPath, referencedObjectPaths, features);
+        referenceWriter.writeMDArray(objectPath, referencedObjectPaths, features);
     }
 
     @Override
     public void setObjectReferenceAttribute(String objectPath, String name,
             String referencedObjectPath)
     {
-        referenceWriter.setObjectReferenceAttribute(objectPath, name, referencedObjectPath);
+        referenceWriter.setAttr(objectPath, name, referencedObjectPath);
     }
 
     @Override
     public void setObjectReferenceArrayAttribute(String objectPath, String name, String[] value)
     {
-        referenceWriter.setObjectReferenceArrayAttribute(objectPath, name, value);
+        referenceWriter.setArrayAttr(objectPath, name, value);
     }
 
     //
@@ -873,40 +879,40 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void setObjectReferenceMDArrayAttribute(String objectPath, String name,
             MDArray<String> referencedObjectPaths)
     {
-        referenceWriter.setObjectReferenceMDArrayAttribute(objectPath, name, referencedObjectPaths);
+        referenceWriter.setMDArrayAttr(objectPath, name, referencedObjectPaths);
     }
 
     @Override
     public void createObjectReferenceArray(String objectPath, int size)
     {
-        referenceWriter.createObjectReferenceArray(objectPath, size);
+        referenceWriter.createArray(objectPath, size);
     }
 
     @Override
     public void createObjectReferenceArray(String objectPath, long size, int blockSize)
     {
-        referenceWriter.createObjectReferenceArray(objectPath, size, blockSize);
+        referenceWriter.createArray(objectPath, size, blockSize);
     }
 
     @Override
     public void createObjectReferenceArray(String objectPath, int size,
             HDF5IntStorageFeatures features)
     {
-        referenceWriter.createObjectReferenceArray(objectPath, size, features);
+        referenceWriter.createArray(objectPath, size, features);
     }
 
     @Override
     public void createObjectReferenceArray(String objectPath, long size, int blockSize,
             HDF5IntStorageFeatures features)
     {
-        referenceWriter.createObjectReferenceArray(objectPath, size, blockSize, features);
+        referenceWriter.createArray(objectPath, size, blockSize, features);
     }
 
     @Override
     public void writeObjectReferenceArrayBlock(String objectPath, String[] referencedObjectPaths,
             long blockNumber)
     {
-        referenceWriter.writeObjectReferenceArrayBlock(objectPath, referencedObjectPaths,
+        referenceWriter.writeArrayBlock(objectPath, referencedObjectPaths,
                 blockNumber);
     }
 
@@ -914,35 +920,35 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeObjectReferenceArrayBlockWithOffset(String objectPath,
             String[] referencedObjectPaths, int dataSize, long offset)
     {
-        referenceWriter.writeObjectReferenceArrayBlockWithOffset(objectPath, referencedObjectPaths,
+        referenceWriter.writeArrayBlockWithOffset(objectPath, referencedObjectPaths,
                 dataSize, offset);
     }
 
     @Override
     public void createObjectReferenceMDArray(String objectPath, int[] dimensions)
     {
-        referenceWriter.createObjectReferenceMDArray(objectPath, dimensions);
+        referenceWriter.createMDArray(objectPath, dimensions);
     }
 
     @Override
     public void createObjectReferenceMDArray(String objectPath, long[] dimensions,
             int[] blockDimensions)
     {
-        referenceWriter.createObjectReferenceMDArray(objectPath, dimensions, blockDimensions);
+        referenceWriter.createMDArray(objectPath, dimensions, blockDimensions);
     }
 
     @Override
     public void createObjectReferenceMDArray(String objectPath, int[] dimensions,
             HDF5IntStorageFeatures features)
     {
-        referenceWriter.createObjectReferenceMDArray(objectPath, dimensions, features);
+        referenceWriter.createMDArray(objectPath, dimensions, features);
     }
 
     @Override
     public void createObjectReferenceMDArray(String objectPath, long[] dimensions,
             int[] blockDimensions, HDF5IntStorageFeatures features)
     {
-        referenceWriter.createObjectReferenceMDArray(objectPath, dimensions, blockDimensions,
+        referenceWriter.createMDArray(objectPath, dimensions, blockDimensions,
                 features);
     }
 
@@ -950,7 +956,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeObjectReferenceMDArrayBlock(String objectPath,
             MDArray<String> referencedObjectPaths, long[] blockNumber)
     {
-        referenceWriter.writeObjectReferenceMDArrayBlock(objectPath, referencedObjectPaths,
+        referenceWriter.writeMDArrayBlock(objectPath, referencedObjectPaths,
                 blockNumber);
     }
 
@@ -958,7 +964,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeObjectReferenceMDArrayBlockWithOffset(String objectPath,
             MDArray<String> referencedObjectPaths, long[] offset)
     {
-        referenceWriter.writeObjectReferenceMDArrayBlockWithOffset(objectPath,
+        referenceWriter.writeMDArrayBlockWithOffset(objectPath,
                 referencedObjectPaths, offset);
     }
 
@@ -966,7 +972,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeObjectReferenceMDArrayBlockWithOffset(String objectPath, MDLongArray data,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        referenceWriter.writeObjectReferenceMDArrayBlockWithOffset(objectPath, data,
+        referenceWriter.writeMDArrayBlockWithOffset(objectPath, data,
                 blockDimensions, offset, memoryOffset);
     }
 

@@ -34,13 +34,14 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
+public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5ReferenceWriter
 {
 
     private final HDF5BaseWriter baseWriter;
 
     HDF5ReferenceWriter(HDF5BaseWriter baseWriter)
     {
+        super(baseWriter);
         assert baseWriter != null;
 
         this.baseWriter = baseWriter;
@@ -51,7 +52,7 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     // /////////////////////
 
     @Override
-    public void setObjectReferenceAttribute(String objectPath, String name,
+    public void setAttr(String objectPath, String name,
             String referencedObjectPath)
     {
         assert objectPath != null;
@@ -65,7 +66,7 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void setObjectReferenceArrayAttribute(final String objectPath, final String name,
+    public void setArrayAttr(final String objectPath, final String name,
             final String[] referencedObjectPaths)
     {
         assert objectPath != null;
@@ -92,7 +93,7 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void setObjectReferenceMDArrayAttribute(final String objectPath, final String name,
+    public void setMDArrayAttr(final String objectPath, final String name,
             final MDArray<String> referencedObjectPaths)
     {
         assert objectPath != null;
@@ -123,7 +124,7 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     // /////////////////////
 
     @Override
-    public void writeObjectReference(String objectPath, String referencedObjectPath)
+    public void write(String objectPath, String referencedObjectPath)
     {
         assert objectPath != null;
         assert referencedObjectPath != null;
@@ -135,15 +136,15 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void writeObjectReferenceArray(final String objectPath,
+    public void writeArray(final String objectPath,
             final String[] referencedObjectPath)
     {
-        writeObjectReferenceArray(objectPath, referencedObjectPath,
+        writeArray(objectPath, referencedObjectPath,
                 HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
     @Override
-    public void writeObjectReferenceArray(final String objectPath,
+    public void writeArray(final String objectPath,
             final String[] referencedObjectPaths, final HDF5IntStorageFeatures features)
     {
         assert referencedObjectPaths != null;
@@ -169,19 +170,19 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void createObjectReferenceArray(final String objectPath, final int size)
+    public void createArray(final String objectPath, final int size)
     {
-        createObjectReferenceArray(objectPath, size, INT_NO_COMPRESSION);
+        createArray(objectPath, size, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void createObjectReferenceArray(final String objectPath, final long size, final int blockSize)
+    public void createArray(final String objectPath, final long size, final int blockSize)
     {
-        createObjectReferenceArray(objectPath, size, blockSize, INT_NO_COMPRESSION);
+        createArray(objectPath, size, blockSize, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void createObjectReferenceArray(final String objectPath, final int size,
+    public void createArray(final String objectPath, final int size,
             final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
@@ -211,7 +212,7 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void createObjectReferenceArray(final String objectPath, final long size,
+    public void createArray(final String objectPath, final long size,
             final int blockSize, final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
@@ -234,15 +235,15 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void writeObjectReferenceArrayBlock(final String objectPath,
+    public void writeArrayBlock(final String objectPath,
             final String[] referencedObjectPaths, final long blockNumber)
     {
-        writeObjectReferenceArrayBlockWithOffset(objectPath, referencedObjectPaths,
+        writeArrayBlockWithOffset(objectPath, referencedObjectPaths,
                 referencedObjectPaths.length, referencedObjectPaths.length * blockNumber);
     }
 
     @Override
-    public void writeObjectReferenceArrayBlockWithOffset(final String objectPath,
+    public void writeArrayBlockWithOffset(final String objectPath,
             final String[] referencedObjectPaths, final int dataSize, final long offset)
     {
         assert objectPath != null;
@@ -279,15 +280,15 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void writeObjectReferenceMDArray(final String objectPath,
+    public void writeMDArray(final String objectPath,
             final MDArray<String> referencedObjectPaths)
     {
-        writeObjectReferenceMDArray(objectPath, referencedObjectPaths,
+        writeMDArray(objectPath, referencedObjectPaths,
                 HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
     @Override
-    public void writeObjectReferenceMDArray(final String objectPath,
+    public void writeMDArray(final String objectPath,
             final MDArray<String> referencedObjectPaths, final HDF5IntStorageFeatures features)
     {
         assert referencedObjectPaths != null;
@@ -313,20 +314,20 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void createObjectReferenceMDArray(final String objectPath, final int[] dimensions)
+    public void createMDArray(final String objectPath, final int[] dimensions)
     {
-        createObjectReferenceMDArray(objectPath, dimensions, INT_NO_COMPRESSION);
+        createMDArray(objectPath, dimensions, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void createObjectReferenceMDArray(final String objectPath, final long[] dimensions,
+    public void createMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions)
     {
-        createObjectReferenceMDArray(objectPath, dimensions, blockDimensions, INT_NO_COMPRESSION);
+        createMDArray(objectPath, dimensions, blockDimensions, INT_NO_COMPRESSION);
     }
 
     @Override
-    public void createObjectReferenceMDArray(final String objectPath, final int[] dimensions,
+    public void createMDArray(final String objectPath, final int[] dimensions,
             final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
@@ -358,7 +359,7 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void createObjectReferenceMDArray(final String objectPath, final long[] dimensions,
+    public void createMDArray(final String objectPath, final long[] dimensions,
             final int[] blockDimensions, final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
@@ -380,7 +381,7 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void writeObjectReferenceMDArrayBlock(final String objectPath,
+    public void writeMDArrayBlock(final String objectPath,
             final MDArray<String> referencedObjectPaths, final long[] blockNumber)
     {
         assert blockNumber != null;
@@ -391,11 +392,11 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
         {
             offset[i] = blockNumber[i] * dimensions[i];
         }
-        writeObjectReferenceMDArrayBlockWithOffset(objectPath, referencedObjectPaths, offset);
+        writeMDArrayBlockWithOffset(objectPath, referencedObjectPaths, offset);
     }
 
     @Override
-    public void writeObjectReferenceMDArrayBlockWithOffset(final String objectPath,
+    public void writeMDArrayBlockWithOffset(final String objectPath,
             final MDArray<String> referencedObjectPaths, final long[] offset)
     {
         assert objectPath != null;
@@ -435,7 +436,7 @@ public class HDF5ReferenceWriter implements IHDF5ReferenceWriter
     }
 
     @Override
-    public void writeObjectReferenceMDArrayBlockWithOffset(final String objectPath,
+    public void writeMDArrayBlockWithOffset(final String objectPath,
             final MDLongArray data, final int[] blockDimensions, final long[] offset,
             final int[] memoryOffset)
     {
