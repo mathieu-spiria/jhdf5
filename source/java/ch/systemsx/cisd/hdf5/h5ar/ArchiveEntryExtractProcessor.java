@@ -216,7 +216,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
             while (offset < size)
             {
                 final int n =
-                        reader.readAsByteArrayToBlockWithOffset(objectPath, buffer, buffer.length,
+                        reader.generic().readArrayToBlockWithOffset(objectPath, buffer, buffer.length,
                                 offset, 0);
                 offset += n;
                 output.write(buffer, 0, n);

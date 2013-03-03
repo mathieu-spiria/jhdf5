@@ -434,10 +434,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         booleanWriter.write(objectPath, value);
     }
 
-    //
-    // Opaque
-    //
-
     @Override
     public void createBitField(String objectPath, int size)
     {
@@ -476,58 +472,68 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         booleanWriter.writeBitFieldBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
+    //
+    // Opaque
+    //
+
+    @Override
+    public IHDF5OpaqueWriter opaque()
+    {
+        return opaqueWriter;
+    }
+
     @Override
     public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, int size,
             HDF5GenericStorageFeatures features)
     {
-        return opaqueWriter.createOpaqueByteArray(objectPath, tag, size, features);
+        return opaqueWriter.createArray(objectPath, tag, size, features);
     }
 
     @Override
     public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, int size)
     {
-        return opaqueWriter.createOpaqueByteArray(objectPath, tag, size);
+        return opaqueWriter.createArray(objectPath, tag, size);
     }
 
     @Override
     public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, long size,
             int blockSize, HDF5GenericStorageFeatures features)
     {
-        return opaqueWriter.createOpaqueByteArray(objectPath, tag, size, blockSize, features);
+        return opaqueWriter.createArray(objectPath, tag, size, blockSize, features);
     }
 
     @Override
     public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, long size,
             int blockSize)
     {
-        return opaqueWriter.createOpaqueByteArray(objectPath, tag, size, blockSize);
+        return opaqueWriter.createArray(objectPath, tag, size, blockSize);
     }
 
     @Override
     public void writeOpaqueByteArray(String objectPath, String tag, byte[] data,
             HDF5GenericStorageFeatures features)
     {
-        opaqueWriter.writeOpaqueByteArray(objectPath, tag, data, features);
+        opaqueWriter.writeArray(objectPath, tag, data, features);
     }
 
     @Override
     public void writeOpaqueByteArray(String objectPath, String tag, byte[] data)
     {
-        opaqueWriter.writeOpaqueByteArray(objectPath, tag, data);
+        opaqueWriter.writeArray(objectPath, tag, data);
     }
 
     @Override
     public void writeOpaqueByteArrayBlock(String objectPath, HDF5OpaqueType dataType, byte[] data,
             long blockNumber)
     {
-        opaqueWriter.writeOpaqueByteArrayBlock(objectPath, dataType, data, blockNumber);
+        opaqueWriter.writeArrayBlock(objectPath, dataType, data, blockNumber);
     }
 
     @Override
     public void writeOpaqueByteArrayBlockWithOffset(String objectPath, HDF5OpaqueType dataType,
             byte[] data, int dataSize, long offset)
     {
-        opaqueWriter.writeOpaqueByteArrayBlockWithOffset(objectPath, dataType, data, dataSize,
+        opaqueWriter.writeArrayBlockWithOffset(objectPath, dataType, data, dataSize,
                 offset);
     }
 

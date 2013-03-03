@@ -679,43 +679,49 @@ class HDF5Reader implements IHDF5Reader
     //
 
     @Override
+    public IHDF5GenericReader generic()
+    {
+        return genericReader;
+    }
+
+    @Override
     public Iterable<HDF5DataBlock<byte[]>> getAsByteArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
-        return genericReader.getAsByteArrayNaturalBlocks(dataSetPath);
+        return genericReader.getArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public byte[] readAsByteArray(String objectPath)
     {
-        return genericReader.readAsByteArray(objectPath);
+        return genericReader.readArray(objectPath);
     }
 
     @Override
     public byte[] getAttributeAsByteArray(String objectPath, String attributeName)
     {
-        return genericReader.getAttributeAsByteArray(objectPath, attributeName);
+        return genericReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public byte[] readAsByteArrayBlock(String objectPath, int blockSize, long blockNumber)
             throws HDF5JavaException
     {
-        return genericReader.readAsByteArrayBlock(objectPath, blockSize, blockNumber);
+        return genericReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
     public byte[] readAsByteArrayBlockWithOffset(String objectPath, int blockSize, long offset)
             throws HDF5JavaException
     {
-        return genericReader.readAsByteArrayBlockWithOffset(objectPath, blockSize, offset);
+        return genericReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     @Override
     public int readAsByteArrayToBlockWithOffset(String objectPath, byte[] buffer, int blockSize,
             long offset, int memoryOffset) throws HDF5JavaException
     {
-        return genericReader.readAsByteArrayToBlockWithOffset(objectPath, buffer, blockSize,
+        return genericReader.readArrayToBlockWithOffset(objectPath, buffer, blockSize,
                 offset, memoryOffset);
     }
 

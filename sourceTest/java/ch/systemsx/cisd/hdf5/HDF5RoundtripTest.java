@@ -1295,14 +1295,14 @@ public class HDF5RoundtripTest
         final byte[] byteDataRead = reader.readAsByteArray("f");
         final double[] floatDataRead = NativeData.byteToDouble(byteDataRead, ByteOrder.NATIVE);
         assertTrue(Arrays.equals(floatDataWritten, floatDataRead));
-        byte[] byteDataBlockRead = reader.readAsByteArrayBlock("f", 2, 1);
+        byte[] byteDataBlockRead = reader.generic().readArrayBlock("f", 2, 1);
         assertEquals(16, byteDataBlockRead.length);
         assertEquals(floatDataWritten[2],
                 NativeData.byteToDouble(byteDataBlockRead, ByteOrder.NATIVE, 0, 1)[0]);
         assertEquals(floatDataWritten[3],
                 NativeData.byteToDouble(byteDataBlockRead, ByteOrder.NATIVE, 8, 1)[0]);
 
-        byteDataBlockRead = reader.readAsByteArrayBlockWithOffset("f", 2, 1);
+        byteDataBlockRead = reader.generic().readArrayBlockWithOffset("f", 2, 1);
         assertEquals(16, byteDataBlockRead.length);
         assertEquals(floatDataWritten[1],
                 NativeData.byteToDouble(byteDataBlockRead, ByteOrder.NATIVE, 0, 1)[0]);
@@ -1313,7 +1313,7 @@ public class HDF5RoundtripTest
                 { 2.8, 8.2, -3.1 },
                 { 0.0, 10000.0 } };
         int i = 0;
-        for (HDF5DataBlock<byte[]> block : reader.getAsByteArrayNaturalBlocks("f"))
+        for (HDF5DataBlock<byte[]> block : reader.generic().getArrayNaturalBlocks("f"))
         {
             assertEquals(i, block.getIndex());
             assertEquals(i * 3, block.getOffset());
@@ -1622,7 +1622,7 @@ public class HDF5RoundtripTest
         assertEquals(4f, NativeData.byteToFloat(arr, ByteOrder.NATIVE, 12, 1)[0]);
         try
         {
-            reader.readAsByteArrayBlock("fm", 2, 0);
+            reader.generic().readArrayBlock("fm", 2, 0);
             fail("readAsByteArrayBlock() is expected to fail on datasets of rank > 1");
         } catch (HDF5JavaException ex)
         {
@@ -1828,13 +1828,13 @@ public class HDF5RoundtripTest
         final int blockSize = 10;
         final int numberOfBlocks = 10;
         final HDF5OpaqueType opaqueDataType =
-                writer.createOpaqueByteArray(dsName, "TAG", size / 2, blockSize,
-                        GENERIC_DEFLATE_MAX);
+                writer.opaque()
+                        .createArray(dsName, "TAG", size / 2, blockSize, GENERIC_DEFLATE_MAX);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {
             Arrays.fill(block, (byte) i);
-            writer.writeOpaqueByteArrayBlock(dsName, opaqueDataType, block, i);
+            writer.opaque().writeArrayBlock(dsName, opaqueDataType, block, i);
         }
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
@@ -1860,7 +1860,7 @@ public class HDF5RoundtripTest
         final int blockSize = 10;
         final int numberOfBlocks = 10;
         final HDF5OpaqueType opaqueDataType =
-                writer.createOpaqueByteArray(dsName, "TAG", size, blockSize, GENERIC_DEFLATE);
+                writer.opaque().createArray(dsName, "TAG", size, blockSize, GENERIC_DEFLATE);
         final byte[] block = new byte[blockSize];
         for (int i = 0; i < numberOfBlocks; ++i)
         {
@@ -1868,11 +1868,11 @@ public class HDF5RoundtripTest
             if (blockSize * (i + 1) > size)
             {
                 final int ofs = blockSize * i;
-                writer.writeOpaqueByteArrayBlockWithOffset(dsName, opaqueDataType, block, size
-                        - ofs, ofs);
+                writer.opaque().writeArrayBlockWithOffset(dsName, opaqueDataType, block,
+                        size - ofs, ofs);
             } else
             {
-                writer.writeOpaqueByteArrayBlock(dsName, opaqueDataType, block, i);
+                writer.opaque().writeArrayBlock(dsName, opaqueDataType, block, i);
             }
         }
         writer.close();
@@ -2776,7 +2776,7 @@ public class HDF5RoundtripTest
         w.string().setAttr("/", "a", "abc");
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
-        final byte[] b = r.getAttributeAsByteArray("/", "a");
+        final byte[] b = r.generic().getArrayAttr("/", "a");
         assertEquals("abc", new String(b));
         r.close();
     }
@@ -6096,7 +6096,7 @@ public class HDF5RoundtripTest
         final byte[] byteArrayWritten = new byte[]
             { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         writer.int8().writeArray(byteArrayDataSetName, byteArrayWritten);
-        writer.writeOpaqueByteArray(opaqueDataSetName, opaqueTag, byteArrayWritten);
+        writer.opaque().writeArray(opaqueDataSetName, opaqueTag, byteArrayWritten);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         HDF5DataSetInformation info = reader.getDataSetInformation(byteArrayDataSetName);
@@ -6106,10 +6106,10 @@ public class HDF5RoundtripTest
         assertEquals(HDF5DataClass.OPAQUE, info.getTypeInformation().getDataClass());
         assertEquals(opaqueTag, info.getTypeInformation().tryGetOpaqueTag());
         assertChunkSizes(info, byteArrayWritten.length);
-        assertEquals(opaqueTag, reader.tryGetOpaqueTag(opaqueDataSetName));
-        assertEquals(opaqueTag, reader.tryGetOpaqueType(opaqueDataSetName).getTag());
-        assertNull(reader.tryGetOpaqueTag(byteArrayDataSetName));
-        assertNull(reader.tryGetOpaqueType(byteArrayDataSetName));
+        assertEquals(opaqueTag, reader.generic().tryGetOpaqueTag(opaqueDataSetName));
+        assertEquals(opaqueTag, reader.generic().tryGetOpaqueType(opaqueDataSetName).getTag());
+        assertNull(reader.generic().tryGetOpaqueTag(byteArrayDataSetName));
+        assertNull(reader.generic().tryGetOpaqueType(byteArrayDataSetName));
         final byte[] byteArrayRead = reader.readAsByteArray(byteArrayDataSetName);
         assertTrue(Arrays.equals(byteArrayWritten, byteArrayRead));
         final byte[] byteArrayReadOpaque = reader.readAsByteArray(opaqueDataSetName);

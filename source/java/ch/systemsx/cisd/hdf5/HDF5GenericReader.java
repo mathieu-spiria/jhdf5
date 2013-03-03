@@ -94,7 +94,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
     }
 
     @Override
-    public byte[] readAsByteArray(final String objectPath)
+    public byte[] readArray(final String objectPath)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
@@ -144,7 +144,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
     }
 
     @Override
-    public byte[] getAttributeAsByteArray(final String objectPath, final String attributeName)
+    public byte[] getArrayAttr(final String objectPath, final String attributeName)
     {
         baseReader.checkOpen();
         final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
@@ -161,7 +161,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
     }
 
     @Override
-    public byte[] readAsByteArrayBlock(final String objectPath, final int blockSize,
+    public byte[] readArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber) throws HDF5JavaException
     {
         baseReader.checkOpen();
@@ -189,7 +189,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
     }
 
     @Override
-    public byte[] readAsByteArrayBlockWithOffset(final String objectPath, final int blockSize,
+    public byte[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset) throws HDF5JavaException
     {
         baseReader.checkOpen();
@@ -216,7 +216,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
     }
 
     @Override
-    public int readAsByteArrayToBlockWithOffset(final String objectPath, final byte[] buffer,
+    public int readArrayToBlockWithOffset(final String objectPath, final byte[] buffer,
             final int blockSize, final long offset, final int memoryOffset)
             throws HDF5JavaException
     {
@@ -253,7 +253,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
     }
 
     @Override
-    public Iterable<HDF5DataBlock<byte[]>> getAsByteArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5DataBlock<byte[]>> getArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException
     {
         final HDF5NaturalBlock1DParameters params =
@@ -280,7 +280,7 @@ public class HDF5GenericReader implements IHDF5GenericReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final byte[] block =
-                                        readAsByteArrayBlockWithOffset(dataSetPath,
+                                        readArrayBlockWithOffset(dataSetPath,
                                                 index.getBlockSize(), offset);
                                 return new HDF5DataBlock<byte[]>(block, index.getAndIncIndex(),
                                         offset);

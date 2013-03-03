@@ -44,7 +44,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
  */
 public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5PrimitiveBasicWriter,
         IHDF5StringBasicWriter, IHDF5EnumBasicWriter, IHDF5CompoundBasicWriter, IHDF5BooleanBasicWriter,
-        IHDF5OpaqueWriter, IHDF5DateTimeBasicWriter, IHDF5ReferenceBasicWriter
+        IHDF5OpaqueLegacyWriter, IHDF5DateTimeBasicWriter, IHDF5ReferenceBasicWriter
 {
 
     // /////////////////////
@@ -317,6 +317,15 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Primit
      * @param name The name of the attribute to delete.
      */
     public void deleteAttribute(final String objectPath, final String name);
+
+    // /////////////////////
+    // Boolean
+    // /////////////////////
+
+    /**
+     * Returns the full writer for opaque values.
+     */
+    public IHDF5OpaqueWriter opaque();
 
     // /////////////////////
     // Boolean

@@ -42,14 +42,14 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
     }
 
     @Override
-    public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data)
+    public void writeArray(final String objectPath, final String tag, final byte[] data)
     {
-        writeOpaqueByteArray(objectPath, tag, data,
+        writeArray(objectPath, tag, data,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public void writeOpaqueByteArray(final String objectPath, final String tag, final byte[] data,
+    public void writeArray(final String objectPath, final String tag, final byte[] data,
             final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
@@ -74,22 +74,22 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
     }
 
     @Override
-    public HDF5OpaqueType createOpaqueByteArray(String objectPath, String tag, int size)
+    public HDF5OpaqueType createArray(String objectPath, String tag, int size)
     {
-        return createOpaqueByteArray(objectPath, tag, size,
+        return createArray(objectPath, tag, size,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
+    public HDF5OpaqueType createArray(final String objectPath, final String tag,
             final long size, final int blockSize)
     {
-        return createOpaqueByteArray(objectPath, tag, size, blockSize,
+        return createArray(objectPath, tag, size, blockSize,
                 HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
     }
 
     @Override
-    public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
+    public HDF5OpaqueType createArray(final String objectPath, final String tag,
             final int size, final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
@@ -121,7 +121,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
     }
 
     @Override
-    public HDF5OpaqueType createOpaqueByteArray(final String objectPath, final String tag,
+    public HDF5OpaqueType createArray(final String objectPath, final String tag,
             final long size, final int blockSize, final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
@@ -147,7 +147,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
     }
 
     @Override
-    public void writeOpaqueByteArrayBlock(final String objectPath, final HDF5OpaqueType dataType,
+    public void writeArrayBlock(final String objectPath, final HDF5OpaqueType dataType,
             final byte[] data, final long blockNumber)
     {
         assert objectPath != null;
@@ -183,7 +183,7 @@ public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
     }
 
     @Override
-    public void writeOpaqueByteArrayBlockWithOffset(final String objectPath,
+    public void writeArrayBlockWithOffset(final String objectPath,
             final HDF5OpaqueType dataType, final byte[] data, final int dataSize, final long offset)
     {
         assert objectPath != null;

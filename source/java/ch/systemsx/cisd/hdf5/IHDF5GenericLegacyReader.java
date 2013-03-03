@@ -24,13 +24,9 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5GenericReader
+public interface IHDF5GenericLegacyReader
 {
 
-    ///////////////////////////////
-    // Opaque tags and types
-    ///////////////////////////////
-    
     /**
      * Returns the tag of the opaque data type associated with <var>objectPath</var>, or
      * <code>null</code>, if <var>objectPath</var> is not of an opaque data type (i.e. if
@@ -39,7 +35,9 @@ public interface IHDF5GenericReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The tag of the opaque data type, or <code>null</code>.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
      */
+    @Deprecated
     public String tryGetOpaqueTag(final String objectPath);
 
     /**
@@ -48,26 +46,28 @@ public interface IHDF5GenericReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The opaque data type, or <code>null</code>.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
      */
+    @Deprecated
     public HDF5OpaqueType tryGetOpaqueType(final String objectPath);
-
-    ///////////////////////////////
-    // Reading as byte array
-    ///////////////////////////////
 
     /**
      * Gets the (unchanged) byte array values of an attribute <var>attributeName</var> of object
      * </var>objectPath</var>.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
      */
-    public byte[] getArrayAttr(final String objectPath, final String attributeName);
+    @Deprecated
+    public byte[] getAttributeAsByteArray(final String objectPath, final String attributeName);
 
     /**
      * Reads the data set <var>objectPath</var> as byte array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
      */
-    public byte[] readArray(final String objectPath);
+    @Deprecated
+    public byte[] readAsByteArray(final String objectPath);
 
     /**
      * Reads a block from data set <var>objectPath</var> as byte array (of rank 1).
@@ -80,8 +80,10 @@ public interface IHDF5GenericReader
      *            <var>blockSize</var>).
      * @return The data block read from the data set.
      * @throws HDF5JavaException If the data set is not of rank 1 or is a String.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
      */
-    public byte[] readArrayBlock(final String objectPath, final int blockSize,
+    @Deprecated
+    public byte[] readAsByteArrayBlock(final String objectPath, final int blockSize,
             final long blockNumber) throws HDF5JavaException;
 
     /**
@@ -94,8 +96,10 @@ public interface IHDF5GenericReader
      * @param offset The offset of the block to read as number of elements (starting with 0).
      * @return The data block read from the data set.
      * @throws HDF5JavaException If the data set is not of rank 1.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
      */
-    public byte[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
+    @Deprecated
+    public byte[] readAsByteArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset) throws HDF5JavaException;
 
     /**
@@ -112,8 +116,10 @@ public interface IHDF5GenericReader
      *            (zero-based).
      * @return The effective block size.
      * @throws HDF5JavaException If the data set is not of rank 1.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
      */
-    public int readArrayToBlockWithOffset(final String objectPath, final byte[] buffer,
+    @Deprecated
+    public int readAsByteArrayToBlockWithOffset(final String objectPath, final byte[] buffer,
             final int blockSize, final long offset, final int memoryOffset)
             throws HDF5JavaException;
 
@@ -123,8 +129,10 @@ public interface IHDF5GenericReader
      * 
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
      */
-    public Iterable<HDF5DataBlock<byte[]>> getArrayNaturalBlocks(final String dataSetPath)
+    @Deprecated
+    public Iterable<HDF5DataBlock<byte[]>> getAsByteArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException;
 
 }

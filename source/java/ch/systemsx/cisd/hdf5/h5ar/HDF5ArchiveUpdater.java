@@ -686,19 +686,19 @@ class HDF5ArchiveUpdater
                 features = HDF5GenericStorageFeatures.GENERIC_CONTIGUOUS;
             }
             final HDF5OpaqueType type =
-                    hdf5Writer.createOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, n, features);
-            hdf5Writer.writeOpaqueByteArrayBlockWithOffset(objectPath, type, buffer, n, 0);
+                    hdf5Writer.opaque().createArray(objectPath, OPAQUE_TAG_FILE, n, features);
+            hdf5Writer.opaque().writeArrayBlockWithOffset(objectPath, type, buffer, n, 0);
             crc32.update(buffer, 0, n);
             return new DataSetInfo(n, (int) crc32.getValue());
         }
 
         final HDF5OpaqueType type =
-                hdf5Writer.createOpaqueByteArray(objectPath, OPAQUE_TAG_FILE, 0,
+                hdf5Writer.opaque().createArray(objectPath, OPAQUE_TAG_FILE, 0,
                         effectiveBufferLength, compression);
         long count = 0;
         while (n > 0)
         {
-            hdf5Writer.writeOpaqueByteArrayBlockWithOffset(objectPath, type, buffer, n, count);
+            hdf5Writer.opaque().writeArrayBlockWithOffset(objectPath, type, buffer, n, count);
             count += n;
             crc32.update(buffer, 0, n);
             n = fillBuffer(input, effectiveBufferLength);

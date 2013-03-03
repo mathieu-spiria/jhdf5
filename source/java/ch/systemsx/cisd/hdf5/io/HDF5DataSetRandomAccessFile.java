@@ -357,7 +357,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
                                 HDF5IntStorageFeatures.createFromGeneric(creationStorageFeature));
                     } else
                     {
-                        writerOrNull.createOpaqueByteArray(dataSetPath, opaqueTagOrNull, maxSize,
+                        writerOrNull.opaque().createArray(dataSetPath, opaqueTagOrNull, maxSize,
                                 size, creationStorageFeature);
                     }
                 }
@@ -371,7 +371,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
         if (readOnly == false
                 && dataSetInfo.getTypeInformation().getDataClass() == HDF5DataClass.OPAQUE)
         {
-            this.opaqueTypeOrNull = reader.tryGetOpaqueType(dataSetPath);
+            this.opaqueTypeOrNull = reader.generic().tryGetOpaqueType(dataSetPath);
         } else
         {
             this.opaqueTypeOrNull = null;
@@ -436,7 +436,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
                 try
                 {
                     this.realBlockSize =
-                            reader.readAsByteArrayToBlockWithOffset(dataSetPath, block,
+                            reader.generic().readArrayToBlockWithOffset(dataSetPath, block,
                                     realBlockSize, blockOffset, 0);
                 } catch (HDF5Exception ex)
                 {
@@ -456,7 +456,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
             try
             {
                 this.realBlockSize =
-                        reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, blockSize,
+                        reader.generic().readArrayToBlockWithOffset(dataSetPath, block, blockSize,
                                 blockOffset, 0);
             } catch (HDF5Exception ex)
             {
@@ -473,7 +473,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
             try
             {
                 this.realBlockSize =
-                        reader.readAsByteArrayToBlockWithOffset(dataSetPath, block, blockSize,
+                        reader.generic().readArrayToBlockWithOffset(dataSetPath, block, blockSize,
                                 newBlockOffset, 0);
             } catch (HDF5Exception ex)
             {
@@ -697,12 +697,12 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
             {
                 if (opaqueTypeOrNull != null)
                 {
-                    writerOrNull.writeOpaqueByteArrayBlockWithOffset(dataSetPath, opaqueTypeOrNull,
+                    writerOrNull.opaque().writeArrayBlockWithOffset(dataSetPath, opaqueTypeOrNull,
                             block, realBlockSize, blockOffset);
                 } else
                 {
-                    writerOrNull.int8().writeArrayBlockWithOffset(dataSetPath, block, realBlockSize,
-                            blockOffset);
+                    writerOrNull.int8().writeArrayBlockWithOffset(dataSetPath, block,
+                            realBlockSize, blockOffset);
                 }
             } catch (HDF5Exception ex)
             {
