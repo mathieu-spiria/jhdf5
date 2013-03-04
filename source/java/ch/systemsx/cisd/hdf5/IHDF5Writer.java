@@ -16,14 +16,56 @@
 
 package ch.systemsx.cisd.hdf5;
 
-
 /**
  * An interface for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).
  * <p>
- * The interface focuses on ease of use instead of completeness. As a consequence not all valid HDF5
- * files can be generated using this class, but only a subset.
+ * The interface focuses on ease of use instead of completeness. As a consequence not all features
+ * of HDF5 are supported by this class, however it covers a large subset.
  * <p>
- * Usage:
+ * The API supports two approaches:
+ * <ol>
+ * <li>{@link IHDF5SimpleWriter} which contains the most important methods in one interface. If you
+ * are new to the library, this is usually a good starting point, see the simple example below.</li>
+ * <li>Using the hierarchical ("quasi-fluent") API. It is designed along the types of data sets that
+ * JHDF5 can handle.
+ * <ul>
+ * <li>{@link #file()}: File-level information and operations, has e.g. the
+ * {@link IHDF5FileLevelReadWriteHandler#close()} and {@link IHDF5FileLevelReadWriteHandler#flush()}
+ * methods.</li>
+ * <li>{@link #object()}: Object-level information, where "objects" can be data sets, links, groups
+ * or data types, following the concept of an HDF5 object. Here you can find methods like
+ * {@link IHDF5ObjectReadWriteInfoProviderHandler#createGroup(String)} for creating a new group, or
+ * {@link IHDF5ObjectReadWriteInfoProviderHandler#createSoftLink(String, String)} for creating a
+ * symbolic link.</li>
+ * <li>{@link #bool()}: Writer methods for boolean data sets, including bit fields.</li>
+ * <li>{@link #int8()} / {@link #int16()} / {@link #int16()} / {@link #int32()} / {@link #int64()}:
+ * Writer methods for signed integer data sets, where the number as part of the method name denotes
+ * the size of the integer type.</li>
+ * <li>{@link #uint8()} / {@link #uint16()} / {@link #uint16()} / {@link #uint32()} /
+ * {@link #int64()}: Writer methods for unsigned integer data sets, where the number as part of the
+ * name sets the size of the integer type. While the data sets take signed integer values due to
+ * Java's lack of unsigned integer types, they <i>represent</i> them as unsigned values in the HDF5
+ * file. See {@link UnsignedIntUtils} for conversion methods, e.g.
+ * <code>uint32().write("myint", UnsignedIntUtils.toInt16(50000))</code> will write a 16-bit
+ * unsigned integer with value 50000.</li>
+ * <li>{@link #float32()} / {@link #float64()}: Writer methods for float data sets, where the number
+ * as part of the name sets the size of the float type.</li>
+ * <li>{@link #time()} / {@link #duration()}: Writer methods for time stamp (or date) and for time
+ * duration data sets.</li>
+ * <li>{@link #string()}: Writer methods for string data sets.</li>
+ * <li>{@link #enumeration()}: Writer methods for enumeration data sets.</li>
+ * <li>{@link #compound()}: Writer methods for compound data sets.</li>
+ * <li>{@link #opaque()}: Writer methods for data sets that are "black boxes" to HDF5 which are
+ * called "opaque data sets" in HDF5 jargon. Here you can also find methods of reading arbitrary
+ * data sets as byte arrays.</li>
+ * <li>{@link #reference()}: Writer methods for HDF5 object references. Note that object references,
+ * though similar to hard links and symbolic links on the first glance, are quite different for
+ * HDF5.</li>
+ * </ul>
+ * </li>
+ * </ol>
+ * <p>
+ * Simple usage example:
  * 
  * <pre>
  * float[] f = new float[100];

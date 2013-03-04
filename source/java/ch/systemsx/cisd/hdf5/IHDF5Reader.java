@@ -16,15 +16,51 @@
 
 package ch.systemsx.cisd.hdf5;
 
-
 /**
  * An interface for reading HDF5 files (HDF5 1.8.x and older).
  * <p>
  * The interface focuses on ease of use instead of completeness. As a consequence not all features
- * of a valid HDF5 files can be read using this class, but only a subset. (All information written
+ * of HDF5 are supported by this class, however it covers a large subset. (All information written
  * by {@link IHDF5Writer} can be read by this class.)
  * <p>
- * Usage:
+ * The API supports two approaches:
+ * <ol>
+ * <li>{@link IHDF5SimpleReader} which contains the most important methods in one interface. If you
+ * are new to the library, this is usually a good starting point, see the simple example below.</li>
+ * <li>Using the hierarchical ("quasi-fluent") API. It is designed along the types of data sets that
+ * JHDF5 can handle.
+ * <ul>
+ * <li>{@link #file()}: File-level information and operations, has e.g. the
+ * {@link IHDF5FileLevelReadOnlyHandler#close()} method.</li>
+ * <li>{@link #object()}: Object-level information, where "objects" can be data sets, links, groups
+ * or data types, following the concept of an HDF5 object. Here you can find for example the method
+ * {@link IHDF5ObjectReadOnlyInfoProviderHandler#getGroupMemberInformation(String, boolean)} which
+ * gives you information on the members of a group and the method
+ * {@link IHDF5ObjectReadOnlyInfoProviderHandler#tryGetSymbolicLinkTarget(String)} for resolving a
+ * symbolic link.</li>
+ * <li>{@link #bool()}: Reader methods for boolean data sets, including bit fields.</li>
+ * <li>{@link #int8()} / {@link #int16()} / {@link #int16()} / {@link #int32()} / {@link #int64()}:
+ * Reader methods for integer data sets, where the number as part of the method name denotes the
+ * size of the integer type. The methods will always read signed integers, if you need unsigned
+ * integers, you need to convert them with one of the methods in {@link UnsignedIntUtils}.</li>
+ * <li>{@link #float32()} / {@link #float64()}: Reader methods for float data sets, where the number
+ * as part of the name sets the size of the float type.</li>
+ * <li>{@link #time()} / {@link #duration()}: Reader methods for time stamp (or date) and for time
+ * duration data sets.</li>
+ * <li>{@link #string()}: Reader methods for string data sets.</li>
+ * <li>{@link #enumeration()}: Reader methods for enumeration data sets.</li>
+ * <li>{@link #compound()}: Reader methods for compound data sets.</li>
+ * <li>{@link #opaque()}: Reader methods for data sets that are "black boxes" to HDF5 which are
+ * called "opaque data sets" in HDF5 jargon. Here you can also find methods of reading arbitrary
+ * data sets as byte arrays.</li>
+ * <li>{@link #reference()}: Reader methods for HDF5 object references. Note that object references,
+ * though similar to hard links and symbolic links on the first glance, are quite different for
+ * HDF5.</li>
+ * </ul>
+ * </li>
+ * </ol>
+ * <p>
+ * Usage example for {@link IHDF5SimpleReader}:
  * 
  * <pre>
  * IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(new File(&quot;test.h5&quot;));
@@ -53,7 +89,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
     // /////////////////////////////////
 
     /**
-     * Returns an info provider for HDF5 objects like links, groups, data sets and data types. 
+     * Returns an info provider for HDF5 objects like links, groups, data sets and data types.
      */
     public IHDF5ObjectReadOnlyInfoProviderHandler object();
 
