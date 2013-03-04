@@ -104,7 +104,7 @@ public interface IHDF5TimeDurationReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}.
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The time duration and its unit.
@@ -120,8 +120,8 @@ public interface IHDF5TimeDurationReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniantly by code
-     * like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniantly by
+     * code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -141,8 +141,8 @@ public interface IHDF5TimeDurationReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by code
-     * like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
+     * code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -169,8 +169,8 @@ public interface IHDF5TimeDurationReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by code
-     * like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
+     * code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -199,12 +199,12 @@ public interface IHDF5TimeDurationReader
      */
     public Iterable<HDF5DataBlock<HDF5TimeDurationArray>> getArrayNaturalBlocks(
             final String objectPath) throws HDF5JavaException;
-    
+
     public HDF5TimeDurationMDArray readMDArray(final String objectPath);
-    
+
     public HDF5TimeDurationMDArray readMDArrayBlock(final String objectPath,
             final int[] blockDimensions, final long[] blockNumber);
-    
+
     public HDF5TimeDurationMDArray readMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset);
 

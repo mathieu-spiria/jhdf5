@@ -791,7 +791,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
         }
         try
         {
-            writerOrNull.setDataSetSize(dataSetPath, newLength);
+            writerOrNull.object().setDataSetSize(dataSetPath, newLength);
         } catch (HDF5Exception ex)
         {
             throw new IOExceptionUnchecked(ex);

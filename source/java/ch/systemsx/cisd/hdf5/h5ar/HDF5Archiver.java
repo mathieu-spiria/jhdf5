@@ -546,7 +546,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     @Override
     public IHDF5Archiver extractFile(String path, OutputStream out) throws IOExceptionUnchecked
     {
-        if (hdf5Reader.isDataSet(path) == false)
+        if (hdf5Reader.object().isDataSet(path) == false)
         {
             errorStrategy.dealWithError(new UnarchivingException(path, "not found in archive"));
             return this;
@@ -575,7 +575,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     @Override
     public IInputStream extractFileAsIInputStream(String path)
     {
-        if (hdf5Reader.isDataSet(path) == false)
+        if (hdf5Reader.object().isDataSet(path) == false)
         {
             errorStrategy.dealWithError(new UnarchivingException(path, "not found in archive"));
             return null;

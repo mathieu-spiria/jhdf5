@@ -46,8 +46,8 @@ public class BrowseExample
                     System.out.println(prefix + "     -> " + info.tryGetSymbolicLinkTarget());
                     break;
                 case GROUP:
-                    browse(reader, reader.getGroupMemberInformation(info.getPath(), true), prefix
-                            + "  ");
+                    browse(reader, reader.object().getGroupMemberInformation(info.getPath(), true),
+                            prefix + "  ");
                     break;
                 default:
                     break;
@@ -59,9 +59,9 @@ public class BrowseExample
     {
         // Create an HDF5 file we can browse.
         IHDF5Writer writer = HDF5Factory.configure("browsing.h5").overwrite().writer();
-        writer.createGroup("groupA");
-        writer.createGroup("groupB");
-        writer.createGroup("groupA/groupC");
+        writer.object().createGroup("groupA");
+        writer.object().createGroup("groupB");
+        writer.object().createGroup("groupA/groupC");
         writer.string().write("/groupA/string", "Just some random string.");
         writer.int32().writeArray("/groupB/inarr", new int[]
             { 17, 42, -1 });
@@ -70,13 +70,13 @@ public class BrowseExample
                 { 1.1, 2.2, 3.3 },
                 { 4.4, 5.5, 6.6 },
                 { 7.7, 8.8, 9.9 }, });
-        writer.createSoftLink("/groupA/groupC", "/groupB/groupC");
+        writer.object().createSoftLink("/groupA/groupC", "/groupB/groupC");
         writer.time().write("/groupA/date", new Date());
         writer.close();
 
         // Browse it.
         IHDF5Reader reader = HDF5Factory.openForReading("browsing.h5");
-        browse(reader, reader.getGroupMemberInformation("/", true), "");
+        browse(reader, reader.object().getGroupMemberInformation("/", true), "");
         reader.close();
     }
 

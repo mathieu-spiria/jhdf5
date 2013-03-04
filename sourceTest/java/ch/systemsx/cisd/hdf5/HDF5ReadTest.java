@@ -36,7 +36,7 @@ public class HDF5ReadTest
         try
         {
             IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(new File("test.h5"));
-            System.out.println(reader.getGroupMemberPaths("/"));
+            System.out.println(reader.object().getGroupMemberPaths("/"));
             describe(reader, "/Group1/MyBitSet", null);
             describe(reader, "/Group1/MyDataSet", null);
             byte[] bsb = reader.readAsByteArray("/Group1/MyBitSet");
@@ -50,7 +50,7 @@ public class HDF5ReadTest
             BitSet bs = reader.readBitField("/Group1/MyBitSet");
             System.out.println(bs);
             System.out.println(reader.float64().getAttr("/", "version"));
-            List<String> members = reader.getGroupMemberPaths("/Group1");
+            List<String> members = reader.object().getGroupMemberPaths("/Group1");
             for (String m : members)
             {
                 System.out.println("  " + m);
@@ -75,7 +75,7 @@ public class HDF5ReadTest
 
     private static void listAttributes(IHDF5Reader reader, String objectName)
     {
-        final List<String> attributeNames = reader.getAttributeNames(objectName);
+        final List<String> attributeNames = reader.object().getAttributeNames(objectName);
         System.out.printf("Found %d attributes for object '%s':\n", attributeNames.size(),
                 objectName);
         for (String a : attributeNames)
@@ -95,7 +95,7 @@ public class HDF5ReadTest
         } else
         {
             dsInfo = null;
-            dtInfo = reader.getAttributeInformation(objectName, attributeNameOrNull);
+            dtInfo = reader.object().getAttributeInformation(objectName, attributeNameOrNull);
         }
         System.out.printf("%s%s, class=%s, elemSize=%d", objectName,
                 attributeNameOrNull != null ? "#" + attributeNameOrNull : "",

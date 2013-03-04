@@ -16,15 +16,13 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeTypeVariantAttributeName;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectTypeVariantAttributeName;
-
 import java.io.Flushable;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
@@ -33,10 +31,9 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.IHDF5CompoundInformationRetriever.IByteArrayInspector;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
-import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
-import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * A class for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).
@@ -62,6 +59,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     private final HDF5BaseWriter baseWriter;
 
     private final IHDF5FileLevelReadWriteHandler fileHandler;
+
+    private final IHDF5ObjectReadWriteInfoProviderHandler objectHandler;
 
     private final IHDF5ByteWriter byteWriter;
 
@@ -104,6 +103,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         super(baseWriter);
         this.baseWriter = baseWriter;
         this.fileHandler = new HDF5FileLevelReadWriteHandler(baseWriter);
+        this.objectHandler = new HDF5ObjectReadWriteInfoProviderHandler(baseWriter);
         this.byteWriter = new HDF5ByteWriter(baseWriter);
         this.ubyteWriter = new HDF5UnsignedByteWriter(baseWriter);
         this.shortWriter = new HDF5ShortWriter(baseWriter);
@@ -177,213 +177,359 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         return baseWriter.removeFlushable(flushable);
     }
 
-    // /////////////////////
-    // Objects & Links
-    // /////////////////////
+    // /////////////////////////////////
+    // Objects, links, groups and types
+    // /////////////////////////////////
+
+    @Override
+    public IHDF5ObjectReadWriteInfoProviderHandler object()
+    {
+        return objectHandler;
+    }
+
+
+    @Override
+    public HDF5LinkInformation getLinkInformation(String objectPath)
+    {
+        return objectHandler.getLinkInformation(objectPath);
+    }
 
     @Override
     public void createHardLink(String currentPath, String newPath)
     {
-        assert currentPath != null;
-        assert newPath != null;
+        objectHandler.createHardLink(currentPath, newPath);
+    }
 
-        baseWriter.checkOpen();
-        baseWriter.h5.createHardLink(baseWriter.fileId, currentPath, newPath);
+    @Override
+    public HDF5ObjectInformation getObjectInformation(String objectPath)
+    {
+        return objectHandler.getObjectInformation(objectPath);
     }
 
     @Override
     public void createSoftLink(String targetPath, String linkPath)
     {
-        assert targetPath != null;
-        assert linkPath != null;
-
-        baseWriter.checkOpen();
-        baseWriter.h5.createSoftLink(baseWriter.fileId, linkPath, targetPath);
+        objectHandler.createSoftLink(targetPath, linkPath);
     }
 
     @Override
     public void createOrUpdateSoftLink(String targetPath, String linkPath)
     {
-        assert targetPath != null;
-        assert linkPath != null;
+        objectHandler.createOrUpdateSoftLink(targetPath, linkPath);
+    }
 
-        baseWriter.checkOpen();
-        if (isSymbolicLink(linkPath))
-        {
-            delete(linkPath);
-        }
-        baseWriter.h5.createSoftLink(baseWriter.fileId, linkPath, targetPath);
+    @Override
+    public HDF5ObjectType getObjectType(String objectPath, boolean followLink)
+    {
+        return objectHandler.getObjectType(objectPath, followLink);
     }
 
     @Override
     public void createExternalLink(String targetFileName, String targetPath, String linkPath)
             throws IllegalStateException
     {
-        assert targetFileName != null;
-        assert targetPath != null;
-        assert linkPath != null;
+        objectHandler.createExternalLink(targetFileName, targetPath, linkPath);
+    }
 
-        baseWriter.checkOpen();
-        if (baseWriter.fileFormat.isHDF5_1_8_OK() == false)
-        {
-            throw new IllegalStateException(
-                    "External links are not allowed in strict HDF5 1.6.x compatibility mode.");
-        }
-        baseWriter.h5.createExternalLink(baseWriter.fileId, linkPath, targetFileName, targetPath);
+    @Override
+    public HDF5ObjectType getObjectType(String objectPath)
+    {
+        return objectHandler.getObjectType(objectPath);
+    }
+
+    @Override
+    public boolean exists(String objectPath, boolean followLink)
+    {
+        return objectHandler.exists(objectPath, followLink);
+    }
+
+    @Override
+    public boolean exists(String objectPath)
+    {
+        return objectHandler.exists(objectPath);
     }
 
     @Override
     public void createOrUpdateExternalLink(String targetFileName, String targetPath, String linkPath)
             throws IllegalStateException
     {
-        assert targetFileName != null;
-        assert targetPath != null;
-        assert linkPath != null;
+        objectHandler.createOrUpdateExternalLink(targetFileName, targetPath, linkPath);
+    }
 
-        baseWriter.checkOpen();
-        if (baseWriter.fileFormat.isHDF5_1_8_OK() == false)
-        {
-            throw new IllegalStateException(
-                    "External links are not allowed in strict HDF5 1.6.x compatibility mode.");
-        }
-        if (isSymbolicLink(linkPath))
-        {
-            delete(linkPath);
-        }
-        baseWriter.h5.createExternalLink(baseWriter.fileId, linkPath, targetFileName, targetPath);
+    @Override
+    public String toHouseKeepingPath(String objectPath)
+    {
+        return objectHandler.toHouseKeepingPath(objectPath);
+    }
+
+    @Override
+    public boolean isHouseKeepingObject(String objectPath)
+    {
+        return objectHandler.isHouseKeepingObject(objectPath);
+    }
+
+    @Override
+    public boolean isGroup(String objectPath, boolean followLink)
+    {
+        return objectHandler.isGroup(objectPath, followLink);
+    }
+
+    @Override
+    public boolean isGroup(String objectPath)
+    {
+        return objectHandler.isGroup(objectPath);
     }
 
     @Override
     public void delete(String objectPath)
     {
-        baseWriter.checkOpen();
-        if (isGroup(objectPath, false))
-        {
-            for (String path : getGroupMemberPaths(objectPath))
-            {
-                delete(path);
-            }
-        }
-        baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
+        objectHandler.delete(objectPath);
     }
 
     @Override
-    public void move(String oldLinkPath, String newLinkPath)
+    public void move(String oldLinkPath, String newLinkPath) throws HDF5SymbolTableException
     {
-        baseWriter.checkOpen();
-        baseWriter.h5.moveLink(baseWriter.fileId, oldLinkPath, newLinkPath);
-    }
-
-    // /////////////////////
-    // Group
-    // /////////////////////
-
-    @Override
-    public void createGroup(final String groupPath)
-    {
-        baseWriter.checkOpen();
-        baseWriter.h5.createGroup(baseWriter.fileId, groupPath);
+        objectHandler.move(oldLinkPath, newLinkPath);
     }
 
     @Override
-    public void createGroup(final String groupPath, final int sizeHint)
+    public boolean isDataSet(String objectPath, boolean followLink)
     {
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createGroupRunnable = new ICallableWithCleanUp<Void>()
-            {
-                @Override
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.h5.createOldStyleGroup(baseWriter.fileId, groupPath, sizeHint,
-                            registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createGroupRunnable);
+        return objectHandler.isDataSet(objectPath, followLink);
     }
 
     @Override
-    public void createGroup(final String groupPath, final int maxCompact, final int minDense)
+    public void createGroup(String groupPath)
     {
-        baseWriter.checkOpen();
-        if (baseWriter.fileFormat.isHDF5_1_8_OK() == false)
-        {
-            throw new IllegalStateException(
-                    "New style groups are not allowed in strict HDF5 1.6.x compatibility mode.");
-        }
-        final ICallableWithCleanUp<Void> createGroupRunnable = new ICallableWithCleanUp<Void>()
-            {
-                @Override
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.h5.createNewStyleGroup(baseWriter.fileId, groupPath, maxCompact,
-                            minDense, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createGroupRunnable);
-    }
-
-    // /////////////////////
-    // Attributes
-    // /////////////////////
-
-    @Override
-    public void deleteAttribute(final String objectPath, final String name)
-    {
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> deleteAttributeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                @Override
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final int objectId =
-                            baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
-                    baseWriter.h5.deleteAttribute(objectId, name);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(deleteAttributeRunnable);
+        objectHandler.createGroup(groupPath);
     }
 
     @Override
-    public void setTypeVariant(final String objectPath, final HDF5DataTypeVariant typeVariant)
+    public boolean isDataSet(String objectPath)
     {
-        baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath,
-                createObjectTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix),
-                baseWriter.typeVariantDataType.getStorageTypeId(),
-                baseWriter.typeVariantDataType.getNativeTypeId(),
-                baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
+        return objectHandler.isDataSet(objectPath);
+    }
+
+    @Override
+    public void createGroup(String groupPath, int sizeHint)
+    {
+        objectHandler.createGroup(groupPath, sizeHint);
+    }
+
+    @Override
+    public boolean isDataType(String objectPath, boolean followLink)
+    {
+        return objectHandler.isDataType(objectPath, followLink);
+    }
+
+    @Override
+    public boolean isDataType(String objectPath)
+    {
+        return objectHandler.isDataType(objectPath);
+    }
+
+    @Override
+    public void createGroup(String groupPath, int maxCompact, int minDense)
+    {
+        objectHandler.createGroup(groupPath, maxCompact, minDense);
+    }
+
+    @Override
+    public boolean isSoftLink(String objectPath)
+    {
+        return objectHandler.isSoftLink(objectPath);
+    }
+
+    @Override
+    public boolean isExternalLink(String objectPath)
+    {
+        return objectHandler.isExternalLink(objectPath);
+    }
+
+    @Override
+    public boolean isSymbolicLink(String objectPath)
+    {
+        return objectHandler.isSymbolicLink(objectPath);
+    }
+
+    @Override
+    public String tryGetSymbolicLinkTarget(String objectPath)
+    {
+        return objectHandler.tryGetSymbolicLinkTarget(objectPath);
+    }
+
+    @Override
+    public void setDataSetSize(String objectPath, long newSize)
+    {
+        objectHandler.setDataSetSize(objectPath, newSize);
+    }
+
+    @Override
+    public boolean hasAttribute(String objectPath, String attributeName)
+    {
+        return objectHandler.hasAttribute(objectPath, attributeName);
+    }
+
+    @Override
+    public void setDataSetDimensions(String objectPath, long[] newDimensions)
+    {
+        objectHandler.setDataSetDimensions(objectPath, newDimensions);
+    }
+
+    @Override
+    public List<String> getAttributeNames(String objectPath)
+    {
+        return objectHandler.getAttributeNames(objectPath);
+    }
+
+    @Override
+    public void setTypeVariant(String objectPath, HDF5DataTypeVariant typeVariant)
+    {
+        objectHandler.setTypeVariant(objectPath, typeVariant);
+    }
+
+    @Override
+    public List<String> getAllAttributeNames(String objectPath)
+    {
+        return objectHandler.getAllAttributeNames(objectPath);
     }
 
     @Override
     public void setTypeVariant(String objectPath, String attributeName,
             HDF5DataTypeVariant typeVariant)
     {
-        baseWriter.checkOpen();
-        baseWriter.setAttribute(
-                objectPath,
-                createAttributeTypeVariantAttributeName(attributeName,
-                        baseWriter.houseKeepingNameSuffix), baseWriter.typeVariantDataType
-                        .getStorageTypeId(), baseWriter.typeVariantDataType.getNativeTypeId(),
-                baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
+        objectHandler.setTypeVariant(objectPath, attributeName, typeVariant);
+    }
+
+    @Override
+    public HDF5DataTypeInformation getAttributeInformation(String objectPath, String attributeName)
+    {
+        return objectHandler.getAttributeInformation(objectPath, attributeName);
     }
 
     @Override
     public void deleteTypeVariant(String objectPath)
     {
-        deleteAttribute(objectPath,
-                createObjectTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix));
+        objectHandler.deleteTypeVariant(objectPath);
     }
 
     @Override
     public void deleteTypeVariant(String objectPath, String attributeName)
     {
-        deleteAttribute(
-                objectPath,
-                createAttributeTypeVariantAttributeName(attributeName,
-                        baseWriter.houseKeepingNameSuffix));
+        objectHandler.deleteTypeVariant(objectPath, attributeName);
+    }
+
+    @Override
+    public HDF5DataTypeInformation getAttributeInformation(String objectPath, String attributeName,
+            DataTypeInfoOptions dataTypeInfoOptions)
+    {
+        return objectHandler
+                .getAttributeInformation(objectPath, attributeName, dataTypeInfoOptions);
+    }
+
+    @Override
+    public void deleteAttribute(String objectPath, String name)
+    {
+        objectHandler.deleteAttribute(objectPath, name);
+    }
+
+    @Override
+    public HDF5DataSetInformation getDataSetInformation(String dataSetPath)
+    {
+        return objectHandler.getDataSetInformation(dataSetPath);
+    }
+
+    @Override
+    public HDF5DataSetInformation getDataSetInformation(String dataSetPath,
+            DataTypeInfoOptions dataTypeInfoOptions)
+    {
+        return objectHandler.getDataSetInformation(dataSetPath, dataTypeInfoOptions);
+    }
+
+    @Override
+    public long getSize(String objectPath)
+    {
+        return objectHandler.getSize(objectPath);
+    }
+
+    @Override
+    public long getNumberOfElements(String objectPath)
+    {
+        return objectHandler.getNumberOfElements(objectPath);
+    }
+
+    @Override
+    public void copy(String sourceObject, IHDF5Writer destinationWriter, String destinationObject)
+    {
+        objectHandler.copy(sourceObject, destinationWriter, destinationObject);
+    }
+
+    @Override
+    public void copy(String sourceObject, IHDF5Writer destinationWriter)
+    {
+        objectHandler.copy(sourceObject, destinationWriter);
+    }
+
+    @Override
+    public void copyAll(IHDF5Writer destinationWriter)
+    {
+        objectHandler.copyAll(destinationWriter);
+    }
+
+    @Override
+    public List<String> getGroupMembers(String groupPath)
+    {
+        return objectHandler.getGroupMembers(groupPath);
+    }
+
+    @Override
+    public List<String> getAllGroupMembers(String groupPath)
+    {
+        return objectHandler.getAllGroupMembers(groupPath);
+    }
+
+    @Override
+    public List<String> getGroupMemberPaths(String groupPath)
+    {
+        return objectHandler.getGroupMemberPaths(groupPath);
+    }
+
+    @Override
+    public List<HDF5LinkInformation> getGroupMemberInformation(String groupPath,
+            boolean readLinkTargets)
+    {
+        return objectHandler.getGroupMemberInformation(groupPath, readLinkTargets);
+    }
+
+    @Override
+    public List<HDF5LinkInformation> getAllGroupMemberInformation(String groupPath,
+            boolean readLinkTargets)
+    {
+        return objectHandler.getAllGroupMemberInformation(groupPath, readLinkTargets);
+    }
+
+    @Override
+    public HDF5DataTypeVariant tryGetTypeVariant(String objectPath)
+    {
+        return objectHandler.tryGetTypeVariant(objectPath);
+    }
+
+    @Override
+    public HDF5DataTypeVariant tryGetTypeVariant(String objectPath, String attributeName)
+    {
+        return objectHandler.tryGetTypeVariant(objectPath, attributeName);
+    }
+
+    @Override
+    public String tryGetDataTypePath(String objectPath)
+    {
+        return objectHandler.tryGetDataTypePath(objectPath);
+    }
+
+    @Override
+    public String tryGetDataTypePath(HDF5DataType type)
+    {
+        return objectHandler.tryGetDataTypePath(type);
     }
 
     @Override
@@ -392,36 +538,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         booleanWriter.setAttr(objectPath, name, value);
     }
 
-    // /////////////////////
-    // Data Sets
-    // /////////////////////
-
-    //
-    // Generic
-    //
-
-    @Override
-    public void setDataSetSize(final String objectPath, final long newSize)
-    {
-        setDataSetDimensions(objectPath, new long[]
-            { newSize });
-    }
-
-    @Override
-    public void setDataSetDimensions(final String objectPath, final long[] newDimensions)
-    {
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
-            {
-                @Override
-                public Void call(ICleanUpRegistry registry)
-                {
-                    baseWriter.setDataSetDimensions(objectPath, newDimensions, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(writeRunnable);
-    }
+    // /////////////////////////////
+    // Data Set Reading and Writing
+    // /////////////////////////////
 
     //
     // Boolean

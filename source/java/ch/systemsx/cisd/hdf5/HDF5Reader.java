@@ -16,8 +16,6 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -27,7 +25,6 @@ import java.util.List;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
@@ -37,8 +34,6 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.IHDF5CompoundInformationRetriever.IByteArrayInspector;
-import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
-import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * A class for reading HDF5 files (HDF5 1.8.x and older).
@@ -63,6 +58,8 @@ class HDF5Reader implements IHDF5Reader
     private final HDF5BaseReader baseReader;
     
     private final IHDF5FileLevelReadOnlyHandler fileHandler;
+    
+    private final IHDF5ObjectReadOnlyInfoProviderHandler objectHandler;
 
     private final IHDF5ByteReader byteReader;
 
@@ -90,7 +87,7 @@ class HDF5Reader implements IHDF5Reader
 
     private final IHDF5ReferenceReader referenceReader;
 
-    private final IHDF5OpaqueReader genericReader;
+    private final IHDF5OpaqueReader opaqueReader;
 
     HDF5Reader(final HDF5BaseReader baseReader)
     {
@@ -98,6 +95,7 @@ class HDF5Reader implements IHDF5Reader
 
         this.baseReader = baseReader;
         this.fileHandler = new HDF5FileLevelReadOnlyHandler(baseReader);
+        this.objectHandler = new HDF5ObjectReadOnlyInfoProviderHandler(baseReader);
         this.byteReader = new HDF5ByteReader(baseReader);
         this.shortReader = new HDF5ShortReader(baseReader);
         this.intReader = new HDF5IntReader(baseReader);
@@ -111,7 +109,7 @@ class HDF5Reader implements IHDF5Reader
         this.dateTimeReader = new HDF5DateTimeReader(baseReader, (HDF5LongReader) longReader);
         this.timeDurationReader = new HDF5TimeDurationReader(baseReader, (HDF5LongReader) longReader);
         this.referenceReader = new HDF5ReferenceReader(baseReader);
-        this.genericReader = new HDF5OpaqueReader(baseReader);
+        this.opaqueReader = new HDF5OpaqueReader(baseReader);
     }
 
     void checkOpen()
@@ -141,14 +139,16 @@ class HDF5Reader implements IHDF5Reader
     }
 
     @Override
+    public String getHouseKeepingNameSuffix()
+    {
+        return baseReader.houseKeepingNameSuffix;
+    }
+    
+    @Override
     public File getFile()
     {
         return baseReader.hdf5File;
     }
-
-    // /////////////////////
-    // File Closing
-    // /////////////////////
 
     @Override
     protected void finalize() throws Throwable
@@ -169,440 +169,253 @@ class HDF5Reader implements IHDF5Reader
         return baseReader.isClosed();
     }
 
-    // /////////////////////
-    // Objects & Links
-    // /////////////////////
+    // /////////////////////////////////
+    // Objects, links, groups and types
+    // /////////////////////////////////
 
     @Override
-    public HDF5LinkInformation getLinkInformation(final String objectPath)
+    public IHDF5ObjectReadOnlyInfoProviderHandler object()
     {
-        baseReader.checkOpen();
-        return baseReader.h5.getLinkInfo(baseReader.fileId, objectPath, false);
+        return objectHandler;
     }
 
     @Override
-    public HDF5ObjectInformation getObjectInformation(final String objectPath)
+    public HDF5LinkInformation getLinkInformation(String objectPath)
     {
-        baseReader.checkOpen();
-        return baseReader.h5.getObjectInfo(baseReader.fileId, objectPath, false);
+        return objectHandler.getLinkInformation(objectPath);
     }
 
     @Override
-    public HDF5ObjectType getObjectType(final String objectPath, boolean followLink)
+    public HDF5ObjectInformation getObjectInformation(String objectPath)
     {
-        baseReader.checkOpen();
-        if (followLink)
-        {
-            return baseReader.h5.getObjectTypeInfo(baseReader.fileId, objectPath, false);
-        } else
-        {
-            return baseReader.h5.getLinkTypeInfo(baseReader.fileId, objectPath, false);
-        }
+        return objectHandler.getObjectInformation(objectPath);
     }
 
     @Override
-    public HDF5ObjectType getObjectType(final String objectPath)
+    public HDF5ObjectType getObjectType(String objectPath, boolean followLink)
     {
-        return getObjectType(objectPath, true);
+        return objectHandler.getObjectType(objectPath, followLink);
     }
 
     @Override
-    public boolean exists(final String objectPath, boolean followLink)
+    public HDF5ObjectType getObjectType(String objectPath)
     {
-        if (followLink == false)
-        {
-            // Optimization
-            baseReader.checkOpen();
-            if ("/".equals(objectPath))
-            {
-                return true;
-            }
-            return baseReader.h5.exists(baseReader.fileId, objectPath);
-        } else
-        {
-            return exists(objectPath);
-        }
+        return objectHandler.getObjectType(objectPath);
     }
 
     @Override
-    public boolean exists(final String objectPath)
+    public boolean exists(String objectPath, boolean followLink)
     {
-        baseReader.checkOpen();
-        if ("/".equals(objectPath))
-        {
-            return true;
-        }
-        return baseReader.h5.getObjectTypeId(baseReader.fileId, objectPath, false) >= 0;
+        return objectHandler.exists(objectPath, followLink);
     }
 
     @Override
-    public String getHouseKeepingNameSuffix()
+    public boolean exists(String objectPath)
     {
-        return baseReader.houseKeepingNameSuffix;
+        return objectHandler.exists(objectPath);
     }
 
     @Override
     public String toHouseKeepingPath(String objectPath)
     {
-        return HDF5Utils.toHouseKeepingPath(objectPath, baseReader.houseKeepingNameSuffix);
+        return objectHandler.toHouseKeepingPath(objectPath);
     }
 
     @Override
     public boolean isHouseKeepingObject(String objectPath)
     {
-        return HDF5Utils.isInternalName(objectPath, baseReader.houseKeepingNameSuffix);
+        return objectHandler.isHouseKeepingObject(objectPath);
     }
 
     @Override
-    public boolean isGroup(final String objectPath, boolean followLink)
+    public boolean isGroup(String objectPath, boolean followLink)
     {
-        return HDF5ObjectType.isGroup(getObjectType(objectPath, followLink));
+        return objectHandler.isGroup(objectPath, followLink);
     }
 
     @Override
-    public boolean isGroup(final String objectPath)
+    public boolean isGroup(String objectPath)
     {
-        return HDF5ObjectType.isGroup(getObjectType(objectPath));
+        return objectHandler.isGroup(objectPath);
     }
 
     @Override
-    public boolean isDataSet(final String objectPath, boolean followLink)
+    public boolean isDataSet(String objectPath, boolean followLink)
     {
-        return HDF5ObjectType.isDataSet(getObjectType(objectPath, followLink));
+        return objectHandler.isDataSet(objectPath, followLink);
     }
 
     @Override
-    public boolean isDataSet(final String objectPath)
+    public boolean isDataSet(String objectPath)
     {
-        return HDF5ObjectType.isDataSet(getObjectType(objectPath));
+        return objectHandler.isDataSet(objectPath);
     }
 
     @Override
-    public boolean isDataType(final String objectPath, boolean followLink)
+    public boolean isDataType(String objectPath, boolean followLink)
     {
-        return HDF5ObjectType.isDataType(getObjectType(objectPath, followLink));
+        return objectHandler.isDataType(objectPath, followLink);
     }
 
     @Override
-    public boolean isDataType(final String objectPath)
+    public boolean isDataType(String objectPath)
     {
-        return HDF5ObjectType.isDataType(getObjectType(objectPath));
+        return objectHandler.isDataType(objectPath);
     }
 
     @Override
-    public boolean isSoftLink(final String objectPath)
+    public boolean isSoftLink(String objectPath)
     {
-        return HDF5ObjectType.isSoftLink(getObjectType(objectPath, false));
+        return objectHandler.isSoftLink(objectPath);
     }
 
     @Override
-    public boolean isExternalLink(final String objectPath)
+    public boolean isExternalLink(String objectPath)
     {
-        return HDF5ObjectType.isExternalLink(getObjectType(objectPath, false));
+        return objectHandler.isExternalLink(objectPath);
     }
 
     @Override
-    public boolean isSymbolicLink(final String objectPath)
+    public boolean isSymbolicLink(String objectPath)
     {
-        return HDF5ObjectType.isSymbolicLink(getObjectType(objectPath, false));
+        return objectHandler.isSymbolicLink(objectPath);
     }
 
     @Override
-    public String tryGetSymbolicLinkTarget(final String objectPath)
+    public String tryGetSymbolicLinkTarget(String objectPath)
     {
-        return getLinkInformation(objectPath).tryGetSymbolicLinkTarget();
+        return objectHandler.tryGetSymbolicLinkTarget(objectPath);
     }
 
     @Override
-    public String tryGetDataTypePath(final String objectPath)
+    public boolean hasAttribute(String objectPath, String attributeName)
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<String> dataTypeNameCallable =
-                new ICallableWithCleanUp<String>()
-                    {
-                        @Override
-                        public String call(ICleanUpRegistry registry)
-                        {
-                            final int dataSetId =
-                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
-                                            registry);
-                            final int dataTypeId =
-                                    baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                            return baseReader.tryGetDataTypePath(dataTypeId);
-                        }
-                    };
-        return baseReader.runner.call(dataTypeNameCallable);
+        return objectHandler.hasAttribute(objectPath, attributeName);
     }
 
     @Override
-    public String tryGetDataTypePath(HDF5DataType type)
+    public List<String> getAttributeNames(String objectPath)
     {
-        assert type != null;
-
-        baseReader.checkOpen();
-        type.check(baseReader.fileId);
-        return baseReader.tryGetDataTypePath(type.getStorageTypeId());
+        return objectHandler.getAttributeNames(objectPath);
     }
 
     @Override
-    public List<String> getAttributeNames(final String objectPath)
+    public List<String> getAllAttributeNames(String objectPath)
     {
-        assert objectPath != null;
-        baseReader.checkOpen();
-        return removeInternalNames(getAllAttributeNames(objectPath),
-                baseReader.houseKeepingNameSuffix, "/".equals(objectPath));
+        return objectHandler.getAllAttributeNames(objectPath);
     }
 
     @Override
-    public List<String> getAllAttributeNames(final String objectPath)
+    public HDF5DataTypeInformation getAttributeInformation(String objectPath, String attributeName)
     {
-        assert objectPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<List<String>> attributeNameReaderRunnable =
-                new ICallableWithCleanUp<List<String>>()
-                    {
-                        @Override
-                        public List<String> call(ICleanUpRegistry registry)
-                        {
-                            final int objectId =
-                                    baseReader.h5.openObject(baseReader.fileId, objectPath,
-                                            registry);
-                            return baseReader.h5.getAttributeNames(objectId, registry);
-                        }
-                    };
-        return baseReader.runner.call(attributeNameReaderRunnable);
+        return objectHandler.getAttributeInformation(objectPath, attributeName);
     }
 
     @Override
-    public HDF5DataTypeInformation getAttributeInformation(final String dataSetPath,
-            final String attributeName)
+    public HDF5DataTypeInformation getAttributeInformation(String objectPath, String attributeName,
+            DataTypeInfoOptions dataTypeInfoOptions)
     {
-        return getAttributeInformation(dataSetPath, attributeName, DataTypeInfoOptions.DEFAULT);
+        return objectHandler.getAttributeInformation(objectPath, attributeName,
+                dataTypeInfoOptions);
     }
 
     @Override
-    public HDF5DataTypeInformation getAttributeInformation(final String dataSetPath,
-            final String attributeName, final DataTypeInfoOptions dataTypeInfoOptions)
+    public HDF5DataSetInformation getDataSetInformation(String dataSetPath)
     {
-        assert dataSetPath != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<HDF5DataTypeInformation> informationDeterminationRunnable =
-                new ICallableWithCleanUp<HDF5DataTypeInformation>()
-                    {
-                        @Override
-                        public HDF5DataTypeInformation call(ICleanUpRegistry registry)
-                        {
-                            try
-                            {
-                                final int objectId =
-                                        baseReader.h5.openObject(baseReader.fileId, dataSetPath,
-                                                registry);
-                                final int attributeId =
-                                        baseReader.h5.openAttribute(objectId, attributeName,
-                                                registry);
-                                final int dataTypeId =
-                                        baseReader.h5
-                                                .getDataTypeForAttribute(attributeId, registry);
-                                final HDF5DataTypeInformation dataTypeInformation =
-                                        baseReader.getDataTypeInformation(dataTypeId,
-                                                dataTypeInfoOptions, registry);
-                                if (dataTypeInformation.isArrayType() == false)
-                                {
-                                    final int[] dimensions =
-                                            MDAbstractArray.toInt(baseReader.h5
-                                                    .getDataDimensionsForAttribute(attributeId,
-                                                            registry));
-                                    if (dimensions.length > 0)
-                                    {
-                                        dataTypeInformation.setDimensions(dimensions);
-                                    }
-                                }
-                                return dataTypeInformation;
-                            } catch (RuntimeException ex)
-                            {
-                                throw ex;
-                            }
-                        }
-                    };
-        return baseReader.runner.call(informationDeterminationRunnable);
+        return objectHandler.getDataSetInformation(dataSetPath);
     }
 
     @Override
-    public HDF5DataSetInformation getDataSetInformation(final String dataSetPath)
+    public HDF5DataSetInformation getDataSetInformation(String dataSetPath,
+            DataTypeInfoOptions dataTypeInfoOptions)
     {
-        return getDataSetInformation(dataSetPath, DataTypeInfoOptions.DEFAULT);
+        return objectHandler.getDataSetInformation(dataSetPath, dataTypeInfoOptions);
     }
 
     @Override
-    public HDF5DataSetInformation getDataSetInformation(final String dataSetPath,
-            final DataTypeInfoOptions dataTypeInfoOptions)
+    public long getSize(String objectPath)
     {
-        assert dataSetPath != null;
-
-        baseReader.checkOpen();
-        return baseReader.getDataSetInformation(dataSetPath, dataTypeInfoOptions);
+        return objectHandler.getSize(objectPath);
     }
 
     @Override
-    public long getSize(final String objectPath)
+    public long getNumberOfElements(String objectPath)
     {
-        return getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL).getSize();
+        return objectHandler.getNumberOfElements(objectPath);
     }
 
     @Override
-    public long getNumberOfElements(final String objectPath)
+    public void copy(String sourceObject, IHDF5Writer destinationWriter, String destinationObject)
     {
-        return getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL).getNumberOfElements();
-    }
-
-    // /////////////////////
-    // Copies
-    // /////////////////////
-
-    @Override
-    public void copy(final String sourceObject, final IHDF5Writer destinationWriter,
-            final String destinationObject)
-    {
-        baseReader.checkOpen();
-        final HDF5Writer dwriter = (HDF5Writer) destinationWriter;
-        if (dwriter != this)
-        {
-            dwriter.checkOpen();
-        }
-        baseReader.copyObject(sourceObject, dwriter.getFileId(), destinationObject);
+        objectHandler.copy(sourceObject, destinationWriter, destinationObject);
     }
 
     @Override
     public void copy(String sourceObject, IHDF5Writer destinationWriter)
     {
-        copy(sourceObject, destinationWriter, "/");
+        objectHandler.copy(sourceObject, destinationWriter);
     }
 
     @Override
     public void copyAll(IHDF5Writer destinationWriter)
     {
-        copy("/", destinationWriter, "/");
+        objectHandler.copyAll(destinationWriter);
     }
 
-    // /////////////////////
-    // Group
-    // /////////////////////
-
     @Override
-    public List<String> getGroupMembers(final String groupPath)
+    public List<String> getGroupMembers(String groupPath)
     {
-        assert groupPath != null;
-
-        baseReader.checkOpen();
-        return baseReader.getGroupMembers(groupPath);
+        return objectHandler.getGroupMembers(groupPath);
     }
 
     @Override
-    public List<String> getAllGroupMembers(final String groupPath)
+    public List<String> getAllGroupMembers(String groupPath)
     {
-        assert groupPath != null;
-
-        baseReader.checkOpen();
-        return baseReader.getAllGroupMembers(groupPath);
+        return objectHandler.getAllGroupMembers(groupPath);
     }
 
     @Override
-    public List<String> getGroupMemberPaths(final String groupPath)
+    public List<String> getGroupMemberPaths(String groupPath)
     {
-        assert groupPath != null;
-
-        baseReader.checkOpen();
-        return baseReader.getGroupMemberPaths(groupPath);
+        return objectHandler.getGroupMemberPaths(groupPath);
     }
 
     @Override
-    public List<HDF5LinkInformation> getGroupMemberInformation(final String groupPath,
+    public List<HDF5LinkInformation> getGroupMemberInformation(String groupPath,
             boolean readLinkTargets)
     {
-        baseReader.checkOpen();
-        if (readLinkTargets)
-        {
-            return baseReader.h5.getGroupMemberLinkInfo(baseReader.fileId, groupPath, false,
-                    baseReader.houseKeepingNameSuffix);
-        } else
-        {
-            return baseReader.h5.getGroupMemberTypeInfo(baseReader.fileId, groupPath, false,
-                    baseReader.houseKeepingNameSuffix);
-        }
+        return objectHandler.getGroupMemberInformation(groupPath, readLinkTargets);
     }
 
     @Override
-    public List<HDF5LinkInformation> getAllGroupMemberInformation(final String groupPath,
+    public List<HDF5LinkInformation> getAllGroupMemberInformation(String groupPath,
             boolean readLinkTargets)
     {
-        baseReader.checkOpen();
-        if (readLinkTargets)
-        {
-            return baseReader.h5.getGroupMemberLinkInfo(baseReader.fileId, groupPath, true,
-                    baseReader.houseKeepingNameSuffix);
-        } else
-        {
-            return baseReader.h5.getGroupMemberTypeInfo(baseReader.fileId, groupPath, true,
-                    baseReader.houseKeepingNameSuffix);
-        }
-    }
-
-    // /////////////////////
-    // Types
-    // /////////////////////
-
-    @Override
-    public String tryGetOpaqueTag(String objectPath)
-    {
-        return genericReader.tryGetOpaqueTag(objectPath);
+        return objectHandler.getAllGroupMemberInformation(groupPath, readLinkTargets);
     }
 
     @Override
-    public HDF5OpaqueType tryGetOpaqueType(String objectPath)
+    public HDF5DataTypeVariant tryGetTypeVariant(String objectPath)
     {
-        return genericReader.tryGetOpaqueType(objectPath);
-    }
-
-    @Override
-    public HDF5DataTypeVariant tryGetTypeVariant(final String objectPath)
-    {
-        baseReader.checkOpen();
-        return baseReader.tryGetTypeVariant(objectPath);
+        return objectHandler.tryGetTypeVariant(objectPath);
     }
 
     @Override
     public HDF5DataTypeVariant tryGetTypeVariant(String objectPath, String attributeName)
     {
-        baseReader.checkOpen();
-        return baseReader.tryGetTypeVariant(objectPath, attributeName);
+        return objectHandler.tryGetTypeVariant(objectPath, attributeName);
     }
 
-    // /////////////////////
-    // Attributes
-    // /////////////////////
+    @Override
+    public String tryGetDataTypePath(String objectPath)
+    {
+        return objectHandler.tryGetDataTypePath(objectPath);
+    }
 
     @Override
-    public boolean hasAttribute(final String objectPath, final String attributeName)
+    public String tryGetDataTypePath(HDF5DataType type)
     {
-        assert objectPath != null;
-        assert attributeName != null;
-
-        baseReader.checkOpen();
-        final ICallableWithCleanUp<Boolean> writeRunnable = new ICallableWithCleanUp<Boolean>()
-            {
-                @Override
-                public Boolean call(ICleanUpRegistry registry)
-                {
-                    final int objectId =
-                            baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    return baseReader.h5.existsAttribute(objectId, attributeName);
-                }
-            };
-        return baseReader.runner.call(writeRunnable);
+        return objectHandler.tryGetDataTypePath(type);
     }
 
     @Override
@@ -680,57 +493,69 @@ class HDF5Reader implements IHDF5Reader
     }
 
     // /////////////////////
-    // Data Sets
+    // Data Sets reading
     // /////////////////////
 
     //
-    // Generic
+    // Opaque
     //
+
+    @Override
+    public String tryGetOpaqueTag(String objectPath)
+    {
+        return opaqueReader.tryGetOpaqueTag(objectPath);
+    }
+
+    @Override
+    public HDF5OpaqueType tryGetOpaqueType(String objectPath)
+    {
+        return opaqueReader.tryGetOpaqueType(objectPath);
+    }
 
     @Override
     public IHDF5OpaqueReader opaque()
     {
-        return genericReader;
+        return opaqueReader;
     }
 
     @Override
     public Iterable<HDF5DataBlock<byte[]>> getAsByteArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException
     {
-        return genericReader.getArrayNaturalBlocks(dataSetPath);
+        return opaqueReader.getArrayNaturalBlocks(dataSetPath);
     }
 
     @Override
     public byte[] readAsByteArray(String objectPath)
     {
-        return genericReader.readArray(objectPath);
+        return opaqueReader.readArray(objectPath);
     }
 
     @Override
     public byte[] getAttributeAsByteArray(String objectPath, String attributeName)
     {
-        return genericReader.getArrayAttr(objectPath, attributeName);
+        return opaqueReader.getArrayAttr(objectPath, attributeName);
     }
 
     @Override
     public byte[] readAsByteArrayBlock(String objectPath, int blockSize, long blockNumber)
             throws HDF5JavaException
     {
-        return genericReader.readArrayBlock(objectPath, blockSize, blockNumber);
+        return opaqueReader.readArrayBlock(objectPath, blockSize, blockNumber);
     }
 
     @Override
     public byte[] readAsByteArrayBlockWithOffset(String objectPath, int blockSize, long offset)
             throws HDF5JavaException
     {
-        return genericReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
+        return opaqueReader.readArrayBlockWithOffset(objectPath, blockSize, offset);
     }
 
     @Override
     public int readAsByteArrayToBlockWithOffset(String objectPath, byte[] buffer, int blockSize,
             long offset, int memoryOffset) throws HDF5JavaException
     {
-        return genericReader.readArrayToBlockWithOffset(objectPath, buffer, blockSize,
+        return opaqueReader.readArrayToBlockWithOffset(objectPath, buffer, blockSize,
                 offset, memoryOffset);
     }
 

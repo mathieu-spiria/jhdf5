@@ -52,7 +52,7 @@ public class HDF5WriteTest
             writer.int64().writeArray("/Group1/MyDataSet3", new long[]
                 { 1 });
             // writer.write("/Group1/MyDataSet", new int[] { 4, 3, 2, 1 });
-            writer.createHardLink("/Group1/MyDataSet", "/Group1/SubGroup1/MyDataSet");
+            writer.object().createHardLink("/Group1/MyDataSet", "/Group1/SubGroup1/MyDataSet");
             writer.string().write("/Group1/MyString", "Und schon wieder die Geschichte vom Pferd!");
             writer.string().setAttr("/Group1/MyDataSet", "foo", "Die Geschichte vom Pferd");
             // writer.addAttribute("/Group1/SubGroup1/MyDataSet", "foo", "No story");

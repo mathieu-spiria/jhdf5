@@ -126,7 +126,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
                 try
                 {
                     // Here we don't rely on link.getSize() to protect against wrong index entries.
-                    final long size = reader.getSize(path);
+                    final long size = reader.object().getSize(path);
                     final int crc32 = copyFromHDF5(reader, path, size, file);
                     restoreAttributes(file, link);
                     final FileSizeType sizeType = getFileSizeType(file);

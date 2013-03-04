@@ -112,12 +112,12 @@ final class LinkRecord implements Comparable<LinkRecord>
      */
     public static LinkRecord tryReadFromArchive(IHDF5Reader hdf5Reader, String normalizedPath)
     {
-        final HDF5LinkInformation linfo = hdf5Reader.getLinkInformation(normalizedPath);
+        final HDF5LinkInformation linfo = hdf5Reader.object().getLinkInformation(normalizedPath);
         if (linfo.exists() == false)
         {
             return null;
         }
-        final long size = linfo.isDataSet() ? hdf5Reader.getSize(linfo.getPath()) : Utils.UNKNOWN;
+        final long size = linfo.isDataSet() ? hdf5Reader.object().getSize(linfo.getPath()) : Utils.UNKNOWN;
         return new LinkRecord(linfo, size);
 
     }
@@ -252,7 +252,7 @@ final class LinkRecord implements Comparable<LinkRecord>
         if (readLinkTarget && linkType == FileLinkType.SYMLINK)
         {
             this.linkTargetOrNull =
-                    reader.getLinkInformation(groupPath + "/" + linkName)
+                    reader.object().getLinkInformation(groupPath + "/" + linkName)
                             .tryGetSymbolicLinkTarget();
         }
         return endPos;
@@ -266,7 +266,7 @@ final class LinkRecord implements Comparable<LinkRecord>
         if (linkType == FileLinkType.SYMLINK && linkTargetOrNull == null)
         {
             this.linkTargetOrNull =
-                    reader.getLinkInformation(groupPath + "/" + linkName)
+                    reader.object().getLinkInformation(groupPath + "/" + linkName)
                             .tryGetSymbolicLinkTarget();
         }
     }

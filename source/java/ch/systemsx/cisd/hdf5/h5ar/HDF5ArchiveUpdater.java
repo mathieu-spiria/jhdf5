@@ -445,7 +445,7 @@ class HDF5ArchiveUpdater
         final String hdf5GroupPath = Utils.concatLink(parentDirectory, link.getLinkName());
         try
         {
-            hdf5Writer.createGroup(hdf5GroupPath);
+            hdf5Writer.object().createGroup(hdf5GroupPath);
             return true;
         } catch (HDF5Exception ex)
         {
@@ -473,10 +473,10 @@ class HDF5ArchiveUpdater
                 {
                     // Compute size hint and pre-create group in order to improve performance.
                     int totalLength = computeSizeHint(fileEntries);
-                    hdf5Writer.createGroup(hdf5GroupPath, totalLength * SIZEHINT_FACTOR);
+                    hdf5Writer.object().createGroup(hdf5GroupPath, totalLength * SIZEHINT_FACTOR);
                 } else
                 {
-                    hdf5Writer.createGroup(hdf5GroupPath);
+                    hdf5Writer.object().createGroup(hdf5GroupPath);
                 }
             } catch (HDF5Exception ex)
             {
@@ -585,7 +585,7 @@ class HDF5ArchiveUpdater
     {
         try
         {
-            hdf5Writer.createSoftLink(entry.getLinkTarget(), entry.getPath());
+            hdf5Writer.object().createSoftLink(entry.getLinkTarget(), entry.getPath());
             if (entryVisitorOrNull != null)
             {
                 entryVisitorOrNull.visit(entry);

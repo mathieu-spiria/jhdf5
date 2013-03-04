@@ -139,8 +139,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniantly by code
-     * like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
+     * code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -160,8 +160,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by code
-     * like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
+     * code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -181,8 +181,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by code
-     * like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
+     * code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -206,8 +206,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by code
-     * like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
+     * code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -240,8 +240,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by code
-     * like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
+     * code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -261,8 +261,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5Writer#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by code
-     * like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
+     * code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -275,13 +275,14 @@ public interface IHDF5DateTimeReader
     public Date[] readDateArray(final String objectPath) throws HDF5JavaException;
 
     public MDLongArray readTimeStampMDArray(final String objectPath);
-    
-    public MDLongArray readTimeStampMDArrayBlock(final String objectPath, final int[] blockDimensions,
-            final long[] blockNumber);
+
+    public MDLongArray readTimeStampMDArrayBlock(final String objectPath,
+            final int[] blockDimensions, final long[] blockNumber);
 
     public MDLongArray readTimeStampMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset);
-    
-    public Iterable<HDF5MDDataBlock<MDLongArray>> getTimeStampMDArrayNaturalBlocks(final String dataSetPath);
+
+    public Iterable<HDF5MDDataBlock<MDLongArray>> getTimeStampMDArrayNaturalBlocks(
+            final String dataSetPath);
 
 }

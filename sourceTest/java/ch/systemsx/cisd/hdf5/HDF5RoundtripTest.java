@@ -467,7 +467,7 @@ public class HDF5RoundtripTest
                 HDF5FactoryProvider.get().configure(datasetFile).useUTF8CharacterEncoding()
                         .writer();
         final String groupName = "/some/deep/and/non/existing/group";
-        writer.createGroup(groupName);
+        writer.object().createGroup(groupName);
         assertTrue(writer.isGroup(groupName));
         writer.close();
     }
@@ -1097,7 +1097,7 @@ public class HDF5RoundtripTest
                 HDF5FactoryProvider.get().configure(datasetFile).dontUseExtendableDataTypes()
                         .writer();
         // Creating the group is part of the "bug magic".
-        writer.createGroup("group");
+        writer.object().createGroup("group");
         final long[] arrayWritten1 = new long[1000];
         for (int i = 0; i < arrayWritten1.length; ++i)
         {
@@ -1295,8 +1295,9 @@ public class HDF5RoundtripTest
         efWriter.writeDoubleArrayBigEndian("f", floatDataWritten,
                 HDF5FloatStorageFeatures.FLOAT_NO_COMPRESSION_KEEP);
         final double[] floatDataWritten2 = new double[]
-                { 2.8, 8.2, -3.1, 0.0 };
-        writer.float64().writeMDArray("f2", new MDDoubleArray(floatDataWritten2, new int[] { 2, 2 }));
+            { 2.8, 8.2, -3.1, 0.0 };
+        writer.float64().writeMDArray("f2", new MDDoubleArray(floatDataWritten2, new int[]
+            { 2, 2 }));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertEquals("FLOAT(8):{5}", reader.getDataSetInformation("f").toString());
@@ -3294,7 +3295,7 @@ public class HDF5RoundtripTest
         writer.float32().writeArray(floatDatasetName, floatDataWritten);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        reader.hasAttribute(floatDatasetName, "flag");
+        reader.object().hasAttribute(floatDatasetName, "flag");
         final float[] floatDataRead = reader.float32().readArray(floatDatasetName);
         assertTrue(Arrays.equals(floatDataWritten, floatDataRead));
         reader.close();
@@ -3398,7 +3399,7 @@ public class HDF5RoundtripTest
         writer.int64().writeArray(longDatasetName, new long[0]);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        assertEquals(HDF5ObjectType.DATASET, reader.getObjectType(floatDatasetName));
+        assertEquals(HDF5ObjectType.DATASET, reader.object().getObjectType(floatDatasetName));
         assertTrue(reader.float32().readArray(floatDatasetName).length == 0);
         assertTrue(reader.float64().readArray(doubleDatasetName).length == 0);
         assertTrue(reader.int8().readArray(byteDatasetName).length == 0);
@@ -3432,7 +3433,7 @@ public class HDF5RoundtripTest
         writer.int64().writeArray(longDatasetName, new long[0]);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        assertEquals(HDF5ObjectType.DATASET, reader.getObjectType(floatDatasetName));
+        assertEquals(HDF5ObjectType.DATASET, reader.object().getObjectType(floatDatasetName));
         assertTrue(reader.float32().readArray(floatDatasetName).length == 0);
         assertTrue(reader.float64().readArray(doubleDatasetName).length == 0);
         assertTrue(reader.int8().readArray(byteDatasetName).length == 0);
@@ -3467,7 +3468,7 @@ public class HDF5RoundtripTest
         writer.int64().writeArray(longDatasetName, new long[0], HDF5IntStorageFeatures.INT_COMPACT);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        assertEquals(HDF5ObjectType.DATASET, reader.getObjectType(floatDatasetName));
+        assertEquals(HDF5ObjectType.DATASET, reader.object().getObjectType(floatDatasetName));
         assertTrue(reader.float32().readArray(floatDatasetName).length == 0);
         assertTrue(reader.float64().readArray(doubleDatasetName).length == 0);
         assertTrue(reader.int8().readArray(byteDatasetName).length == 0);
@@ -3635,7 +3636,7 @@ public class HDF5RoundtripTest
         IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         try
         {
-            final List<String> members = reader.getAllGroupMembers("/");
+            final List<String> members = reader.object().getAllGroupMembers("/");
             assertEquals(1, members.size());
             assertEquals(HDF5Utils.getDataTypeGroup("").substring(1), members.get(0));
         } finally
@@ -3669,7 +3670,7 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         try
         {
-            final List<String> members = reader.getAllGroupMembers("/");
+            final List<String> members = reader.object().getAllGroupMembers("/");
             assertEquals(1, members.size());
             assertEquals(HDF5Utils.getDataTypeGroup("").substring(1), members.get(0));
             assertEquals(0, reader.getGroupMembers("/").size());
@@ -3688,7 +3689,7 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         writer.writeBoolean("/some/boolean/value", true);
-        writer.move("/some/boolean/value", "/a/new/home");
+        writer.object().move("/some/boolean/value", "/a/new/home");
         assertFalse(writer.exists("/home/boolean/value"));
         assertTrue(writer.exists("/a/new/home"));
         writer.close();
@@ -3704,7 +3705,7 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         writer.writeBoolean("/some/boolean/value", true);
         writer.int32().write("/a/new/home", 4);
-        writer.move("/some/boolean/value", "/a/new/home");
+        writer.object().move("/some/boolean/value", "/a/new/home");
         writer.close();
     }
 
@@ -3716,7 +3717,7 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
-        writer.move("/some/boolean/value", "/a/new/home");
+        writer.object().move("/some/boolean/value", "/a/new/home");
         writer.close();
     }
 
@@ -3933,8 +3934,8 @@ public class HDF5RoundtripTest
         writer.int64().write(noTimestampDS, someLong);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
-        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
-                reader.tryGetTypeVariant(timeStampDS));
+        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, reader
+                .object().tryGetTypeVariant(timeStampDS));
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeStampDS);
         assertTrue(info.isScalar());
         assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
@@ -4112,7 +4113,7 @@ public class HDF5RoundtripTest
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         writer.int16().write(timeDurationDS, timeDurationInSeconds);
-        writer.setTypeVariant(timeDurationDS, HDF5TimeUnit.SECONDS.getTypeVariant());
+        writer.object().setTypeVariant(timeDurationDS, HDF5TimeUnit.SECONDS.getTypeVariant());
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final HDF5DataSetInformation info = reader.getDataSetInformation(timeDurationDS);
@@ -4350,7 +4351,7 @@ public class HDF5RoundtripTest
         final String booleanAttributeName = "Boolean Attribute";
         final boolean booleanAttributeValueWritten = true;
         writer.bool().setAttr(datasetName, booleanAttributeName, booleanAttributeValueWritten);
-        assertTrue(writer.hasAttribute(datasetName, booleanAttributeName));
+        assertTrue(writer.object().hasAttribute(datasetName, booleanAttributeName));
         final String integerAttributeName = "Integer Attribute";
         final int integerAttributeValueWritten = 17;
         writer.int32().setAttr(datasetName, integerAttributeName, integerAttributeValueWritten);
@@ -4413,7 +4414,7 @@ public class HDF5RoundtripTest
                 enumMDArrayAttributeValueWritten);
         final String volatileAttributeName = "Some Volatile Attribute";
         writer.int32().setAttr(datasetName, volatileAttributeName, 21);
-        writer.deleteAttribute(datasetName, volatileAttributeName);
+        writer.object().deleteAttribute(datasetName, volatileAttributeName);
         final String floatArrayAttributeName = "Float Array Attribute";
         final float[] floatArrayAttribute = new float[]
             { 3f, 3.1f, 3.14f, 3.142f, 3.1416f };
@@ -4437,7 +4438,7 @@ public class HDF5RoundtripTest
         writer.int8().setArrayAttr(datasetName, byteArrayAttributeName, byteArrayAttribute);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(attributeFile);
-        assertTrue(reader.hasAttribute(datasetName, booleanAttributeName));
+        assertTrue(reader.object().hasAttribute(datasetName, booleanAttributeName));
         final boolean booleanAttributeValueRead =
                 reader.bool().getAttr(datasetName, booleanAttributeName);
         assertEquals(booleanAttributeValueWritten, booleanAttributeValueRead);
@@ -4450,7 +4451,7 @@ public class HDF5RoundtripTest
                 reader.int16().getAttr(datasetName, unsignedByteAttributeName);
         assertEquals(unsignedByteAttributeValueWritten, unsignedByteAttributeValueRead);
         HDF5DataTypeInformation info =
-                reader.getAttributeInformation(datasetName, integerAttributeName);
+                reader.object().getAttributeInformation(datasetName, integerAttributeName);
         assertEquals(HDF5DataClass.INTEGER, info.getDataClass());
         assertEquals(4, info.getElementSize());
         final String stringAttributeValueRead =
@@ -4462,7 +4463,7 @@ public class HDF5RoundtripTest
         final String[] stringArrayAttributeValueRead =
                 reader.string().getArrayAttr(datasetName, stringArrayAttributeName);
         assertTrue(Arrays.equals(stringArrayAttributeValueWritten, stringArrayAttributeValueRead));
-        info = reader.getAttributeInformation(datasetName, stringArrayAttributeName);
+        info = reader.object().getAttributeInformation(datasetName, stringArrayAttributeName);
         assertTrue(info.isArrayType());
         assertEquals(HDF5DataClass.STRING, info.getDataClass());
         assertEquals(21, info.getElementSize()); // longest string in the string array
@@ -4512,7 +4513,7 @@ public class HDF5RoundtripTest
         // Let's try to read the first element of the array using getEnumAttribute
         assertEquals(enumArrayAttributeValueWritten.getValue(0),
                 reader.enumeration().getAttr(datasetName, enumArrayAttributeName).getValue());
-        assertFalse(reader.hasAttribute(datasetName, volatileAttributeName));
+        assertFalse(reader.object().hasAttribute(datasetName, volatileAttributeName));
         final HDF5EnumerationValueMDArray enumMDArrayAttributeRead =
                 reader.enumeration().getMDArrayAttr(datasetName, enumMDArrayAttributeName);
         assertEquals(enumMDArrayAttributeValueWritten.toStringArray(),
@@ -4551,8 +4552,8 @@ public class HDF5RoundtripTest
         writer.time().setAttr(datasetName, lastChangedAttr, now);
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(attributeFile);
-        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
-                reader.tryGetTypeVariant(datasetName, lastChangedAttr));
+        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, reader
+                .object().tryGetTypeVariant(datasetName, lastChangedAttr));
         assertFalse(reader.time().isTimeStamp(datasetName));
         assertTrue(reader.time().isTimeStamp(datasetName, lastChangedAttr));
         assertFalse(reader.duration().isTimeDuration(datasetName, lastChangedAttr));
@@ -4587,7 +4588,7 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(attributeFile);
         assertEquals(HDF5DataTypeVariant.TIME_DURATION_MINUTES,
-                reader.tryGetTypeVariant(datasetName, validUntilAttr));
+                reader.object().tryGetTypeVariant(datasetName, validUntilAttr));
         assertFalse(reader.time().isTimeStamp(datasetName));
         assertFalse(reader.time().isTimeStamp(datasetName, validUntilAttr));
         assertTrue(reader.duration().isTimeDuration(datasetName, validUntilAttr));
@@ -4639,8 +4640,8 @@ public class HDF5RoundtripTest
                     { 2, 2 }));
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(attributeFile);
-        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
-                reader.tryGetTypeVariant(datasetName, lastChangedAttr));
+        assertEquals(HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, reader
+                .object().tryGetTypeVariant(datasetName, lastChangedAttr));
         assertFalse(reader.time().isTimeStamp(datasetName));
         assertTrue(reader.time().isTimeStamp(datasetName, lastChangedAttr));
         assertFalse(reader.duration().isTimeDuration(datasetName, lastChangedAttr));
@@ -4692,7 +4693,7 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(attributeFile);
         assertEquals(HDF5DataTypeVariant.TIME_DURATION_MINUTES,
-                reader.tryGetTypeVariant(datasetName, validUntilAttr));
+                reader.object().tryGetTypeVariant(datasetName, validUntilAttr));
         assertFalse(reader.time().isTimeStamp(datasetName));
         assertFalse(reader.time().isTimeStamp(datasetName, validUntilAttr));
         assertTrue(reader.duration().isTimeDuration(datasetName, validUntilAttr));
@@ -4738,7 +4739,7 @@ public class HDF5RoundtripTest
         writer.int32().writeArray(datasetName, new int[0]);
         efWriter.setFloatArrayAttributeDimensional(datasetName, attributeName, farray);
         final HDF5DataTypeInformation info =
-                writer.getAttributeInformation(datasetName, attributeName);
+                writer.object().getAttributeInformation(datasetName, attributeName);
         assertEquals("FLOAT(4, #3)", info.toString());
         assertFalse(info.isArrayType());
         writer.close();
@@ -4766,7 +4767,7 @@ public class HDF5RoundtripTest
         efWriter.setFloatArrayAttributeDimensional(datasetName, attributeName, farray);
         writer.float32().setArrayAttr(datasetName, attributeName, farray);
         final HDF5DataTypeInformation info =
-                writer.getAttributeInformation(datasetName, attributeName);
+                writer.object().getAttributeInformation(datasetName, attributeName);
         assertEquals("FLOAT(4, #3)", info.toString());
         assertTrue(info.isArrayType());
         writer.close();
@@ -4814,8 +4815,8 @@ public class HDF5RoundtripTest
         final String groupName4 = "/dataSetGroup";
         final String groupName5 = "/group5";
         final String dataSetName = groupName4 + "/dataset";
-        writer.createGroup(groupName1);
-        writer.createGroup(groupName2);
+        writer.object().createGroup(groupName1);
+        writer.object().createGroup(groupName2);
         writer.int8().writeArray(dataSetName, new byte[]
             { 1 });
         assertTrue(writer.isGroup(groupName1));
@@ -4826,9 +4827,9 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(groupFile);
         assertTrue(reader.isGroup(groupName1));
-        assertEquals(HDF5ObjectType.GROUP, reader.getObjectType(groupName1));
+        assertEquals(HDF5ObjectType.GROUP, reader.object().getObjectType(groupName1));
         assertTrue(reader.isGroup(groupName4));
-        assertEquals(HDF5ObjectType.GROUP, reader.getObjectType(groupName4));
+        assertEquals(HDF5ObjectType.GROUP, reader.object().getObjectType(groupName4));
         assertFalse(reader.isGroup(dataSetName));
         reader.close();
     }
@@ -4842,18 +4843,18 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         assertEquals("", writer.file().getHouseKeepingNameSuffix());
-        assertEquals("__abc__", writer.toHouseKeepingPath("abc"));
-        writer.string().write(writer.toHouseKeepingPath("abc"), "ABC");
+        assertEquals("__abc__", writer.object().toHouseKeepingPath("abc"));
+        writer.string().write(writer.object().toHouseKeepingPath("abc"), "ABC");
         assertTrue(writer.exists("__abc__"));
-        assertTrue(writer.getGroupMemberPaths("/").isEmpty());
+        assertTrue(writer.object().getGroupMemberPaths("/").isEmpty());
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
-        assertTrue(reader.getAttributeNames("/").isEmpty());
+        assertTrue(reader.object().getAttributeNames("/").isEmpty());
         assertEquals("", reader.file().getHouseKeepingNameSuffix());
-        assertEquals("__abc__", reader.toHouseKeepingPath("abc"));
+        assertEquals("__abc__", reader.object().toHouseKeepingPath("abc"));
         assertTrue(reader.exists("__abc__"));
         assertEquals("ABC", reader.readString("__abc__"));
-        assertTrue(reader.getGroupMemberPaths("/").isEmpty());
+        assertTrue(reader.object().getGroupMemberPaths("/").isEmpty());
         reader.close();
     }
 
@@ -4867,11 +4868,11 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer =
                 HDF5Factory.configure(file).houseKeepingNameSuffix("XXX").writer();
         assertEquals("XXX", writer.file().getHouseKeepingNameSuffix());
-        assertEquals("abcXXX", writer.toHouseKeepingPath("abc"));
-        writer.string().write(writer.toHouseKeepingPath("abc"), "ABC");
+        assertEquals("abcXXX", writer.object().toHouseKeepingPath("abc"));
+        writer.string().write(writer.object().toHouseKeepingPath("abc"), "ABC");
         assertTrue(writer.exists("abcXXX"));
         assertFalse(writer.exists("__abc__"));
-        assertTrue(writer.getGroupMemberPaths("/").isEmpty());
+        assertTrue(writer.object().getGroupMemberPaths("/").isEmpty());
         writer.close();
 
         // The house keeping index is only considered when creating a new file.
@@ -4879,23 +4880,23 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer2 =
                 HDF5Factory.configure(file).houseKeepingNameSuffix("YYY").writer();
         assertEquals("XXX", writer2.file().getHouseKeepingNameSuffix());
-        assertEquals("abcXXX", writer2.toHouseKeepingPath("abc"));
+        assertEquals("abcXXX", writer2.object().toHouseKeepingPath("abc"));
         assertTrue(writer2.exists("abcXXX"));
-        writer2.string().write(writer2.toHouseKeepingPath("abc"), "CAB");
+        writer2.string().write(writer2.object().toHouseKeepingPath("abc"), "CAB");
         assertFalse(writer2.exists("__abc__"));
         assertFalse(writer2.exists("abcYYY"));
         assertEquals("CAB", writer2.readString("abcXXX"));
-        assertTrue(writer2.getGroupMemberPaths("/").isEmpty());
+        assertTrue(writer2.object().getGroupMemberPaths("/").isEmpty());
         writer2.close();
 
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
-        assertTrue(reader.getAttributeNames("/").isEmpty());
+        assertTrue(reader.object().getAttributeNames("/").isEmpty());
         assertEquals("XXX", reader.file().getHouseKeepingNameSuffix());
-        assertEquals("abcXXX", reader.toHouseKeepingPath("abc"));
+        assertEquals("abcXXX", reader.object().toHouseKeepingPath("abc"));
         assertTrue(reader.exists("abcXXX"));
         assertFalse(reader.exists("__abc__"));
         assertEquals("CAB", reader.readString("abcXXX"));
-        assertTrue(reader.getGroupMemberPaths("/").isEmpty());
+        assertTrue(reader.object().getGroupMemberPaths("/").isEmpty());
         reader.close();
     }
 
@@ -4909,19 +4910,19 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer =
                 HDF5Factory.configure(file).houseKeepingNameSuffix("\1\0").writer();
         assertEquals("\1\0", writer.file().getHouseKeepingNameSuffix());
-        assertEquals("abc\1\0", writer.toHouseKeepingPath("abc"));
-        writer.string().write(writer.toHouseKeepingPath("abc"), "ABC");
+        assertEquals("abc\1\0", writer.object().toHouseKeepingPath("abc"));
+        writer.string().write(writer.object().toHouseKeepingPath("abc"), "ABC");
         assertTrue(writer.exists("abc\1\0"));
         assertFalse(writer.exists("__abc__"));
-        assertTrue(writer.getGroupMemberPaths("/").isEmpty());
+        assertTrue(writer.object().getGroupMemberPaths("/").isEmpty());
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         assertEquals("\1\0", reader.file().getHouseKeepingNameSuffix());
-        assertEquals("abc\1\0", reader.toHouseKeepingPath("abc"));
+        assertEquals("abc\1\0", reader.object().toHouseKeepingPath("abc"));
         assertTrue(reader.exists("abc\1\0"));
         assertFalse(reader.exists("__abc__"));
         assertEquals("ABC", reader.readString("abc\1\0"));
-        assertTrue(reader.getGroupMemberPaths("/").isEmpty());
+        assertTrue(reader.object().getGroupMemberPaths("/").isEmpty());
         reader.close();
     }
 
@@ -4934,20 +4935,20 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         writer.writeBoolean("/some/flag", false);
-        writer.createSoftLink("/some", "/linkToSome");
-        writer.createSoftLink("/some/flag", "/linkToFlag");
-        writer.createHardLink("/some/flag", "/some/flag2");
+        writer.object().createSoftLink("/some", "/linkToSome");
+        writer.object().createSoftLink("/some/flag", "/linkToFlag");
+        writer.object().createHardLink("/some/flag", "/some/flag2");
         writer.bool().setAttr("/some/flag2", "test", true);
-        assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/some"));
-        assertEquals(HDF5ObjectType.SOFT_LINK, writer.getObjectType("/linkToSome", false));
-        assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/some"));
-        assertEquals(HDF5ObjectType.GROUP, writer.getObjectType("/linkToSome"));
-        assertEquals(HDF5ObjectType.DATASET, writer.getObjectType("/some/flag", false));
-        assertEquals(HDF5ObjectType.DATASET, writer.getObjectType("/some/flag"));
-        assertEquals(HDF5ObjectType.SOFT_LINK, writer.getObjectType("/linkToFlag", false));
-        assertEquals(HDF5ObjectType.DATASET, writer.getObjectType("/linkToFlag"));
+        assertEquals(HDF5ObjectType.GROUP, writer.object().getObjectType("/some"));
+        assertEquals(HDF5ObjectType.SOFT_LINK, writer.object().getObjectType("/linkToSome", false));
+        assertEquals(HDF5ObjectType.GROUP, writer.object().getObjectType("/some"));
+        assertEquals(HDF5ObjectType.GROUP, writer.object().getObjectType("/linkToSome"));
+        assertEquals(HDF5ObjectType.DATASET, writer.object().getObjectType("/some/flag", false));
+        assertEquals(HDF5ObjectType.DATASET, writer.object().getObjectType("/some/flag"));
+        assertEquals(HDF5ObjectType.SOFT_LINK, writer.object().getObjectType("/linkToFlag", false));
+        assertEquals(HDF5ObjectType.DATASET, writer.object().getObjectType("/linkToFlag"));
         assertFalse(writer.exists("non_existent"));
-        assertEquals(HDF5ObjectType.NONEXISTENT, writer.getObjectType("non_existent"));
+        assertEquals(HDF5ObjectType.NONEXISTENT, writer.object().getObjectType("non_existent"));
         writer.close();
     }
 
@@ -4962,7 +4963,7 @@ public class HDF5RoundtripTest
         try
         {
             assertFalse(writer.exists("non_existent"));
-            writer.getLinkInformation("non_existent").checkExists();
+            writer.object().getLinkInformation("non_existent").checkExists();
         } finally
         {
             writer.close();
@@ -5054,18 +5055,18 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(groupFile);
         try
         {
-            writer.createGroup(groupName1);
+            writer.object().createGroup(groupName1);
             writer.int8().writeArray(dataSetName, new byte[]
                 { 1 });
             writer.string().write(dataSetName2, "abc");
-            writer.createSoftLink(dataSetName2, linkName);
+            writer.object().createSoftLink(dataSetName2, linkName);
         } finally
         {
             writer.close();
         }
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(groupFile);
         final Map<String, HDF5LinkInformation> map = new HashMap<String, HDF5LinkInformation>();
-        for (HDF5LinkInformation info : reader.getAllGroupMemberInformation("/", false))
+        for (HDF5LinkInformation info : reader.object().getAllGroupMemberInformation("/", false))
         {
             map.put(info.getPath(), info);
         }
@@ -5093,7 +5094,7 @@ public class HDF5RoundtripTest
         assertNull(info.tryGetSymbolicLinkTarget());
 
         map.clear();
-        for (HDF5LinkInformation info2 : reader.getGroupMemberInformation("/", true))
+        for (HDF5LinkInformation info2 : reader.object().getGroupMemberInformation("/", true))
         {
             map.put(info2.getPath(), info2);
         }
@@ -5132,10 +5133,10 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(linkFile);
         final String str = "BlaBlub";
         writer.string().write("/data/set", str);
-        writer.createHardLink("/data/set", "/data/link");
+        writer.object().createHardLink("/data/set", "/data/link");
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(linkFile);
-        assertEquals(HDF5ObjectType.DATASET, reader.getObjectType("/data/link"));
+        assertEquals(HDF5ObjectType.DATASET, reader.object().getObjectType("/data/link"));
         assertEquals(str, reader.readString("/data/link"));
         reader.close();
     }
@@ -5149,11 +5150,11 @@ public class HDF5RoundtripTest
         linkFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(linkFile);
         writer.writeBoolean("/data/set", true);
-        writer.createSoftLink("/data/set", "/data/link");
+        writer.object().createSoftLink("/data/set", "/data/link");
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(linkFile);
-        assertEquals(HDF5ObjectType.SOFT_LINK, reader.getObjectType("/data/link", false));
-        assertEquals("/data/set", reader.getLinkInformation("/data/link")
+        assertEquals(HDF5ObjectType.SOFT_LINK, reader.object().getObjectType("/data/link", false));
+        assertEquals("/data/set", reader.object().getLinkInformation("/data/link")
                 .tryGetSymbolicLinkTarget());
         reader.close();
     }
@@ -5172,18 +5173,19 @@ public class HDF5RoundtripTest
         final String linkName = "time";
         writer.time().write(dataSetName1, now);
         writer.time().write(dataSetName2, now);
-        writer.createSoftLink(dataSetName1, linkName);
-        writer.createOrUpdateSoftLink(dataSetName2, linkName);
+        writer.object().createSoftLink(dataSetName1, linkName);
+        writer.object().createOrUpdateSoftLink(dataSetName2, linkName);
         try
         {
-            writer.createOrUpdateSoftLink(dataSetName1, dataSetName2);
+            writer.object().createOrUpdateSoftLink(dataSetName1, dataSetName2);
         } catch (HDF5LibraryException ex)
         {
             assertEquals(HDF5Constants.H5E_EXISTS, ex.getMinorErrorNumber());
         }
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
-        assertEquals(dataSetName2, reader.getLinkInformation(linkName).tryGetSymbolicLinkTarget());
+        assertEquals(dataSetName2, reader.object().getLinkInformation(linkName)
+                .tryGetSymbolicLinkTarget());
         reader.close();
     }
 
@@ -5195,13 +5197,14 @@ public class HDF5RoundtripTest
         assertFalse(linkFile.exists());
         linkFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(linkFile);
-        writer.createSoftLink("/does/not/exist", "/linkToNowhere");
+        writer.object().createSoftLink("/does/not/exist", "/linkToNowhere");
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(linkFile);
         assertFalse(reader.exists("/linkToNowhere"));
-        assertTrue(reader.exists("/linkToNowhere", false));
-        assertEquals(HDF5ObjectType.SOFT_LINK, reader.getObjectType("/linkToNowhere", false));
-        assertEquals("/does/not/exist", reader.getLinkInformation("/linkToNowhere")
+        assertTrue(reader.object().exists("/linkToNowhere", false));
+        assertEquals(HDF5ObjectType.SOFT_LINK,
+                reader.object().getObjectType("/linkToNowhere", false));
+        assertEquals("/does/not/exist", reader.object().getLinkInformation("/linkToNowhere")
                 .tryGetSymbolicLinkTarget());
         reader.close();
     }
@@ -5215,11 +5218,11 @@ public class HDF5RoundtripTest
         linkFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(linkFile);
         writer.writeBoolean("/group/boolean", true);
-        writer.createSoftLink("/group", "/link");
+        writer.object().createSoftLink("/group", "/link");
         writer.delete("/link");
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(linkFile);
-        assertFalse(reader.exists("/link", false));
+        assertFalse(reader.object().exists("/link", false));
         assertTrue(reader.exists("/group"));
         assertTrue(reader.exists("/group/boolean"));
         reader.close();
@@ -5238,7 +5241,7 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(noLinkFile);
         try
         {
-            assertNull(reader.getLinkInformation("/data/set").tryGetSymbolicLinkTarget());
+            assertNull(reader.object().getLinkInformation("/data/set").tryGetSymbolicLinkTarget());
         } finally
         {
             reader.close();
@@ -5263,15 +5266,16 @@ public class HDF5RoundtripTest
         linkFile.deleteOnExit();
         final IHDF5Writer writer2 = HDF5FactoryProvider.get().open(linkFile);
         final String linkName = "/data/link";
-        writer2.createExternalLink(fileToLinkTo.getPath(), dataSetName, linkName);
+        writer2.object().createExternalLink(fileToLinkTo.getPath(), dataSetName, linkName);
         writer2.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(linkFile);
-        assertEquals(HDF5ObjectType.EXTERNAL_LINK, reader.getObjectType(linkName, false));
+        assertEquals(HDF5ObjectType.EXTERNAL_LINK, reader.object().getObjectType(linkName, false));
         assertEquals(dataSetValue, reader.readString(linkName));
         final String expectedLink =
                 OSUtilities.isWindows() ? "EXTERNAL::targets\\unit-test-wd\\hdf5-roundtrip-wd\\fileToLinkTo.h5::/data/set"
                         : "EXTERNAL::targets/unit-test-wd/hdf5-roundtrip-wd/fileToLinkTo.h5::/data/set";
-        assertEquals(expectedLink, reader.getLinkInformation(linkName).tryGetSymbolicLinkTarget());
+        assertEquals(expectedLink, reader.object().getLinkInformation(linkName)
+                .tryGetSymbolicLinkTarget());
         reader.close();
     }
 
@@ -5290,7 +5294,7 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         final HDF5DataTypeInformation minimalEnumInfo =
-                reader.getDataSetInformation(enumDsName, DataTypeInfoOptions.MINIMAL)
+                reader.object().getDataSetInformation(enumDsName, DataTypeInfoOptions.MINIMAL)
                         .getTypeInformation();
         assertFalse(minimalEnumInfo.knowsDataTypePath());
         assertFalse(minimalEnumInfo.knowsDataTypeVariant());
@@ -5303,14 +5307,14 @@ public class HDF5RoundtripTest
         assertNull(defaultInfo.tryGetName());
         assertEquals(HDF5DataTypeVariant.NONE, defaultInfo.tryGetTypeVariant());
         final HDF5DataTypeInformation allInfo =
-                reader.getDataSetInformation(enumDsName, DataTypeInfoOptions.ALL)
+                reader.object().getDataSetInformation(enumDsName, DataTypeInfoOptions.ALL)
                         .getTypeInformation();
         assertTrue(allInfo.knowsDataTypePath());
         assertTrue(allInfo.knowsDataTypeVariant());
         assertEquals(JavaEnum.class.getSimpleName(), allInfo.tryGetName());
 
         final HDF5DataTypeInformation minimalDateInfo =
-                reader.getDataSetInformation(dateDsName, DataTypeInfoOptions.MINIMAL)
+                reader.object().getDataSetInformation(dateDsName, DataTypeInfoOptions.MINIMAL)
                         .getTypeInformation();
         assertFalse(minimalDateInfo.knowsDataTypePath());
         assertFalse(minimalDateInfo.knowsDataTypeVariant());
@@ -5318,7 +5322,7 @@ public class HDF5RoundtripTest
         assertNull(minimalDateInfo.tryGetTypeVariant());
 
         final HDF5DataTypeInformation defaultDateInfo =
-                reader.getDataSetInformation(dateDsName, DataTypeInfoOptions.DEFAULT)
+                reader.object().getDataSetInformation(dateDsName, DataTypeInfoOptions.DEFAULT)
                         .getTypeInformation();
         assertFalse(defaultDateInfo.knowsDataTypePath());
         assertTrue(defaultDateInfo.knowsDataTypeVariant());
@@ -5327,7 +5331,7 @@ public class HDF5RoundtripTest
                 defaultDateInfo.tryGetTypeVariant());
 
         final HDF5DataTypeInformation allDateInfo =
-                reader.getDataSetInformation(dateDsName, DataTypeInfoOptions.ALL)
+                reader.object().getDataSetInformation(dateDsName, DataTypeInfoOptions.ALL)
                         .getTypeInformation();
         assertTrue(allDateInfo.knowsDataTypePath());
         assertTrue(allDateInfo.knowsDataTypeVariant());
@@ -5366,8 +5370,8 @@ public class HDF5RoundtripTest
         final String expectedDataTypePath =
                 HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, "",
                         JavaEnum.class.getSimpleName());
-        assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(value.getType()));
-        assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(dsName));
+        assertEquals(expectedDataTypePath, reader.object().tryGetDataTypePath(value.getType()));
+        assertEquals(expectedDataTypePath, reader.object().tryGetDataTypePath(dsName));
         final HDF5EnumerationType type = reader.enumeration().getDataSetType(dsName);
         assertEquals(3, type.getValues().size());
         assertEquals("ONE", type.getValues().get(0));
@@ -5397,7 +5401,8 @@ public class HDF5RoundtripTest
         type = reader.enumeration().getType(enumTypeName);
         assertEquals(enumTypeName, type.tryGetName());
         final HDF5DataTypeInformation typeInfo =
-                reader.getDataSetInformation(dsName, DataTypeInfoOptions.ALL).getTypeInformation();
+                reader.object().getDataSetInformation(dsName, DataTypeInfoOptions.ALL)
+                        .getTypeInformation();
         assertEquals(enumTypeName, typeInfo.tryGetName());
         assertEquals(HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, "", enumTypeName),
                 typeInfo.tryGetDataTypePath());
@@ -5407,8 +5412,8 @@ public class HDF5RoundtripTest
         assertEquals("THREE", value.getValue());
         final String expectedDataTypePath =
                 HDF5Utils.createDataTypePath(HDF5Utils.ENUM_PREFIX, "", enumTypeName);
-        assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(value.getType()));
-        assertEquals(expectedDataTypePath, reader.tryGetDataTypePath(dsName));
+        assertEquals(expectedDataTypePath, reader.object().tryGetDataTypePath(value.getType()));
+        assertEquals(expectedDataTypePath, reader.object().tryGetDataTypePath(dsName));
         type = reader.enumeration().getDataSetType(dsName);
         assertEquals("THREE", reader.enumeration().read(dsName, type).getValue());
         reader.close();
@@ -9116,7 +9121,7 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         writer.int8().createArray("ds", 0, 10);
-        writer.setDataSetSize("ds", 20);
+        writer.object().setDataSetSize("ds", 20);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         assertEquals(20, reader.getDataSetInformation("ds").getSize());
@@ -9307,7 +9312,7 @@ public class HDF5RoundtripTest
         // reference "b" would be dangling.
         writer.string().write("aa", "TestX");
         assertEquals("/aa", writer.reference().read("/b"));
-        writer.move("/aa", "/C");
+        writer.object().move("/aa", "/C");
         assertEquals("/C", writer.reference().read("/b"));
         writer.close();
     }
@@ -9348,7 +9353,7 @@ public class HDF5RoundtripTest
         writer.string().write("a", "TestA");
         writer.reference().write("b", "a");
         assertEquals("/a", writer.reference().read("/b"));
-        writer.move("/a", "/C");
+        writer.object().move("/a", "/C");
         assertEquals("/C", writer.reference().read("/b"));
         assertEquals("TestA", writer.readString(writer.reference().read("/b", false)));
         writer.close();
@@ -9369,7 +9374,7 @@ public class HDF5RoundtripTest
             { "a1", "a2", "a3" });
         assertTrue(ArrayUtils.isEquals(new String[]
             { "/a1", "/a2", "/a3" }, writer.reference().readArray("/b")));
-        writer.move("/a1", "/C");
+        writer.object().move("/a1", "/C");
         assertTrue(ArrayUtils.isEquals(new String[]
             { "/C", "/a2", "/a3" }, writer.reference().readArray("/b")));
         writer.close();
@@ -9412,7 +9417,7 @@ public class HDF5RoundtripTest
         writer.reference().writeArrayBlock("b", chunk[1], 1);
         writer.reference().writeArrayBlock("b", chunk[3], 3);
         assertTrue(ArrayUtils.isEquals(completeArray, writer.reference().readArray("/b")));
-        writer.move("/a1", "/C");
+        writer.object().move("/a1", "/C");
         completeArray[0] = "/C";
         chunk[0][0] = "/C";
         assertTrue(ArrayUtils.isEquals(completeArray, writer.reference().readArray("/b")));
@@ -9444,7 +9449,7 @@ public class HDF5RoundtripTest
         assertEquals(new MDArray<String>(new String[]
             { "/a1", "/a2", "/a3", "/a4" }, new int[]
             { 2, 2 }), writer.reference().readMDArray("/b"));
-        writer.move("/a1", "/C");
+        writer.object().move("/a1", "/C");
         assertEquals(new MDArray<String>(new String[]
             { "/C", "/a2", "/a3", "/a4" }, new int[]
             { 2, 2 }), writer.reference().readMDArray("/b"));
@@ -9492,7 +9497,7 @@ public class HDF5RoundtripTest
             { 3, 0 });
         assertEquals(new MDArray<String>(completeArray, new int[]
             { 4, 4 }), writer.reference().readMDArray("/b"));
-        writer.move("/a1", "/C");
+        writer.object().move("/a1", "/C");
         completeArray[0] = "/C";
         chunk[0][0] = "/C";
         assertEquals(new MDArray<String>(completeArray, new int[]
@@ -9521,7 +9526,7 @@ public class HDF5RoundtripTest
         writer.string().write("b", "TestB");
         writer.reference().setAttr("a", "partner", "b");
         assertEquals("/b", writer.reference().getAttr("/a", "partner"));
-        writer.move("/b", "/C");
+        writer.object().move("/b", "/C");
         assertEquals("/C", writer.reference().getAttr("/a", "partner"));
         writer.close();
     }

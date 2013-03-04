@@ -203,12 +203,12 @@ class DirectoryIndex implements IDirectoryIndex
 
     private String getIndexDataSetName()
     {
-        return groupPath + "/" + hdf5Reader.toHouseKeepingPath("INDEX");
+        return groupPath + "/" + hdf5Reader.object().toHouseKeepingPath("INDEX");
     }
 
     private String getIndexNamesDataSetName()
     {
-        return groupPath + "/" + hdf5Reader.toHouseKeepingPath("INDEXNAMES");
+        return groupPath + "/" + hdf5Reader.object().toHouseKeepingPath("INDEXNAMES");
     }
 
     /**
@@ -269,16 +269,16 @@ class DirectoryIndex implements IDirectoryIndex
         // Fallback: couldn't read the index, reconstructing it from the group information.
         if (readingH5ArIndexWorked == false)
         {
-            if (hdf5Reader.isGroup(groupPath, false))
+            if (hdf5Reader.object().isGroup(groupPath, false))
             {
                 final List<HDF5LinkInformation> hdf5LinkInfos =
-                        hdf5Reader.getGroupMemberInformation(groupPath, withLinkTargets);
+                        hdf5Reader.object().getGroupMemberInformation(groupPath, withLinkTargets);
                 final LinkRecord[] work = new LinkRecord[hdf5LinkInfos.size()];
                 int idx = 0;
                 for (HDF5LinkInformation linfo : hdf5LinkInfos)
                 {
                     final long size =
-                            linfo.isDataSet() ? hdf5Reader.getSize(linfo.getPath()) : Utils.UNKNOWN;
+                            linfo.isDataSet() ? hdf5Reader.object().getSize(linfo.getPath()) : Utils.UNKNOWN;
                     work[idx++] = new LinkRecord(linfo, size);
                 }
                 Arrays.sort(work);

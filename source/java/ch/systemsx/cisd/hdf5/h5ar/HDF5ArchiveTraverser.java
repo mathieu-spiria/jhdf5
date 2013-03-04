@@ -35,7 +35,7 @@ class HDF5ArchiveTraverser
     {
         boolean isDirectoryFollowSymlinks(ArchiveEntry entry);
     }
-    
+
     private final IHDF5Reader hdf5Reader;
 
     private final IDirectoryIndexProvider indexProvider;
@@ -46,8 +46,8 @@ class HDF5ArchiveTraverser
 
     private final IDirectoryChecker directoryChecker;
 
-    public HDF5ArchiveTraverser(IDirectoryChecker directoryChecker,
-            IHDF5Reader hdf5Reader, IDirectoryIndexProvider indexProvider, IdCache idCache)
+    public HDF5ArchiveTraverser(IDirectoryChecker directoryChecker, IHDF5Reader hdf5Reader,
+            IDirectoryIndexProvider indexProvider, IdCache idCache)
     {
         this.directoryChecker = directoryChecker;
         this.hdf5Reader = hdf5Reader;
@@ -60,7 +60,7 @@ class HDF5ArchiveTraverser
             boolean followSymlinks, IArchiveEntryProcessor processor)
     {
         final String normalizedPath = Utils.normalizePath(fileOrDir);
-        final boolean isDirectory = hdf5Reader.isGroup(normalizedPath, followSymlinks);
+        final boolean isDirectory = hdf5Reader.object().isGroup(normalizedPath, followSymlinks);
         final boolean effectiveReadLinkTargets = readLinkTargets | followSymlinks;
 
         final String parentPath = Utils.getParentPath(normalizedPath);
@@ -131,9 +131,9 @@ class HDF5ArchiveTraverser
     private void processDirectory(String normalizedDir, boolean recursive, boolean readLinkTargets,
             boolean followSymlinks, IArchiveEntryProcessor processor)
     {
-        if (hdf5Reader.exists(normalizedDir, followSymlinks) == false)
+        if (hdf5Reader.object().exists(normalizedDir, followSymlinks) == false)
         {
-            if (hdf5Reader.exists(normalizedDir, false) == false)
+            if (hdf5Reader.object().exists(normalizedDir, false) == false)
             {
                 errorStrategy.dealWithError(processor.createException(normalizedDir,
                         "Directory not found in archive."));

@@ -56,12 +56,12 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
         String errorMessage = null;
         if (checkArchive)
         {
-            final HDF5LinkInformation info = reader.getLinkInformation(path);
+            final HDF5LinkInformation info = reader.object().getLinkInformation(path);
             final FileLinkType verifiedType = Utils.translateType(info.getType());
             link.setVerifiedType(verifiedType);
             if (verifiedType == FileLinkType.REGULAR_FILE)
             {
-                final long verifiedSize = reader.getSize(path);
+                final long verifiedSize = reader.object().getSize(path);
                 int verifiedCrc32 = 0;
                 try
                 {
