@@ -20,6 +20,8 @@ import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
 
+import com.sun.xml.internal.ws.Closeable;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
@@ -38,13 +40,14 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5SimpleReader
+public interface IHDF5SimpleReader extends Closeable
 {
 
     /**
      * Closes this object and the file referenced by this object. This object must not be used after
      * being closed.
      */
+    @Override
     public void close();
 
     /**
