@@ -61,6 +61,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 {
     private final HDF5BaseWriter baseWriter;
 
+    private final IHDF5FileLevelReadWriteHandler fileHandler;
+
     private final IHDF5ByteWriter byteWriter;
 
     private final IHDF5UnsignedByteWriter ubyteWriter;
@@ -101,6 +103,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         super(baseWriter);
         this.baseWriter = baseWriter;
+        this.fileHandler = new HDF5FileLevelReadWriteHandler(baseWriter);
         this.byteWriter = new HDF5ByteWriter(baseWriter);
         this.ubyteWriter = new HDF5UnsignedByteWriter(baseWriter);
         this.shortWriter = new HDF5ShortWriter(baseWriter);
@@ -127,8 +130,14 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     // /////////////////////
-    // Configuration
+    // File
     // /////////////////////
+
+    @Override
+    public IHDF5FileLevelReadWriteHandler file()
+    {
+        return fileHandler;
+    }
 
     @Override
     public boolean isUseExtendableDataTypes()
@@ -141,10 +150,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         return baseWriter.fileFormat;
     }
-
-    // /////////////////////
-    // File
-    // /////////////////////
 
     @Override
     public void flush()

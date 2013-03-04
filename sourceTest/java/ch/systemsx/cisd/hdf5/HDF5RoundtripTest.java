@@ -844,7 +844,7 @@ public class HDF5RoundtripTest
         final String intDatasetName2 = "/Group2/ints2";
         writer.int32().writeArray(intDatasetName1, intDataWritten, INT_DEFLATE);
         writer.int32().writeArray(intDatasetName2, intDataWritten, INT_SHUFFLE_DEFLATE);
-        writer.flush();
+        writer.file().flush();
         final String stringDataWritten1 = "Some Random String";
         final String stringDataWritten2 = "Another Random String";
         final String stringDatasetName = "/Group3/strings";
@@ -4841,7 +4841,7 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
-        assertEquals("", writer.getHouseKeepingNameSuffix());
+        assertEquals("", writer.file().getHouseKeepingNameSuffix());
         assertEquals("__abc__", writer.toHouseKeepingPath("abc"));
         writer.string().write(writer.toHouseKeepingPath("abc"), "ABC");
         assertTrue(writer.exists("__abc__"));
@@ -4849,7 +4849,7 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         assertTrue(reader.getAttributeNames("/").isEmpty());
-        assertEquals("", reader.getHouseKeepingNameSuffix());
+        assertEquals("", reader.file().getHouseKeepingNameSuffix());
         assertEquals("__abc__", reader.toHouseKeepingPath("abc"));
         assertTrue(reader.exists("__abc__"));
         assertEquals("ABC", reader.readString("__abc__"));
@@ -4866,7 +4866,7 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer =
                 HDF5Factory.configure(file).houseKeepingNameSuffix("XXX").writer();
-        assertEquals("XXX", writer.getHouseKeepingNameSuffix());
+        assertEquals("XXX", writer.file().getHouseKeepingNameSuffix());
         assertEquals("abcXXX", writer.toHouseKeepingPath("abc"));
         writer.string().write(writer.toHouseKeepingPath("abc"), "ABC");
         assertTrue(writer.exists("abcXXX"));
@@ -4878,7 +4878,7 @@ public class HDF5RoundtripTest
         // If the file exists, the one saved in the file takes precedence.
         final IHDF5Writer writer2 =
                 HDF5Factory.configure(file).houseKeepingNameSuffix("YYY").writer();
-        assertEquals("XXX", writer2.getHouseKeepingNameSuffix());
+        assertEquals("XXX", writer2.file().getHouseKeepingNameSuffix());
         assertEquals("abcXXX", writer2.toHouseKeepingPath("abc"));
         assertTrue(writer2.exists("abcXXX"));
         writer2.string().write(writer2.toHouseKeepingPath("abc"), "CAB");
@@ -4890,7 +4890,7 @@ public class HDF5RoundtripTest
 
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         assertTrue(reader.getAttributeNames("/").isEmpty());
-        assertEquals("XXX", reader.getHouseKeepingNameSuffix());
+        assertEquals("XXX", reader.file().getHouseKeepingNameSuffix());
         assertEquals("abcXXX", reader.toHouseKeepingPath("abc"));
         assertTrue(reader.exists("abcXXX"));
         assertFalse(reader.exists("__abc__"));
@@ -4908,7 +4908,7 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer =
                 HDF5Factory.configure(file).houseKeepingNameSuffix("\1\0").writer();
-        assertEquals("\1\0", writer.getHouseKeepingNameSuffix());
+        assertEquals("\1\0", writer.file().getHouseKeepingNameSuffix());
         assertEquals("abc\1\0", writer.toHouseKeepingPath("abc"));
         writer.string().write(writer.toHouseKeepingPath("abc"), "ABC");
         assertTrue(writer.exists("abc\1\0"));
@@ -4916,7 +4916,7 @@ public class HDF5RoundtripTest
         assertTrue(writer.getGroupMemberPaths("/").isEmpty());
         writer.close();
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
-        assertEquals("\1\0", reader.getHouseKeepingNameSuffix());
+        assertEquals("\1\0", reader.file().getHouseKeepingNameSuffix());
         assertEquals("abc\1\0", reader.toHouseKeepingPath("abc"));
         assertTrue(reader.exists("abc\1\0"));
         assertFalse(reader.exists("__abc__"));

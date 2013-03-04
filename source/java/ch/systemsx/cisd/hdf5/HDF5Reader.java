@@ -61,6 +61,8 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 class HDF5Reader implements IHDF5Reader
 {
     private final HDF5BaseReader baseReader;
+    
+    private final IHDF5FileLevelReadOnlyHandler fileHandler;
 
     private final IHDF5ByteReader byteReader;
 
@@ -90,11 +92,12 @@ class HDF5Reader implements IHDF5Reader
 
     private final IHDF5OpaqueReader genericReader;
 
-    HDF5Reader(HDF5BaseReader baseReader)
+    HDF5Reader(final HDF5BaseReader baseReader)
     {
         assert baseReader != null;
 
         this.baseReader = baseReader;
+        this.fileHandler = new HDF5FileLevelReadOnlyHandler(baseReader);
         this.byteReader = new HDF5ByteReader(baseReader);
         this.shortReader = new HDF5ShortReader(baseReader);
         this.intReader = new HDF5IntReader(baseReader);
@@ -122,8 +125,14 @@ class HDF5Reader implements IHDF5Reader
     }
 
     // /////////////////////
-    // Configuration
+    // File
     // /////////////////////
+    
+    @Override
+    public IHDF5FileLevelReadOnlyHandler file()
+    {
+        return fileHandler;
+    }
 
     @Override
     public boolean isPerformNumericConversions()
@@ -138,7 +147,7 @@ class HDF5Reader implements IHDF5Reader
     }
 
     // /////////////////////
-    // Closing
+    // File Closing
     // /////////////////////
 
     @Override

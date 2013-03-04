@@ -43,22 +43,24 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
          */
         NO_SYNC,
         /**
-         * Synchronize whenever {@link IHDF5Writer#flush()} or {@link IHDF5Writer#close()} are
-         * called.
+         * Synchronize whenever {@link IHDF5FileLevelReadWriteHandler#flush()} or
+         * {@link IHDF5FileLevelReadWriteHandler#close()} are called.
          */
         SYNC,
         /**
-         * Synchronize whenever {@link IHDF5Writer#flush()} or {@link IHDF5Writer#close()} are
-         * called. Block until synchronize is finished.
+         * Synchronize whenever {@link IHDF5FileLevelReadWriteHandler#flush()} or
+         * {@link IHDF5FileLevelReadWriteHandler#close()} are called. Block until synchronize is
+         * finished.
          */
         SYNC_BLOCK,
         /**
-         * Synchronize whenever {@link IHDF5Writer#flush()} is called. <i>Default on Unix</i>
+         * Synchronize whenever {@link IHDF5FileLevelReadWriteHandler#flush()} is called. <i>Default
+         * on Unix</i>
          */
         SYNC_ON_FLUSH,
         /**
-         * Synchronize whenever {@link IHDF5Writer#flush()} is called. Block until synchronize is
-         * finished. <i>Default on Windows</i>.
+         * Synchronize whenever {@link IHDF5FileLevelReadWriteHandler#flush()} is called. Block
+         * until synchronize is finished. <i>Default on Windows</i>.
          */
         SYNC_ON_FLUSH_BLOCK,
     }
@@ -151,8 +153,8 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
      * Switches off automatic dereferencing of unresolved references. Use this when you need to
      * access file names that start with \0. The down-side of switching off automatic dereferencing
      * is that you can't provide references as obtained by
-     * {@link IHDF5ReferenceReader#read(String, boolean)} with
-     * <code>resolveName=false</code> in places where a dataset path is required. <br>
+     * {@link IHDF5ReferenceReader#read(String, boolean)} with <code>resolveName=false</code> in
+     * places where a dataset path is required. <br>
      * <i>Note: automatic dereferencing is switched on by default.</i>
      */
     @Override

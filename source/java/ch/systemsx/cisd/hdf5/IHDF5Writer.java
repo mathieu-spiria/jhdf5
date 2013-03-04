@@ -16,12 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import java.io.Flushable;
-
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
-
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 
 /**
  * An interface for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).
@@ -45,70 +41,12 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 @SuppressWarnings("deprecation")
 public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5LegacyWriter
 {
-
-    // /////////////////////
-    // Configuration
-    // /////////////////////
-
-    /**
-     * Returns <code>true</code>, if the {@link IHDF5WriterConfigurator} was <em>not</em> configured
-     * with {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}, that is if extendable data
-     * types are used for new data sets.
-     */
-    public boolean isUseExtendableDataTypes();
-
-    /**
-     * Returns the {@link FileFormat} compatibility setting for this writer.
-     */
-    public FileFormat getFileFormat();
-
     // /////////////////////
     // File
     // /////////////////////
 
-    /**
-     * Flushes the cache to disk (without discarding it). Note that this may or may not trigger a
-     * <code>fsync(2)</code>, depending on the {@link IHDF5WriterConfigurator.SyncMode} used.
-     */
-    public void flush();
-
-    /**
-     * Flushes the cache to disk (without discarding it) and synchronizes the file with the
-     * underlying storage using a method like <code>fsync(2)</code>, regardless of what
-     * {@link IHDF5WriterConfigurator.SyncMode} has been set for this file.
-     * <p>
-     * This method blocks until <code>fsync(2)</code> has returned.
-     */
-    public void flushSyncBlocking();
-
-    /**
-     * Adds a {@link Flushable} to the set of flushables. This set is flushed when {@link #flush()}
-     * or {@link #flushSyncBlocking()} are called and before the writer is closed.
-     * <p>
-     * This function is supposed to be used for in-memory caching structures that need to make it
-     * into the HDF5 file.
-     * <p>
-     * If the <var>flushable</var> implements
-     * {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy}, in case of an exception in
-     * {@link Flushable#flush()}, the method
-     * {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy#dealWithError(Throwable)} will be
-     * called to decide how do deal with the exception.
-     * 
-     * @param flushable The {@link Flushable} to add. Needs to fulfill the {@link Object#hashCode()}
-     *            contract.
-     * @return <code>true</code> if the set of flushables did not already contain the specified
-     *         element.
-     */
-    public boolean addFlushable(Flushable flushable);
-
-    /**
-     * Removes a {@link Flushable} from the set of flushables.
-     * 
-     * @param flushable The {@link Flushable} to remove. Needs to fulfill the
-     *            {@link Object#hashCode()} contract.
-     * @return <code>true</code> if the set of flushables contained the specified element.
-     */
-    public boolean removeFlushable(Flushable flushable);
+    @Override
+    public IHDF5FileLevelReadWriteHandler file();
 
     // /////////////////////
     // Objects & Links
@@ -318,7 +256,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Legacy
     public void deleteAttribute(final String objectPath, final String name);
 
     // /////////////////////
-    // Boolean
+    // Opaque
     // /////////////////////
 
     /**

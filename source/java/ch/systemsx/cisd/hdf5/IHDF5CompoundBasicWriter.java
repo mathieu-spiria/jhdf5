@@ -25,7 +25,7 @@ import ch.systemsx.cisd.hdf5.IHDF5CompoundInformationRetriever.IByteArrayInspect
  * 
  * @author Bernd Rinn
  */
-@SuppressWarnings("deprecation")
+@Deprecated
 public interface IHDF5CompoundBasicWriter extends IHDF5CompoundBasicReader
 {
     // /////////////////////

@@ -468,7 +468,7 @@ class HDF5ArchiveUpdater
         if ("/".equals(hdf5GroupPath) == false)
             try
             {
-                if (hdf5Writer.getFileFormat() != FileFormat.STRICTLY_1_8
+                if (hdf5Writer.file().getFileFormat() != FileFormat.STRICTLY_1_8
                         && fileEntries.length > MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT)
                 {
                     // Compute size hint and pre-create group in order to improve performance.

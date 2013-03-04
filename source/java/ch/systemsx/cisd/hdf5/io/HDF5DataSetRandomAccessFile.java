@@ -346,7 +346,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
             } else
             {
                 this.writerOrNull = (IHDF5Writer) reader;
-                this.writerOrNull.addFlushable(this);
+                this.writerOrNull.file().addFlushable(this);
                 this.reader = writerOrNull;
                 if (writerOrNull.exists(dataSetPath) == false)
                 {
@@ -504,7 +504,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
 
     public File getHdf5File()
     {
-        return reader.getFile();
+        return reader.file().getFile();
     }
 
     public String getDataSetPath()
@@ -660,7 +660,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
             }
         } else if (writerOrNull != null)
         {
-            writerOrNull.removeFlushable(this);
+            writerOrNull.file().removeFlushable(this);
         }
     }
 
@@ -720,7 +720,7 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
             flush();
             try
             {
-                writerOrNull.flushSyncBlocking();
+                writerOrNull.file().flushSyncBlocking();
             } catch (HDF5Exception ex)
             {
                 throw new IOExceptionUnchecked(ex);

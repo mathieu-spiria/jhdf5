@@ -205,7 +205,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     @Override
     public boolean isClosed()
     {
-        return hdf5Reader.isClosed();
+        return hdf5Reader.file().isClosed();
     }
 
     //
@@ -217,7 +217,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     {
         if (hdf5WriterOrNull != null)
         {
-            hdf5WriterOrNull.flush();
+            hdf5WriterOrNull.file().flush();
         }
     }
 
@@ -262,7 +262,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         if ("/".equals(normalizedPath))
         {
             return new ArchiveEntry("", "/", LinkRecord.getLinkRecordForArchiveRoot(hdf5Reader
-                    .getFile()), idCache);
+                    .file().getFile()), idCache);
         }
         final String parentPath = Utils.getParentPath(normalizedPath);
         final String name = Utils.getName(normalizedPath);

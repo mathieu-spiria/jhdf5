@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.io.File;
 import java.util.BitSet;
 import java.util.Date;
 
@@ -40,7 +41,50 @@ import ch.systemsx.cisd.base.mdarray.MDShortArray;
 public interface IHDF5LegacyReader extends IHDF5EnumBasicReader, IHDF5CompoundBasicReader
 {
     // *********************
-    // Generic
+    // File level
+    // *********************
+
+    // /////////////////////
+    // Configuration
+    // /////////////////////
+
+    /**
+     * Returns <code>true</code>, if numeric conversions should be performed automatically, e.g.
+     * between <code>float</code> and <code>int</code>.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#file()} instead.
+     */
+    @Deprecated
+    public boolean isPerformNumericConversions();
+
+    /**
+     * Returns the suffix used to mark and recognize internal (house keeping) files and groups. An
+     * empty string ("") encodes for the default, which is two leading and two trailing underscores
+     * ("__NAME__")
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#file()} instead.
+     */
+    @Deprecated
+    public String getHouseKeepingNameSuffix();
+
+    /**
+     * Returns the HDF5 file that this class is reading.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#file()} instead.
+     */
+    @Deprecated
+    public File getFile();
+
+    // /////////////////////
+    // Status
+    // /////////////////////
+
+    /**
+     * Returns <code>true</code> if this reader has been already closed.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#file()} instead.
+     */
+    @Deprecated
+    public boolean isClosed();
+
+    // *********************
+    // Opaque
     // *********************
 
     /**

@@ -16,7 +16,6 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import java.io.File;
 import java.util.List;
 
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
@@ -44,38 +43,10 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
 {
 
     // /////////////////////
-    // Configuration
+    // File
     // /////////////////////
 
-    /**
-     * Returns <code>true</code>, if numeric conversions should be performed automatically, e.g.
-     * between <code>float</code> and <code>int</code>.
-     */
-    public boolean isPerformNumericConversions();
-
-    /**
-     * Returns the suffix used to mark and recognize internal (house keeping) files and groups. An
-     * empty string ("") encodes for the default, which is two leading and two trailing underscores
-     * ("__NAME__")
-     */
-    public String getHouseKeepingNameSuffix();
-
-    /**
-     * Returns the HDF5 file that this class is reading.
-     */
-    public File getFile();
-
-    /**
-     * Closes this object and the file referenced by this object. This object must not be used after
-     * being closed. Calling this method for a second time is a no-op.
-     */
-    @Override
-    public void close();
-
-    /**
-     * Returns <code>true</code> if this reader has been already closed.
-     */
-    public boolean isClosed();
+    public IHDF5FileLevelReadOnlyHandler file();
 
     // /////////////////////
     // Objects & Links
@@ -415,7 +386,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
     public boolean hasAttribute(final String objectPath, final String attributeName);
 
     // /////////////////////
-    // Boolean
+    // Opaque
     // /////////////////////
 
     /**

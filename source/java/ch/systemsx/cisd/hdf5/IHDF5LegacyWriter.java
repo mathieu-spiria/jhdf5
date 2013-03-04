@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.io.Flushable;
 import java.util.BitSet;
 import java.util.Date;
 
@@ -26,6 +27,7 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 
 /**
  * The legacy interface for writing HDF5 files. Do not use in any new code as it will be removed in
@@ -36,6 +38,90 @@ import ch.systemsx.cisd.base.mdarray.MDShortArray;
 @Deprecated
 public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBasicWriter
 {
+    // *********************
+    // File level
+    // *********************
+
+    // /////////////////////
+    // Configuration
+    // /////////////////////
+
+    /**
+     * Returns <code>true</code>, if the {@link IHDF5WriterConfigurator} was <em>not</em> configured
+     * with {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}, that is if extendable data
+     * types are used for new data sets.
+     * 
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#file()} instead.
+     */
+    @Deprecated
+    public boolean isUseExtendableDataTypes();
+
+    /**
+     * Returns the {@link FileFormat} compatibility setting for this writer.
+     * 
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#file()} instead.
+     */
+    @Deprecated
+    public FileFormat getFileFormat();
+
+    // /////////////////////
+    // Flushing and Syncing
+    // /////////////////////
+
+    /**
+     * Flushes the cache to disk (without discarding it). Note that this may or may not trigger a
+     * <code>fsync(2)</code>, depending on the {@link IHDF5WriterConfigurator.SyncMode} used.
+     * 
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#file()} instead.
+     */
+    @Deprecated
+    public void flush();
+
+    /**
+     * Flushes the cache to disk (without discarding it) and synchronizes the file with the
+     * underlying storage using a method like <code>fsync(2)</code>, regardless of what
+     * {@link IHDF5WriterConfigurator.SyncMode} has been set for this file.
+     * <p>
+     * This method blocks until <code>fsync(2)</code> has returned.
+     * 
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#file()} instead.
+     */
+    @Deprecated
+    public void flushSyncBlocking();
+
+    /**
+     * Adds a {@link Flushable} to the set of flushables. This set is flushed when {@link #flush()}
+     * or {@link #flushSyncBlocking()} are called and before the writer is closed.
+     * <p>
+     * This function is supposed to be used for in-memory caching structures that need to make it
+     * into the HDF5 file.
+     * <p>
+     * If the <var>flushable</var> implements
+     * {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy}, in case of an exception in
+     * {@link Flushable#flush()}, the method
+     * {@link ch.systemsx.cisd.base.exceptions.IErrorStrategy#dealWithError(Throwable)} will be
+     * called to decide how do deal with the exception.
+     * 
+     * @param flushable The {@link Flushable} to add. Needs to fulfill the {@link Object#hashCode()}
+     *            contract.
+     * @return <code>true</code> if the set of flushables did not already contain the specified
+     *         element.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#file()} instead.
+     */
+    @Deprecated
+    public boolean addFlushable(Flushable flushable);
+
+    /**
+     * Removes a {@link Flushable} from the set of flushables.
+     * 
+     * @param flushable The {@link Flushable} to remove. Needs to fulfill the
+     *            {@link Object#hashCode()} contract.
+     * @return <code>true</code> if the set of flushables contained the specified element.
+     * @deprecated Use the corresponding method in {@link IHDF5Writer#file()} instead.
+     */
+    @Deprecated
+    public boolean removeFlushable(Flushable flushable);
+
     // *********************
     // Opaque
     // *********************
@@ -336,8 +422,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
 
     /**
      * Writes out a block of a <code>long</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createBitField(String, long, int, HDF5IntStorageFeatures)}
-     * beforehand.
+     * created by {@link #createBitField(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of {@link #writeBitFieldBlock(String, BitSet, int, long)} if the
      * total size of the data set is not a multiple of the block size.
@@ -392,8 +477,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
     @Deprecated
-    public void setByteArrayAttribute(final String objectPath, final String name,
-            final byte[] value);
+    public void setByteArrayAttribute(final String objectPath, final String name, final byte[] value);
 
     /**
      * Set a multi-dimensional code>byte</code> attribute on the referenced object.
@@ -424,7 +508,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     @Deprecated
     public void setByteMatrixAttribute(final String objectPath, final String name,
             final byte[][] value);
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -456,17 +540,17 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
     @Deprecated
-    public void writeByteArray(final String objectPath, final byte[] data, 
+    public void writeByteArray(final String objectPath, final byte[] data,
             final HDF5IntStorageFeatures features);
 
     /**
      * Creates a <code>byte</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the byte array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets. 
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
     @Deprecated
@@ -476,11 +560,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>byte</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the byte array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @param size The size of the byte array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
     @Deprecated
@@ -490,27 +574,27 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>byte</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the byte array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets.
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link HDF5IntStorageFeatures}.
+     * @param size The size of the byte array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
     @Deprecated
     public void createByteArray(final String objectPath, final int size,
             final HDF5IntStorageFeatures features);
-    
+
     /**
      * Creates a <code>byte</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the byte array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
+     * @param size The size of the byte array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
@@ -519,9 +603,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final HDF5IntStorageFeatures features);
 
     /**
-     * Writes out a block of a <code>byte</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createByteArray(String, long, int, HDF5IntStorageFeatures)}
-     * beforehand.
+     * Writes out a block of a <code>byte</code> array (of rank 1). The data set needs to have been
+     * created by {@link #createByteArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
@@ -539,12 +622,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final long blockNumber);
 
     /**
-     * Writes out a block of a <code>byte</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createByteArray(String, long, int, HDF5IntStorageFeatures)}
-     * beforehand.
+     * Writes out a block of a <code>byte</code> array (of rank 1). The data set needs to have been
+     * created by {@link #createByteArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeByteArrayBlock(String, byte[], long)} if the
-     * total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeByteArrayBlock(String, byte[], long)} if the total
+     * size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -584,7 +666,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
     @Deprecated
-    public void writeByteMatrix(final String objectPath, final byte[][] data, 
+    public void writeByteMatrix(final String objectPath, final byte[][] data,
             final HDF5IntStorageFeatures features);
 
     /**
@@ -596,8 +678,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
     @Deprecated
-    public void createByteMatrix(final String objectPath, final int blockSizeX, 
-            final int blockSizeY);
+    public void createByteMatrix(final String objectPath, final int blockSizeX, final int blockSizeY);
 
     /**
      * Creates a <code>byte</code> matrix (array of rank 2).
@@ -660,8 +741,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * have been created by
      * {@link #createByteMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeByteMatrixBlock(String, byte[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeByteMatrixBlock(String, byte[][], long, long)} if the
+     * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -683,8 +764,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * have been created by
      * {@link #createByteMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeByteMatrixBlock(String, byte[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeByteMatrixBlock(String, byte[][], long, long)} if the
+     * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -733,11 +814,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>byte</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the byte array to create. This will be the total dimensions 
-     *          for non-extendable data sets and the dimensions of one chunk (extent along each axis) 
-     *          for extendable (chunked) data sets. For extendable data sets the initial size of the 
-     *          array along each axis will be 0, 
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param dimensions The dimensions of the byte array to create. This will be the total
+     *            dimensions for non-extendable data sets and the dimensions of one chunk (extent
+     *            along each axis) for extendable (chunked) data sets. For extendable data sets the
+     *            initial size of the array along each axis will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
     @Deprecated
@@ -759,10 +840,10 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>byte</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array. Will be the total dimensions for non-extendable 
-     *       data sets and the dimensions of one chunk for extendable (chunked) data sets
-     *       For extendable data sets the initial size of the array along each axis will be 0,
-     *       see {@link HDF5IntStorageFeatures}.
+     * @param dimensions The dimensions of the array. Will be the total dimensions for
+     *            non-extendable data sets and the dimensions of one chunk for extendable (chunked)
+     *            data sets For extendable data sets the initial size of the array along each axis
+     *            will be 0, see {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
@@ -803,14 +884,14 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param offset The offset in the data set  to start writing to in each dimension.
+     * @param offset The offset in the data set to start writing to in each dimension.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int8()}.
      */
     @Deprecated
     public void writeByteMDArrayBlockWithOffset(final String objectPath, final MDByteArray data,
             final long[] offset);
 
-   /**
+    /**
      * Writes out a block of a multi-dimensional <code>byte</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -890,7 +971,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     @Deprecated
     public void setShortMatrixAttribute(final String objectPath, final String name,
             final short[][] value);
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -924,17 +1005,17 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
     @Deprecated
-    public void writeShortArray(final String objectPath, final short[] data, 
+    public void writeShortArray(final String objectPath, final short[] data,
             final HDF5IntStorageFeatures features);
 
     /**
      * Creates a <code>short</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the short array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets. 
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param size The size of the short array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
     @Deprecated
@@ -944,11 +1025,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>short</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the short array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @param size The size of the short array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
     @Deprecated
@@ -958,27 +1039,27 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>short</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the short array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets.
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link HDF5IntStorageFeatures}.
+     * @param size The size of the short array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
     @Deprecated
     public void createShortArray(final String objectPath, final int size,
             final HDF5IntStorageFeatures features);
-    
+
     /**
      * Creates a <code>short</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the short array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
+     * @param size The size of the short array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
@@ -987,9 +1068,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final HDF5IntStorageFeatures features);
 
     /**
-     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createShortArray(String, long, int, HDF5IntStorageFeatures)}
-     * beforehand.
+     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have been
+     * created by {@link #createShortArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
@@ -1007,12 +1087,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final long blockNumber);
 
     /**
-     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createShortArray(String, long, int, HDF5IntStorageFeatures)}
-     * beforehand.
+     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have been
+     * created by {@link #createShortArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeShortArrayBlock(String, short[], long)} if the
-     * total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeShortArrayBlock(String, short[], long)} if the total
+     * size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -1052,7 +1131,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
     @Deprecated
-    public void writeShortMatrix(final String objectPath, final short[][] data, 
+    public void writeShortMatrix(final String objectPath, final short[][] data,
             final HDF5IntStorageFeatures features);
 
     /**
@@ -1064,7 +1143,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
     @Deprecated
-    public void createShortMatrix(final String objectPath, final int blockSizeX, 
+    public void createShortMatrix(final String objectPath, final int blockSizeX,
             final int blockSizeY);
 
     /**
@@ -1107,8 +1186,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * <p>
      * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
      * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
-     * used to create the data set.
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that
+     * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -1133,8 +1212,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
-     * used to create the data set.
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that
+     * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
@@ -1156,8 +1235,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that was
-     * used to create the data set.
+     * {@link #createShortMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} call that
+     * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
@@ -1201,11 +1280,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>short</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the short array to create. This will be the total dimensions 
-     *          for non-extendable data sets and the dimensions of one chunk (extent along each axis) 
-     *          for extendable (chunked) data sets. For extendable data sets the initial size of the 
-     *          array along each axis will be 0, 
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param dimensions The dimensions of the short array to create. This will be the total
+     *            dimensions for non-extendable data sets and the dimensions of one chunk (extent
+     *            along each axis) for extendable (chunked) data sets. For extendable data sets the
+     *            initial size of the array along each axis will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
     @Deprecated
@@ -1227,10 +1306,10 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>short</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array. Will be the total dimensions for non-extendable 
-     *       data sets and the dimensions of one chunk for extendable (chunked) data sets
-     *       For extendable data sets the initial size of the array along each axis will be 0,
-     *       see {@link HDF5IntStorageFeatures}.
+     * @param dimensions The dimensions of the array. Will be the total dimensions for
+     *            non-extendable data sets and the dimensions of one chunk for extendable (chunked)
+     *            data sets For extendable data sets the initial size of the array along each axis
+     *            will be 0, see {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
@@ -1271,14 +1350,14 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param offset The offset in the data set  to start writing to in each dimension.
+     * @param offset The offset in the data set to start writing to in each dimension.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int16()}.
      */
     @Deprecated
     public void writeShortMDArrayBlockWithOffset(final String objectPath, final MDShortArray data,
             final long[] offset);
 
-   /**
+    /**
      * Writes out a block of a multi-dimensional <code>short</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1326,8 +1405,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
     @Deprecated
-    public void setIntArrayAttribute(final String objectPath, final String name,
-            final int[] value);
+    public void setIntArrayAttribute(final String objectPath, final String name, final int[] value);
 
     /**
      * Set a multi-dimensional code>int</code> attribute on the referenced object.
@@ -1356,7 +1434,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      */
     public void setIntMatrixAttribute(final String objectPath, final String name,
             final int[][] value);
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -1386,17 +1464,17 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
     @Deprecated
-    public void writeIntArray(final String objectPath, final int[] data, 
+    public void writeIntArray(final String objectPath, final int[] data,
             final HDF5IntStorageFeatures features);
 
     /**
      * Creates a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the int array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets. 
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param size The size of the int array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
     @Deprecated
@@ -1406,11 +1484,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the int array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @param size The size of the int array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
     @Deprecated
@@ -1420,27 +1498,27 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the int array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets.
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link HDF5IntStorageFeatures}.
+     * @param size The size of the int array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
     @Deprecated
     public void createIntArray(final String objectPath, final int size,
             final HDF5IntStorageFeatures features);
-    
+
     /**
      * Creates a <code>int</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the int array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
+     * @param size The size of the int array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
@@ -1449,9 +1527,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final HDF5IntStorageFeatures features);
 
     /**
-     * Writes out a block of a <code>int</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createIntArray(String, long, int, HDF5IntStorageFeatures)}
-     * beforehand.
+     * Writes out a block of a <code>int</code> array (of rank 1). The data set needs to have been
+     * created by {@link #createIntArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
@@ -1465,16 +1542,14 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
     @Deprecated
-    public void writeIntArrayBlock(final String objectPath, final int[] data,
-            final long blockNumber);
+    public void writeIntArrayBlock(final String objectPath, final int[] data, final long blockNumber);
 
     /**
-     * Writes out a block of a <code>int</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createIntArray(String, long, int, HDF5IntStorageFeatures)}
-     * beforehand.
+     * Writes out a block of a <code>int</code> array (of rank 1). The data set needs to have been
+     * created by {@link #createIntArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeIntArrayBlock(String, int[], long)} if the
-     * total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeIntArrayBlock(String, int[], long)} if the total size
+     * of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -1512,7 +1587,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
     @Deprecated
-    public void writeIntMatrix(final String objectPath, final int[][] data, 
+    public void writeIntMatrix(final String objectPath, final int[][] data,
             final HDF5IntStorageFeatures features);
 
     /**
@@ -1524,8 +1599,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
     @Deprecated
-    public void createIntMatrix(final String objectPath, final int blockSizeX, 
-            final int blockSizeY);
+    public void createIntMatrix(final String objectPath, final int blockSizeX, final int blockSizeY);
 
     /**
      * Creates a <code>int</code> matrix (array of rank 2).
@@ -1557,8 +1631,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final int blockSizeX, final int blockSizeY, final HDF5IntStorageFeatures features);
 
     /**
-     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to
-     * have been created by
+     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to have
+     * been created by
      * {@link #createIntMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of
@@ -1584,12 +1658,12 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final long blockNumberX, final long blockNumberY);
 
     /**
-     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to
-     * have been created by
+     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to have
+     * been created by
      * {@link #createIntMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeIntMatrixBlock(String, int[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeIntMatrixBlock(String, int[][], long, long)} if the
+     * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -1607,12 +1681,12 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final long offsetX, final long offsetY);
 
     /**
-     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to
-     * have been created by
+     * Writes out a block of a <code>int</code> matrix (array of rank 2). The data set needs to have
+     * been created by
      * {@link #createIntMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeIntMatrixBlock(String, int[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeIntMatrixBlock(String, int[][], long, long)} if the
+     * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -1661,11 +1735,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the int array to create. This will be the total dimensions 
-     *          for non-extendable data sets and the dimensions of one chunk (extent along each axis) 
-     *          for extendable (chunked) data sets. For extendable data sets the initial size of the 
-     *          array along each axis will be 0, 
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param dimensions The dimensions of the int array to create. This will be the total
+     *            dimensions for non-extendable data sets and the dimensions of one chunk (extent
+     *            along each axis) for extendable (chunked) data sets. For extendable data sets the
+     *            initial size of the array along each axis will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
     @Deprecated
@@ -1687,10 +1761,10 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array. Will be the total dimensions for non-extendable 
-     *       data sets and the dimensions of one chunk for extendable (chunked) data sets
-     *       For extendable data sets the initial size of the array along each axis will be 0,
-     *       see {@link HDF5IntStorageFeatures}.
+     * @param dimensions The dimensions of the array. Will be the total dimensions for
+     *            non-extendable data sets and the dimensions of one chunk for extendable (chunked)
+     *            data sets For extendable data sets the initial size of the array along each axis
+     *            will be 0, see {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
@@ -1731,14 +1805,14 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param offset The offset in the data set  to start writing to in each dimension.
+     * @param offset The offset in the data set to start writing to in each dimension.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int32()}.
      */
     @Deprecated
     public void writeIntMDArrayBlockWithOffset(final String objectPath, final MDIntArray data,
             final long[] offset);
 
-   /**
+    /**
      * Writes out a block of a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -1786,8 +1860,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
     @Deprecated
-    public void setLongArrayAttribute(final String objectPath, final String name,
-            final long[] value);
+    public void setLongArrayAttribute(final String objectPath, final String name, final long[] value);
 
     /**
      * Set a multi-dimensional code>long</code> attribute on the referenced object.
@@ -1818,7 +1891,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     @Deprecated
     public void setLongMatrixAttribute(final String objectPath, final String name,
             final long[][] value);
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -1848,17 +1921,17 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
     @Deprecated
-    public void writeLongArray(final String objectPath, final long[] data, 
+    public void writeLongArray(final String objectPath, final long[] data,
             final HDF5IntStorageFeatures features);
 
     /**
      * Creates a <code>long</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the long array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets. 
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param size The size of the long array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
     @Deprecated
@@ -1868,11 +1941,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>long</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the long array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @param size The size of the long array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
     @Deprecated
@@ -1882,27 +1955,27 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>long</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the long array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets.
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link HDF5IntStorageFeatures}.
+     * @param size The size of the long array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
     @Deprecated
     public void createLongArray(final String objectPath, final int size,
             final HDF5IntStorageFeatures features);
-    
+
     /**
      * Creates a <code>long</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the long array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
+     * @param size The size of the long array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
@@ -1911,9 +1984,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final HDF5IntStorageFeatures features);
 
     /**
-     * Writes out a block of a <code>long</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createLongArray(String, long, int, HDF5IntStorageFeatures)}
-     * beforehand.
+     * Writes out a block of a <code>long</code> array (of rank 1). The data set needs to have been
+     * created by {@link #createLongArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
@@ -1931,12 +2003,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final long blockNumber);
 
     /**
-     * Writes out a block of a <code>long</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createLongArray(String, long, int, HDF5IntStorageFeatures)}
-     * beforehand.
+     * Writes out a block of a <code>long</code> array (of rank 1). The data set needs to have been
+     * created by {@link #createLongArray(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeLongArrayBlock(String, long[], long)} if the
-     * total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeLongArrayBlock(String, long[], long)} if the total
+     * size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -1974,7 +2045,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
     @Deprecated
-    public void writeLongMatrix(final String objectPath, final long[][] data, 
+    public void writeLongMatrix(final String objectPath, final long[][] data,
             final HDF5IntStorageFeatures features);
 
     /**
@@ -1986,8 +2057,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
     @Deprecated
-    public void createLongMatrix(final String objectPath, final int blockSizeX, 
-            final int blockSizeY);
+    public void createLongMatrix(final String objectPath, final int blockSizeX, final int blockSizeY);
 
     /**
      * Creates a <code>long</code> matrix (array of rank 2).
@@ -2050,8 +2120,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * have been created by
      * {@link #createLongMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeLongMatrixBlock(String, long[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeLongMatrixBlock(String, long[][], long, long)} if the
+     * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -2073,8 +2143,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * have been created by
      * {@link #createLongMatrix(String, long, long, int, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeLongMatrixBlock(String, long[][], long, long)} if
-     * the total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeLongMatrixBlock(String, long[][], long, long)} if the
+     * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -2123,11 +2193,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>long</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the long array to create. This will be the total dimensions 
-     *          for non-extendable data sets and the dimensions of one chunk (extent along each axis) 
-     *          for extendable (chunked) data sets. For extendable data sets the initial size of the 
-     *          array along each axis will be 0, 
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param dimensions The dimensions of the long array to create. This will be the total
+     *            dimensions for non-extendable data sets and the dimensions of one chunk (extent
+     *            along each axis) for extendable (chunked) data sets. For extendable data sets the
+     *            initial size of the array along each axis will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
     @Deprecated
@@ -2149,10 +2219,10 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>long</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array. Will be the total dimensions for non-extendable 
-     *       data sets and the dimensions of one chunk for extendable (chunked) data sets
-     *       For extendable data sets the initial size of the array along each axis will be 0,
-     *       see {@link HDF5IntStorageFeatures}.
+     * @param dimensions The dimensions of the array. Will be the total dimensions for
+     *            non-extendable data sets and the dimensions of one chunk for extendable (chunked)
+     *            data sets For extendable data sets the initial size of the array along each axis
+     *            will be 0, see {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
@@ -2193,14 +2263,14 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param offset The offset in the data set  to start writing to in each dimension.
+     * @param offset The offset in the data set to start writing to in each dimension.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#int64()}.
      */
     @Deprecated
     public void writeLongMDArrayBlockWithOffset(final String objectPath, final MDLongArray data,
             final long[] offset);
 
-   /**
+    /**
      * Writes out a block of a multi-dimensional <code>long</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -2280,7 +2350,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     @Deprecated
     public void setFloatMatrixAttribute(final String objectPath, final String name,
             final float[][] value);
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -2310,17 +2380,17 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float32()}.
      */
     @Deprecated
-    public void writeFloatArray(final String objectPath, final float[] data, 
+    public void writeFloatArray(final String objectPath, final float[] data,
             final HDF5FloatStorageFeatures features);
 
     /**
      * Creates a <code>float</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the float array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets. 
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param size The size of the float array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float32()}.
      */
     @Deprecated
@@ -2330,11 +2400,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>float</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the float array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @param size The size of the float array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float32()}.
      */
     @Deprecated
@@ -2344,27 +2414,28 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>float</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the float array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets.
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link HDF5FloatStorageFeatures}.
+     * @param size The size of the float array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5FloatStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float32()}.
      */
     @Deprecated
     public void createFloatArray(final String objectPath, final int size,
             final HDF5FloatStorageFeatures features);
-    
+
     /**
      * Creates a <code>float</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the float array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>features</code> is <code>HDF5FloatStorageFeature.FLOATNO_COMPRESSION</code>.
+     * @param size The size of the float array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>features</code> is
+     *            <code>HDF5FloatStorageFeature.FLOATNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float32()}.
      */
@@ -2373,9 +2444,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final HDF5FloatStorageFeatures features);
 
     /**
-     * Writes out a block of a <code>float</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createFloatArray(String, long, int, HDF5FloatStorageFeatures)}
-     * beforehand.
+     * Writes out a block of a <code>float</code> array (of rank 1). The data set needs to have been
+     * created by {@link #createFloatArray(String, long, int, HDF5FloatStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
@@ -2393,12 +2463,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final long blockNumber);
 
     /**
-     * Writes out a block of a <code>float</code> array (of rank 1). The data set needs to have
-     * been created by {@link #createFloatArray(String, long, int, HDF5FloatStorageFeatures)}
-     * beforehand.
+     * Writes out a block of a <code>float</code> array (of rank 1). The data set needs to have been
+     * created by {@link #createFloatArray(String, long, int, HDF5FloatStorageFeatures)} beforehand.
      * <p>
-     * Use this method instead of {@link #writeFloatArrayBlock(String, float[], long)} if the
-     * total size of the data set is not a multiple of the block size.
+     * Use this method instead of {@link #writeFloatArrayBlock(String, float[], long)} if the total
+     * size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
@@ -2436,7 +2505,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float32()}.
      */
     @Deprecated
-    public void writeFloatMatrix(final String objectPath, final float[][] data, 
+    public void writeFloatMatrix(final String objectPath, final float[][] data,
             final HDF5FloatStorageFeatures features);
 
     /**
@@ -2448,7 +2517,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float32()}.
      */
     @Deprecated
-    public void createFloatMatrix(final String objectPath, final int blockSizeX, 
+    public void createFloatMatrix(final String objectPath, final int blockSizeX,
             final int blockSizeY);
 
     /**
@@ -2483,16 +2552,17 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     /**
      * Writes out a block of a <code>float</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} beforehand.
+     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)}
+     * beforehand.
      * <p>
      * Use this method instead of
-     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} if the total
-     * size of the data set is not a multiple of the block size.
+     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} if the
+     * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
      * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
-     * used to create the data set.
+     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that
+     * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -2510,15 +2580,16 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     /**
      * Writes out a block of a <code>float</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} beforehand.
+     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)}
+     * beforehand.
      * <p>
      * Use this method instead of {@link #writeFloatMatrixBlock(String, float[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
-     * used to create the data set.
+     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that
+     * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
@@ -2533,15 +2604,16 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     /**
      * Writes out a block of a <code>float</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} beforehand.
+     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)}
+     * beforehand.
      * <p>
      * Use this method instead of {@link #writeFloatMatrixBlock(String, float[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
-     * used to create the data set.
+     * {@link #createFloatMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that
+     * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
@@ -2585,11 +2657,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>float</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the float array to create. This will be the total dimensions 
-     *          for non-extendable data sets and the dimensions of one chunk (extent along each axis) 
-     *          for extendable (chunked) data sets. For extendable data sets the initial size of the 
-     *          array along each axis will be 0, 
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param dimensions The dimensions of the float array to create. This will be the total
+     *            dimensions for non-extendable data sets and the dimensions of one chunk (extent
+     *            along each axis) for extendable (chunked) data sets. For extendable data sets the
+     *            initial size of the array along each axis will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float32()}.
      */
     @Deprecated
@@ -2611,10 +2683,10 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>float</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array. Will be the total dimensions for non-extendable 
-     *       data sets and the dimensions of one chunk for extendable (chunked) data sets
-     *       For extendable data sets the initial size of the array along each axis will be 0,
-     *       see {@link HDF5FloatStorageFeatures}.
+     * @param dimensions The dimensions of the array. Will be the total dimensions for
+     *            non-extendable data sets and the dimensions of one chunk for extendable (chunked)
+     *            data sets For extendable data sets the initial size of the array along each axis
+     *            will be 0, see {@link HDF5FloatStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float32()}.
      */
@@ -2655,14 +2727,14 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param offset The offset in the data set  to start writing to in each dimension.
+     * @param offset The offset in the data set to start writing to in each dimension.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float32()}.
      */
     @Deprecated
     public void writeFloatMDArrayBlockWithOffset(final String objectPath, final MDFloatArray data,
             final long[] offset);
 
-   /**
+    /**
      * Writes out a block of a multi-dimensional <code>float</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -2742,7 +2814,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     @Deprecated
     public void setDoubleMatrixAttribute(final String objectPath, final String name,
             final double[][] value);
-    
+
     // /////////////////////
     // Data Sets
     // /////////////////////
@@ -2772,17 +2844,17 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
     @Deprecated
-    public void writeDoubleArray(final String objectPath, final double[] data, 
+    public void writeDoubleArray(final String objectPath, final double[] data,
             final HDF5FloatStorageFeatures features);
 
     /**
      * Creates a <code>double</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the double array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets. 
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param size The size of the double array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
     @Deprecated
@@ -2792,11 +2864,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>double</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the double array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @param size The size of the double array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
     @Deprecated
@@ -2806,27 +2878,28 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a <code>double</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the double array to create. This will be the total size for 
-     *          non-extendable data sets and the size of one chunk for extendable (chunked) data sets.
-     *          For extendable data sets the initial size of the array will be 0,
-     *          see {@link HDF5FloatStorageFeatures}.
+     * @param size The size of the double array to create. This will be the total size for
+     *            non-extendable data sets and the size of one chunk for extendable (chunked) data
+     *            sets. For extendable data sets the initial size of the array will be 0, see
+     *            {@link HDF5FloatStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
     @Deprecated
     public void createDoubleArray(final String objectPath, final int size,
             final HDF5FloatStorageFeatures features);
-    
+
     /**
      * Creates a <code>double</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the double array to create. When using extendable data sets 
-     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
-     *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
-     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>features</code> is <code>HDF5FloatStorageFeature.FLOATNO_COMPRESSION</code>.
+     * @param size The size of the double array to create. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>features</code> is
+     *            <code>HDF5FloatStorageFeature.FLOATNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
@@ -2898,7 +2971,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
     @Deprecated
-    public void writeDoubleMatrix(final String objectPath, final double[][] data, 
+    public void writeDoubleMatrix(final String objectPath, final double[][] data,
             final HDF5FloatStorageFeatures features);
 
     /**
@@ -2910,7 +2983,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
     @Deprecated
-    public void createDoubleMatrix(final String objectPath, final int blockSizeX, 
+    public void createDoubleMatrix(final String objectPath, final int blockSizeX,
             final int blockSizeY);
 
     /**
@@ -2945,16 +3018,17 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     /**
      * Writes out a block of a <code>double</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} beforehand.
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)}
+     * beforehand.
      * <p>
      * Use this method instead of
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} if the total
-     * size of the data set is not a multiple of the block size.
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} if the
+     * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
      * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
-     * used to create the data set.
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that
+     * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -2972,15 +3046,16 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     /**
      * Writes out a block of a <code>double</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} beforehand.
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)}
+     * beforehand.
      * <p>
      * Use this method instead of {@link #writeDoubleMatrixBlock(String, double[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
-     * used to create the data set.
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that
+     * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
@@ -2995,15 +3070,16 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     /**
      * Writes out a block of a <code>double</code> matrix (array of rank 2). The data set needs to
      * have been created by
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} beforehand.
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)}
+     * beforehand.
      * <p>
      * Use this method instead of {@link #writeDoubleMatrixBlock(String, double[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
-     * used to create the data set.
+     * {@link #createDoubleMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that
+     * was used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
@@ -3045,11 +3121,11 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>double</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the double array to create. This will be the total dimensions 
-     *          for non-extendable data sets and the dimensions of one chunk (extent along each axis) 
-     *          for extendable (chunked) data sets. For extendable data sets the initial size of the 
-     *          array along each axis will be 0, 
-     *          see {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
+     * @param dimensions The dimensions of the double array to create. This will be the total
+     *            dimensions for non-extendable data sets and the dimensions of one chunk (extent
+     *            along each axis) for extendable (chunked) data sets. For extendable data sets the
+     *            initial size of the array along each axis will be 0, see
+     *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
     @Deprecated
@@ -3071,10 +3147,10 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Creates a multi-dimensional <code>double</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param dimensions The dimensions of the array. Will be the total dimensions for non-extendable 
-     *       data sets and the dimensions of one chunk for extendable (chunked) data sets
-     *       For extendable data sets the initial size of the array along each axis will be 0,
-     *       see {@link HDF5FloatStorageFeatures}.
+     * @param dimensions The dimensions of the array. Will be the total dimensions for
+     *            non-extendable data sets and the dimensions of one chunk for extendable (chunked)
+     *            data sets For extendable data sets the initial size of the array along each axis
+     *            will be 0, see {@link HDF5FloatStorageFeatures}.
      * @param features The storage features of the data set.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
@@ -3115,14 +3191,14 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
-     * @param offset The offset in the data set  to start writing to in each dimension.
+     * @param offset The offset in the data set to start writing to in each dimension.
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
     @Deprecated
-    public void writeDoubleMDArrayBlockWithOffset(final String objectPath, final MDDoubleArray data,
-            final long[] offset);
+    public void writeDoubleMDArrayBlockWithOffset(final String objectPath,
+            final MDDoubleArray data, final long[] offset);
 
-   /**
+    /**
      * Writes out a block of a multi-dimensional <code>double</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -3133,8 +3209,9 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#float64()}.
      */
     @Deprecated
-    public void writeDoubleMDArrayBlockWithOffset(final String objectPath, final MDDoubleArray data,
-            final int[] blockDimensions, final long[] offset, final int[] memoryOffset);
+    public void writeDoubleMDArrayBlockWithOffset(final String objectPath,
+            final MDDoubleArray data, final int[] blockDimensions, final long[] offset,
+            final int[] memoryOffset);
 
     // *********************
     // String
@@ -3792,7 +3869,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final MDArray<String> data, final HDF5GenericStorageFeatures features);
 
     // *********************
-    // Date & Time 
+    // Date & Time
     // *********************
 
     // /////////////////////
@@ -4027,8 +4104,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link IHDF5LongWriter#createArray(String, long, int, HDF5IntStorageFeatures)} call that
-     * was used to create the data set.
+     * {@link IHDF5LongWriter#createArray(String, long, int, HDF5IntStorageFeatures)} call that was
+     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -4050,8 +4127,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link IHDF5LongWriter#createArray(String, long, int, HDF5IntStorageFeatures)} call that
-     * was used to create the data set.
+     * {@link IHDF5LongWriter#createArray(String, long, int, HDF5IntStorageFeatures)} call that was
+     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -4602,7 +4679,8 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * @deprecated Use the corresponding method in {@link IHDF5Writer#reference()}.
      */
     @Deprecated
-    public void createObjectReferenceArray(final String objectPath, final long size, final int blockSize);
+    public void createObjectReferenceArray(final String objectPath, final long size,
+            final int blockSize);
 
     /**
      * Creates an array (of rank 1) of object references.

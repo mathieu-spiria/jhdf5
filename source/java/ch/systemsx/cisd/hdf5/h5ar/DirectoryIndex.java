@@ -151,7 +151,7 @@ class DirectoryIndex implements IDirectoryIndex
                 (hdf5Reader instanceof IHDF5Writer) ? (IHDF5Writer) hdf5Reader : null;
         if (hdf5WriterOrNull != null)
         {
-            hdf5WriterOrNull.addFlushable(this);
+            hdf5WriterOrNull.file().addFlushable(this);
         }
         this.groupPath = (groupPath.length() == 0) ? "/" : groupPath;
         this.errorStrategy = errorStrategy;
@@ -477,7 +477,7 @@ class DirectoryIndex implements IDirectoryIndex
         flush();
         if (hdf5WriterOrNull != null)
         {
-            hdf5WriterOrNull.removeFlushable(this);
+            hdf5WriterOrNull.file().removeFlushable(this);
         }
         flushables.clear();
     }
