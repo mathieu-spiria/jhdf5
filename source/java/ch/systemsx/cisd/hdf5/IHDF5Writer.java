@@ -207,15 +207,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Legacy
     // /////////////////////
 
     /**
-     * Returns the full writer for enums.
-     * 
-     * @deprecated Use {@link #enumeration()} instead.
-     */
-    @Deprecated
-    @Override
-    public IHDF5EnumWriter enums();
-
-    /**
      * Returns the full writer for enumerations.
      */
     @Override
@@ -224,15 +215,6 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Legacy
     // /////////////////////
     // Compounds
     // /////////////////////
-
-    /**
-     * Returns the full writer for compounds.
-     * 
-     * @deprecated Use {@link #compound()} instead.
-     */
-    @Deprecated
-    @Override
-    public IHDF5CompoundWriter compounds();
 
     /**
      * Returns the full reader for compounds.

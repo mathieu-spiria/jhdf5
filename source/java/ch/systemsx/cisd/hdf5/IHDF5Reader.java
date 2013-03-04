@@ -171,14 +171,6 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
     // /////////////////////
 
     /**
-     * Returns the full reader for enums.
-     * 
-     * @deprecated Use {@link #enumeration()} instead.
-     */
-    @Deprecated
-    public IHDF5EnumReader enums();
-
-    /**
      * Returns the full reader for enumerations.
      */
     public IHDF5EnumReader enumeration();
@@ -186,14 +178,6 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
     // /////////////////////
     // Compounds
     // /////////////////////
-
-    /**
-     * Returns the full reader for compounds.
-     * 
-     * @deprecated Use {@link #compound()} instead.
-     */
-    @Deprecated
-    public IHDF5CompoundReader compounds();
 
     /**
      * Returns the full reader for compounds.

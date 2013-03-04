@@ -5112,4 +5112,28 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
             final MDLongArray referencedObjectPaths, final int[] blockDimensions,
             final long[] offset, final int[] memoryOffset);
 
+    // *********************
+    // Enums
+    // *********************
+
+    /**
+     * Returns the full writer for enums.
+     * 
+     * @deprecated Use {@link IHDF5Writer#enumeration()} instead.
+     */
+    @Deprecated
+    public IHDF5EnumWriter enums();
+
+    // *********************
+    // Compounds
+    // *********************
+
+    /**
+     * Returns the full writer for compounds.
+     * 
+     * @deprecated Use {@link IHDF5Writer#compound()} instead.
+     */
+    @Deprecated
+    public IHDF5CompoundWriter compounds();
+
 }

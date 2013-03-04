@@ -3313,4 +3313,30 @@ public interface IHDF5LegacyReader extends IHDF5EnumBasicReader, IHDF5CompoundBa
     @Deprecated
     public Iterable<HDF5MDDataBlock<MDArray<String>>> getObjectReferenceMDArrayNaturalBlocks(
             final String dataSetPath, final boolean resolveName);
+
+    /**
+     * Returns the full reader for compounds.
+     * 
+     * @deprecated Use {@link IHDF5Reader#compound()} instead.
+     */
+
+    // *********************
+    // Compounds
+    // *********************
+
+    @Deprecated
+    public IHDF5CompoundReader compounds();
+
+    // *********************
+    // Enums
+    // *********************
+
+    /**
+     * Returns the full reader for enums.
+     * 
+     * @deprecated Use {@link IHDF5Reader#enumeration()} instead.
+     */
+    @Deprecated
+    public IHDF5EnumReader enums();
+
 }
