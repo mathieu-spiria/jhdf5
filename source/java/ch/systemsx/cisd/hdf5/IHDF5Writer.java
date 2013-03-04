@@ -324,6 +324,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Legacy
     /**
      * Returns the full writer for opaque values.
      */
+    @Override
     public IHDF5OpaqueWriter opaque();
 
     // /////////////////////

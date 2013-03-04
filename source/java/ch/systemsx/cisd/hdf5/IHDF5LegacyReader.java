@@ -51,7 +51,7 @@ public interface IHDF5LegacyReader extends IHDF5EnumBasicReader, IHDF5CompoundBa
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The tag of the opaque data type, or <code>null</code>.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#opaque()} instead.
      */
     @Deprecated
     public String tryGetOpaqueTag(final String objectPath);
@@ -62,7 +62,7 @@ public interface IHDF5LegacyReader extends IHDF5EnumBasicReader, IHDF5CompoundBa
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The opaque data type, or <code>null</code>.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#opaque()} instead.
      */
     @Deprecated
     public HDF5OpaqueType tryGetOpaqueType(final String objectPath);
@@ -71,7 +71,7 @@ public interface IHDF5LegacyReader extends IHDF5EnumBasicReader, IHDF5CompoundBa
      * Gets the (unchanged) byte array values of an attribute <var>attributeName</var> of object
      * </var>objectPath</var>.
      * 
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#opaque()} instead.
      */
     @Deprecated
     public byte[] getAttributeAsByteArray(final String objectPath, final String attributeName);
@@ -81,7 +81,7 @@ public interface IHDF5LegacyReader extends IHDF5EnumBasicReader, IHDF5CompoundBa
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#opaque()} instead.
      */
     @Deprecated
     public byte[] readAsByteArray(final String objectPath);
@@ -97,7 +97,7 @@ public interface IHDF5LegacyReader extends IHDF5EnumBasicReader, IHDF5CompoundBa
      *            <var>blockSize</var>).
      * @return The data block read from the data set.
      * @throws HDF5JavaException If the data set is not of rank 1 or is a String.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#opaque()} instead.
      */
     @Deprecated
     public byte[] readAsByteArrayBlock(final String objectPath, final int blockSize,
@@ -113,7 +113,7 @@ public interface IHDF5LegacyReader extends IHDF5EnumBasicReader, IHDF5CompoundBa
      * @param offset The offset of the block to read as number of elements (starting with 0).
      * @return The data block read from the data set.
      * @throws HDF5JavaException If the data set is not of rank 1.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#opaque()} instead.
      */
     @Deprecated
     public byte[] readAsByteArrayBlockWithOffset(final String objectPath, final int blockSize,
@@ -133,7 +133,7 @@ public interface IHDF5LegacyReader extends IHDF5EnumBasicReader, IHDF5CompoundBa
      *            (zero-based).
      * @return The effective block size.
      * @throws HDF5JavaException If the data set is not of rank 1.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#opaque()} instead.
      */
     @Deprecated
     public int readAsByteArrayToBlockWithOffset(final String objectPath, final byte[] buffer,
@@ -146,7 +146,7 @@ public interface IHDF5LegacyReader extends IHDF5EnumBasicReader, IHDF5CompoundBa
      * 
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
-     * @deprecated Use the corresponding method in {@link IHDF5Reader#generic()} instead.
+     * @deprecated Use the corresponding method in {@link IHDF5Reader#opaque()} instead.
      */
     @Deprecated
     public Iterable<HDF5DataBlock<byte[]>> getAsByteArrayNaturalBlocks(final String dataSetPath)

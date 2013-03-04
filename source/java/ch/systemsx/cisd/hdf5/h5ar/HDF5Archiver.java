@@ -553,7 +553,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         }
         try
         {
-            for (HDF5DataBlock<byte[]> block : hdf5Reader.generic().getArrayNaturalBlocks(path))
+            for (HDF5DataBlock<byte[]> block : hdf5Reader.opaque().getArrayNaturalBlocks(path))
             {
                 out.write(block.getData());
             }

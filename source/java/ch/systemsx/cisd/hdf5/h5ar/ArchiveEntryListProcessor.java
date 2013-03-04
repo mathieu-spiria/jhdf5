@@ -90,7 +90,7 @@ class ArchiveEntryListProcessor implements IArchiveEntryProcessor
         while (offset < size)
         {
             final int n =
-                    hdf5Reader.generic().readArrayToBlockWithOffset(objectPath, buffer, buffer.length,
+                    hdf5Reader.opaque().readArrayToBlockWithOffset(objectPath, buffer, buffer.length,
                             offset, 0);
             offset += n;
             crc32Digest.update(buffer, 0, n);

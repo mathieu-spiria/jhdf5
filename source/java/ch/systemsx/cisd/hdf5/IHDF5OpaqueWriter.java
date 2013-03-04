@@ -21,12 +21,12 @@ package ch.systemsx.cisd.hdf5;
  * represented as byte arrays, however, contrary to the methods in {@link IHDF5ByteWriter} there is
  * no notion on the interpretation of these values. The methods in this writer can be used to store
  * data sets which are a "black box". Note that there are no dedicated methods for reading opaque
- * types. Use the methods in {@link IHDF5GenericReader} instead which allow you to read any data set
+ * types. Use the methods in {@link IHDF5OpaqueReader} instead which allow you to read any data set
  * as a byte array.
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5OpaqueWriter
+public interface IHDF5OpaqueWriter extends IHDF5OpaqueReader
 {
 
     /**
@@ -34,7 +34,7 @@ public interface IHDF5OpaqueWriter
      * array (of rank 1).
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link IHDF5GenericReader#readArray(String)} instead.
+     * {@link IHDF5OpaqueReader#readArray(String)} instead.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param tag The tag of the data set.
@@ -47,7 +47,7 @@ public interface IHDF5OpaqueWriter
      * array (of rank 1).
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link IHDF5GenericReader#readArray(String)} instead.
+     * {@link IHDF5OpaqueReader#readArray(String)} instead.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param tag The tag of the data set.
@@ -131,7 +131,7 @@ public interface IHDF5OpaqueWriter
      * that was used to created the data set.
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link IHDF5GenericReader#readArrayBlock(String, int, long)} instead.
+     * {@link IHDF5OpaqueReader#readArrayBlock(String, int, long)} instead.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -157,7 +157,7 @@ public interface IHDF5OpaqueWriter
      * that was used to created the data set.
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link IHDF5GenericReader#readArrayBlockWithOffset(String, int, long)} instead.
+     * {@link IHDF5OpaqueReader#readArrayBlockWithOffset(String, int, long)} instead.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be

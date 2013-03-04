@@ -19,18 +19,19 @@ package ch.systemsx.cisd.hdf5;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
- * An interface that provides methods for reading any one-dimensional data sets as byte arrays. This
- * is particularly useful for opaque data types, which are "black boxes" to the HDF5 library.
+ * An interface that provides methods for reading any data sets as byte arrays (as 'opaque data',
+ * just like ordinary file systems treat files). This is particularly useful for opaque data types,
+ * which are "black boxes" to the HDF5 library.
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5GenericReader
+public interface IHDF5OpaqueReader
 {
 
-    ///////////////////////////////
+    // /////////////////////////////
     // Opaque tags and types
-    ///////////////////////////////
-    
+    // /////////////////////////////
+
     /**
      * Returns the tag of the opaque data type associated with <var>objectPath</var>, or
      * <code>null</code>, if <var>objectPath</var> is not of an opaque data type (i.e. if
@@ -51,18 +52,21 @@ public interface IHDF5GenericReader
      */
     public HDF5OpaqueType tryGetOpaqueType(final String objectPath);
 
-    ///////////////////////////////
+    // /////////////////////////////
     // Reading as byte array
-    ///////////////////////////////
+    // /////////////////////////////
 
     /**
-     * Gets the (unchanged) byte array values of an attribute <var>attributeName</var> of object
-     * </var>objectPath</var>.
+     * Gets the byte array values of an attribute <var>attributeName</var> of object
+     * </var>objectPath</var>. The bytes read will be in the native byte-order of the machine but
+     * will otherwise be unchanged.
      */
     public byte[] getArrayAttr(final String objectPath, final String attributeName);
 
     /**
-     * Reads the data set <var>objectPath</var> as byte array (of rank 1).
+     * Reads the data set <var>objectPath</var> as byte array. The bytes read will be in the native
+     * byte-order of the machine and will be ordered 'row-first' in the case of multi-dimensional
+     * data sets, but will otherwise be unchanged.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
@@ -70,7 +74,8 @@ public interface IHDF5GenericReader
     public byte[] readArray(final String objectPath);
 
     /**
-     * Reads a block from data set <var>objectPath</var> as byte array (of rank 1).
+     * Reads a block from data set <var>objectPath</var> as byte array. The bytes read will be in
+     * the native byte-order of the machine, but will otherwise be unchanged.
      * <em>Must not be called for data sets of rank other than 1 and must not be called on Strings!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -85,7 +90,8 @@ public interface IHDF5GenericReader
             final long blockNumber) throws HDF5JavaException;
 
     /**
-     * Reads a block from data set <var>objectPath</var> as byte array (of rank 1).
+     * Reads a block from data set <var>objectPath</var> as byte array. The bytes read will be in
+     * the native byte-order of the machine, but will otherwise be unchanged.
      * <em>Must not be called for data sets of rank other than 1 and must not be called on Strings!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -99,8 +105,8 @@ public interface IHDF5GenericReader
             final long offset) throws HDF5JavaException;
 
     /**
-     * Reads a block from data set <var>objectPath</var> as byte array (of rank 1) into
-     * <var>buffer</var>.
+     * Reads a block from data set <var>objectPath</var> as byte array into <var>buffer</var>. The
+     * bytes read will be in the native byte-order of the machine, but will otherwise be unchanged.
      * <em>Must not be called for data sets of rank other than 1 and must not be called on Strings!</em>
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -118,7 +124,8 @@ public interface IHDF5GenericReader
             throws HDF5JavaException;
 
     /**
-     * Provides all natural blocks of this one-dimensional data set to iterate over.
+     * Provides all natural blocks of this one-dimensional data set to iterate over. The bytes read
+     * will be in the native byte-order of the machine, but will otherwise be unchanged.
      * <em>Must not be called for data sets of rank other than 1 and must not be called on Strings!</em>
      * 
      * @see HDF5DataBlock

@@ -28,16 +28,16 @@ import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
- * Implementation of {@link IHDF5GenericReader}
+ * Implementation of {@link IHDF5OpaqueReader}
  * 
  * @author Bernd Rinn
  */
-public class HDF5GenericReader implements IHDF5GenericReader
+public class HDF5OpaqueReader implements IHDF5OpaqueReader
 {
 
     private final HDF5BaseReader baseReader;
 
-    HDF5GenericReader(HDF5BaseReader baseReader)
+    HDF5OpaqueReader(HDF5BaseReader baseReader)
     {
         assert baseReader != null;
 

@@ -130,12 +130,13 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
      * Creates and returns an internal (house-keeping) version of <var>objectPath</var>.
      */
     public String toHouseKeepingPath(final String objectPath);
-    
+
     /**
-     * Returns <code>true</code> if <var>objectPath</var> denotes an internal (house-keeping) object.
+     * Returns <code>true</code> if <var>objectPath</var> denotes an internal (house-keeping)
+     * object.
      */
     public boolean isHouseKeepingObject(final String objectPath);
-    
+
     /**
      * Returns <code>true</code> if the <var>objectPath</var> exists and represents a group and
      * <code>false</code> otherwise. Note that if <var>followLink</var> is <code>false</code> this
@@ -418,9 +419,10 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
     // /////////////////////
 
     /**
-     * Returns the full generic reader for reading objects as byte arrays and obtaining opaque types.
+     * Returns the full reader for reading data sets and attributes as byte arrays ('opaque') and
+     * obtaining opaque types.
      */
-    public IHDF5GenericReader generic();
+    public IHDF5OpaqueReader opaque();
 
     // /////////////////////
     // Boolean
@@ -491,6 +493,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
 
     /**
      * Returns the full reader for enums.
+     * 
      * @deprecated Use {@link #enumeration()} instead.
      */
     @Deprecated
@@ -507,6 +510,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
 
     /**
      * Returns the full reader for compounds.
+     * 
      * @deprecated Use {@link #compound()} instead.
      */
     @Deprecated
@@ -534,7 +538,7 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
      * Returns the full reader for date and times.
      */
     public IHDF5DateTimeReader time();
-    
+
     /**
      * Returns the full reader for time durations.
      */

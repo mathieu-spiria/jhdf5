@@ -30,12 +30,13 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-public class HDF5OpaqueWriter implements IHDF5OpaqueWriter
+public class HDF5OpaqueWriter extends HDF5OpaqueReader implements IHDF5OpaqueWriter
 {
     private final HDF5BaseWriter baseWriter;
 
     HDF5OpaqueWriter(HDF5BaseWriter baseWriter)
     {
+        super(baseWriter);
         assert baseWriter != null;
 
         this.baseWriter = baseWriter;

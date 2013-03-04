@@ -88,7 +88,7 @@ class HDF5Reader implements IHDF5Reader
 
     private final IHDF5ReferenceReader referenceReader;
 
-    private final IHDF5GenericReader genericReader;
+    private final IHDF5OpaqueReader genericReader;
 
     HDF5Reader(HDF5BaseReader baseReader)
     {
@@ -108,7 +108,7 @@ class HDF5Reader implements IHDF5Reader
         this.dateTimeReader = new HDF5DateTimeReader(baseReader, (HDF5LongReader) longReader);
         this.timeDurationReader = new HDF5TimeDurationReader(baseReader, (HDF5LongReader) longReader);
         this.referenceReader = new HDF5ReferenceReader(baseReader);
-        this.genericReader = new HDF5GenericReader(baseReader);
+        this.genericReader = new HDF5OpaqueReader(baseReader);
     }
 
     void checkOpen()
@@ -679,7 +679,7 @@ class HDF5Reader implements IHDF5Reader
     //
 
     @Override
-    public IHDF5GenericReader generic()
+    public IHDF5OpaqueReader opaque()
     {
         return genericReader;
     }

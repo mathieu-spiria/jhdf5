@@ -65,6 +65,7 @@ import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
+import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
@@ -1293,20 +1294,26 @@ public class HDF5RoundtripTest
             { 2.8, 8.2, -3.1, 0.0, 10000.0 };
         efWriter.writeDoubleArrayBigEndian("f", floatDataWritten,
                 HDF5FloatStorageFeatures.FLOAT_NO_COMPRESSION_KEEP);
+        final double[] floatDataWritten2 = new double[]
+                { 2.8, 8.2, -3.1, 0.0 };
+        writer.float64().writeMDArray("f2", new MDDoubleArray(floatDataWritten2, new int[] { 2, 2 }));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertEquals("FLOAT(8):{5}", reader.getDataSetInformation("f").toString());
         final byte[] byteDataRead = reader.readAsByteArray("f");
         final double[] floatDataRead = NativeData.byteToDouble(byteDataRead, ByteOrder.NATIVE);
         assertTrue(Arrays.equals(floatDataWritten, floatDataRead));
-        byte[] byteDataBlockRead = reader.generic().readArrayBlock("f", 2, 1);
+        final byte[] byteDataRead2 = reader.readAsByteArray("f2");
+        final double[] floatDataRead2 = NativeData.byteToDouble(byteDataRead2, ByteOrder.NATIVE);
+        assertTrue(Arrays.equals(floatDataWritten2, floatDataRead2));
+        byte[] byteDataBlockRead = reader.opaque().readArrayBlock("f", 2, 1);
         assertEquals(16, byteDataBlockRead.length);
         assertEquals(floatDataWritten[2],
                 NativeData.byteToDouble(byteDataBlockRead, ByteOrder.NATIVE, 0, 1)[0]);
         assertEquals(floatDataWritten[3],
                 NativeData.byteToDouble(byteDataBlockRead, ByteOrder.NATIVE, 8, 1)[0]);
 
-        byteDataBlockRead = reader.generic().readArrayBlockWithOffset("f", 2, 1);
+        byteDataBlockRead = reader.opaque().readArrayBlockWithOffset("f", 2, 1);
         assertEquals(16, byteDataBlockRead.length);
         assertEquals(floatDataWritten[1],
                 NativeData.byteToDouble(byteDataBlockRead, ByteOrder.NATIVE, 0, 1)[0]);
@@ -1317,7 +1324,7 @@ public class HDF5RoundtripTest
                 { 2.8, 8.2, -3.1 },
                 { 0.0, 10000.0 } };
         int i = 0;
-        for (HDF5DataBlock<byte[]> block : reader.generic().getArrayNaturalBlocks("f"))
+        for (HDF5DataBlock<byte[]> block : reader.opaque().getArrayNaturalBlocks("f"))
         {
             assertEquals(i, block.getIndex());
             assertEquals(i * 3, block.getOffset());
@@ -1626,7 +1633,7 @@ public class HDF5RoundtripTest
         assertEquals(4f, NativeData.byteToFloat(arr, ByteOrder.NATIVE, 12, 1)[0]);
         try
         {
-            reader.generic().readArrayBlock("fm", 2, 0);
+            reader.opaque().readArrayBlock("fm", 2, 0);
             fail("readAsByteArrayBlock() is expected to fail on datasets of rank > 1");
         } catch (HDF5JavaException ex)
         {
@@ -2780,7 +2787,7 @@ public class HDF5RoundtripTest
         w.string().setAttr("/", "a", "abc");
         w.close();
         final IHDF5Reader r = HDF5Factory.openForReading(file);
-        final byte[] b = r.generic().getArrayAttr("/", "a");
+        final byte[] b = r.opaque().getArrayAttr("/", "a");
         assertEquals("abc", new String(b));
         r.close();
     }
@@ -6117,10 +6124,10 @@ public class HDF5RoundtripTest
         assertEquals(HDF5DataClass.OPAQUE, info.getTypeInformation().getDataClass());
         assertEquals(opaqueTag, info.getTypeInformation().tryGetOpaqueTag());
         assertChunkSizes(info, byteArrayWritten.length);
-        assertEquals(opaqueTag, reader.generic().tryGetOpaqueTag(opaqueDataSetName));
-        assertEquals(opaqueTag, reader.generic().tryGetOpaqueType(opaqueDataSetName).getTag());
-        assertNull(reader.generic().tryGetOpaqueTag(byteArrayDataSetName));
-        assertNull(reader.generic().tryGetOpaqueType(byteArrayDataSetName));
+        assertEquals(opaqueTag, reader.opaque().tryGetOpaqueTag(opaqueDataSetName));
+        assertEquals(opaqueTag, reader.opaque().tryGetOpaqueType(opaqueDataSetName).getTag());
+        assertNull(reader.opaque().tryGetOpaqueTag(byteArrayDataSetName));
+        assertNull(reader.opaque().tryGetOpaqueType(byteArrayDataSetName));
         final byte[] byteArrayRead = reader.readAsByteArray(byteArrayDataSetName);
         assertTrue(Arrays.equals(byteArrayWritten, byteArrayRead));
         final byte[] byteArrayReadOpaque = reader.readAsByteArray(opaqueDataSetName);

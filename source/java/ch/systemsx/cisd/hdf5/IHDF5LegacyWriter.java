@@ -45,7 +45,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * array (of rank 1).
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link IHDF5GenericReader#readArray(String)} instead.
+     * {@link IHDF5OpaqueReader#readArray(String)} instead.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param tag The tag of the data set.
@@ -60,7 +60,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * array (of rank 1).
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link IHDF5GenericReader#readArray(String)} instead.
+     * {@link IHDF5OpaqueReader#readArray(String)} instead.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param tag The tag of the data set.
@@ -154,7 +154,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * that was used to created the data set.
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link IHDF5GenericReader#readArrayBlock(String, int, long)} instead.
+     * {@link IHDF5OpaqueReader#readArrayBlock(String, int, long)} instead.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -182,7 +182,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * that was used to created the data set.
      * <p>
      * Note that there is no dedicated method for reading opaque types. Use the method
-     * {@link IHDF5GenericReader#readArrayBlockWithOffset(String, int, long)} instead.
+     * {@link IHDF5OpaqueReader#readArrayBlockWithOffset(String, int, long)} instead.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
