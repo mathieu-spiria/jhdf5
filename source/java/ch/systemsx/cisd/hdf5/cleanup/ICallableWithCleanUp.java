@@ -20,6 +20,8 @@ package ch.systemsx.cisd.hdf5.cleanup;
  * A role that calls a method which requires one or more clean-up steps that need to be run reliably
  * at the end of the method regardless of whether the method is finished normally or whether it
  * exits with an exception.
+ * <p>
+ * <em>This is an internal interface that is not meant to be used by users of the library.</em>
  * 
  * @author Bernd Rinn
  */

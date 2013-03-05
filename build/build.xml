@@ -460,6 +460,7 @@
 				<include name="ch/systemsx/cisd/hdf5/**/*.java" />
 				<include name="ncsa/hdf/hdf5lib/exceptions/**/*.java" />
 				<exclude name="ch/systemsx/cisd/hdf5/hdf5lib/**/*.java" />
+				<exclude name="ch/systemsx/cisd/hdf5/cleanup/**/*.java" />
 				<exclude name="ch/systemsx/cisd/hdf5/MatrixUtils.java" />
 				<exclude name="ch/systemsx/cisd/hdf5/StringUtils.java" />
 				<exclude name="ch/systemsx/cisd/hdf5/ReflectionUtils.java" />

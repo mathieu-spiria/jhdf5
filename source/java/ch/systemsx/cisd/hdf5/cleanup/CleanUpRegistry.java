@@ -21,6 +21,8 @@ import java.util.List;
 
 /**
  * A class that allows registering items for clean up and that allows to perform the clean up later.
+ * <p>
+ * <em>This is an internal implementation class that is not meant to be used by users of the library.</em>
  * 
  * @author Bernd Rinn
  */

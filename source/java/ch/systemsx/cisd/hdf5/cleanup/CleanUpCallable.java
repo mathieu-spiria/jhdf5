@@ -20,6 +20,8 @@ package ch.systemsx.cisd.hdf5.cleanup;
  * A class that implements the logic of cleaning up a resource even in case of an exception but
  * re-throws an exception of the clean up procedure only when the main procedure didn't throw one.
  * <code>CleanUpRunner</code>s can be stacked.
+ * <p>
+ * <em>This is an internal implementation class that is not meant to be used by users of the library.</em>
  * 
  * @author Bernd Rinn
  */

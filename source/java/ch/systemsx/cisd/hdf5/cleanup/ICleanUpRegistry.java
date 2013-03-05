@@ -19,6 +19,8 @@ package ch.systemsx.cisd.hdf5.cleanup;
 /**
  * A role that allows to register a clean-up method that is called regardless of whether an
  * exception occurs or not.
+ * <p>
+ * <em>This is an internal interface that is not meant to be used by users of the library.</em>
  * 
  * @author Bernd Rinn
  */
