@@ -74,11 +74,7 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
      * @param strategy The archiving strategy to use. This strategy object determines which files to
      *            include and to exclude and which files to compress.
      * @param keepNameFromPath If <code>true</code>, the name part of <var>path</var> is kept in the
-     *            archive. Otherwise, <var>path</var> will represent / in the archive. In other
-     *            words, <code>keepNameFromPath=true</code> is a shortcut for
-     *            <code>archiveFromFilesystem(path.getParentFile(), path, strategy, pathVisitorOrNull)</code>
-     *            , while <code>keepNameFromPath=false</code> is a shortcut for
-     *            <code>archiveFromFilesystem(path, path, strategy, pathVisitorOrNull)</code>.
+     *            archive. Otherwise, <var>path</var> will represent "/" in the archive.
      * @param visitor The {@link IArchiveEntryVisitor} to use. Can be <code>null</code>.
      */
     public IHDF5Archiver archiveFromFilesystem(File path, ArchivingStrategy strategy,
