@@ -136,7 +136,7 @@ public class FullVoltageMeasurementCompoundExample
     void writeMeasurement(String datasetName, Date measurementDate, float measuredTemperature,
             double measuredVoltage)
     {
-        hdf5Writer.writeCompound(datasetName, new Measurement(measurementDate, measuredTemperature,
+        hdf5Writer.compound().write(datasetName, new Measurement(measurementDate, measuredTemperature,
                 measuredVoltage));
     }
 
@@ -155,7 +155,7 @@ public class FullVoltageMeasurementCompoundExample
         map.put("date", measurementDate);
         map.put("temperatureInDegreeCelsius", measuredTemperature);
         map.put("voltageInMilliVolts", measuredVoltage);
-        hdf5Writer.writeCompound(datasetName, map);
+        hdf5Writer.compound().write(datasetName, map);
     }
 
     /**
@@ -206,7 +206,7 @@ public class FullVoltageMeasurementCompoundExample
      */
     Measurement readMeasurement(String datasetName)
     {
-        return hdf5Reader.readCompound(datasetName, Measurement.class);
+        return hdf5Reader.compound().read(datasetName, Measurement.class);
     }
 
     /**
@@ -216,7 +216,7 @@ public class FullVoltageMeasurementCompoundExample
      */
     HDF5CompoundDataMap readMeasurementToMap(String datasetName)
     {
-        return hdf5Reader.readCompound(datasetName, HDF5CompoundDataMap.class);
+        return hdf5Reader.compound().read(datasetName, HDF5CompoundDataMap.class);
     }
 
     /**
@@ -226,7 +226,7 @@ public class FullVoltageMeasurementCompoundExample
      */
     HDF5CompoundDataList readMeasurementToList(String datasetName)
     {
-        return hdf5Reader.readCompound(datasetName, HDF5CompoundDataList.class);
+        return hdf5Reader.compound().read(datasetName, HDF5CompoundDataList.class);
     }
 
     /**
@@ -236,7 +236,7 @@ public class FullVoltageMeasurementCompoundExample
      */
     Object[] readMeasurementToArray(String datasetName)
     {
-        return hdf5Reader.readCompound(datasetName, Object[].class);
+        return hdf5Reader.compound().read(datasetName, Object[].class);
     }
 
     public static void main(String[] args)

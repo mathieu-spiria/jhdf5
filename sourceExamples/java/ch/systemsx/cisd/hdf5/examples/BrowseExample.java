@@ -39,7 +39,7 @@ public class BrowseExample
             switch (info.getType())
             {
                 case DATASET:
-                    HDF5DataSetInformation dsInfo = reader.getDataSetInformation(info.getPath());
+                    HDF5DataSetInformation dsInfo = reader.object().getDataSetInformation(info.getPath());
                     System.out.println(prefix + "     " + dsInfo);
                     break;
                 case SOFT_LINK:
