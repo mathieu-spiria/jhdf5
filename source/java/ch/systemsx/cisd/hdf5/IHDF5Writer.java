@@ -22,12 +22,12 @@ package ch.systemsx.cisd.hdf5;
  * The interface focuses on ease of use instead of completeness. As a consequence not all features
  * of HDF5 are supported by this class, however it covers a large subset.
  * <p>
- * The API supports two approaches:
+ * The functionality is being made available in two ways:
  * <ol>
- * <li>{@link IHDF5SimpleWriter} which contains the most important methods in one interface. If you
- * are new to the library, this is usually a good starting point, see the simple example below.</li>
- * <li>Using the hierarchical ("quasi-fluent") API. It is designed along the types of data sets that
- * JHDF5 can handle.
+ * <li>{@link IHDF5SimpleWriter} contains the most important methods in one interface. If you are
+ * new to the library, this is a good starting point, see the example code below.</li>
+ * <li>The hierarchical ("quasi-fluent") API provides the full functionality. It is designed along
+ * the data types supported by JHDF5.
  * <ul>
  * <li>{@link #file()}: File-level information and operations, has e.g. the
  * {@link IHDF5FileLevelReadWriteHandler#close()} and {@link IHDF5FileLevelReadWriteHandler#flush()}

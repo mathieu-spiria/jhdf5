@@ -20,15 +20,15 @@ package ch.systemsx.cisd.hdf5;
  * An interface for reading HDF5 files (HDF5 1.8.x and older).
  * <p>
  * The interface focuses on ease of use instead of completeness. As a consequence not all features
- * of HDF5 are supported by this class, however it covers a large subset. (All information written
- * by {@link IHDF5Writer} can be read by this class.)
+ * of HDF5 are supported by this class, however it covers a large subset. In particular all
+ * information written by {@link IHDF5Writer} can be read by this class.
  * <p>
- * The API supports two approaches:
+ * The functionality is being made available in two ways:
  * <ol>
- * <li>{@link IHDF5SimpleReader} which contains the most important methods in one interface. If you
- * are new to the library, this is usually a good starting point, see the simple example below.</li>
- * <li>Using the hierarchical ("quasi-fluent") API. It is designed along the types of data sets that
- * JHDF5 can handle.
+ * <li>{@link IHDF5SimpleReader} contains the most important methods in one interface. If you are
+ * new to the library, this is a good starting point, see the example code below.</li>
+ * <li>The hierarchical ("quasi-fluent") API provides the full functionality. It is designed along
+ * the data types supported by JHDF5.
  * <ul>
  * <li>{@link #file()}: File-level information and operations, has e.g. the
  * {@link IHDF5FileLevelReadOnlyHandler#close()} method.</li>
