@@ -176,7 +176,7 @@ public final class HDF5CompoundMemberInformation implements
         {
             typeInfo =
                     new HDF5DataTypeInformation(HDF5DataClass.STRING, houseKeepingNameSuffix,
-                            member.getMemberTypeLength() + 1);
+                            member.getMemberTypeLength());
         } else if (fieldTypeOrNull == HDF5EnumerationValue.class)
         {
             final DataTypeInfoOptions options =

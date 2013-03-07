@@ -149,6 +149,11 @@ abstract class HDF5MemberByteifyer
     {
         return false;
     }
+    
+    public boolean mayBeCut()
+    {
+        return false;
+    }
 
     @Override
     public String toString()

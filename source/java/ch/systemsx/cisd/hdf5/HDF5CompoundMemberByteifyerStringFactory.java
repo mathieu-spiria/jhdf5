@@ -38,6 +38,28 @@ import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
 class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberBytifyerFactory
 {
 
+    private static abstract class HDF5StringMemberByteifyer extends HDF5MemberByteifyer
+    {
+
+        HDF5StringMemberByteifyer(Field fieldOrNull, String memberName, int size, int sizeInBytes,
+                int offset, CharacterEncoding encoding)
+        {
+            super(fieldOrNull, memberName, size, sizeInBytes, offset, encoding);
+        }
+        
+        @Override
+        public boolean mayBeCut()
+        {
+            return true;
+        }
+
+        @Override
+        protected int getMemberNativeTypeId()
+        {
+            return -1;
+        }
+    }
+    
     @Override
     public boolean canHandle(Class<?> clazz, HDF5CompoundMemberInformation memberInfoOrNull)
     {
@@ -69,11 +91,10 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
         // May be -1 if not known
         final int memberTypeId = member.getStorageDataTypeId();
         final int maxLengthChars = member.getMemberTypeLength();
-        final CharacterEncoding encoding = fileInfoProvider.getCharacterEncoding(memberTypeId); 
+        final CharacterEncoding encoding = fileInfoProvider.getCharacterEncoding(memberTypeId);
         final int maxLengthBytes =
                 (compoundMemberInfoOrNull != null) ? compoundMemberInfoOrNull.getType().getSize()
-                        : encoding.getMaxBytesPerChar()
-                                * ((memberTypeId < 0) ? maxLengthChars + 1 : maxLengthChars);
+                        : encoding.getMaxBytesPerChar() * maxLengthChars;
         final int stringDataTypeId =
                 (memberTypeId < 0) ? fileInfoProvider.getStringDataTypeId(maxLengthBytes)
                         : memberTypeId;
@@ -104,19 +125,13 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
         ReflectionUtils.ensureAccessible(field);
         if (isCharArray)
         {
-            return new HDF5MemberByteifyer(field, memberName, maxLength, maxLengthInBytes, offset,
+            return new HDF5StringMemberByteifyer(field, memberName, maxLength, maxLengthInBytes, offset,
                     encoding)
                 {
                     @Override
                     protected int getMemberStorageTypeId()
                     {
                         return stringDataTypeId;
-                    }
-
-                    @Override
-                    protected int getMemberNativeTypeId()
-                    {
-                        return -1;
                     }
 
                     @Override
@@ -140,19 +155,13 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                 };
         } else
         {
-            return new HDF5MemberByteifyer(field, memberName, maxLength, maxLengthInBytes, offset,
+            return new HDF5StringMemberByteifyer(field, memberName, maxLength, maxLengthInBytes, offset,
                     encoding)
                 {
                     @Override
                     protected int getMemberStorageTypeId()
                     {
                         return stringDataTypeId;
-                    }
-
-                    @Override
-                    protected int getMemberNativeTypeId()
-                    {
-                        return -1;
                     }
 
                     @Override
@@ -187,19 +196,13 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
             final int stringDataTypeId, final int maxLength, final int maxLengthInBytes,
             final CharacterEncoding encoding, final boolean isCharArray)
     {
-        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes, offset,
+        return new HDF5StringMemberByteifyer(null, memberName, maxLength, maxLengthInBytes, offset,
                 encoding)
             {
                 @Override
                 protected int getMemberStorageTypeId()
                 {
                     return stringDataTypeId;
-                }
-
-                @Override
-                protected int getMemberNativeTypeId()
-                {
-                    return -1;
                 }
 
                 @Override
@@ -241,19 +244,13 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
             final int offset, final int stringDataTypeId, final int maxLength,
             final int maxLengthInBytes, final CharacterEncoding encoding, final boolean isCharArray)
     {
-        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes, offset,
+        return new HDF5StringMemberByteifyer(null, memberName, maxLength, maxLengthInBytes, offset,
                 encoding)
             {
                 @Override
                 protected int getMemberStorageTypeId()
                 {
                     return stringDataTypeId;
-                }
-
-                @Override
-                protected int getMemberNativeTypeId()
-                {
-                    return -1;
                 }
 
                 @Override
@@ -295,19 +292,13 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
             final int offset, final int stringDataTypeId, final int maxLength,
             final int maxLengthInBytes, final CharacterEncoding encoding, final boolean isCharArray)
     {
-        return new HDF5MemberByteifyer(null, memberName, maxLength, maxLengthInBytes, offset,
+        return new HDF5StringMemberByteifyer(null, memberName, maxLength, maxLengthInBytes, offset,
                 encoding)
             {
                 @Override
                 protected int getMemberStorageTypeId()
                 {
                     return stringDataTypeId;
-                }
-
-                @Override
-                protected int getMemberNativeTypeId()
-                {
-                    return -1;
                 }
 
                 @Override

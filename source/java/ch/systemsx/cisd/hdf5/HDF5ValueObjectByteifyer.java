@@ -72,7 +72,7 @@ class HDF5ValueObjectByteifyer<T>
         public int getArrayTypeId(int baseTypeId, int length);
 
         public int getArrayTypeId(int baseTypeId, int[] dimensions);
-        
+
         public HDF5EnumerationType getEnumType(String[] options);
 
         public CharacterEncoding getCharacterEncoding(int dataTypeId);
@@ -130,14 +130,15 @@ class HDF5ValueObjectByteifyer<T>
                 try
                 {
                     final byte[] b = byteifyer.byteify(compoundDataTypeId, obj);
-                    if (b.length > byteifyer.getSizeInBytes())
+                    if (b.length > byteifyer.getSizeInBytes() && byteifyer.mayBeCut() == false)
                     {
                         throw new HDF5JavaException("Compound " + byteifyer.describe()
                                 + " of array element " + counter + " must not exceed "
                                 + byteifyer.getSizeInBytes() + " bytes, but is of size " + b.length
                                 + " bytes.");
                     }
-                    System.arraycopy(b, 0, barray, offset + byteifyer.getOffset(), b.length);
+                    System.arraycopy(b, 0, barray, offset + byteifyer.getOffset(),
+                            Math.min(b.length, byteifyer.getSizeInBytes()));
                 } catch (IllegalAccessException ex)
                 {
                     throw new HDF5JavaException("Error accessing " + byteifyer.describe());
@@ -160,13 +161,13 @@ class HDF5ValueObjectByteifyer<T>
             try
             {
                 final byte[] b = byteifyer.byteify(compoundDataTypeId, obj);
-                if (b.length > byteifyer.getSizeInBytes())
+                if (b.length > byteifyer.getSizeInBytes() && byteifyer.mayBeCut() == false)
                 {
                     throw new HDF5JavaException("Compound " + byteifyer.describe()
                             + " must not exceed " + byteifyer.getSizeInBytes()
                             + " bytes, but is of size " + b.length + " bytes.");
                 }
-                System.arraycopy(b, 0, barray, byteifyer.getOffset(), b.length);
+                System.arraycopy(b, 0, barray, byteifyer.getOffset(), Math.min(b.length, byteifyer.getSizeInBytes()));
             } catch (IllegalAccessException ex)
             {
                 throw new HDF5JavaException("Error accessing " + byteifyer.describe());
