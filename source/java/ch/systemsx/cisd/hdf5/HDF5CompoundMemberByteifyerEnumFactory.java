@@ -77,7 +77,7 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                         : compoundMemberInfoEnumTypeOrNull;
         if (enumTypeOrNull == null)
         {
-            throw new HDF5JavaException("Enumeration type for member " + memberName + " not known for member byteifyer.");
+            throw new HDF5JavaException("Enumeration type for member '" + memberName + "' not known for member byteifyer.");
         }
         switch (accessType)
         {
