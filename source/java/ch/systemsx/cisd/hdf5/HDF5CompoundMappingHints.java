@@ -16,6 +16,9 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * A class to store general hints that can influence the compound member mapping.
  * 
@@ -29,6 +32,8 @@ public class HDF5CompoundMappingHints
     }
 
     private EnumReturnType enumReturnType = EnumReturnType.HDF5ENUMERATIONVALUE;
+
+    private Map<String, HDF5EnumerationType> enumerationTypeMap;
 
     /**
      * Returns the desired return type for enums.
@@ -47,7 +52,7 @@ public class HDF5CompoundMappingHints
     }
 
     /**
-     * Sets that enums should be returned as a string.
+     * Sets the return type for enums .
      * 
      * @return This object (for chaining)
      */
@@ -56,6 +61,34 @@ public class HDF5CompoundMappingHints
     {
         this.enumReturnType = enumReturnType;
         return this;
+    }
+
+    /**
+     * Ads an enum type mapping to this hints object.
+     * 
+     * @return The hint object.
+     */
+    public HDF5CompoundMappingHints enumTypeMapping(String memberName, HDF5EnumerationType enumType)
+    {
+        if (enumerationTypeMap == null)
+        {
+            enumerationTypeMap = new HashMap<String, HDF5EnumerationType>();
+        }
+        enumerationTypeMap.put(memberName, enumType);
+        return this;
+    }
+
+    /**
+     * Returns the {@link HDF5EnumerationType} for the given <var>memberName</var>, or
+     * <code>null</code>, if no mapping is available for this member.
+     */
+    public HDF5EnumerationType tryGetEnumType(String memberName)
+    {
+        if (enumerationTypeMap == null)
+        {
+            return null;
+        }
+        return enumerationTypeMap.get(memberName);
     }
 
     /**

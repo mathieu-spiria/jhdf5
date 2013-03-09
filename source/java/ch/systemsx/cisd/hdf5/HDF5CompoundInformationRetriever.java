@@ -415,15 +415,31 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         for (HDF5CompoundMemberMapping m : mapping)
         {
             final Class<?> memberClass = m.tryGetMemberClass();
-            if (memberClass != null && m.tryGetMemberClass().isEnum())
+            if (memberClass != null)
             {
-                @SuppressWarnings("unchecked")
-                final Class<? extends Enum<?>> enumClass = (Class<? extends Enum<?>>) memberClass;
-                final String typeName =
-                        (m.getEnumTypeName() == null) ? memberClass.getSimpleName() : m
-                                .getEnumTypeName();
-                m.setEnumerationType(enumTypeRetriever.getType(typeName,
-                        ReflectionUtils.getEnumOptions(enumClass)));
+                if (memberClass.isEnum())
+                {
+                    @SuppressWarnings("unchecked")
+                    final Class<? extends Enum<?>> enumClass =
+                            (Class<? extends Enum<?>>) memberClass;
+                    final String typeName =
+                            (m.getEnumTypeName() == null) ? memberClass.getSimpleName() : m
+                                    .getEnumTypeName();
+                    m.setEnumerationType(enumTypeRetriever.getType(typeName,
+                            ReflectionUtils.getEnumOptions(enumClass)));
+                } else if (memberClass == HDF5EnumerationValue.class
+                        || memberClass == HDF5EnumerationValueArray.class
+                        || memberClass == HDF5EnumerationValueMDArray.class)
+                {
+                    final HDF5CompoundMappingHints hintsOrNull = m.tryGetHints();
+                    final HDF5EnumerationType typeOrNull =
+                            (hintsOrNull != null) ? hintsOrNull.tryGetEnumType(m.getMemberName())
+                                    : null;
+                    if (typeOrNull != null)
+                    {
+                        m.setEnumerationType(typeOrNull);
+                    }
+                }
             }
         }
         return mapping;
