@@ -23,6 +23,7 @@ import java.util.BitSet;
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -200,6 +201,35 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
         }
         final long word = storageFormOrNull[0];
         return (word & BitSetConversionUtils.getBitMaskInWord(bitIndex)) != 0;
+    }
+
+    @Override
+    public BitSet[] readBitFieldArray(String objectPath)
+    {
+        baseReader.checkOpen();
+        return BitSetConversionUtils.fromStorageForm2D(readBitFieldArrayStorageForm(objectPath));
+    }
+
+    private MDLongArray readBitFieldArrayStorageForm(final String objectPath)
+    {
+        assert objectPath != null;
+
+        final ICallableWithCleanUp<MDLongArray> readCallable = new ICallableWithCleanUp<MDLongArray>()
+            {
+                @Override
+                public MDLongArray call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getSpaceParameters(dataSetId, registry);
+                    final long[] data = new long[spaceParams.blockSize];
+                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_B64, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return new MDLongArray(data, spaceParams.dimensions);
+                }
+            };
+        return baseReader.runner.call(readCallable);
     }
 
 }

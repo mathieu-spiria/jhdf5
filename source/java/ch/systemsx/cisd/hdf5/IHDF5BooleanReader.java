@@ -110,4 +110,19 @@ public interface IHDF5BooleanReader
      */
     public boolean isBitSet(final String objectPath, final int bitIndex);
 
+    /**
+     * Reads a bit field array (which can be considered the equivalent to a boolean array of rank 2)
+     * from the data set <var>objectPath</var> and returns it as a Java {@link BitSet}.
+     * <p>
+     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
+     * in HDF5 to be interpreted bit-wise. Thus a data set written by
+     * {@link IHDF5LongWriter#writeMatrix(String, long[][])} cannot be read back by this method but
+     * will throw a {@link HDF5DatatypeInterfaceException}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The {@link BitSet} array read from the data set.
+     * @throws HDF5DatatypeInterfaceException If the <var>objectPath</var> is not of bit field type.
+     */
+    public BitSet[] readBitFieldArray(final String objectPath);
+
 }

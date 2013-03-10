@@ -211,4 +211,38 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
+    public void writeBitFieldArray(final String objectPath, final BitSet[] data)
+    {
+        writeBitFieldArray(objectPath, data, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+    }
+    
+    @Override
+    public void writeBitFieldArray(final String objectPath, final BitSet[] data,
+            final HDF5GenericStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int longBytes = 8;
+                    final int longBits = longBytes * 8;
+                    final int msb = BitSetConversionUtils.getMaxLengthInWords(data);
+                    final int numberOfWords = msb / longBits + (msb % longBits != 0 ? 1 : 0);
+                    final int dataSetId =
+                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_B64LE, new long[]
+                                { numberOfWords, data.length }, longBytes, features, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            BitSetConversionUtils.toStorageForm(data, numberOfWords));
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
 }

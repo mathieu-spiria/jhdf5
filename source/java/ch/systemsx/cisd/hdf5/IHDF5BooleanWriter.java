@@ -148,8 +148,7 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
 
     /**
      * Writes out a block of a <code>long</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createBitField(String, long, int, HDF5IntStorageFeatures)}
-     * beforehand.
+     * created by {@link #createBitField(String, long, int, HDF5IntStorageFeatures)} beforehand.
      * <p>
      * Use this method instead of {@link #writeBitFieldBlock(String, BitSet, int, long)} if the
      * total size of the data set is not a multiple of the block size.
@@ -167,5 +166,35 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      */
     public void writeBitFieldBlockWithOffset(final String objectPath, BitSet data,
             final int dataSize, final long offset);
+
+    /**
+     * Writes out a bit field array (which can be considered the equivalent to a boolean array of
+     * rank 2), provided as a Java array of {@link BitSet}s.
+     * <p>
+     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
+     * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
+     * back by {@link IHDF5LongReader#readArray(String)} but will throw a
+     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param features The storage features of the data set.
+     */
+    public void writeBitFieldArray(final String objectPath, final BitSet[] data,
+            final HDF5GenericStorageFeatures features);
+
+    /**
+     * Writes out a bit field array (which can be considered the equivalent to a boolean array of
+     * rank 2), provided as a Java array of {@link BitSet}s.
+     * <p>
+     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
+     * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
+     * back by {@link IHDF5LongReader#readArray(String)} but will throw a
+     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     */
+    public void writeBitFieldArray(final String objectPath, final BitSet[] data);
 
 }

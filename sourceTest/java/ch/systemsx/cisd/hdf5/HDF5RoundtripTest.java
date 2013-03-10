@@ -21,6 +21,7 @@ import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_SCALING1_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE_MAX;
+import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_SHUFFLE_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_DEFLATE;
@@ -149,6 +150,7 @@ public class HDF5RoundtripTest
         test.testScaleOffsetFilterFloat();
         test.testBooleanArray();
         test.testBooleanArrayBlock();
+        test.testBitFieldArray();
         test.testSmallString();
         test.testReadStringAttributeAsByteArray();
         test.testReadStringAsByteArray();
@@ -677,6 +679,50 @@ public class HDF5RoundtripTest
         assertFalse(reader.bool().isBitSet(booleanDatasetName, 64));
         assertFalse(reader.bool().isBitSet(booleanDatasetName, 256));
         assertFalse(reader.bool().isBitSet(booleanDatasetName, 512));
+        reader.close();
+    }
+
+    @Test
+    public void testBitFieldArray()
+    {
+        final File datasetFile = new File(workingDirectory, "bitFieldArray.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        //datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String booleanDatasetName = "/bitFieldArray";
+        final BitSet[] arrayWritten = new BitSet[] { new BitSet(), new BitSet(), new BitSet() };
+        arrayWritten[0].set(32);
+        arrayWritten[1].set(40);
+        arrayWritten[2].set(17);
+        writer.bool().writeBitFieldArray(booleanDatasetName, arrayWritten);
+        final String bigBooleanDatasetName = "/bigBitFieldArray";
+        final BitSet[] bigAarrayWritten = new BitSet[] { new BitSet(), new BitSet(), new BitSet() };
+        bigAarrayWritten[0].set(32);
+        bigAarrayWritten[1].set(126);
+        bigAarrayWritten[2].set(17);
+        bigAarrayWritten[2].set(190);
+        writer.bool().writeBitFieldArray(bigBooleanDatasetName, bigAarrayWritten, GENERIC_SHUFFLE_DEFLATE);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final BitSet[] arrayRead = reader.bool().readBitFieldArray(booleanDatasetName);
+        assertEquals(3, arrayRead.length);
+        assertEquals(1, arrayRead[0].cardinality());
+        assertTrue(arrayRead[0].get(32));
+        assertEquals(1, arrayRead[1].cardinality());
+        assertTrue(arrayRead[1].get(40));
+        assertEquals(1, arrayRead[2].cardinality());
+        assertTrue(arrayRead[2].get(17));
+
+        final BitSet[] bigArrayRead = reader.bool().readBitFieldArray(bigBooleanDatasetName);
+        assertEquals(3, arrayRead.length);
+        assertEquals(1, bigArrayRead[0].cardinality());
+        assertTrue(bigArrayRead[0].get(32));
+        assertEquals(1, bigArrayRead[1].cardinality());
+        assertTrue(bigArrayRead[1].get(126));
+        assertEquals(2, bigArrayRead[2].cardinality());
+        assertTrue(bigArrayRead[2].get(17));
+        assertTrue(bigArrayRead[2].get(190));
         reader.close();
     }
 

@@ -19,9 +19,12 @@ package ch.systemsx.cisd.hdf5;
 import java.lang.reflect.Field;
 import java.util.BitSet;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
 import org.apache.commons.lang.SystemUtils;
 
 import ch.rinn.restrictions.Private;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
  * Methods for converting {@link BitSet}s to a storage form suitable for storing in an HDF5 file.
@@ -73,23 +76,45 @@ public final class BitSetConversionUtils
 
     public static BitSet fromStorageForm(final long[] serializedWordArray)
     {
+        return fromStorageForm(serializedWordArray, 0, serializedWordArray.length);
+    }
+    
+    public static BitSet fromStorageForm(final long[] serializedWordArray, int start, int length)
+    {
         if (BIT_SET_WORDS != null)
         {
-            return fromStorageFormFast(serializedWordArray);
+            return fromStorageFormFast(serializedWordArray, start, length);
         } else
         {
-            return fromStorageFormGeneric(serializedWordArray);
+            return fromStorageFormGeneric(serializedWordArray, start, length);
         }
     }
 
-    private static BitSet fromStorageFormFast(final long[] serializedWordArray)
+    public static BitSet[] fromStorageForm2D(final MDLongArray serializedWordArray)
+    {
+        if (serializedWordArray.rank() != 2)
+        {
+            throw new HDF5JavaException("Array is supposed to be of rank 2, but is of rank "
+                    + serializedWordArray.rank());
+        }
+        final int dimX = serializedWordArray.dimensions()[0];
+        final int dimY = serializedWordArray.dimensions()[1];
+        final BitSet[] result = new BitSet[dimY];
+        for (int i = 0; i < result.length; ++i)
+        {
+            result[i] = fromStorageForm(serializedWordArray.getAsFlatArray(), i * dimX, dimX);
+        }
+        return result;
+    }
+
+    private static BitSet fromStorageFormFast(final long[] serializedWordArray, int start, int length)
     {
         try
         {
             final BitSet result = new BitSet();
-            int inUse = calcInUse(serializedWordArray, serializedWordArray.length);
+            int inUse = calcInUse(serializedWordArray, start, length);
             BIT_SET_WORDS_IN_USE.set(result, inUse);
-            BIT_SET_WORDS.set(result, trim(serializedWordArray, inUse));
+            BIT_SET_WORDS.set(result, trim(serializedWordArray, start, inUse));
             return result;
         } catch (final IllegalAccessException ex)
         {
@@ -98,12 +123,12 @@ public final class BitSetConversionUtils
     }
 
     @Private
-    static BitSet fromStorageFormGeneric(final long[] serializedWordArray)
+    static BitSet fromStorageFormGeneric(final long[] serializedWordArray, int start, int length)
     {
         final BitSet result = new BitSet();
-        for (int wordIndex = 0; wordIndex < serializedWordArray.length; ++wordIndex)
+        for (int wordIndex = 0; wordIndex < length; ++wordIndex)
         {
-            final long word = serializedWordArray[wordIndex];
+            final long word = serializedWordArray[start + wordIndex];
             for (int bitInWord = 0; bitInWord < BITS_PER_WORD; ++bitInWord)
             {
                 if ((word & 1L << bitInWord) != 0)
@@ -111,6 +136,18 @@ public final class BitSetConversionUtils
                     result.set(wordIndex << ADDRESS_BITS_PER_WORD | bitInWord);
                 }
             }
+        }
+        return result;
+    }
+
+    public static long[] toStorageForm(final BitSet[] data, int numberOfWords)
+    {
+        final long[] result = new long[data.length * numberOfWords];
+        int idx = 0;
+        for (BitSet bs : data)
+        {
+            System.arraycopy(toStorageForm(bs, numberOfWords), 0, result, idx, numberOfWords);
+            idx += numberOfWords;
         }
         return result;
     }
@@ -143,7 +180,7 @@ public final class BitSetConversionUtils
         {
             long[] storageForm = (long[]) BIT_SET_WORDS.get(data);
             int inUse = BIT_SET_WORDS_IN_USE.getInt(data);
-            return trim(storageForm, inUse);
+            return trim(storageForm, 0, inUse);
         } catch (final IllegalAccessException ex)
         {
             throw new IllegalAccessError(ex.getMessage());
@@ -155,41 +192,41 @@ public final class BitSetConversionUtils
         try
         {
             long[] storageForm = (long[]) BIT_SET_WORDS.get(data);
-            return trimEnforceLen(storageForm, numberOfWords);
+            return trimEnforceLen(storageForm, 0, numberOfWords);
         } catch (final IllegalAccessException ex)
         {
             throw new IllegalAccessError(ex.getMessage());
         }
     }
 
-    private static long[] trim(final long[] array, int len)
+    private static long[] trim(final long[] array, int start, int len)
     {
-        final int inUse = calcInUse(array, len);
+        final int inUse = calcInUse(array, start, len);
         if (inUse < array.length)
         {
             final long[] trimmedArray = new long[inUse];
-            System.arraycopy(array, 0, trimmedArray, 0, inUse);
+            System.arraycopy(array, start, trimmedArray, 0, inUse);
             return trimmedArray;
         }
         return array;
     }
 
-    private static long[] trimEnforceLen(final long[] array, int len)
+    private static long[] trimEnforceLen(final long[] array, int start, int len)
     {
         if (len != array.length)
         {
             final long[] trimmedArray = new long[len];
-            final int inUse = calcInUse(array, len);
-            System.arraycopy(array, 0, trimmedArray, 0, inUse);
+            final int inUse = calcInUse(array, start, len);
+            System.arraycopy(array, start, trimmedArray, 0, inUse);
             return trimmedArray;
         }
         return array;
     }
 
-    private static int calcInUse(final long[] array, int len)
+    private static int calcInUse(final long[] array, int start, int len)
     {
         int result = Math.min(len, array.length);
-        while (result > 0 && array[result - 1] == 0)
+        while (result > 0 && array[start + result - 1] == 0)
         {
             --result;
         }
@@ -240,6 +277,16 @@ public final class BitSetConversionUtils
             words[wordIndex] |= getBitMaskInWord(bitIndex);
         }
         return words;
+    }
+
+    static int getMaxLengthInWords(BitSet[] data)
+    {
+        int length = 0;
+        for (BitSet bs : data)
+        {
+            length = Math.max(length, bs.length());
+        }
+        return length;
     }
 
 }

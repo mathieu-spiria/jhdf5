@@ -17,13 +17,16 @@
 package ch.systemsx.cisd.hdf5;
 
 import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
+import java.util.Arrays;
 import java.util.BitSet;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import ch.rinn.restrictions.Friend;
+import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
  * Test cases for the BitSet conversion from / to storage form.
@@ -39,6 +42,20 @@ public class BitSetConversionTest
         for (final int index : indices)
         {
             bs.set(index);
+        }
+        return bs;
+    }
+
+    private BitSet[] create2D(final int length, final Integer... indices)
+    {
+        final BitSet[] bs = new BitSet[length];
+        for (int i = 0; i < bs.length; ++i)
+        {
+            bs[i] = new BitSet();
+            for (final int index : indices)
+            {
+                bs[i].set(index);
+            }
         }
         return bs;
     }
@@ -66,7 +83,7 @@ public class BitSetConversionTest
     public void testBitSetRoundTripGeneric(final BitSet bs)
     {
         final long[] bsArray = BitSetConversionUtils.toStorageFormGeneric(bs);
-        final BitSet bs2 = BitSetConversionUtils.fromStorageFormGeneric(bsArray);
+        final BitSet bs2 = BitSetConversionUtils.fromStorageFormGeneric(bsArray, 0, bsArray.length);
         assertEquals(bs, bs2);
     }
 
@@ -76,6 +93,36 @@ public class BitSetConversionTest
         final long[] bsArray = BitSetConversionUtils.toStorageForm(bs);
         final BitSet bs2 = BitSetConversionUtils.fromStorageForm(bsArray);
         assertEquals(bs, bs2);
+    }
+
+    @DataProvider
+    public Object[][] createBitSetArrays()
+    {
+        final BitSet[] full4w = new BitSet[] { new BitSet(), new BitSet(), new BitSet(), };
+        full4w[0].set(0, 256);
+        full4w[1].set(0, 256);
+        full4w[2].set(0, 256);
+
+        return new Object[][]
+            {
+                { create2D(3) },
+                { create2D(3, 0) },
+                { create2D(3, 31) },
+                { create2D(3, 64) },
+                { create2D(3, 128) },
+                { create2D(3, 63, 191) },
+                { create2D(1, 64, 192) },
+                { create2D(2, 17, 88, 155) },
+                { full4w }, };
+    }
+
+    @Test(dataProvider = "createBitSetArrays")
+    public void testBitSetArrayRoundTrip(final BitSet[] bs)
+    {
+        final int maxLength = BitSetConversionUtils.getMaxLengthInWords(bs);
+        final long[] bsArray = BitSetConversionUtils.toStorageForm(bs, maxLength);
+        final BitSet bs2[] = BitSetConversionUtils.fromStorageForm2D(new MDLongArray(bsArray, new int[] { bs.length, maxLength }));
+        assertTrue(Arrays.equals(bs, bs2));
     }
 
 }
