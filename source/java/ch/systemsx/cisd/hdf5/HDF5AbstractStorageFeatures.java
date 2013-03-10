@@ -94,13 +94,11 @@ abstract class HDF5AbstractStorageFeatures
 
     private final byte scalingFactor;
 
+    private final DataSetReplacementPolicy datasetReplacementPolicy;
+
     private final HDF5StorageLayout proposedLayoutOrNull;
 
     private final boolean shuffleBeforeDeflate;
-
-    private final boolean keepDataSetIfExists;
-
-    private final boolean deleteDataSetIfExists;
 
     public abstract static class HDF5AbstractStorageFeatureBuilder
     {
@@ -117,6 +115,15 @@ abstract class HDF5AbstractStorageFeatures
 
         HDF5AbstractStorageFeatureBuilder()
         {
+        }
+
+        public HDF5AbstractStorageFeatureBuilder(HDF5AbstractStorageFeatures template)
+        {
+            deflateLevel(template.getDeflateLevel());
+            scalingFactor(template.getScalingFactor());
+            storageLayout(template.tryGetProposedLayout());
+            datasetReplacementPolicy(template.getDatasetReplacementPolicy());
+            shuffleBeforeDeflate(template.isShuffleBeforeDeflate());
         }
 
         byte getDeflateLevel()
@@ -250,31 +257,22 @@ abstract class HDF5AbstractStorageFeatures
     }
 
     HDF5AbstractStorageFeatures(final HDF5StorageLayout proposedLayoutOrNull,
-            final boolean keepDataSetIfExists, final boolean deleteDataSetIfExists,
-            final byte deflateLevel, final byte scalingFactor)
+            final DataSetReplacementPolicy datasetReplacementPolicy, final byte deflateLevel,
+            final byte scalingFactor)
     {
-        this(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists, false, deflateLevel,
-                scalingFactor);
+        this(proposedLayoutOrNull, datasetReplacementPolicy, false, deflateLevel, scalingFactor);
     }
 
     HDF5AbstractStorageFeatures(final HDF5StorageLayout proposedLayoutOrNull,
-            final boolean keepDataSetIfExists, final boolean deleteDataSetIfExists,
+            final DataSetReplacementPolicy datasetReplacementPolicy,
             final boolean shuffleBeforeDeflate, final byte deflateLevel, final byte scalingFactor)
     {
-        assert (keepDataSetIfExists && deleteDataSetIfExists) == false;
-
         if (deflateLevel < 0)
         {
             throw new IllegalArgumentException("Invalid deflateLevel " + deflateLevel);
         }
-        if (keepDataSetIfExists && deleteDataSetIfExists)
-        {
-            throw new IllegalArgumentException(
-                    "Cannot set both keepDataSetIfExists and deleteDataSetIfExists as they are contradicting.");
-        }
         this.proposedLayoutOrNull = proposedLayoutOrNull;
-        this.keepDataSetIfExists = keepDataSetIfExists;
-        this.deleteDataSetIfExists = deleteDataSetIfExists;
+        this.datasetReplacementPolicy = datasetReplacementPolicy;
         this.shuffleBeforeDeflate = shuffleBeforeDeflate;
         this.deflateLevel = deflateLevel;
         this.scalingFactor = scalingFactor;
@@ -294,6 +292,15 @@ abstract class HDF5AbstractStorageFeatures
         return proposedLayoutOrNull;
     }
 
+    /**
+     * Returns the policy of this storage feature object regarding replacing or keeping already
+     * existing datasets.
+     */
+    public DataSetReplacementPolicy getDatasetReplacementPolicy()
+    {
+        return datasetReplacementPolicy;
+    }
+
     boolean requiresChunking()
     {
         return isDeflating() || isScaling() || proposedLayoutOrNull == HDF5StorageLayout.CHUNKED;
@@ -304,24 +311,20 @@ abstract class HDF5AbstractStorageFeatures
         return proposedLayoutOrNull == null || proposedLayoutOrNull == HDF5StorageLayout.COMPACT;
     }
 
+    /**
+     * Returns <code>true</code>, if this storage feature object deflates data.
+     */
     public boolean isDeflating()
     {
         return (deflateLevel != NO_DEFLATION_LEVEL);
     }
 
+    /**
+     * Returns <code>true</code>, if this storage feature object scales data.
+     */
     public boolean isScaling()
     {
         return scalingFactor >= 0;
-    }
-
-    boolean isKeepDataSetIfExists()
-    {
-        return keepDataSetIfExists;
-    }
-
-    boolean isDeleteDataSetIfExists()
-    {
-        return deleteDataSetIfExists;
     }
 
     void checkScalingOK(FileFormat fileFormat) throws IllegalStateException
@@ -333,19 +336,37 @@ abstract class HDF5AbstractStorageFeatures
         }
     }
 
+    /**
+     * Returns <code>true</code>, if this storage feature object performs shuffling before deflating
+     * the data.
+     */
     public boolean isShuffleBeforeDeflate()
     {
         return shuffleBeforeDeflate;
     }
 
-    byte getDeflateLevel()
+    /**
+     * Returns the deflate level of this storage feature object. 0 means no deflate.
+     */
+    public byte getDeflateLevel()
     {
         return deflateLevel;
     }
 
-    byte getScalingFactor()
+    /**
+     * Returns the scaling factor of this storage feature object. -1 means no scaling, 0 means
+     * auto-scaling.
+     */
+    public byte getScalingFactor()
     {
         return scalingFactor;
     }
 
+    static DataSetReplacementPolicy getDataSetReplacementPolicy(boolean keepDataSetIfExists,
+            boolean deleteDataSetIfExists)
+    {
+        return keepDataSetIfExists ? DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING
+                : (deleteDataSetIfExists ? DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW
+                        : DataSetReplacementPolicy.USE_WRITER_DEFAULT);
+    }
 }

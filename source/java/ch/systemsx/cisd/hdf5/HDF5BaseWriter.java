@@ -1039,8 +1039,16 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     boolean keepDataIfExists(final HDF5AbstractStorageFeatures features)
     {
-        return (features.isKeepDataSetIfExists() || keepDataSetIfExists)
-                && (features.isDeleteDataSetIfExists() == false);
+        switch (features.getDatasetReplacementPolicy())
+        {
+            case ENFORCE_KEEP_EXISTING:
+                return true;
+            case ENFORCE_REPLACE_WITH_NEW:
+                return false;
+            case USE_WRITER_DEFAULT:
+            default:
+                return keepDataSetIfExists;
+        }
     }
 
     /**

@@ -94,7 +94,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_NO_COMPRESSION_KEEP =
-            new HDF5IntStorageFeatures(null, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
 
     /**
      * Represents 'no compression', unsigned integers, use default storage layout.
@@ -102,7 +103,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_NO_COMPRESSION_UNSIGNED_KEEP =
-            new HDF5IntStorageFeatures(null, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, false);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, false);
 
     /**
      * Represents 'no compression', use default storage layout.
@@ -112,8 +114,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_NO_COMPRESSION_DELETE =
-            new HDF5IntStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR,
-                    true);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
 
     /**
      * Represents 'no compression', unsigned integers, use default storage layout.
@@ -123,8 +125,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_NO_COMPRESSION_UNSIGNED_DELETE =
-            new HDF5IntStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR,
-                    false);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, false);
 
     /**
      * Represents a compact storage layout.
@@ -144,7 +146,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_COMPACT_KEEP = new HDF5IntStorageFeatures(
-            HDF5StorageLayout.COMPACT, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            HDF5StorageLayout.COMPACT, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+            NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
 
     /**
      * Represents a compact storage layout with unsigned integers.
@@ -152,7 +155,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_COMPACT_UNSIGNED_KEEP =
-            new HDF5IntStorageFeatures(HDF5StorageLayout.COMPACT, true, NO_DEFLATION_LEVEL,
+            new HDF5IntStorageFeatures(HDF5StorageLayout.COMPACT,
+                    DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING, NO_DEFLATION_LEVEL,
                     NO_SCALING_FACTOR, false);
 
     /**
@@ -163,7 +167,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_COMPACT_DELETE = new HDF5IntStorageFeatures(
-            HDF5StorageLayout.COMPACT, false, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            HDF5StorageLayout.COMPACT, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+            NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
 
     /**
      * Represents a compact storage layout with unsigned integers.
@@ -173,7 +178,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_COMPACT_UNSIGNED_DELETE =
-            new HDF5IntStorageFeatures(HDF5StorageLayout.COMPACT, false, true, NO_DEFLATION_LEVEL,
+            new HDF5IntStorageFeatures(HDF5StorageLayout.COMPACT,
+                    DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW, NO_DEFLATION_LEVEL,
                     NO_SCALING_FACTOR, false);
 
     /**
@@ -195,7 +201,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_CONTIGUOUS_KEEP = new HDF5IntStorageFeatures(
-            HDF5StorageLayout.CONTIGUOUS, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            HDF5StorageLayout.CONTIGUOUS, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+            NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
 
     /**
      * Represents a contiguous storage layout with unsigned integers.
@@ -203,7 +210,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_CONTIGUOUS_UNSIGNED_KEEP =
-            new HDF5IntStorageFeatures(HDF5StorageLayout.CONTIGUOUS, true, NO_DEFLATION_LEVEL,
+            new HDF5IntStorageFeatures(HDF5StorageLayout.CONTIGUOUS,
+                    DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING, NO_DEFLATION_LEVEL,
                     NO_SCALING_FACTOR, false);
 
     /**
@@ -214,7 +222,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_CONTIGUOUS_DELETE = new HDF5IntStorageFeatures(
-            HDF5StorageLayout.CONTIGUOUS, false, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            HDF5StorageLayout.CONTIGUOUS, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+            NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
 
     /**
      * Represents a contiguous storage layout with unsigned integers.
@@ -224,8 +233,9 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_CONTIGUOUS_UNSIGNED_DELETE =
-            new HDF5IntStorageFeatures(HDF5StorageLayout.CONTIGUOUS, false, true,
-                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, false);
+            new HDF5IntStorageFeatures(HDF5StorageLayout.CONTIGUOUS,
+                    DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW, NO_DEFLATION_LEVEL,
+                    NO_SCALING_FACTOR, false);
 
     /**
      * Represents a chunked (extendable) storage layout.
@@ -245,7 +255,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_CHUNKED_KEEP = new HDF5IntStorageFeatures(
-            HDF5StorageLayout.CHUNKED, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            HDF5StorageLayout.CHUNKED, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+            NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
 
     /**
      * Represents a chunked (extendable) storage layout with unsigned integers.
@@ -253,7 +264,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_CHUNKED_UNSIGNED_KEEP =
-            new HDF5IntStorageFeatures(HDF5StorageLayout.CHUNKED, true, NO_DEFLATION_LEVEL,
+            new HDF5IntStorageFeatures(HDF5StorageLayout.CHUNKED,
+                    DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING, NO_DEFLATION_LEVEL,
                     NO_SCALING_FACTOR, false);
 
     /**
@@ -264,7 +276,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_CHUNKED_DELETE = new HDF5IntStorageFeatures(
-            HDF5StorageLayout.CHUNKED, false, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            HDF5StorageLayout.CHUNKED, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+            NO_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
 
     /**
      * Represents a chunked (extendable) storage layout with unsigned integers.
@@ -274,7 +287,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_CHUNKED_UNSIGNED_DELETE =
-            new HDF5IntStorageFeatures(HDF5StorageLayout.CHUNKED, false, true, NO_DEFLATION_LEVEL,
+            new HDF5IntStorageFeatures(HDF5StorageLayout.CHUNKED,
+                    DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW, NO_DEFLATION_LEVEL,
                     NO_SCALING_FACTOR, false);
 
     /**
@@ -288,7 +302,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * default deflation level.
      */
     public static final HDF5IntStorageFeatures INT_SHUFFLE_DEFLATE = new HDF5IntStorageFeatures(
-            null, false, false, true, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            null, DataSetReplacementPolicy.USE_WRITER_DEFAULT, true, DEFAULT_DEFLATION_LEVEL,
+            NO_SCALING_FACTOR, true);
 
     /**
      * Represents 'standard compression' with unsigned integers, that is deflation with the default
@@ -303,7 +318,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_DEFLATE_KEEP = new HDF5IntStorageFeatures(null,
-            true, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING, DEFAULT_DEFLATION_LEVEL,
+            NO_SCALING_FACTOR, true);
 
     /**
      * Represents 'standard compression' with unsigned integers, that is deflation with the default
@@ -312,8 +328,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_DEFLATE_UNSIGNED_KEEP =
-            new HDF5IntStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR,
-                    false);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR, false);
 
     /**
      * Represents 'standard compression', that is deflation with the default deflation level.
@@ -323,7 +339,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_DEFLATE_DELETE = new HDF5IntStorageFeatures(
-            null, false, true, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW, DEFAULT_DEFLATION_LEVEL,
+            NO_SCALING_FACTOR, true);
 
     /**
      * Represents 'standard compression' with unsigned integers, that is deflation with the default
@@ -334,8 +351,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_DEFLATE_UNSIGNED_DELETE =
-            new HDF5IntStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL,
-                    NO_SCALING_FACTOR, false);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR, false);
 
     /**
      * Represents 'maximal compression', that is deflation with the maximal deflation level.
@@ -356,7 +373,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_DEFLATE_MAX_KEEP = new HDF5IntStorageFeatures(
-            null, true, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING, MAX_DEFLATION_LEVEL,
+            NO_SCALING_FACTOR, true);
 
     /**
      * Represents 'maximal compression' with unsigned integers, that is deflation with the maximal
@@ -365,7 +383,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_DEFLATE_MAX_UNSIGNED_KEEP =
-            new HDF5IntStorageFeatures(null, true, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR, false);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR, false);
 
     /**
      * Represents 'maximal compression', that is deflation with the maximal deflation level.
@@ -375,7 +394,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_DEFLATE_MAX_DELETE = new HDF5IntStorageFeatures(
-            null, false, true, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR, true);
+            null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW, MAX_DEFLATION_LEVEL,
+            NO_SCALING_FACTOR, true);
 
     /**
      * Represents 'maximal compression' with unsigned integers, that is deflation with the maximal
@@ -386,8 +406,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_DEFLATE_MAX_UNSIGNED_DELETE =
-            new HDF5IntStorageFeatures(null, false, true, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR,
-                    false);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR, false);
 
     /**
      * Represents automatic scaling for integer values.
@@ -407,7 +427,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_AUTO_SCALING_KEEP = new HDF5IntStorageFeatures(
-            null, true, NO_DEFLATION_LEVEL, INTEGER_AUTO_SCALING_FACTOR, true);
+            null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING, NO_DEFLATION_LEVEL,
+            INTEGER_AUTO_SCALING_FACTOR, true);
 
     /**
      * Represents automatic scaling for integer values with unsigned integers.
@@ -415,8 +436,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_AUTO_SCALING_UNSIGNED_KEEP =
-            new HDF5IntStorageFeatures(null, true, NO_DEFLATION_LEVEL, INTEGER_AUTO_SCALING_FACTOR,
-                    false);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    NO_DEFLATION_LEVEL, INTEGER_AUTO_SCALING_FACTOR, false);
 
     /**
      * Represents automatic scaling for integer values.
@@ -426,8 +447,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_AUTO_SCALING_DELETE =
-            new HDF5IntStorageFeatures(null, false, true, NO_DEFLATION_LEVEL,
-                    INTEGER_AUTO_SCALING_FACTOR, true);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    NO_DEFLATION_LEVEL, INTEGER_AUTO_SCALING_FACTOR, true);
 
     /**
      * Represents automatic scaling for integer values with unsigned integers.
@@ -437,8 +458,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_AUTO_SCALING_UNSIGNED_DELETE =
-            new HDF5IntStorageFeatures(null, false, true, NO_DEFLATION_LEVEL,
-                    INTEGER_AUTO_SCALING_FACTOR, false);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    NO_DEFLATION_LEVEL, INTEGER_AUTO_SCALING_FACTOR, false);
 
     /**
      * Represents automatic scaling for integer values combined with deflation with the default
@@ -463,8 +484,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_AUTO_SCALING_DEFLATE_KEEP =
-            new HDF5IntStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL,
-                    INTEGER_AUTO_SCALING_FACTOR, true);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    DEFAULT_DEFLATION_LEVEL, INTEGER_AUTO_SCALING_FACTOR, true);
 
     /**
      * Represents automatic scaling for integer values combined with deflation with the default
@@ -473,8 +494,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5IntStorageFeatures INT_AUTO_SCALING_DEFLATE_UNSIGNED_KEEP =
-            new HDF5IntStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL,
-                    INTEGER_AUTO_SCALING_FACTOR, false);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    DEFAULT_DEFLATION_LEVEL, INTEGER_AUTO_SCALING_FACTOR, false);
 
     /**
      * Represents automatic scaling for integer values combined with deflation with the default
@@ -485,8 +506,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_AUTO_SCALING_DEFLATE_DELETE =
-            new HDF5IntStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL,
-                    INTEGER_AUTO_SCALING_FACTOR, true);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    DEFAULT_DEFLATION_LEVEL, INTEGER_AUTO_SCALING_FACTOR, true);
 
     /**
      * Represents automatic scaling for integer values combined with deflation with the default
@@ -497,8 +518,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5IntStorageFeatures INT_AUTO_SCALING_DEFLATE_UNSIGNED_DELETE =
-            new HDF5IntStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL,
-                    INTEGER_AUTO_SCALING_FACTOR, false);
+            new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    DEFAULT_DEFLATION_LEVEL, INTEGER_AUTO_SCALING_FACTOR, false);
 
     /**
      * A builder for storage features.
@@ -507,6 +528,16 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
             HDF5AbstractStorageFeatureBuilder
     {
         private boolean signed = true;
+
+        public HDF5IntStorageFeatureBuilder()
+        {
+        }
+
+        public HDF5IntStorageFeatureBuilder(HDF5IntStorageFeatures template)
+        {
+            super(template);
+            signed(template.isSigned());
+        }
 
         boolean isSigned()
         {
@@ -752,6 +783,14 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
     }
 
     /**
+     * Returns a new storage feature builder, initializing from <var>template</var>.
+     */
+    public static HDF5IntStorageFeatureBuilder build(HDF5IntStorageFeatures template)
+    {
+        return new HDF5IntStorageFeatureBuilder(template);
+    }
+
+    /**
      * Create a corresponding {@link HDF5IntStorageFeatures} for the given
      * {@link HDF5GenericStorageFeatures}.
      */
@@ -815,9 +854,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
         } else
         {
             return new HDF5IntStorageFeatures(storageFeatures.tryGetProposedLayout(),
-                    storageFeatures.isKeepDataSetIfExists(),
-                    storageFeatures.isDeleteDataSetIfExists(), storageFeatures.getDeflateLevel(),
-                    NO_SCALING_FACTOR, true);
+                    storageFeatures.getDatasetReplacementPolicy(),
+                    storageFeatures.getDeflateLevel(), NO_SCALING_FACTOR, true);
         }
     }
 
@@ -885,9 +923,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
         } else
         {
             return new HDF5IntStorageFeatures(storageFeatures.tryGetProposedLayout(),
-                    storageFeatures.isKeepDataSetIfExists(),
-                    storageFeatures.isDeleteDataSetIfExists(), storageFeatures.getDeflateLevel(),
-                    NO_SCALING_FACTOR, true);
+                    storageFeatures.getDatasetReplacementPolicy(),
+                    storageFeatures.getDeflateLevel(), NO_SCALING_FACTOR, true);
         }
     }
 
@@ -962,46 +999,18 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * <var>deflationLevel</var> for unsigned integers.
      */
     private static HDF5IntStorageFeatures createDeflation(int deflationLevel,
-            boolean keepExistingDataSetIfExists, boolean deleteExistingDataSetIfExists,
-            boolean signed)
+            boolean keepDataSetIfExists, boolean deleteDataSetIfExists, boolean signed)
     {
         if (signed)
         {
-            if (deflationLevel == NO_DEFLATION_LEVEL)
-            {
-                return keepExistingDataSetIfExists ? INT_NO_COMPRESSION_KEEP : INT_NO_COMPRESSION;
-            } else if (deflationLevel == DEFAULT_DEFLATION_LEVEL)
-            {
-                return keepExistingDataSetIfExists ? INT_DEFLATE_KEEP : INT_DEFLATE;
-            } else if (deflationLevel == MAX_DEFLATION_LEVEL)
-            {
-                return keepExistingDataSetIfExists ? INT_DEFLATE_MAX_KEEP : INT_DEFLATE_MAX;
-            } else
-            {
-                return new HDF5IntStorageFeatures(null, keepExistingDataSetIfExists,
-                        deleteExistingDataSetIfExists, toByte(deflationLevel), NO_SCALING_FACTOR,
-                        true);
-            }
+            return new HDF5IntStorageFeatures(null, getDataSetReplacementPolicy(
+                    keepDataSetIfExists, deleteDataSetIfExists), toByte(deflationLevel),
+                    NO_SCALING_FACTOR, true);
         } else
         {
-            if (deflationLevel == NO_DEFLATION_LEVEL)
-            {
-                return keepExistingDataSetIfExists ? INT_NO_COMPRESSION_UNSIGNED_KEEP
-                        : INT_NO_COMPRESSION_UNSIGNED;
-            } else if (deflationLevel == DEFAULT_DEFLATION_LEVEL)
-            {
-                return keepExistingDataSetIfExists ? INT_DEFLATE_UNSIGNED_KEEP
-                        : INT_DEFLATE_UNSIGNED;
-            } else if (deflationLevel == MAX_DEFLATION_LEVEL)
-            {
-                return keepExistingDataSetIfExists ? INT_DEFLATE_MAX_UNSIGNED_KEEP
-                        : INT_DEFLATE_MAX_UNSIGNED;
-            } else
-            {
-                return new HDF5IntStorageFeatures(null, keepExistingDataSetIfExists,
-                        deleteExistingDataSetIfExists, toByte(deflationLevel), NO_SCALING_FACTOR,
-                        false);
-            }
+            return new HDF5IntStorageFeatures(null, getDataSetReplacementPolicy(
+                    keepDataSetIfExists, deleteDataSetIfExists), toByte(deflationLevel),
+                    NO_SCALING_FACTOR, false);
         }
     }
 
@@ -1095,8 +1104,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      */
     public static HDF5IntStorageFeatures createDeflateAndIntegerScalingKeep(int scalingFactor)
     {
-        return new HDF5IntStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL,
-                toByte(scalingFactor), true);
+        return new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                DEFAULT_DEFLATION_LEVEL, toByte(scalingFactor), true);
     }
 
     /**
@@ -1126,8 +1135,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
     public static HDF5IntStorageFeatures createDeflateAndIntegerScaling(int deflateLevel,
             byte scalingFactor, boolean keepDataSetIfExists)
     {
-        return new HDF5IntStorageFeatures(null, keepDataSetIfExists, toByte(deflateLevel),
-                scalingFactor, true);
+        return new HDF5IntStorageFeatures(null, getDataSetReplacementPolicy(keepDataSetIfExists,
+                false), toByte(deflateLevel), scalingFactor, true);
     }
 
     /**
@@ -1137,8 +1146,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
     public static HDF5IntStorageFeatures createDeflateAndIntegerScalingUnsigned(int deflateLevel,
             byte scalingFactor, boolean keepDataSetIfExists)
     {
-        return new HDF5IntStorageFeatures(null, keepDataSetIfExists, toByte(deflateLevel),
-                scalingFactor, false);
+        return new HDF5IntStorageFeatures(null, getDataSetReplacementPolicy(keepDataSetIfExists,
+                false), toByte(deflateLevel), scalingFactor, false);
     }
 
     /**
@@ -1150,48 +1159,40 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
     public static HDF5IntStorageFeatures createDeflateAndIntegerScalingKeep(int deflateLevel,
             byte scalingFactor)
     {
-        return new HDF5IntStorageFeatures(null, true, toByte(deflateLevel), scalingFactor, true);
+        return new HDF5IntStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                toByte(deflateLevel), scalingFactor, true);
     }
 
     private final boolean signed;
 
     HDF5IntStorageFeatures(HDF5IntStorageFeatureBuilder builder)
     {
-        super(builder.getStorageLayout(), DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING == builder
-                .getDatasetReplacementPolicy(),
-                DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW == builder
-                        .getDatasetReplacementPolicy(), builder.isShuffleBeforeDeflate(), builder
-                        .getDeflateLevel(), builder.getScalingFactor());
+        super(builder.getStorageLayout(), builder.getDatasetReplacementPolicy(), builder
+                .isShuffleBeforeDeflate(), builder.getDeflateLevel(), builder.getScalingFactor());
         this.signed = builder.isSigned();
     }
 
     HDF5IntStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, byte deflateLevel,
             byte scalingFactor, boolean signed)
     {
-        this(proposedLayoutOrNull, false, deflateLevel, scalingFactor, signed);
+        this(proposedLayoutOrNull, DataSetReplacementPolicy.USE_WRITER_DEFAULT, deflateLevel,
+                scalingFactor, signed);
     }
 
-    HDF5IntStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
-            byte deflateLevel, byte scalingFactor, boolean signed)
-    {
-        super(proposedLayoutOrNull, keepDataSetIfExists, false, deflateLevel, scalingFactor);
-        this.signed = signed;
-    }
-
-    HDF5IntStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
-            boolean deleteDataSetIfExists, byte deflateLevel, byte scalingFactor, boolean signed)
-    {
-        super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists, deflateLevel,
-                scalingFactor);
-        this.signed = signed;
-    }
-
-    HDF5IntStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
-            boolean deleteDataSetIfExists, boolean shuffleBeforeDeflate, byte deflateLevel,
+    HDF5IntStorageFeatures(HDF5StorageLayout proposedLayoutOrNull,
+            DataSetReplacementPolicy dataSetReplacementPolicy, byte deflateLevel,
             byte scalingFactor, boolean signed)
     {
-        super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists,
-                shuffleBeforeDeflate, deflateLevel, scalingFactor);
+        super(proposedLayoutOrNull, dataSetReplacementPolicy, deflateLevel, scalingFactor);
+        this.signed = signed;
+    }
+
+    HDF5IntStorageFeatures(HDF5StorageLayout proposedLayoutOrNull,
+            DataSetReplacementPolicy dataSetReplacementPolicy, boolean shuffleBeforeDeflate,
+            byte deflateLevel, byte scalingFactor, boolean signed)
+    {
+        super(proposedLayoutOrNull, dataSetReplacementPolicy, shuffleBeforeDeflate, deflateLevel,
+                scalingFactor);
         this.signed = signed;
     }
 

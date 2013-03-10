@@ -78,7 +78,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_NO_COMPRESSION_KEEP =
-            new HDF5FloatStorageFeatures(null, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents 'no compression', use default storage layout.
@@ -88,7 +89,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_NO_COMPRESSION_DELETE =
-            new HDF5FloatStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents a compact storage layout.
@@ -102,7 +104,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_COMPACT_KEEP = new HDF5FloatStorageFeatures(
-            HDF5StorageLayout.COMPACT, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+            HDF5StorageLayout.COMPACT, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+            NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents a compact storage layout.
@@ -112,8 +115,9 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_COMPACT_DELETE =
-            new HDF5FloatStorageFeatures(HDF5StorageLayout.COMPACT, false, true,
-                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+            new HDF5FloatStorageFeatures(HDF5StorageLayout.COMPACT,
+                    DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW, NO_DEFLATION_LEVEL,
+                    NO_SCALING_FACTOR);
 
     /**
      * Represents a contiguous storage layout.
@@ -127,7 +131,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_CONTIGUOUS_KEEP =
-            new HDF5FloatStorageFeatures(HDF5StorageLayout.CONTIGUOUS, true, NO_DEFLATION_LEVEL,
+            new HDF5FloatStorageFeatures(HDF5StorageLayout.CONTIGUOUS,
+                    DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING, NO_DEFLATION_LEVEL,
                     NO_SCALING_FACTOR);
 
     /**
@@ -138,8 +143,9 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_CONTIGUOUS_DELETE =
-            new HDF5FloatStorageFeatures(HDF5StorageLayout.CONTIGUOUS, false, true,
-                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+            new HDF5FloatStorageFeatures(HDF5StorageLayout.CONTIGUOUS,
+                    DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW, NO_DEFLATION_LEVEL,
+                    NO_SCALING_FACTOR);
 
     /**
      * Represents a chunked storage layout.
@@ -153,7 +159,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_CHUNKED_KEEP = new HDF5FloatStorageFeatures(
-            HDF5StorageLayout.CHUNKED, true, NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+            HDF5StorageLayout.CHUNKED, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+            NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents a chunked storage layout.
@@ -163,8 +170,9 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_CHUNKED_DELETE =
-            new HDF5FloatStorageFeatures(HDF5StorageLayout.CHUNKED, false, true,
-                    NO_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+            new HDF5FloatStorageFeatures(HDF5StorageLayout.CHUNKED,
+                    DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW, NO_DEFLATION_LEVEL,
+                    NO_SCALING_FACTOR);
 
     /**
      * Represents 'standard compression', that is deflation with the default deflation level.
@@ -177,8 +185,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * default deflation level.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SHUFFLE_DEFLATE =
-            new HDF5FloatStorageFeatures(null, false, false, true, DEFAULT_DEFLATION_LEVEL,
-                    NO_SCALING_FACTOR);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.USE_WRITER_DEFAULT, true,
+                    DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents 'standard compression', that is deflation with the default deflation level.
@@ -186,7 +194,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_DEFLATE_KEEP = new HDF5FloatStorageFeatures(
-            null, true, DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+            null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING, DEFAULT_DEFLATION_LEVEL,
+            NO_SCALING_FACTOR);
 
     /**
      * Represents 'standard compression', that is deflation with the default deflation level.
@@ -196,8 +205,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_DEFLATE_DELETE =
-            new HDF5FloatStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL,
-                    NO_SCALING_FACTOR);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    DEFAULT_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents 'maximal compression', that is deflation with the maximal deflation level.
@@ -211,7 +220,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_DEFLATE_MAX_KEEP =
-            new HDF5FloatStorageFeatures(null, true, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents 'maximal compression', that is deflation with the maximal deflation level.
@@ -221,7 +231,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_DEFLATE_MAX_DELETE =
-            new HDF5FloatStorageFeatures(null, false, true, MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    MAX_DEFLATION_LEVEL, NO_SCALING_FACTOR);
 
     /**
      * Represents scaling with scaling factor 1 for float values.
@@ -235,7 +246,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING1_KEEP =
-            new HDF5FloatStorageFeatures(null, true, NO_DEFLATION_LEVEL, (byte) 1);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    NO_DEFLATION_LEVEL, (byte) 1);
 
     /**
      * Represents scaling with scaling factor 1 for float values.
@@ -245,7 +257,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING1_DELETE =
-            new HDF5FloatStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, (byte) 1);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    NO_DEFLATION_LEVEL, (byte) 1);
 
     /**
      * Represents scaling with scaling factor 1 for float values combined with deflation using the
@@ -261,7 +274,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING1_DEFLATE_KEEP =
-            new HDF5FloatStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL, (byte) 1);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    DEFAULT_DEFLATION_LEVEL, (byte) 1);
 
     /**
      * Represents scaling with scaling factor 1 for float values combined with deflation using the
@@ -272,7 +286,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING1_DEFLATE_DELETE =
-            new HDF5FloatStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL, (byte) 1);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    DEFAULT_DEFLATION_LEVEL, (byte) 1);
 
     /**
      * Represents scaling with scaling factor 2 for float values.
@@ -286,7 +301,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING2_KEEP =
-            new HDF5FloatStorageFeatures(null, true, NO_DEFLATION_LEVEL, (byte) 2);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    NO_DEFLATION_LEVEL, (byte) 2);
 
     /**
      * Represents scaling with scaling factor 2 for float values.
@@ -296,7 +312,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING2_DELETE =
-            new HDF5FloatStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, (byte) 2);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    NO_DEFLATION_LEVEL, (byte) 2);
 
     /**
      * Represents scaling with scaling factor 2 for float values combined with deflation using the
@@ -312,7 +329,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING2_DEFLATE_KEEP =
-            new HDF5FloatStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL, (byte) 2);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    DEFAULT_DEFLATION_LEVEL, (byte) 2);
 
     /**
      * Represents scaling with scaling factor 2 for float values combined with deflation using the
@@ -323,7 +341,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING2_DEFLATE_DELETE =
-            new HDF5FloatStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL, (byte) 2);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    DEFAULT_DEFLATION_LEVEL, (byte) 2);
 
     /**
      * Represents scaling with scaling factor 3 for float values.
@@ -337,7 +356,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING3_KEEP =
-            new HDF5FloatStorageFeatures(null, true, NO_DEFLATION_LEVEL, (byte) 3);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    NO_DEFLATION_LEVEL, (byte) 3);
 
     /**
      * Represents scaling with scaling factor 3 for float values.
@@ -347,7 +367,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING3_DELETE =
-            new HDF5FloatStorageFeatures(null, false, true, NO_DEFLATION_LEVEL, (byte) 3);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    true, NO_DEFLATION_LEVEL, (byte) 3);
 
     /**
      * Represents scaling with scaling factor 3 for float values combined with deflation using the
@@ -363,7 +384,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING3_DEFLATE_KEEP =
-            new HDF5FloatStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL, (byte) 3);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                    DEFAULT_DEFLATION_LEVEL, (byte) 3);
 
     /**
      * Represents scaling with scaling factor 3 for float values combined with deflation using the
@@ -374,7 +396,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * setting.
      */
     public static final HDF5FloatStorageFeatures FLOAT_SCALING3_DEFLATE_DELETE =
-            new HDF5FloatStorageFeatures(null, false, true, DEFAULT_DEFLATION_LEVEL, (byte) 3);
+            new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW,
+                    DEFAULT_DEFLATION_LEVEL, (byte) 3);
 
     /**
      * A builder for storage features.
@@ -382,6 +405,15 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
     public static final class HDF5FloatStorageFeatureBuilder extends
             HDF5AbstractStorageFeatureBuilder
     {
+        public HDF5FloatStorageFeatureBuilder()
+        {
+        }
+
+        public HDF5FloatStorageFeatureBuilder(HDF5FloatStorageFeatures template)
+        {
+            super(template);
+        }
+
         /**
          * Compresses the dataset with default deflation level, if <code>compress==true</code>, do
          * not compress if <code>compress==false</code>.
@@ -601,6 +633,14 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
     }
 
     /**
+     * Returns a new storage feature builder, initializing from <var>template</var>.
+     */
+    public static HDF5FloatStorageFeatureBuilder build(HDF5FloatStorageFeatures template)
+    {
+        return new HDF5FloatStorageFeatureBuilder(template);
+    }
+
+    /**
      * Create a corresponding {@link HDF5FloatStorageFeatures} for the given
      * {@link HDF5GenericStorageFeatures}.
      */
@@ -664,9 +704,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
         } else
         {
             return new HDF5FloatStorageFeatures(storageFeatures.tryGetProposedLayout(),
-                    storageFeatures.isKeepDataSetIfExists(),
-                    storageFeatures.isDeleteDataSetIfExists(), storageFeatures.getDeflateLevel(),
-                    NO_SCALING_FACTOR);
+                    storageFeatures.getDatasetReplacementPolicy(),
+                    storageFeatures.getDeflateLevel(), NO_SCALING_FACTOR);
         }
     }
 
@@ -676,7 +715,7 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      */
     public static HDF5FloatStorageFeatures createDeflation(int deflationLevel)
     {
-        return createDeflation(deflationLevel, false, false);
+        return createDeflation(deflationLevel, DataSetReplacementPolicy.USE_WRITER_DEFAULT);
     }
 
     /**
@@ -687,7 +726,7 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      */
     public static HDF5FloatStorageFeatures createDeflationKeep(int deflationLevel)
     {
-        return createDeflation(deflationLevel, true, false);
+        return createDeflation(deflationLevel, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING);
     }
 
     /**
@@ -700,7 +739,7 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      */
     public static HDF5FloatStorageFeatures createDeflationDelete(int deflationLevel)
     {
-        return createDeflation(deflationLevel, false, true);
+        return createDeflation(deflationLevel, DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW);
     }
 
     /**
@@ -708,22 +747,10 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      * <var>deflationLevel</var>.
      */
     private static HDF5FloatStorageFeatures createDeflation(int deflationLevel,
-            boolean keepDataSetIfExists, boolean deleteDataSetIfExists)
+            DataSetReplacementPolicy dataSetReplacementPolicy)
     {
-        if (deflationLevel == NO_DEFLATION_LEVEL)
-        {
-            return keepDataSetIfExists ? FLOAT_NO_COMPRESSION_KEEP : FLOAT_NO_COMPRESSION;
-        } else if (deflationLevel == DEFAULT_DEFLATION_LEVEL)
-        {
-            return keepDataSetIfExists ? FLOAT_DEFLATE_KEEP : FLOAT_DEFLATE;
-        } else if (deflationLevel == MAX_DEFLATION_LEVEL)
-        {
-            return keepDataSetIfExists ? FLOAT_DEFLATE_MAX_KEEP : FLOAT_DEFLATE_MAX;
-        } else
-        {
-            return new HDF5FloatStorageFeatures(null, keepDataSetIfExists, deleteDataSetIfExists,
-                    toByte(deflationLevel), NO_SCALING_FACTOR);
-        }
+        return new HDF5FloatStorageFeatures(null, dataSetReplacementPolicy, toByte(deflationLevel),
+                NO_SCALING_FACTOR);
     }
 
     /**
@@ -743,7 +770,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      */
     public static HDF5FloatStorageFeatures createFloatScalingKeep(int scalingFactor)
     {
-        return new HDF5FloatStorageFeatures(null, true, NO_DEFLATION_LEVEL, toByte(scalingFactor));
+        return new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                NO_DEFLATION_LEVEL, toByte(scalingFactor));
     }
 
     /**
@@ -763,8 +791,8 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
      */
     public static HDF5FloatStorageFeatures createDeflateAndFloatScalingKeep(int scalingFactor)
     {
-        return new HDF5FloatStorageFeatures(null, true, DEFAULT_DEFLATION_LEVEL,
-                toByte(scalingFactor));
+        return new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                DEFAULT_DEFLATION_LEVEL, toByte(scalingFactor));
     }
 
     /**
@@ -786,43 +814,35 @@ public final class HDF5FloatStorageFeatures extends HDF5AbstractStorageFeatures
     public static HDF5FloatStorageFeatures createDeflateAndFloatScalingKeep(int deflateLevel,
             int scalingFactor)
     {
-        return new HDF5FloatStorageFeatures(null, true, toByte(deflateLevel), toByte(scalingFactor));
+        return new HDF5FloatStorageFeatures(null, DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING,
+                toByte(deflateLevel), toByte(scalingFactor));
     }
 
     HDF5FloatStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, byte deflateLevel,
             byte scalingFactor)
     {
-        this(proposedLayoutOrNull, false, deflateLevel, scalingFactor);
-    }
-
-    HDF5FloatStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
-            byte deflateLevel, byte scalingFactor)
-    {
-        super(proposedLayoutOrNull, keepDataSetIfExists, false, deflateLevel, scalingFactor);
-    }
-
-    HDF5FloatStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
-            boolean deleteDataSetIfExists, byte deflateLevel, byte scalingFactor)
-    {
-        super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists, deflateLevel,
+        this(proposedLayoutOrNull, DataSetReplacementPolicy.USE_WRITER_DEFAULT, deflateLevel,
                 scalingFactor);
+    }
+
+    HDF5FloatStorageFeatures(HDF5StorageLayout proposedLayoutOrNull,
+            DataSetReplacementPolicy dataSetReplacementPolicy, byte deflateLevel, byte scalingFactor)
+    {
+        super(proposedLayoutOrNull, dataSetReplacementPolicy, deflateLevel, scalingFactor);
     }
 
     HDF5FloatStorageFeatures(HDF5FloatStorageFeatureBuilder builder)
     {
-        super(builder.getStorageLayout(), DataSetReplacementPolicy.ENFORCE_KEEP_EXISTING == builder
-                .getDatasetReplacementPolicy(),
-                DataSetReplacementPolicy.ENFORCE_REPLACE_WITH_NEW == builder
-                        .getDatasetReplacementPolicy(), builder.isShuffleBeforeDeflate(), builder
-                        .getDeflateLevel(), builder.getScalingFactor());
+        super(builder.getStorageLayout(), builder.getDatasetReplacementPolicy(), builder
+                .isShuffleBeforeDeflate(), builder.getDeflateLevel(), builder.getScalingFactor());
     }
 
-    HDF5FloatStorageFeatures(HDF5StorageLayout proposedLayoutOrNull, boolean keepDataSetIfExists,
-            boolean deleteDataSetIfExists, boolean shuffleBeforeDeflate, byte deflateLevel,
-            byte scalingFactor)
+    HDF5FloatStorageFeatures(HDF5StorageLayout proposedLayoutOrNull,
+            DataSetReplacementPolicy dataSetReplacementPolicy, boolean shuffleBeforeDeflate,
+            byte deflateLevel, byte scalingFactor)
     {
-        super(proposedLayoutOrNull, keepDataSetIfExists, deleteDataSetIfExists,
-                shuffleBeforeDeflate, deflateLevel, scalingFactor);
+        super(proposedLayoutOrNull, dataSetReplacementPolicy, shuffleBeforeDeflate, deflateLevel,
+                scalingFactor);
     }
 
     /**
