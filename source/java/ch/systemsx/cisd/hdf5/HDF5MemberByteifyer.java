@@ -68,25 +68,30 @@ abstract class HDF5MemberByteifyer
         this.typeVariant = HDF5DataTypeVariant.maskNull(typeVariantOrNull);
     }
 
-    public abstract byte[] byteify(int compoundDataTypeId, Object obj)
+    abstract byte[] byteify(int compoundDataTypeId, Object obj)
             throws IllegalAccessException;
 
-    public abstract void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+    abstract void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
             int arrayOffset) throws IllegalAccessException;
-
-    protected abstract int getMemberStorageTypeId();
+    
+    abstract int getMemberStorageTypeId();
 
     /**
      * Returns -1 if the native type id should be inferred from the storage type id
      */
-    protected abstract int getMemberNativeTypeId();
+    abstract int getMemberNativeTypeId();
 
-    public void insertType(int dataTypeId)
+    HDF5EnumerationType tryGetEnumType()
+    {
+        return null;
+    }
+
+    void insertType(int dataTypeId)
     {
         H5Tinsert(dataTypeId, memberName, offset, getMemberStorageTypeId());
     }
 
-    public void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
+    void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
     {
         if (getMemberNativeTypeId() < 0)
         {
@@ -98,7 +103,7 @@ abstract class HDF5MemberByteifyer
         }
     }
 
-    public String getMemberName()
+    String getMemberName()
     {
         return memberName;
     }
@@ -108,32 +113,32 @@ abstract class HDF5MemberByteifyer
         return fieldOrNull;
     }
 
-    public int getSize()
+    int getSize()
     {
         return size;
     }
 
-    public int getSizeInBytes()
+    int getSizeInBytes()
     {
         return sizeInBytes;
     }
 
-    public int getOffset()
+    int getOffset()
     {
         return offset;
     }
 
-    public int getTotalSize()
+    int getTotalSize()
     {
         return offset + sizeInBytes;
     }
 
-    public HDF5DataTypeVariant getTypeVariant()
+    HDF5DataTypeVariant getTypeVariant()
     {
         return typeVariant;
     }
 
-    public String describe()
+    String describe()
     {
         if (fieldOrNull != null)
         {
@@ -145,12 +150,12 @@ abstract class HDF5MemberByteifyer
         }
     }
     
-    public boolean isDummy()
+    boolean isDummy()
     {
         return false;
     }
     
-    public boolean mayBeCut()
+    boolean mayBeCut()
     {
         return false;
     }

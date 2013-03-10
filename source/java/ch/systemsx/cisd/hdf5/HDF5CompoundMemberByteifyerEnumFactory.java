@@ -173,6 +173,12 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                         return new HDF5EnumerationValue(enumType, enumObj.toString());
                     }
                 }
+
+                @Override
+                HDF5EnumerationType tryGetEnumType()
+                {
+                    return enumType;
+                }
             };
     }
 
@@ -227,6 +233,12 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                     {
                         return new HDF5EnumerationValue(enumType, enumObj.toString());
                     }
+                }
+                
+                @Override
+                HDF5EnumerationType tryGetEnumType()
+                {
+                    return enumType;
                 }
             };
     }
@@ -284,6 +296,12 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                         return new HDF5EnumerationValue(enumType, enumObj.toString());
                     }
                 }
+
+                @Override
+                HDF5EnumerationType tryGetEnumType()
+                {
+                    return enumType;
+                }
             };
     }
 
@@ -339,6 +357,12 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                     {
                         return new HDF5EnumerationValue(enumType, enumObj.toString());
                     }
+                }
+
+                @Override
+                HDF5EnumerationType tryGetEnumType()
+                {
+                    return enumType;
                 }
             };
     }

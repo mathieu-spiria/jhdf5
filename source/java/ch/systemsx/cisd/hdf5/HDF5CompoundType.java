@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -293,6 +294,26 @@ public class HDF5CompoundType<T> extends HDF5DataType
     public String tryGetName()
     {
         return nameOrNull;
+    }
+
+    /**
+     * Returns the map of member names to enumeration types (only enum members will have an entry in
+     * the map).
+     */
+    public Map<String, HDF5EnumerationType> getEnumTypeMap()
+    {
+        final HDF5MemberByteifyer[] bytefier = objectByteifyer.getByteifyers();
+        final Map<String, HDF5EnumerationType> result = new LinkedHashMap<String, HDF5EnumerationType>();
+        int idx = 0;
+        for (HDF5CompoundMemberInformation info : getCompoundMemberInformation(DataTypeInfoOptions.MINIMAL))
+        {
+            if (info.getType().getDataClass() == HDF5DataClass.ENUM)
+            {
+                result.put(info.getName(), bytefier[idx].tryGetEnumType());
+            }
+            ++idx;
+        }
+        return result;
     }
 
     @Override

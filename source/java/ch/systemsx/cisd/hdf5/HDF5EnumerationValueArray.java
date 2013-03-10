@@ -23,7 +23,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
-import ch.systemsx.cisd.hdf5.HDF5EnumerationType.StorageFormEnum;
+import ch.systemsx.cisd.hdf5.HDF5EnumerationType.EnumStorageForm;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
@@ -38,7 +38,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
 
     private final int length;
 
-    private StorageFormEnum storageForm;
+    private EnumStorageForm storageForm;
 
     private byte[] bArrayOrNull;
 
@@ -166,7 +166,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.BYTE;
+            storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = new byte[array.length];
             for (int i = 0; i < array.length; ++i)
             {
@@ -182,7 +182,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.SHORT;
+            storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = new short[array.length];
             for (int i = 0; i < array.length; ++i)
@@ -198,7 +198,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
             iArrayOrNull = null;
         } else
         {
-            storageForm = StorageFormEnum.INT;
+            storageForm = EnumStorageForm.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = new int[array.length];
@@ -219,21 +219,21 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.BYTE;
+            storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = array;
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.SHORT;
+            storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = toShortArray(array);
             checkOrdinalArray(sArrayOrNull);
             iArrayOrNull = null;
         } else
         {
-            storageForm = StorageFormEnum.INT;
+            storageForm = EnumStorageForm.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = toIntArray(array);
@@ -245,21 +245,21 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.BYTE;
+            storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = toByteArray(array);
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.SHORT;
+            storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = array;
             checkOrdinalArray(sArrayOrNull);
             iArrayOrNull = null;
         } else
         {
-            storageForm = StorageFormEnum.INT;
+            storageForm = EnumStorageForm.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = toIntArray(array);
@@ -271,21 +271,21 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.BYTE;
+            storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = toByteArray(array);
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.SHORT;
+            storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = toShortArray(array);
             checkOrdinalArray(sArrayOrNull);
             iArrayOrNull = null;
         } else
         {
-            storageForm = StorageFormEnum.INT;
+            storageForm = EnumStorageForm.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = array;
@@ -407,7 +407,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
         }
     }
 
-    StorageFormEnum getStorageForm()
+    EnumStorageForm getStorageForm()
     {
         return storageForm;
     }

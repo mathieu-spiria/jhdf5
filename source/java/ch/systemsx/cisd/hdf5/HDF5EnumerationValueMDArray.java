@@ -25,7 +25,7 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
-import ch.systemsx.cisd.hdf5.HDF5EnumerationType.StorageFormEnum;
+import ch.systemsx.cisd.hdf5.HDF5EnumerationType.EnumStorageForm;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
@@ -39,7 +39,7 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
 
     private final int size;
 
-    private StorageFormEnum storageForm;
+    private EnumStorageForm storageForm;
 
     private MDByteArray bArrayOrNull;
 
@@ -47,26 +47,35 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
 
     private MDIntArray iArrayOrNull;
 
-    HDF5EnumerationValueMDArray(HDF5EnumerationType type, MDAbstractArray<?> array)
+    /**
+     * Creates an enumeration value array.
+     * 
+     * @param type The enumeration type of this value.
+     * @param ordinalArray The array of ordinal values in the <var>type</var>. Has to be one of
+     *            {@link MDByteArray}, {@link MDShortArray} or {@link MDIntArray}.
+     * @throws IllegalArgumentException If any of the ordinals in the <var>ordinalArray</var> is
+     *             outside of the range of allowed values of the <var>type</var>.
+     */
+    public HDF5EnumerationValueMDArray(HDF5EnumerationType type, MDAbstractArray<?> ordinalArray)
             throws IllegalArgumentException
     {
         this.type = type;
-        this.size = array.size();
-        if (array instanceof MDByteArray)
+        this.size = ordinalArray.size();
+        if (ordinalArray instanceof MDByteArray)
         {
-            final MDByteArray bArray = (MDByteArray) array;
+            final MDByteArray bArray = (MDByteArray) ordinalArray;
             setOrdinalArray(bArray);
-        } else if (array instanceof MDShortArray)
+        } else if (ordinalArray instanceof MDShortArray)
         {
-            final MDShortArray sArray = (MDShortArray) array;
+            final MDShortArray sArray = (MDShortArray) ordinalArray;
             setOrdinalArray(sArray);
-        } else if (array instanceof MDIntArray)
+        } else if (ordinalArray instanceof MDIntArray)
         {
-            final MDIntArray iArray = (MDIntArray) array;
+            final MDIntArray iArray = (MDIntArray) ordinalArray;
             setOrdinalArray(iArray);
-        } else if (array instanceof MDArray)
+        } else if (ordinalArray instanceof MDArray)
         {
-            final MDArray<?> concreteArray = (MDArray<?>) array;
+            final MDArray<?> concreteArray = (MDArray<?>) ordinalArray;
             if (concreteArray.getAsFlatArray().getClass().getComponentType() == String.class)
             {
                 @SuppressWarnings("unchecked")
@@ -86,7 +95,7 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
         } else
         {
             throw new IllegalArgumentException("array is of illegal type "
-                    + array.getClass().getCanonicalName());
+                    + ordinalArray.getClass().getCanonicalName());
         }
     }
 
@@ -155,7 +164,7 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
         final String[] flatArray = array.getAsFlatArray();
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.BYTE;
+            storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = new MDByteArray(array.dimensions());
             final byte[] flatBArray = bArrayOrNull.getAsFlatArray();
             for (int i = 0; i < flatArray.length; ++i)
@@ -172,7 +181,7 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.SHORT;
+            storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = new MDShortArray(array.dimensions());
             final short[] flatSArray = sArrayOrNull.getAsFlatArray();
@@ -189,7 +198,7 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
             iArrayOrNull = null;
         } else
         {
-            storageForm = StorageFormEnum.INT;
+            storageForm = EnumStorageForm.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = new MDIntArray(array.dimensions());
@@ -211,21 +220,21 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.BYTE;
+            storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = array;
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.SHORT;
+            storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = toShortArray(array);
             checkOrdinalArray(sArrayOrNull);
             iArrayOrNull = null;
         } else
         {
-            storageForm = StorageFormEnum.INT;
+            storageForm = EnumStorageForm.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = toIntArray(array);
@@ -237,21 +246,21 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.BYTE;
+            storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = toByteArray(array);
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.SHORT;
+            storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = array;
             checkOrdinalArray(sArrayOrNull);
             iArrayOrNull = null;
         } else
         {
-            storageForm = StorageFormEnum.INT;
+            storageForm = EnumStorageForm.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = toIntArray(array);
@@ -263,21 +272,21 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
     {
         if (type.getValueArray().length < Byte.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.BYTE;
+            storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = toByteArray(array);
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
         } else if (type.getValueArray().length < Short.MAX_VALUE)
         {
-            storageForm = StorageFormEnum.SHORT;
+            storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
             sArrayOrNull = toShortArray(array);
             checkOrdinalArray(sArrayOrNull);
             iArrayOrNull = null;
         } else
         {
-            storageForm = StorageFormEnum.INT;
+            storageForm = EnumStorageForm.INT;
             bArrayOrNull = null;
             sArrayOrNull = null;
             iArrayOrNull = array;
@@ -414,7 +423,7 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
         }
     }
 
-    StorageFormEnum getStorageForm()
+    EnumStorageForm getStorageForm()
     {
         return storageForm;
     }

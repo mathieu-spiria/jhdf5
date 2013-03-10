@@ -25,7 +25,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
-import ch.systemsx.cisd.hdf5.HDF5EnumerationType.StorageFormEnum;
+import ch.systemsx.cisd.hdf5.HDF5EnumerationType.EnumStorageForm;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
@@ -479,7 +479,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                                     (enumTypeOrNull == null) ? getEnumTypeForDataSetId(dataSetId,
                                             objectPath, scaledEnum, registry) : enumTypeOrNull;
                             final int arraySize = HDF5Utils.getOneDimensionalArraySize(dimensions);
-                            final StorageFormEnum storageForm = actualEnumType.getStorageForm();
+                            final EnumStorageForm storageForm = actualEnumType.getStorageForm();
                             final byte[] data = new byte[arraySize * storageForm.getStorageSize()];
                             if (scaledEnum)
                             {
@@ -618,7 +618,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, offsetOrNull,
                                             blockDimensionsOrNull, registry);
-                            final StorageFormEnum storageForm = actualEnumType.getStorageForm();
+                            final EnumStorageForm storageForm = actualEnumType.getStorageForm();
                             final byte[] byteArr =
                                     new byte[spaceParams.blockSize * storageForm.getStorageSize()];
                             if (scaledEnum)

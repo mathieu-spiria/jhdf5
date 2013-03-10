@@ -340,6 +340,7 @@ public class HDF5RoundtripTest
         test.testOverwriteCompound();
         test.testOverwriteCompoundKeepType();
         test.testCompoundJavaEnum();
+        test.testEnumFromCompoundJavaEnum();
         test.testCompoundJavaEnumArray();
         test.testCompoundJavaEnumMap();
         test.testCompoundAttribute();
@@ -6656,7 +6657,7 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5Factory.open(file);
-        final JavaEnumCompoundType recordWritten = new JavaEnumCompoundType(TestEnum.CHERRY);
+        final JavaEnumCompoundType recordWritten = new JavaEnumCompoundType(FruitEnum.CHERRY);
         writer.compound().write("cpd", recordWritten);
         writer.close();
 
@@ -6671,22 +6672,61 @@ public class HDF5RoundtripTest
         assertEquals(recordWritten, recordRead);
         final StringEnumCompoundType stringRecordRead =
                 reader.readCompound("cpd", StringEnumCompoundType.class);
-        assertEquals(TestEnum.CHERRY.name(), stringRecordRead.fruit);
+        assertEquals(FruitEnum.CHERRY.name(), stringRecordRead.fruit);
         final OrdinalEnumCompoundType ordinalRecordRead =
                 reader.readCompound("cpd", OrdinalEnumCompoundType.class);
-        assertEquals(TestEnum.CHERRY.ordinal(), ordinalRecordRead.fruit);
+        assertEquals(FruitEnum.CHERRY.ordinal(), ordinalRecordRead.fruit);
+        reader.close();
+    }
+
+    @Test
+    public void testEnumFromCompoundJavaEnum()
+    {
+        final File file = new File(workingDirectory, "enumsFromCompoundJavaEnum.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        final JavaMultipleEnumsCompoundType recordWritten = new JavaMultipleEnumsCompoundType(FruitEnum.APPLE, ColorEnum.BLUE, StateEnum.ONGOING);
+        HDF5CompoundType<JavaMultipleEnumsCompoundType> type = writer.compound().getInferredAnonType(JavaMultipleEnumsCompoundType.class);
+        writer.compound().write("cpd", type, recordWritten);
+        Map<String, HDF5EnumerationType> enumMap = type.getEnumTypeMap();
+        assertEquals("[fruit, color, state]", enumMap.keySet().toString());
+        writer.enumeration().write("fruit", new HDF5EnumerationValue(enumMap.get("fruit"), "ORANGE"));
+        writer.enumeration().write("color", new HDF5EnumerationValue(enumMap.get("color"), "BLACK"));
+        writer.enumeration().write("state", new HDF5EnumerationValue(enumMap.get("state"), "READY"));
+        writer.close();
+
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        type = reader.compound().getDataSetType("cpd", JavaMultipleEnumsCompoundType.class);
+        assertFalse(type.isMappingIncomplete());
+        assertFalse(type.isDiskRepresentationIncomplete());
+        assertFalse(type.isMemoryRepresentationIncomplete());
+        type.checkMappingComplete();
+        final JavaMultipleEnumsCompoundType recordRead = reader.compound().read("cpd", type);
+        enumMap = type.getEnumTypeMap();
+        assertEquals(recordWritten, recordRead);
+        assertEquals(FruitEnum.APPLE, recordRead.fruit);
+        assertEquals(ColorEnum.BLUE, recordRead.color);
+        assertEquals(StateEnum.ONGOING, recordRead.state);
+        assertEquals(reader.enumeration().getDataSetType("fruit"), enumMap.get("fruit"));
+        assertEquals(reader.enumeration().getDataSetType("color"), enumMap.get("color"));
+        assertEquals(reader.enumeration().getDataSetType("state"), enumMap.get("state"));
+        assertEquals("ORANGE", reader.enumeration().read("fruit").getValue());
+        assertEquals("BLACK", reader.enumeration().read("color").getValue());
+        assertEquals("READY", reader.enumeration().read("state").getValue());
         reader.close();
     }
 
     static class JavaEnumArrayCompoundType
     {
-        TestEnum[] fruits;
+        FruitEnum[] fruits;
 
         JavaEnumArrayCompoundType()
         {
         }
 
-        JavaEnumArrayCompoundType(TestEnum[] fruits)
+        JavaEnumArrayCompoundType(FruitEnum[] fruits)
         {
             this.fruits = fruits;
         }
@@ -6767,8 +6807,8 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5Factory.open(file);
         final JavaEnumArrayCompoundType recordWritten =
-                new JavaEnumArrayCompoundType(new TestEnum[]
-                    { TestEnum.CHERRY, TestEnum.APPLE, TestEnum.ORANGE });
+                new JavaEnumArrayCompoundType(new FruitEnum[]
+                    { FruitEnum.CHERRY, FruitEnum.APPLE, FruitEnum.ORANGE });
         writer.compound().write("cpd", recordWritten);
         writer.close();
 
@@ -6801,7 +6841,7 @@ public class HDF5RoundtripTest
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5Factory.open(file);
         final HDF5CompoundDataMap recordWritten = new HDF5CompoundDataMap();
-        recordWritten.put("fruit", TestEnum.ORANGE);
+        recordWritten.put("fruit", FruitEnum.ORANGE);
         writer.compound().write("cpd", recordWritten);
         writer.close();
 
@@ -8702,20 +8742,30 @@ public class HDF5RoundtripTest
         }
     }
 
-    enum TestEnum
+    enum FruitEnum
     {
         APPLE, ORANGE, CHERRY
+    }
+    
+    enum ColorEnum
+    {
+        RED, GEEN, BLUE, BLACK
+    }
+    
+    enum StateEnum
+    {
+        PREPARING, READY, ONGOING, DONE
     }
 
     static class JavaEnumCompoundType
     {
-        TestEnum fruit;
+        FruitEnum fruit;
 
         JavaEnumCompoundType()
         {
         }
 
-        JavaEnumCompoundType(TestEnum fruit)
+        JavaEnumCompoundType(FruitEnum fruit)
         {
             this.fruit = fruit;
         }
@@ -8746,6 +8796,70 @@ public class HDF5RoundtripTest
             }
             JavaEnumCompoundType other = (JavaEnumCompoundType) obj;
             if (fruit != other.fruit)
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    static class JavaMultipleEnumsCompoundType
+    {
+        int i; // Will be ignored, just to be sure a non-enum member doesn't hurt.
+        
+        FruitEnum fruit;
+        
+        ColorEnum color;
+        
+        StateEnum state;
+
+        JavaMultipleEnumsCompoundType()
+        {
+        }
+
+        JavaMultipleEnumsCompoundType(FruitEnum fruit, ColorEnum color, StateEnum state)
+        {
+            this.fruit = fruit;
+            this.color = color;
+            this.state = state;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((color == null) ? 0 : color.hashCode());
+            result = prime * result + ((fruit == null) ? 0 : fruit.hashCode());
+            result = prime * result + ((state == null) ? 0 : state.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            JavaMultipleEnumsCompoundType other = (JavaMultipleEnumsCompoundType) obj;
+            if (color != other.color)
+            {
+                return false;
+            }
+            if (fruit != other.fruit)
+            {
+                return false;
+            }
+            if (state != other.state)
             {
                 return false;
             }

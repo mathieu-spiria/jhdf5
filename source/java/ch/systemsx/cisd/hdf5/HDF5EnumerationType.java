@@ -47,10 +47,23 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
  */
 public final class HDF5EnumerationType extends HDF5DataType implements Iterable<String>
 {
-    enum StorageFormEnum
+    /**
+     * The storage form (as size in bytes) of an enumeration type.
+     */
+    public enum EnumStorageForm
     {
-        BYTE(1, H5T_NATIVE_INT8, H5T_STD_U8LE), SHORT(2, H5T_NATIVE_INT16, H5T_STD_U16LE), INT(4,
-                H5T_NATIVE_INT32, H5T_STD_U32LE);
+        /**
+         * One byte, for up to 255 alternatives.
+         */
+        BYTE(1, H5T_NATIVE_INT8, H5T_STD_U8LE), 
+        /**
+         * Two bytes, for up to 65535 alternatives.
+         */
+        SHORT(2, H5T_NATIVE_INT16, H5T_STD_U16LE), 
+        /**
+         * Four bytes, for more than 65535 alternatives.
+         */
+        INT(4, H5T_NATIVE_INT32, H5T_STD_U32LE);
 
         private final byte storageSize;
 
@@ -58,14 +71,17 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
 
         private final int intStorageType;
 
-        StorageFormEnum(int storageSize, int intNativeType, int intStorageType)
+        EnumStorageForm(int storageSize, int intNativeType, int intStorageType)
         {
             this.storageSize = (byte) storageSize;
             this.intNativeType = intNativeType;
             this.intStorageType = intStorageType;
         }
 
-        byte getStorageSize()
+        /**
+         * Return the number of bytes (1, 2 or 4) of this storage form.
+         */
+        public byte getStorageSize()
         {
             return storageSize;
         }
@@ -175,18 +191,21 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         return unmodifiableValues;
     }
 
-    StorageFormEnum getStorageForm()
+    /**
+     * Returns the {@link EnumStorageForm} of this enumeration type.
+     */
+    public EnumStorageForm getStorageForm()
     {
         final int len = values.length;
         if (len < Byte.MAX_VALUE)
         {
-            return StorageFormEnum.BYTE;
+            return EnumStorageForm.BYTE;
         } else if (len < Short.MAX_VALUE)
         {
-            return StorageFormEnum.SHORT;
+            return EnumStorageForm.SHORT;
         } else
         {
-            return StorageFormEnum.INT;
+            return EnumStorageForm.INT;
         }
     }
 
@@ -253,7 +272,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         throw new HDF5JavaException("Unexpected size for Enum data type (" + size + ")");
     }
 
-    static Object fromStorageForm(byte[] data, StorageFormEnum storageForm)
+    static Object fromStorageForm(byte[] data, EnumStorageForm storageForm)
     {
         switch (storageForm)
         {
@@ -268,7 +287,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     }
 
     static MDAbstractArray<?> fromStorageForm(byte[] data, long[] dimensions,
-            StorageFormEnum storageForm)
+            EnumStorageForm storageForm)
     {
         switch (storageForm)
         {
@@ -283,7 +302,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     }
 
     static MDAbstractArray<?> fromStorageForm(byte[] data, int[] dimensions,
-            StorageFormEnum storageForm)
+            EnumStorageForm storageForm)
     {
         switch (storageForm)
         {
