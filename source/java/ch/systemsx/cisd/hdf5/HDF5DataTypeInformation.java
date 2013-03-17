@@ -116,13 +116,13 @@ public final class HDF5DataTypeInformation
         return new DataTypeInfoOptions();
     }
 
-    private final HDF5DataClass dataClass;
-
     private final boolean arrayType;
 
     private final String dataTypePathOrNull;
 
     private final String nameOrNull;
+
+    private final HDF5DataClass dataClass;
 
     private int elementSize;
 
@@ -206,11 +206,32 @@ public final class HDF5DataTypeInformation
     }
 
     /**
+     * Returns the raw data class (<code>INTEGER</code>, <code>FLOAT</code>, ...) of this type.
+     * <p>
+     * May differ from {@link #getDataClass()} if it is the type of a scaled enum (
+     * {@link HDF5DataTypeVariant#ENUM} or a scaled bitfield (@link
+     * {@link HDF5DataTypeVariant#BITFIELD}.
+     */
+    public HDF5DataClass getRawDataClass()
+    {
+        return dataClass;
+    }
+
+    /**
      * Returns the data class (<code>INTEGER</code>, <code>FLOAT</code>, ...) of this type.
      */
     public HDF5DataClass getDataClass()
     {
-        return dataClass;
+        if (typeVariantOrNull == HDF5DataTypeVariant.ENUM)
+        {
+            return HDF5DataClass.ENUM;
+        } else if (typeVariantOrNull == HDF5DataTypeVariant.BITFIELD)
+        {
+            return HDF5DataClass.BITFIELD;
+        } else
+        {
+            return dataClass;
+        }
     }
 
     /**
@@ -388,6 +409,22 @@ public final class HDF5DataTypeInformation
     public HDF5TimeUnit tryGetTimeUnit()
     {
         return (typeVariantOrNull != null) ? typeVariantOrNull.tryGetTimeUnit() : null;
+    }
+
+    /**
+     * Returns <code>true</code>, if the data set is an enumeration type.
+     */
+    public boolean isEnum()
+    {
+        return getDataClass() == HDF5DataClass.ENUM;
+    }
+
+    /**
+     * Returns <code>true</code>, if the data set is a bitfield type.
+     */
+    public boolean isBitField()
+    {
+        return getDataClass() == HDF5DataClass.BITFIELD;
     }
 
     /**
