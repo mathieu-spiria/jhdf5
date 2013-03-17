@@ -462,7 +462,7 @@ class HDF5BaseReader
     DataSpaceParameters tryGetSpaceParameters(final int dataSetId, final long offset,
             final int blockSize, boolean nullWhenOutside, ICleanUpRegistry registry)
     {
-        return getSpaceParameters(dataSetId, 0, offset, blockSize, nullWhenOutside, registry);
+        return tryGetSpaceParameters(dataSetId, 0, offset, blockSize, nullWhenOutside, registry);
     }
 
     /**
@@ -471,13 +471,22 @@ class HDF5BaseReader
     DataSpaceParameters getSpaceParameters(final int dataSetId, final long offset,
             final int blockSize, ICleanUpRegistry registry)
     {
-        return getSpaceParameters(dataSetId, 0, offset, blockSize, false, registry);
+        return tryGetSpaceParameters(dataSetId, 0, offset, blockSize, false, registry);
     }
 
     /**
      * Returns the {@link DataSpaceParameters} for a 1d block of the given <var>dataSetId</var>.
      */
     DataSpaceParameters getSpaceParameters(final int dataSetId, final long memoryOffset,
+            final long offset, final int blockSize, ICleanUpRegistry registry)
+    {
+        return tryGetSpaceParameters(dataSetId, memoryOffset, offset, blockSize, false, registry);
+    }
+    
+    /**
+     * Returns the {@link DataSpaceParameters} for a 1d block of the given <var>dataSetId</var>.
+     */
+    DataSpaceParameters tryGetSpaceParameters(final int dataSetId, final long memoryOffset,
             final long offset, final int blockSize, boolean nullWhenOutside,
             ICleanUpRegistry registry)
     {
@@ -539,6 +548,16 @@ class HDF5BaseReader
     DataSpaceParameters getSpaceParameters(final int dataSetId, final long[] offset,
             final int[] blockDimensionsOrNull, ICleanUpRegistry registry)
     {
+        return tryGetSpaceParameters(dataSetId, offset, blockDimensionsOrNull, false, registry);
+    }
+    
+    /**
+     * Returns the {@link DataSpaceParameters} for a multi-dimensional block of the given
+     * <var>dataSetId</var>.
+     */
+    DataSpaceParameters tryGetSpaceParameters(final int dataSetId, final long[] offset,
+            final int[] blockDimensionsOrNull, boolean nullWhenOutside, ICleanUpRegistry registry)
+    {
         final int memorySpaceId;
         final int dataSpaceId;
         final long[] effectiveBlockDimensions;
@@ -560,6 +579,10 @@ class HDF5BaseReader
                 final long maxBlockSize = dimensions[i] - offset[i];
                 if (maxBlockSize <= 0)
                 {
+                    if (nullWhenOutside)
+                    {
+                        return null;
+                    }
                     throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
                 }
                 effectiveBlockDimensions[i] = Math.min(blockDimensionsOrNull[i], maxBlockSize);
@@ -583,6 +606,16 @@ class HDF5BaseReader
     DataSpaceParameters getBlockSpaceParameters(final int dataSetId, final int[] memoryOffset,
             final int[] memoryDimensions, ICleanUpRegistry registry)
     {
+        return tryGetBlockSpaceParameters(dataSetId, memoryOffset, memoryDimensions, false, registry);
+    }
+    
+    /**
+     * Returns the {@link DataSpaceParameters} for the given <var>dataSetId</var> when they are
+     * mapped to a block in memory.
+     */
+    DataSpaceParameters tryGetBlockSpaceParameters(final int dataSetId, final int[] memoryOffset,
+            final int[] memoryDimensions, final boolean nullWhenOutside, ICleanUpRegistry registry)
+    {
         assert memoryOffset != null;
         assert memoryDimensions != null;
         assert memoryDimensions.length == memoryOffset.length;
@@ -594,6 +627,10 @@ class HDF5BaseReader
         {
             if (dimensions[i] + memoryOffset[i] > memoryDimensions[i])
             {
+                if (nullWhenOutside)
+                {
+                    return null;
+                }
                 throw new HDF5JavaException("Dimensions " + dimensions[i] + " + memory offset "
                         + memoryOffset[i] + " >= memory buffer " + memoryDimensions[i]);
             }
@@ -610,6 +647,18 @@ class HDF5BaseReader
     DataSpaceParameters getBlockSpaceParameters(final int dataSetId, final int[] memoryOffset,
             final int[] memoryDimensions, final long[] offset, final int[] blockDimensions,
             ICleanUpRegistry registry)
+    {
+        return tryGetBlockSpaceParameters(dataSetId, memoryOffset, memoryDimensions, offset,
+                blockDimensions, false, registry);
+    }
+
+    /**
+     * Returns the {@link DataSpaceParameters} for a block of the given <var>dataSetId</var> when
+     * they are mapped to a block in memory.
+     */
+    DataSpaceParameters tryGetBlockSpaceParameters(final int dataSetId, final int[] memoryOffset,
+            final int[] memoryDimensions, final long[] offset, final int[] blockDimensions,
+            final boolean nullWhenOutside, ICleanUpRegistry registry)
     {
         assert memoryOffset != null;
         assert memoryDimensions != null;
@@ -636,11 +685,19 @@ class HDF5BaseReader
             final long maxFileBlockSize = dimensions[i] - offset[i];
             if (maxFileBlockSize <= 0)
             {
+                if (nullWhenOutside)
+                {
+                    return null;
+                }
                 throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
             }
             final long maxMemoryBlockSize = memoryDimensions[i] - memoryOffset[i];
             if (maxMemoryBlockSize <= 0)
             {
+                if (nullWhenOutside)
+                {
+                    return null;
+                }
                 throw new HDF5JavaException("Memory offset " + memoryOffset[i] + " >= Size "
                         + memoryDimensions[i]);
             }
@@ -1297,6 +1354,12 @@ class HDF5BaseReader
     {
         final HDF5DataTypeVariant typeVariantOrNull = tryGetTypeVariant(objectId, registry);
         return (HDF5DataTypeVariant.ENUM == typeVariantOrNull);
+    }
+
+    boolean isScaledBitField(final int objectId, final ICleanUpRegistry registry)
+    {
+        final HDF5DataTypeVariant typeVariantOrNull = tryGetTypeVariant(objectId, registry);
+        return (HDF5DataTypeVariant.BITFIELD == typeVariantOrNull);
     }
 
     //

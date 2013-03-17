@@ -287,9 +287,10 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
         {
         }
 
-        public HDF5GenericStorageFeatureBuilder(HDF5GenericStorageFeatures template)
+        public HDF5GenericStorageFeatureBuilder(HDF5AbstractStorageFeatures template)
         {
             super(template);
+            noScaling();
         }
 
         /**
@@ -501,7 +502,7 @@ public final class HDF5GenericStorageFeatures extends HDF5AbstractStorageFeature
     /**
      * Returns a new storage feature builder, initializing from <var>template</var>.
      */
-    public static HDF5GenericStorageFeatureBuilder build(HDF5GenericStorageFeatures template)
+    public static HDF5GenericStorageFeatureBuilder build(HDF5AbstractStorageFeatures template)
     {
         return new HDF5GenericStorageFeatureBuilder(template);
     }

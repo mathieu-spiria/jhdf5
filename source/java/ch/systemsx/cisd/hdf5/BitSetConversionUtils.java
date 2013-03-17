@@ -279,7 +279,7 @@ public final class BitSetConversionUtils
         return words;
     }
 
-    static int getMaxLengthInWords(BitSet[] data)
+    static int getMaxLength(BitSet[] data)
     {
         int length = 0;
         for (BitSet bs : data)

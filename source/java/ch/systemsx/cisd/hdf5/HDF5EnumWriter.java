@@ -656,11 +656,6 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                     {
                         H5Dwrite(dataSetId, data.getType().getIntNativeTypeId(), memorySpaceId,
                                 dataSpaceId, H5P_DEFAULT, data.toStorageForm());
-                        baseWriter.setTypeVariant(dataSetId, HDF5DataTypeVariant.ENUM, registry);
-                        baseWriter.setStringAttribute(dataSetId, HDF5Utils
-                                .getEnumTypeNameAttributeName(baseWriter.houseKeepingNameSuffix),
-                                data.getType().getName(), data.getType().getName().length(), true,
-                                registry);
                     } else
                     {
                         H5Dwrite(dataSetId, data.getType().getNativeTypeId(), memorySpaceId,

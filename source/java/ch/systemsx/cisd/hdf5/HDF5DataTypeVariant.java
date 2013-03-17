@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -80,7 +81,9 @@ public enum HDF5DataTypeVariant
     /**
      * No type variant.
      */
-    NONE;
+    NONE,
+    
+    BITFIELD(BitSet.class);
 
     private Set<Class<?>> compatibleTypes;
 

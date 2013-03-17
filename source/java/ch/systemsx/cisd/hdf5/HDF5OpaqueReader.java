@@ -234,7 +234,7 @@ public class HDF5OpaqueReader implements IHDF5OpaqueReader
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, memoryOffset, offset,
-                                    blockSize, false, registry);
+                                    blockSize, registry);
                     final int nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     checkNotAString(objectPath, nativeDataTypeId);

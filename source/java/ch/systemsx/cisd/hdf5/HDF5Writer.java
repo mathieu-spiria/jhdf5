@@ -91,7 +91,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     private final IHDF5CompoundWriter compoundWriter;
 
     private final IHDF5DateTimeWriter dateTimeWriter;
-    
+
     private final HDF5TimeDurationWriter timeDurationWriter;
 
     private final IHDF5ReferenceWriter referenceWriter;
@@ -119,7 +119,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
         this.enumWriter = new HDF5EnumWriter(baseWriter);
         this.compoundWriter = new HDF5CompoundWriter(baseWriter, enumWriter);
         this.dateTimeWriter = new HDF5DateTimeWriter(baseWriter, (HDF5LongReader) longReader);
-        this.timeDurationWriter = new HDF5TimeDurationWriter(baseWriter, (HDF5LongReader) longReader);
+        this.timeDurationWriter =
+                new HDF5TimeDurationWriter(baseWriter, (HDF5LongReader) longReader);
         this.referenceWriter = new HDF5ReferenceWriter(baseWriter);
         this.opaqueWriter = new HDF5OpaqueWriter(baseWriter);
     }
@@ -186,7 +187,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         return objectHandler;
     }
-
 
     @Override
     public HDF5LinkInformation getLinkInformation(String objectPath)
@@ -585,14 +585,16 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     @Override
     public void createBitField(String objectPath, int size, HDF5IntStorageFeatures features)
     {
-        booleanWriter.createBitField(objectPath, size, features);
+        booleanWriter.createBitField(objectPath, size, HDF5GenericStorageFeatures.build(features)
+                .features());
     }
 
     @Override
     public void createBitField(String objectPath, long size, int blockSize,
             HDF5IntStorageFeatures features)
     {
-        booleanWriter.createBitField(objectPath, size, blockSize, features);
+        booleanWriter.createBitField(objectPath, size, blockSize,
+                HDF5GenericStorageFeatures.build(features).features());
     }
 
     @Override
@@ -669,8 +671,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeOpaqueByteArrayBlockWithOffset(String objectPath, HDF5OpaqueType dataType,
             byte[] data, int dataSize, long offset)
     {
-        opaqueWriter.writeArrayBlockWithOffset(objectPath, dataType, data, dataSize,
-                offset);
+        opaqueWriter.writeArrayBlockWithOffset(objectPath, dataType, data, dataSize, offset);
     }
 
     //
@@ -938,8 +939,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeTimeDurationArrayBlockWithOffset(String objectPath, long[] data, int dataSize,
             long offset, HDF5TimeUnit timeUnit)
     {
-        timeDurationWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset,
-                timeUnit);
+        timeDurationWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize,
+                offset, timeUnit);
     }
 
     @Override
@@ -955,7 +956,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeTimeDurationArrayBlockWithOffset(String objectPath, HDF5TimeDuration[] data,
             int dataSize, long offset)
     {
-        timeDurationWriter.writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset);
+        timeDurationWriter
+                .writeTimeDurationArrayBlockWithOffset(objectPath, data, dataSize, offset);
     }
 
     //
@@ -1060,16 +1062,15 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeObjectReferenceArrayBlock(String objectPath, String[] referencedObjectPaths,
             long blockNumber)
     {
-        referenceWriter.writeArrayBlock(objectPath, referencedObjectPaths,
-                blockNumber);
+        referenceWriter.writeArrayBlock(objectPath, referencedObjectPaths, blockNumber);
     }
 
     @Override
     public void writeObjectReferenceArrayBlockWithOffset(String objectPath,
             String[] referencedObjectPaths, int dataSize, long offset)
     {
-        referenceWriter.writeArrayBlockWithOffset(objectPath, referencedObjectPaths,
-                dataSize, offset);
+        referenceWriter.writeArrayBlockWithOffset(objectPath, referencedObjectPaths, dataSize,
+                offset);
     }
 
     @Override
@@ -1096,32 +1097,29 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void createObjectReferenceMDArray(String objectPath, long[] dimensions,
             int[] blockDimensions, HDF5IntStorageFeatures features)
     {
-        referenceWriter.createMDArray(objectPath, dimensions, blockDimensions,
-                features);
+        referenceWriter.createMDArray(objectPath, dimensions, blockDimensions, features);
     }
 
     @Override
     public void writeObjectReferenceMDArrayBlock(String objectPath,
             MDArray<String> referencedObjectPaths, long[] blockNumber)
     {
-        referenceWriter.writeMDArrayBlock(objectPath, referencedObjectPaths,
-                blockNumber);
+        referenceWriter.writeMDArrayBlock(objectPath, referencedObjectPaths, blockNumber);
     }
 
     @Override
     public void writeObjectReferenceMDArrayBlockWithOffset(String objectPath,
             MDArray<String> referencedObjectPaths, long[] offset)
     {
-        referenceWriter.writeMDArrayBlockWithOffset(objectPath,
-                referencedObjectPaths, offset);
+        referenceWriter.writeMDArrayBlockWithOffset(objectPath, referencedObjectPaths, offset);
     }
 
     @Override
     public void writeObjectReferenceMDArrayBlockWithOffset(String objectPath, MDLongArray data,
             int[] blockDimensions, long[] offset, int[] memoryOffset)
     {
-        referenceWriter.writeMDArrayBlockWithOffset(objectPath, data,
-                blockDimensions, offset, memoryOffset);
+        referenceWriter.writeMDArrayBlockWithOffset(objectPath, data, blockDimensions, offset,
+                memoryOffset);
     }
 
     @Override
@@ -2270,8 +2268,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeDoubleMatrixBlockWithOffset(String objectPath, double[][] data, int dataSizeX,
             int dataSizeY, long offsetX, long offsetY)
     {
-        doubleWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
-                offsetX, offsetY);
+        doubleWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
+                offsetY);
     }
 
     @Override
@@ -2464,8 +2462,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeFloatMatrixBlockWithOffset(String objectPath, float[][] data, int dataSizeX,
             int dataSizeY, long offsetX, long offsetY)
     {
-        floatWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
-                offsetX, offsetY);
+        floatWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
+                offsetY);
     }
 
     @Override
@@ -3042,8 +3040,8 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeShortMatrixBlockWithOffset(String objectPath, short[][] data, int dataSizeX,
             int dataSizeY, long offsetX, long offsetY)
     {
-        shortWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY,
-                offsetX, offsetY);
+        shortWriter.writeMatrixBlockWithOffset(objectPath, data, dataSizeX, dataSizeY, offsetX,
+                offsetY);
     }
 
     @Override

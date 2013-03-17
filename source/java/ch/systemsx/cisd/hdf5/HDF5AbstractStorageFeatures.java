@@ -170,10 +170,16 @@ abstract class HDF5AbstractStorageFeatures
             return this;
         }
 
-        HDF5AbstractStorageFeatureBuilder scalingFactor(@SuppressWarnings("hiding")
+        public HDF5AbstractStorageFeatureBuilder scalingFactor(@SuppressWarnings("hiding")
         byte scalingFactor)
         {
             this.scalingFactor = scalingFactor;
+            return this;
+        }
+
+        public HDF5AbstractStorageFeatureBuilder noScaling()
+        {
+            this.scalingFactor = (byte) -1;
             return this;
         }
 

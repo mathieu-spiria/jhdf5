@@ -36,7 +36,7 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setAttr(final String objectPath, final String name, final boolean value);
+    public void setAttr(String objectPath, String name, boolean value);
 
     /**
      * Writes out a <code>boolean</code> value.
@@ -44,7 +44,7 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param value The value of the data set.
      */
-    public void write(final String objectPath, final boolean value);
+    public void write(String objectPath, boolean value);
 
     /**
      * Writes out a bit field ((which can be considered the equivalent to a boolean array of rank
@@ -58,7 +58,7 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
-    public void writeBitField(final String objectPath, final BitSet data);
+    public void writeBitField(String objectPath, BitSet data);
 
     /**
      * Writes out a bit field ((which can be considered the equivalent to a boolean array of rank
@@ -73,8 +73,7 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
      */
-    public void writeBitField(final String objectPath, final BitSet data,
-            final HDF5GenericStorageFeatures features);
+    public void writeBitField(String objectPath, BitSet data, HDF5GenericStorageFeatures features);
 
     /**
      * Creates a bit field (of rank 1).
@@ -86,7 +85,7 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      *            be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
-    public void createBitField(final String objectPath, final int size);
+    public void createBitField(String objectPath, int size);
 
     /**
      * Creates a bit field (of rank 1).
@@ -98,7 +97,7 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      */
-    public void createBitField(final String objectPath, final long size, final int blockSize);
+    public void createBitField(String objectPath, long size, int blockSize);
 
     /**
      * Creates a bit field array (of rank 1).
@@ -110,8 +109,7 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      *            be 0, see {@link HDF5IntStorageFeatures}.
      * @param features The storage features of the data set.
      */
-    public void createBitField(final String objectPath, final int size,
-            final HDF5IntStorageFeatures features);
+    public void createBitField(String objectPath, int size, HDF5GenericStorageFeatures features);
 
     /**
      * Creates a bit field (of rank 1).
@@ -125,16 +123,16 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      *            and <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
      * @param features The storage features of the data set.
      */
-    public void createBitField(final String objectPath, final long size, final int blockSize,
-            final HDF5IntStorageFeatures features);
+    public void createBitField(String objectPath, long size, int blockSize,
+            HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a block of a bit field (of rank 1). The data set needs to have been created by
-     * {@link #createBitField(String, long, int, HDF5IntStorageFeatures)} beforehand.
+     * {@link #createBitField(String, long, int, HDF5GenericStorageFeatures)} beforehand.
      * <p>
      * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
      * to the <var>blockSize</var> argument of the
-     * {@link #createBitField(String, long, int, HDF5IntStorageFeatures)} call that was used to
+     * {@link #createBitField(String, long, int, HDF5GenericStorageFeatures)} call that was used to
      * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -143,19 +141,19 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param dataSize The (real) size of <code>data</code>
      * @param blockNumber The number of the block to write.
      */
-    public void writeBitFieldBlock(final String objectPath, final BitSet data, final int dataSize,
-            final long blockNumber);
+    public void writeBitFieldBlock(String objectPath, BitSet data, int dataSize, long blockNumber);
 
     /**
      * Writes out a block of a <code>long</code> array (of rank 1). The data set needs to have been
-     * created by {@link #createBitField(String, long, int, HDF5IntStorageFeatures)} beforehand.
+     * created by {@link #createBitFieldArray(String, int, long, long, HDF5IntStorageFeatures)}
+     * beforehand.
      * <p>
      * Use this method instead of {@link #writeBitFieldBlock(String, BitSet, int, long)} if the
      * total size of the data set is not a multiple of the block size.
      * <p>
      * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
      * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createBitField(String, long, int, HDF5IntStorageFeatures)} call that was used to
+     * {@link #createBitField(String, long, int, HDF5GenericStorageFeatures)} call that was used to
      * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -164,12 +162,12 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param dataSize The (real) size of <code>data</code>
      * @param offset The offset in the data set to start writing to.
      */
-    public void writeBitFieldBlockWithOffset(final String objectPath, BitSet data,
-            final int dataSize, final long offset);
+    public void writeBitFieldBlockWithOffset(String objectPath, BitSet data, int dataSize,
+            long offset);
 
     /**
-     * Writes out a bit field array (which can be considered the equivalent to a boolean array of
-     * rank 2), provided as a Java array of {@link BitSet}s.
+     * Writes out an array of bit fields (which can be considered the equivalent to a boolean array
+     * of rank 2), provided as a Java array of {@link BitSet}s.
      * <p>
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
@@ -180,12 +178,11 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
      */
-    public void writeBitFieldArray(final String objectPath, final BitSet[] data,
-            final HDF5GenericStorageFeatures features);
+    public void writeBitFieldArray(String objectPath, BitSet[] data, HDF5IntStorageFeatures features);
 
     /**
-     * Writes out a bit field array (which can be considered the equivalent to a boolean array of
-     * rank 2), provided as a Java array of {@link BitSet}s.
+     * Writes out an array of bit fields (which can be considered the equivalent to a boolean array
+     * of rank 2), provided as a Java array of {@link BitSet}s.
      * <p>
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
@@ -195,6 +192,131 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
-    public void writeBitFieldArray(final String objectPath, final BitSet[] data);
+    public void writeBitFieldArray(String objectPath, BitSet[] data);
+
+    /**
+     * Creates an array of bit fields (of rank 1) (which can be considered the equivalent to a
+     * boolean array of rank 2).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param bitFieldSize The size of the bit fields in the array (in 64 bit words).
+     * @param arraySize The size of the array of bit fields to create. When using extendable data
+     *            sets ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no
+     *            data set smaller than this size can be created, however data sets may be larger.
+     * @param arrayBlockSize The size of one block (for block-wise IO). Ignored if no extendable
+     *            data sets are used (see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
+     *            <code>features</code> is <code>HDF5IntStorageFeature.INT_NO_COMPRESSION</code>.
+     * @param features The storage features of the data set.
+     */
+    public void createBitFieldArray(String objectPath, int bitFieldSize, long arraySize,
+            long arrayBlockSize, HDF5IntStorageFeatures features);
+
+    /**
+     * Creates an array of bit fields (of rank 1) (which can be considered the equivalent to a
+     * boolean array of rank 2).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param bitFieldSize The size of the bit fields in the array (in 64 bit words).
+     * @param arraySize The size of the array of bit fields to create. When using extendable data
+     *            sets ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no
+     *            data set smaller than this size can be created, however data sets may be larger.
+     * @param arrayBlockSize The size of one block (for block-wise IO). Ignored if no extendable
+     *            data sets are used (see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and
+     *            <code>features</code> is <code>HDF5IntStorageFeature.INT_NO_COMPRESSION</code>.
+     */
+    public void createBitFieldArray(String objectPath, int bitFieldSize, long arraySize,
+            long arrayBlockSize);
+
+    /**
+     * Creates an empty array of bit fields (of rank 1) (which can be considered the equivalent to a
+     * boolean array of rank 2). This method always creates an extendable data sets.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param bitFieldSize The size of the bit fields in the array (in 64 bit words).
+     * @param arrayBlockSize The size of one block (for block-wise IO).
+     * @param features The storage features of the data set.
+     */
+    public void createBitFieldArray(String objectPath, int bitFieldSize, long arrayBlockSize,
+            HDF5IntStorageFeatures features);
+
+    /**
+     * Creates an empty array of bit fields (of rank 1) (which can be considered the equivalent to a
+     * boolean array of rank 2). This method always creates an extendable data sets.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param bitFieldSize The size of the bit fields in the array (in 64 bit words).
+     * @param arrayBlockSize The size of one block (for block-wise IO).
+     */
+    public void createBitFieldArray(String objectPath, int bitFieldSize, long arrayBlockSize);
+
+    /**
+     * Writes out an array of bit fields (which can be considered the equivalent to a boolean array
+     * of rank 2), provided as a Java array of {@link BitSet}s.
+     * <p>
+     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
+     * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
+     * back by {@link IHDF5LongReader#readArray(String)} but will throw a
+     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param dataSize The number of entries from <var>data</var> to write to the bitfield array
+     *            (must be smaller or equals to <code>data.length</code>.
+     * @param blockNumber The block number in the array (offset: multiply with
+     *            <var>dataSize</var>>).
+     */
+    public void writeBitFieldArrayBlock(String objectPath, BitSet[] data, int dataSize,
+            long blockNumber);
+
+    /**
+     * Writes out an array of bit fields (which can be considered the equivalent to a boolean array
+     * of rank 2), provided as a Java array of {@link BitSet}s.
+     * <p>
+     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
+     * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
+     * back by {@link IHDF5LongReader#readArray(String)} but will throw a
+     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockNumber The block number in the array (offset: multiply with
+     *            <code>data.length</code>).
+     */
+    public void writeBitFieldArrayBlock(String objectPath, BitSet[] data, long blockNumber);
+
+    /**
+     * Writes out an array of bit fields (which can be considered the equivalent to a boolean array
+     * of rank 2), provided as a Java array of {@link BitSet}s.
+     * <p>
+     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
+     * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
+     * back by {@link IHDF5LongReader#readArray(String)} but will throw a
+     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param dataSize The number of entries from <var>data</var> to write to the bitfield array
+     *            (must be smaller or equals to <code>data.length</code>.
+     * @param offset The offset in the bitfield array where to start writing the data.
+     */
+    public void writeBitFieldArrayBlockWithOffset(String objectPath, BitSet[] data, int dataSize,
+            long offset);
+
+    /**
+     * Writes out an array of bit fields (which can be considered the equivalent to a boolean array
+     * of rank 2), provided as a Java array of {@link BitSet}s.
+     * <p>
+     * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
+     * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
+     * back by {@link IHDF5LongReader#readArray(String)} but will throw a
+     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param offset The offset in the bitfield array where to start writing the data.
+     */
+    public void writeBitFieldArrayBlockWithOffset(String objectPath, BitSet[] data, long offset);
 
 }

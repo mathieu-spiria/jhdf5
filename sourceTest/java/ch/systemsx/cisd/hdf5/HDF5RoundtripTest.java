@@ -21,12 +21,11 @@ import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_SCALING1_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE_MAX;
-import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_SHUFFLE_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_SHUFFLE_DEFLATE;
-import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.*;
+import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.toInt8;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
@@ -151,6 +150,7 @@ public class HDF5RoundtripTest
         test.testBooleanArray();
         test.testBooleanArrayBlock();
         test.testBitFieldArray();
+        test.testBitFieldArrayBlockWise();
         test.testSmallString();
         test.testReadStringAttributeAsByteArray();
         test.testReadStringAsByteArray();
@@ -688,23 +688,28 @@ public class HDF5RoundtripTest
         final File datasetFile = new File(workingDirectory, "bitFieldArray.h5");
         datasetFile.delete();
         assertFalse(datasetFile.exists());
-        //datasetFile.deleteOnExit();
+        datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         final String booleanDatasetName = "/bitFieldArray";
-        final BitSet[] arrayWritten = new BitSet[] { new BitSet(), new BitSet(), new BitSet() };
+        final BitSet[] arrayWritten = new BitSet[]
+            { new BitSet(), new BitSet(), new BitSet() };
         arrayWritten[0].set(32);
         arrayWritten[1].set(40);
         arrayWritten[2].set(17);
-        writer.bool().writeBitFieldArray(booleanDatasetName, arrayWritten);
+        writer.bool().writeBitFieldArray(booleanDatasetName, arrayWritten, INT_AUTO_SCALING);
         final String bigBooleanDatasetName = "/bigBitFieldArray";
-        final BitSet[] bigAarrayWritten = new BitSet[] { new BitSet(), new BitSet(), new BitSet() };
+        final BitSet[] bigAarrayWritten = new BitSet[]
+            { new BitSet(), new BitSet(), new BitSet() };
         bigAarrayWritten[0].set(32);
         bigAarrayWritten[1].set(126);
         bigAarrayWritten[2].set(17);
         bigAarrayWritten[2].set(190);
-        writer.bool().writeBitFieldArray(bigBooleanDatasetName, bigAarrayWritten, GENERIC_SHUFFLE_DEFLATE);
+        writer.bool().writeBitFieldArray(bigBooleanDatasetName, bigAarrayWritten, INT_AUTO_SCALING);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        assertEquals(HDF5DataClass.BITFIELD,
+                reader.object().getDataSetInformation(booleanDatasetName).getTypeInformation()
+                        .getDataClass());
         final BitSet[] arrayRead = reader.bool().readBitFieldArray(booleanDatasetName);
         assertEquals(3, arrayRead.length);
         assertEquals(1, arrayRead[0].cardinality());
@@ -714,6 +719,9 @@ public class HDF5RoundtripTest
         assertEquals(1, arrayRead[2].cardinality());
         assertTrue(arrayRead[2].get(17));
 
+        assertEquals(HDF5DataClass.BITFIELD,
+                reader.object().getDataSetInformation(bigBooleanDatasetName).getTypeInformation()
+                        .getDataClass());
         final BitSet[] bigArrayRead = reader.bool().readBitFieldArray(bigBooleanDatasetName);
         assertEquals(3, arrayRead.length);
         assertEquals(1, bigArrayRead[0].cardinality());
@@ -723,6 +731,46 @@ public class HDF5RoundtripTest
         assertEquals(2, bigArrayRead[2].cardinality());
         assertTrue(bigArrayRead[2].get(17));
         assertTrue(bigArrayRead[2].get(190));
+        reader.close();
+    }
+
+    @Test
+    public void testBitFieldArrayBlockWise()
+    {
+        final File datasetFile = new File(workingDirectory, "bitFieldArrayBlockWise.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String booleanDatasetName = "/bitFieldArray";
+        final BitSet[] arrayWritten = new BitSet[]
+            { new BitSet(), new BitSet(), new BitSet(), new BitSet() };
+        arrayWritten[0].set(0);
+        arrayWritten[1].set(1);
+        arrayWritten[2].set(2);
+        arrayWritten[3].set(3);
+        final int count = 100;
+        writer.bool().createBitFieldArray(booleanDatasetName, 4, count * arrayWritten.length,
+                INT_AUTO_SCALING);
+        for (int i = 0; i < count; ++i)
+        {
+            writer.bool().writeBitFieldArrayBlock(booleanDatasetName, arrayWritten, i);
+        }
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final HDF5DataSetInformation info =
+                reader.object().getDataSetInformation(booleanDatasetName);
+        assertEquals(HDF5DataClass.BITFIELD, info.getTypeInformation().getDataClass());
+        assertEquals(2, info.getDimensions().length);
+        assertEquals(1, info.getDimensions()[0]);
+        assertEquals(count * arrayWritten.length, info.getDimensions()[1]);
+        for (int i = 0; i < count; ++i)
+        {
+            assertTrue(
+                    "Block " + i,
+                    Arrays.equals(arrayWritten,
+                            reader.bool().readBitFieldArrayBlock(booleanDatasetName, 4, i)));
+        }
         reader.close();
     }
 
@@ -6112,6 +6160,8 @@ public class HDF5RoundtripTest
         writer.enumeration().writeArray("/testEnum", arrayWritten, INT_AUTO_SCALING);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        assertEquals(HDF5DataClass.ENUM, reader.object().getDataSetInformation("/testEnum")
+                .getTypeInformation().getDataClass());
         final HDF5EnumerationValueArray arrayRead = reader.enumeration().readArray("/testEnum");
         enumType = reader.enumeration().getDataSetType("/testEnum");
         final HDF5EnumerationValueArray arrayRead2 =
@@ -6733,14 +6783,20 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5Factory.open(file);
-        final JavaMultipleEnumsCompoundType recordWritten = new JavaMultipleEnumsCompoundType(FruitEnum.APPLE, ColorEnum.BLUE, StateEnum.ONGOING);
-        HDF5CompoundType<JavaMultipleEnumsCompoundType> type = writer.compound().getInferredAnonType(JavaMultipleEnumsCompoundType.class);
+        final JavaMultipleEnumsCompoundType recordWritten =
+                new JavaMultipleEnumsCompoundType(FruitEnum.APPLE, ColorEnum.BLUE,
+                        StateEnum.ONGOING);
+        HDF5CompoundType<JavaMultipleEnumsCompoundType> type =
+                writer.compound().getInferredAnonType(JavaMultipleEnumsCompoundType.class);
         writer.compound().write("cpd", type, recordWritten);
         Map<String, HDF5EnumerationType> enumMap = type.getEnumTypeMap();
         assertEquals("[fruit, color, state]", enumMap.keySet().toString());
-        writer.enumeration().write("fruit", new HDF5EnumerationValue(enumMap.get("fruit"), "ORANGE"));
-        writer.enumeration().write("color", new HDF5EnumerationValue(enumMap.get("color"), "BLACK"));
-        writer.enumeration().write("state", new HDF5EnumerationValue(enumMap.get("state"), "READY"));
+        writer.enumeration().write("fruit",
+                new HDF5EnumerationValue(enumMap.get("fruit"), "ORANGE"));
+        writer.enumeration()
+                .write("color", new HDF5EnumerationValue(enumMap.get("color"), "BLACK"));
+        writer.enumeration()
+                .write("state", new HDF5EnumerationValue(enumMap.get("state"), "READY"));
         writer.close();
 
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
@@ -8792,12 +8848,12 @@ public class HDF5RoundtripTest
     {
         APPLE, ORANGE, CHERRY
     }
-    
+
     enum ColorEnum
     {
         RED, GEEN, BLUE, BLACK
     }
-    
+
     enum StateEnum
     {
         PREPARING, READY, ONGOING, DONE
@@ -8852,11 +8908,11 @@ public class HDF5RoundtripTest
     static class JavaMultipleEnumsCompoundType
     {
         int i; // Will be ignored, just to be sure a non-enum member doesn't hurt.
-        
+
         FruitEnum fruit;
-        
+
         ColorEnum color;
-        
+
         StateEnum state;
 
         JavaMultipleEnumsCompoundType()

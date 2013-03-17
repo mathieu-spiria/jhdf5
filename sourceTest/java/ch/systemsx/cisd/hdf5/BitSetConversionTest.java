@@ -119,7 +119,7 @@ public class BitSetConversionTest
     @Test(dataProvider = "createBitSetArrays")
     public void testBitSetArrayRoundTrip(final BitSet[] bs)
     {
-        final int maxLength = BitSetConversionUtils.getMaxLengthInWords(bs);
+        final int maxLength = BitSetConversionUtils.getMaxLength(bs);
         final long[] bsArray = BitSetConversionUtils.toStorageForm(bs, maxLength);
         final BitSet bs2[] = BitSetConversionUtils.fromStorageForm2D(new MDLongArray(bsArray, new int[] { bs.length, maxLength }));
         assertTrue(Arrays.equals(bs, bs2));

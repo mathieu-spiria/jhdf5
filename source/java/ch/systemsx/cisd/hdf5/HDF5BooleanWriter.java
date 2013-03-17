@@ -16,14 +16,19 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_UINT64;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_B64LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;
 
 import java.util.BitSet;
+
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -108,19 +113,19 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
     @Override
     public void createBitField(String objectPath, int size)
     {
-        createBitField(objectPath, size, INT_NO_COMPRESSION);
+        createBitField(objectPath, size, GENERIC_NO_COMPRESSION);
 
     }
 
     @Override
     public void createBitField(String objectPath, long size, int blockSize)
     {
-        createBitField(objectPath, size, blockSize, INT_NO_COMPRESSION);
+        createBitField(objectPath, size, blockSize, GENERIC_NO_COMPRESSION);
     }
 
     @Override
     public void createBitField(final String objectPath, final int size,
-            final HDF5IntStorageFeatures features)
+            final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
         assert size >= 0;
@@ -150,7 +155,7 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
 
     @Override
     public void createBitField(final String objectPath, final long size, final int blockSize,
-            final HDF5IntStorageFeatures features)
+            final HDF5GenericStorageFeatures features)
     {
         assert objectPath != null;
         assert size >= 0;
@@ -214,12 +219,12 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
     @Override
     public void writeBitFieldArray(final String objectPath, final BitSet[] data)
     {
-        writeBitFieldArray(objectPath, data, HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION);
+        writeBitFieldArray(objectPath, data, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
-    
+
     @Override
     public void writeBitFieldArray(final String objectPath, final BitSet[] data,
-            final HDF5GenericStorageFeatures features)
+            final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert data != null;
@@ -232,17 +237,172 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                 {
                     final int longBytes = 8;
                     final int longBits = longBytes * 8;
-                    final int msb = BitSetConversionUtils.getMaxLengthInWords(data);
+                    final int msb = BitSetConversionUtils.getMaxLength(data);
                     final int numberOfWords = msb / longBits + (msb % longBits != 0 ? 1 : 0);
-                    final int dataSetId =
-                            baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_B64LE, new long[]
-                                { numberOfWords, data.length }, longBytes, features, registry);
-                    H5Dwrite(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                            BitSetConversionUtils.toStorageForm(data, numberOfWords));
+                    if (features.isScaling() && msb < longBits)
+                    {
+                        features.checkScalingOK(baseWriter.fileFormat);
+                        final HDF5IntStorageFeatures actualFeatures =
+                                HDF5IntStorageFeatures.build(features).scalingFactor((byte) msb)
+                                        .features();
+                        final int dataSetId =
+                                baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_U64LE,
+                                        new long[]
+                                            { numberOfWords, data.length }, longBytes,
+                                        actualFeatures, registry);
+                        H5Dwrite(dataSetId, H5T_NATIVE_UINT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                                BitSetConversionUtils.toStorageForm(data, numberOfWords));
+                        baseWriter
+                                .setTypeVariant(dataSetId, HDF5DataTypeVariant.BITFIELD, registry);
+                    } else
+                    {
+                        final HDF5IntStorageFeatures actualFeatures =
+                                HDF5IntStorageFeatures.build(features).noScaling().features();
+                        final int dataSetId =
+                                baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_B64LE,
+                                        new long[]
+                                            { numberOfWords, data.length }, longBytes,
+                                        actualFeatures, registry);
+                        H5Dwrite(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                                BitSetConversionUtils.toStorageForm(data, numberOfWords));
+                    }
                     return null; // Nothing to return.
                 }
             };
         baseWriter.runner.call(writeRunnable);
     }
 
+    @Override
+    public void createBitFieldArray(final String objectPath, final int bitFieldSize,
+            final long arraySize, final long arrayBlockSize, final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int longBytes = 8;
+                    final int longBits = longBytes * 8;
+                    final int numberOfWords =
+                            bitFieldSize / longBits + (bitFieldSize % longBits != 0 ? 1 : 0);
+                    if (features.isScaling() && bitFieldSize < longBits)
+                    {
+                        features.checkScalingOK(baseWriter.fileFormat);
+                        final HDF5IntStorageFeatures actualFeatures =
+                                HDF5IntStorageFeatures.build(features)
+                                        .scalingFactor((byte) bitFieldSize).features();
+                        final int dataSetId =
+                                baseWriter.createDataSet(objectPath, H5T_STD_U64LE, actualFeatures,
+                                        new long[]
+                                            { numberOfWords, arraySize }, new long[]
+                                            { numberOfWords, arrayBlockSize }, longBytes, registry);
+                        baseWriter
+                                .setTypeVariant(dataSetId, HDF5DataTypeVariant.BITFIELD, registry);
+                    } else
+                    {
+                        final HDF5IntStorageFeatures actualFeatures =
+                                HDF5IntStorageFeatures.build(features).noScaling().features();
+                        baseWriter.createDataSet(objectPath, H5T_STD_B64LE, actualFeatures,
+                                new long[]
+                                    { numberOfWords, arraySize }, new long[]
+                                    { numberOfWords, arrayBlockSize }, longBytes, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
+    @Override
+    public void createBitFieldArray(String objectPath, int bitFieldSize, long arrayBlockSize,
+            HDF5IntStorageFeatures features)
+    {
+        createBitFieldArray(objectPath, bitFieldSize, 0, arrayBlockSize, features);
+    }
+
+    @Override
+    public void createBitFieldArray(String objectPath, int bitFieldSize, long arraySize,
+            long arrayBlockSize)
+    {
+        createBitFieldArray(objectPath, bitFieldSize, arraySize, arrayBlockSize, INT_NO_COMPRESSION);
+    }
+
+    @Override
+    public void createBitFieldArray(String objectPath, int bitFieldSize, long arrayBlockSize)
+    {
+        createBitFieldArray(objectPath, bitFieldSize, 0, arrayBlockSize, INT_NO_COMPRESSION);
+    }
+
+    @Override
+    public void writeBitFieldArrayBlockWithOffset(final String objectPath, final BitSet[] data,
+            final int dataSize, final long offset)
+    {
+        assert objectPath != null;
+        assert data != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
+                                    baseWriter.fileFormat, new long[]
+                                        { -1, offset + dataSize }, -1, registry);
+                    final long[] dimensions = baseWriter.h5.getDataDimensions(dataSetId, registry);
+                    if (dimensions.length != 2)
+                    {
+                        throw new HDF5JavaException(
+                                "Array is supposed to be of rank 2, but is of rank "
+                                        + dimensions.length);
+                    }
+                    final int numberOfWords = dimToInt(dimensions[0]);
+                    final long[] blockDimensions = new long[]
+                        { numberOfWords, dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { 0, offset };
+                    final int dataSpaceId =
+                            baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
+                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId =
+                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
+
+                    if (baseWriter.isScaledBitField(dataSetId, registry))
+                    {
+                        H5Dwrite(dataSetId, H5T_NATIVE_UINT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                                BitSetConversionUtils.toStorageForm(data, numberOfWords));
+                    } else
+                    {
+                        H5Dwrite(dataSetId, H5T_NATIVE_B64, memorySpaceId, dataSpaceId,
+                                H5P_DEFAULT,
+                                BitSetConversionUtils.toStorageForm(data, numberOfWords));
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    @Override
+    public void writeBitFieldArrayBlockWithOffset(String objectPath, BitSet[] data, long offset)
+    {
+        writeBitFieldArrayBlockWithOffset(objectPath, data, data.length, offset);
+    }
+
+    @Override
+    public void writeBitFieldArrayBlock(String objectPath, BitSet[] data, int dataSize,
+            long blockNumber)
+    {
+        writeBitFieldArrayBlockWithOffset(objectPath, data, dataSize, dataSize * blockNumber);
+    }
+
+    @Override
+    public void writeBitFieldArrayBlock(String objectPath, BitSet[] data, long blockNumber)
+    {
+        writeBitFieldArrayBlock(objectPath, data, data.length, blockNumber);
+    }
 }

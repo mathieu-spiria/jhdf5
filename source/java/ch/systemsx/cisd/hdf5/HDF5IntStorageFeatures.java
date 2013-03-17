@@ -533,10 +533,13 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
         {
         }
 
-        public HDF5IntStorageFeatureBuilder(HDF5IntStorageFeatures template)
+        public HDF5IntStorageFeatureBuilder(HDF5AbstractStorageFeatures template)
         {
             super(template);
-            signed(template.isSigned());
+            if (template instanceof HDF5IntStorageFeatures)
+            {
+                signed(((HDF5IntStorageFeatures) template).isSigned());
+            }
         }
 
         boolean isSigned()
@@ -613,6 +616,18 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
         public HDF5IntStorageFeatureBuilder scalingFactor(byte scalingFactor)
         {
             super.scalingFactor(scalingFactor);
+            return this;
+        }
+
+        /**
+         * Disables the scaling pre-filter.
+         * 
+         * @return This builder.
+         */
+        @Override
+        public HDF5IntStorageFeatureBuilder noScaling()
+        {
+            super.noScaling();
             return this;
         }
 
@@ -785,7 +800,7 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
     /**
      * Returns a new storage feature builder, initializing from <var>template</var>.
      */
-    public static HDF5IntStorageFeatureBuilder build(HDF5IntStorageFeatures template)
+    public static HDF5IntStorageFeatureBuilder build(HDF5AbstractStorageFeatures template)
     {
         return new HDF5IntStorageFeatureBuilder(template);
     }

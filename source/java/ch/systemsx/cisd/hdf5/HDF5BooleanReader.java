@@ -17,6 +17,7 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_UINT64;
 
 import java.util.BitSet;
 
@@ -214,6 +215,48 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
     {
         assert objectPath != null;
 
+        final ICallableWithCleanUp<MDLongArray> readCallable =
+                new ICallableWithCleanUp<MDLongArray>()
+                    {
+                        @Override
+                        public MDLongArray call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    baseReader.h5.openDataSet(baseReader.fileId, objectPath,
+                                            registry);
+                            final DataSpaceParameters spaceParams =
+                                    baseReader.getSpaceParameters(dataSetId, registry);
+                            checkDimensions2D(spaceParams.dimensions);
+                            final long[] data = new long[spaceParams.blockSize];
+                            if (baseReader.isScaledBitField(dataSetId, registry))
+                            {
+                                baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_UINT64,
+                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                            } else
+                            {
+                                baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_B64,
+                                        spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
+                            }
+                            return new MDLongArray(data, spaceParams.dimensions);
+                        }
+                    };
+        return baseReader.runner.call(readCallable);
+    }
+
+    @Override
+    public BitSet[] readBitFieldArrayBlockWithOffset(String objectPath, int blockSize, long offset)
+    {
+        baseReader.checkOpen();
+        return BitSetConversionUtils.fromStorageForm2D(readBitFieldBlockStorageForm2D(objectPath,
+                blockSize, offset, true));
+    }
+
+    private MDLongArray readBitFieldBlockStorageForm2D(final String objectPath, final int blockSize,
+            final long offset, final boolean nullWhenOutside)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
         final ICallableWithCleanUp<MDLongArray> readCallable = new ICallableWithCleanUp<MDLongArray>()
             {
                 @Override
@@ -221,15 +264,57 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
                 {
                     final int dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, registry);
-                    final long[] data = new long[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_B64, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, data);
-                    return new MDLongArray(data, spaceParams.dimensions);
+                    final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId, registry);
+                    checkDimensions2D(dimensions);
+                    final int numberOfWords = dimToInt(dimensions[0]);
+                    final int[] blockDimensions = new int[]
+                            { numberOfWords, blockSize };
+                    final DataSpaceParameters spaceParamsOrNull =
+                            baseReader.tryGetSpaceParameters(dataSetId, new long[]
+                                { 0, offset }, blockDimensions, nullWhenOutside, registry);
+                    if (spaceParamsOrNull == null)
+                    {
+                        return null;
+                    }
+                    final long[] data = new long[spaceParamsOrNull.blockSize];
+                    if (baseReader.isScaledBitField(dataSetId, registry))
+                    {
+                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_UINT64,
+                                spaceParamsOrNull.memorySpaceId, spaceParamsOrNull.dataSpaceId, data);
+                    } else
+                    {
+                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_B64,
+                                spaceParamsOrNull.memorySpaceId, spaceParamsOrNull.dataSpaceId, data);
+                    }
+                    return new MDLongArray(data, blockDimensions);
                 }
             };
         return baseReader.runner.call(readCallable);
     }
 
+    private static void checkDimensions2D(final long[] dimensions)
+    {
+        if (dimensions.length != 2)
+        {
+            throw new HDF5JavaException(
+                    "Array is supposed to be of rank 2, but is of rank "
+                            + dimensions.length);
+        }
+    }
+    
+    static int dimToInt(long longNumber)
+    {
+        final int intNumber = (int) longNumber;
+        if (intNumber != longNumber)
+        {
+            throw new HDF5JavaException("Dimension " + longNumber + " out of bounds.");
+        }
+        return intNumber;
+    }
+
+    @Override
+    public BitSet[] readBitFieldArrayBlock(String objectPath, int blockSize, long blockNumber)
+    {
+        return readBitFieldArrayBlockWithOffset(objectPath, blockSize, blockNumber * blockSize);
+    }
 }
