@@ -294,17 +294,38 @@ class HDF5DoubleWriter extends HDF5DoubleReader implements IHDF5DoubleWriter
     }
 
     @Override
-    public void createMatrix(final String objectPath, final int blockSizeX, 
-            final int blockSizeY)
+    public void createMatrix(final String objectPath, final int sizeX, 
+            final int sizeY)
     {
-        createMatrix(objectPath, 0, 0, blockSizeX, blockSizeY, FLOAT_NO_COMPRESSION);
+        assert objectPath != null;
+        assert sizeX >= 0;
+        assert sizeY >= 0;
+
+        createMDArray(objectPath, new int[] { sizeX, sizeY });
+    }
+
+    @Override
+    public void createMatrix(final String objectPath, final int sizeX, 
+            final int sizeY, final HDF5FloatStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert sizeX >= 0;
+        assert sizeY >= 0;
+
+        createMDArray(objectPath, new int[] { sizeX, sizeY }, features);
     }
 
     @Override
     public void createMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY)
     {
-        createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, FLOAT_NO_COMPRESSION);
+        assert objectPath != null;
+        assert sizeX >= 0;
+        assert sizeY >= 0;
+        assert blockSizeX >= 0 && (blockSizeX <= sizeX || sizeX == 0);
+        assert blockSizeY >= 0 && (blockSizeY <= sizeY || sizeY == 0);
+
+        createMDArray(objectPath, new long[] { sizeX, sizeY }, new int[] { blockSizeX, blockSizeY });
     }
 
     @Override
@@ -317,23 +338,7 @@ class HDF5DoubleWriter extends HDF5DoubleReader implements IHDF5DoubleWriter
         assert blockSizeX >= 0 && (blockSizeX <= sizeX || sizeX == 0);
         assert blockSizeY >= 0 && (blockSizeY <= sizeY || sizeY == 0);
 
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                @Override
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { sizeX, sizeY };
-                    final long[] blockDimensions = new long[]
-                        { blockSizeX, blockSizeY };
-                    baseWriter
-                            .createDataSet(objectPath, H5T_IEEE_F64LE, 
-                            features, dimensions, blockDimensions, 8, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
+        createMDArray(objectPath, new long[] { sizeX, sizeY }, new int[] { blockSizeX, blockSizeY }, features);
     }
 
     @Override

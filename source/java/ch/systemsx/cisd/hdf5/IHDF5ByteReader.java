@@ -39,7 +39,7 @@ public interface IHDF5ByteReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public byte getAttr(final String objectPath, final String attributeName);
+    public byte getAttr(String objectPath, String attributeName);
 
     /**
      * Reads a <code>byte[]</code> attribute named <var>attributeName</var> from the data set
@@ -49,7 +49,7 @@ public interface IHDF5ByteReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute value read from the data set.
      */
-    public byte[] getArrayAttr(final String objectPath, final String attributeName);
+    public byte[] getArrayAttr(String objectPath, String attributeName);
 
     /**
      * Reads a multi-dimensional array <code>byte</code> attribute named <var>attributeName</var>
@@ -59,8 +59,8 @@ public interface IHDF5ByteReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute array value read from the data set.
      */
-    public MDByteArray getMDArrayAttr(final String objectPath,
-            final String attributeName);
+    public MDByteArray getMDArrayAttr(String objectPath,
+            String attributeName);
 
     /**
      * Reads a <code>byte</code> matrix attribute named <var>attributeName</var>
@@ -70,7 +70,7 @@ public interface IHDF5ByteReader
      * @param attributeName The name of the attribute to read.
      * @return The attribute matrix value read from the data set.
      */
-    public byte[][] getMatrixAttr(final String objectPath, final String attributeName)
+    public byte[][] getMatrixAttr(String objectPath, String attributeName)
             throws HDF5JavaException;
 
     // /////////////////////
@@ -84,7 +84,7 @@ public interface IHDF5ByteReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The value read from the data set.
      */
-    public byte read(final String objectPath);
+    public byte read(String objectPath);
 
     /**
      * Reads a <code>byte</code> array (of rank 1) from the data set <var>objectPath</var>.
@@ -92,7 +92,7 @@ public interface IHDF5ByteReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public byte[] readArray(final String objectPath);
+    public byte[] readArray(String objectPath);
 
     /**
      * Reads a multi-dimensional <code>byte</code> array data set <var>objectPath</var>
@@ -103,8 +103,8 @@ public interface IHDF5ByteReader
      * @param memoryOffset The offset in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public int[] readToMDArrayWithOffset(final String objectPath, 
-    				final MDByteArray array, final int[] memoryOffset);
+    public int[] readToMDArrayWithOffset(String objectPath, 
+    				MDByteArray array, int[] memoryOffset);
 
     /**
      * Reads a block of the multi-dimensional <code>byte</code> array data set
@@ -117,9 +117,9 @@ public interface IHDF5ByteReader
      * @param memoryOffset The offset of the block in the array to write the data to.
      * @return The effective dimensions of the block in <var>array</var> that was filled.
      */
-    public int[] readToMDArrayBlockWithOffset(final String objectPath,
-            final MDByteArray array, final int[] blockDimensions, final long[] offset,
-            final int[] memoryOffset);
+    public int[] readToMDArrayBlockWithOffset(String objectPath,
+            MDByteArray array, int[] blockDimensions, long[] offset,
+            int[] memoryOffset);
 
     /**
      * Reads a block from a <code>byte</code> array (of rank 1) from the data set 
@@ -133,8 +133,8 @@ public interface IHDF5ByteReader
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
      */
-    public byte[] readArrayBlock(final String objectPath, final int blockSize,
-            final long blockNumber);
+    public byte[] readArrayBlock(String objectPath, int blockSize,
+            long blockNumber);
 
     /**
      * Reads a block from <code>byte</code> array (of rank 1) from the data set
@@ -146,8 +146,8 @@ public interface IHDF5ByteReader
      * @param offset The offset of the block in the data set to start reading from (starting with 0).
      * @return The data block read from the data set.
      */
-    public byte[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
-            final long offset);
+    public byte[] readArrayBlockWithOffset(String objectPath, int blockSize,
+            long offset);
 
     /**
      * Reads a <code>byte</code> matrix (array of arrays) from the data set
@@ -158,7 +158,7 @@ public interface IHDF5ByteReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public byte[][] readMatrix(final String objectPath) throws HDF5JavaException;
+    public byte[][] readMatrix(String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a <code>byte</code> matrix (array of arrays) from the data set
@@ -175,8 +175,8 @@ public interface IHDF5ByteReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public byte[][] readMatrixBlock(final String objectPath, final int blockSizeX,
-            final int blockSizeY, final long blockNumberX, final long blockNumberY) 
+    public byte[][] readMatrixBlock(String objectPath, int blockSizeX,
+            int blockSizeY, long blockNumberX, long blockNumberY) 
             throws HDF5JavaException;
 
     /**
@@ -192,8 +192,8 @@ public interface IHDF5ByteReader
      *
      * @throws HDF5JavaException If the data set <var>objectPath</var> is not of rank 2.
      */
-    public byte[][] readMatrixBlockWithOffset(final String objectPath, 
-    				final int blockSizeX, final int blockSizeY, final long offsetX, final long offsetY) 
+    public byte[][] readMatrixBlockWithOffset(String objectPath, 
+    				int blockSizeX, int blockSizeY, long offsetX, long offsetY) 
     				throws HDF5JavaException;
 
     /**
@@ -203,7 +203,7 @@ public interface IHDF5ByteReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @return The data read from the data set.
      */
-    public MDByteArray readMDArray(final String objectPath);
+    public MDByteArray readMDArray(String objectPath);
 
     /**
      * Reads a multi-dimensional <code>byte</code> array from the data set 
@@ -215,8 +215,8 @@ public interface IHDF5ByteReader
      *            <var>blockDimensions</var> in the according dimension).
      * @return The data block read from the data set.
      */
-    public MDByteArray readMDArrayBlock(final String objectPath,
-    				final int[] blockDimensions, final long[] blockNumber);
+    public MDByteArray readMDArrayBlock(String objectPath,
+    				int[] blockDimensions, long[] blockNumber);
 
     /**
      * Reads a multi-dimensional <code>byte</code> array from the data set
@@ -227,8 +227,8 @@ public interface IHDF5ByteReader
      * @param offset The offset in the data set to start reading from in each dimension.
      * @return The data block read from the data set.
      */
-    public MDByteArray readMDArrayBlockWithOffset(final String objectPath,
-            final int[] blockDimensions, final long[] offset);
+    public MDByteArray readMDArrayBlockWithOffset(String objectPath,
+            int[] blockDimensions, long[] offset);
     
     /**
      * Provides all natural blocks of this one-dimensional data set to iterate over.
@@ -237,7 +237,7 @@ public interface IHDF5ByteReader
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
     public Iterable<HDF5DataBlock<byte[]>> getArrayNaturalBlocks(
-    									final String dataSetPath)
+    									String dataSetPath)
             throws HDF5JavaException;
 
     /**
@@ -246,5 +246,5 @@ public interface IHDF5ByteReader
      * @see HDF5MDDataBlock
      */
     public Iterable<HDF5MDDataBlock<MDByteArray>> getMDArrayNaturalBlocks(
-    									final String dataSetPath);
+    									String dataSetPath);
 }

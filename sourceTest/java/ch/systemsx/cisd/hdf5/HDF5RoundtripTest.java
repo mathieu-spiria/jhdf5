@@ -19,11 +19,13 @@ package ch.systemsx.cisd.hdf5;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_SCALING1_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_CHUNKED;
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE_MAX;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_DEFLATE;
+import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_CHUNKED;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_SHUFFLE_DEFLATE;
 import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.toInt8;
 import static org.testng.AssertJUnit.assertEquals;
@@ -140,6 +142,11 @@ public class HDF5RoundtripTest
         test.testDataSets();
         test.testDataTypeInfoOptions();
         test.testCompactDataset();
+        test.testCreateEmptyFixedSizeDataSets();
+        test.testCreateEmptyDefaultFixedSizeDataSets();
+        test.testCreateEmptyGrowableDataSets();
+        test.testCreateZeroLengthGrowableDataSets();
+        test.testExtendChunkedDataset();
         test.testMaxPathLength();
         test.testExceedMaxPathLength();
         test.testAccessClosedReaderWriter();
@@ -1231,6 +1238,194 @@ public class HDF5RoundtripTest
         writer.close();
         IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertTrue(Arrays.equals(data, reader.int64().readArray(dsName)));
+        reader.close();
+    }
+
+    @Test
+    public void testCreateEmptyFixedSizeDataSets()
+    {
+        final File datasetFile = new File(workingDirectory, "createEmptyFixedSizeDataSets.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer = HDF5Factory.open(datasetFile);
+        writer.int64().createArray("longArr", 5, HDF5IntStorageFeatures.INT_COMPACT);
+        writer.int64().createMDArray("longMDArr", new int[]
+            { 5, 5 }, HDF5IntStorageFeatures.INT_COMPACT);
+        writer.bool()
+                .createBitFieldArray("bitfieldArr", 128, 5, HDF5IntStorageFeatures.INT_COMPACT);
+        writer.enumeration().createArray("enumArr", writer.enumeration().getAnonType(new String[]
+            { "a", "b", "c" }), 5, HDF5IntStorageFeatures.INT_COMPACT);
+        writer.enumeration().createMDArray("enumMDArr", writer.enumeration().getAnonType(new String[]
+                { "a", "b", "c" }), new int[] { 5, 5 }, HDF5IntStorageFeatures.INT_COMPACT);
+        writer.close();
+        IHDF5Reader reader = HDF5Factory.openForReading(datasetFile);
+        HDF5DataSetInformation info = reader.getDataSetInformation("longArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5 }, info.getDimensions()));
+        assertNull(info.tryGetChunkSizes());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
+        info = reader.getDataSetInformation("longMDArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5, 5 }, info.getDimensions()));
+        assertNull(info.tryGetChunkSizes());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
+        info = reader.getDataSetInformation("enumArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5 }, info.getDimensions()));
+        assertNull(info.tryGetChunkSizes());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
+        info = reader.getDataSetInformation("enumMDArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5, 5 }, info.getDimensions()));
+        assertNull(info.tryGetChunkSizes());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
+        info = reader.getDataSetInformation("bitfieldArr");
+        assertTrue(Arrays.equals(new long[]
+            { 2, 5 }, info.getDimensions()));
+        assertNull(info.tryGetChunkSizes());
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
+        reader.close();
+    }
+
+    @Test
+    public void testCreateEmptyGrowableDataSets()
+    {
+        final File datasetFile = new File(workingDirectory, "createEmptyGrowableDataSets.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer = HDF5Factory.open(datasetFile);
+        writer.int64().createArray("longArr", 5);
+        writer.int64().createMDArray("longMDArr", new int[]
+            { 5, 5 });
+        writer.bool()
+                .createBitFieldArray("bitfieldArr", 128, 5);
+        writer.enumeration().createArray("enumArr", writer.enumeration().getAnonType(new String[]
+            { "a", "b", "c" }), 5);
+        writer.enumeration().createMDArray("enumMDArr", writer.enumeration().getAnonType(new String[]
+                { "a", "b", "c" }), new int[] { 5, 5 });
+        writer.close();
+        IHDF5Reader reader = HDF5Factory.openForReading(datasetFile);
+        HDF5DataSetInformation info = reader.object().getDataSetInformation("longArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new int[]
+                { 5 }, info.tryGetChunkSizes()));
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        info = reader.object().getDataSetInformation("longMDArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5, 5 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new int[]
+                { 5, 5 }, info.tryGetChunkSizes()));
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        info = reader.object().getDataSetInformation("enumArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new int[]
+                { 5 }, info.tryGetChunkSizes()));
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        info = reader.object().getDataSetInformation("enumMDArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5, 5 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new int[]
+                { 5, 5 }, info.tryGetChunkSizes()));
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        info = reader.object().getDataSetInformation("bitfieldArr");
+        assertTrue(Arrays.equals(new long[]
+            { 2, 5 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new int[]
+                { 2, 5 }, info.tryGetChunkSizes()));
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        reader.close();
+    }
+
+    @Test
+    public void testCreateZeroLengthGrowableDataSets()
+    {
+        final File datasetFile = new File(workingDirectory, "createZeroLengthGrowableDataSets.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer = HDF5Factory.open(datasetFile);
+        writer.int64().createArray("longArr", 5, INT_CHUNKED);
+        writer.int64().createMDArray("longMDArr", new int[]
+            { 5, 5 }, INT_CHUNKED);
+        writer.bool()
+                .createBitFieldArray("bitfieldArr", 128, 5, INT_CHUNKED);
+        writer.enumeration().createArray("enumArr", writer.enumeration().getAnonType(new String[]
+            { "a", "b", "c" }), 5, INT_CHUNKED);
+        writer.enumeration().createMDArray("enumMDArr", writer.enumeration().getAnonType(new String[]
+                { "a", "b", "c" }), new int[] { 5, 5 }, INT_CHUNKED);
+        writer.close();
+        IHDF5Reader reader = HDF5Factory.openForReading(datasetFile);
+        HDF5DataSetInformation info = reader.object().getDataSetInformation("longArr");
+        assertTrue(Arrays.equals(new long[]
+                { 0 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new int[]
+            { 5 }, info.tryGetChunkSizes()));
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        info = reader.object().getDataSetInformation("longMDArr");
+        assertTrue(Arrays.equals(new long[]
+            { 0, 0 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new int[]
+                { 5, 5 }, info.tryGetChunkSizes()));
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        info = reader.object().getDataSetInformation("enumArr");
+        assertTrue(Arrays.equals(new long[]
+            { 0 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new int[]
+                { 5 }, info.tryGetChunkSizes()));
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        info = reader.object().getDataSetInformation("enumMDArr");
+        assertTrue(Arrays.equals(new long[]
+            { 0, 0 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new int[]
+                { 5, 5 }, info.tryGetChunkSizes()));
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        info = reader.object().getDataSetInformation("bitfieldArr");
+        assertTrue(Arrays.equals(new long[]
+            { 2, 0 }, info.getDimensions()));
+        assertTrue(Arrays.equals(new int[]
+                { 2, 5 }, info.tryGetChunkSizes()));
+        assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
+        reader.close();
+    }
+
+    @Test
+    public void testCreateEmptyDefaultFixedSizeDataSets()
+    {
+        final File datasetFile =
+                new File(workingDirectory, "createEmptyDefaultFixedSizeDataSets.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer =
+                HDF5Factory.configure(datasetFile).dontUseExtendableDataTypes().writer();
+        writer.int64().createArray("longArr", 5);
+        writer.int64().createMDArray("longMDArr", new int[]
+            { 5, 5 });
+        writer.bool().createBitFieldArray("bitfieldArr", 128, 5);
+        writer.enumeration().createArray("enumArr", writer.enumeration().getAnonType(new String[]
+                { "a", "b", "c" }), 5);
+        writer.close();
+        IHDF5Reader reader = HDF5Factory.openForReading(datasetFile);
+        HDF5DataSetInformation info = reader.getDataSetInformation("longArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5 }, info.getDimensions()));
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
+        info = reader.getDataSetInformation("longMDArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5, 5 }, info.getDimensions()));
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
+        info = reader.getDataSetInformation("enumArr");
+        assertTrue(Arrays.equals(new long[]
+            { 5 }, info.getDimensions()));
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
+        info = reader.getDataSetInformation("bitfieldArr");
+        assertTrue(Arrays.equals(new long[]
+            { 2, 5 }, info.getDimensions()));
+        assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
         reader.close();
     }
 
@@ -3356,7 +3551,7 @@ public class HDF5RoundtripTest
         datasetFile.deleteOnExit();
         IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         final String floatDatasetName = "/emptyMatrix";
-        writer.float32().createMatrix(floatDatasetName, 2, 2);
+        writer.float32().createMatrix(floatDatasetName, 2, 2, FLOAT_CHUNKED);
         writer.close();
         writer = HDF5FactoryProvider.get().open(datasetFile);
         float[][] floatMatrixRead = writer.float32().readMatrix(floatDatasetName);

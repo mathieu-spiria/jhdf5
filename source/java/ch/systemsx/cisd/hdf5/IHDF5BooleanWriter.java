@@ -120,7 +120,8 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      *            data set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
-     *            and <code>features</code> is <code>HDF5IntStorageFeature.INTNO_COMPRESSION</code>.
+     *            and <code>features</code> is <code>HDF5IntStorageFeature.INT_NO_COMPRESSION</code>
+     *            .
      * @param features The storage features of the data set.
      */
     public void createBitField(String objectPath, long size, int blockSize,
@@ -231,14 +232,24 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
 
     /**
      * Creates an empty array of bit fields (of rank 1) (which can be considered the equivalent to a
-     * boolean array of rank 2). This method always creates an extendable data sets.
+     * boolean array of rank 2).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param bitFieldSize The size of the bit fields in the array (in 64 bit words).
-     * @param arrayBlockSize The size of one block (for block-wise IO).
+     * @param arraySize The size of the long array to create. When <i>requesting</i> a chunked data
+     *            set (e.g. {@link HDF5IntStorageFeatures#INT_CHUNKED}), the initial size of the
+     *            array will be 0 and the chunk size will be <var>arraySize</var>. When
+     *            <i>allowing</i> a chunked data set (e.g.
+     *            {@link HDF5IntStorageFeatures#INT_NO_COMPRESSION} when the writer is not
+     *            configured to avoid extendable data types, see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
+     *            and the chunk size of the array will be <var>arraySize</var>. When
+     *            <i>enforcing</i> a on-extendable data set (e.g.
+     *            {@link HDF5IntStorageFeatures#INT_CONTIGUOUS}), the initial size equals the total size
+     *            and will be <var>arraySize</var>.
      * @param features The storage features of the data set.
      */
-    public void createBitFieldArray(String objectPath, int bitFieldSize, long arrayBlockSize,
+    public void createBitFieldArray(String objectPath, int bitFieldSize, long arraySize,
             HDF5IntStorageFeatures features);
 
     /**
@@ -247,9 +258,13 @@ public interface IHDF5BooleanWriter extends IHDF5BooleanReader
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param bitFieldSize The size of the bit fields in the array (in 64 bit words).
-     * @param arrayBlockSize The size of one block (for block-wise IO).
+     * @param arraySize When the writer is configured to use extendable data types (see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
+     *            and the chunk size of the array will be <var>arraySize</var>. When the writer is
+     *            configured to <i>enforce</i> a on-extendable data set, the initial size equals the
+     *            total size and will be <var>arraySize</var>.
      */
-    public void createBitFieldArray(String objectPath, int bitFieldSize, long arrayBlockSize);
+    public void createBitFieldArray(String objectPath, int bitFieldSize, long arraySize);
 
     /**
      * Writes out an array of bit fields (which can be considered the equivalent to a boolean array

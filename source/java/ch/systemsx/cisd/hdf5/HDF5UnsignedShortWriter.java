@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 ETH Zuerich, CISD.
+ * Copyright 2013 ETH Zuerich, CISD.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -293,17 +293,38 @@ class HDF5UnsignedShortWriter implements IHDF5UnsignedShortWriter
     }
 
     @Override
-    public void createMatrix(final String objectPath, final int blockSizeX, 
-            final int blockSizeY)
+    public void createMatrix(final String objectPath, final int sizeX, 
+            final int sizeY)
     {
-        createMatrix(objectPath, 0, 0, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
+        assert objectPath != null;
+        assert sizeX >= 0;
+        assert sizeY >= 0;
+
+        createMDArray(objectPath, new int[] { sizeX, sizeY });
+    }
+
+    @Override
+    public void createMatrix(final String objectPath, final int sizeX, 
+            final int sizeY, final HDF5IntStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert sizeX >= 0;
+        assert sizeY >= 0;
+
+        createMDArray(objectPath, new int[] { sizeX, sizeY }, features);
     }
 
     @Override
     public void createMatrix(final String objectPath, final long sizeX, final long sizeY,
             final int blockSizeX, final int blockSizeY)
     {
-        createMatrix(objectPath, sizeX, sizeY, blockSizeX, blockSizeY, INT_NO_COMPRESSION);
+        assert objectPath != null;
+        assert sizeX >= 0;
+        assert sizeY >= 0;
+        assert blockSizeX >= 0 && (blockSizeX <= sizeX || sizeX == 0);
+        assert blockSizeY >= 0 && (blockSizeY <= sizeY || sizeY == 0);
+
+        createMDArray(objectPath, new long[] { sizeX, sizeY }, new int[] { blockSizeX, blockSizeY });
     }
 
     @Override
@@ -316,23 +337,7 @@ class HDF5UnsignedShortWriter implements IHDF5UnsignedShortWriter
         assert blockSizeX >= 0 && (blockSizeX <= sizeX || sizeX == 0);
         assert blockSizeY >= 0 && (blockSizeY <= sizeY || sizeY == 0);
 
-        baseWriter.checkOpen();
-        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
-            {
-                @Override
-                public Void call(ICleanUpRegistry registry)
-                {
-                    final long[] dimensions = new long[]
-                        { sizeX, sizeY };
-                    final long[] blockDimensions = new long[]
-                        { blockSizeX, blockSizeY };
-                    baseWriter
-                            .createDataSet(objectPath, H5T_STD_U16LE, 
-                            features, dimensions, blockDimensions, 2, registry);
-                    return null; // Nothing to return.
-                }
-            };
-        baseWriter.runner.call(createRunnable);
+        createMDArray(objectPath, new long[] { sizeX, sizeY }, new int[] { blockSizeX, blockSizeY }, features);
     }
 
     @Override

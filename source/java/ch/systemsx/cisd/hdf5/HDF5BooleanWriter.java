@@ -288,6 +288,26 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                     final int longBits = longBytes * 8;
                     final int numberOfWords =
                             bitFieldSize / longBits + (bitFieldSize % longBits != 0 ? 1 : 0);
+                    if (features.requiresChunking() || arraySize > 0)
+                    {
+                        create(objectPath, new long[]
+                            { numberOfWords, arraySize }, new long[]
+                            { numberOfWords, arrayBlockSize }, features, registry);
+                    } else
+                    {
+                        create(objectPath, new long[]
+                                { numberOfWords, arrayBlockSize }, null, features, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+
+                @SuppressWarnings("hiding")
+                void create(final String objectPath, final long[] dimensions,
+                        final long[] blockDimensionsOrNull, final HDF5IntStorageFeatures features,
+                        ICleanUpRegistry registry)
+                {
+                    final int longBytes = 8;
+                    final int longBits = longBytes * 8;
                     if (features.isScaling() && bitFieldSize < longBits)
                     {
                         features.checkScalingOK(baseWriter.fileFormat);
@@ -296,9 +316,7 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                                         .scalingFactor((byte) bitFieldSize).features();
                         final int dataSetId =
                                 baseWriter.createDataSet(objectPath, H5T_STD_U64LE, actualFeatures,
-                                        new long[]
-                                            { numberOfWords, arraySize }, new long[]
-                                            { numberOfWords, arrayBlockSize }, longBytes, registry);
+                                        dimensions, blockDimensionsOrNull, longBytes, registry);
                         baseWriter
                                 .setTypeVariant(dataSetId, HDF5DataTypeVariant.BITFIELD, registry);
                     } else
@@ -306,11 +324,8 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                         final HDF5IntStorageFeatures actualFeatures =
                                 HDF5IntStorageFeatures.build(features).noScaling().features();
                         baseWriter.createDataSet(objectPath, H5T_STD_B64LE, actualFeatures,
-                                new long[]
-                                    { numberOfWords, arraySize }, new long[]
-                                    { numberOfWords, arrayBlockSize }, longBytes, registry);
+                                dimensions, blockDimensionsOrNull, longBytes, registry);
                     }
-                    return null; // Nothing to return.
                 }
             };
         baseWriter.runner.call(createRunnable);
@@ -373,7 +388,8 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
 
                     if (baseWriter.isScaledBitField(dataSetId, registry))
                     {
-                        H5Dwrite(dataSetId, H5T_NATIVE_UINT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
+                        H5Dwrite(dataSetId, H5T_NATIVE_UINT64, memorySpaceId, dataSpaceId,
+                                H5P_DEFAULT,
                                 BitSetConversionUtils.toStorageForm(data, numberOfWords));
                     } else
                     {
