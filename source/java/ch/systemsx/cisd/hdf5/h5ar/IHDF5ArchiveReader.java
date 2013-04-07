@@ -57,6 +57,26 @@ public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
      *            be stripped from each entry before <var>rootDirectoryOnFS</var> is added.
      * @param visitor The entry visitor to call for each entry. Call {@link ArchiveEntry#isOK()} to
      *            check whether verification was successful.
+     * @param missingArchiveEntryVisitor The entry visitor to call for each file that exists on the
+     *            filesystem, but is missing in the archive.
+     * @param params The parameters to determine behavior of the verification process.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            String rootDirectoryInArchive, IArchiveEntryVisitor visitor,
+            IArchiveEntryVisitor missingArchiveEntryVisitor, VerifyParameters params);
+
+    /**
+     * Verifies the content of the archive against the filesystem.
+     * 
+     * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
+     *            case all entries below <var>rootDirectoryInArchive</var> are verified.
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @param rootDirectoryInArchive The root directory in the archive to start verify from. It will
+     *            be stripped from each entry before <var>rootDirectoryOnFS</var> is added.
+     * @param visitor The entry visitor to call for each entry. Call {@link ArchiveEntry#isOK()} to
+     *            check whether verification was successful.
      * @param params The parameters to determine behavior of the verification process.
      * @return This archive reader.
      */
@@ -72,11 +92,45 @@ public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
      *            entry in the archive when comparing.
      * @param visitor The entry visitor to call for each entry. Call {@link ArchiveEntry#isOK()} to
      *            check whether verification was successful.
+     * @param missingArchiveEntryVisitor The entry visitor to call for each file that exists on the
+     *            filesystem, but is missing in the archive.
+     * @param params The parameters to determine behavior of the verification process.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            IArchiveEntryVisitor visitor, IArchiveEntryVisitor missingArchiveEntryVisitor,
+            VerifyParameters params);
+
+    /**
+     * Verifies the content of the complete archive against the filesystem.
+     * 
+     * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
+     *            case all entries below <var>rootDirectoryInArchive</var> are verified.
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @param visitor The entry visitor to call for each entry. Call {@link ArchiveEntry#isOK()} to
+     *            check whether verification was successful.
      * @param params The parameters to determine behavior of the verification process.
      * @return This archive reader.
      */
     public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             IArchiveEntryVisitor visitor, VerifyParameters params);
+
+    /**
+     * Verifies the content of the complete archive against the filesystem.
+     * 
+     * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
+     *            case all entries below <var>rootDirectoryInArchive</var> are verified.
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @param visitor The entry visitor to call for each entry. Call {@link ArchiveEntry#isOK()} to
+     *            check whether verification was successful.
+     * @param missingArchiveEntryVisitor The entry visitor to call for each file that exists on the
+     *            filesystem, but is missing in the archive.
+     * @return This archive reader.
+     */
+    public IHDF5ArchiveReader verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            IArchiveEntryVisitor visitor, IArchiveEntryVisitor missingArchiveEntryVisitor);
 
     /**
      * Verifies the content of the complete archive against the filesystem.

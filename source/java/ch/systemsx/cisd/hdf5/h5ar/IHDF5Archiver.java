@@ -349,7 +349,17 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
 
     @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
-            IArchiveEntryVisitor visitor);
+            String rootDirectoryInArchive, IArchiveEntryVisitor visitor,
+            IArchiveEntryVisitor missingArchiveEntryVisitor, VerifyParameters params);
+
+    @Override
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            String rootDirectoryInArchive, IArchiveEntryVisitor visitor, VerifyParameters params);
+
+    @Override
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            IArchiveEntryVisitor visitor, IArchiveEntryVisitor missingArchiveEntryVisitor,
+            VerifyParameters params);
 
     @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
@@ -357,7 +367,11 @@ public interface IHDF5Archiver extends IHDF5ArchiveReader
 
     @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
-            String rootDirectoryInArchive, IArchiveEntryVisitor visitor, VerifyParameters params);
+            IArchiveEntryVisitor visitor, IArchiveEntryVisitor missingArchiveEntryVisitor);
+
+    @Override
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            IArchiveEntryVisitor visitor);
 
     @Override
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,

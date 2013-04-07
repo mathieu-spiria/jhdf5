@@ -48,7 +48,7 @@ final class LinkRecord implements Comparable<LinkRecord>
 
     @CompoundElement(memberName = "lastModified")
     private long lastModified;
-    
+
     @CompoundElement(memberName = "uid")
     private int uid;
 
@@ -60,7 +60,7 @@ final class LinkRecord implements Comparable<LinkRecord>
 
     @CompoundElement(memberName = "checksum")
     private int crc32;
-    
+
     private boolean hasCrc32Checksum = false;
 
     private String linkName;
@@ -117,7 +117,8 @@ final class LinkRecord implements Comparable<LinkRecord>
         {
             return null;
         }
-        final long size = linfo.isDataSet() ? hdf5Reader.object().getSize(linfo.getPath()) : Utils.UNKNOWN;
+        final long size =
+                linfo.isDataSet() ? hdf5Reader.object().getSize(linfo.getPath()) : Utils.UNKNOWN;
         return new LinkRecord(linfo, size);
 
     }
@@ -162,6 +163,26 @@ final class LinkRecord implements Comparable<LinkRecord>
         {
             return new LinkRecord("", hdf5Archive.lastModified() / Utils.MILLIS_PER_SECOND,
                     Utils.getCurrentUid(), Utils.getCurrentGid(), Utils.UNKNOWN_S);
+        }
+    }
+
+    /**
+     * Creates the link record for a file in the file system.
+     */
+    static LinkRecord getLinkRecordForLink(File file)
+    {
+        if (Unix.isOperational())
+        {
+            final Stat stat = Unix.getLinkInfo(file.getPath());
+            return new LinkRecord(file.getName(), stat.tryGetSymbolicLink(), stat.getLinkType(),
+                    stat.getSize(), stat.getLastModified(), stat.getUid(), stat.getGid(),
+                    stat.getPermissions(), (short) 0);
+        } else
+        {
+            return new LinkRecord(file.getName(), null, file.isDirectory() ? FileLinkType.DIRECTORY
+                    : FileLinkType.REGULAR_FILE, file.length(), file.lastModified()
+                    / Utils.MILLIS_PER_SECOND, Utils.getCurrentUid(), Utils.getCurrentGid(),
+                    Utils.UNKNOWN_S, (short) 0);
         }
     }
 

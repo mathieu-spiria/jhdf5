@@ -21,6 +21,7 @@ import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
@@ -300,9 +301,8 @@ public class HDF5ArchiverMain
     private ArchivingStrategy createArchivingStrategy()
     {
         final ArchivingStrategy strategy =
-                new ArchivingStrategy(
-                        compressionBlackList.isEmpty() ? ArchivingStrategy.DEFAULT
-                                : ArchivingStrategy.DEFAULT_NO_COMPRESSION);
+                new ArchivingStrategy(compressionBlackList.isEmpty() ? ArchivingStrategy.DEFAULT
+                        : ArchivingStrategy.DEFAULT_NO_COMPRESSION);
         if (compressAll != null)
         {
             strategy.compressAll(compressAll);
@@ -559,12 +559,22 @@ public class HDF5ArchiverMain
                                 archiveFile, getFSRoot());
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
+                    final AtomicBoolean haveMissingFiles = new AtomicBoolean();
+                    final IArchiveEntryVisitor missingFileVisitor = new IArchiveEntryVisitor()
+                        {
+                            @Override
+                            public void visit(ArchiveEntry entry)
+                            {
+                                System.err.println(entry.describeLink(true, false, false) + " (MISSING IN ARCHIVE)");
+                                haveMissingFiles.set(true);
+                            }
+                        };
                     final ListingVisitor visitor =
                             new ListingVisitor(true, quiet, verbose, numeric);
                     archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot(), visitor,
-                            VerifyParameters.build().recursive(recursive).numeric(numeric)
-                                    .verifyAttributes(verifyAttributes).get());
-                    return visitor.isOK();
+                            missingFileVisitor, VerifyParameters.build().recursive(recursive)
+                                    .numeric(numeric).verifyAttributes(verifyAttributes).get());
+                    return visitor.isOK() && haveMissingFiles.get() == false;
                 }
                 case LIST:
                 {

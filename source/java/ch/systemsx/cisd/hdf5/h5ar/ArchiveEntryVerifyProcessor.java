@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5.h5ar;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Set;
 import java.util.zip.CRC32;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
@@ -45,6 +46,8 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
 
     private final File rootDirectoryOnFS;
 
+    private final Set<File> filesOnFSOrNull;
+
     private final String rootDirectoryInArchive;
 
     private final byte[] buffer;
@@ -53,17 +56,19 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
 
     private final boolean numeric;
 
-    ArchiveEntryVerifyProcessor(IArchiveEntryVisitor visitor, File rootDirectoryOnFS, byte[] buffer,
-            boolean checkAttributes, boolean numeric)
+    ArchiveEntryVerifyProcessor(IArchiveEntryVisitor visitor, File rootDirectoryOnFS,
+            Set<File> filesOnFSOrNull, byte[] buffer, boolean checkAttributes, boolean numeric)
     {
-        this(visitor, rootDirectoryOnFS, "", buffer, checkAttributes, numeric);
+        this(visitor, rootDirectoryOnFS, filesOnFSOrNull, "", buffer, checkAttributes, numeric);
     }
 
     ArchiveEntryVerifyProcessor(IArchiveEntryVisitor visitor, File rootDirectoryOnFS,
-            String rootDirectoryInArchive, byte[] buffer, boolean checkAttributes, boolean numeric)
+            Set<File> filesOnFSOrNull, String rootDirectoryInArchive, byte[] buffer,
+            boolean checkAttributes, boolean numeric)
     {
         this.visitor = visitor;
         this.rootDirectoryOnFS = rootDirectoryOnFS;
+        this.filesOnFSOrNull = filesOnFSOrNull;
         this.rootDirectoryInArchive = Utils.normalizePath(rootDirectoryInArchive);
         this.buffer = buffer;
         this.checkAttributes = checkAttributes;
@@ -76,6 +81,10 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
     {
         final String errorMessage = checkLink(link, path, idCache);
         visitor.visit(new ArchiveEntry(dir, path, link, idCache, errorMessage));
+        if (filesOnFSOrNull != null)
+        {
+            filesOnFSOrNull.remove(new File(rootDirectoryOnFS, path));
+        }
         return true;
     }
 
@@ -89,7 +98,8 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
     {
         if (rootDirectoryInArchive.length() > 0 && path.startsWith(rootDirectoryInArchive) == false)
         {
-            return "Object '" + path + "' does not start with path prefix '" + rootDirectoryInArchive + "'.";
+            return "Object '" + path + "' does not start with path prefix '"
+                    + rootDirectoryInArchive + "'.";
         }
         final String strippedPath = path.substring(rootDirectoryInArchive.length());
         final File f = new File(rootDirectoryOnFS, strippedPath);

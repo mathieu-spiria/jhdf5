@@ -493,14 +493,57 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return verifyErrors;
     }
 
+    @SuppressWarnings("null")
+    @Override
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            IArchiveEntryVisitor visitor, IArchiveEntryVisitor missingArchiveEntryVisitorOrNull,
+            VerifyParameters params)
+    {
+        final Set<File> filesOnFSOrNull =
+                (missingArchiveEntryVisitorOrNull != null) ? getFiles(rootDirectoryOnFS) : null;
+        final ArchiveEntryVerifyProcessor verifyProcessor =
+                new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, filesOnFSOrNull,
+                        buffer, params.isVerifyAttributes(), params.isNumeric());
+        processor.process(fileOrDir, params.isRecursive(), true, false, verifyProcessor);
+        if (filesOnFSOrNull != null && filesOnFSOrNull.isEmpty() == false)
+        {
+            for (File f : filesOnFSOrNull)
+            {
+                missingArchiveEntryVisitorOrNull.visit(new ArchiveEntry(f.getParent(), f.getPath(),
+                        LinkRecord.getLinkRecordForLink(f), idCache));
+            }
+        }
+        return this;
+    }
+
     @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             IArchiveEntryVisitor visitor, VerifyParameters params)
     {
+        return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, visitor, null, params);
+    }
+
+    @SuppressWarnings("null")
+    @Override
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            String rootDirectoryInArchive, IArchiveEntryVisitor visitor,
+            IArchiveEntryVisitor missingArchiveEntryVisitorOrNull, VerifyParameters params)
+    {
+        final Set<File> filesOnFSOrNull =
+                (missingArchiveEntryVisitorOrNull != null) ? getFiles(rootDirectoryOnFS) : null;
         final ArchiveEntryVerifyProcessor verifyProcessor =
-                new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, buffer,
-                        params.isVerifyAttributes(), params.isNumeric());
+                new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, filesOnFSOrNull,
+                        rootDirectoryInArchive, buffer, params.isVerifyAttributes(),
+                        params.isNumeric());
         processor.process(fileOrDir, params.isRecursive(), true, false, verifyProcessor);
+        if (filesOnFSOrNull != null && filesOnFSOrNull.isEmpty() == false)
+        {
+            for (File f : filesOnFSOrNull)
+            {
+                missingArchiveEntryVisitorOrNull.visit(new ArchiveEntry(f.getParent(), f.getPath(),
+                        LinkRecord.getLinkRecordForLink(f), idCache));
+            }
+        }
         return this;
     }
 
@@ -508,11 +551,16 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive, IArchiveEntryVisitor visitor, VerifyParameters params)
     {
-        final ArchiveEntryVerifyProcessor verifyProcessor =
-                new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, rootDirectoryInArchive,
-                        buffer, params.isVerifyAttributes(), params.isNumeric());
-        processor.process(fileOrDir, params.isRecursive(), true, false, verifyProcessor);
-        return this;
+        return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, rootDirectoryInArchive,
+                visitor, null, params);
+    }
+
+    @Override
+    public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
+            IArchiveEntryVisitor visitor, IArchiveEntryVisitor missingArchiveEntryVisitor)
+    {
+        return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, visitor,
+                missingArchiveEntryVisitor, VerifyParameters.DEFAULT);
     }
 
     @Override
@@ -541,6 +589,28 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     {
         return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, rootDirectoryInArchive,
                 VerifyParameters.DEFAULT);
+    }
+
+    private static Set<File> getFiles(File fsRoot)
+    {
+        final Set<File> result = new HashSet<File>();
+        if (fsRoot.isDirectory())
+        {
+            addFilesInDir(fsRoot, result);
+        }
+        return result;
+    }
+
+    private static void addFilesInDir(File dir, Set<File> files)
+    {
+        for (File f : dir.listFiles())
+        {
+            files.add(f);
+            if (f.isDirectory())
+            {
+                addFilesInDir(f, files);
+            }
+        }
     }
 
     @Override
@@ -592,23 +662,24 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory) throws IllegalStateException
     {
-        return extractToFilesystemBelowDirectory(rootDirectory, "", "/", ArchivingStrategy.DEFAULT, null);
+        return extractToFilesystemBelowDirectory(rootDirectory, "", "/", ArchivingStrategy.DEFAULT,
+                null);
     }
 
     @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory, String path)
             throws IllegalStateException
     {
-        return extractToFilesystemBelowDirectory(rootDirectory, "", path, ArchivingStrategy.DEFAULT,
-                null);
+        return extractToFilesystemBelowDirectory(rootDirectory, "", path,
+                ArchivingStrategy.DEFAULT, null);
     }
 
     @Override
     public IHDF5Archiver extractToFilesystem(File rootDirectory, String path,
             IArchiveEntryVisitor visitorOrNull) throws IllegalStateException
     {
-        return extractToFilesystemBelowDirectory(rootDirectory, "", path, ArchivingStrategy.DEFAULT,
-                visitorOrNull);
+        return extractToFilesystemBelowDirectory(rootDirectory, "", path,
+                ArchivingStrategy.DEFAULT, visitorOrNull);
     }
 
     @Override
@@ -620,7 +691,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     }
 
     @Override
-    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory, String rootPathInArchive)
+    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootPathInArchive)
     {
         return extractToFilesystemBelowDirectory(rootDirectory, rootPathInArchive, "",
                 ArchivingStrategy.DEFAULT, null);
@@ -632,21 +704,21 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     {
         return extractToFilesystemBelowDirectory(rootDirectory, rootPathInArchive, "",
                 ArchivingStrategy.DEFAULT, visitorOrNull);
-        
+
     }
 
     @Override
     public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
             String rootPathInArchive, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull)
     {
-        return extractToFilesystemBelowDirectory(rootDirectory, rootPathInArchive, "",
-                strategy, visitorOrNull);
+        return extractToFilesystemBelowDirectory(rootDirectory, rootPathInArchive, "", strategy,
+                visitorOrNull);
     }
 
     @Override
-    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory, String rootPathInArchive,
-            String path, ArchivingStrategy strategy, IArchiveEntryVisitor visitorOrNull)
-            throws IllegalStateException
+    public IHDF5Archiver extractToFilesystemBelowDirectory(File rootDirectory,
+            String rootPathInArchive, String path, ArchivingStrategy strategy,
+            IArchiveEntryVisitor visitorOrNull) throws IllegalStateException
     {
         final IArchiveEntryProcessor extractor =
                 new ArchiveEntryExtractProcessor(visitorOrNull, strategy, rootDirectory,
