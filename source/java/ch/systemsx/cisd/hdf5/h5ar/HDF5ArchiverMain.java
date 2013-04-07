@@ -576,6 +576,9 @@ public class HDF5ArchiverMain
                                         {
                                             System.out.println(entry.describeLink(true, false,
                                                     false) + "\t" + errMsg);
+                                        } else if (quiet == false)
+                                        {
+                                            System.out.println(entry.getPath() + "\t" + errMsg);
                                         }
                                         System.err.println(errMsg);
                                         missingFileCount.incrementAndGet();
