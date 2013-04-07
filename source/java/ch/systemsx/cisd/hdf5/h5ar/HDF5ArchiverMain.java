@@ -563,15 +563,24 @@ public class HDF5ArchiverMain
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final AtomicBoolean haveMissingFiles = new AtomicBoolean();
-                    final IArchiveEntryVisitor missingFileVisitorOrNull = checkMissingFile ? new IArchiveEntryVisitor()
-                        {
-                            @Override
-                            public void visit(ArchiveEntry entry)
-                            {
-                                System.err.println(entry.describeLink(true, false, false) + " (MISSING IN ARCHIVE)");
-                                haveMissingFiles.set(true);
-                            }
-                        } : null;
+                    final IArchiveEntryVisitor missingFileVisitorOrNull =
+                            checkMissingFile ? new IArchiveEntryVisitor()
+                                {
+                                    @Override
+                                    public void visit(ArchiveEntry entry)
+                                    {
+                                        final String errMsg =
+                                                "ERROR: Object '" + entry.getName()
+                                                        + "' does not exist in archive.";
+                                        if (verbose)
+                                        {
+                                            System.out.println(entry.describeLink(true, false,
+                                                    false) + "\t" + errMsg);
+                                        }
+                                        System.err.println(errMsg);
+                                        haveMissingFiles.set(true);
+                                    }
+                                } : null;
                     final ListingVisitor visitor =
                             new ListingVisitor(true, quiet, verbose, numeric);
                     archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot(), visitor,
