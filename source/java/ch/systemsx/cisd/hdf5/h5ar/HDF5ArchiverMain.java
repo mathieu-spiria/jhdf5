@@ -161,6 +161,9 @@ public class HDF5ArchiverMain
     @Option(name = "a", longName = "verify-attributes", usage = "Consider file attributes for VERIFY")
     private boolean verifyAttributes = false;
 
+    @Option(name = "m", longName = "check-missing-files", usage = "Check for files present on the filesystem but missing from the archive for VERIFY")
+    private boolean checkMissingFile = false;
+
     @Option(longName = "file-format", skipForExample = true, usage = "Specifies the file format version when creating an archive (N=1 -> HDF51.6 (default), N=2 -> HDF51.8)")
     private int fileFormat = 1;
 
@@ -560,7 +563,7 @@ public class HDF5ArchiverMain
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
                     final AtomicBoolean haveMissingFiles = new AtomicBoolean();
-                    final IArchiveEntryVisitor missingFileVisitor = new IArchiveEntryVisitor()
+                    final IArchiveEntryVisitor missingFileVisitorOrNull = checkMissingFile ? new IArchiveEntryVisitor()
                         {
                             @Override
                             public void visit(ArchiveEntry entry)
@@ -568,11 +571,11 @@ public class HDF5ArchiverMain
                                 System.err.println(entry.describeLink(true, false, false) + " (MISSING IN ARCHIVE)");
                                 haveMissingFiles.set(true);
                             }
-                        };
+                        } : null;
                     final ListingVisitor visitor =
                             new ListingVisitor(true, quiet, verbose, numeric);
                     archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot(), visitor,
-                            missingFileVisitor, VerifyParameters.build().recursive(recursive)
+                            missingFileVisitorOrNull, VerifyParameters.build().recursive(recursive)
                                     .numeric(numeric).verifyAttributes(verifyAttributes).get());
                     return visitor.isOK() && haveMissingFiles.get() == false;
                 }

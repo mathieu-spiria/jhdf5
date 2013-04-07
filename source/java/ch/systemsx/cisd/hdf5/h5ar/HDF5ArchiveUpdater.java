@@ -632,12 +632,12 @@ class HDF5ArchiveUpdater
         return info;
     }
 
-    private static String getRelativePath(File root, File filePath)
+    static String getRelativePath(File root, File filePath)
     {
         return getRelativePath(root.getAbsolutePath(), filePath.getAbsolutePath());
     }
 
-    private static String getRelativePath(String parentDirToBeStripped, String filePath)
+    static String getRelativePath(String parentDirToBeStripped, String filePath)
     {
         if (filePath.startsWith(parentDirToBeStripped) == false
                 && parentDirToBeStripped.startsWith(filePath) == false)

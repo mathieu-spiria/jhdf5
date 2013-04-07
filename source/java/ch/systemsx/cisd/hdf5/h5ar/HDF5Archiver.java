@@ -500,7 +500,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
             VerifyParameters params)
     {
         final Set<File> filesOnFSOrNull =
-                (missingArchiveEntryVisitorOrNull != null) ? getFiles(rootDirectoryOnFS) : null;
+                (missingArchiveEntryVisitorOrNull != null) ? getFiles(rootDirectoryOnFS,
+                        params.isRecursive()) : null;
         final ArchiveEntryVerifyProcessor verifyProcessor =
                 new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, filesOnFSOrNull,
                         buffer, params.isVerifyAttributes(), params.isNumeric());
@@ -509,8 +510,10 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         {
             for (File f : filesOnFSOrNull)
             {
-                missingArchiveEntryVisitorOrNull.visit(new ArchiveEntry(f.getParent(), f.getPath(),
-                        LinkRecord.getLinkRecordForLink(f), idCache));
+                missingArchiveEntryVisitorOrNull.visit(new ArchiveEntry(HDF5ArchiveUpdater
+                        .getRelativePath(rootDirectoryOnFS, f.getParentFile()), HDF5ArchiveUpdater
+                        .getRelativePath(rootDirectoryOnFS, f), LinkRecord.getLinkRecordForLink(f),
+                        idCache));
             }
         }
         return this;
@@ -530,7 +533,8 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
             IArchiveEntryVisitor missingArchiveEntryVisitorOrNull, VerifyParameters params)
     {
         final Set<File> filesOnFSOrNull =
-                (missingArchiveEntryVisitorOrNull != null) ? getFiles(rootDirectoryOnFS) : null;
+                (missingArchiveEntryVisitorOrNull != null) ? getFiles(rootDirectoryOnFS,
+                        params.isRecursive()) : null;
         final ArchiveEntryVerifyProcessor verifyProcessor =
                 new ArchiveEntryVerifyProcessor(visitor, rootDirectoryOnFS, filesOnFSOrNull,
                         rootDirectoryInArchive, buffer, params.isVerifyAttributes(),
@@ -591,10 +595,10 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
                 VerifyParameters.DEFAULT);
     }
 
-    private static Set<File> getFiles(File fsRoot)
+    private static Set<File> getFiles(File fsRoot, boolean recursive)
     {
         final Set<File> result = new HashSet<File>();
-        if (fsRoot.isDirectory())
+        if (recursive && fsRoot.isDirectory())
         {
             addFilesInDir(fsRoot, result);
         }
