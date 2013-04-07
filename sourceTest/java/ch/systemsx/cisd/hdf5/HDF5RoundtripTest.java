@@ -213,6 +213,7 @@ public class HDF5RoundtripTest
         test.testIterateOverStringArrayInNaturalBlocks(10, 100);
         test.testIterateOverStringArrayInNaturalBlocks(10, 101);
         test.testReadToFloatMDArrayBlockWithOffset();
+        test.testReadToTimeDurationMDArrayBlockWithOffset();
         test.testIterateOverMDFloatArrayInNaturalBlocks(new int[]
             { 2, 2 }, new long[]
             { 4, 3 }, new float[]
@@ -2421,6 +2422,59 @@ public class HDF5RoundtripTest
                 if (isSet[i][j] == false)
                 {
                     assertEquals("(" + i + "," + j + ")", 0f, arrayRead.get(i, j));
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testReadToTimeDurationMDArrayBlockWithOffset()
+    {
+        final File datasetFile = new File(workingDirectory, "readToTimeDurationMDArrayBlockWithOffset.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String dsName = "ds";
+        final HDF5TimeDurationMDArray arrayWritten = new HDF5TimeDurationMDArray(new long[]
+            { 1, 1, 1, 1, 1, 1, 1, 1, 1 }, new int[]
+            { 3, 3 }, HDF5TimeUnit.MINUTES);
+        writer.duration().writeMDArray(dsName, arrayWritten);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final HDF5TimeDurationMDArray arrayRead = new HDF5TimeDurationMDArray(new int[]
+            { 10, 10 }, HDF5TimeUnit.SECONDS);
+        final int memOfsX = 2;
+        final int memOfsY = 3;
+        final int diskOfsX = 1;
+        final int diskOfsY = 0;
+        final int blockSizeX = 3;
+        final int blockSizeY = 2;
+        final int[] effectiveDimensions =
+                reader.duration().readToMDArrayBlockWithOffset(dsName, arrayRead, new int[]
+                    { blockSizeX, blockSizeY }, new long[]
+                    { diskOfsX, diskOfsY }, new int[]
+                    { memOfsX, memOfsY });
+        reader.close();
+        assertEquals(blockSizeX - 1, effectiveDimensions[0]);
+        assertEquals(blockSizeY, effectiveDimensions[1]);
+        final boolean[][] isSet = new boolean[10][10];
+        for (int i = 0; i < effectiveDimensions[0]; ++i)
+        {
+            for (int j = 0; j < effectiveDimensions[1]; ++j)
+            {
+                isSet[memOfsX + i][memOfsY + j] = true;
+                assertEquals("(" + i + "," + j + ")", 60 * arrayWritten.get(diskOfsX + i, diskOfsY + j),
+                        arrayRead.get(memOfsX + i, memOfsY + j));
+            }
+        }
+        for (int i = 0; i < arrayRead.size(0); ++i)
+        {
+            for (int j = 0; j < arrayRead.size(1); ++j)
+            {
+                if (isSet[i][j] == false)
+                {
+                    assertEquals("(" + i + "," + j + ")", 0, arrayRead.get(i, j));
                 }
             }
         }

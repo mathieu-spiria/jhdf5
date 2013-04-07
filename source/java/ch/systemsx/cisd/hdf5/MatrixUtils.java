@@ -271,4 +271,21 @@ final class MatrixUtils
         return result;
     }
 
+    static boolean incrementIdx(int[] idx, int[] dims, int[] offset)
+    {
+        int d = idx.length - 1;
+        while (++idx[d] >= offset[d] + dims[d])
+        {
+            idx[d] = offset[d];
+            if (d == 0)
+            {
+                return false;
+            } else
+            {
+                --d;
+            }
+        }
+        return true;
+    }
+
 }

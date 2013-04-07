@@ -577,14 +577,21 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
     {
         writeMDArrayBlock(objectPath, datesToTimeStamps(data), blockNumber);
     }
-    
+
+    @Override
+    public void writeMDArrayBlockWithOffset(String objectPath, MDArray<Date> data, long[] offset)
+    {
+        writeMDArrayBlockWithOffset(objectPath, datesToTimeStamps(data), offset);
+    }
+
     @Override
     public void writeMDArrayBlockWithOffset(final String objectPath, final MDArray<Date> data,
             final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
     {
-        writeMDArrayBlockWithOffset(objectPath, datesToTimeStamps(data), offset);
+        writeMDArrayBlockWithOffset(objectPath, datesToTimeStamps(data), blockDimensions, offset,
+                memoryOffset);
     }
-    
+
     private static long[] datesToTimeStamps(Date[] dates)
     {
         assert dates != null;

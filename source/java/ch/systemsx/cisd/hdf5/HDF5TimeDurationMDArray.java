@@ -55,6 +55,14 @@ public class HDF5TimeDurationMDArray extends MDAbstractArray<Long>
     }
 
     /**
+     * Creates an array of dimension <var>dimensions</var> with <var>timeUnit</var>.
+     */
+    public HDF5TimeDurationMDArray(int[] dimensions, HDF5TimeUnit timeUnit)
+    {
+        this(new long[getLength(dimensions, 0)], dimensions, timeUnit);
+    }
+
+    /**
      * Creates an array of <var>timeDurations</var> using a common <var>timeUnit</var>.
      */
     public HDF5TimeDurationMDArray(HDF5TimeDuration[] timeDurations, int[] dimensions,
@@ -156,6 +164,14 @@ public class HDF5TimeDurationMDArray extends MDAbstractArray<Long>
         return timeDurations.size();
     }
 
+    /**
+     * Returns the time duration values.
+     */
+    public MDLongArray getValues()
+    {
+        return timeDurations;
+    }
+    
     /**
      * Returns the time duration values in the given <var>targetUnit</var>.
      */

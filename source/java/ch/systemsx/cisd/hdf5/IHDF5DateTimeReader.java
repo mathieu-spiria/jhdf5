@@ -39,8 +39,7 @@ public interface IHDF5DateTimeReader
      * Returns <code>true</code>, if the attribute <var>attributeName</var> of data set
      * <var>objectPath</var> is a time stamp and <code>false</code> otherwise.
      */
-    public boolean isTimeStamp(final String objectPath, String attributeName)
-            throws HDF5JavaException;
+    public boolean isTimeStamp(String objectPath, String attributeName) throws HDF5JavaException;
 
     /**
      * Reads a time stamp attribute named <var>attributeName</var> from the data set
@@ -53,7 +52,7 @@ public interface IHDF5DateTimeReader
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      */
-    public long getAttrAsLong(final String objectPath, final String attributeName);
+    public long getAttrAsLong(String objectPath, String attributeName);
 
     /**
      * Reads a time stamp array attribute named <var>attributeName</var> from the data set
@@ -67,7 +66,7 @@ public interface IHDF5DateTimeReader
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      */
-    public long[] getArrayAttrAsLong(final String objectPath, final String attributeName);
+    public long[] getArrayAttrAsLong(String objectPath, String attributeName);
 
     /**
      * Reads a multi-dimension time stamp array attribute named <var>attributeName</var> from the
@@ -81,7 +80,7 @@ public interface IHDF5DateTimeReader
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      */
-    public MDLongArray getMDArrayAttrAsLong(final String objectPath, final String attributeName);
+    public MDLongArray getMDArrayAttrAsLong(String objectPath, String attributeName);
 
     /**
      * Reads a time stamp attribute named <var>attributeName</var> from the data set
@@ -94,7 +93,7 @@ public interface IHDF5DateTimeReader
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      */
-    public Date getAttr(final String objectPath, final String attributeName);
+    public Date getAttr(String objectPath, String attributeName);
 
     /**
      * Reads a time stamp array attribute named <var>attributeName</var> from the data set
@@ -107,7 +106,7 @@ public interface IHDF5DateTimeReader
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      */
-    public Date[] getArrayAttr(final String objectPath, final String attributeName);
+    public Date[] getArrayAttr(String objectPath, String attributeName);
 
     /**
      * Reads a multi-dimension time stamp array attribute named <var>attributeName</var> from the
@@ -120,7 +119,7 @@ public interface IHDF5DateTimeReader
      *             <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      */
-    public MDArray<Date> getMDArrayAttr(final String objectPath, final String attributeName);
+    public MDArray<Date> getMDArrayAttr(String objectPath, String attributeName);
 
     // /////////////////////
     // Data Sets
@@ -130,7 +129,7 @@ public interface IHDF5DateTimeReader
      * Returns <code>true</code>, if the data set given by <var>objectPath</var> is a time stamp and
      * <code>false</code> otherwise.
      */
-    public boolean isTimeStamp(final String objectPath) throws HDF5JavaException;
+    public boolean isTimeStamp(String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a time stamp value from the data set <var>objectPath</var>. The time stamp is stored as
@@ -139,8 +138,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
-     * code like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)},
+     * most conveniently by code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -151,7 +150,7 @@ public interface IHDF5DateTimeReader
      * @throws HDF5JavaException If the <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      */
-    public long readTimeStamp(final String objectPath) throws HDF5JavaException;
+    public long readTimeStamp(String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a time stamp array from the data set <var>objectPath</var>. The time stamp is stored as
@@ -160,8 +159,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
-     * code like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)},
+     * most conveniently by code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -172,7 +171,7 @@ public interface IHDF5DateTimeReader
      * @throws HDF5JavaException If the <var>objectPath</var> is not defined as type variant
      *             {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
      */
-    public long[] readTimeStampArray(final String objectPath) throws HDF5JavaException;
+    public long[] readTimeStampArray(String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a block of a time stamp array (of rank 1) from the data set <var>objectPath</var>. The
@@ -181,8 +180,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
-     * code like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)},
+     * most conveniently by code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -196,8 +195,7 @@ public interface IHDF5DateTimeReader
      * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
      *         blockSize).
      */
-    public long[] readTimeStampArrayBlock(final String objectPath, final int blockSize,
-            final long blockNumber);
+    public long[] readTimeStampArrayBlock(String objectPath, int blockSize, long blockNumber);
 
     /**
      * Reads a block of a time stamp array (of rank 1) from the data set <var>objectPath</var>. The
@@ -206,8 +204,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
-     * code like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)},
+     * most conveniently by code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -220,8 +218,7 @@ public interface IHDF5DateTimeReader
      *            0).
      * @return The data block read from the data set.
      */
-    public long[] readTimeStampArrayBlockWithOffset(final String objectPath, final int blockSize,
-            final long offset);
+    public long[] readTimeStampArrayBlockWithOffset(String objectPath, int blockSize, long offset);
 
     /**
      * Provides all natural blocks of this one-dimensional data set of time stamps to iterate over.
@@ -229,7 +226,7 @@ public interface IHDF5DateTimeReader
      * @see HDF5DataBlock
      * @throws HDF5JavaException If the data set is not of rank 1.
      */
-    public Iterable<HDF5DataBlock<long[]>> getTimeStampArrayNaturalBlocks(final String dataSetPath)
+    public Iterable<HDF5DataBlock<long[]>> getTimeStampArrayNaturalBlocks(String dataSetPath)
             throws HDF5JavaException;
 
     /**
@@ -240,8 +237,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
-     * code like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)},
+     * most conveniently by code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -251,7 +248,7 @@ public interface IHDF5DateTimeReader
      * @return The time stamp as {@link Date}.
      * @throws HDF5JavaException If the <var>objectPath</var> does not denote a time stamp.
      */
-    public Date readDate(final String objectPath) throws HDF5JavaException;
+    public Date readDate(String objectPath) throws HDF5JavaException;
 
     /**
      * Reads a time stamp array (of rank 1) from the data set <var>objectPath</var> and returns it
@@ -261,8 +258,8 @@ public interface IHDF5DateTimeReader
      * <p>
      * This tagging is done by the writer when using
      * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
-     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)}, most conveniently by
-     * code like
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)},
+     * most conveniently by code like
      * 
      * <pre>
      * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
@@ -272,17 +269,169 @@ public interface IHDF5DateTimeReader
      * @return The time stamp as {@link Date}.
      * @throws HDF5JavaException If the <var>objectPath</var> does not denote a time stamp.
      */
-    public Date[] readDateArray(final String objectPath) throws HDF5JavaException;
+    public Date[] readDateArray(String objectPath) throws HDF5JavaException;
 
-    public MDLongArray readTimeStampMDArray(final String objectPath);
+    /**
+     * Reads a block of a {@link Date} array (of rank 1) from the data set <var>objectPath</var>.
+     * The time stamp is stored as a <code>long</code> value in the HDF5 file. It needs to be tagged
+     * as type variant {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * <p>
+     * This tagging is done by the writer when using
+     * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)},
+     * most conveniently by code like
+     * 
+     * <pre>
+     * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
+     * </pre>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The block size (this will be the length of the <code>long[]</code> returned
+     *            if the data set is long enough).
+     * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
+     *            <var>blockSize</var>).
+     * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
+     *         blockSize).
+     */
+    public Date[] readDateArrayBlock(String objectPath, int blockSize, long blockNumber);
 
-    public MDLongArray readTimeStampMDArrayBlock(final String objectPath,
-            final int[] blockDimensions, final long[] blockNumber);
+    /**
+     * Reads a block of a {@link Date} array (of rank 1) from the data set <var>objectPath</var>.
+     * The time stamp is stored as a <code>long</code> value in the HDF5 file. It needs to be tagged
+     * as type variant {@link HDF5DataTypeVariant#TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH}.
+     * <p>
+     * This tagging is done by the writer when using
+     * {@link IHDF5Writer#writeTimeDuration(String, HDF5TimeDuration)} or can be done by calling
+     * {@link IHDF5ObjectReadWriteInfoProviderHandler#setTypeVariant(String, HDF5DataTypeVariant)},
+     * most conveniently by code like
+     * 
+     * <pre>
+     * writer.addTypeVariant(&quot;/dataSetPath&quot;, HDF5TimeUnit.SECONDS.getTypeVariant());
+     * </pre>
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockSize The block size (this will be the length of the <code>long[]</code>
+     *            returned).
+     * @param offset The offset of the block in the data set to start reading from (starting with
+     *            0).
+     * @return The data block read from the data set.
+     */
+    public Date[] readDateArrayBlockWithOffset(String objectPath, int blockSize, long offset);
 
-    public MDLongArray readTimeStampMDArrayBlockWithOffset(final String objectPath,
-            final int[] blockDimensions, final long[] offset);
+    /**
+     * Provides all natural blocks of this one-dimensional data set of {@link Date}s to iterate
+     * over.
+     * 
+     * @see HDF5DataBlock
+     * @throws HDF5JavaException If the data set is not of rank 1.
+     */
+    public Iterable<HDF5DataBlock<Date[]>> getDateArrayNaturalBlocks(String dataSetPath)
+            throws HDF5JavaException;
 
+    /**
+     * Reads a multi-dimensional array of time stamps from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     */
+    public MDLongArray readTimeStampMDArray(String objectPath);
+
+    /**
+     * Reads a multi-dimensional array of time stamps from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockDimensions The extent of the block in each dimension.
+     * @param blockNumber The block number in each dimension (offset: multiply with the
+     *            <var>blockDimensions</var> in the according dimension).
+     * @return The data block read from the data set.
+     */
+    public MDLongArray readTimeStampMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber);
+
+    /**
+     * Reads a multi-dimensional array of time stamps from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockDimensions The extent of the block in each dimension.
+     * @param offset The offset in the data set to start reading from in each dimension.
+     * @return The data block read from the data set.
+     */
+    public MDLongArray readTimeStampMDArrayBlockWithOffset(String objectPath,
+            int[] blockDimensions, long[] offset);
+
+    /**
+     * Reads a multi-dimensional array data set <var>objectPath</var> of type time stamp into a
+     * given <var>array</var> in memory.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param array The array to read the data into.
+     * @param memoryOffset The offset in the array to write the data to.
+     * @return The effective dimensions of the block in <var>array</var> that was filled.
+     */
+    public int[] readToMDArrayWithOffset(String objectPath, MDLongArray array, int[] memoryOffset);
+
+    /**
+     * Reads a block of the multi-dimensional array data set <var>objectPath</var> of type time
+     * stamp into a given <var>array</var> in memory.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param array The array to read the data into.
+     * @param blockDimensions The size of the block to read along each axis.
+     * @param offset The offset of the block in the data set.
+     * @param memoryOffset The offset of the block in the array to write the data to.
+     * @return The effective dimensions of the block in <var>array</var> that was filled.
+     */
+    public int[] readToMDArrayBlockWithOffset(String objectPath, MDLongArray array,
+            int[] blockDimensions, long[] offset, int[] memoryOffset);
+
+    /**
+     * Provides all natural blocks of this multi-dimensional data set to iterate over.
+     * 
+     * @see HDF5MDDataBlock
+     */
     public Iterable<HDF5MDDataBlock<MDLongArray>> getTimeStampMDArrayNaturalBlocks(
-            final String dataSetPath);
+            String dataSetPath);
+
+    /**
+     * Reads a multi-dimensional array of {@link Date}s from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @return The data read from the data set.
+     * @throws HDF5JavaException If the <var>objectPath</var> is not tagged as a type variant that
+     *             corresponds to a time duration.
+     */
+    public MDArray<Date> readDateMDArray(String objectPath);
+
+    /**
+     * Reads a multi-dimensional array of {@link Date}s from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockDimensions The extent of the block in each dimension.
+     * @param blockNumber The block number in each dimension (offset: multiply with the
+     *            <var>blockDimensions</var> in the according dimension).
+     * @return The data block read from the data set.
+     */
+    public MDArray<Date> readDateMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber);
+
+    /**
+     * Reads a multi-dimensional array of {@link Date}s from the data set <var>objectPath</var>.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param blockDimensions The extent of the block in each dimension.
+     * @param offset The offset in the data set to start reading from in each dimension.
+     * @return The data block read from the data set.
+     */
+    public MDArray<Date> readDateMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
+            long[] offset);
+
+    /**
+     * Provides all natural blocks of this multi-dimensional data set to iterate over.
+     * 
+     * @see HDF5MDDataBlock
+     */
+    public Iterable<HDF5MDDataBlock<MDArray<Date>>> getDateMDArrayNaturalBlocks(String dataSetPath);
 
 }

@@ -39,8 +39,8 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      * @param timeDuration The value of the attribute.
      * @param timeUnit The unit of the attribute.
      */
-    public void setAttr(final String objectPath, final String attributeName,
-            final long timeDuration, final HDF5TimeUnit timeUnit);
+    public void setAttr(String objectPath, String attributeName,
+            long timeDuration, HDF5TimeUnit timeUnit);
 
     /**
      * Set a time duration value as attribute on the referenced object.
@@ -52,8 +52,8 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      * @param attributeName The name of the attribute.
      * @param timeDuration The value of the attribute.
      */
-    public void setAttr(final String objectPath, final String attributeName,
-            final HDF5TimeDuration timeDuration);
+    public void setAttr(String objectPath, String attributeName,
+            HDF5TimeDuration timeDuration);
 
     /**
      * Set a time duration array value as attribute on the referenced object. The smallest time unit
@@ -68,8 +68,8 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      * @param attributeName The name of the attribute.
      * @param timeDurations The value of the attribute.
      */
-    public void setArrayAttr(final String objectPath, final String attributeName,
-            final HDF5TimeDurationArray timeDurations);
+    public void setArrayAttr(String objectPath, String attributeName,
+            HDF5TimeDurationArray timeDurations);
 
     /**
      * Set a multi-dimensional time duration array value as attribute on the referenced object. The
@@ -84,8 +84,8 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      * @param attributeName The name of the attribute.
      * @param timeDurations The value of the attribute.
      */
-    public void setMDArrayAttr(final String objectPath, final String attributeName,
-            final HDF5TimeDurationMDArray timeDurations);
+    public void setMDArrayAttr(String objectPath, String attributeName,
+            HDF5TimeDurationMDArray timeDurations);
 
     // /////////////////////
     // Data Sets
@@ -101,7 +101,7 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      * @param timeDuration The duration of time to write in the given <var>timeUnit</var>.
      * @param timeUnit The unit of the time duration.
      */
-    public void write(final String objectPath, final long timeDuration, final HDF5TimeUnit timeUnit);
+    public void write(String objectPath, long timeDuration, HDF5TimeUnit timeUnit);
 
     /**
      * Writes out a time duration value.
@@ -112,7 +112,7 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeDuration The duration of time to write.
      */
-    public void write(final String objectPath, final HDF5TimeDuration timeDuration);
+    public void write(String objectPath, HDF5TimeDuration timeDuration);
 
     /**
      * Creates a time duration array (of rank 1).
@@ -126,7 +126,7 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      * @param timeUnit The unit of the time duration.
      */
-    public void createArray(final String objectPath, final int size, final HDF5TimeUnit timeUnit);
+    public void createArray(String objectPath, int size, HDF5TimeUnit timeUnit);
 
     /**
      * Creates a time duration array (of rank 1).
@@ -141,8 +141,8 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      *            and <code>deflate == false</code>.
      * @param timeUnit The unit of the time duration.
      */
-    public void createArray(final String objectPath, final long size, final int blockSize,
-            final HDF5TimeUnit timeUnit);
+    public void createArray(String objectPath, long size, int blockSize,
+            HDF5TimeUnit timeUnit);
 
     /**
      * Creates a time duration array (of rank 1).
@@ -158,8 +158,8 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      * @param timeUnit The unit of the time duration.
      * @param features The storage features of the data set.
      */
-    public void createArray(final String objectPath, final long size, final int blockSize,
-            final HDF5TimeUnit timeUnit, final HDF5GenericStorageFeatures features);
+    public void createArray(String objectPath, long size, int blockSize,
+            HDF5TimeUnit timeUnit, HDF5GenericStorageFeatures features);
 
     /**
      * Creates a time duration array (of rank 1).
@@ -175,8 +175,8 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      * @param timeUnit The unit of the time duration.
      * @param features The storage features of the data set.
      */
-    public void createArray(final String objectPath, final int size, final HDF5TimeUnit timeUnit,
-            final HDF5GenericStorageFeatures features);
+    public void createArray(String objectPath, int size, HDF5TimeUnit timeUnit,
+            HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a time duration array (of rank 1).
@@ -187,7 +187,7 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param timeDurations The time durations to write.
      */
-    public void writeArray(final String objectPath, final HDF5TimeDurationArray timeDurations);
+    public void writeArray(String objectPath, HDF5TimeDurationArray timeDurations);
 
     /**
      * Writes out a time duration array (of rank 1).
@@ -199,8 +199,8 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      * @param timeDurations The time durations to write.
      * @param features The storage features used to store the array.
      */
-    public void writeArray(final String objectPath, final HDF5TimeDurationArray timeDurations,
-            final HDF5IntStorageFeatures features);
+    public void writeArray(String objectPath, HDF5TimeDurationArray timeDurations,
+            HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a time duration array. The data set needs to have been created by
@@ -216,8 +216,8 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
      */
-    public void writeArrayBlock(final String objectPath, final HDF5TimeDurationArray data,
-            final long blockNumber);
+    public void writeArrayBlock(String objectPath, HDF5TimeDurationArray data,
+            long blockNumber);
 
     /**
      * Writes out a block of a time duration array. The data set needs to have been created by
@@ -238,32 +238,119 @@ public interface IHDF5TimeDurationWriter extends IHDF5TimeDurationReader
      *            )
      * @param offset The offset in the data set to start writing to.
      */
-    public void writeArrayBlockWithOffset(final String objectPath,
-            final HDF5TimeDurationArray data, final int dataSize, final long offset);
+    public void writeArrayBlockWithOffset(String objectPath,
+            HDF5TimeDurationArray data, int dataSize, long offset);
 
-    public void writeMDArray(final String objectPath, final HDF5TimeDurationMDArray data,
-            final HDF5IntStorageFeatures features);
-    
-    public void writeMDArray(final String objectPath, final HDF5TimeDurationMDArray data);
-    
-    public void createMDArray(final String objectPath, final int[] dimensions, final HDF5TimeUnit timeUnit);
-    
-    public void createMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final HDF5TimeUnit timeUnit);
-    
-    public void createMDArray(final String objectPath, final int[] dimensions,
-            final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features);
+    /**
+     * Writes out a multi-dimensional array of time durations.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param features The storage features of the data set.
+     */
+    public void writeMDArray(String objectPath, HDF5TimeDurationMDArray data,
+            HDF5IntStorageFeatures features);
 
-    public void createMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features);
-    
-    public void writeMDArrayBlock(final String objectPath, final HDF5TimeDurationMDArray data,
-            final long[] blockNumber);
-    
-    public void writeMDArrayBlockWithOffset(final String objectPath, final HDF5TimeDurationMDArray data,
-            final long[] offset);
-    
-    public void writeMDArrayBlockWithOffset(final String objectPath, final HDF5TimeDurationMDArray data,
-            final int[] blockDimensions, final long[] offset, final int[] memoryOffset);
-    
+    /**
+     * Writes out a multi-dimensional array of time durations.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     */
+    public void writeMDArray(String objectPath, HDF5TimeDurationMDArray data);
+
+    /**
+     * Creates a multi-dimensional array of time durations.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions When the writer is configured to use extendable data types (see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial
+     *            dimensions and the dimensions of a chunk of the array will be
+     *            <var>dimensions</var>. When the writer is configured to <i>enforce</i> a
+     *            on-extendable data set, the initial dimensions equal the dimensions and will be
+     *            <var>dimensions</var>.
+     */
+    public void createMDArray(String objectPath, int[] dimensions,
+            HDF5TimeUnit timeUnit);
+
+    /**
+     * Creates a multi-dimensional array of time durations.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     */
+    public void createMDArray(String objectPath, long[] dimensions,
+            int[] blockDimensions, HDF5TimeUnit timeUnit);
+
+    /**
+     * Creates a multi-dimensional array of time durations.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the <code>long</code> array to create. When <i>requesting</i> 
+     *            a chunked data set (e.g. {@link HDF5IntStorageFeatures#INT_CHUNKED}), 
+     *            the initial size of the array will be 0 and the chunk size will be <var>dimensions</var>. 
+     *            When <i>allowing</i> a chunked data set (e.g. 
+     *            {@link HDF5IntStorageFeatures#INT_NO_COMPRESSION} when the writer is 
+     *            not configured to avoid extendable data types, see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
+     *            and the chunk size of the array will be <var>dimensions</var>. When <i>enforcing</i> a 
+     *            on-extendable data set (e.g. 
+     *            {@link HDF5IntStorageFeatures#INT_CONTIGUOUS}), the initial size equals 
+     *            the total size and will be <var>dimensions</var>.
+     * @param features The storage features of the data set.
+     */
+    public void createMDArray(String objectPath, int[] dimensions,
+            HDF5TimeUnit timeUnit, HDF5IntStorageFeatures features);
+
+    /**
+     * Creates a multi-dimensional array of time durations.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     * @param features The storage features of the data set.
+     */
+    public void createMDArray(String objectPath, long[] dimensions,
+            int[] blockDimensions, HDF5TimeUnit timeUnit,
+            HDF5IntStorageFeatures features);
+
+    /**
+     * Writes out a block of a multi-dimensional array of time durations.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
+     *            the according dimension).
+     */
+    public void writeMDArrayBlock(String objectPath, HDF5TimeDurationMDArray data,
+            long[] blockNumber);
+
+    /**
+     * Writes out a block of a multi-dimensional array of time durations.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param offset The offset in the data set  to start writing to in each dimension.
+     */
+    public void writeMDArrayBlockWithOffset(String objectPath,
+            HDF5TimeDurationMDArray data, long[] offset);
+
+    /**
+     * Writes out a block of a multi-dimensional array of time durations.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeMDArrayBlockWithOffset(String objectPath,
+            HDF5TimeDurationMDArray data, int[] blockDimensions, long[] offset,
+            int[] memoryOffset);
+
 }

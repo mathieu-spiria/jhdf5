@@ -22,6 +22,7 @@ import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -111,8 +112,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                             final HDF5TimeUnit storedUnit =
                                     baseReader.checkIsTimeDuration(objectPath, attributeName,
                                             objectId, registry);
-                            final long[] data =
-                                    longReader.getArrayAttr(objectPath, attributeName);
+                            final long[] data = longReader.getArrayAttr(objectPath, attributeName);
                             return new HDF5TimeDurationArray(data, storedUnit);
                         }
                     };
@@ -415,6 +415,96 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
         return baseReader.runner.call(readCallable);
     }
 
+    @Override
+    public int[] readToMDArrayWithOffset(final String objectPath,
+            final HDF5TimeDurationMDArray array, final int[] memoryOffset)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
+            {
+                @Override
+                public int[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final HDF5TimeUnit storedUnit =
+                            baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset,
+                                    array.dimensions(), registry);
+                    final int nativeDataTypeId =
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                            array.getAsFlatArray());
+                    final int[] effectiveBlockDims = MDArray.toInt(spaceParams.dimensions); 
+                    if (array.getUnit() != storedUnit)
+                    {
+                        convertUnit(array.getValues(), storedUnit, array.getUnit(),
+                                effectiveBlockDims, memoryOffset);
+                    }
+                    return effectiveBlockDims;
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+
+    @Override
+    public int[] readToMDArrayBlockWithOffset(final String objectPath,
+            final HDF5TimeDurationMDArray array, final int[] blockDimensions, final long[] offset,
+            final int[] memoryOffset)
+    {
+        assert objectPath != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<int[]> readCallable = new ICallableWithCleanUp<int[]>()
+            {
+                @Override
+                public int[] call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
+                    final HDF5TimeUnit storedUnit =
+                            baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getBlockSpaceParameters(dataSetId, memoryOffset,
+                                    array.dimensions(), offset, blockDimensions, registry);
+                    final int nativeDataTypeId =
+                            baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
+                    baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
+                            spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                            array.getAsFlatArray());
+                    final int[] effectiveBlockDims = MDArray.toInt(spaceParams.dimensions); 
+                    if (array.getUnit() != storedUnit)
+                    {
+                        convertUnit(array.getValues(), storedUnit, array.getUnit(),
+                                effectiveBlockDims, memoryOffset);
+                    }
+                    return effectiveBlockDims;
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+
+    static void convertUnit(MDLongArray array, HDF5TimeUnit fromUnit, HDF5TimeUnit toUnit,
+            int[] dims, int[] offset)
+    {
+        final long[] flatArray = array.getAsFlatArray();
+        final int[] idx = offset.clone();
+        System.arraycopy(offset, 0, idx, 0, idx.length);
+        while (true)
+        {
+            final int linIdx = array.computeIndex(idx);
+            flatArray[linIdx] = toUnit.convert(flatArray[linIdx], fromUnit);
+            if (MatrixUtils.incrementIdx(idx, dims, offset) == false)
+            {
+                break;
+            }
+        }
+    }
+    
     @Override
     public Iterable<HDF5DataBlock<HDF5TimeDurationArray>> getArrayNaturalBlocks(
             final String objectPath) throws HDF5JavaException

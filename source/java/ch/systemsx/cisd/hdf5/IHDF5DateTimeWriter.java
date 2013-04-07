@@ -43,8 +43,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param attributeName The name of the attribute.
      * @param date The value of the attribute.
      */
-    public void setAttr(final String objectPath, final String attributeName,
-            final Date date);
+    public void setAttr(String objectPath, String attributeName,
+            Date date);
 
     /**
      * Set a date array value as attribute on the referenced object.
@@ -56,8 +56,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param attributeName The name of the attribute.
      * @param dates The value of the attribute.
      */
-    public void setArrayAttr(final String objectPath, final String attributeName,
-            final Date[] dates);
+    public void setArrayAttr(String objectPath, String attributeName,
+            Date[] dates);
 
     /**
      * Set a time stamp value as attribute on the referenced object.
@@ -69,8 +69,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param attributeName The name of the attribute.
      * @param timeStamp The value of the attribute.
      */
-    public void setAttr(final String objectPath, final String attributeName,
-            final long timeStamp);
+    public void setAttr(String objectPath, String attributeName,
+            long timeStamp);
 
     /**
      * Set a time stamp array value as attribute on the referenced object.
@@ -82,8 +82,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param attributeName The name of the attribute.
      * @param timeStamps The value of the attribute.
      */
-    public void setArrayAttr(final String objectPath, final String attributeName,
-            final long[] timeStamps);
+    public void setArrayAttr(String objectPath, String attributeName,
+            long[] timeStamps);
 
     /**
      * Sets a multi-dimensional timestamp array attribute on the referenced object.
@@ -95,8 +95,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
-            final MDLongArray value);
+    public void setMDArrayAttr(String objectPath, String name,
+            MDLongArray value);
 
     /**
      * Sets a multi-dimensional timestamp array attribute on the referenced object.
@@ -108,8 +108,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
-    public void setMDArrayAttr(final String objectPath, final String name,
-            final MDArray<Date> value);
+    public void setMDArrayAttr(String objectPath, String name,
+            MDArray<Date> value);
 
     // /////////////////////
     // Data Sets
@@ -125,7 +125,7 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param timeStamp The timestamp to write as number of milliseconds since January 1, 1970,
      *            00:00:00 GMT.
      */
-    public void write(final String objectPath, final long timeStamp);
+    public void write(String objectPath, long timeStamp);
 
     /**
      * Creates a time stamp array (of rank 1).
@@ -138,7 +138,7 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
      *            and <code>deflate == false</code>.
      */
-    public void createArray(final String objectPath, final long size, final int blockSize);
+    public void createArray(String objectPath, long size, int blockSize);
 
     /**
      * Creates a time stamp array (of rank 1).
@@ -151,7 +151,7 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      *            sets. For extendable data sets the initial size of the array will be 0, see
      *            {@link ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator#dontUseExtendableDataTypes}.
      */
-    public void createArray(final String objectPath, final int size);
+    public void createArray(String objectPath, int size);
 
     /**
      * Creates a time stamp array (of rank 1).
@@ -165,8 +165,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      *            and <code>deflate == false</code>.
      * @param features The storage features of the data set.
      */
-    public void createArray(final String objectPath, final long size, final int blockSize,
-            final HDF5GenericStorageFeatures features);
+    public void createArray(String objectPath, long size, int blockSize,
+            HDF5GenericStorageFeatures features);
 
     /**
      * Creates a time stamp array (of rank 1).
@@ -180,8 +180,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      *            {@link HDF5GenericStorageFeatures}.
      * @param features The storage features of the data set.
      */
-    public void createArray(final String objectPath, final int size,
-            final HDF5GenericStorageFeatures features);
+    public void createArray(String objectPath, int size,
+            HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a time stamp array (of rank 1). The data set will be tagged as type variant
@@ -193,7 +193,7 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param timeStamps The timestamps to write as number of milliseconds since January 1, 1970,
      *            00:00:00 GMT.
      */
-    public void writeArray(final String objectPath, final long[] timeStamps);
+    public void writeArray(String objectPath, long[] timeStamps);
 
     /**
      * Writes out a time stamp array (of rank 1). The data set will be tagged as type variant
@@ -206,8 +206,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      *            00:00:00 GMT.
      * @param features The storage features of the data set.
      */
-    public void writeArray(final String objectPath, final long[] timeStamps,
-            final HDF5GenericStorageFeatures features);
+    public void writeArray(String objectPath, long[] timeStamps,
+            HDF5GenericStorageFeatures features);
 
     /**
      * Writes out a block of a time stamp array (which is stored as a <code>long</code> array of
@@ -224,8 +224,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
      */
-    public void writeArrayBlock(final String objectPath, final long[] data,
-            final long blockNumber);
+    public void writeArrayBlock(String objectPath, long[] data,
+            long blockNumber);
 
     /**
      * Writes out a block of a time stamp array (which is stored as a <code>long</code> array of
@@ -247,8 +247,8 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      *            )
      * @param offset The offset in the data set to start writing to.
      */
-    public void writeArrayBlockWithOffset(final String objectPath, final long[] data,
-            final int dataSize, final long offset);
+    public void writeArrayBlockWithOffset(String objectPath, long[] data,
+            int dataSize, long offset);
 
     /**
      * Writes out a time stamp value provided as a {@link Date}.
@@ -260,7 +260,7 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param date The date to write.
      * @see #write(String, long)
      */
-    public void write(final String objectPath, final Date date);
+    public void write(String objectPath, Date date);
 
     /**
      * Writes out a {@link Date} array (of rank 1).
@@ -272,7 +272,7 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param dates The dates to write.
      * @see #writeArray(String, long[])
      */
-    public void writeArray(final String objectPath, final Date[] dates);
+    public void writeArray(String objectPath, Date[] dates);
 
     /**
      * Writes out a {@link Date} array (of rank 1).
@@ -285,39 +285,152 @@ public interface IHDF5DateTimeWriter extends IHDF5DateTimeReader
      * @param features The storage features of the data set.
      * @see #writeArray(String, long[], HDF5GenericStorageFeatures)
      */
-    public void writeArray(final String objectPath, final Date[] dates,
-            final HDF5GenericStorageFeatures features);
+    public void writeArray(String objectPath, Date[] dates,
+            HDF5GenericStorageFeatures features);
 
-    public void writeMDArray(final String objectPath, final MDLongArray data,
-            final HDF5IntStorageFeatures features);
+    /**
+     * Writes out a multi-dimensional array of time stamps.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param features The storage features of the data set.
+     */
+    public void writeMDArray(String objectPath, MDLongArray data,
+            HDF5IntStorageFeatures features);
     
-    public void createMDArray(final String objectPath, final int[] dimensions);
+    /**
+     * Creates a multi-dimensional array of time stamps / dates.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions When the writer is configured to use extendable data types (see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial dimensions
+     *            and the dimensions of a chunk of the array will be <var>dimensions</var>. When the 
+     *            writer is configured to <i>enforce</i> a on-extendable data set, the initial dimensions 
+     *            equal the dimensions and will be <var>dimensions</var>.
+     */
+    public void createMDArray(String objectPath, int[] dimensions);
     
-    public void createMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions);
+    /**
+     * Creates a multi-dimensional array of time stamps / dates.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     */
+    public void createMDArray(String objectPath, long[] dimensions,
+            int[] blockDimensions);
 
-    public void createMDArray(final String objectPath, final int[] dimensions,
-            final HDF5IntStorageFeatures features);
+    /**
+     * Creates a multi-dimensional array of time stamps / dates.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the <code>long</code> array to create. When <i>requesting</i> 
+     *            a chunked data set (e.g. {@link HDF5IntStorageFeatures#INT_CHUNKED}), 
+     *            the initial size of the array will be 0 and the chunk size will be <var>dimensions</var>. 
+     *            When <i>allowing</i> a chunked data set (e.g. 
+     *            {@link HDF5IntStorageFeatures#INT_NO_COMPRESSION} when the writer is 
+     *            not configured to avoid extendable data types, see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
+     *            and the chunk size of the array will be <var>dimensions</var>. When <i>enforcing</i> a 
+     *            on-extendable data set (e.g. 
+     *            {@link HDF5IntStorageFeatures#INT_CONTIGUOUS}), the initial size equals 
+     *            the total size and will be <var>dimensions</var>.
+     * @param features The storage features of the data set.
+     */
+    public void createMDArray(String objectPath, int[] dimensions,
+            HDF5IntStorageFeatures features);
     
-    public void createMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final HDF5IntStorageFeatures features);
+    /**
+     * Creates a multi-dimensional array of time stamps / dates.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     * @param features The storage features of the data set.
+     */
+    public void createMDArray(String objectPath, long[] dimensions,
+            int[] blockDimensions, HDF5IntStorageFeatures features);
     
-    public void writeMDArrayBlock(final String objectPath, final MDLongArray data,
-            final long[] blockNumber);
+    /**
+     * Writes out a block of a multi-dimensional array of time stamps.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
+     *            the according dimension).
+     */
+    public void writeMDArrayBlock(String objectPath, MDLongArray data,
+            long[] blockNumber);
     
-    public void writeMDArrayBlockWithOffset(final String objectPath, final MDLongArray data,
-            final long[] offset);
+    /**
+     * Writes out a block of a multi-dimensional array of time stamps.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param offset The offset in the data set  to start writing to in each dimension.
+     */
+    public void writeMDArrayBlockWithOffset(String objectPath, MDLongArray data,
+            long[] offset);
     
-    public void writeMDArrayBlockWithOffset(final String objectPath, final MDLongArray data,
-            final int[] blockDimensions, final long[] offset, final int[] memoryOffset);
+    /**
+     * Writes out a block of a multi-dimensional array of time stamps.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeMDArrayBlockWithOffset(String objectPath, MDLongArray data,
+            int[] blockDimensions, long[] offset, int[] memoryOffset);
     
-    public void writeMDArray(final String objectPath, final MDArray<Date> data,
-            final HDF5IntStorageFeatures features);
+    /**
+     * Writes out a multi-dimensional array of dates.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param features The storage features of the data set.
+     */
+    public void writeMDArray(String objectPath, MDArray<Date> data,
+            HDF5IntStorageFeatures features);
     
-    public void writeMDArrayBlock(final String objectPath, final MDArray<Date> data,
-            final long[] blockNumber);
+    /**
+     * Writes out a block of a multi-dimensional array of dates.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
+     *            the according dimension).
+     */
+    public void writeMDArrayBlock(String objectPath, MDArray<Date> data,
+            long[] blockNumber);
     
-    public void writeMDArrayBlockWithOffset(final String objectPath, final MDArray<Date> data,
-            final int[] blockDimensions, final long[] offset, final int[] memoryOffset);
+    /**
+     * Writes out a block of a multi-dimensional array of daates.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param offset The offset in the data set  to start writing to in each dimension.
+     */
+    public void writeMDArrayBlockWithOffset(String objectPath, MDArray<Date> data,
+            long[] offset);
+    
+    /**
+     * Writes out a block of a multi-dimensional array of dates.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeMDArrayBlockWithOffset(String objectPath, MDArray<Date> data,
+            int[] blockDimensions, long[] offset, int[] memoryOffset);
 
 }
