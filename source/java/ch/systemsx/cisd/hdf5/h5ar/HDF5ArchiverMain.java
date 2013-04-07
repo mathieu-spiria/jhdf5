@@ -21,7 +21,7 @@ import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
@@ -403,11 +403,11 @@ public class HDF5ArchiverMain
             }
         }
 
-        boolean isOK()
+        boolean isOK(int missingFiles)
         {
-            if (verifying && checkSumFailures > 0)
+            if (verifying && (checkSumFailures + missingFiles > 0))
             {
-                System.err.println(checkSumFailures + " file(s) failed the test.");
+                System.err.println(checkSumFailures + missingFiles + " file(s) failed the test.");
                 return false;
             } else
             {
@@ -562,7 +562,7 @@ public class HDF5ArchiverMain
                                 archiveFile, getFSRoot());
                     }
                     final String fileOrDir = (arguments.size() > 2) ? arguments.get(2) : "/";
-                    final AtomicBoolean haveMissingFiles = new AtomicBoolean();
+                    final AtomicInteger missingFileCount = new AtomicInteger();
                     final IArchiveEntryVisitor missingFileVisitorOrNull =
                             checkMissingFile ? new IArchiveEntryVisitor()
                                 {
@@ -578,7 +578,7 @@ public class HDF5ArchiverMain
                                                     false) + "\t" + errMsg);
                                         }
                                         System.err.println(errMsg);
-                                        haveMissingFiles.set(true);
+                                        missingFileCount.incrementAndGet();
                                     }
                                 } : null;
                     final ListingVisitor visitor =
@@ -586,7 +586,7 @@ public class HDF5ArchiverMain
                     archiver.verifyAgainstFilesystem(fileOrDir, getFSRoot(), visitor,
                             missingFileVisitorOrNull, VerifyParameters.build().recursive(recursive)
                                     .numeric(numeric).verifyAttributes(verifyAttributes).get());
-                    return visitor.isOK() && haveMissingFiles.get() == false;
+                    return visitor.isOK(missingFileCount.get());
                 }
                 case LIST:
                 {
@@ -604,7 +604,7 @@ public class HDF5ArchiverMain
                                     suppressDirectoryEntries);
                     archiver.list(fileOrDir, visitor, ListParameters.build().recursive(recursive)
                             .readLinkTargets(verbose).testArchive(testAgainstChecksums).get());
-                    return visitor.isOK();
+                    return visitor.isOK(0);
                 }
                 case HELP: // Can't happen any more at this point
                     break;
