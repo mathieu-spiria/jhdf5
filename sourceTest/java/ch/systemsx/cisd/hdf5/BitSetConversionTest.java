@@ -121,7 +121,7 @@ public class BitSetConversionTest
     {
         final int maxLength = BitSetConversionUtils.getMaxLength(bs);
         final long[] bsArray = BitSetConversionUtils.toStorageForm(bs, maxLength);
-        final BitSet bs2[] = BitSetConversionUtils.fromStorageForm2D(new MDLongArray(bsArray, new int[] { bs.length, maxLength }));
+        final BitSet bs2[] = BitSetConversionUtils.fromStorageForm2D(new MDLongArray(bsArray, new int[] { maxLength, bs.length }));
         assertTrue(Arrays.equals(bs, bs2));
     }
 
