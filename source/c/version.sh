@@ -1,1 +1,1 @@
-VERSION=1.8.10-patch1
+VERSION=1.8.11-pre1
