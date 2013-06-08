@@ -439,6 +439,16 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
     }
 
     /**
+     * Returns the extent of this enum array along its <var>dim</var>-th axis.
+     */
+    public int size(int dim)
+    {
+        assert dim < dimensions().length;
+
+        return dimensions()[dim];
+    }
+
+    /**
      * Returns the rank of this multi-dimensional enumeration array.
      */
     public int rank()
