@@ -31,7 +31,7 @@ import java.util.Map;
  * 
  * @author Bernd Rinn
  */
-final class ReflectionUtils
+public final class ReflectionUtils
 {
 
     private ReflectionUtils()

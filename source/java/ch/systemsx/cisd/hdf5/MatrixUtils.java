@@ -28,7 +28,7 @@ import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
  *
  * @author Bernd Rinn
  */
-final class MatrixUtils
+public final class MatrixUtils
 {
 
     static void checkMDArrayDimensions(final String name, final int[] dimensions,
