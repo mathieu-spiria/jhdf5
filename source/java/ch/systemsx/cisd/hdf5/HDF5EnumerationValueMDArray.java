@@ -37,8 +37,6 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
 {
     private final HDF5EnumerationType type;
 
-    private final int size;
-
     private EnumStorageForm storageForm;
 
     private MDByteArray bArrayOrNull;
@@ -60,7 +58,6 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
             throws IllegalArgumentException
     {
         this.type = type;
-        this.size = ordinalArray.size();
         if (ordinalArray instanceof MDByteArray)
         {
             final MDByteArray bArray = (MDByteArray) ordinalArray;
@@ -111,7 +108,6 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
             throws IllegalArgumentException
     {
         this.type = type;
-        this.size = ordinalArray.size();
         setOrdinalArray(ordinalArray);
     }
 
@@ -127,7 +123,6 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
             throws IllegalArgumentException
     {
         this.type = type;
-        this.size = ordinalArray.size();
         setOrdinalArray(ordinalArray);
     }
 
@@ -143,7 +138,6 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
             throws IllegalArgumentException
     {
         this.type = type;
-        this.size = ordinalArray.size();
         setOrdinalArray(ordinalArray);
     }
 
@@ -441,7 +435,15 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
      */
     public int size()
     {
-        return size;
+        return getOrdinalValues().size();
+    }
+
+    /**
+     * Returns the rank of this multi-dimensional enumeration array.
+     */
+    public int rank()
+    {
+        return dimensions().length;
     }
 
     /**
@@ -670,7 +672,6 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
         result = prime * result + ((bArrayOrNull == null) ? 0 : bArrayOrNull.hashCode());
         result = prime * result + ((iArrayOrNull == null) ? 0 : iArrayOrNull.hashCode());
         result = prime * result + ((sArrayOrNull == null) ? 0 : sArrayOrNull.hashCode());
-        result = prime * result + size;
         result = prime * result + ((storageForm == null) ? 0 : storageForm.hashCode());
         result = prime * result + ((type == null) ? 0 : type.hashCode());
         return result;
@@ -719,10 +720,6 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
                 return false;
             }
         } else if (false == sArrayOrNull.equals(other.sArrayOrNull))
-        {
-            return false;
-        }
-        if (size != other.size)
         {
             return false;
         }
