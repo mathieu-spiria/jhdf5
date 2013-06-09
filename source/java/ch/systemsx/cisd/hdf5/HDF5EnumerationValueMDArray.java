@@ -29,7 +29,7 @@ import ch.systemsx.cisd.hdf5.HDF5EnumerationType.EnumStorageForm;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
- * A class the represents a multi-dimensional array of HDF enumeration values.
+ * A class that represents a multi-dimensional array of HDF enumeration values.
  * 
  * @author Bernd Rinn
  */
@@ -94,6 +94,16 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
             throw new IllegalArgumentException("array is of illegal type "
                     + ordinalArray.getClass().getCanonicalName());
         }
+    }
+
+    /**
+     * Creates an empty array with given <var>rank</var>.
+     */
+    public HDF5EnumerationValueMDArray(int rank)
+    {
+        this.type = null;
+        storageForm = EnumStorageForm.BYTE;
+        this.bArrayOrNull = new MDByteArray(new int[rank]);
     }
 
     /**
