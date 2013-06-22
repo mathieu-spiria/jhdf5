@@ -18,10 +18,13 @@ HDFPARENTDIR=C:\JHDF5
 HDFJAVADIR=$(HDFPARENTDIR)\jhdf5_src\
 
 # The directory where HDF5 has been compiled
-HDFDIR=$(HDFPARENTDIR)\hdf5\hdf5-1.8.11-pre1
+HDFDIR=$(HDFPARENTDIR)\hdf5\hdf5-1.8.11
 
 # The directory where HDF library is located
-HDFLIBDIR=$(HDFDIR)\proj\hdf5\Release
+HDFBUILDDIR=$(HDFDIR)\build
+
+# The directory where HDF library is located
+HDFLIBDIR=$(HDFBUILDDIR)\bin\Release
 
 # The directory where HDF header files are located
 HDFINCDIR=$(HDFDIR)\src
@@ -32,7 +35,7 @@ JPEGLIB=
 
 # the GZIP library, for example
 #GZIPLIB=E:\Work\MyHDFstuff\lib-external\zlib\bin\windows\zlib114\lib\zlib.lib
-GZIPLIB=C:\JHDF5\hdf5\zlib123-vs2005\lib\zlib.lib
+GZIPLIB=$(HDFLIBDIR)\zlibstatic.lib
 
 # SZIP library, for example
 #SZIPLIB=E:\Work\MyHDFstuff\lib-external\szip\bin\windows\szip-msvc++\lib\szlib.lib
@@ -71,6 +74,12 @@ VALID_PATH_SET=NO
 !IF EXISTS("$(SRCDIR2)")
 !ELSE
 !MESSAGE ERROR: C source directory $(SRCDIR2) does not exist
+VALID_PATH_SET=NO 
+!ENDIF
+
+!IF EXISTS("$(HDFBUILDDIR)")
+!ELSE
+!MESSAGE ERROR: HDF build directory $(HDFBUILDDIR) does not exist
 VALID_PATH_SET=NO 
 !ENDIF
 
@@ -127,7 +136,7 @@ ALL : "$(OUTDIR)\jhdf5.dll"
     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
 
 CPP=cl.exe
-CPP_PROJ=/nologo /W3 /EHsc /O2 /I "$(HDFINCDIR)" /I "$(JAVADIR)\include" /I "$(JAVADIR)\include\win32" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /Fp"$(INTDIR)\jhdf5.pch" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
+CPP_PROJ=/nologo /W3 /EHsc /O2 /I "$(HDFINCDIR)" /I "$(HDFBUILDDIR)" /I "$(JAVADIR)\include" /I "$(JAVADIR)\include\win32" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /Fp"$(INTDIR)\jhdf5.pch" /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
 
 .c{$(INTDIR)}.obj::
    $(CPP) @<<
@@ -167,7 +176,7 @@ BSC32_FLAGS=/nologo /o"$(INTDIR)\jhdf5.bsc"
 BSC32_SBRS= \
 	
 LINK32=link.exe
-LINK32_FLAGS=$(HDFLIBDIR)\hdf5.lib $(SZIPLIB) $(GZIPLIB) /nologo /dll /nodefaultlib:msvcrt /incremental:no /pdb:"$(INTDIR)\jhdf5.pdb" /machine:I386 /out:"$(OUTDIR)\jhdf5.dll" /implib:"$(INTDIR)\jhdf5.lib" 
+LINK32_FLAGS=$(HDFLIBDIR)\libhdf5.lib $(SZIPLIB) $(GZIPLIB) /nologo /dll /nodefaultlib:msvcrt /incremental:no /pdb:"$(INTDIR)\jhdf5.pdb" /machine:I386 /out:"$(OUTDIR)\jhdf5.dll" /implib:"$(INTDIR)\jhdf5.lib" 
 LINK32_OBJS= \
 	"$(INTDIR)\exceptionImpJHDF5.obj" \
 	"$(INTDIR)\h5aImpJHDF5.obj" \
