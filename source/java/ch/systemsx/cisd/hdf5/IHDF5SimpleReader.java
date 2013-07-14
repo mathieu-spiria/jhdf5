@@ -16,11 +16,10 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import java.io.Closeable;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
-
-import com.sun.xml.internal.ws.Closeable;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
