@@ -226,7 +226,8 @@
 			<fileset dir="${classes}">
 				<include name="${build.info.filename}" />
 				<include name="**/*.class" />
-				<exclude name="**/tools/*.class" />
+				<exclude name="**/io/*.class" />
+				<exclude name="**/h5ar/*.class" />
 			</fileset>
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
 				<include name="ch/systemsx/cisd/base/utilities/AbstractBuildAndEnvironmentInfo.class" />
@@ -247,7 +248,8 @@
 		<jar destfile="${jar.tools.file}">
 			<fileset dir="${classes}">
 				<include name="${build.info.filename}" />
-				<include name="**/tools/*.class" />
+				<include name="**/io/*.class" />
+				<include name="**/h5ar/*.class" />
 				<include name="ch/systems/cisd/hdf5/BuildAndEnvironmentInfo*.class" />
 			</fileset>
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
