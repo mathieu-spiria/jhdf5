@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5.h5ar;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,10 +31,12 @@ import ch.systemsx.cisd.base.unix.Unix.Stat;
 final class IdCache
 {
     /** Gid -> Group Name */
-    private final Map<Integer, String> gidMap = new HashMap<Integer, String>();
+    private final Map<Integer, String> gidMap = Collections
+            .synchronizedMap(new HashMap<Integer, String>());
 
     /** Uid -> User Name */
-    private final Map<Integer, String> uidMap = new HashMap<Integer, String>();
+    private final Map<Integer, String> uidMap = Collections
+            .synchronizedMap(new HashMap<Integer, String>());
 
     /**
      * Returns the name for the given <var>uid</var>.
@@ -93,8 +96,8 @@ final class IdCache
         if (groupNameOrNull == null)
         {
             groupNameOrNull =
-                    (numeric == false && Unix.isOperational()) ? Unix
-                            .tryGetGroupNameForGid(gid) : null;
+                    (numeric == false && Unix.isOperational()) ? Unix.tryGetGroupNameForGid(gid)
+                            : null;
             if (groupNameOrNull == null)
             {
                 groupNameOrNull = Integer.toString(gid);

@@ -16,6 +16,7 @@
 
 package ch.systemsx.cisd.hdf5.h5ar;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -75,7 +76,7 @@ final class LinkStore implements Iterable<LinkRecord>
      * Returns an array of the links in this store, in the order defined by
      * {@link LinkRecord#compareTo(LinkRecord)}.
      */
-    public LinkRecord[] getLinkArray()
+    public synchronized LinkRecord[] getLinkArray()
     {
         if (sortedArrayOrNull == null)
         {
@@ -85,7 +86,7 @@ final class LinkStore implements Iterable<LinkRecord>
         return sortedArrayOrNull;
     }
 
-    public void amendLinkTargets(IHDF5Reader reader, String groupPath)
+    public synchronized void amendLinkTargets(IHDF5Reader reader, String groupPath)
     {
         for (LinkRecord link : getLinkMap().values())
         {
@@ -97,7 +98,7 @@ final class LinkStore implements Iterable<LinkRecord>
      * Returns the link with {@link LinkRecord#getLinkName()} equal to <var>name</var>, or
      * <code>null</code>, if there is no such link in the directory index.
      */
-    public LinkRecord tryGetLink(String name)
+    public synchronized LinkRecord tryGetLink(String name)
     {
         return getLinkMap().get(name);
     }
@@ -110,7 +111,7 @@ final class LinkStore implements Iterable<LinkRecord>
     /**
      * Returns <code>true</code> if this list is empty.
      */
-    public boolean isEmpty()
+    public synchronized boolean isEmpty()
     {
         return getLinkMap().isEmpty();
     }
@@ -124,20 +125,20 @@ final class LinkStore implements Iterable<LinkRecord>
      * {@link LinkRecord#compareTo(LinkRecord)}.
      */
     @Override
-    public Iterator<LinkRecord> iterator()
+    public synchronized Iterator<LinkRecord> iterator()
     {
         final LinkRecord[] list = getLinkArray();
         for (LinkRecord link : list)
         {
             link.resetVerification();
         }
-        return Arrays.asList(list).iterator();
+        return new ArrayList<LinkRecord>(Arrays.asList(list)).iterator();
     }
 
     /**
      * Updates the <var>entries</var> in the store.
      */
-    public void update(LinkRecord entry)
+    public synchronized void update(LinkRecord entry)
     {
         getLinkMap().put(entry.getLinkName(), entry);
         sortedArrayOrNull = null;
@@ -146,7 +147,7 @@ final class LinkStore implements Iterable<LinkRecord>
     /**
      * Updates the <var>entries</var> in the store.
      */
-    public void update(LinkRecord[] entries)
+    public synchronized void update(LinkRecord[] entries)
     {
         for (LinkRecord entry : entries)
         {
@@ -161,7 +162,7 @@ final class LinkStore implements Iterable<LinkRecord>
     /**
      * Updates the <var>entries</var> in the store.
      */
-    public void update(Collection<LinkRecord> entries)
+    public synchronized void update(Collection<LinkRecord> entries)
     {
         for (LinkRecord entry : entries)
         {
@@ -178,7 +179,7 @@ final class LinkStore implements Iterable<LinkRecord>
      * 
      * @return <code>true</code>, if it was removed, <code>false</code>, if it couldn't be found.
      */
-    public boolean remove(String linkName)
+    public synchronized boolean remove(String linkName)
     {
         final boolean storeChanged = (getLinkMap().remove(linkName) != null);
         if (storeChanged)

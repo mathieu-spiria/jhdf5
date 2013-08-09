@@ -43,7 +43,7 @@ class DirectoryIndexProvider implements IDirectoryIndexProvider
     }
 
     @Override
-    public IDirectoryIndex get(String normalizedGroupPath, boolean withLinkTargets)
+    public synchronized IDirectoryIndex get(String normalizedGroupPath, boolean withLinkTargets)
     {
         final String nonEmptyGroupPath =
                 (normalizedGroupPath.length() == 0) ? "/" : normalizedGroupPath;
@@ -66,7 +66,7 @@ class DirectoryIndexProvider implements IDirectoryIndexProvider
     }
 
     @Override
-    public void close() throws IOExceptionUnchecked
+    public synchronized void close() throws IOExceptionUnchecked
     {
         IOExceptionUnchecked exeptionOrNull = null;
         for (DirectoryIndex index : cacheMap.values())
