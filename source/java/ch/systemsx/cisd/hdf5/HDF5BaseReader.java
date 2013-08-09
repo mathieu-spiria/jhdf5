@@ -132,7 +132,7 @@ class HDF5BaseReader
         this.encodingForNewDataSets =
                 useUTF8CharEncoding ? CharacterEncoding.UTF8 : CharacterEncoding.ASCII;
         this.h5 =
-                new HDF5(fileRegistry, performNumericConversions, useUTF8CharEncoding,
+                new HDF5(fileRegistry, runner, performNumericConversions, useUTF8CharEncoding,
                         autoDereference);
         this.fileId = openFile(fileFormat, overwrite);
         this.state = State.OPEN;
@@ -482,7 +482,7 @@ class HDF5BaseReader
     {
         return tryGetSpaceParameters(dataSetId, memoryOffset, offset, blockSize, false, registry);
     }
-    
+
     /**
      * Returns the {@link DataSpaceParameters} for a 1d block of the given <var>dataSetId</var>.
      */
@@ -550,7 +550,7 @@ class HDF5BaseReader
     {
         return tryGetSpaceParameters(dataSetId, offset, blockDimensionsOrNull, false, registry);
     }
-    
+
     /**
      * Returns the {@link DataSpaceParameters} for a multi-dimensional block of the given
      * <var>dataSetId</var>.
@@ -606,9 +606,10 @@ class HDF5BaseReader
     DataSpaceParameters getBlockSpaceParameters(final int dataSetId, final int[] memoryOffset,
             final int[] memoryDimensions, ICleanUpRegistry registry)
     {
-        return tryGetBlockSpaceParameters(dataSetId, memoryOffset, memoryDimensions, false, registry);
+        return tryGetBlockSpaceParameters(dataSetId, memoryOffset, memoryDimensions, false,
+                registry);
     }
-    
+
     /**
      * Returns the {@link DataSpaceParameters} for the given <var>dataSetId</var> when they are
      * mapped to a block in memory.

@@ -101,10 +101,11 @@ class HDF5
 
     private final boolean autoDereference;
 
-    public HDF5(final CleanUpRegistry fileRegistry, final boolean performNumericConversions,
-            final boolean useUTF8CharEncoding, final boolean autoDereference)
+    public HDF5(final CleanUpRegistry fileRegistry, final CleanUpCallable runner,
+            final boolean performNumericConversions, final boolean useUTF8CharEncoding,
+            final boolean autoDereference)
     {
-        this.runner = new CleanUpCallable();
+        this.runner = runner;
         this.useUTF8CharEncoding = useUTF8CharEncoding;
         this.autoDereference = autoDereference;
         this.dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc =

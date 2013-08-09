@@ -28,7 +28,14 @@ package ch.systemsx.cisd.hdf5.cleanup;
 public final class CleanUpCallable
 {
 
-    private final CleanUpRegistry registry = new CleanUpRegistry();
+    private final ThreadLocal<CleanUpRegistry> registry = new ThreadLocal<CleanUpRegistry>()
+        {
+            @Override
+            protected CleanUpRegistry initialValue()
+            {
+                return new CleanUpRegistry();
+            }
+        };
 
     /**
      * Runs a {@link ICallableWithCleanUp} and ensures that all registered clean-ups are performed
@@ -39,12 +46,12 @@ public final class CleanUpCallable
         boolean exceptionThrown = true;
         try
         {
-            T result = runnable.call(registry);
+            T result = runnable.call(registry.get());
             exceptionThrown = false;
             return result;
         } finally
         {
-            registry.cleanUp(exceptionThrown);
+            registry.get().cleanUp(exceptionThrown);
         }
     }
 
