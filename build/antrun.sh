@@ -7,4 +7,4 @@ fi
 BINDIR="${SCRIPT%/*}"
 BASEDIR=${BINDIR%/*}
 cd $BASEDIR
-ant -lib ../../build_resources/lib/ecj.jar -f build/build.xml "$@"
+ant -lib ../build_resources/lib/ecj.jar -f build/build.xml "$@"
