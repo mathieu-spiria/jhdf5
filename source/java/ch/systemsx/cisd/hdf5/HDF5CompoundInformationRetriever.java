@@ -245,7 +245,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             {
                 compoundInfo.members[i] =
                         new HDF5CompoundMemberInformation(memberNames[i], dataTypeInformation,
-                                offset, enumTypeOrNull.getValueArray());
+                                offset, enumTypeOrNull.getEnumType().getValueArray());
             } else
             {
                 compoundInfo.members[i] =

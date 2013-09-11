@@ -23,21 +23,9 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U32LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U8LE;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
-
-import ch.systemsx.cisd.base.convert.NativeData;
-import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
-import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
-import ch.systemsx.cisd.base.mdarray.MDByteArray;
-import ch.systemsx.cisd.base.mdarray.MDIntArray;
-import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
@@ -55,11 +43,11 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         /**
          * One byte, for up to 255 alternatives.
          */
-        BYTE(1, H5T_NATIVE_INT8, H5T_STD_U8LE), 
+        BYTE(1, H5T_NATIVE_INT8, H5T_STD_U8LE),
         /**
          * Two bytes, for up to 65535 alternatives.
          */
-        SHORT(2, H5T_NATIVE_INT16, H5T_STD_U16LE), 
+        SHORT(2, H5T_NATIVE_INT16, H5T_STD_U16LE),
         /**
          * Four bytes, for more than 65535 alternatives.
          */
@@ -97,13 +85,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         }
     }
 
-    private final String nameOrNull;
-
-    private final String[] values;
-
-    private final List<String> unmodifiableValues;
-
-    private Map<String, Integer> nameToIndexMap;
+    private final EnumerationType enumType;
 
     /**
      * Returns the storage data type id of the corresponding integer type of this type.
@@ -128,41 +110,22 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
 
         assert values != null;
 
-        this.nameOrNull = nameOrNull;
-        this.values = values;
-        this.unmodifiableValues = Collections.unmodifiableList(Arrays.asList(values));
+        this.enumType = new EnumerationType(nameOrNull, values);
     }
 
-    private Map<String, Integer> getMap()
+    HDF5EnumerationType(int fileId, int storageTypeId, int nativeTypeId, EnumerationType enumType,
+            HDF5BaseReader baseReader)
     {
-        if (nameToIndexMap == null)
-        {
-            nameToIndexMap = new HashMap<String, Integer>(values.length);
-            for (int i = 0; i < values.length; ++i)
-            {
-                nameToIndexMap.put(values[i], i);
-            }
-        }
-        return nameToIndexMap;
+        super(fileId, storageTypeId, nativeTypeId, baseReader);
+
+        assert enumType != null;
+
+        this.enumType = enumType;
     }
 
-    String[] getValueArray()
+    EnumerationType getEnumType()
     {
-        return values;
-    }
-
-    Object createArray(int length)
-    {
-        if (values.length < Byte.MAX_VALUE)
-        {
-            return new byte[length];
-        } else if (values.length < Short.MAX_VALUE)
-        {
-            return new short[length];
-        } else
-        {
-            return new int[length];
-        }
+        return enumType;
     }
 
     /**
@@ -171,7 +134,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
      */
     public Integer tryGetIndexForValue(String value)
     {
-        return getMap().get(value);
+        return enumType.tryGetIndexForValue(value);
     }
 
     /**
@@ -180,7 +143,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     @Override
     public String tryGetName()
     {
-        return nameOrNull;
+        return enumType.tryGetName();
     }
 
     /**
@@ -188,7 +151,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
      */
     public List<String> getValues()
     {
-        return unmodifiableValues;
+        return enumType.getValues();
     }
 
     /**
@@ -196,124 +159,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
      */
     public EnumStorageForm getStorageForm()
     {
-        final int len = values.length;
-        if (len < Byte.MAX_VALUE)
-        {
-            return EnumStorageForm.BYTE;
-        } else if (len < Short.MAX_VALUE)
-        {
-            return EnumStorageForm.SHORT;
-        } else
-        {
-            return EnumStorageForm.INT;
-        }
-    }
-
-    byte getNumberOfBits()
-    {
-        final int n = (values.length > 0) ? values.length - 1 : 0;
-        // Binary search - decision tree (5 tests, rarely 6)
-        return (byte) (n < 1 << 15 ? (n < 1 << 7 ? (n < 1 << 3 ? (n < 1 << 1 ? (n < 1 << 0 ? (n < 0 ? 32
-                : 0)
-                : 1)
-                : (n < 1 << 2 ? 2 : 3))
-                : (n < 1 << 5 ? (n < 1 << 4 ? 4 : 5) : (n < 1 << 6 ? 6 : 7)))
-                : (n < 1 << 11 ? (n < 1 << 9 ? (n < 1 << 8 ? 8 : 9) : (n < 1 << 10 ? 10 : 11))
-                        : (n < 1 << 13 ? (n < 1 << 12 ? 12 : 13) : (n < 1 << 14 ? 14 : 15))))
-                : (n < 1 << 23 ? (n < 1 << 19 ? (n < 1 << 17 ? (n < 1 << 16 ? 16 : 17)
-                        : (n < 1 << 18 ? 18 : 19)) : (n < 1 << 21 ? (n < 1 << 20 ? 20 : 21)
-                        : (n < 1 << 22 ? 22 : 23)))
-                        : (n < 1 << 27 ? (n < 1 << 25 ? (n < 1 << 24 ? 24 : 25) : (n < 1 << 26 ? 26
-                                : 27)) : (n < 1 << 29 ? (n < 1 << 28 ? 28 : 29) : (n < 1 << 30 ? 30
-                                : 31)))));
-    }
-
-    byte[] toStorageForm(int ordinal)
-    {
-        switch (getStorageForm())
-        {
-            case BYTE:
-                return HDFNativeData.byteToByte((byte) ordinal);
-            case SHORT:
-                return HDFNativeData.shortToByte((short) ordinal);
-            case INT:
-                return HDFNativeData.intToByte(ordinal);
-        }
-        throw new Error("Illegal storage size.");
-    }
-
-    static int fromStorageForm(byte[] data)
-    {
-        if (data.length == 1)
-        {
-            return data[0];
-        } else if (data.length == 2)
-        {
-            return NativeData.byteToShort(data, ByteOrder.NATIVE)[0];
-        } else if (data.length == 4)
-        {
-            return NativeData.byteToInt(data, ByteOrder.NATIVE)[0];
-        }
-        throw new HDF5JavaException("Unexpected size for Enum data type (" + data.length + ")");
-    }
-
-    static int fromStorageForm(byte[] data, int index, int size)
-    {
-        if (size == 1)
-        {
-            return data[index];
-        } else if (size == 2)
-        {
-            return NativeData.byteToShort(data, ByteOrder.NATIVE, size * index, 1)[0];
-        } else if (size == 4)
-        {
-            return NativeData.byteToInt(data, ByteOrder.NATIVE, index, 1)[0];
-        }
-        throw new HDF5JavaException("Unexpected size for Enum data type (" + size + ")");
-    }
-
-    static Object fromStorageForm(byte[] data, EnumStorageForm storageForm)
-    {
-        switch (storageForm)
-        {
-            case BYTE:
-                return data;
-            case SHORT:
-                return NativeData.byteToShort(data, ByteOrder.NATIVE);
-            case INT:
-                return NativeData.byteToInt(data, ByteOrder.NATIVE);
-        }
-        throw new Error("Illegal storage size.");
-    }
-
-    static MDAbstractArray<?> fromStorageForm(byte[] data, long[] dimensions,
-            EnumStorageForm storageForm)
-    {
-        switch (storageForm)
-        {
-            case BYTE:
-                return new MDByteArray(data, dimensions);
-            case SHORT:
-                return new MDShortArray(NativeData.byteToShort(data, ByteOrder.NATIVE), dimensions);
-            case INT:
-                return new MDIntArray(NativeData.byteToInt(data, ByteOrder.NATIVE), dimensions);
-        }
-        throw new Error("Illegal storage size.");
-    }
-
-    static MDAbstractArray<?> fromStorageForm(byte[] data, int[] dimensions,
-            EnumStorageForm storageForm)
-    {
-        switch (storageForm)
-        {
-            case BYTE:
-                return new MDByteArray(data, dimensions);
-            case SHORT:
-                return new MDShortArray(NativeData.byteToShort(data, ByteOrder.NATIVE), dimensions);
-            case INT:
-                return new MDIntArray(NativeData.byteToInt(data, ByteOrder.NATIVE), dimensions);
-        }
-        throw new Error("Illegal storage size.");
+        return enumType.getStorageForm();
     }
 
     HDF5EnumerationValue createFromStorageForm(byte[] data, int offset)
@@ -323,7 +169,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
 
     String createStringFromStorageForm(byte[] data, int offset)
     {
-        return values[getOrdinalFromStorageForm(data, offset)];
+        return enumType.createStringFromStorageForm(data, offset);
     }
 
     int getOrdinalFromStorageForm(byte[] data, int offset)
@@ -352,41 +198,13 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     @Override
     public Iterator<String> iterator()
     {
-        return new Iterator<String>()
-            {
-                private int index = 0;
-
-                @Override
-                public boolean hasNext()
-                {
-                    return index < values.length;
-                }
-
-                @Override
-                public String next()
-                {
-                    return values[index++];
-                }
-
-                /**
-                 * @throws UnsupportedOperationException As this iterator doesn't support removal.
-                 */
-                @Override
-                public void remove() throws UnsupportedOperationException
-                {
-                    throw new UnsupportedOperationException();
-                }
-
-            };
+        return enumType.iterator();
     }
 
     @Override
     public int hashCode()
     {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + Arrays.hashCode(values);
-        return result;
+        return enumType.hashCode();
     }
 
     @Override
@@ -401,7 +219,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
             return false;
         }
         final HDF5EnumerationType other = (HDF5EnumerationType) obj;
-        return Arrays.equals(values, other.values);
+        return enumType.equals(other.enumType);
     }
 
 }

@@ -244,7 +244,7 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
                 createObjectTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix),
                 baseWriter.typeVariantDataType.getStorageTypeId(),
                 baseWriter.typeVariantDataType.getNativeTypeId(),
-                baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
+                baseWriter.typeVariantDataType.getEnumType().toStorageForm(typeVariant.ordinal()));
     }
 
     @Override
@@ -257,7 +257,7 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
                 createAttributeTypeVariantAttributeName(attributeName,
                         baseWriter.houseKeepingNameSuffix), baseWriter.typeVariantDataType
                         .getStorageTypeId(), baseWriter.typeVariantDataType.getNativeTypeId(),
-                baseWriter.typeVariantDataType.toStorageForm(typeVariant.ordinal()));
+                baseWriter.typeVariantDataType.getEnumType().toStorageForm(typeVariant.ordinal()));
     }
 
     @Override

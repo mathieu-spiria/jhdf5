@@ -109,6 +109,26 @@ class HDF5EnumReader implements IHDF5EnumReader
     }
 
     @Override
+    public HDF5EnumerationType getType(EnumerationType genericType) throws HDF5JavaException
+    {
+        return getType(genericType, true);
+    }
+
+    @Override
+    public HDF5EnumerationType getType(EnumerationType genericType, boolean check)
+            throws HDF5JavaException
+    {
+        baseReader.checkOpen();
+        final HDF5EnumerationType dataType = getType(genericType.tryGetName());
+        if (check)
+        {
+            baseReader.checkEnumValues(dataType.getStorageTypeId(), genericType.getValueArray(),
+                    genericType.tryGetName());
+        }
+        return dataType;
+    }
+
+    @Override
     public HDF5EnumerationType getDataSetType(final String dataSetPath)
     {
         baseReader.checkOpen();
@@ -135,7 +155,8 @@ class HDF5EnumReader implements IHDF5EnumReader
         {
             final String enumTypeName =
                     baseReader.getStringAttribute(objectId, objectName, HDF5Utils
-                            .getEnumTypeNameAttributeName(baseReader.houseKeepingNameSuffix), false, registry);
+                            .getEnumTypeNameAttributeName(baseReader.houseKeepingNameSuffix),
+                            false, registry);
             return getType(enumTypeName);
         } else
         {
@@ -206,7 +227,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                                     size);
                     final String value =
                             baseReader.h5.getNameForEnumOrCompoundMemberIndex(enumDataTypeId,
-                                    HDF5EnumerationType.fromStorageForm(data, 0, size));
+                                    EnumerationType.fromStorageForm(data, 0, size));
                     if (value == null)
                     {
                         throw new HDF5JavaException("Attribute " + attributeName + " of object "
@@ -369,7 +390,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
                     final String value =
                             baseReader.h5.getNameForEnumOrCompoundMemberIndex(storageDataTypeId,
-                                    HDF5EnumerationType.fromStorageForm(data));
+                                    EnumerationType.fromStorageForm(data));
                     if (value == null)
                     {
                         throw new HDF5JavaException(objectPath + " needs to be an Enumeration.");
@@ -449,7 +470,7 @@ class HDF5EnumReader implements IHDF5EnumReader
     {
         final byte[] data = new byte[enumType.getStorageForm().getStorageSize()];
         baseReader.h5.readDataSet(dataSetId, enumType.getNativeTypeId(), data);
-        return new HDF5EnumerationValue(enumType, HDF5EnumerationType.fromStorageForm(data));
+        return new HDF5EnumerationValue(enumType, EnumerationType.fromStorageForm(data));
     }
 
     @Override
@@ -491,7 +512,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                                         actualEnumType.getNativeTypeId(), data);
                             }
                             return new HDF5EnumerationValueArray(actualEnumType,
-                                    HDF5EnumerationType.fromStorageForm(data, storageForm));
+                                    EnumerationType.fromStorageForm(data, storageForm));
                         }
                     };
 
@@ -546,7 +567,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                                         spaceParams.memorySpaceId, spaceParams.dataSpaceId, data);
                             }
                             return new HDF5EnumerationValueArray(actualEnumType,
-                                    HDF5EnumerationType.fromStorageForm(data,
+                                    EnumerationType.fromStorageForm(data,
                                             actualEnumType.getStorageForm()));
                         }
                     };
@@ -635,7 +656,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                                                 byteArr);
                             }
                             return new HDF5EnumerationValueMDArray(actualEnumType,
-                                    HDF5EnumerationType.fromStorageForm(byteArr,
+                                    EnumerationType.fromStorageForm(byteArr,
                                             spaceParams.dimensions, storageForm));
                         }
                     };

@@ -164,7 +164,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
 
     private void map(String[] array) throws IllegalArgumentException
     {
-        if (type.getValueArray().length < Byte.MAX_VALUE)
+        if (type.getEnumType().getValueArray().length < Byte.MAX_VALUE)
         {
             storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = new byte[array.length];
@@ -180,7 +180,7 @@ public class HDF5EnumerationValueArray implements Iterable<String>
             }
             sArrayOrNull = null;
             iArrayOrNull = null;
-        } else if (type.getValueArray().length < Short.MAX_VALUE)
+        } else if (type.getEnumType().getValueArray().length < Short.MAX_VALUE)
         {
             storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
@@ -217,14 +217,14 @@ public class HDF5EnumerationValueArray implements Iterable<String>
 
     private void setOrdinalArray(byte[] array)
     {
-        if (type.getValueArray().length < Byte.MAX_VALUE)
+        if (type.getEnumType().getValueArray().length < Byte.MAX_VALUE)
         {
             storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = array;
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
-        } else if (type.getValueArray().length < Short.MAX_VALUE)
+        } else if (type.getEnumType().getValueArray().length < Short.MAX_VALUE)
         {
             storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
@@ -243,14 +243,14 @@ public class HDF5EnumerationValueArray implements Iterable<String>
 
     private void setOrdinalArray(short[] array) throws IllegalArgumentException
     {
-        if (type.getValueArray().length < Byte.MAX_VALUE)
+        if (type.getEnumType().getValueArray().length < Byte.MAX_VALUE)
         {
             storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = toByteArray(array);
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
-        } else if (type.getValueArray().length < Short.MAX_VALUE)
+        } else if (type.getEnumType().getValueArray().length < Short.MAX_VALUE)
         {
             storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
@@ -269,14 +269,14 @@ public class HDF5EnumerationValueArray implements Iterable<String>
 
     private void setOrdinalArray(int[] array) throws IllegalArgumentException
     {
-        if (type.getValueArray().length < Byte.MAX_VALUE)
+        if (type.getEnumType().getValueArray().length < Byte.MAX_VALUE)
         {
             storageForm = EnumStorageForm.BYTE;
             bArrayOrNull = toByteArray(array);
             checkOrdinalArray(bArrayOrNull);
             sArrayOrNull = null;
             iArrayOrNull = null;
-        } else if (type.getValueArray().length < Short.MAX_VALUE)
+        } else if (type.getEnumType().getValueArray().length < Short.MAX_VALUE)
         {
             storageForm = EnumStorageForm.SHORT;
             bArrayOrNull = null;
@@ -372,10 +372,10 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         for (int i = 0; i < array.length; ++i)
         {
-            if (array[i] < 0 || array[i] >= type.getValueArray().length)
+            if (array[i] < 0 || array[i] >= type.getEnumType().getValueArray().length)
             {
                 throw new IllegalArgumentException("valueIndex " + array[i]
-                        + " out of allowed range [0.." + (type.getValueArray().length - 1)
+                        + " out of allowed range [0.." + (type.getEnumType().getValueArray().length - 1)
                         + "] of type '" + type.getName() + "'.");
             }
         }
@@ -385,10 +385,10 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         for (int i = 0; i < array.length; ++i)
         {
-            if (array[i] < 0 || array[i] >= type.getValueArray().length)
+            if (array[i] < 0 || array[i] >= type.getEnumType().getValueArray().length)
             {
                 throw new IllegalArgumentException("valueIndex " + array[i]
-                        + " out of allowed range [0.." + (type.getValueArray().length - 1)
+                        + " out of allowed range [0.." + (type.getEnumType().getValueArray().length - 1)
                         + "] of type '" + type.getName() + "'.");
             }
         }
@@ -398,10 +398,10 @@ public class HDF5EnumerationValueArray implements Iterable<String>
     {
         for (int i = 0; i < array.length; ++i)
         {
-            if (array[i] < 0 || array[i] >= type.getValueArray().length)
+            if (array[i] < 0 || array[i] >= type.getEnumType().getValueArray().length)
             {
                 throw new IllegalArgumentException("valueIndex " + array[i]
-                        + " out of allowed range [0.." + (type.getValueArray().length - 1)
+                        + " out of allowed range [0.." + (type.getEnumType().getValueArray().length - 1)
                         + "] of type '" + type.getName() + "'.");
             }
         }

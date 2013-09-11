@@ -1455,7 +1455,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
     {
         setAttribute(objectId, createObjectTypeVariantAttributeName(houseKeepingNameSuffix),
                 typeVariantDataType.getStorageTypeId(), typeVariantDataType.getNativeTypeId(),
-                typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
+                typeVariantDataType.getEnumType().toStorageForm(typeVariant.ordinal()), registry);
     }
 
     void setTypeVariant(final int objectId, final String attributeName,
@@ -1464,7 +1464,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         setAttribute(objectId,
                 createAttributeTypeVariantAttributeName(attributeName, houseKeepingNameSuffix),
                 typeVariantDataType.getStorageTypeId(), typeVariantDataType.getNativeTypeId(),
-                typeVariantDataType.toStorageForm(typeVariant.ordinal()), registry);
+                typeVariantDataType.getEnumType().toStorageForm(typeVariant.ordinal()), registry);
     }
 
     void setStringAttribute(final int objectId, final String name, final String value,

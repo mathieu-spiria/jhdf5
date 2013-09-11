@@ -909,7 +909,7 @@ class HDF5BaseReader
                 h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, len
                         * enumType.getStorageForm().getStorageSize());
         final HDF5EnumerationValueArray value =
-                new HDF5EnumerationValueArray(enumType, HDF5EnumerationType.fromStorageForm(data,
+                new HDF5EnumerationValueArray(enumType, EnumerationType.fromStorageForm(data,
                         enumType.getStorageForm()));
         return value;
     }
@@ -950,7 +950,7 @@ class HDF5BaseReader
                 h5.readAttributeAsByteArray(attributeId, nativeDataTypeId, len
                         * enumType.getStorageForm().getStorageSize());
         final HDF5EnumerationValueMDArray value =
-                new HDF5EnumerationValueMDArray(enumType, HDF5EnumerationType.fromStorageForm(data,
+                new HDF5EnumerationValueMDArray(enumType, EnumerationType.fromStorageForm(data,
                         arrayDimensions, enumType.getStorageForm()));
         return value;
     }
@@ -1065,7 +1065,7 @@ class HDF5BaseReader
                 h5.readAttributeAsByteArray(attributeId,
                         (nativeDataTypeId < 0) ? enumType.getNativeTypeId() : nativeDataTypeId,
                         enumType.getStorageForm().getStorageSize());
-        return HDF5EnumerationType.fromStorageForm(data);
+        return EnumerationType.fromStorageForm(data);
     }
 
     /**

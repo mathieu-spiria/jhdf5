@@ -66,6 +66,19 @@ public interface IHDF5EnumTypeRetriever
             throws HDF5JavaException;
 
     /**
+     * Returns the enumeration type <var>name</var> for this HDF5 file. If the type is read from the
+     * file, it will check the type in the file with the <var>values</var>. If the
+     * <var>dataTypeName</var> starts with '/', it will be considered a data type path instead of a
+     * data type name.
+     * 
+     * @param genericType The generic enum type (independent of this file).
+     * @throws HDF5JavaException If the data type exists and is not compatible with the
+     *             <var>values</var> provided.
+     */
+    public HDF5EnumerationType getType(EnumerationType genericType)
+            throws HDF5JavaException;
+
+    /**
      * Returns the enumeration type <var>name</var> for this HDF5 file. If the
      * <var>dataTypeName</var> starts with '/', it will be considered a data type path instead of a
      * data type name.
@@ -78,6 +91,21 @@ public interface IHDF5EnumTypeRetriever
      *             compatible with the <var>values</var> provided.
      */
     public HDF5EnumerationType getType(String dataTypeName, String[] values, boolean check)
+            throws HDF5JavaException;
+
+    /**
+     * Returns the enumeration type <var>name</var> for this HDF5 file. If the type is read from the
+     * file, it will check the type in the file with the <var>values</var>. If the
+     * <var>dataTypeName</var> starts with '/', it will be considered a data type path instead of a
+     * data type name.
+     * 
+     * @param genericType The generic enum type (independent of this file).
+     * @param check If <code>true</code> and if the data type already exists, check whether it is
+     *            compatible with the <var>values</var> provided.
+     * @throws HDF5JavaException If <code>check = true</code>, the data type exists and is not
+     *             compatible with the <var>values</var> provided.
+     */
+    public HDF5EnumerationType getType(EnumerationType genericType, boolean check)
             throws HDF5JavaException;
 
     /**

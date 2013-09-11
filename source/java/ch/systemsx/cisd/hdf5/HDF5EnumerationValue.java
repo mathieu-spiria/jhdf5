@@ -55,10 +55,10 @@ public final class HDF5EnumerationValue
     {
         assert type != null;
 
-        if (ordinal < 0 || ordinal >= type.getValueArray().length)
+        if (ordinal < 0 || ordinal >= type.getEnumType().getValueArray().length)
         {
             throw new IllegalArgumentException("valueIndex " + ordinal
-                    + " out of allowed range [0.." + (type.getValueArray().length - 1)
+                    + " out of allowed range [0.." + (type.getEnumType().getValueArray().length - 1)
                     + "] of type '" + type.getName() + "'.");
         }
         this.type = type;
@@ -102,7 +102,7 @@ public final class HDF5EnumerationValue
      */
     public String getValue()
     {
-        return type.getValueArray()[ordinal];
+        return type.getEnumType().getValueArray()[ordinal];
     }
 
     /**
@@ -126,12 +126,12 @@ public final class HDF5EnumerationValue
      */
     public String getDescription()
     {
-        return type.getName() + " [" + type.getValueArray()[ordinal] + "]";
+        return type.getName() + " [" + type.getEnumType().getValueArray()[ordinal] + "]";
     }
 
     byte[] toStorageForm()
     {
-        return type.toStorageForm(ordinal);
+        return type.getEnumType().toStorageForm(ordinal);
     }
 
     //
