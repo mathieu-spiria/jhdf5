@@ -21,12 +21,11 @@ import ch.systemsx.cisd.base.mdarray.MDShortArray;
 /**
  * An interface that provides methods for writing unsigned <code>short</code> values to HDF5 files.
  * <p>
- * Note: There is no reader for unsigned values. Use the methods in {@link UnsignedIntUtils} to convert 
- * from and to unsigned values.
+ * Note: Use the methods in {@link UnsignedIntUtils} to convert from and to unsigned values.
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5UnsignedShortWriter
+public interface IHDF5UnsignedShortWriter extends IHDF5ShortReader
 {
     // /////////////////////
     // Attributes

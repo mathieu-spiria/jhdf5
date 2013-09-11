@@ -34,12 +34,13 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-class HDF5Unsigned__Name__Writer implements IHDF5Unsigned__Name__Writer
+class HDF5Unsigned__Name__Writer extends HDF5__Name__Reader implements IHDF5Unsigned__Name__Writer
 {
     private final HDF5BaseWriter baseWriter;
 
     HDF5Unsigned__Name__Writer(HDF5BaseWriter baseWriter)
     {
+        super(baseWriter);
         assert baseWriter != null;
 
         this.baseWriter = baseWriter;

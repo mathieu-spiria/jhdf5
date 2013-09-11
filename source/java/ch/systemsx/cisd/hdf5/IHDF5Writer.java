@@ -135,6 +135,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Legacy
     /**
      * Returns the full writer for unsigned byte / uint8.
      */
+    @Override
     public IHDF5UnsignedByteWriter uint8();
 
     // /////////////////////
@@ -150,6 +151,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Legacy
     /**
      * Returns the full writer for unsigned short / uint16.
      */
+    @Override
     public IHDF5UnsignedShortWriter uint16();
 
     // /////////////////////
@@ -165,6 +167,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Legacy
     /**
      * Returns the full writer for unsigned int / uint32.
      */
+    @Override
     public IHDF5UnsignedIntWriter uint32();
 
     // /////////////////////
@@ -180,6 +183,7 @@ public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5Legacy
     /**
      * Returns the full writer for unsigned long / uint64.
      */
+    @Override
     public IHDF5UnsignedLongWriter uint64();
 
     // /////////////////////

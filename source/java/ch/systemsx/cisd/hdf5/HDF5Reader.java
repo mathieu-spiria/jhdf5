@@ -63,11 +63,19 @@ class HDF5Reader implements IHDF5Reader
 
     private final IHDF5ByteReader byteReader;
 
+    private final IHDF5ByteReader ubyteReader;
+
     private final IHDF5ShortReader shortReader;
+
+    private final IHDF5ShortReader ushortReader;
 
     private final IHDF5IntReader intReader;
 
+    private final IHDF5IntReader uintReader;
+
     protected final IHDF5LongReader longReader;
+
+    private final IHDF5LongReader ulongReader;
 
     private final IHDF5FloatReader floatReader;
 
@@ -97,9 +105,13 @@ class HDF5Reader implements IHDF5Reader
         this.fileHandler = new HDF5FileLevelReadOnlyHandler(baseReader);
         this.objectHandler = new HDF5ObjectReadOnlyInfoProviderHandler(baseReader);
         this.byteReader = new HDF5ByteReader(baseReader);
+        this.ubyteReader = new HDF5UnsignedByteReader(baseReader);
         this.shortReader = new HDF5ShortReader(baseReader);
+        this.ushortReader = new HDF5UnsignedShortReader(baseReader);
         this.intReader = new HDF5IntReader(baseReader);
+        this.uintReader = new HDF5UnsignedIntReader(baseReader);
         this.longReader = new HDF5LongReader(baseReader);
+        this.ulongReader = new HDF5UnsignedLongReader(baseReader);
         this.floatReader = new HDF5FloatReader(baseReader);
         this.doubleReader = new HDF5DoubleReader(baseReader);
         this.booleanReader = new HDF5BooleanReader(baseReader);
@@ -2269,9 +2281,21 @@ class HDF5Reader implements IHDF5Reader
     }
 
     @Override
+    public IHDF5ByteReader uint8()
+    {
+        return ubyteReader;
+    }
+
+    @Override
     public IHDF5ShortReader int16()
     {
         return shortReader;
+    }
+
+    @Override
+    public IHDF5ShortReader uint16()
+    {
+        return ushortReader;
     }
 
     @Override
@@ -2281,9 +2305,21 @@ class HDF5Reader implements IHDF5Reader
     }
 
     @Override
+    public IHDF5IntReader uint32()
+    {
+        return uintReader;
+    }
+
+    @Override
     public IHDF5LongReader int64()
     {
         return longReader;
+    }
+
+    @Override
+    public IHDF5LongReader uint64()
+    {
+        return ulongReader;
     }
 
     @Override

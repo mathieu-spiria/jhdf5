@@ -34,12 +34,13 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-class HDF5UnsignedByteWriter implements IHDF5UnsignedByteWriter
+class HDF5UnsignedByteWriter extends HDF5ByteReader implements IHDF5UnsignedByteWriter
 {
     private final HDF5BaseWriter baseWriter;
 
     HDF5UnsignedByteWriter(HDF5BaseWriter baseWriter)
     {
+        super(baseWriter);
         assert baseWriter != null;
 
         this.baseWriter = baseWriter;

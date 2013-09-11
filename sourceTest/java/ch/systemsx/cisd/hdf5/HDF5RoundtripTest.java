@@ -137,6 +137,8 @@ public class HDF5RoundtripTest
         test.testCreateSomeDeepGroup();
         test.testGetGroupMembersIteratively();
         test.testScalarValues();
+        test.testUnsignedInt8ValuesArray();
+        test.testUnsignedInt16ValuesArray();
         test.testOverwriteScalar();
         test.testOverwriteScalarKeepDataSet();
         test.testDataSets();
@@ -590,6 +592,46 @@ public class HDF5RoundtripTest
         assertEquals("some string", reader.string().read(stringDatasetName));
         assertEquals("some string", reader.string().read(stringWithZeroDatasetName));
         assertEquals("some string\0with zero", reader.string().readRaw(stringWithZeroDatasetName));
+        reader.close();
+    }
+    
+    @Test
+    public void testUnsignedInt8ValuesArray()
+    {
+        final String byteDatasetName = "/byte";
+        final File datasetFile = new File(workingDirectory, "unsignedInt8Values.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final byte[] valuesWritten = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, (byte) 128, (byte) 255 };
+        writer.uint8().writeArray(byteDatasetName, valuesWritten);
+        writer.uint8().setAttr(byteDatasetName, "attr", (byte) 224);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final byte[] valuesRead = reader.uint8().readArray(byteDatasetName);
+        assertTrue(Arrays.equals(valuesWritten, valuesRead));
+        assertEquals(224, UnsignedIntUtils.toUint8(reader.uint8().getAttr(byteDatasetName, "attr")));
+        reader.close();
+    }
+
+    @Test
+    public void testUnsignedInt16ValuesArray()
+    {
+        final String byteDatasetName = "/byte";
+        final File datasetFile = new File(workingDirectory, "unsignedInt16Values.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final short[] valuesWritten = new short[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 256, 1024 };
+        writer.uint16().writeArray(byteDatasetName, valuesWritten);
+        writer.uint16().setAttr(byteDatasetName, "attr", (short) 60000);
+        writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        final short[] valuesRead = reader.uint16().readArray(byteDatasetName);
+        assertTrue(Arrays.equals(valuesWritten, valuesRead));
+        assertEquals(60000, UnsignedIntUtils.toUint16(reader.uint16().getAttr(byteDatasetName, "attr")));
         reader.close();
     }
 
@@ -5822,7 +5864,7 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5Factory.configure(file).keepDataSetsIfTheyExist().writer();
         HDF5EnumerationType type = createEnum16Bit(writer, enumTypeName);
         writer.enumeration().write(dsName, new HDF5EnumerationValue(type, "17"));
-        final String[] confusedValues = new String[type.getValueArray().length];
+        final String[] confusedValues = new String[type.getEnumType().getValueArray().length];
         System.arraycopy(confusedValues, 0, confusedValues, 1, confusedValues.length - 1);
         confusedValues[0] = "XXX";
         // This is wrong, but we disabled the check.
@@ -5838,7 +5880,9 @@ public class HDF5RoundtripTest
         assertEquals("17", reader.enumeration().read(dsName, type).getValue());
         reader.close();
         final IHDF5Writer writer2 = HDF5FactoryProvider.get().open(file);
-        type = writer2.enumeration().getType(enumTypeName, type.getValueArray(), true);
+        type =
+                writer2.enumeration().getType(enumTypeName, type.getEnumType().getValueArray(),
+                        true);
         assertEquals("17", writer2.enumeration().read(dsName, type).getValue());
         // That is wrong, but we disable the check, so no exception should be thrown.
         writer2.close();

@@ -121,6 +121,11 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
      */
     public IHDF5ByteReader int8();
 
+    /**
+     * Returns the full reader for unsigned byte / uint8.
+     */
+    public IHDF5ByteReader uint8();
+
     // /////////////////////
     // Short
     // /////////////////////
@@ -129,6 +134,11 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
      * Returns the full reader for short / int16.
      */
     public IHDF5ShortReader int16();
+
+    /**
+     * Returns the full reader for unsigned short / uint16.
+     */
+    public IHDF5ShortReader uint16();
 
     // /////////////////////
     // Int
@@ -139,6 +149,11 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
      */
     public IHDF5IntReader int32();
 
+    /**
+     * Returns the full reader for unsigned int / uint32.
+     */
+    public IHDF5IntReader uint32();
+
     // /////////////////////
     // Long
     // /////////////////////
@@ -147,6 +162,11 @@ public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
      * Returns the full reader for long / int64.
      */
     public IHDF5LongReader int64();
+
+    /**
+     * Returns the full reader for unsigned long / uint64.
+     */
+    public IHDF5LongReader uint64();
 
     // /////////////////////
     // Float

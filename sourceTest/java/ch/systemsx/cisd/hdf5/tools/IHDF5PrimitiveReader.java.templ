@@ -22,6 +22,9 @@ import ch.systemsx.cisd.base.mdarray.MD__Name__Array;
 
 /**
  * An interface that provides methods for reading <code>__name__</code> values from HDF5 files.
+ * <p>
+ * Note: If the values read are unsigned, use the methods in {@link UnsignedIntUtils} to convert 
+ * to a larger Java integer type that can hold all values as unsigned.
  * 
  * @author Bernd Rinn
  */

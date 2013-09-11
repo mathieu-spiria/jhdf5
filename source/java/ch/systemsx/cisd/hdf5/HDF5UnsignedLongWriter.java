@@ -34,12 +34,13 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-class HDF5UnsignedLongWriter implements IHDF5UnsignedLongWriter
+class HDF5UnsignedLongWriter extends HDF5LongReader implements IHDF5UnsignedLongWriter
 {
     private final HDF5BaseWriter baseWriter;
 
     HDF5UnsignedLongWriter(HDF5BaseWriter baseWriter)
     {
+        super(baseWriter);
         assert baseWriter != null;
 
         this.baseWriter = baseWriter;

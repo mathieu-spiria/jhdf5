@@ -226,16 +226,17 @@ public class HDF5CodeGenerator
                                 + t.capitalizedName + "Reader.java"));
                 generateCode(interfaceTemplateReader, t, outInterfaceReader);
                 outInterfaceReader.close();
-                final String classTemplateReader =
-                        FileUtils
-                                .readFileToString(new File(
-                                        "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveReader.java.templ"));
-                final PrintStream outclassReader =
-                        new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
-                                + t.capitalizedName + "Reader.java"));
-                generateCode(classTemplateReader, t, outclassReader);
-                outclassReader.close();
             }
+            final String classTemplateReader =
+                    FileUtils
+                            .readFileToString(new File(
+                                    t.isUnsigned ? "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5UnsignedPrimitiveReader.java.templ"
+                                            : "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveReader.java.templ"));
+            final PrintStream outclassReader =
+                    new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
+                            + (t.isUnsigned ? "Unsigned" : "") + t.capitalizedName + "Reader.java"));
+            generateCode(classTemplateReader, t, outclassReader);
+            outclassReader.close();
             final String interfaceTemplateWriter =
                     FileUtils
                             .readFileToString(new File(
