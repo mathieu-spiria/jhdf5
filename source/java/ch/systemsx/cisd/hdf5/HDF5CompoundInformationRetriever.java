@@ -671,7 +671,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 }
                 mapping.add(HDF5CompoundMemberMapping.mappingArrayWithStorageId(fieldName,
                         memberName, String.class, new int[]
-                            { typeInfo.getElementSize() }, compoundMemberTypeId,
+                            { typeInfo.getElementSize() }, compoundMemberTypeId, false,
                         typeInfo.tryGetTypeVariant()));
 
             } else
@@ -686,7 +686,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 }
                 mapping.add(HDF5CompoundMemberMapping.mappingArrayWithStorageId(fieldName,
                         memberName, memberClazz, dimensions, compoundMemberTypeId,
-                        typeInfo.tryGetTypeVariant()));
+                        false == compoundMember.getType().isSigned(), typeInfo.tryGetTypeVariant()));
             }
         }
         return HDF5CompoundMemberMapping.addHints(

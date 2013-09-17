@@ -53,6 +53,7 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_FLOAT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_INTEGER;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_OPAQUE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_OPAQUE_TAG_MAX;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_SGN_NONE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;
@@ -1662,6 +1663,11 @@ class HDF5
                 }
             });
         return baseDataTypeId;
+    }
+    
+    public boolean getSigned(int dataTypeId)
+    {
+        return H5Tget_sign(dataTypeId) != H5T_SGN_NONE;
     }
 
     public String tryGetDataTypePath(int dataTypeId)

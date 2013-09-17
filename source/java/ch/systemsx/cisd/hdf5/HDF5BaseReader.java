@@ -1128,13 +1128,16 @@ class HDF5BaseReader
             final int numberOfElements = MDAbstractArray.getLength(arrayDimensions);
             final int size = totalSize / numberOfElements;
             final int baseTypeId = h5.getBaseDataType(dataTypeId, registry);
+            final boolean signed =
+                    (dataClass == HDF5DataClass.INTEGER) ? h5.getSigned(baseTypeId)
+                            : (dataClass == HDF5DataClass.FLOAT);
             final String dataTypePathOrNull =
                     options.knowsDataTypePath() ? tryGetDataTypePath(baseTypeId) : null;
             final CharacterEncoding dataSetEncoding =
                     (dataClass == HDF5DataClass.STRING) ? h5.getCharacterEncoding(baseTypeId)
                             : CharacterEncoding.ASCII;
             return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass,
-                    dataSetEncoding, houseKeepingNameSuffix, size, arrayDimensions, true);
+                    dataSetEncoding, houseKeepingNameSuffix, size, arrayDimensions, true, signed);
         } else
         {
             dataClass = getDataClassForClassType(classTypeId, dataTypeId);
@@ -1148,11 +1151,14 @@ class HDF5BaseReader
             }
             final String dataTypePathOrNull =
                     options.knowsDataTypePath() ? tryGetDataTypePath(dataTypeId) : null;
+            final boolean signed =
+                    (dataClass == HDF5DataClass.INTEGER) ? h5.getSigned(dataTypeId)
+                            : (dataClass == HDF5DataClass.FLOAT);
             final CharacterEncoding dataSetEncoding =
                     (dataClass == HDF5DataClass.STRING) ? h5.getCharacterEncoding(dataTypeId)
                             : CharacterEncoding.ASCII;
             return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass,
-                    dataSetEncoding, houseKeepingNameSuffix, totalSize, 1, opaqueTagOrNull);
+                    dataSetEncoding, houseKeepingNameSuffix, totalSize, 1, signed, opaqueTagOrNull);
         }
     }
 

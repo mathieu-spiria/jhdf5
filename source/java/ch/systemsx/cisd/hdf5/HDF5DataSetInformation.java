@@ -159,6 +159,14 @@ public final class HDF5DataSetInformation
     {
         return dimensions.length == 0;
     }
+    
+    /**
+     * Returns <code>true</code>, if this data set type has a sign anf <code>false</code> otherwise.
+     */
+    public boolean isSigned()
+    {
+        return typeInformation.isSigned();
+    }
 
     /**
      * Returns the one-dimensional length of the multi-dimensional array defined by

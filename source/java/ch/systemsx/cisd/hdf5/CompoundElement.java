@@ -53,6 +53,11 @@ public @interface CompoundElement
      * fixed length, e.g. a float field.
      */
     int[] dimensions() default 0;
+    
+    /**
+     * If <code>true</code>, map this integer field to an unsigned integer type. 
+     */
+    boolean unsigned() default false;
 
     /**
      * The {@link HDF5DataTypeVariant} of this compound element, if any.

@@ -137,46 +137,55 @@ public final class HDF5CompoundMemberInformation implements
         if (fieldTypeOrNull == boolean.class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.BOOLEAN, houseKeepingNameSuffix, 1);
+                    new HDF5DataTypeInformation(HDF5DataClass.BOOLEAN, houseKeepingNameSuffix, 1,
+                            false);
         } else if (fieldTypeOrNull == byte.class || fieldTypeOrNull == byte[].class
                 || fieldTypeOrNull == byte[][].class || fieldTypeOrNull == MDByteArray.class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 1);
+                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 1,
+                            false == member.isUnsigned());
         } else if (fieldTypeOrNull == short.class || fieldTypeOrNull == short[].class
                 || fieldTypeOrNull == short[][].class || fieldTypeOrNull == MDShortArray.class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 2);
+                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 2,
+                            false == member.isUnsigned());
         } else if (fieldTypeOrNull == int.class || fieldTypeOrNull == int[].class
                 || fieldTypeOrNull == int[][].class || fieldTypeOrNull == MDIntArray.class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 4);
+                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 4,
+                            false == member.isUnsigned());
         } else if (fieldTypeOrNull == long.class || fieldTypeOrNull == long[].class
                 || fieldTypeOrNull == long[][].class || fieldTypeOrNull == MDLongArray.class)
         {
             typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 8);
+                    new HDF5DataTypeInformation(HDF5DataClass.INTEGER, houseKeepingNameSuffix, 8,
+                            false == member.isUnsigned());
         } else if (fieldTypeOrNull == BitSet.class)
         {
             typeInfo =
                     new HDF5DataTypeInformation(HDF5DataClass.BITFIELD, houseKeepingNameSuffix, 8,
                             member.getMemberTypeLength() / 64
-                                    + (member.getMemberTypeLength() % 64 != 0 ? 1 : 0));
+                                    + (member.getMemberTypeLength() % 64 != 0 ? 1 : 0), false);
         } else if (fieldTypeOrNull == float.class || fieldTypeOrNull == float[].class
                 || fieldTypeOrNull == float[][].class || fieldTypeOrNull == MDFloatArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, houseKeepingNameSuffix, 4);
+            typeInfo =
+                    new HDF5DataTypeInformation(HDF5DataClass.FLOAT, houseKeepingNameSuffix, 4,
+                            true);
         } else if (fieldTypeOrNull == double.class || fieldTypeOrNull == double[].class
                 || fieldTypeOrNull == double[][].class || fieldTypeOrNull == MDDoubleArray.class)
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.FLOAT, houseKeepingNameSuffix, 8);
+            typeInfo =
+                    new HDF5DataTypeInformation(HDF5DataClass.FLOAT, houseKeepingNameSuffix, 8,
+                            true);
         } else if (fieldTypeOrNull == String.class || fieldTypeOrNull == char[].class)
         {
             typeInfo =
                     new HDF5DataTypeInformation(HDF5DataClass.STRING, houseKeepingNameSuffix,
-                            member.getMemberTypeLength());
+                            member.getMemberTypeLength(), false);
         } else if (fieldTypeOrNull == HDF5EnumerationValue.class)
         {
             final DataTypeInfoOptions options =
@@ -188,14 +197,17 @@ public final class HDF5CompoundMemberInformation implements
                                     HDF5Utils.ENUM_PREFIX, houseKeepingNameSuffix, member
                                             .tryGetEnumerationType().getName()) : null, options,
                             HDF5DataClass.ENUM, houseKeepingNameSuffix, member
-                                    .tryGetEnumerationType().getStorageForm().getStorageSize());
+                                    .tryGetEnumerationType().getStorageForm().getStorageSize(),
+                            false);
             if (options.knowsDataTypeVariant())
             {
                 typeInfo.setTypeVariant(member.tryGetTypeVariant());
             }
         } else
         {
-            typeInfo = new HDF5DataTypeInformation(HDF5DataClass.OTHER, houseKeepingNameSuffix, -1);
+            typeInfo =
+                    new HDF5DataTypeInformation(HDF5DataClass.OTHER, houseKeepingNameSuffix, -1,
+                            false);
         }
         if (fieldTypeOrNull != null
                 && (fieldTypeOrNull.isArray() && fieldTypeOrNull != char[].class)

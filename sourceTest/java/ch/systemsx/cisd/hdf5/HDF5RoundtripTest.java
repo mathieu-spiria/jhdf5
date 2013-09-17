@@ -525,9 +525,11 @@ public class HDF5RoundtripTest
         writer.int32().write("a", 4);
         assertEquals(HDF5DataClass.INTEGER, writer.getDataSetInformation("a").getTypeInformation()
                 .getDataClass());
+        assertTrue(writer.getDataSetInformation("a").isSigned());
         writer.float32().write("a", 1e6f);
         assertEquals(HDF5DataClass.FLOAT, writer.getDataSetInformation("a").getTypeInformation()
                 .getDataClass());
+        assertTrue(writer.getDataSetInformation("a").isSigned());
         assertEquals(1e6f, writer.float32().read("a"));
         writer.close();
     }
@@ -583,7 +585,9 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertTrue(reader.readBoolean(booleanDatasetName));
         assertEquals(17, reader.int8().read(byteDatasetName));
+        assertTrue(reader.getDataSetInformation(byteDatasetName).isSigned());
         assertEquals(0, reader.int16().read(unsignedByteOverflowDatasetName));
+        assertFalse(reader.getDataSetInformation(unsignedByteOverflowDatasetName).isSigned());
         assertEquals(1000, reader.int16().read(shortDatasetName));
         assertEquals(1000000, reader.int32().read(intDatasetName));
         assertEquals(10000000000L, reader.int64().read(longDatasetName));
@@ -594,7 +598,7 @@ public class HDF5RoundtripTest
         assertEquals("some string\0with zero", reader.string().readRaw(stringWithZeroDatasetName));
         reader.close();
     }
-    
+
     @Test
     public void testUnsignedInt8ValuesArray()
     {
@@ -604,11 +608,13 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        final byte[] valuesWritten = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, (byte) 128, (byte) 255 };
+        final byte[] valuesWritten = new byte[]
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, (byte) 128, (byte) 255 };
         writer.uint8().writeArray(byteDatasetName, valuesWritten);
         writer.uint8().setAttr(byteDatasetName, "attr", (byte) 224);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        assertFalse(reader.getDataSetInformation(byteDatasetName).isSigned());
         final byte[] valuesRead = reader.uint8().readArray(byteDatasetName);
         assertTrue(Arrays.equals(valuesWritten, valuesRead));
         assertEquals(224, UnsignedIntUtils.toUint8(reader.uint8().getAttr(byteDatasetName, "attr")));
@@ -624,14 +630,17 @@ public class HDF5RoundtripTest
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
-        final short[] valuesWritten = new short[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 256, 1024 };
+        final short[] valuesWritten = new short[]
+            { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 256, 1024 };
         writer.uint16().writeArray(byteDatasetName, valuesWritten);
         writer.uint16().setAttr(byteDatasetName, "attr", (short) 60000);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        assertFalse(reader.getDataSetInformation(byteDatasetName).isSigned());
         final short[] valuesRead = reader.uint16().readArray(byteDatasetName);
         assertTrue(Arrays.equals(valuesWritten, valuesRead));
-        assertEquals(60000, UnsignedIntUtils.toUint16(reader.uint16().getAttr(byteDatasetName, "attr")));
+        assertEquals(60000,
+                UnsignedIntUtils.toUint16(reader.uint16().getAttr(byteDatasetName, "attr")));
         reader.close();
     }
 
@@ -1206,6 +1215,7 @@ public class HDF5RoundtripTest
         HDF5DataSetInformation info = reader.getDataSetInformation(floatDatasetName);
         assertEquals(HDF5StorageLayout.COMPACT, info.getStorageLayout());
         assertNull(info.tryGetChunkSizes());
+        assertTrue(info.isSigned());
         assertTrue(Arrays.equals(floatDataWritten, floatDataRead));
         final long[] compressedLongDataRead =
                 reader.int64().readArray(longDatasetNameAboveCompactThresholdCompress);
@@ -6596,6 +6606,7 @@ public class HDF5RoundtripTest
 
         double c;
 
+        @CompoundElement(unsigned = true)
         short d;
 
         boolean e;
@@ -6614,6 +6625,7 @@ public class HDF5RoundtripTest
 
         short[] dr;
 
+        @CompoundElement(unsigned = true)
         byte[] er;
 
         MDIntArray fr;
@@ -6663,11 +6675,12 @@ public class HDF5RoundtripTest
         private static HDF5CompoundMemberMapping[] getMapping(HDF5EnumerationType enumType)
         {
             return new HDF5CompoundMemberMapping[]
-                { mapping("a"), mapping("b"), mapping("l"), mapping("c"), mapping("d"),
+                { mapping("a"), mapping("b"), mapping("l"), mapping("c"), mapping("d").unsigned(),
                         mapping("e"), mapping("f").length(3), mapping("g").enumType(enumType),
                         mapping("ar").length(3), mapping("br").length(2), mapping("lr").length(3),
-                        mapping("cr").length(1), mapping("dr").length(2), mapping("er").length(4),
-                        mapping("fr").dimensions(2, 2), mapping("gr").length(5) };
+                        mapping("cr").length(1), mapping("dr").length(2),
+                        mapping("er").length(4).unsigned(), mapping("fr").dimensions(2, 2),
+                        mapping("gr").length(5) };
         }
 
         private static HDF5CompoundMemberMapping[] getShuffledMapping(HDF5EnumerationType enumType)
@@ -8234,14 +8247,14 @@ public class HDF5RoundtripTest
         Record[] arrayWritten =
                 new Record[]
                     {
-                            new Record(1, 2.0f, 100000000L, 3.0, (short) 4, true, "one",
+                            new Record(1, 2.0f, 100000000L, 3.0, (short) -1, true, "one",
                                     new HDF5EnumerationValue(enumType, "THREE"), new int[]
                                         { 1, 2, 3 }, new float[]
                                         { 8.0f, -17.0f }, new long[]
                                         { -10, -11, -12 }, new double[]
                                         { 3.14159 }, new short[]
                                         { 1000, 2000 }, new byte[]
-                                        { 11, 12, 13, 14 }, new MDIntArray(new int[][]
+                                        { 11, 12, 13, -14 }, new MDIntArray(new int[][]
                                         {
                                             { 1, 2 },
                                             { 3, 4 } }), new char[]
@@ -8266,6 +8279,13 @@ public class HDF5RoundtripTest
                 HDF5GenericStorageFeatures.GENERIC_COMPACT);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        final HDF5CompoundMemberInformation[] memberInfo =
+                reader.compound().getDataSetInfo("/testCompound");
+        assertEquals(16, memberInfo.length);
+        assertEquals("a", memberInfo[0].getName());
+        assertTrue(memberInfo[0].getType().isSigned());
+        assertEquals("d", memberInfo[4].getName());
+        assertFalse(memberInfo[4].getType().isSigned());
         compoundType = Record.getHDF5Type(reader);
         inferredType = reader.compound().getDataSetType("/testCompound", Record.class);
         Record[] arrayRead = reader.compound().readArray("/testCompound", inferredType);
@@ -9645,7 +9665,9 @@ public class HDF5RoundtripTest
         writer.object().setDataSetSize("ds", 20);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
-        assertEquals(20, reader.getDataSetInformation("ds").getSize());
+        final HDF5DataSetInformation dsInfo = reader.getDataSetInformation("ds");
+        assertEquals(20, dsInfo.getSize());
+        assertTrue(dsInfo.isSigned());
         int idx = 0;
         for (byte b : reader.int8().readArray("ds"))
         {

@@ -24,6 +24,7 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.putMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setArray;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setList;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;
 
 import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
@@ -136,8 +137,10 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
             { 1 } : member.getMemberTypeDimensions();
         final int storageTypeId = member.getStorageDataTypeId();
         final int memberTypeId =
-                rank.isScalar() ? H5T_STD_I16LE : ((storageTypeId < 0) ? fileInfoProvider
-                        .getArrayTypeId(H5T_STD_I16LE, dimensions) : storageTypeId);
+                rank.isScalar() ? (member.isUnsigned() ? H5T_STD_U16LE : H5T_STD_I16LE)
+                        : ((storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
+                                member.isUnsigned() ? H5T_STD_U16LE : H5T_STD_I16LE, dimensions)
+                                : storageTypeId);
         switch (accessType)
         {
             case FIELD:

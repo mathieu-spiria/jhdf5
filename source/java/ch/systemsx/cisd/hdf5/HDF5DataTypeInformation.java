@@ -118,6 +118,8 @@ public final class HDF5DataTypeInformation
 
     private final boolean arrayType;
 
+    private final boolean signed;
+
     private final String dataTypePathOrNull;
 
     private final String nameOrNull;
@@ -139,50 +141,52 @@ public final class HDF5DataTypeInformation
     private HDF5DataTypeVariant typeVariantOrNull;
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, String houseKeepingNameSuffix, int elementSize)
+            HDF5DataClass dataClass, String houseKeepingNameSuffix, int elementSize, boolean signed)
     {
         this(dataTypePathOrNull, options, dataClass, CharacterEncoding.ASCII,
                 houseKeepingNameSuffix, elementSize, new int[]
-                    { 1 }, false, null);
-    }
-
-    HDF5DataTypeInformation(HDF5DataClass dataClass, String houseKeepingNameSuffix, int elementSize)
-    {
-        this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
-                houseKeepingNameSuffix, elementSize, new int[]
-                    { 1 }, false, null);
+                    { 1 }, false, signed, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, String houseKeepingNameSuffix,
-            int elementSize, int numberOfElements)
+            int elementSize, boolean signed)
     {
         this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
                 houseKeepingNameSuffix, elementSize, new int[]
-                    { numberOfElements }, false, null);
+                    { 1 }, false, signed, null);
+    }
+
+    HDF5DataTypeInformation(HDF5DataClass dataClass, String houseKeepingNameSuffix,
+            int elementSize, int numberOfElements, boolean signed)
+    {
+        this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
+                houseKeepingNameSuffix, elementSize, new int[]
+                    { numberOfElements }, false, signed, null);
 
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
             HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
-            int elementSize, int numberOfElements, String opaqueTagOrNull)
+            int elementSize, int numberOfElements, boolean signed, String opaqueTagOrNull)
     {
         this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
                 new int[]
-                    { numberOfElements }, false, opaqueTagOrNull);
+                    { numberOfElements }, false, signed, opaqueTagOrNull);
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
             HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
-            int elementSize, int[] dimensions, boolean arrayType)
+            int elementSize, int[] dimensions, boolean arrayType, boolean signed)
     {
         this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
-                dimensions, arrayType, null);
+                dimensions, arrayType, signed, null);
 
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
             HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
-            int elementSize, int[] dimensions, boolean arrayType, String opaqueTagOrNull)
+            int elementSize, int[] dimensions, boolean arrayType, boolean signed,
+            String opaqueTagOrNull)
     {
         if (dataClass == HDF5DataClass.BOOLEAN || dataClass == HDF5DataClass.STRING)
         {
@@ -196,6 +200,7 @@ public final class HDF5DataTypeInformation
                             houseKeepingNameSuffix, dataClass);
         }
         this.arrayType = arrayType;
+        this.signed = signed;
         this.dataClass = dataClass;
         this.elementSize = elementSize;
         this.dimensions = dimensions;
@@ -308,6 +313,14 @@ public final class HDF5DataTypeInformation
     public boolean isVariableLengthType()
     {
         return elementSize < 0;
+    }
+
+    /**
+     * Returns <code>true</code>, if this data set type has a sign anf <code>false</code> otherwise.
+     */
+    public boolean isSigned()
+    {
+        return signed;
     }
 
     /**
