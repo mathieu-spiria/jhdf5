@@ -411,8 +411,29 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         value.getType().check(baseWriter.fileId);
         final int storageDataTypeId = value.getType().getStorageTypeId();
         final int nativeDataTypeId = value.getType().getNativeTypeId();
-        baseWriter.setAttribute(objectPath, name, storageDataTypeId, nativeDataTypeId,
-                value.toStorageForm());
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        @Override
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            {
+                                final int dataSpaceId =
+                                        baseWriter.h5.createSimpleDataSpace(new long[]
+                                            { 1 }, registry);
+                                baseWriter.setAttribute(objectPath, name,
+                                        storageDataTypeId, nativeDataTypeId,
+                                        dataSpaceId, value.toStorageForm(), registry);
+                            } else
+                            {
+                                baseWriter.setAttribute(objectPath, name, storageDataTypeId,
+                                        nativeDataTypeId, -1, value.toStorageForm(), registry);
+                            }
+                            return null; // Nothing to return.
+                        }
+                    };
+        baseWriter.runner.call(addAttributeRunnable);
     }
 
     @Override

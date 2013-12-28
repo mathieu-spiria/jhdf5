@@ -17,23 +17,28 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping.mapping;
+import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_CHUNKED;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_SCALING1_DEFLATE;
-import static ch.systemsx.cisd.hdf5.HDF5FloatStorageFeatures.FLOAT_CHUNKED;
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_DEFLATE_MAX;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING_DEFLATE;
-import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_CHUNKED;
+import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_SHUFFLE_DEFLATE;
 import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.toInt8;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_FLOAT;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_INTEGER;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_REFERENCE;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
+import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -283,6 +288,7 @@ public class HDF5RoundtripTest
         test.testOverwriteMatrixIncreaseSize();
         test.testOverwriteStringVectorDecreaseSize();
         test.testAttributes();
+        test.testSimpleDataspaceAttributes();
         test.testTimeStampAttributes();
         test.testTimeDurationAttributes();
         test.testTimeStampArrayAttributes();
@@ -4940,6 +4946,153 @@ public class HDF5RoundtripTest
                 datasetName, floatArrayMDAttributeName))));
         assertTrue(Arrays.equals(byteArrayAttribute,
                 reader.int8().getArrayAttr(datasetName, byteArrayAttributeName)));
+        reader.close();
+    }
+
+    @Test
+    public void testSimpleDataspaceAttributes()
+    {
+        final File attributeFile = new File(workingDirectory, "simpleDataspaceAttributes.h5");
+        attributeFile.delete();
+        assertFalse(attributeFile.exists());
+        attributeFile.deleteOnExit();
+        final IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(attributeFile)
+                        .enforceSimpleDataSpaceForAttributes().writer();
+        final String datasetName = "SomeDataSet";
+        final String floatAttrName = "SomeFloatAttr";
+        final String floatAttrArrayName = "SomeFloatArrayAttr";
+        final String floatAttrMDArrayName = "SomeFloatMDArrayAttr";
+        final String unsignedIntAttrName = "SomeUnsignedIntAttr";
+        final String unsignedIntAttrArrayName = "SomeUnsignedIntArrayAttr";
+        final String unsignedIntAttrMDArrayName = "SomeUnsignedIntMDArrayAttr";
+        final String referenceAttrArrayName = "SomeRefAttr";
+        final String dateTimeAttrName = "SomeDateTimeAttr";
+        final String dateTimeAttrArrayName = "SomeDateTimeArrayAttr";
+        final String timeDurationAttrName = "SomeTimeDurationAttr";
+        final String timeDurationAttrArrayName = "SomeTimeDurationArrayAttr";
+        writer.float32().writeArray(datasetName, new float[0]);
+        writer.float32().setAttr(datasetName, floatAttrName, 17.0f);
+        final float[] floatArrayValueWritten = new float[]
+            { 1, 2, 3, };
+        writer.float32().setArrayAttr(datasetName, floatAttrArrayName, floatArrayValueWritten);
+        final MDFloatArray floatMDArrayWritten = new MDFloatArray(new float[]
+            { 1, 2, 3, 4 }, new int[]
+            { 2, 2 });
+        writer.float32().setMDArrayAttr(datasetName, floatAttrMDArrayName, floatMDArrayWritten);
+        writer.uint32().setAttr(datasetName, unsignedIntAttrName, toInt32(4000000000L));
+        final int[] uintArrayValueWritten = new int[]
+            { toInt32(4000000001L), toInt32(4000000002L), toInt32(4000000003L) };
+        writer.uint32().setArrayAttr(datasetName, unsignedIntAttrArrayName, uintArrayValueWritten);
+        final MDIntArray uintMDArrayValueWritten =
+                new MDIntArray(new int[]
+                    { toInt32(4000000000L), toInt32(4000000002L), toInt32(4000000003L),
+                            toInt32(4000000003L) }, new int[]
+                    { 2, 2 });
+        writer.uint32().setMDArrayAttr(datasetName, unsignedIntAttrMDArrayName,
+                uintMDArrayValueWritten);
+        writer.reference().setArrayAttr(datasetName, referenceAttrArrayName, new String[]
+            { datasetName, datasetName });
+        writer.time().setAttr(datasetName, dateTimeAttrName, 1000L);
+        writer.time().setArrayAttr(datasetName, dateTimeAttrArrayName, new long[]
+            { 1000L, 2000L });
+        writer.duration().setAttr(datasetName, timeDurationAttrName,
+                new HDF5TimeDuration(100L, HDF5TimeUnit.SECONDS));
+        writer.duration().setArrayAttr(datasetName, timeDurationAttrArrayName,
+                new HDF5TimeDurationArray(new long[]
+                    { 100L, 150L }, HDF5TimeUnit.SECONDS));
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(attributeFile);
+        assertTrue(reader.object().hasAttribute(datasetName, floatAttrName));
+        final float attributeValue = reader.float32().getAttr(datasetName, floatAttrName);
+        assertEquals(17.0f, attributeValue);
+        final HDF5BaseReader baseReader = ((HDF5FloatReader) reader.float32()).getBaseReader();
+        final int objectId =
+                baseReader.h5.openObject(baseReader.fileId, datasetName, baseReader.fileRegistry);
+        int attributeId =
+                baseReader.h5.openAttribute(objectId, floatAttrName, baseReader.fileRegistry);
+        int attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
+        assertEquals(H5T_FLOAT, baseReader.h5.getClassType(attributeTypeId));
+        assertTrue(reader.object().hasAttribute(datasetName, floatAttrArrayName));
+        final float[] attributeArrayValueRead =
+                reader.float32().getArrayAttr(datasetName, floatAttrArrayName);
+        assertTrue(Arrays.equals(floatArrayValueWritten, attributeArrayValueRead));
+        attributeId =
+                baseReader.h5.openAttribute(objectId, floatAttrArrayName, baseReader.fileRegistry);
+        attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
+        assertEquals(H5T_FLOAT, baseReader.h5.getClassType(attributeTypeId));
+        assertTrue(reader.object().hasAttribute(datasetName, floatAttrMDArrayName));
+        final MDFloatArray attributeMDArrayValueRead =
+                reader.float32().getMDArrayAttr(datasetName, floatAttrMDArrayName);
+        assertEquals(floatMDArrayWritten, attributeMDArrayValueRead);
+        assertEquals(toInt32(4000000000L), reader.uint32()
+                .getAttr(datasetName, unsignedIntAttrName));
+        attributeId =
+                baseReader.h5.openAttribute(objectId, unsignedIntAttrName, baseReader.fileRegistry);
+        attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
+        assertEquals(H5T_INTEGER, baseReader.h5.getClassType(attributeTypeId));
+        assertTrue(Arrays.equals(uintArrayValueWritten,
+                reader.uint32().getArrayAttr(datasetName, unsignedIntAttrArrayName)));
+        attributeId =
+                baseReader.h5.openAttribute(objectId, unsignedIntAttrArrayName,
+                        baseReader.fileRegistry);
+        attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
+        assertEquals(H5T_INTEGER, baseReader.h5.getClassType(attributeTypeId));
+        assertEquals(uintMDArrayValueWritten,
+                reader.uint32().getMDArrayAttr(datasetName, unsignedIntAttrMDArrayName));
+        attributeId =
+                baseReader.h5.openAttribute(objectId, unsignedIntAttrMDArrayName,
+                        baseReader.fileRegistry);
+        attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
+        assertEquals(H5T_INTEGER, baseReader.h5.getClassType(attributeTypeId));
+        attributeId =
+                baseReader.h5.openAttribute(objectId, referenceAttrArrayName,
+                        baseReader.fileRegistry);
+        attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
+        assertEquals(H5T_REFERENCE, baseReader.h5.getClassType(attributeTypeId));
+        final String[] referenceValues =
+                reader.reference().getArrayAttr(datasetName, referenceAttrArrayName);
+        assertEquals(2, referenceValues.length);
+        assertEquals("/" + datasetName, referenceValues[0]);
+        assertEquals("/" + datasetName, referenceValues[1]);
+        assertEquals(1000L, reader.time().getAttrAsLong(datasetName, dateTimeAttrName));
+        assertTrue(Arrays.equals(new long[]
+            { 1000L, 2000L }, reader.time().getArrayAttrAsLong(datasetName, dateTimeAttrArrayName)));
+        attributeId =
+                baseReader.h5.openAttribute(objectId, dateTimeAttrName, baseReader.fileRegistry);
+        attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
+        assertEquals(H5T_INTEGER, baseReader.h5.getClassType(attributeTypeId));
+        attributeId =
+                baseReader.h5.openAttribute(objectId, "__TYPE_VARIANT__" + dateTimeAttrName + "__",
+                        baseReader.fileRegistry);
+        attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
+        assertEquals(H5T_ENUM, baseReader.h5.getClassType(attributeTypeId));
+        assertEquals(new HDF5TimeDuration(100L, HDF5TimeUnit.SECONDS),
+                reader.duration().getAttr(datasetName, timeDurationAttrName));
+        assertEquals(new HDF5TimeDurationArray(new long[]
+            { 100L, 150L }, HDF5TimeUnit.SECONDS),
+                reader.duration().getArrayAttr(datasetName, timeDurationAttrArrayName));
+        attributeId =
+                baseReader.h5
+                        .openAttribute(objectId, timeDurationAttrName, baseReader.fileRegistry);
+        attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
+        assertEquals(H5T_INTEGER, baseReader.h5.getClassType(attributeTypeId));
+        attributeId =
+                baseReader.h5.openAttribute(objectId, "__TYPE_VARIANT__" + timeDurationAttrName
+                        + "__", baseReader.fileRegistry);
+        attributeTypeId =
+                baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
+        assertEquals(H5T_ENUM, baseReader.h5.getClassType(attributeTypeId));
         reader.close();
     }
 

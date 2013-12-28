@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 ETH Zuerich, CISD.
+ * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,8 +57,30 @@ class HDF5UnsignedLongWriter extends HDF5LongReader implements IHDF5UnsignedLong
         assert name != null;
 
         baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath, name, H5T_STD_U64LE, H5T_NATIVE_UINT64, 
-        		new long[] { value });
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        @Override
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            {
+                                final int dataSpaceId =
+                                        baseWriter.h5.createSimpleDataSpace(new long[]
+                                            { 1 }, registry);
+                                baseWriter.setAttribute(objectPath, name, H5T_STD_U64LE,
+                                        H5T_NATIVE_UINT64, dataSpaceId, new long[]
+                                            { value }, registry);
+                            } else
+                            {
+                                baseWriter.setAttribute(objectPath, name, H5T_STD_U64LE,
+                                        H5T_NATIVE_UINT64, -1, new long[]
+                                            { value }, registry);
+                            }
+                            return null; // Nothing to return.
+                        }
+                    };
+        baseWriter.runner.call(addAttributeRunnable);
     }
 
     @Override
@@ -75,11 +97,21 @@ class HDF5UnsignedLongWriter extends HDF5LongReader implements IHDF5UnsignedLong
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
-                            baseWriter.h5.createArrayType(H5T_NATIVE_UINT64, value.length, registry);
-                    final int storageTypeId =
-                            baseWriter.h5.createArrayType(H5T_STD_U64LE, value.length, registry);
-                    baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId, value);
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                            { value.length }, registry);
+                        baseWriter.setAttribute(objectPath, name, H5T_STD_U64LE, H5T_NATIVE_UINT64,
+                                dataSpaceId, value, registry);
+                    } else
+                    {
+                        final int memoryTypeId =
+                                baseWriter.h5.createArrayType(H5T_NATIVE_UINT64, value.length, registry);
+                        final int storageTypeId =
+                                baseWriter.h5.createArrayType(H5T_STD_U64LE, value.length, registry);
+                        baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId, -1, value, 
+                                registry);
+                    }
                     return null; // Nothing to return.
                 }
             };
@@ -100,14 +132,23 @@ class HDF5UnsignedLongWriter extends HDF5LongReader implements IHDF5UnsignedLong
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
-                            baseWriter.h5.createArrayType(H5T_NATIVE_UINT64, value.dimensions(),
-                                    registry);
-                    final int storageTypeId =
-                            baseWriter.h5.createArrayType(H5T_STD_U64LE, value.dimensions(),
-                                    registry);
-                    baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId,
-                            value.getAsFlatArray());
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId =
+                                baseWriter.h5.createSimpleDataSpace(value.longDimensions(), registry);
+                        baseWriter.setAttribute(objectPath, name, H5T_STD_U64LE, H5T_NATIVE_UINT64,
+                                dataSpaceId, value.getAsFlatArray(), registry);
+                    } else
+                    {
+                        final int memoryTypeId =
+                                baseWriter.h5.createArrayType(H5T_NATIVE_UINT64, value.dimensions(),
+                                        registry);
+                        final int storageTypeId =
+                                baseWriter.h5.createArrayType(H5T_STD_U64LE, value.dimensions(),
+                                        registry);
+                        baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId, -1,
+                                value.getAsFlatArray(), registry);
+                    }
                     return null; // Nothing to return.
                 }
             };

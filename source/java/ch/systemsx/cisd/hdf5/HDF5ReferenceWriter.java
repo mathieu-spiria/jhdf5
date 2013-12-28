@@ -52,17 +52,39 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
     // /////////////////////
 
     @Override
-    public void setAttr(String objectPath, String name,
-            String referencedObjectPath)
+    public void setAttr(final String objectPath, final String name,
+            final String referencedObjectPath)
     {
         assert objectPath != null;
         assert name != null;
         assert referencedObjectPath != null;
 
         baseWriter.checkOpen();
-        final byte[] reference =
-                baseWriter.h5.createObjectReference(baseWriter.fileId, referencedObjectPath);
-        baseWriter.setAttribute(objectPath, name, H5T_STD_REF_OBJ, H5T_STD_REF_OBJ, reference);
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        @Override
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final byte[] reference =
+                                    baseWriter.h5.createObjectReference(baseWriter.fileId,
+                                            referencedObjectPath);
+                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            {
+                                final int dataSpaceId =
+                                        baseWriter.h5.createSimpleDataSpace(new long[]
+                                            { 1 }, registry);
+                                baseWriter.setAttribute(objectPath, name, H5T_STD_REF_OBJ,
+                                        H5T_STD_REF_OBJ, dataSpaceId, reference, registry);
+                            } else
+                            {
+                                baseWriter.setAttribute(objectPath, name, H5T_STD_REF_OBJ,
+                                        H5T_STD_REF_OBJ, -1, reference, registry);
+                            }
+                            return null; // Nothing to return.
+                        }
+                    };
+        baseWriter.runner.call(addAttributeRunnable);
     }
 
     @Override
@@ -79,13 +101,22 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int typeId =
-                            baseWriter.h5.createArrayType(H5T_STD_REF_OBJ,
-                                    referencedObjectPaths.length, registry);
                     final long[] references =
                             baseWriter.h5.createObjectReferences(baseWriter.fileId,
                                     referencedObjectPaths);
-                    baseWriter.setAttribute(objectPath, name, typeId, typeId, references);
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                            { references.length }, registry);
+                        baseWriter.setAttribute(objectPath, name, H5T_STD_REF_OBJ, H5T_STD_REF_OBJ,
+                                dataSpaceId, references);
+                    } else
+                    {
+                        final int typeId =
+                                baseWriter.h5.createArrayType(H5T_STD_REF_OBJ,
+                                        referencedObjectPaths.length, registry);
+                        baseWriter.setAttribute(objectPath, name, typeId, typeId, -1, references);
+                    }
                     return null; // Nothing to return.
                 }
             };
@@ -106,13 +137,23 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int typeId =
-                            baseWriter.h5.createArrayType(H5T_STD_REF_OBJ,
-                                    referencedObjectPaths.dimensions(), registry);
                     final long[] references =
                             baseWriter.h5.createObjectReferences(baseWriter.fileId,
                                     referencedObjectPaths.getAsFlatArray());
-                    baseWriter.setAttribute(objectPath, name, typeId, typeId, references);
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId =
+                                baseWriter.h5.createSimpleDataSpace(
+                                        referencedObjectPaths.longDimensions(), registry);
+                        baseWriter.setAttribute(objectPath, name, H5T_STD_REF_OBJ, H5T_STD_REF_OBJ,
+                                dataSpaceId, references);
+                    } else
+                    {
+                        final int typeId =
+                                baseWriter.h5.createArrayType(H5T_STD_REF_OBJ,
+                                        referencedObjectPaths.dimensions(), registry);
+                        baseWriter.setAttribute(objectPath, name, typeId, typeId, -1, references);
+                    }
                     return null; // Nothing to return.
                 }
             };
@@ -136,16 +177,14 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
     }
 
     @Override
-    public void writeArray(final String objectPath,
-            final String[] referencedObjectPath)
+    public void writeArray(final String objectPath, final String[] referencedObjectPath)
     {
-        writeArray(objectPath, referencedObjectPath,
-                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+        writeArray(objectPath, referencedObjectPath, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
     @Override
-    public void writeArray(final String objectPath,
-            final String[] referencedObjectPaths, final HDF5IntStorageFeatures features)
+    public void writeArray(final String objectPath, final String[] referencedObjectPaths,
+            final HDF5IntStorageFeatures features)
     {
         assert referencedObjectPaths != null;
 
@@ -212,8 +251,8 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
     }
 
     @Override
-    public void createArray(final String objectPath, final long size,
-            final int blockSize, final HDF5IntStorageFeatures features)
+    public void createArray(final String objectPath, final long size, final int blockSize,
+            final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert size >= 0;
@@ -235,11 +274,11 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
     }
 
     @Override
-    public void writeArrayBlock(final String objectPath,
-            final String[] referencedObjectPaths, final long blockNumber)
+    public void writeArrayBlock(final String objectPath, final String[] referencedObjectPaths,
+            final long blockNumber)
     {
-        writeArrayBlockWithOffset(objectPath, referencedObjectPaths,
-                referencedObjectPaths.length, referencedObjectPaths.length * blockNumber);
+        writeArrayBlockWithOffset(objectPath, referencedObjectPaths, referencedObjectPaths.length,
+                referencedObjectPaths.length * blockNumber);
     }
 
     @Override
@@ -280,16 +319,14 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
     }
 
     @Override
-    public void writeMDArray(final String objectPath,
-            final MDArray<String> referencedObjectPaths)
+    public void writeMDArray(final String objectPath, final MDArray<String> referencedObjectPaths)
     {
-        writeMDArray(objectPath, referencedObjectPaths,
-                HDF5IntStorageFeatures.INT_NO_COMPRESSION);
+        writeMDArray(objectPath, referencedObjectPaths, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
 
     @Override
-    public void writeMDArray(final String objectPath,
-            final MDArray<String> referencedObjectPaths, final HDF5IntStorageFeatures features)
+    public void writeMDArray(final String objectPath, final MDArray<String> referencedObjectPaths,
+            final HDF5IntStorageFeatures features)
     {
         assert referencedObjectPaths != null;
 
@@ -347,10 +384,9 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                                 REFERENCE_SIZE_IN_BYTES, registry);
                     } else
                     {
-                        baseWriter
-                                .createDataSet(objectPath, H5T_STD_REF_OBJ, features,
-                                        MDAbstractArray.toLong(dimensions), null, REFERENCE_SIZE_IN_BYTES,
-                                        registry);
+                        baseWriter.createDataSet(objectPath, H5T_STD_REF_OBJ, features,
+                                MDAbstractArray.toLong(dimensions), null, REFERENCE_SIZE_IN_BYTES,
+                                registry);
                     }
                     return null; // Nothing to return.
                 }
@@ -373,7 +409,8 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                 public Void call(ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, H5T_STD_REF_OBJ, features, dimensions,
-                            MDAbstractArray.toLong(blockDimensions), REFERENCE_SIZE_IN_BYTES, registry);
+                            MDAbstractArray.toLong(blockDimensions), REFERENCE_SIZE_IN_BYTES,
+                            registry);
                     return null; // Nothing to return.
                 }
             };
@@ -436,9 +473,8 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
     }
 
     @Override
-    public void writeMDArrayBlockWithOffset(final String objectPath,
-            final MDLongArray data, final int[] blockDimensions, final long[] offset,
-            final int[] memoryOffset)
+    public void writeMDArrayBlockWithOffset(final String objectPath, final MDLongArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
     {
         assert objectPath != null;
         assert data != null;
@@ -467,8 +503,8 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
                     final int memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset),
-                            longBlockDimensions);
+                    baseWriter.h5.setHyperslabBlock(memorySpaceId,
+                            MDAbstractArray.toLong(memoryOffset), longBlockDimensions);
                     H5Dwrite(dataSetId, H5T_STD_REF_OBJ, memorySpaceId, dataSpaceId, H5P_DEFAULT,
                             data.getAsFlatArray());
                     return null; // Nothing to return.

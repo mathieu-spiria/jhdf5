@@ -355,8 +355,30 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         {
             inspectorOrNull.inspect(byteArray);
         }
-        baseWriter.setAttribute(objectPath, attributeName, type.getStorageTypeId(),
-                type.getNativeTypeId(), byteArray);
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        @Override
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            {
+                                final int dataSpaceId =
+                                        baseWriter.h5.createSimpleDataSpace(new long[]
+                                            { 1 }, registry);
+                                baseWriter.setAttribute(objectPath, attributeName,
+                                        type.getStorageTypeId(), type.getNativeTypeId(),
+                                        dataSpaceId, byteArray, registry);
+                            } else
+                            {
+                                baseWriter.setAttribute(objectPath, attributeName,
+                                        type.getStorageTypeId(), type.getNativeTypeId(), -1,
+                                        byteArray, registry);
+                            }
+                            return null; // Nothing to return.
+                        }
+                    };
+        baseWriter.runner.call(addAttributeRunnable);
     }
 
     @Override
@@ -688,8 +710,9 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 {
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(),
-                                    MDAbstractArray.toLong(data.dimensions()), type.getObjectByteifyer()
-                                            .getRecordSize(), features, registry);
+                                    MDAbstractArray.toLong(data.dimensions()), type
+                                            .getObjectByteifyer().getRecordSize(), features,
+                                    registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
                                     data.getAsFlatArray());
@@ -831,8 +854,8 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
                     final int memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
-                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDAbstractArray.toLong(memoryOffset),
-                            longBlockDimensions);
+                    baseWriter.h5.setHyperslabBlock(memorySpaceId,
+                            MDAbstractArray.toLong(memoryOffset), longBlockDimensions);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
                                     data.getAsFlatArray());
@@ -881,8 +904,8 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 public Void call(final ICleanUpRegistry registry)
                 {
                     baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
-                            dimensions, MDAbstractArray.toLong(blockDimensions), type.getObjectByteifyer()
-                                    .getRecordSize(), registry);
+                            dimensions, MDAbstractArray.toLong(blockDimensions), type
+                                    .getObjectByteifyer().getRecordSize(), registry);
                     return null; // Nothing to return.
                 }
             };

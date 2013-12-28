@@ -132,6 +132,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     final boolean keepDataSetIfExists;
 
+    final boolean enforceSimpleDataSpaceForAttributes;
+
     final SyncMode syncMode;
 
     final FileFormat fileFormat;
@@ -141,7 +143,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
     HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
             boolean autoDereference, FileFormat fileFormat, boolean useExtentableDataTypes,
             boolean overwriteFile, boolean keepDataSetIfExists,
-            String preferredHouseKeepingNameSuffix, SyncMode syncMode)
+            boolean enforceSimpleDataSpaceForAttributes, String preferredHouseKeepingNameSuffix,
+            SyncMode syncMode)
     {
         super(hdf5File, performNumericConversions, useUTF8CharEncoding, autoDereference,
                 fileFormat, overwriteFile, preferredHouseKeepingNameSuffix);
@@ -157,6 +160,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         this.useExtentableDataTypes = useExtentableDataTypes;
         this.overwriteFile = overwriteFile;
         this.keepDataSetIfExists = keepDataSetIfExists;
+        this.enforceSimpleDataSpaceForAttributes = enforceSimpleDataSpaceForAttributes;
         this.syncMode = syncMode;
         readNamedDataTypes();
         variableLengthStringDataTypeId = openOrCreateVLStringType();
@@ -411,15 +415,15 @@ final class HDF5BaseWriter extends HDF5BaseReader
     {
         if (value > Short.MAX_VALUE)
         {
-            setAttribute(objectId, attributeName, H5T_STD_I32LE, H5T_NATIVE_INT32, new int[]
+            setAttribute(objectId, attributeName, H5T_STD_I32LE, H5T_NATIVE_INT32, -1, new int[]
                 { value }, registry);
         } else if (value > Byte.MAX_VALUE)
         {
-            setAttribute(objectId, attributeName, H5T_STD_I16LE, H5T_NATIVE_INT16, new int[]
+            setAttribute(objectId, attributeName, H5T_STD_I16LE, H5T_NATIVE_INT16, -1, new int[]
                 { value }, registry);
         } else
         {
-            setAttribute(objectId, attributeName, H5T_STD_I8LE, H5T_NATIVE_INT8, new byte[]
+            setAttribute(objectId, attributeName, H5T_STD_I8LE, H5T_NATIVE_INT8, -1, new byte[]
                 { (byte) value }, registry);
         }
     }
@@ -474,8 +478,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
                     final int baseStorageTypeId = value.getType().getStorageTypeId();
                     final int storageTypeId =
                             h5.createArrayType(baseStorageTypeId, value.getLength(), registry);
-                    setAttribute(objectPath, name, storageTypeId, memoryTypeId,
-                            value.toStorageForm());
+                    setAttribute(objectPath, name, storageTypeId, memoryTypeId, -1,
+                            value.toStorageForm(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -501,8 +505,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
                     final int baseStorageTypeId = value.getType().getStorageTypeId();
                     final int storageTypeId =
                             h5.createArrayType(baseStorageTypeId, value.dimensions(), registry);
-                    setAttribute(objectPath, name, storageTypeId, memoryTypeId,
-                            value.toStorageForm());
+                    setAttribute(objectPath, name, storageTypeId, memoryTypeId, -1,
+                            value.toStorageForm(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -536,7 +540,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
                     final int baseStorageTypeId = type.getStorageTypeId();
                     final int storageTypeId =
                             h5.createArrayType(baseStorageTypeId, data.length, registry);
-                    setAttribute(objectPath, attributeName, storageTypeId, memoryTypeId, byteArray);
+                    setAttribute(objectPath, attributeName, storageTypeId, memoryTypeId, -1,
+                            byteArray, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -571,7 +576,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
                     final int baseStorageTypeId = type.getStorageTypeId();
                     final int storageTypeId =
                             h5.createArrayType(baseStorageTypeId, data.dimensions(), registry);
-                    setAttribute(objectPath, attributeName, storageTypeId, memoryTypeId, byteArray);
+                    setAttribute(objectPath, attributeName, storageTypeId, memoryTypeId, -1,
+                            byteArray, registry);
                     return null; // Nothing to return.
                 }
             };
@@ -1161,7 +1167,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
     //
 
     void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final byte[] value)
+            final int nativeDataTypeId, final int dataSpaceId, final byte[] value,
+            ICleanUpRegistry registry)
     {
         assert objectPath != null;
         assert name != null;
@@ -1169,23 +1176,14 @@ final class HDF5BaseWriter extends HDF5BaseReader
         assert nativeDataTypeId >= 0;
         assert value != null;
 
-        final ICallableWithCleanUp<Object> addAttributeRunnable =
-                new ICallableWithCleanUp<Object>()
-                    {
-                        @Override
-                        public Object call(ICleanUpRegistry registry)
-                        {
-                            final int objectId = h5.openObject(fileId, objectPath, registry);
-                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
-                                    value, registry);
-                            return null; // Nothing to return.
-                        }
-                    };
-        runner.call(addAttributeRunnable);
+        final int objectId = h5.openObject(fileId, objectPath, registry);
+        setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId, dataSpaceId, value,
+                registry);
     }
 
     void setAttribute(final int objectId, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final byte[] value, ICleanUpRegistry registry)
+            final int nativeDataTypeId, final int dataSpaceId, final byte[] value,
+            ICleanUpRegistry registry)
     {
         int attributeId;
         if (h5.existsAttribute(objectId, name))
@@ -1195,17 +1193,19 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
             {
                 h5.deleteAttribute(objectId, name);
-                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+                attributeId =
+                        h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
             }
         } else
         {
-            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            attributeId =
+                    h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
         }
         h5.writeAttribute(attributeId, nativeDataTypeId, value);
     }
 
     void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final short[] value)
+            final int nativeDataTypeId, final int dataSpaceId, final short[] value)
     {
         assert objectPath != null;
         assert name != null;
@@ -1219,17 +1219,26 @@ final class HDF5BaseWriter extends HDF5BaseReader
                         @Override
                         public Object call(ICleanUpRegistry registry)
                         {
-                            final int objectId = h5.openObject(fileId, objectPath, registry);
-                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
-                                    value, registry);
+                            setAttribute(objectPath, name, storageDataTypeId, nativeDataTypeId,
+                                    dataSpaceId, value, registry);
                             return null; // Nothing to return.
                         }
                     };
         runner.call(addAttributeRunnable);
     }
 
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final int dataSpaceId, final short[] value,
+            ICleanUpRegistry registry)
+    {
+        final int objectId = h5.openObject(fileId, objectPath, registry);
+        setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId, dataSpaceId, value,
+                registry);
+    }
+
     void setAttribute(final int objectId, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final short[] value, ICleanUpRegistry registry)
+            final int nativeDataTypeId, final int dataSpaceId, final short[] value,
+            ICleanUpRegistry registry)
     {
         int attributeId;
         if (h5.existsAttribute(objectId, name))
@@ -1239,17 +1248,19 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
             {
                 h5.deleteAttribute(objectId, name);
-                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+                attributeId =
+                        h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
             }
         } else
         {
-            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            attributeId =
+                    h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
         }
         h5.writeAttribute(attributeId, nativeDataTypeId, value);
     }
 
     void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final int[] value)
+            final int nativeDataTypeId, final int dataSpaceId, final int[] value)
     {
         assert objectPath != null;
         assert name != null;
@@ -1263,17 +1274,26 @@ final class HDF5BaseWriter extends HDF5BaseReader
                         @Override
                         public Object call(ICleanUpRegistry registry)
                         {
-                            final int objectId = h5.openObject(fileId, objectPath, registry);
-                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
-                                    value, registry);
+                            setAttribute(objectPath, name, storageDataTypeId, nativeDataTypeId,
+                                    dataSpaceId, value, registry);
                             return null; // Nothing to return.
                         }
                     };
         runner.call(addAttributeRunnable);
     }
 
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final int dataSpaceId, final int[] value,
+            ICleanUpRegistry registry)
+    {
+        final int objectId = h5.openObject(fileId, objectPath, registry);
+        setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId, dataSpaceId, value,
+                registry);
+    }
+
     void setAttribute(final int objectId, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final int[] value, ICleanUpRegistry registry)
+            final int nativeDataTypeId, final int dataSpaceId, final int[] value,
+            ICleanUpRegistry registry)
     {
         int attributeId;
         if (h5.existsAttribute(objectId, name))
@@ -1283,17 +1303,19 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
             {
                 h5.deleteAttribute(objectId, name);
-                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+                attributeId =
+                        h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
             }
         } else
         {
-            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            attributeId =
+                    h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
         }
         h5.writeAttribute(attributeId, nativeDataTypeId, value);
     }
 
     void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final long[] value)
+            final int nativeDataTypeId, final int dataSpaceId, final long[] value)
     {
         assert objectPath != null;
         assert name != null;
@@ -1307,18 +1329,27 @@ final class HDF5BaseWriter extends HDF5BaseReader
                         @Override
                         public Object call(ICleanUpRegistry registry)
                         {
-                            final int objectId = h5.openObject(fileId, objectPath, registry);
-                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
-                                    value, registry);
+                            setAttribute(objectPath, name, storageDataTypeId, nativeDataTypeId,
+                                    dataSpaceId, value, registry);
                             return null; // Nothing to return.
                         }
                     };
         runner.call(addAttributeRunnable);
+    }
+
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final int dataSpaceId, final long[] value,
+            ICleanUpRegistry registry)
+    {
+        final int objectId = h5.openObject(fileId, objectPath, registry);
+        setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId, dataSpaceId, value,
+                registry);
     }
 
     void setAttribute(final String objectPath, final String name,
             final HDF5DataTypeVariant typeVariant, final int storageDataTypeId,
-            final int nativeDataTypeId, final long[] value)
+            final int nativeDataTypeId, final int dataSpaceId, final long[] value,
+            ICleanUpRegistry registry)
     {
         assert objectPath != null;
         assert name != null;
@@ -1326,24 +1357,15 @@ final class HDF5BaseWriter extends HDF5BaseReader
         assert nativeDataTypeId >= 0;
         assert value != null;
 
-        final ICallableWithCleanUp<Object> addAttributeRunnable =
-                new ICallableWithCleanUp<Object>()
-                    {
-                        @Override
-                        public Object call(ICleanUpRegistry registry)
-                        {
-                            final int objectId = h5.openObject(fileId, objectPath, registry);
-                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
-                                    value, registry);
-                            setTypeVariant(objectId, name, typeVariant, registry);
-                            return null; // Nothing to return.
-                        }
-                    };
-        runner.call(addAttributeRunnable);
+        final int objectId = h5.openObject(fileId, objectPath, registry);
+        setAttribute(objectPath, name, storageDataTypeId, nativeDataTypeId, dataSpaceId, value,
+                registry);
+        setTypeVariant(objectId, name, (dataSpaceId != -1), typeVariant, registry);
     }
 
     void setAttribute(final int objectId, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final long[] value, ICleanUpRegistry registry)
+            final int nativeDataTypeId, final int dataSpaceId, final long[] value,
+            ICleanUpRegistry registry)
     {
         int attributeId;
         if (h5.existsAttribute(objectId, name))
@@ -1353,17 +1375,19 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
             {
                 h5.deleteAttribute(objectId, name);
-                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+                attributeId =
+                        h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
             }
         } else
         {
-            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            attributeId =
+                    h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
         }
         h5.writeAttribute(attributeId, nativeDataTypeId, value);
     }
 
     void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final float[] value)
+            final int nativeDataTypeId, final int dataSpaceId, final float[] value)
     {
         assert objectPath != null;
         assert name != null;
@@ -1377,17 +1401,26 @@ final class HDF5BaseWriter extends HDF5BaseReader
                         @Override
                         public Object call(ICleanUpRegistry registry)
                         {
-                            final int objectId = h5.openObject(fileId, objectPath, registry);
-                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
-                                    value, registry);
+                            setAttribute(objectPath, name, storageDataTypeId, nativeDataTypeId,
+                                    dataSpaceId, value, registry);
                             return null; // Nothing to return.
                         }
                     };
         runner.call(addAttributeRunnable);
     }
 
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final int dataSpaceId, final float[] value,
+            ICleanUpRegistry registry)
+    {
+        final int objectId = h5.openObject(fileId, objectPath, registry);
+        setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId, dataSpaceId, value,
+                registry);
+    }
+
     void setAttribute(final int objectId, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final float[] value, ICleanUpRegistry registry)
+            final int nativeDataTypeId, final int dataSpaceId, final float[] value,
+            ICleanUpRegistry registry)
     {
         int attributeId;
         if (h5.existsAttribute(objectId, name))
@@ -1397,17 +1430,19 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
             {
                 h5.deleteAttribute(objectId, name);
-                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+                attributeId =
+                        h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
             }
         } else
         {
-            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            attributeId =
+                    h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
         }
         h5.writeAttribute(attributeId, nativeDataTypeId, value);
     }
 
     void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final double[] value)
+            final int nativeDataTypeId, final int dataSpaceId, final double[] value)
     {
         assert objectPath != null;
         assert name != null;
@@ -1421,17 +1456,26 @@ final class HDF5BaseWriter extends HDF5BaseReader
                         @Override
                         public Object call(ICleanUpRegistry registry)
                         {
-                            final int objectId = h5.openObject(fileId, objectPath, registry);
-                            setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId,
-                                    value, registry);
+                            setAttribute(objectPath, name, storageDataTypeId, nativeDataTypeId,
+                                    dataSpaceId, value, registry);
                             return null; // Nothing to return.
                         }
                     };
         runner.call(addAttributeRunnable);
     }
 
+    void setAttribute(final String objectPath, final String name, final int storageDataTypeId,
+            final int nativeDataTypeId, final int dataSpaceId, final double[] value,
+            ICleanUpRegistry registry)
+    {
+        final int objectId = h5.openObject(fileId, objectPath, registry);
+        setAttribute(objectId, name, storageDataTypeId, nativeDataTypeId, dataSpaceId, value,
+                registry);
+    }
+
     void setAttribute(final int objectId, final String name, final int storageDataTypeId,
-            final int nativeDataTypeId, final double[] value, ICleanUpRegistry registry)
+            final int nativeDataTypeId, final int dataSpaceId, final double[] value,
+            ICleanUpRegistry registry)
     {
         int attributeId;
         if (h5.existsAttribute(objectId, name))
@@ -1441,11 +1485,13 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
             {
                 h5.deleteAttribute(objectId, name);
-                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+                attributeId =
+                        h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
             }
         } else
         {
-            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            attributeId =
+                    h5.createAttribute(objectId, name, storageDataTypeId, dataSpaceId, registry);
         }
         h5.writeAttribute(attributeId, nativeDataTypeId, value);
     }
@@ -1454,16 +1500,20 @@ final class HDF5BaseWriter extends HDF5BaseReader
             ICleanUpRegistry registry)
     {
         setAttribute(objectId, createObjectTypeVariantAttributeName(houseKeepingNameSuffix),
-                typeVariantDataType.getStorageTypeId(), typeVariantDataType.getNativeTypeId(),
+                typeVariantDataType.getStorageTypeId(), typeVariantDataType.getNativeTypeId(), -1,
                 typeVariantDataType.getEnumType().toStorageForm(typeVariant.ordinal()), registry);
     }
 
     void setTypeVariant(final int objectId, final String attributeName,
-            final HDF5DataTypeVariant typeVariant, ICleanUpRegistry registry)
+            final boolean enforceSimpleDataSpace, final HDF5DataTypeVariant typeVariant,
+            ICleanUpRegistry registry)
     {
+        final int dataSpaceId = enforceSimpleDataSpace ? h5.createSimpleDataSpace(new long[]
+            { 1 }, registry) : -1;
         setAttribute(objectId,
                 createAttributeTypeVariantAttributeName(attributeName, houseKeepingNameSuffix),
                 typeVariantDataType.getStorageTypeId(), typeVariantDataType.getNativeTypeId(),
+                dataSpaceId,
                 typeVariantDataType.getEnumType().toStorageForm(typeVariant.ordinal()), registry);
     }
 
@@ -1480,7 +1530,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             bytes = StringUtils.toBytes(value, maxLength, encodingForNewDataSets);
             realMaxLengthInBytes =
-                    encodingForNewDataSets.getMaxBytesPerChar() * ((maxLength == 0) ? 1 : maxLength);
+                    encodingForNewDataSets.getMaxBytesPerChar()
+                            * ((maxLength == 0) ? 1 : maxLength);
         }
         final int storageDataTypeId = h5.createDataTypeString(realMaxLengthInBytes, registry);
         int attributeId;
@@ -1491,11 +1542,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
             {
                 h5.deleteAttribute(objectId, name);
-                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, -1, registry);
             }
         } else
         {
-            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, -1, registry);
         }
         h5.writeAttribute(attributeId, storageDataTypeId,
                 StringUtils.cutOrPadBytes(bytes, realMaxLengthInBytes));
@@ -1536,13 +1587,15 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
         private void addAllLengthFixedLength(String[] array)
         {
-            this.realMaxLengthPerString = encodingForNewDataSets.getMaxBytesPerChar() * maxLengthPerString;
+            this.realMaxLengthPerString =
+                    encodingForNewDataSets.getMaxBytesPerChar() * maxLengthPerString;
             this.buf = new byte[realMaxLengthPerString * array.length];
             this.lengths = new int[array.length];
             int idx = 0;
             for (String s : array)
             {
-                final byte[] data = StringUtils.toBytes(s, maxLengthPerString, encodingForNewDataSets);
+                final byte[] data =
+                        StringUtils.toBytes(s, maxLengthPerString, encodingForNewDataSets);
                 final int dataLen = Math.min(data.length, realMaxLengthPerString);
                 final int newLen = len + realMaxLengthPerString;
                 System.arraycopy(data, 0, buf, len, dataLen);
@@ -1617,11 +1670,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
             {
                 h5.deleteAttribute(objectId, name);
-                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, -1, registry);
             }
         } else
         {
-            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, -1, registry);
         }
         h5.writeAttribute(attributeId, storageDataTypeId, arrData);
     }
@@ -1644,11 +1697,11 @@ final class HDF5BaseWriter extends HDF5BaseReader
             if (h5.dataTypesAreEqual(oldStorageDataTypeId, storageDataTypeId) == false)
             {
                 h5.deleteAttribute(objectId, name);
-                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+                attributeId = h5.createAttribute(objectId, name, storageDataTypeId, -1, registry);
             }
         } else
         {
-            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, registry);
+            attributeId = h5.createAttribute(objectId, name, storageDataTypeId, -1, registry);
         }
         h5.writeAttribute(attributeId, storageDataTypeId, arrData);
     }
@@ -1665,12 +1718,13 @@ final class HDF5BaseWriter extends HDF5BaseReader
             {
                 h5.deleteAttribute(objectId, name);
                 attributeId =
-                        h5.createAttribute(objectId, name, variableLengthStringDataTypeId, registry);
+                        h5.createAttribute(objectId, name, variableLengthStringDataTypeId, -1,
+                                registry);
             }
         } else
         {
             attributeId =
-                    h5.createAttribute(objectId, name, variableLengthStringDataTypeId, registry);
+                    h5.createAttribute(objectId, name, variableLengthStringDataTypeId, -1, registry);
         }
         writeAttributeStringVL(attributeId, new String[]
             { value });

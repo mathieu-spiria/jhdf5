@@ -59,9 +59,31 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
     public void setAttr(final String objectPath, final String name, final boolean value)
     {
         baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath, name, baseWriter.booleanDataTypeId,
-                baseWriter.booleanDataTypeId, new byte[]
-                    { (byte) (value ? 1 : 0) });
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        @Override
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            final byte byteValue = (byte) (value ? 1 : 0);
+                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            {
+                                final int dataSpaceId =
+                                        baseWriter.h5.createSimpleDataSpace(new long[]
+                                            { 1 }, registry);
+                                baseWriter.setAttribute(objectPath, name, baseWriter.booleanDataTypeId,
+                                        baseWriter.booleanDataTypeId, dataSpaceId, new byte[]
+                                            { byteValue }, registry);
+                            } else
+                            {
+                                baseWriter.setAttribute(objectPath, name, baseWriter.booleanDataTypeId,
+                                        baseWriter.booleanDataTypeId, -1, new byte[]
+                                            { byteValue }, registry);
+                            }
+                            return null; // Nothing to return.
+                        }
+                    };
+        baseWriter.runner.call(addAttributeRunnable);
     }
 
     // /////////////////////

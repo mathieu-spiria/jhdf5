@@ -36,8 +36,10 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
 
     private boolean keepDataSetIfExists = false;
 
+    private boolean enforceSimpleDataSpaceForAttributes = false;
+
     private FileFormat fileFormat = FileFormat.ALLOW_1_8;
-    
+
     private String houseKeepingNameSuffix = "";
 
     // For Windows, use a blocking sync mode by default as otherwise the mandatory locks are up for
@@ -68,6 +70,13 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     public HDF5WriterConfigurator dontUseExtendableDataTypes()
     {
         this.useExtentableDataTypes = false;
+        return this;
+    }
+
+    @Override
+    public HDF5WriterConfigurator enforceSimpleDataSpaceForAttributes()
+    {
+        this.enforceSimpleDataSpaceForAttributes = true;
         return this;
     }
 
@@ -108,10 +117,10 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     @Override
     public HDF5WriterConfigurator noAutoDereference()
     {
-        
+
         return (HDF5WriterConfigurator) super.noAutoDereference();
     }
-    
+
     @Override
     public IHDF5Writer writer()
     {
@@ -120,7 +129,8 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
             readerWriterOrNull =
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
                             useUTF8CharEncoding, autoDereference, fileFormat,
-                            useExtentableDataTypes, overwriteFile, keepDataSetIfExists, houseKeepingNameSuffix, syncMode));
+                            useExtentableDataTypes, overwriteFile, keepDataSetIfExists,
+                            enforceSimpleDataSpaceForAttributes, houseKeepingNameSuffix, syncMode));
         }
         return (HDF5Writer) readerWriterOrNull;
     }

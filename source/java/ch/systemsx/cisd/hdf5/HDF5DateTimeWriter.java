@@ -51,16 +51,42 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
     }
 
     @Override
-    public void setAttr(String objectPath, String name, long timeStamp)
+    public void setAttr(final String objectPath, final String name, final long timeStamp)
     {
         assert objectPath != null;
         assert name != null;
 
         baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath, name,
-                HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH, H5T_STD_I64LE,
-                H5T_NATIVE_INT64, new long[]
-                    { timeStamp });
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                            { 1 }, registry);
+                        baseWriter
+                                .setAttribute(
+                                        objectPath,
+                                        name,
+                                        HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                                        H5T_STD_I64LE, H5T_NATIVE_INT64, dataSpaceId, new long[]
+                                            { timeStamp }, registry);
+                    } else
+                    {
+                        baseWriter
+                                .setAttribute(
+                                        objectPath,
+                                        name,
+                                        HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                                        H5T_STD_I64LE, H5T_NATIVE_INT64, -1, new long[]
+                                            { timeStamp }, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(addAttributeRunnable);
     }
 
     @Override
@@ -88,15 +114,32 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
-                            baseWriter.h5.createArrayType(H5T_NATIVE_INT64, timeStamps.length,
-                                    registry);
-                    final int storageTypeId =
-                            baseWriter.h5.createArrayType(H5T_STD_I64LE, timeStamps.length,
-                                    registry);
-                    baseWriter.setAttribute(objectPath, name,
-                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
-                            storageTypeId, memoryTypeId, timeStamps);
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                            { timeStamps.length }, registry);
+                        baseWriter
+                                .setAttribute(
+                                        objectPath,
+                                        name,
+                                        HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                                        H5T_STD_I64LE, H5T_NATIVE_INT64, dataSpaceId, timeStamps,
+                                        registry);
+                    } else
+                    {
+                        final int memoryTypeId =
+                                baseWriter.h5.createArrayType(H5T_NATIVE_INT64, timeStamps.length,
+                                        registry);
+                        final int storageTypeId =
+                                baseWriter.h5.createArrayType(H5T_STD_I64LE, timeStamps.length,
+                                        registry);
+                        baseWriter
+                                .setAttribute(
+                                        objectPath,
+                                        name,
+                                        HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                                        storageTypeId, memoryTypeId, -1, timeStamps, registry);
+                    }
                     return null; // Nothing to return.
                 }
             };
@@ -104,11 +147,11 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
     }
 
     @Override
-    public void setMDArrayAttr(final String objectPath, final String name, final MDLongArray value)
+    public void setMDArrayAttr(final String objectPath, final String name, final MDLongArray timeStamps)
     {
         assert objectPath != null;
         assert name != null;
-        assert value != null;
+        assert timeStamps != null;
 
         baseWriter.checkOpen();
         final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
@@ -116,15 +159,34 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
-                            baseWriter.h5.createArrayType(H5T_NATIVE_INT64, value.dimensions(),
-                                    registry);
-                    final int storageTypeId =
-                            baseWriter.h5.createArrayType(H5T_STD_I64LE, value.dimensions(),
-                                    registry);
-                    baseWriter.setAttribute(objectPath, name,
-                            HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
-                            storageTypeId, memoryTypeId, value.getAsFlatArray());
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId =
+                                baseWriter.h5.createSimpleDataSpace(timeStamps.longDimensions(),
+                                        registry);
+                        baseWriter
+                                .setAttribute(
+                                        objectPath,
+                                        name,
+                                        HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                                        H5T_STD_I64LE, H5T_NATIVE_INT64, dataSpaceId,
+                                        timeStamps.getAsFlatArray(), registry);
+                    } else
+                    {
+                        final int memoryTypeId =
+                                baseWriter.h5.createArrayType(H5T_NATIVE_INT64, timeStamps.dimensions(),
+                                        registry);
+                        final int storageTypeId =
+                                baseWriter.h5.createArrayType(H5T_STD_I64LE, timeStamps.dimensions(),
+                                        registry);
+                        baseWriter
+                                .setAttribute(
+                                        objectPath,
+                                        name,
+                                        HDF5DataTypeVariant.TIMESTAMP_MILLISECONDS_SINCE_START_OF_THE_EPOCH,
+                                        storageTypeId, memoryTypeId, -1, timeStamps.getAsFlatArray(),
+                                        registry);
+                    }
                     return null; // Nothing to return.
                 }
             };

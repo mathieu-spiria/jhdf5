@@ -109,6 +109,11 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
     public IHDF5WriterConfigurator dontUseExtendableDataTypes();
 
     /**
+     * Enforce using simple data spaces for attributes.
+     */
+    public HDF5WriterConfigurator enforceSimpleDataSpaceForAttributes();
+    
+    /**
      * On writing a data set, keep the data set if it exists and only write the new data. This is
      * equivalent to the <code>_KEEP</code> variants of {@link HDF5GenericStorageFeatures} and makes
      * this behavior the default.

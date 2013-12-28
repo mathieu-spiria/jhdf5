@@ -192,7 +192,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                                 registry);
                             } else
                             {
-                                checkReference(attributeId, objectPath);
+                                checkReference(attributeTypeId, objectPath);
                                 final long[] arrayDimensions =
                                         baseReader.h5.getDataDimensionsForAttribute(attributeId,
                                                 registry);
@@ -257,7 +257,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                                     arrayDimensions, registry);
                                 } else
                                 {
-                                    checkReference(attributeId, objectPath);
+                                    checkReference(attributeTypeId, objectPath);
                                     arrayDimensions =
                                             MDAbstractArray.toInt(baseReader.h5
                                                     .getDataDimensionsForAttribute(attributeId,

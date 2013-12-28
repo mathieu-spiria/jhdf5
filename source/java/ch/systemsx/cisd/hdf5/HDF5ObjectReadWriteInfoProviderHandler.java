@@ -35,7 +35,7 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
     HDF5ObjectReadWriteInfoProviderHandler(HDF5BaseWriter baseWriter)
     {
         super(baseWriter);
-        
+
         assert baseWriter != null;
         this.baseWriter = baseWriter;
     }
@@ -240,24 +240,80 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
     public void setTypeVariant(final String objectPath, final HDF5DataTypeVariant typeVariant)
     {
         baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath,
-                createObjectTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix),
-                baseWriter.typeVariantDataType.getStorageTypeId(),
-                baseWriter.typeVariantDataType.getNativeTypeId(),
-                baseWriter.typeVariantDataType.getEnumType().toStorageForm(typeVariant.ordinal()));
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+                {
+                    @Override
+                    public Void call(ICleanUpRegistry registry)
+                    {
+                        if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                        {
+                            final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                                { 1 }, registry);
+                            baseWriter.setAttribute(
+                                    objectPath,
+                                    createObjectTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix),
+                                    baseWriter.typeVariantDataType.getStorageTypeId(),
+                                    baseWriter.typeVariantDataType.getNativeTypeId(),
+                                    dataSpaceId,
+                                    baseWriter.typeVariantDataType.getEnumType().toStorageForm(
+                                            typeVariant.ordinal()), registry);
+                        } else
+                        {
+                            baseWriter.setAttribute(
+                                    objectPath,
+                                    createObjectTypeVariantAttributeName(baseWriter.houseKeepingNameSuffix),
+                                    baseWriter.typeVariantDataType.getStorageTypeId(),
+                                    baseWriter.typeVariantDataType.getNativeTypeId(),
+                                    -1,
+                                    baseWriter.typeVariantDataType.getEnumType().toStorageForm(
+                                            typeVariant.ordinal()), registry);
+                        }
+                        return null; // Nothing to return.
+                    }
+                };
+                baseWriter.runner.call(addAttributeRunnable);
     }
 
     @Override
-    public void setTypeVariant(String objectPath, String attributeName,
-            HDF5DataTypeVariant typeVariant)
+    public void setTypeVariant(final String objectPath, final String attributeName,
+            final HDF5DataTypeVariant typeVariant)
     {
         baseWriter.checkOpen();
-        baseWriter.setAttribute(
-                objectPath,
-                createAttributeTypeVariantAttributeName(attributeName,
-                        baseWriter.houseKeepingNameSuffix), baseWriter.typeVariantDataType
-                        .getStorageTypeId(), baseWriter.typeVariantDataType.getNativeTypeId(),
-                baseWriter.typeVariantDataType.getEnumType().toStorageForm(typeVariant.ordinal()));
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        @Override
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            {
+                                final int dataSpaceId =
+                                        baseWriter.h5.createSimpleDataSpace(new long[]
+                                            { 1 }, registry);
+                                baseWriter.setAttribute(
+                                        objectPath,
+                                        createAttributeTypeVariantAttributeName(attributeName,
+                                                baseWriter.houseKeepingNameSuffix),
+                                        baseWriter.typeVariantDataType.getStorageTypeId(),
+                                        baseWriter.typeVariantDataType.getNativeTypeId(),
+                                        dataSpaceId, baseWriter.typeVariantDataType.getEnumType()
+                                                .toStorageForm(typeVariant.ordinal()), registry);
+                            } else
+                            {
+                                baseWriter.setAttribute(
+                                        objectPath,
+                                        createAttributeTypeVariantAttributeName(attributeName,
+                                                baseWriter.houseKeepingNameSuffix),
+                                        baseWriter.typeVariantDataType.getStorageTypeId(),
+                                        baseWriter.typeVariantDataType.getNativeTypeId(),
+                                        -1,
+                                        baseWriter.typeVariantDataType.getEnumType().toStorageForm(
+                                                typeVariant.ordinal()), registry);
+                            }
+                            return null; // Nothing to return.
+                        }
+                    };
+        baseWriter.runner.call(addAttributeRunnable);
     }
 
     @Override

@@ -49,12 +49,32 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
     }
 
     @Override
-    public void setAttr(String objectPath, String name, long timeDuration, HDF5TimeUnit timeUnit)
+    public void setAttr(final String objectPath, final String name, final long timeDuration,
+            final HDF5TimeUnit timeUnit)
     {
         baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath, name, timeUnit.getTypeVariant(), H5T_STD_I64LE,
-                H5T_NATIVE_INT64, new long[]
-                    { timeDuration });
+        final ICallableWithCleanUp<Void> addAttributeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                            { 1 }, registry);
+                        baseWriter.setAttribute(objectPath, name, timeUnit.getTypeVariant(),
+                                H5T_STD_I64LE, H5T_NATIVE_INT64, dataSpaceId, new long[]
+                                    { timeDuration }, registry);
+                    } else
+                    {
+                        baseWriter.setAttribute(objectPath, name, timeUnit.getTypeVariant(),
+                                H5T_STD_I64LE, H5T_NATIVE_INT64, -1, new long[]
+                                    { timeDuration }, registry);
+                    }
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(addAttributeRunnable);
     }
 
     @Override
@@ -77,15 +97,26 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
-                            baseWriter.h5.createArrayType(H5T_NATIVE_INT64,
-                                    timeDurations.timeDurations.length, registry);
-                    final int storageTypeId =
-                            baseWriter.h5.createArrayType(H5T_STD_I64LE,
-                                    timeDurations.timeDurations.length, registry);
-                    baseWriter.setAttribute(objectPath, name,
-                            timeDurations.timeUnit.getTypeVariant(), storageTypeId, memoryTypeId,
-                            timeDurations.timeDurations);
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                            { timeDurations.timeDurations.length }, registry);
+                        baseWriter.setAttribute(objectPath, name,
+                                timeDurations.timeUnit.getTypeVariant(), H5T_STD_I64LE,
+                                H5T_NATIVE_INT64, dataSpaceId, timeDurations.timeDurations,
+                                registry);
+                    } else
+                    {
+                        final int memoryTypeId =
+                                baseWriter.h5.createArrayType(H5T_NATIVE_INT64,
+                                        timeDurations.timeDurations.length, registry);
+                        final int storageTypeId =
+                                baseWriter.h5.createArrayType(H5T_STD_I64LE,
+                                        timeDurations.timeDurations.length, registry);
+                        baseWriter.setAttribute(objectPath, name,
+                                timeDurations.timeUnit.getTypeVariant(), storageTypeId,
+                                memoryTypeId, -1, timeDurations.timeDurations, registry);
+                    }
                     return null; // Nothing to return.
                 }
             };
@@ -106,15 +137,28 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
-                            baseWriter.h5.createArrayType(H5T_NATIVE_INT64,
-                                    timeDurations.timeDurations.dimensions(), registry);
-                    final int storageTypeId =
-                            baseWriter.h5.createArrayType(H5T_STD_I64LE,
-                                    timeDurations.timeDurations.dimensions(), registry);
-                    baseWriter.setAttribute(objectPath, attributeName,
-                            timeDurations.timeUnit.getTypeVariant(), storageTypeId, memoryTypeId,
-                            timeDurations.timeDurations.getAsFlatArray());
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId =
+                                baseWriter.h5.createSimpleDataSpace(
+                                        timeDurations.timeDurations.longDimensions(), registry);
+                        baseWriter.setAttribute(objectPath, attributeName,
+                                timeDurations.timeUnit.getTypeVariant(), H5T_STD_I64LE,
+                                H5T_NATIVE_INT64, dataSpaceId,
+                                timeDurations.timeDurations.getAsFlatArray(), registry);
+                    } else
+                    {
+                        final int memoryTypeId =
+                                baseWriter.h5.createArrayType(H5T_NATIVE_INT64,
+                                        timeDurations.timeDurations.dimensions(), registry);
+                        final int storageTypeId =
+                                baseWriter.h5.createArrayType(H5T_STD_I64LE,
+                                        timeDurations.timeDurations.dimensions(), registry);
+                        baseWriter.setAttribute(objectPath, attributeName,
+                                timeDurations.timeUnit.getTypeVariant(), storageTypeId,
+                                memoryTypeId, -1, timeDurations.timeDurations.getAsFlatArray(),
+                                registry);
+                    }
                     return null; // Nothing to return.
                 }
             };
@@ -391,8 +435,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                                     data.longDimensions(), 8, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             data.getAsFlatArray());
-                    baseWriter.setTypeVariant(dataSetId, data.timeUnit.getTypeVariant(),
-                            registry);
+                    baseWriter.setTypeVariant(dataSetId, data.timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -404,9 +447,10 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
     {
         writeMDArray(objectPath, data, HDF5IntStorageFeatures.INT_NO_COMPRESSION);
     }
-    
+
     @Override
-    public void createMDArray(final String objectPath, final int[] dimensions, final HDF5TimeUnit timeUnit)
+    public void createMDArray(final String objectPath, final int[] dimensions,
+            final HDF5TimeUnit timeUnit)
     {
         createMDArray(objectPath, dimensions, timeUnit, INT_NO_COMPRESSION);
     }
@@ -447,8 +491,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                                         features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE,
                                         features, MDArray.toLong(dimensions), null, 8, registry);
                     }
-                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(),
-                            registry);
+                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -457,7 +500,8 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
 
     @Override
     public void createMDArray(final String objectPath, final long[] dimensions,
-            final int[] blockDimensions, final HDF5TimeUnit timeUnit, final HDF5IntStorageFeatures features)
+            final int[] blockDimensions, final HDF5TimeUnit timeUnit,
+            final HDF5IntStorageFeatures features)
     {
         assert objectPath != null;
         assert dimensions != null;
@@ -473,8 +517,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                             baseWriter.createDataSet(objectPath,
                                     features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE, features,
                                     dimensions, MDArray.toLong(blockDimensions), 8, registry);
-                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(),
-                            registry);
+                    baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -497,8 +540,8 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
     }
 
     @Override
-    public void writeMDArrayBlockWithOffset(final String objectPath, final HDF5TimeDurationMDArray data,
-            final long[] offset)
+    public void writeMDArrayBlockWithOffset(final String objectPath,
+            final HDF5TimeDurationMDArray data, final long[] offset)
     {
         assert objectPath != null;
         assert data != null;
@@ -536,8 +579,9 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
     }
 
     @Override
-    public void writeMDArrayBlockWithOffset(final String objectPath, final HDF5TimeDurationMDArray data,
-            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
+    public void writeMDArrayBlockWithOffset(final String objectPath,
+            final HDF5TimeDurationMDArray data, final int[] blockDimensions, final long[] offset,
+            final int[] memoryOffset)
     {
         assert objectPath != null;
         assert data != null;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 ETH Zuerich, CISD.
+ * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,6 +45,12 @@ class HDF5LongReader implements IHDF5LongReader
         assert baseReader != null;
 
         this.baseReader = baseReader;
+    }
+
+    // For Unit tests only.
+    HDF5BaseReader getBaseReader()
+    {
+        return baseReader;
     }
 
     // /////////////////////

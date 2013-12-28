@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 ETH Zuerich, CISD.
+ * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,9 @@ import ch.systemsx.cisd.base.mdarray.MDByteArray;
 
 /**
  * An interface that provides methods for reading <code>byte</code> values from HDF5 files.
+ * <p>
+ * Note: If the values read are unsigned, use the methods in {@link UnsignedIntUtils} to convert 
+ * to a larger Java integer type that can hold all values as unsigned.
  * 
  * @author Bernd Rinn
  */

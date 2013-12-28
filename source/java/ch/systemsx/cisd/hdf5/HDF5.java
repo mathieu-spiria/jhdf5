@@ -1004,18 +1004,22 @@ class HDF5
     //
 
     public int createAttribute(int locationId, String attributeName, int dataTypeId,
-            ICleanUpRegistry registry)
+            int dataSpaceIdOrMinusOne, ICleanUpRegistry registry)
     {
         checkMaxLength(attributeName);
-        final int dataSpaceId = H5Screate(H5S_SCALAR);
-        registry.registerCleanUp(new Runnable()
-            {
-                @Override
-                public void run()
+        final int dataSpaceId =
+                (dataSpaceIdOrMinusOne == -1) ? H5Screate(H5S_SCALAR) : dataSpaceIdOrMinusOne;
+        if (dataSpaceIdOrMinusOne == -1)
+        {
+            registry.registerCleanUp(new Runnable()
                 {
-                    H5Sclose(dataSpaceId);
-                }
-            });
+                    @Override
+                    public void run()
+                    {
+                        H5Sclose(dataSpaceId);
+                    }
+                });
+        }
         final int attCreationPlistId;
         if (useUTF8CharEncoding)
         {
@@ -1664,7 +1668,7 @@ class HDF5
             });
         return baseDataTypeId;
     }
-    
+
     public boolean getSigned(int dataTypeId)
     {
         return H5Tget_sign(dataTypeId) != H5T_SGN_NONE;

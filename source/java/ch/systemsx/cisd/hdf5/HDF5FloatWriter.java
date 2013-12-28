@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 ETH Zuerich, CISD.
+ * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,8 +57,30 @@ class HDF5FloatWriter extends HDF5FloatReader implements IHDF5FloatWriter
         assert name != null;
 
         baseWriter.checkOpen();
-        baseWriter.setAttribute(objectPath, name, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT, 
-        		new float[] { value });
+        final ICallableWithCleanUp<Object> addAttributeRunnable =
+                new ICallableWithCleanUp<Object>()
+                    {
+                        @Override
+                        public Object call(ICleanUpRegistry registry)
+                        {
+                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            {
+                                final int dataSpaceId =
+                                        baseWriter.h5.createSimpleDataSpace(new long[]
+                                            { 1 }, registry);
+                                baseWriter.setAttribute(objectPath, name, H5T_IEEE_F32LE,
+                                        H5T_NATIVE_FLOAT, dataSpaceId, new float[]
+                                            { value }, registry);
+                            } else
+                            {
+                                baseWriter.setAttribute(objectPath, name, H5T_IEEE_F32LE,
+                                        H5T_NATIVE_FLOAT, -1, new float[]
+                                            { value }, registry);
+                            }
+                            return null; // Nothing to return.
+                        }
+                    };
+        baseWriter.runner.call(addAttributeRunnable);
     }
 
     @Override
@@ -75,11 +97,21 @@ class HDF5FloatWriter extends HDF5FloatReader implements IHDF5FloatWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
-                            baseWriter.h5.createArrayType(H5T_NATIVE_FLOAT, value.length, registry);
-                    final int storageTypeId =
-                            baseWriter.h5.createArrayType(H5T_IEEE_F32LE, value.length, registry);
-                    baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId, value);
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                            { value.length }, registry);
+                        baseWriter.setAttribute(objectPath, name, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT,
+                                dataSpaceId, value, registry);
+                    } else
+                    {
+                        final int memoryTypeId =
+                                baseWriter.h5.createArrayType(H5T_NATIVE_FLOAT, value.length, registry);
+                        final int storageTypeId =
+                                baseWriter.h5.createArrayType(H5T_IEEE_F32LE, value.length, registry);
+                        baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId, -1, value, 
+                                registry);
+                    }
                     return null; // Nothing to return.
                 }
             };
@@ -100,14 +132,23 @@ class HDF5FloatWriter extends HDF5FloatReader implements IHDF5FloatWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
-                            baseWriter.h5.createArrayType(H5T_NATIVE_FLOAT, value.dimensions(),
-                                    registry);
-                    final int storageTypeId =
-                            baseWriter.h5.createArrayType(H5T_IEEE_F32LE, value.dimensions(),
-                                    registry);
-                    baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId,
-                            value.getAsFlatArray());
+                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    {
+                        final int dataSpaceId =
+                                baseWriter.h5.createSimpleDataSpace(value.longDimensions(), registry);
+                        baseWriter.setAttribute(objectPath, name, H5T_IEEE_F32LE, H5T_NATIVE_FLOAT,
+                                dataSpaceId, value.getAsFlatArray(), registry);
+                    } else
+                    {
+                        final int memoryTypeId =
+                                baseWriter.h5.createArrayType(H5T_NATIVE_FLOAT, value.dimensions(),
+                                        registry);
+                        final int storageTypeId =
+                                baseWriter.h5.createArrayType(H5T_IEEE_F32LE, value.dimensions(),
+                                        registry);
+                        baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId, -1,
+                                value.getAsFlatArray(), registry);
+                    }
                     return null; // Nothing to return.
                 }
             };
