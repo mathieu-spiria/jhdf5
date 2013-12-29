@@ -69,7 +69,7 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                             final byte[] reference =
                                     baseWriter.h5.createObjectReference(baseWriter.fileId,
                                             referencedObjectPath);
-                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
                                 final int dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]
@@ -104,7 +104,7 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                     final long[] references =
                             baseWriter.h5.createObjectReferences(baseWriter.fileId,
                                     referencedObjectPaths);
-                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
                         final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { references.length }, registry);
@@ -140,7 +140,7 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                     final long[] references =
                             baseWriter.h5.createObjectReferences(baseWriter.fileId,
                                     referencedObjectPaths.getAsFlatArray());
-                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
                         final int dataSpaceId =
                                 baseWriter.h5.createSimpleDataSpace(

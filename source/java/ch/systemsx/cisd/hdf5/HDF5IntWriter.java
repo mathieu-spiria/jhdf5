@@ -64,7 +64,7 @@ class HDF5IntWriter extends HDF5IntReader implements IHDF5IntWriter
                         @Override
                         public Object call(ICleanUpRegistry registry)
                         {
-                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
                                 final int dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]
@@ -98,7 +98,7 @@ class HDF5IntWriter extends HDF5IntReader implements IHDF5IntWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
                         final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { value.length }, registry);
@@ -133,7 +133,7 @@ class HDF5IntWriter extends HDF5IntReader implements IHDF5IntWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
                         final int dataSpaceId =
                                 baseWriter.h5.createSimpleDataSpace(value.longDimensions(), registry);

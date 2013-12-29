@@ -62,7 +62,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
                         final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { 1 }, registry);
@@ -114,7 +114,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
                         final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { timeStamps.length }, registry);
@@ -159,7 +159,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
                         final int dataSpaceId =
                                 baseWriter.h5.createSimpleDataSpace(timeStamps.longDimensions(),

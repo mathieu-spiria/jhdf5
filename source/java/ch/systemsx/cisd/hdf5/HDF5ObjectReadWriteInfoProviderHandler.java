@@ -245,7 +245,7 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
                     @Override
                     public Void call(ICleanUpRegistry registry)
                     {
-                        if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                        if (baseWriter.useSimpleDataSpaceForAttributes)
                         {
                             final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                                 { 1 }, registry);
@@ -285,7 +285,7 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
                         @Override
                         public Object call(ICleanUpRegistry registry)
                         {
-                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
                                 final int dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]

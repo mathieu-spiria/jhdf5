@@ -417,7 +417,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         @Override
                         public Object call(ICleanUpRegistry registry)
                         {
-                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
                                 final int dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]

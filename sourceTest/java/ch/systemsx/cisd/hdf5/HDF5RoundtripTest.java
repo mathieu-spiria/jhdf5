@@ -4958,7 +4958,7 @@ public class HDF5RoundtripTest
         attributeFile.deleteOnExit();
         final IHDF5Writer writer =
                 HDF5FactoryProvider.get().configure(attributeFile)
-                        .enforceSimpleDataSpaceForAttributes().writer();
+                        .useSimpleDataSpaceForAttributes().writer();
         final String datasetName = "SomeDataSet";
         final String floatAttrName = "SomeFloatAttr";
         final String floatAttrArrayName = "SomeFloatArrayAttr";

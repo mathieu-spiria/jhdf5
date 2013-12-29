@@ -58,7 +58,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
                         final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { 1 }, registry);
@@ -97,7 +97,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
                         final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { timeDurations.timeDurations.length }, registry);
@@ -137,7 +137,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                    if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
                         final int dataSpaceId =
                                 baseWriter.h5.createSimpleDataSpace(

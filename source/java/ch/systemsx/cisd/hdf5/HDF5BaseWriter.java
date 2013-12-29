@@ -132,7 +132,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     final boolean keepDataSetIfExists;
 
-    final boolean enforceSimpleDataSpaceForAttributes;
+    final boolean useSimpleDataSpaceForAttributes;
 
     final SyncMode syncMode;
 
@@ -143,7 +143,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
     HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
             boolean autoDereference, FileFormat fileFormat, boolean useExtentableDataTypes,
             boolean overwriteFile, boolean keepDataSetIfExists,
-            boolean enforceSimpleDataSpaceForAttributes, String preferredHouseKeepingNameSuffix,
+            boolean useSimpleDataSpaceForAttributes, String preferredHouseKeepingNameSuffix,
             SyncMode syncMode)
     {
         super(hdf5File, performNumericConversions, useUTF8CharEncoding, autoDereference,
@@ -160,7 +160,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         this.useExtentableDataTypes = useExtentableDataTypes;
         this.overwriteFile = overwriteFile;
         this.keepDataSetIfExists = keepDataSetIfExists;
-        this.enforceSimpleDataSpaceForAttributes = enforceSimpleDataSpaceForAttributes;
+        this.useSimpleDataSpaceForAttributes = useSimpleDataSpaceForAttributes;
         this.syncMode = syncMode;
         readNamedDataTypes();
         variableLengthStringDataTypeId = openOrCreateVLStringType();

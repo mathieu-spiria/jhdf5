@@ -36,7 +36,7 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
 
     private boolean keepDataSetIfExists = false;
 
-    private boolean enforceSimpleDataSpaceForAttributes = false;
+    private boolean useSimpleDataSpaceForAttributes = false;
 
     private FileFormat fileFormat = FileFormat.ALLOW_1_8;
 
@@ -74,9 +74,9 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     }
 
     @Override
-    public HDF5WriterConfigurator enforceSimpleDataSpaceForAttributes()
+    public HDF5WriterConfigurator useSimpleDataSpaceForAttributes()
     {
-        this.enforceSimpleDataSpaceForAttributes = true;
+        this.useSimpleDataSpaceForAttributes = true;
         return this;
     }
 
@@ -130,7 +130,7 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
                             useUTF8CharEncoding, autoDereference, fileFormat,
                             useExtentableDataTypes, overwriteFile, keepDataSetIfExists,
-                            enforceSimpleDataSpaceForAttributes, houseKeepingNameSuffix, syncMode));
+                            useSimpleDataSpaceForAttributes, houseKeepingNameSuffix, syncMode));
         }
         return (HDF5Writer) readerWriterOrNull;
     }

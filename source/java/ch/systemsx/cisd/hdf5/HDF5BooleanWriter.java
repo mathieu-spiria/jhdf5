@@ -66,7 +66,7 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                         public Object call(ICleanUpRegistry registry)
                         {
                             final byte byteValue = (byte) (value ? 1 : 0);
-                            if (baseWriter.enforceSimpleDataSpaceForAttributes)
+                            if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
                                 final int dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]
