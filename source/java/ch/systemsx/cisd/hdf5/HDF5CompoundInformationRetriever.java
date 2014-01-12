@@ -25,6 +25,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
@@ -423,7 +425,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                     final Class<? extends Enum<?>> enumClass =
                             (Class<? extends Enum<?>>) memberClass;
                     final String typeName =
-                            (m.getEnumTypeName() == null) ? memberClass.getSimpleName() : m
+                            (StringUtils.isBlank(m.getEnumTypeName())) ? memberClass.getSimpleName() : m
                                     .getEnumTypeName();
                     m.setEnumerationType(enumTypeRetriever.getType(typeName,
                             ReflectionUtils.getEnumOptions(enumClass)));
