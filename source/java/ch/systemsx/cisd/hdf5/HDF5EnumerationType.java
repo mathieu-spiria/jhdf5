@@ -155,6 +155,15 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     }
 
     /**
+     * Returns the (file-independent) {@link EnumerationType} of this (file-dependen)
+     * {@link HDF5EnumerationType}.
+     */
+    public EnumerationType getEnumerationType()
+    {
+        return enumType;
+    }
+
+    /**
      * Returns the {@link EnumStorageForm} of this enumeration type.
      */
     public EnumStorageForm getStorageForm()
