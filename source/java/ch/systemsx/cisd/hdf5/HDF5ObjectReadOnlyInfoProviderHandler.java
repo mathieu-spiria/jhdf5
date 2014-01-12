@@ -27,13 +27,13 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
  * Implementation of {@link IHDF5ObjectReadOnlyInfoProviderHandler}
- *
+ * 
  * @author Bernd Rinn
  */
 class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoProviderHandler
 {
     private final HDF5BaseReader baseReader;
-    
+
     HDF5ObjectReadOnlyInfoProviderHandler(HDF5BaseReader baseReader)
     {
         assert baseReader != null;
@@ -307,10 +307,16 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
     public HDF5DataSetInformation getDataSetInformation(final String dataSetPath,
             final DataTypeInfoOptions dataTypeInfoOptions)
     {
+        return getDataSetInformation(dataSetPath, dataTypeInfoOptions, true);
+    }
+
+    HDF5DataSetInformation getDataSetInformation(final String dataSetPath,
+            final DataTypeInfoOptions dataTypeInfoOptions, final boolean fillInDimensions)
+    {
         assert dataSetPath != null;
 
         baseReader.checkOpen();
-        return baseReader.getDataSetInformation(dataSetPath, dataTypeInfoOptions);
+        return baseReader.getDataSetInformation(dataSetPath, dataTypeInfoOptions, fillInDimensions);
     }
 
     @Override
@@ -323,6 +329,13 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
     public long getNumberOfElements(final String objectPath)
     {
         return getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL).getNumberOfElements();
+    }
+
+    @Override
+    public int getElementSize(final String objectPath)
+    {
+        return getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL, false)
+                .getTypeInformation().getElementSize();
     }
 
     // /////////////////////
@@ -458,6 +471,5 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
             };
         return baseReader.runner.call(writeRunnable);
     }
-
 
 }

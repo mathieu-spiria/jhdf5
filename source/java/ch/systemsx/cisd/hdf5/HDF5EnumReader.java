@@ -749,7 +749,7 @@ class HDF5EnumReader implements IHDF5EnumReader
     {
         final HDF5NaturalBlockMDParameters params =
                 new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(objectPath,
-                        DataTypeInfoOptions.MINIMAL));
+                        DataTypeInfoOptions.MINIMAL, true));
         return new Iterable<HDF5MDEnumBlock>()
             {
                 @Override

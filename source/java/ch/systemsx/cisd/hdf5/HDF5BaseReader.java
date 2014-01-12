@@ -786,7 +786,7 @@ class HDF5BaseReader
      */
     HDF5DataSetInformation getDataSetInformation(final String dataSetPath)
     {
-        return getDataSetInformation(dataSetPath, DataTypeInfoOptions.DEFAULT);
+        return getDataSetInformation(dataSetPath, DataTypeInfoOptions.DEFAULT, true);
     }
 
     /**
@@ -797,9 +797,10 @@ class HDF5BaseReader
      * @param dataSetPath The name (including path information) of the data set to return
      *            information about.
      * @param options What information to obtain about the data type.
+     * @param fillDimensions If <code>true</code>, fill in the dimensions of the dataset
      */
     HDF5DataSetInformation getDataSetInformation(final String dataSetPath,
-            final DataTypeInfoOptions options)
+            final DataTypeInfoOptions options, final boolean fillDimensions)
     {
         assert dataSetPath != null;
 
@@ -826,7 +827,10 @@ class HDF5BaseReader
                             {
                                 dataTypeInfo.setElementSize(-1);
                             }
-                            h5.fillDataDimensions(dataSetId, false, dataSetInfo);
+                            if (fillDimensions)
+                            {
+                                h5.fillDataDimensions(dataSetId, false, dataSetInfo);
+                            }
                             return dataSetInfo;
                         }
                     };

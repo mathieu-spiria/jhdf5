@@ -248,12 +248,19 @@ public interface IHDF5ObjectReadOnlyInfoProviderHandler
     public long getSize(final String objectPath);
 
     /**
-     * Returns the total number of elements of <var>objectPath</var> It is a failure condition if
+     * Returns the total number of elements of <var>objectPath</var>. It is a failure condition if
      * the <var>dataSetPath</var> does not exist or does not identify a data set. This method
      * follows symbolic links.
      */
     public long getNumberOfElements(final String objectPath);
 
+    /**
+     * Returns the size of one element of <var>objectPath</var>. It is a failure condition if
+     * the <var>dataSetPath</var> does not exist or does not identify a data set. This method
+     * follows symbolic links.
+     */
+    public int getElementSize(final String objectPath);
+    
     // /////////////////////
     // Copies
     // /////////////////////

@@ -605,7 +605,7 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
         type.check(baseReader.fileId);
         final HDF5NaturalBlockMDParameters params =
                 new HDF5NaturalBlockMDParameters(baseReader.getDataSetInformation(objectPath,
-                        DataTypeInfoOptions.MINIMAL));
+                        DataTypeInfoOptions.MINIMAL, true));
 
         return primGetCompoundMDArrayNaturalBlocks(objectPath, type, params, inspectorOrNull);
     }
