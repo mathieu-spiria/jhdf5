@@ -58,6 +58,11 @@ public class EnumerationType implements Iterable<String>
         this.unmodifiableValues = Collections.unmodifiableList(Arrays.asList(values));
     }
 
+    public EnumerationType(Class<? extends Enum<?>> enumClass)
+    {
+        this(enumClass.getName(), enumClass);
+    }
+    
     public EnumerationType(String nameOrNull, Class<? extends Enum<?>> enumClass)
     {
         this(nameOrNull, ReflectionUtils.getEnumOptions(enumClass));
@@ -105,7 +110,21 @@ public class EnumerationType implements Iterable<String>
     }
 
     /**
-     * Returns the name of this type, if it exists and <code>null</code> otherwise.
+     * Returns the name of this type, if it exists, or <code>NONAME</code> otherwise.
+     */
+    public String getName()
+    {
+        if (nameOrNull == null)
+        {
+            return "NONAME";
+        } else
+        {
+            return nameOrNull;
+        }
+    }
+    
+    /**
+     * Returns the name of this type, if it exists, or <code>null</code> otherwise.
      */
     public String tryGetName()
     {
