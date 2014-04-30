@@ -1,0 +1,59 @@
+apply from: 'http://svncisd.ethz.ch/repos/cisd/gradle/trunk/javaproject.gradle'
+
+group="cisd"
+
+dependencies {
+    compile 'cisd:cisd-args4j:+',
+            'cisd:cisd-base:+',
+            'rinn:restrictions:+'
+    
+    testCompile 'testng:testng:+',
+                'jmock:jmock:+'
+}
+
+tasks.withType(Test) {
+    systemProperty "java.library.path", "../libraries/hdf5/native/jhdf5/amd64-Linux:../libraries/hdf5/native/jhdf5/amd64-Linux:../libraries/hdf5/native/jhdf5/x86_64-Mac OS X:../libraries/hdf5/native/jhdf5/x86_64-Mac OS X"
+}
+
+jar {
+    baseName 'cisd-jhdf5-core'
+    from sourceSets.main.output.classesDir
+    exclude('ch/systemsx/cisd/hdf5/h5ar') 
+    exclude('ch/systemsx/cisd/hdf5/io') 
+}
+
+task toolsJar(type: Jar) {
+    baseName 'cisd-jhdf5-tools'
+    from sourceSets.main.output.classesDir
+    include('ch/systemsx/cisd/hdf5/h5ar/**/*') 
+    include('ch/systemsx/cisd/hdf5/io/**/*') 
+}
+
+task allJar(type: Jar) {
+    baseName 'cisd-jhdf5'
+    from files(sourceSets.main.output.classesDir)
+    from {configurations.runtime.collect {zipTree(it)}}
+}
+
+task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar]) {
+    from (jar.archivePath) {
+        into 'cisd-jhdf5/lib'
+        rename '(.*)', 'cisd-jhdf5-core.jar'
+    }
+    
+    from (toolsJar.archivePath) {
+        into 'cisd-jhdf5/lib'
+        rename '(.*)', 'cisd-jhdf5-tools.jar'
+    }
+
+    from (allJar.archivePath) {
+        into 'cisd-jhdf5/lib'
+        rename '(.*)', 'cisd-jhdf5.jar'
+    }
+    
+    from (configurations.runtime) {
+        into 'cisd-jhfd5/lib'
+    }
+}
+
+build.dependsOn distributionZip
