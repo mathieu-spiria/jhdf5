@@ -22,20 +22,168 @@ jar {
     exclude('ch/systemsx/cisd/hdf5/io') 
 }
 
-task toolsJar(type: Jar) {
+task toolsJar(type: Jar, dependsOn: [compileJava]) {
     baseName 'cisd-jhdf5-tools'
     from sourceSets.main.output.classesDir
     include('ch/systemsx/cisd/hdf5/h5ar/**/*') 
     include('ch/systemsx/cisd/hdf5/io/**/*') 
 }
 
-task allJar(type: Jar) {
+task allJar(type: Jar, dependsOn: [compileJava]) {
     baseName 'cisd-jhdf5'
-    from files(sourceSets.main.output.classesDir)
-    from {configurations.runtime.collect {zipTree(it)}}
+
+    from (sourceSets.main.output.classesDir) {
+        include '**/*'
+    }
+
+    from (configurations.runtime.collect {zipTree(it)}) {
+        exclude 'native/**/*'
+    }
 }
 
-task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar]) {
+task nativeJarLinux(type: Jar) {
+    archiveName 'hdf5-linux-intel.jar'
+    from ("../libraries/hdf5") {
+        include 'native/jhdf5/amd64-Linux/**/*'
+        include 'native/jhdf5/i386-Linux/**/*'
+    }
+    from ("../libraries/unix") {
+        include 'native/unix/amd64-Linux/**/*'
+        include 'native/unix/i386-Linux/**/*'
+    }
+    
+    from ("targets/dist") {
+        include "BUILD-jhdf5.INFO"
+    }    
+}
+
+task nativeJarMac(type: Jar) {
+    archiveName 'hdf5-macosx-intel.jar'
+    from ("../libraries/hdf5") {
+        include 'native/jhdf5/i386-Mac OS X/**/*'
+        include 'native/jhdf5/x86_64-Mac OS X/**/*'
+    }
+    from ("../libraries/unix") {
+        include 'native/unix/i386-Mac OS X/**/*'
+        include 'native/unix/x86_64-Mac OS X/**/*'
+    }
+    
+    from ("targets/dist") {
+        include "BUILD-jhdf5.INFO"
+    }    
+}
+
+task nativeJarSolarisIntel(type: Jar) {
+    archiveName 'hdf5-solaris-intel.jar'
+    from ("../libraries/hdf5") {
+        include 'native/jhdf5/amd64-SunOS/**/*'
+        include 'native/jhdf5/x86-SunOS/**/*'
+    }
+    from ("../libraries/unix") {
+        include 'native/unix/amd64-SunOS/**/*'
+        include 'native/unix/x86-SunOS/**/*'
+    }
+    
+    from ("targets/dist") {
+        include "BUILD-jhdf5.INFO"
+    }    
+}
+
+task nativeJarSolarisSparc(type: Jar) {
+    archiveName 'hdf5-solaris-sparc.jar'
+    from ("../libraries/hdf5") {
+        include 'native/jhdf5/sparc-SunOS/**/*'
+        include 'native/jhdf5/sparcv9-SunOS/**/*'
+    }
+    from ("../libraries/unix") {
+        include 'native/unix/sparc-SunOS/**/*'
+        include 'native/unix/sparcv9-SunOS/**/*'
+    }
+    
+    from ("targets/dist") {
+        include "BUILD-jhdf5.INFO"
+    }    
+}
+
+task nativeJarWindowsIntel(type: Jar) {
+    archiveName 'hdf5-windows-intel.jar'
+    from ("../libraries/hdf5") {
+        include 'native/jhdf5/amd64-Windows/**/*'
+        include 'native/jhdf5/x86-Windows/**/*'
+    }
+    
+    from ("targets/dist") {
+        include "BUILD-jhdf5.INFO"
+    }    
+}
+
+task batteriesIncludedLinWinMac(type: Jar, dependsOn: [allJar, nativeJarLinux, nativeJarMac, nativeJarWindowsIntel]) {
+    archiveName 'cisd-jhdf5-batteries_included_lin_win_mac.jar'
+    from (zipTree(allJar.archivePath)) {
+        include '**/*'
+    }
+    
+    from (zipTree(nativeJarLinux.archivePath)) {
+        include 'native/**/*'
+    }
+    from (zipTree(nativeJarMac.archivePath)) {
+        include 'native/**/*'
+    }
+    from (zipTree(nativeJarWindowsIntel.archivePath)) {
+        include 'native/**/*'
+    }
+    
+    from ("../libraries/nativedata") {
+        include 'native/nativedata/amd64-Linux/**/*'
+        include 'native/nativedata/i386-Linux/**/*'
+        include 'native/nativedata/i386-Mac OS X/**/*'
+        include 'native/nativedata/x86_64-Mac OS X/**/*'
+        include 'native/nativedata/amd64-Windows/**/*'
+        include 'native/nativedata/x86-Windows/**/*'
+    }
+}
+
+task batteriesIncludedLinWinMacSol(type: Jar, dependsOn: [batteriesIncludedLinWinMac, nativeJarSolarisSparc, nativeJarSolarisIntel]) {
+    archiveName 'cisd-jhdf5-batteries_included_lin_win_mac_sol.jar'
+    
+    from (zipTree(batteriesIncludedLinWinMac.archivePath)) {
+        include '**/*'
+    }
+    from (zipTree(nativeJarSolarisSparc.archivePath)) {
+        include 'native/**/*'
+    }
+    from (zipTree(nativeJarSolarisIntel.archivePath)) {
+        include 'native/**/*'
+    }
+    
+    from ("../libraries/nativedata") {
+        include 'native/nativedata/sparc-SunOS/**/*'
+        include 'native/nativedata/sparcv9-SunOS/**/*'
+        include 'native/nativedata/amd64-SunOS/**/*'
+        include 'native/nativedata/x86-SunOS/**/*'
+    }
+}
+
+task javadocZip(type: Zip, dependsOn: javadoc) {
+    archiveName 'cisd-jhdf5-javadoc.zip'
+    from javadoc.destinationDir
+}
+
+task exampleZip(type: Jar) {
+    archiveName 'cisd-jhdf5-examples-src.zip'
+
+    from ("sourceExamples/java") {
+        include '**/*'
+    }
+    
+    from ("targets/dist") {
+        include "BUILD-jhdf5.INFO"
+    }
+}
+
+task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar, nativeJarLinux, nativeJarMac,nativeJarSolarisIntel, nativeJarSolarisSparc, nativeJarWindowsIntel, batteriesIncludedLinWinMac, batteriesIncludedLinWinMacSol, javadocZip, sourcesJar, exampleZip]) {
+    baseName 'cisd-jhdf5'
+
     from (jar.archivePath) {
         into 'cisd-jhdf5/lib'
         rename '(.*)', 'cisd-jhdf5-core.jar'
@@ -53,6 +201,63 @@ task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar]) {
     
     from (configurations.runtime) {
         into 'cisd-jhfd5/lib'
+    }
+    
+    from ("../libraries/hdf5/native") {
+        into 'cisd-jhdf5/lib/native'
+    }
+    
+    from ("../libraries/unix/native") {
+        into 'cisd-jhdf5/lib/native'
+    }
+    
+    from ("../libraries/nativedata/native") {
+        into 'cisd-jhdf5/lib/native'
+    }
+    
+    from (nativeJarLinux.archivePath) {
+        into 'cisd-jhdf5/lib/nativejar'
+    }
+    
+    from (nativeJarMac.archivePath) {
+        into 'cisd-jhdf5/lib/nativejar'
+    }
+    
+    from (nativeJarSolarisIntel.archivePath) {
+        into 'cisd-jhdf5/lib/nativejar'
+    }
+    
+    from (nativeJarSolarisSparc.archivePath) {
+        into 'cisd-jhdf5/lib/nativejar'
+    }
+    
+    from (nativeJarWindowsIntel.archivePath) {
+        into 'cisd-jhdf5/lib/nativejar'
+    }
+
+    from (batteriesIncludedLinWinMac.archivePath) {
+        into 'cisd-jhdf5/lib/batteries_included'
+    }
+
+    from (batteriesIncludedLinWinMacSol.archivePath) {
+        into 'cisd-jhdf5/lib/batteries_included'
+    }
+    
+    from ("dist") {
+        into 'cisd-jhdf5'
+    }
+    
+    from (javadocZip.archivePath) {
+        into 'cisd-jhdf5/doc'
+    }
+    
+    from (exampleZip.archivePath) {
+        into 'cisd-jhdf5/doc'
+    }    
+    
+    from (sourcesJar.archivePath) {
+        into 'cisd-jhdf5/src'
+        rename '(.*)', 'cisd-jhdf5-src.zip'
     }
 }
 
