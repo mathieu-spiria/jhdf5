@@ -11,6 +11,26 @@ dependencies {
                 'jmock:jmock:+'
 }
 
+new ByteArrayOutputStream().withStream { os ->
+    def result = exec {
+        executable = 'svn'
+        args = ['info']
+        standardOutput = os
+    }
+    def outputAsString = os.toString()
+    def matchLastChangedRevMatcher = outputAsString =~ /Last Changed Rev: (\d+)/
+    def urlMatcher = outputAsString =~ /URL: .*\/(.+)/
+
+    def revision = "r${matchLastChangedRevMatcher[0][1]}"
+    def branch = urlMatcher[0][1]
+
+    if (branch.equals('trunk')) {
+        project.version = revision
+    } else {
+        project.version = branch
+    }
+}
+
 tasks.withType(Test) {
     systemProperty "java.library.path", "../libraries/hdf5/native/jhdf5/amd64-Linux:../libraries/hdf5/native/jhdf5/amd64-Linux:../libraries/hdf5/native/jhdf5/x86_64-Mac OS X:../libraries/hdf5/native/jhdf5/x86_64-Mac OS X"
 }
@@ -258,6 +278,33 @@ task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar, nativeJarLinu
     from (sourcesJar.archivePath) {
         into 'cisd-jhdf5/src'
         rename '(.*)', 'cisd-jhdf5-src.zip'
+    }
+}
+
+publishing {
+    publications {
+        artifacts(IvyPublication) {
+            from components.java
+            artifact(toolsJar) {
+                name = "cisd-jhdf5-tools"
+                conf = "runtime"
+            }
+            artifact(nativeJarLinux) {
+                name = "hdf5-linux-intel"
+                conf = "runtime"
+            }
+            artifact(nativeJarMac) {
+                name = "hdf5-macosx-intel"
+                conf = "runtime"
+            }
+            artifact(nativeJarWindowsIntel) {
+                name = "hdf5-windows-intel"
+                conf = "runtime"
+            }
+            artifact(sourcesJar) {
+                type = "source"
+            }            
+        }
     }
 }
 
