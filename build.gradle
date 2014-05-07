@@ -1,6 +1,7 @@
 apply from: 'http://svncisd.ethz.ch/repos/cisd/gradle/trunk/javaproject.gradle'
 
 group="cisd"
+buildInfo="jhdf5"
 
 dependencies {
     compile 'cisd:cisd-args4j:+',
@@ -31,35 +32,49 @@ new ByteArrayOutputStream().withStream { os ->
     }
 }
 
+task isClean(type: Exec) {
+    workingDir = '.'
+    commandLine = ['svn', 'status']
+    standardOutput = new ByteArrayOutputStream()
+
+    ext.output = { 
+        return standardOutput.toString().length() == 0
+    }    
+}
+
+task createBuildInfo(dependsOn: [isClean]){
+    
+    ext.output = "${buildDir}/BUILD-${buildInfo}.INFO"
+    
+    doLast {
+        def writer = new FileWriter(ext.output)
+        try {
+            writer.println("SNAPSHOT:"+project.version.substring(1)+":"+(isClean.output()?"clean":"dirty"))
+        } finally {
+            writer.close()
+        }
+    }
+}
+
 tasks.withType(Test) {
     systemProperty "java.library.path", "../libraries/hdf5/native/jhdf5/amd64-Linux:../libraries/hdf5/native/jhdf5/amd64-Linux:../libraries/hdf5/native/jhdf5/x86_64-Mac OS X:../libraries/hdf5/native/jhdf5/x86_64-Mac OS X"
 }
 
 jar {
     baseName 'cisd-jhdf5-core'
-    from sourceSets.main.output.classesDir
-    exclude('ch/systemsx/cisd/hdf5/h5ar') 
-    exclude('ch/systemsx/cisd/hdf5/io') 
-}
-
-task toolsJar(type: Jar, dependsOn: [compileJava]) {
-    baseName 'cisd-jhdf5-tools'
-    from sourceSets.main.output.classesDir
-    include('ch/systemsx/cisd/hdf5/h5ar/**/*') 
-    include('ch/systemsx/cisd/hdf5/io/**/*') 
-}
-
-task allJar(type: Jar, dependsOn: [compileJava]) {
-    baseName 'cisd-jhdf5'
-
-    from (sourceSets.main.output.classesDir) {
-        include '**/*'
+    from (sourceSets.main.output.classesDir) { 
+        exclude('ch/systemsx/cisd/hdf5/h5ar') 
+        exclude('ch/systemsx/cisd/hdf5/io')
     }
-
-    from (configurations.runtime.collect {zipTree(it)}) {
-        exclude 'native/**/*'
+    from (createBuildInfo.output)
+    
+    manifest {
+        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo'
+        attributes 'Class-Path': configurations.runtime.collect { it.getName() }.join(' ')
     }
+    
 }
+jar.dependsOn createBuildInfo
 
 task nativeJarLinux(type: Jar) {
     archiveName 'hdf5-linux-intel.jar'
@@ -72,9 +87,7 @@ task nativeJarLinux(type: Jar) {
         include 'native/unix/i386-Linux/**/*'
     }
     
-    from ("targets/dist") {
-        include "BUILD-jhdf5.INFO"
-    }    
+    from (createBuildInfo.output)
 }
 
 task nativeJarMac(type: Jar) {
@@ -88,9 +101,7 @@ task nativeJarMac(type: Jar) {
         include 'native/unix/x86_64-Mac OS X/**/*'
     }
     
-    from ("targets/dist") {
-        include "BUILD-jhdf5.INFO"
-    }    
+    from (createBuildInfo.output)
 }
 
 task nativeJarSolarisIntel(type: Jar) {
@@ -104,9 +115,7 @@ task nativeJarSolarisIntel(type: Jar) {
         include 'native/unix/x86-SunOS/**/*'
     }
     
-    from ("targets/dist") {
-        include "BUILD-jhdf5.INFO"
-    }    
+    from (createBuildInfo.output)
 }
 
 task nativeJarSolarisSparc(type: Jar) {
@@ -120,9 +129,7 @@ task nativeJarSolarisSparc(type: Jar) {
         include 'native/unix/sparcv9-SunOS/**/*'
     }
     
-    from ("targets/dist") {
-        include "BUILD-jhdf5.INFO"
-    }    
+    from (createBuildInfo.output)
 }
 
 task nativeJarWindowsIntel(type: Jar) {
@@ -132,10 +139,41 @@ task nativeJarWindowsIntel(type: Jar) {
         include 'native/jhdf5/x86-Windows/**/*'
     }
     
-    from ("targets/dist") {
-        include "BUILD-jhdf5.INFO"
-    }    
+    from (createBuildInfo.output)
 }
+
+task toolsJar(type: Jar, dependsOn: [compileJava]) {
+    baseName 'cisd-jhdf5-tools'
+    from (sourceSets.main.output.classesDir) {
+        include('ch/systemsx/cisd/hdf5/h5ar/**/*') 
+        include('ch/systemsx/cisd/hdf5/io/**/*') 
+    }
+    from (createBuildInfo.output)    
+    
+    manifest {
+        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
+        attributes 'Class-Path': configurations.runtime.collect { it.getName() }.join(' ') + " cisd-jhdf5-core.jar " + [nativeJarLinux, nativeJarMac, nativeJarSolarisIntel, nativeJarSolarisSparc,nativeJarWindowsIntel].collect {it.archiveName}.join(' ')
+    }
+}
+
+task allJar(type: Jar, dependsOn: [compileJava]) {
+    baseName 'cisd-jhdf5'
+
+    from (sourceSets.main.output.classesDir) {
+        include '**/*'
+    }
+
+    from (configurations.runtime.collect {zipTree(it)}) {
+        exclude 'native/**/*'
+    }
+    from (createBuildInfo.output)
+    
+    manifest {
+        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
+        attributes 'Class-Path': [nativeJarLinux, nativeJarMac, nativeJarSolarisIntel, nativeJarSolarisSparc,nativeJarWindowsIntel].collect {it.archiveName}.join(' ')
+    }
+}
+
 
 task batteriesIncludedLinWinMac(type: Jar, dependsOn: [allJar, nativeJarLinux, nativeJarMac, nativeJarWindowsIntel]) {
     archiveName 'cisd-jhdf5-batteries_included_lin_win_mac.jar'
@@ -161,6 +199,10 @@ task batteriesIncludedLinWinMac(type: Jar, dependsOn: [allJar, nativeJarLinux, n
         include 'native/nativedata/amd64-Windows/**/*'
         include 'native/nativedata/x86-Windows/**/*'
     }
+
+    manifest {
+        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
+    }
 }
 
 task batteriesIncludedLinWinMacSol(type: Jar, dependsOn: [batteriesIncludedLinWinMac, nativeJarSolarisSparc, nativeJarSolarisIntel]) {
@@ -181,6 +223,10 @@ task batteriesIncludedLinWinMacSol(type: Jar, dependsOn: [batteriesIncludedLinWi
         include 'native/nativedata/sparcv9-SunOS/**/*'
         include 'native/nativedata/amd64-SunOS/**/*'
         include 'native/nativedata/x86-SunOS/**/*'
+    }
+    
+    manifest {
+        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
     }
 }
 
@@ -220,7 +266,7 @@ task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar, nativeJarLinu
     }
     
     from (configurations.runtime) {
-        into 'cisd-jhfd5/lib'
+        into 'cisd-jhdf5/lib'
     }
     
     from ("../libraries/hdf5/native") {
