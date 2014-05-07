@@ -266,6 +266,8 @@ task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar, nativeJarLinu
     }
     
     from (configurations.runtime) {
+        exclude '*restriction*'
+        exclude '*bcel*'
         into 'cisd-jhdf5/lib'
     }
     
