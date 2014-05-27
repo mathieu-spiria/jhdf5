@@ -353,6 +353,7 @@ public class HDF5RoundtripTest
         test.testEnumArrayScaleCompression();
         test.testOpaqueType();
         test.testCompound();
+        test.testCompoundInferStringLength();
         test.testClosedCompoundType();
         test.testAnonCompound();
         test.testOverwriteCompound();
@@ -7062,6 +7063,51 @@ public class HDF5RoundtripTest
         final SimpleInheretingRecord recordReadFile2 = reader2.compound().read("cpd", type2);
         assertEquals(recordWritten, recordReadFile2);
         reader2.close();
+    }
+
+    static class SimpleStringRecord
+    {
+        String s1;
+
+        String s2;
+
+        SimpleStringRecord()
+        {
+        }
+        
+        SimpleStringRecord(String s, String s2)
+        {
+            this.s1 = s;
+            this.s2 = s2;
+        }
+    }
+
+    @Test
+    public void testCompoundInferStringLength()
+    {
+        final File file = new File(workingDirectory, "stringsInCompound.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        final SimpleStringRecord recordWritten = new SimpleStringRecord("hello", "X");
+        writer.compound().write("strings", recordWritten);
+        writer.close();
+        
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<SimpleStringRecord> type = reader.compound().getInferredType(recordWritten);
+        assertEquals(2, type.getCompoundMemberInformation().length);
+        assertEquals("s1", type.getCompoundMemberInformation()[0].getName());
+        assertEquals(HDF5DataClass.STRING, type.getCompoundMemberInformation()[0].getType().getDataClass());
+        assertEquals(recordWritten.s1.length(), type.getCompoundMemberInformation()[0].getType().getSize());
+        assertEquals("s2", type.getCompoundMemberInformation()[1].getName());
+        assertEquals(HDF5DataClass.STRING, type.getCompoundMemberInformation()[1].getType().getDataClass());
+        assertEquals(recordWritten.s2.length(), type.getCompoundMemberInformation()[1].getType().getSize());
+        final SimpleStringRecord recordRead = reader.compound().read("strings", type);
+        assertEquals(recordWritten.s1, recordRead.s1);
+        assertEquals(recordWritten.s2, recordRead.s2);
+        reader.close();
+        
     }
 
     @Test

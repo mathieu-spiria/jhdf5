@@ -530,7 +530,7 @@ public final class HDF5CompoundMemberMapping
                     if (memberClass == String.class)
                     {
                         ReflectionUtils.ensureAccessible(m.fieldOrNull);
-                        m.length(Array.getLength(m.fieldOrNull.get(pojo)));
+                        m.length(((String) (m.fieldOrNull.get(pojo))).length());
                     } else if (memberClass.isArray())
                     {
                         if (memberClass.isArray())
