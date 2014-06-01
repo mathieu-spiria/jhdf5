@@ -589,7 +589,9 @@ public final class HDF5CompoundMemberMapping
                         int maxLen = 0;
                         for (int i = 0; i < pojo.length; ++i)
                         {
-                            maxLen = Math.max(maxLen, Array.getLength(m.fieldOrNull.get(pojo[i])));
+                            maxLen =
+                                    Math.max(maxLen,
+                                            ((String) (m.fieldOrNull.get(pojo[i]))).length());
                         }
                         m.length(maxLen);
                     } else if (memberClass.isArray())

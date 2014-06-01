@@ -7074,11 +7074,60 @@ public class HDF5RoundtripTest
         SimpleStringRecord()
         {
         }
-        
+
         SimpleStringRecord(String s, String s2)
         {
             this.s1 = s;
             this.s2 = s2;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((s1 == null) ? 0 : s1.hashCode());
+            result = prime * result + ((s2 == null) ? 0 : s2.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            SimpleStringRecord other = (SimpleStringRecord) obj;
+            if (s1 == null)
+            {
+                if (other.s1 != null)
+                {
+                    return false;
+                }
+            } else if (!s1.equals(other.s1))
+            {
+                return false;
+            }
+            if (s2 == null)
+            {
+                if (other.s2 != null)
+                {
+                    return false;
+                }
+            } else if (!s2.equals(other.s2))
+            {
+                return false;
+            }
+            return true;
         }
     }
 
@@ -7092,22 +7141,47 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5Factory.open(file);
         final SimpleStringRecord recordWritten = new SimpleStringRecord("hello", "X");
         writer.compound().write("strings", recordWritten);
+        final SimpleStringRecord[] recordArrayWritten = new SimpleStringRecord[]
+            { new SimpleStringRecord("hello", "X"), new SimpleStringRecord("Y2", "0123456789") };
+        writer.compound().writeArray("stringsArray", recordArrayWritten);
         writer.close();
-        
+
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
-        final HDF5CompoundType<SimpleStringRecord> type = reader.compound().getInferredType(recordWritten);
+        final HDF5CompoundType<SimpleStringRecord> type =
+                reader.compound().getInferredType(recordWritten);
         assertEquals(2, type.getCompoundMemberInformation().length);
         assertEquals("s1", type.getCompoundMemberInformation()[0].getName());
-        assertEquals(HDF5DataClass.STRING, type.getCompoundMemberInformation()[0].getType().getDataClass());
-        assertEquals(recordWritten.s1.length(), type.getCompoundMemberInformation()[0].getType().getSize());
+        assertEquals(HDF5DataClass.STRING, type.getCompoundMemberInformation()[0].getType()
+                .getDataClass());
+        assertEquals(recordWritten.s1.length(), type.getCompoundMemberInformation()[0].getType()
+                .getSize());
         assertEquals("s2", type.getCompoundMemberInformation()[1].getName());
-        assertEquals(HDF5DataClass.STRING, type.getCompoundMemberInformation()[1].getType().getDataClass());
-        assertEquals(recordWritten.s2.length(), type.getCompoundMemberInformation()[1].getType().getSize());
+        assertEquals(HDF5DataClass.STRING, type.getCompoundMemberInformation()[1].getType()
+                .getDataClass());
+        assertEquals(recordWritten.s2.length(), type.getCompoundMemberInformation()[1].getType()
+                .getSize());
         final SimpleStringRecord recordRead = reader.compound().read("strings", type);
-        assertEquals(recordWritten.s1, recordRead.s1);
-        assertEquals(recordWritten.s2, recordRead.s2);
-        reader.close();
+        assertEquals(recordWritten, recordRead);
+
+        final HDF5CompoundType<SimpleStringRecord> arrayType =
+                reader.compound().getInferredType(recordArrayWritten);
+        assertEquals("s1", arrayType.getCompoundMemberInformation()[0].getName());
+        assertEquals(HDF5DataClass.STRING, arrayType.getCompoundMemberInformation()[0].getType()
+                .getDataClass());
+        assertEquals(recordArrayWritten[0].s1.length(), arrayType.getCompoundMemberInformation()[0].getType()
+                .getSize());
+        assertEquals("s2", arrayType.getCompoundMemberInformation()[1].getName());
+        assertEquals(HDF5DataClass.STRING, arrayType.getCompoundMemberInformation()[1].getType()
+                .getDataClass());
+        assertEquals(recordArrayWritten[1].s2.length(), arrayType.getCompoundMemberInformation()[1].getType()
+                .getSize());
+        final SimpleStringRecord[] recordArrayRead = reader.compound().readArray("stringsArray", SimpleStringRecord.class);
+        assertEquals(2, recordArrayRead.length);
+        assertEquals(recordArrayWritten[0], recordArrayRead[0]);
+        assertEquals(recordArrayWritten[1], recordArrayRead[1]);
         
+        reader.close();
+
     }
 
     @Test
