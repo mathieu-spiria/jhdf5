@@ -15,11 +15,6 @@ public class TestH5Oparams {
         assertTrue("H5 open ids is 0",H5.getOpenIDCount()==0);
     }
 
-    @Test(expected = HDF5LibraryException.class)
-    public void testH5Oclose_invalid() throws Throwable {
-        H5.H5Oclose(-1);
-    }
-
     @Test(expected = NullPointerException.class)
     public void testH5Oopen_null() throws Throwable {
         H5.H5Oopen(-1, null, 0);
@@ -96,6 +91,7 @@ public class TestH5Oparams {
     }
 
     @Test(expected = HDF5LibraryException.class)
+    @SuppressWarnings("deprecation")
     public void testH5Oset_comment_invalid() throws Throwable {
         H5.H5Oset_comment(-1, "Bogus");
     }
@@ -106,11 +102,13 @@ public class TestH5Oparams {
     }
 
     @Test(expected = HDF5LibraryException.class)
+    @SuppressWarnings("deprecation")
     public void testH5Oset_comment_by_name_invalid() throws Throwable {
         H5.H5Oset_comment_by_name(-1, "Bogus", null, -1);
     }
 
     @Test(expected = NullPointerException.class)
+    @SuppressWarnings("deprecation")
     public void testH5Oset_comment_by_name_null() throws Throwable {
         H5.H5Oset_comment_by_name(-1, null, null, -1);
     }

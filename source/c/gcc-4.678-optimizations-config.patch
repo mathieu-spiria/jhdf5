@@ -1,6 +1,7 @@
---- config/gnu-flags.orig	2012-10-11 19:31:46.000000000 +0200
-+++ config/gnu-flags	2012-10-27 21:38:26.422746000 +0200
-@@ -258,6 +258,9 @@
+diff -ruN hdf5-1.8.13.orig/config/gnu-flags hdf5-1.8.13/config/gnu-flags
+--- config/gnu-flags	2014-05-06 04:13:21.000000000 +0200
++++ config/gnu-flags	2014-06-06 15:36:09.318183153 +0200
+@@ -260,6 +260,9 @@
      # (Strictly speaking this isn't really a "warning" flag, so it's added to
      #   the debugging flags)
      #DEBUG_CFLAGS="$DEBUG_CFLAGS -Wstack-protector -fstack-protector-all"
@@ -9,8 +10,18 @@
 +    PROD_CFLAGS="$PROD_CFLAGS -floop-interchange -floop-strip-mine -floop-block -fgraphite-identity -fuse-linker-plugin -flto -mtune=corei7"
      ;;
  
- # Closer to the gcc 4.7 release, we should check for additional flags to
-@@ -325,6 +328,9 @@
+   gcc-4.7*)
+@@ -331,6 +334,9 @@
+     # (Strictly speaking this isn't really a "warning" flag, so it's added to
+     #   the debugging flags)
+     #DEBUG_CFLAGS="$DEBUG_CFLAGS -Wstack-protector -fstack-protector-all"
++
++    # Enable some additional optimization settings
++    PROD_CFLAGS="$PROD_CFLAGS -floop-interchange -floop-strip-mine -floop-block -fgraphite-identity -fuse-linker-plugin -flto -mtune=corei7"
+     ;;
+ 
+   gcc-4.6*)
+@@ -395,6 +401,9 @@
      # (Strictly speaking this isn't really a "warning" flag, so it's added to
      #   the debugging flags)
      #DEBUG_CFLAGS="$DEBUG_CFLAGS -Wstack-protector -fstack-protector-all"

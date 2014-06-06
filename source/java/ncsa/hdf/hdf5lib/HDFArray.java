@@ -30,7 +30,6 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
  * convert between Java and C representations.
  */
 
-@SuppressWarnings("all")
 public class HDFArray {
 
     private Object _theArray = null;
@@ -56,8 +55,9 @@ public class HDFArray {
         if (anArray == null) {
             HDF5JavaException ex = new HDF5JavaException(
                     "HDFArray: array is null?: ");
+            throw (ex);
         }
-        Class tc = anArray.getClass();
+        Class<?> tc = anArray.getClass();
         if (tc.isArray() == false) {
             /* exception: not an array */
             HDF5JavaException ex = new HDF5JavaException(
@@ -81,7 +81,7 @@ public class HDFArray {
      * @return A one-D array of bytes, filled with zeroes. The bytes are
      *         sufficient to hold the data of the Array passed to the
      *         constructor.
-     * @exception ncsa.hdf.hdf5lib.exception.HDF5JavaException
+     * @exception ncsa.hdf.hdf5lib.exceptions.HDF5JavaException
      *                Allocation failed.
      */
 
@@ -108,9 +108,9 @@ public class HDFArray {
      * 
      * @return A one-D array of bytes, constructed from the Array passed to the
      *         constructor.
-     * @exception ncsa.hdf.hdf5lib.exception.HDF5Exception
+     * @exception ncsa.hdf.hdf5lib.exceptions.HDF5Exception
      *                thrown for errors in HDF5
-     * @exception ncsa.hdf.hdf5lib.exception.HDF5JavaException
+     * @exception ncsa.hdf.hdf5lib.exceptions.HDF5JavaException
      *                the object not an array or other internal error.
      */
     public byte[] byteify() throws HDF5Exception {
@@ -374,9 +374,9 @@ public class HDFArray {
      *            The bytes to construct the Array.
      * @return An Array (possibly multidimensional) of primitive or number
      *         objects.
-     * @exception ncsa.hdf.hdf5lib.exception.HDF5Exception
+     * @exception ncsa.hdf.hdf5lib.exceptions.HDF5Exception
      *                thrown for errors in HDF5
-     * @exception ncsa.hdf.hdf5lib.exception.HDF5JavaException
+     * @exception ncsa.hdf.hdf5lib.exceptions.HDF5JavaException
      *                the object not an array or other internal error.
      */
     public Object arrayify(byte[] bytes) throws HDF5Exception {
@@ -784,7 +784,7 @@ public class HDFArray {
 
     private Short[] ByteToShort(byte[] bin) {
         short in[] = HDFNativeData.byteToShort(bin);
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        int nelems = java.lang.reflect.Array.getLength(in);
         Short[] out = new Short[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -794,8 +794,8 @@ public class HDFArray {
     }
 
     private Short[] ByteToShort(int start, int len, byte[] bin) {
-        short in[] = (short[]) HDFNativeData.byteToShort(start, len, bin);
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        short in[] = HDFNativeData.byteToShort(start, len, bin);
+        int nelems = java.lang.reflect.Array.getLength(in);
         Short[] out = new Short[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -805,7 +805,7 @@ public class HDFArray {
     }
 
     private byte[] ByteObjToByte(Byte in[]) {
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        int nelems = java.lang.reflect.Array.getLength(in);
         byte[] out = new byte[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -815,7 +815,7 @@ public class HDFArray {
     }
 
     private Byte[] ByteToByteObj(byte[] bin) {
-        int nelems = java.lang.reflect.Array.getLength((Object) bin);
+        int nelems = java.lang.reflect.Array.getLength(bin);
         Byte[] out = new Byte[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -834,7 +834,7 @@ public class HDFArray {
     }
 
     private byte[] FloatObjToByte(Float in[]) {
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        int nelems = java.lang.reflect.Array.getLength(in);
         float[] out = new float[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -844,8 +844,8 @@ public class HDFArray {
     }
 
     private Float[] ByteToFloatObj(byte[] bin) {
-        float in[] = (float[]) HDFNativeData.byteToFloat(bin);
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        float in[] = HDFNativeData.byteToFloat(bin);
+        int nelems = java.lang.reflect.Array.getLength(in);
         Float[] out = new Float[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -855,8 +855,8 @@ public class HDFArray {
     }
 
     private Float[] ByteToFloatObj(int start, int len, byte[] bin) {
-        float in[] = (float[]) HDFNativeData.byteToFloat(start, len, bin);
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        float in[] = HDFNativeData.byteToFloat(start, len, bin);
+        int nelems = java.lang.reflect.Array.getLength(in);
         Float[] out = new Float[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -866,7 +866,7 @@ public class HDFArray {
     }
 
     private byte[] DoubleObjToByte(Double in[]) {
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        int nelems = java.lang.reflect.Array.getLength(in);
         double[] out = new double[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -876,8 +876,8 @@ public class HDFArray {
     }
 
     private Double[] ByteToDoubleObj(byte[] bin) {
-        double in[] = (double[]) HDFNativeData.byteToDouble(bin);
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        double in[] = HDFNativeData.byteToDouble(bin);
+        int nelems = java.lang.reflect.Array.getLength(in);
         Double[] out = new Double[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -887,8 +887,8 @@ public class HDFArray {
     }
 
     private Double[] ByteToDoubleObj(int start, int len, byte[] bin) {
-        double in[] = (double[]) HDFNativeData.byteToDouble(start, len, bin);
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        double in[] = HDFNativeData.byteToDouble(start, len, bin);
+        int nelems = java.lang.reflect.Array.getLength(in);
         Double[] out = new Double[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -898,7 +898,7 @@ public class HDFArray {
     }
 
     private byte[] LongObjToByte(Long in[]) {
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        int nelems = java.lang.reflect.Array.getLength(in);
         long[] out = new long[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -908,8 +908,8 @@ public class HDFArray {
     }
 
     private Long[] ByteToLongObj(byte[] bin) {
-        long in[] = (long[]) HDFNativeData.byteToLong(bin);
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        long in[] = HDFNativeData.byteToLong(bin);
+        int nelems = java.lang.reflect.Array.getLength(in);
         Long[] out = new Long[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -919,8 +919,8 @@ public class HDFArray {
     }
 
     private Long[] ByteToLongObj(int start, int len, byte[] bin) {
-        long in[] = (long[]) HDFNativeData.byteToLong(start, len, bin);
-        int nelems = java.lang.reflect.Array.getLength((Object) in);
+        long in[] = HDFNativeData.byteToLong(start, len, bin);
+        int nelems = java.lang.reflect.Array.getLength(in);
         Long[] out = new Long[nelems];
 
         for (int i = 0; i < nelems; i++) {
@@ -936,11 +936,10 @@ public class HDFArray {
  * <p>
  * We use java.lang.reflection here.
  */
-@SuppressWarnings("all")
 class ArrayDescriptor {
 
     static String theType = "";
-    static Class theClass = null;
+    static Class<? extends Object> theClass = null;
     static int[] dimlen = null;
     static int[] dimstart = null;
     static int[] currentindex = null;
@@ -954,7 +953,7 @@ class ArrayDescriptor {
 
     public ArrayDescriptor(Object anArray) throws HDF5Exception {
 
-        Class tc = anArray.getClass();
+        Class<? extends Object> tc = anArray.getClass();
         if (tc.isArray() == false) {
             /* exception: not an array */
             HDF5Exception ex = new HDF5JavaException(
@@ -981,8 +980,6 @@ class ArrayDescriptor {
         }
 
         String css = ss.substring(ss.lastIndexOf('[') + 1);
-        Class compC = tc.getComponentType();
-        String cs = compC.toString();
         NT = c; /* must be B,S,I,L,F,D, else error */
         if (NT == 'B') {
             NTsize = 1;
@@ -1053,8 +1050,8 @@ class ArrayDescriptor {
         currentindex[0] = 0;
         int i;
         for (i = 1; i <= dims; i++) {
-            dimlen[i] = java.lang.reflect.Array.getLength((Object) o);
-            o = java.lang.reflect.Array.get((Object) o, 0);
+            dimlen[i] = java.lang.reflect.Array.getLength(o);
+            o = java.lang.reflect.Array.get(o, 0);
             objs[i] = o;
             dimstart[i] = 0;
             currentindex[i] = 0;
@@ -1085,7 +1082,7 @@ class ArrayDescriptor {
                 + " bytes)");
         int i;
         for (i = 0; i <= dims; i++) {
-            Class tc = objs[i].getClass();
+            Class<? extends Object> tc = objs[i].getClass();
             String ss = tc.toString();
             System.out.println(i + ":  start " + dimstart[i] + ": len "
                     + dimlen[i] + " current " + currentindex[i]

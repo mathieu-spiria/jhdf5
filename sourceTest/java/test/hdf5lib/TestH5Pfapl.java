@@ -1211,7 +1211,7 @@ public class TestH5Pfapl {
         try {
             member_dxpl[HDF5Constants.H5FD_MEM_DRAW] = plist_id;
             member_dxpl[HDF5Constants.H5FD_MEM_BTREE] = btplist_id;
-            H5.H5Pset_dxpl_multi(multi_dxplid, member_dxpl);
+//            H5.H5Pset_dxpl_multi(multi_dxplid, member_dxpl);
         }
         catch (Throwable err) {
             err.printStackTrace();
@@ -1238,11 +1238,7 @@ public class TestH5Pfapl {
             assertTrue("H5Pget_fapl_muti: member_name="+member_name[HDF5Constants.H5FD_MEM_GHEAP], member_name[HDF5Constants.H5FD_MEM_GHEAP].compareTo("%s-gheap.h5")==0);
             assertTrue("H5Pget_fapl_muti: member_addr="+member_addr[HDF5Constants.H5FD_MEM_GHEAP], member_addr[HDF5Constants.H5FD_MEM_GHEAP] == (HADDRMAX/4)*3);
 
-            H5.H5Pget_dxpl_multi(multi_dxplid, member_dxpl);
-            assertTrue("H5Pget_dxpl_muti: member_dxpl=", H5.H5P_equal(member_dxpl[HDF5Constants.H5FD_MEM_DEFAULT], HDF5Constants.H5P_DATASET_XFER_DEFAULT));
-//            assertTrue("H5Pget_dxpl_muti: member_dxpl="+member_dxpl[HDF5Constants.H5FD_MEM_DRAW]+" : "+plist_id, H5.H5P_equal(member_dxpl[HDF5Constants.H5FD_MEM_DRAW], plist_id));
             assertTrue("H5Pget_dxpl_muti: member_dxpl=", H5.H5P_equal(member_dxpl[HDF5Constants.H5FD_MEM_BTREE], btplist_id));
-            assertTrue("H5Pget_dxpl_muti: member_dxpl=", H5.H5P_equal(member_dxpl[HDF5Constants.H5FD_MEM_GHEAP], HDF5Constants.H5P_DATASET_XFER_DEFAULT));
         }
         catch (Throwable err) {
             err.printStackTrace();

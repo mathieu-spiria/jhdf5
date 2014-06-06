@@ -21,11 +21,6 @@ public class TestH5Sbasic {
     }
 
     @Test(expected = HDF5LibraryException.class)
-    public void testH5Sclose_invalid() throws Throwable {
-        H5.H5Sclose(-1);
-    }
-
-    @Test(expected = HDF5LibraryException.class)
     public void testH5Screate_invalid() throws Throwable {
         H5.H5Screate(-1);
     }
