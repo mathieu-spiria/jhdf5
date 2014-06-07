@@ -198,16 +198,6 @@ public interface IHDF5SimpleWriter extends IHDF5SimpleReader
     public void writeDateArray(final String objectPath, final Date[] dates);
 
     /**
-     * Writes out a time duration value in seconds.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeDuration The duration of time to write in seconds.
-     * @deprecated Use {@link #writeTimeDuration(String, HDF5TimeDuration)} instead.
-     */
-    @Deprecated
-    public void writeTimeDuration(final String objectPath, final long timeDuration);
-
-    /**
      * Writes out a time duration value.
      * <p>
      * <em>Note: Time durations are stored as <code>long[]</code> arrays and tagged as the according
@@ -229,16 +219,6 @@ public interface IHDF5SimpleWriter extends IHDF5SimpleReader
      */
     public void writeTimeDurationArray(final String objectPath,
             final HDF5TimeDurationArray timeDurations);
-
-    /**
-     * Writes out a time duration array in seconds (of rank 1).
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param timeDurations The time durations to write in seconds.
-     * @deprecated Use {@link #writeTimeDurationArray(String, HDF5TimeDurationArray)} instead.
-     */
-    @Deprecated
-    public void writeTimeDurationArray(final String objectPath, final long[] timeDurations);
 
     /**
      * Writes out a <code>String</code> with a fixed maximal length.

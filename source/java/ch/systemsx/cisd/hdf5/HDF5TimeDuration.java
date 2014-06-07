@@ -35,17 +35,6 @@ public class HDF5TimeDuration
 
     /**
      * The time duration, see {@link #getUnit()} for the time unit.
-     * 
-     * @deprecated Use {@link #getValue()}/
-     */
-    @Deprecated
-    public long getDuration()
-    {
-        return duration;
-    }
-
-    /**
-     * The time duration, see {@link #getUnit()} for the time unit.
      */
     public long getValue()
     {
