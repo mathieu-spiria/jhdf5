@@ -125,10 +125,13 @@ public class HDF5RoundtripTest
 
     public static void main(String[] args) throws Throwable
     {
+        // Print Java Version
+        System.out.println("Java Version: " + System.getProperty("java.version"));
+
         // Print OS Version
         System.out.println("Platform: " + OSUtilities.getComputerPlatform());
-        HDF5RoundtripTest test = new HDF5RoundtripTest();
 
+        HDF5RoundtripTest test = new HDF5RoundtripTest();
         test.init();
 
         // Print Library Version
