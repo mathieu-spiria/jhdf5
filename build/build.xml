@@ -2,22 +2,20 @@
 	<import file="../../build_resources/ant/build-common.xml" />
 	<project-classpath name="ecp" classes="${classes}:${lib}/junit4/junit.jar" />
 
-	<property name="mainfolder" value="cisd-${ant.project.name}" />
+	<property name="mainfolder" value="sis-${ant.project.name}" />
 	<property name="distfolder" value="${ant.project.name}" />
-	<property name="jar.file" value="${dist}/cisd-jhdf5.jar" />
-	<property name="dist.file" value="${dist}/cisd-jhdf5" />
+	<property name="jar.file" value="${dist}/sis-jhdf5.jar" />
+	<property name="dist.file" value="${dist}/sis-jhdf5" />
 	<property name="jar.batteries-included.filename"
-	          value="cisd-jhdf5-batteries_included_lin_win_mac_sol.jar" />
+	          value="sis-jhdf5-batteries_included.jar" />
 	<property name="jar.batteries-included.file" value="${dist}/${jar.batteries-included.filename}" />
-	<property name="jar.batteries-included_lin_win_mac.file"
-	          value="${dist}/cisd-jhdf5-batteries_included_lin_win_mac.jar" />
-	<property name="jar.core.file" value="${dist}/cisd-jhdf5-core.jar" />
-	<property name="jar.tools.file" value="${dist}/cisd-jhdf5-tools.jar" />
+	<property name="jar.core.file" value="${dist}/sis-jhdf5-core.jar" />
+	<property name="jar.tools.file" value="${dist}/sis-jhdf5-tools.jar" />
 	<property name="sources.examples" value="sourceExamples/java" />
-	<property name="src.zip.file" value="${dist}/cisd-jhdf5-src.zip" />
-	<property name="examples.src.zip.file" value="${dist}/cisd-jhdf5-examples-src.zip" />
-	<property name="javadoc.zip.file" value="${dist}/cisd-jhdf5-javadoc.zip" />
-	<property name="test.jar.file" value="${dist}/cisd-jhdf5-test.jar" />
+	<property name="src.zip.file" value="${dist}/sis-jhdf5-src.zip" />
+	<property name="examples.src.zip.file" value="${dist}/sis-jhdf5-examples-src.zip" />
+	<property name="javadoc.zip.file" value="${dist}/sis-jhdf5-javadoc.zip" />
+	<property name="test.jar.file" value="${dist}/sis-jhdf5-test.jar" />
 	<property name="lib" value="../libraries" />
 	<property name="original.dist" value="../${ant.project.name}/dist" />
 	<property name="nativesrc1" value="${lib}/hdf5/native" />
@@ -116,40 +114,6 @@
 				           value="${version.number} (r${revision.number},${clean.flag})" />
 			</manifest>
 		</recursive-jar>
-		<recursive-jar destfile="${jar.batteries-included_lin_win_mac.file}">
-			<fileset dir="${classes}">
-				<include name="${build.info.filename}" />
-				<include name="**/*.class" />
-			</fileset>
-			<fileset dir="${nativeroot}">
-				<include name="native/**/*.so" />
-				<exclude name="native/**/*-SunOS/*.so" />
-				<include name="native/**/*.jnilib" />
-				<include name="native/**/*.dll" />
-			</fileset>
-			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
-				<exclude name="${build.info.filename}" />
-				<exclude name="native/**/*-SunOS/*.so" />
-			</zipfileset>
-			<zipfileset src="${lib}/cisd-args4j/cisd-args4j.jar">
-				<exclude name="${build.info.filename}" />
-				<exclude name="**/AbstractBuildAndEnvironmentInfo.class" />
-			</zipfileset>
-			<zipfileset src="${lib}/commons-lang/commons-lang.jar">
-				<exclude name="META-INF/LICENSE.txt" />
-				<exclude name="META-INF/NOTICE.txt" />
-			</zipfileset>
-			<zipfileset src="${lib}/commons-io/commons-io.jar">
-				<exclude name="META-INF/LICENSE.txt" />
-				<exclude name="META-INF/NOTICE.txt" />
-			</zipfileset>
-			<manifest>
-				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain" />
-				<attribute name="Version" value="${version.number}" />
-				<attribute name="Build-Number"
-				           value="${version.number} (r${revision.number},${clean.flag})" />
-			</manifest>
-		</recursive-jar>
 		<recursive-jar destfile="${jar.file}">
 			<fileset dir="${classes}">
 				<include name="${build.info.filename}" />
@@ -177,7 +141,7 @@
 				<attribute name="Build-Number"
 				           value="${version.number} (r${revision.number},${clean.flag})" />
 				<attribute name="Class-Path"
-				           value="hdf5-linux-intel.jar hdf5-solaris-intel.jar hdf5-solaris-sparc.jar hdf5-macosx-intel.jar hdf5-windows-intel.jar" />
+				           value="hdf5-linux-intel.jar hdf5-macosx-intel.jar hdf5-windows-intel.jar" />
 			</manifest>
 		</recursive-jar>
 	</target>
@@ -261,7 +225,7 @@
 				           value="${version.number} (r${revision.number},${clean.flag})" />
 				<attribute name="Main-Class" value="ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain" />
 				<attribute name="Class-Path"
-				           value="commons-lang.jar commons-io.jar cisd-base.jar cisd-args4j.jar cisd-jhdf5-core.jar hdf5-linux-intel.jar hdf5-solaris-intel.jar hdf5-solaris-sparc.jar hdf5-macosx-intel.jar hdf5-windows-intel.jar" />
+				           value="commons-lang.jar commons-io.jar cisd-base.jar cisd-args4j.jar sis-jhdf5-core.jar hdf5-linux-intel.jar hdf5-macosx-intel.jar hdf5-windows-intel.jar" />
 			</manifest>
 		</jar>
 	</target>
@@ -270,7 +234,7 @@
 	        depends="jar-complete, src-zip, examples-src-zip, jar-core, jar-tools, jar-platforms" />
 
 	<target name="jar-platforms"
-	        depends="jar-linux-intel, jar-solaris-intel, jar-solaris-sparc, jar-macosx-intel, jar-windows-intel" />
+	        depends="jar-linux-intel, jar-macosx-intel, jar-windows-intel" />
 
 	<target name="jar-linux-intel" depends="compile">
 		<delete dir="${native}" />
@@ -289,78 +253,6 @@
 			</fileset>
 		</copy>
 		<jar destfile="${dist}/hdf5-linux-intel.jar">
-			<fileset dir="${classes}">
-				<include name="${build.info.filename}" />
-			</fileset>
-			<fileset dir="${nativeroot}">
-				<include name="native/**/*.so" />
-			</fileset>
-			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
-				<include name="ch/systemsx/cisd/base/utilities/BuildAndEnvironmentInfo.class" />
-			</zipfileset>
-			<manifest>
-				<attribute name="Main-Class"
-				           value="ch.systemsx.cisd.base.utilities.BuildAndEnvironmentInfo" />
-				<attribute name="Version" value="${version.number}" />
-				<attribute name="Build-Number"
-				           value="${version.number} (r${revision.number},${clean.flag})" />
-			</manifest>
-		</jar>
-	</target>
-
-	<target name="jar-solaris-intel" depends="compile">
-		<delete dir="${native}" />
-		<mkdir dir="${native}" />
-		<mkdir dir="${dist.hdf5.lib}" />
-		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
-		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
-		<copy todir="${native}">
-			<fileset dir="${nativesrc1}">
-				<include name="jhdf5/x86-SunOS/libjhdf5.so" />
-				<include name="jhdf5/amd64-SunOS/libjhdf5.so" />
-			</fileset>
-			<fileset dir="${nativesrc2}">
-				<include name="unix/x86-SunOS/libunix.so" />
-				<include name="unix/amd64-SunOS/libunix.so" />
-			</fileset>
-		</copy>
-		<jar destfile="${dist}/hdf5-solaris-intel.jar">
-			<fileset dir="${classes}">
-				<include name="${build.info.filename}" />
-			</fileset>
-			<fileset dir="${nativeroot}">
-				<include name="native/**/*.so" />
-			</fileset>
-			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
-				<include name="ch/systemsx/cisd/base/utilities/BuildAndEnvironmentInfo.class" />
-			</zipfileset>
-			<manifest>
-				<attribute name="Main-Class"
-				           value="ch.systemsx.cisd.base.utilities.BuildAndEnvironmentInfo" />
-				<attribute name="Version" value="${version.number}" />
-				<attribute name="Build-Number"
-				           value="${version.number} (r${revision.number},${clean.flag})" />
-			</manifest>
-		</jar>
-	</target>
-
-	<target name="jar-solaris-sparc" depends="compile">
-		<delete dir="${native}" />
-		<mkdir dir="${native}" />
-		<mkdir dir="${dist.hdf5.lib}" />
-		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
-		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
-		<copy todir="${native}">
-			<fileset dir="${nativesrc1}">
-				<include name="jhdf5/sparc-SunOS/libjhdf5.so" />
-				<include name="jhdf5/sparcv9-SunOS/libjhdf5.so" />
-			</fileset>
-			<fileset dir="${nativesrc2}">
-				<include name="unix/sparc-SunOS/libunix.so" />
-				<include name="unix/sparcv9-SunOS/libunix.so" />
-			</fileset>
-		</copy>
-		<jar destfile="${dist}/hdf5-solaris-sparc.jar">
 			<fileset dir="${classes}">
 				<include name="${build.info.filename}" />
 			</fileset>
@@ -487,11 +379,7 @@
 		<copy file="${lib}/commons-io/commons-io.jar" todir="${dist}/${distfolder}/lib" />
 		<move file="${jar.batteries-included.file}"
 		      todir="${dist}/${distfolder}/lib/batteries_included" />
-		<move file="${jar.batteries-included_lin_win_mac.file}"
-		      todir="${dist}/${distfolder}/lib/batteries_included" />
 		<move file="${dist}/hdf5-linux-intel.jar" todir="${dist}/${distfolder}/lib/nativejar" />
-		<move file="${dist}/hdf5-solaris-intel.jar" todir="${dist}/${distfolder}/lib/nativejar" />
-		<move file="${dist}/hdf5-solaris-sparc.jar" todir="${dist}/${distfolder}/lib/nativejar" />
 		<move file="${dist}/hdf5-macosx-intel.jar" todir="${dist}/${distfolder}/lib/nativejar" />
 		<move file="${dist}/hdf5-windows-intel.jar" todir="${dist}/${distfolder}/lib/nativejar" />
 		<move todir="${dist}/${distfolder}/lib">
