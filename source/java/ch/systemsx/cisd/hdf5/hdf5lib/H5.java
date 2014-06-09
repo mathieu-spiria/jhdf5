@@ -69,11 +69,10 @@ class H5
         if (libversion[0] != expectedMajnum || libversion[1] != expectedMinnum
                 || libversion[2] < expectedRelnum)
         {
-            System.err.println("The HDF5 native library is outdated! It has version "
+            throw new UnsupportedOperationException("The HDF5 native library is outdated! It is version "
                     + libversion[0] + "." + libversion[1] + "." + libversion[2]
                     + ", but we require " + expectedMajnum + "." + expectedMinnum + ".x with x >= "
-                    + expectedRelnum + ", exiting now.");
-            System.exit(1);
+                    + expectedRelnum + ".");
         }
     }
 
