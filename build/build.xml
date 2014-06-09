@@ -18,7 +18,7 @@
 	<property name="test.jar.file" value="${dist}/sis-jhdf5-test.jar" />
 	<property name="lib" value="../libraries" />
 	<property name="original.dist" value="../${ant.project.name}/dist" />
-	<property name="nativesrc1" value="${lib}/hdf5/native" />
+	<property name="nativesrc" value="libs/native" />
 	<property name="nativeroot" value="${targets}/ant" />
 	<property name="native" value="${nativeroot}/native" />
 
@@ -35,7 +35,7 @@
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
-			<fileset dir="${nativesrc1}">
+			<fileset dir="${nativesrc}">
 				<include name="**/libjhdf5.so" />
 				<include name="**/libjhdf5.jnilib" />
 				<include name="**/jhdf5.dll" />
@@ -75,7 +75,7 @@
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
-			<fileset dir="${nativesrc1}">
+			<fileset dir="${nativesrc}">
 				<include name="**/libjhdf5.so" />
 				<include name="**/libjhdf5.jnilib" />
 				<include name="**/jhdf5.dll" />
@@ -88,11 +88,13 @@
 			</fileset>
 			<fileset dir="${nativeroot}">
 				<include name="native/**/*.so" />
+				<exclude name="native/**/*-SunOS/*.so" />
 				<include name="native/**/*.jnilib" />
 				<include name="native/**/*.dll" />
 			</fileset>
 			<zipfileset src="${lib}/cisd-base/cisd-base.jar">
 				<exclude name="${build.info.filename}" />
+				<exclude name="native/**/*-SunOS/*.so" />
 			</zipfileset>
 			<zipfileset src="${lib}/cisd-args4j/cisd-args4j.jar">
 				<exclude name="${build.info.filename}" />
@@ -242,9 +244,10 @@
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
-			<fileset dir="${nativesrc1}">
+			<fileset dir="${nativesrc}">
 				<include name="jhdf5/i386-Linux/libjhdf5.so" />
 				<include name="jhdf5/amd64-Linux/libjhdf5.so" />
+				<include name="jhdf5/arm-Linux/libjhdf5.so" />
 			</fileset>
 		</copy>
 		<jar destfile="${dist}/hdf5-linux-intel.jar">
@@ -274,7 +277,7 @@
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
-			<fileset dir="${nativesrc1}">
+			<fileset dir="${nativesrc}">
 				<include name="jhdf5/i386-Mac OS X/libjhdf5.jnilib" />
 				<include name="jhdf5/x86_64-Mac OS X/libjhdf5.jnilib" />
 			</fileset>
@@ -306,7 +309,7 @@
 		<build-info revision="revision.number" version="version.number" clean="clean.flag" />
 		<echo file="${build.info.file}">${version.number}:${revision.number}:${clean.flag}</echo>
 		<copy todir="${native}">
-			<fileset dir="${nativesrc1}">
+			<fileset dir="${nativesrc}">
 				<include name="jhdf5/x86-Windows/jhdf5.dll" />
 				<include name="jhdf5/amd64-Windows/jhdf5.dll" />
 			</fileset>

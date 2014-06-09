@@ -57,7 +57,7 @@ task createBuildInfo(dependsOn: [isClean]){
 }
 
 tasks.withType(Test) {
-    systemProperty "java.library.path", "../libraries/hdf5/native/jhdf5/amd64-Linux:../libraries/hdf5/native/jhdf5/amd64-Linux:../libraries/hdf5/native/jhdf5/x86_64-Mac OS X:../libraries/hdf5/native/jhdf5/x86_64-Mac OS X"
+    systemProperty "java.library.path", "native/jhdf5/amd64-Linux:native/jhdf5/amd64-Linux:native/jhdf5/x86_64-Mac OS X:native/jhdf5/x86_64-Mac OS X"
 }
 
 jar {
@@ -78,9 +78,10 @@ jar.dependsOn createBuildInfo
 
 task nativeJarLinuxIntel(type: Jar) {
     archiveName 'hdf5-linux-intel.jar'
-    from ("../libraries/hdf5") {
+    from ("libs") {
         include 'native/jhdf5/amd64-Linux/**/*'
         include 'native/jhdf5/i386-Linux/**/*'
+        include 'native/jhdf5/arm-Linux/**/*'
     }
     
     from (createBuildInfo.output)
@@ -88,7 +89,7 @@ task nativeJarLinuxIntel(type: Jar) {
 
 task nativeJarMacIntel(type: Jar) {
     archiveName 'hdf5-macosx-intel.jar'
-    from ("../libraries/hdf5") {
+    from ("libs") {
         include 'native/jhdf5/i386-Mac OS X/**/*'
         include 'native/jhdf5/x86_64-Mac OS X/**/*'
     }
@@ -98,7 +99,7 @@ task nativeJarMacIntel(type: Jar) {
 
 task nativeJarWindowsIntel(type: Jar) {
     archiveName 'hdf5-windows-intel.jar'
-    from ("../libraries/hdf5") {
+    from ("libs") {
         include 'native/jhdf5/amd64-Windows/**/*'
         include 'native/jhdf5/x86-Windows/**/*'
     }
@@ -129,6 +130,7 @@ task allJar(type: Jar, dependsOn: [compileJava]) {
 
     from (configurations.runtime.collect {zipTree(it)}) {
         exclude 'native/**/*'
+        exclude 'BUILD-*.INFO'
     }
     from (createBuildInfo.output)
     
@@ -145,6 +147,10 @@ task batteriesIncluded(type: Jar, dependsOn: [allJar, nativeJarLinuxIntel, nativ
         include '**/*'
     }
     
+    from (configurations.runtime.collect {zipTree(it)}) {
+        include 'native/**/*'
+    }
+
     from (zipTree(nativeJarLinuxIntel.archivePath)) {
         include 'native/**/*'
     }
@@ -155,15 +161,6 @@ task batteriesIncluded(type: Jar, dependsOn: [allJar, nativeJarLinuxIntel, nativ
         include 'native/**/*'
     }
     
-    from ("../libraries/nativedata") {
-        include 'native/nativedata/amd64-Linux/**/*'
-        include 'native/nativedata/i386-Linux/**/*'
-        include 'native/nativedata/i386-Mac OS X/**/*'
-        include 'native/nativedata/x86_64-Mac OS X/**/*'
-        include 'native/nativedata/amd64-Windows/**/*'
-        include 'native/nativedata/x86-Windows/**/*'
-    }
-
     manifest {
         attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
     }
@@ -210,16 +207,9 @@ task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar, nativeJarLinu
         into 'sis-jhdf5/lib'
     }
     
-    from ("../libraries/hdf5/native") {
+    from (zipTree(batteriesIncluded.archivePath)) {
         into 'sis-jhdf5/lib/native'
-    }
-    
-    from ("../libraries/unix/native") {
-        into 'sis-jhdf5/lib/native'
-    }
-    
-    from ("../libraries/nativedata/native") {
-        into 'sis-jhdf5/lib/native'
+        include 'native/**'
     }
     
     from (nativeJarLinuxIntel.archivePath) {
@@ -254,6 +244,17 @@ task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar, nativeJarLinu
         into 'sis-jhdf5/src'
         rename '(.*)', 'sis-jhdf5-src.zip'
     }
+
+	// BR 2014-06-09:
+	// This is a workaround for an issue in Gradle: if one of entries from a jar file gets extraced read-only, 
+	// overwriting it in a subsequent run will fail. It should be fixed in a future version of Gradle.
+	// See http://forums.gradle.org/gradle/topics/ziptree_unable_to_overwrite_temporary_read_only_files 
+    doLast {
+        exec {
+            commandLine = "chmod -R u+w $buildDir/tmp/expandedArchives".tokenize()
+        }
+    }
+
 }
 
 publishing {
