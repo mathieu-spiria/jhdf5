@@ -57,7 +57,7 @@ task createBuildInfo(dependsOn: [isClean]){
 }
 
 tasks.withType(Test) {
-    systemProperty "java.library.path", "native/jhdf5/amd64-Linux:native/jhdf5/amd64-Linux:native/jhdf5/x86_64-Mac OS X:native/jhdf5/x86_64-Mac OS X"
+    systemProperty "java.library.path", "libs/native/jhdf5/amd64-Linux:libs/native/jhdf5/amd64-Linux:libs/native/jhdf5/x86_64-Mac OS X:libs/native/jhdf5/x86_64-Mac OS X"
 }
 
 jar {
