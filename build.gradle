@@ -1,7 +1,6 @@
 apply from: '../gradle/javaproject.gradle'
 
 group="sis"
-ext.buildInfo="jhdf5"
 
 dependencies {
     compile 'cisd:cisd-args4j:+',
@@ -10,50 +9,6 @@ dependencies {
     
     testCompile 'testng:testng:+',
                 'jmock:jmock:+'
-}
-
-new ByteArrayOutputStream().withStream { os ->
-    def result = exec {
-        executable = 'svn'
-        args = ['info']
-        standardOutput = os
-    }
-    def outputAsString = os.toString()
-    def matchLastChangedRevMatcher = outputAsString =~ /Last Changed Rev: (\d+)/
-    def urlMatcher = outputAsString =~ /URL: .*\/(.+)/
-
-    def revision = "r${matchLastChangedRevMatcher[0][1]}"
-    def branch = urlMatcher[0][1]
-
-    if (branch.equals('trunk')) {
-        project.version = revision
-    } else {
-        project.version = branch
-    }
-}
-
-task isClean(type: Exec) {
-    workingDir = '.'
-    commandLine = ['svn', 'status']
-    standardOutput = new ByteArrayOutputStream()
-
-    ext.output = { 
-        return standardOutput.toString().length() == 0
-    }    
-}
-
-task createBuildInfo(dependsOn: [isClean]){
-    
-    ext.output = "${buildDir}/BUILD-${buildInfo}.INFO"
-    
-    doLast {
-        def writer = new FileWriter(ext.output)
-        try {
-            writer.println("SNAPSHOT:"+project.version.substring(1)+":"+(isClean.output()?"clean":"dirty"))
-        } finally {
-            writer.close()
-        }
-    }
 }
 
 tasks.withType(Test) {
@@ -66,15 +21,15 @@ jar {
         exclude('ch/systemsx/cisd/hdf5/h5ar') 
         exclude('ch/systemsx/cisd/hdf5/io')
     }
-    from (createBuildInfo.output)
-    
+    from('targets/dist') {
+        include 'BUILD*INFO'
+    }    
     manifest {
         attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo'
         attributes 'Class-Path': configurations.runtime.collect { it.getName() }.join(' ')
     }
     
 }
-jar.dependsOn createBuildInfo
 
 task nativeJarLinuxIntel(type: Jar) {
     archiveName 'hdf5-linux-intel.jar'
@@ -84,7 +39,9 @@ task nativeJarLinuxIntel(type: Jar) {
         include 'native/jhdf5/arm-Linux/**/*'
     }
     
-    from (createBuildInfo.output)
+    from('targets/dist') {
+        include 'BUILD*INFO'
+    }    
 }
 
 task nativeJarMacIntel(type: Jar) {
@@ -94,7 +51,9 @@ task nativeJarMacIntel(type: Jar) {
         include 'native/jhdf5/x86_64-Mac OS X/**/*'
     }
     
-    from (createBuildInfo.output)
+    from('targets/dist') {
+        include 'BUILD*INFO'
+    }    
 }
 
 task nativeJarWindowsIntel(type: Jar) {
@@ -104,7 +63,9 @@ task nativeJarWindowsIntel(type: Jar) {
         include 'native/jhdf5/x86-Windows/**/*'
     }
     
-    from (createBuildInfo.output)
+    from('targets/dist') {
+        include 'BUILD*INFO'
+    }    
 }
 
 task toolsJar(type: Jar, dependsOn: [compileJava]) {
@@ -113,7 +74,10 @@ task toolsJar(type: Jar, dependsOn: [compileJava]) {
         include('ch/systemsx/cisd/hdf5/h5ar/**/*') 
         include('ch/systemsx/cisd/hdf5/io/**/*') 
     }
-    from (createBuildInfo.output)    
+    
+    from('targets/dist') {
+        include 'BUILD*INFO'
+    }    
     
     manifest {
         attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
@@ -132,7 +96,10 @@ task allJar(type: Jar, dependsOn: [compileJava]) {
         exclude 'native/**/*'
         exclude 'BUILD-*.INFO'
     }
-    from (createBuildInfo.output)
+
+    from('targets/dist') {
+        include 'BUILD*INFO'
+    }    
     
     manifest {
         attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
