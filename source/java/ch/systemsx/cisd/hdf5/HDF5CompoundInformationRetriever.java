@@ -87,7 +87,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                             final CompoundTypeInformation compoundInformation =
                                     getCompoundTypeInformation(compoundDataTypeId, dataTypePath,
                                             dataTypeInfoOptions, registry);
-                            return compoundInformation.members;
+                            return compoundInformation.getCopyOfMembers();
                         }
                     };
         return baseReader.runner.call(writeRunnable);
@@ -111,7 +111,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                         public HDF5CompoundMemberInformation[] call(final ICleanUpRegistry registry)
                         {
                             return getFullCompoundDataSetInformation(dataSetPath,
-                                    dataTypeInfoOptions, registry).members;
+                                    dataTypeInfoOptions, registry).getCopyOfMembers();
                         }
                     };
         final HDF5CompoundMemberInformation[] compoundInformation =
@@ -158,7 +158,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         {
             throw new HDF5JavaException("Data set '" + dataSetPath + "' is not of compound type.");
         }
-        // Note: the type varians for the compound members are stored at the compound type.
+        // Note: the type variants for the compound members are stored at the compound type.
         // So if we want to know the data set variant, we need to read the data type path as well.
         final String dataTypePathOrNull =
                 (dataTypeInfoOptions.knowsDataTypePath() || dataTypeInfoOptions
@@ -197,11 +197,11 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 baseReader.h5.getNamesForEnumOrCompoundMembers(compoundDataTypeId);
         final int nativeCompoundDataTypeId =
                 baseReader.h5.getNativeDataType(compoundDataTypeId, registry);
-        final int recordSize = baseReader.h5.getDataTypeSize(nativeCompoundDataTypeId);
+        final int recordSizeOnDisk = baseReader.h5.getDataTypeSize(compoundDataTypeId);
+        final int recordSizeInMemory = baseReader.h5.getDataTypeSize(nativeCompoundDataTypeId);
         final CompoundTypeInformation compoundInfo =
                 new CompoundTypeInformation(typeName, compoundDataTypeId, nativeCompoundDataTypeId,
-                        memberNames.length, recordSize);
-        int offset = 0;
+                        memberNames.length, recordSizeOnDisk, recordSizeInMemory);
         final HDF5DataTypeVariant[] memberTypeVariantsOrNull =
                 dataTypeInfoOptions.knowsDataTypeVariant() ? baseReader
                         .tryGetTypeVariantForCompoundMembers(dataTypePathOrNull, registry) : null;
@@ -212,10 +212,19 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                     "Invalid member data type variant information on committed data type '"
                             + dataTypePathOrNull + "'.");
         }
+        int offsetOnDisk = 0;
+        int offsetInMemory = 0;
         for (int i = 0; i < memberNames.length; ++i)
         {
             final int dataTypeId =
                     baseReader.h5.getDataTypeForIndex(compoundDataTypeId, i, registry);
+            // This should safe us from computing the offsets ourselves, but as it turns out, the
+            // offset for the native data type is wrong for bit fields,
+            // Test failing: HDF5RoundtripTest.testCompoundMap()
+            // Tested: 2014-07-28, HDF5 1.8.13
+            // offsetOnDisk = baseReader.h5.getOffsetForCompoundMemberIndex(compoundDataTypeId, i);
+            // offsetInMemory =
+            // baseReader.h5.getOffsetForCompoundMemberIndex(nativeCompoundDataTypeId, i);
             compoundInfo.dataTypeIds[i] = dataTypeId;
             final HDF5DataTypeInformation dataTypeInformation =
                     baseReader.getDataTypeInformation(dataTypeId, dataTypeInfoOptions, registry);
@@ -245,16 +254,19 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             compoundInfo.enumTypes[i] = enumTypeOrNull;
             if (enumTypeOrNull != null)
             {
-                compoundInfo.members[i] =
-                        new HDF5CompoundMemberInformation(memberNames[i], dataTypeInformation,
-                                offset, enumTypeOrNull.getEnumType().getValueArray());
+                compoundInfo.setMember(i, new HDF5CompoundMemberInformation(memberNames[i],
+                        dataTypeInformation, offsetOnDisk, offsetInMemory, enumTypeOrNull
+                                .getEnumType().getValueArray()));
             } else
             {
-                compoundInfo.members[i] =
-                        new HDF5CompoundMemberInformation(memberNames[i], dataTypeInformation,
-                                offset);
+                compoundInfo.setMember(i, new HDF5CompoundMemberInformation(memberNames[i],
+                        dataTypeInformation, offsetOnDisk, offsetInMemory));
             }
-            offset += compoundInfo.members[i].getType().getSize();
+            final HDF5DataTypeInformation typeInfo = compoundInfo.getMember(i).getType();
+            final int size = typeInfo.getSize();
+            offsetOnDisk += size;
+            offsetInMemory = PaddingUtils.padOffset(offsetInMemory + size, typeInfo.getElementSizeForPadding());
+
         }
         return compoundInfo;
     }
@@ -309,7 +321,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                             final CompoundTypeInformation compoundInformation =
                                     getCompoundTypeInformation(storageDataTypeId, dataTypePath,
                                             dataTypeInfoOptions, registry);
-                            return compoundInformation.members;
+                            return compoundInformation.getCopyOfMembers();
                         }
                     };
         return baseReader.runner.call(writeRunnable);
@@ -425,8 +437,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                     final Class<? extends Enum<?>> enumClass =
                             (Class<? extends Enum<?>>) memberClass;
                     final String typeName =
-                            (StringUtils.isBlank(m.getEnumTypeName())) ? memberClass.getSimpleName() : m
-                                    .getEnumTypeName();
+                            (StringUtils.isBlank(m.getEnumTypeName())) ? memberClass
+                                    .getSimpleName() : m.getEnumTypeName();
                     m.setEnumerationType(enumTypeRetriever.getType(typeName,
                             ReflectionUtils.getEnumOptions(enumClass)));
                 } else if (memberClass == HDF5EnumerationValue.class
@@ -632,11 +644,11 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             final HDF5CompoundMappingHints hintsOrNull)
     {
         final List<HDF5CompoundMemberMapping> mapping =
-                new ArrayList<HDF5CompoundMemberMapping>(compoundTypeInfo.members.length);
+                new ArrayList<HDF5CompoundMemberMapping>(compoundTypeInfo.getNumberOfMembers());
         final Map<String, Field> fields = ReflectionUtils.getFieldMap(compoundClazz);
-        for (int i = 0; i < compoundTypeInfo.members.length; ++i)
+        for (int i = 0; i < compoundTypeInfo.getNumberOfMembers(); ++i)
         {
-            final HDF5CompoundMemberInformation compoundMember = compoundTypeInfo.members[i];
+            final HDF5CompoundMemberInformation compoundMember = compoundTypeInfo.getMember(i);
             final int compoundMemberTypeId = compoundTypeInfo.dataTypeIds[i];
             final Field fieldOrNull = fields.get(compoundMember.getName());
             final String memberName = compoundMember.getName();
@@ -674,7 +686,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 mapping.add(HDF5CompoundMemberMapping.mappingArrayWithStorageId(fieldName,
                         memberName, String.class, new int[]
                             { typeInfo.getElementSize() }, compoundMemberTypeId, false,
-                        typeInfo.tryGetTypeVariant()));
+                        typeInfo.isVariableLengthString(), typeInfo.tryGetTypeVariant()));
 
             } else
             {
@@ -688,7 +700,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 }
                 mapping.add(HDF5CompoundMemberMapping.mappingArrayWithStorageId(fieldName,
                         memberName, memberClazz, dimensions, compoundMemberTypeId,
-                        false == compoundMember.getType().isSigned(), typeInfo.tryGetTypeVariant()));
+                        false == compoundMember.getType().isSigned(), false,
+                        typeInfo.tryGetTypeVariant()));
             }
         }
         return HDF5CompoundMemberMapping.addHints(

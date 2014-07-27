@@ -21,7 +21,6 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.createAttributeTypeVariantAttribut
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createObjectTypeVariantAttributeName;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantDataTypePath;
-import static ch.systemsx.cisd.hdf5.HDF5Utils.getVariableLengthStringDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isEmpty;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.isNonPositive;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
@@ -138,8 +137,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
 
     final FileFormat fileFormat;
 
-    final int variableLengthStringDataTypeId;
-
     HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
             boolean autoDereference, FileFormat fileFormat, boolean useExtentableDataTypes,
             boolean overwriteFile, boolean keepDataSetIfExists,
@@ -163,7 +160,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
         this.useSimpleDataSpaceForAttributes = useSimpleDataSpaceForAttributes;
         this.syncMode = syncMode;
         readNamedDataTypes();
-        variableLengthStringDataTypeId = openOrCreateVLStringType();
         saveNonDefaultHouseKeepingNameSuffix();
         commandQueue = new LinkedBlockingQueue<Command>();
         setupSyncThread();
@@ -542,6 +538,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
                             h5.createArrayType(baseStorageTypeId, data.length, registry);
                     setAttribute(objectPath, attributeName, storageTypeId, memoryTypeId, -1,
                             byteArray, registry);
+                    h5.reclaimCompoundVL(type, byteArray);
+
                     return null; // Nothing to return.
                 }
             };
@@ -578,6 +576,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
                             h5.createArrayType(baseStorageTypeId, data.dimensions(), registry);
                     setAttribute(objectPath, attributeName, storageTypeId, memoryTypeId, -1,
                             byteArray, registry);
+                    h5.reclaimCompoundVL(type, byteArray);
+
                     return null; // Nothing to return.
                 }
             };
@@ -593,19 +593,6 @@ final class HDF5BaseWriter extends HDF5BaseReader
             path = getTypeVariantDataTypePath(houseKeepingNameSuffix) + "." + (number++);
         } while (reader.exists(path, false) && number < MAX_TYPE_VARIANT_TYPES);
         return path;
-    }
-
-    private int openOrCreateVLStringType()
-    {
-        final String variableLengthStringTypePath =
-                getVariableLengthStringDataTypePath(houseKeepingNameSuffix);
-        int dataTypeId = getDataTypeId(variableLengthStringTypePath);
-        if (dataTypeId < 0)
-        {
-            dataTypeId = h5.createDataTypeVariableString(fileRegistry);
-            commitDataType(variableLengthStringTypePath, dataTypeId);
-        }
-        return dataTypeId;
     }
 
     /**

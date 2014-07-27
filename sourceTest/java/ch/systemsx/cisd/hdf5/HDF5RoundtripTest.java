@@ -83,6 +83,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 import ch.systemsx.cisd.hdf5.hdf5lib.H5General;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * Test cases for {@link IHDF5Writer} and {@link IHDF5Reader}, doing "round-trips" to the HDF5 disk
@@ -357,6 +358,7 @@ public class HDF5RoundtripTest
         test.testOpaqueType();
         test.testCompound();
         test.testCompoundInferStringLength();
+        test.testCompoundVariableLengthString();
         test.testClosedCompoundType();
         test.testAnonCompound();
         test.testOverwriteCompound();
@@ -366,6 +368,7 @@ public class HDF5RoundtripTest
         test.testCompoundJavaEnumArray();
         test.testCompoundJavaEnumMap();
         test.testCompoundAttribute();
+        test.testCompoundAttributeMemoryAlignment();
         test.testCompoundIncompleteJavaPojo();
         test.testCompoundManualMapping();
         test.testInferredCompoundType();
@@ -3002,7 +3005,7 @@ public class HDF5RoundtripTest
         assertTrue(Arrays.equals(data.dimensions(), dataStored.dimensions()));
         final HDF5DataSetInformation info = reader.getDataSetInformation(dataSetName);
         reader.close();
-        assertTrue(info.getTypeInformation().isVariableLengthType());
+        assertTrue(info.getTypeInformation().isVariableLengthString());
         assertEquals("STRING(-1)", info.getTypeInformation().toString());
         assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
         assertTrue(Arrays.toString(info.getDimensions()), Arrays.equals(new long[]
@@ -3049,7 +3052,7 @@ public class HDF5RoundtripTest
             { 2, 2 }).getAsFlatArray()));
         final HDF5DataSetInformation info = reader.getDataSetInformation(dataSetName);
         reader.close();
-        assertTrue(info.getTypeInformation().isVariableLengthType());
+        assertTrue(info.getTypeInformation().isVariableLengthString());
         assertEquals("STRING(-1)", info.getTypeInformation().toString());
         assertEquals(HDF5StorageLayout.CHUNKED, info.getStorageLayout());
         assertTrue(Arrays.equals(dims, info.getDimensions()));
@@ -3634,7 +3637,7 @@ public class HDF5RoundtripTest
         final String[] dataStored = reader.readStringArray(dataSetName);
         assertTrue(Arrays.equals(data, dataStored));
         assertTrue(reader.getDataSetInformation(dataSetName).getTypeInformation()
-                .isVariableLengthType());
+                .isVariableLengthString());
         reader.close();
     }
 
@@ -5577,7 +5580,7 @@ public class HDF5RoundtripTest
         assertNull(stringInfo.tryGetChunkSizes());
         final HDF5DataSetInformation stringInfoVL = reader.getDataSetInformation("stringDSVL");
         assertEquals(HDF5DataClass.STRING, stringInfoVL.getTypeInformation().getDataClass());
-        assertTrue(stringInfoVL.getTypeInformation().isVariableLengthType());
+        assertTrue(stringInfoVL.getTypeInformation().isVariableLengthString());
         assertEquals(-1, stringInfoVL.getTypeInformation().getElementSize());
         assertEquals(0, stringInfoVL.getDimensions().length);
         assertEquals(HDF5StorageLayout.COMPACT, stringInfoVL.getStorageLayout());
@@ -6995,6 +6998,149 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
+    static class RecordRequiringMemAlignment
+    {
+        byte b1;
+
+        short s;
+
+        byte b2;
+
+        int i;
+
+        byte b3;
+
+        long l;
+
+        public RecordRequiringMemAlignment()
+        {
+        }
+
+        RecordRequiringMemAlignment(byte b1, short s, byte b2, int i, byte b3, long l)
+        {
+            super();
+            this.b1 = b1;
+            this.s = s;
+            this.b2 = b2;
+            this.i = i;
+            this.b3 = b3;
+            this.l = l;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + b1;
+            result = prime * result + b2;
+            result = prime * result + b3;
+            result = prime * result + i;
+            result = prime * result + (int) (l ^ (l >>> 32));
+            result = prime * result + s;
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            RecordRequiringMemAlignment other = (RecordRequiringMemAlignment) obj;
+            if (b1 != other.b1)
+            {
+                return false;
+            }
+            if (b2 != other.b2)
+            {
+                return false;
+            }
+            if (b3 != other.b3)
+            {
+                return false;
+            }
+            if (i != other.i)
+            {
+                return false;
+            }
+            if (l != other.l)
+            {
+                return false;
+            }
+            if (s != other.s)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "RecordRequringMemAlignment [b1=" + b1 + ", s=" + s + ", b2=" + b2 + ", i=" + i
+                    + ", b3=" + b3 + ", l=" + l + "]";
+        }
+
+    }
+
+    @Test
+    public void testCompoundAttributeMemoryAlignment()
+    {
+        final File file = new File(workingDirectory, "compoundAttributeMemoryAlignment.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        final RecordRequiringMemAlignment recordWritten =
+                new RecordRequiringMemAlignment((byte) 1, (short) 2, (byte) 3, 4, (byte) 5, 6L);
+        writer.int32().write("val", 0);
+        writer.compound().setAttr("val", "attr0d", recordWritten);
+        final RecordRequiringMemAlignment[] recordArrayWritten =
+                new RecordRequiringMemAlignment[]
+                    {
+                            new RecordRequiringMemAlignment((byte) 7, (short) 8, (byte) 9, 10,
+                                    (byte) 11, 12L),
+                            new RecordRequiringMemAlignment((byte) 13, (short) 14, (byte) 15, 16,
+                                    (byte) 17, 18L) };
+        writer.compound().setArrayAttr("val", "attr1d", recordArrayWritten);
+        final MDArray<RecordRequiringMemAlignment> recordMDArrayWritten =
+                new MDArray<RecordRequiringMemAlignment>(new RecordRequiringMemAlignment[]
+                    {
+                            new RecordRequiringMemAlignment((byte) 19, (short) 20, (byte) 21, 22,
+                                    (byte) 23, 24L),
+                            new RecordRequiringMemAlignment((byte) 25, (short) 26, (byte) 27, 28,
+                                    (byte) 29, 30L),
+                            new RecordRequiringMemAlignment((byte) 31, (short) 32, (byte) 33, 34,
+                                    (byte) 35, 36L),
+                            new RecordRequiringMemAlignment((byte) 37, (short) 38, (byte) 39, 40,
+                                    (byte) 41, 42L), }, new long[]
+                    { 2, 2 });
+        writer.compound().setMDArrayAttr("val", "attr2d", recordMDArrayWritten);
+        writer.close();
+
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final RecordRequiringMemAlignment recordRead =
+                reader.compound().getAttr("val", "attr0d", RecordRequiringMemAlignment.class);
+        assertEquals(recordWritten, recordRead);
+        final RecordRequiringMemAlignment[] recordArrayRead =
+                reader.compound().getArrayAttr("val", "attr1d", RecordRequiringMemAlignment.class);
+        assertTrue(Arrays.equals(recordArrayWritten, recordArrayRead));
+        final MDArray<RecordRequiringMemAlignment> recordMDArrayRead =
+                reader.compound().getMDArrayAttr("val", "attr2d", RecordRequiringMemAlignment.class);
+        assertTrue(recordMDArrayWritten.equals(recordMDArrayRead));
+        reader.close();
+    }
+
     @Test
     public void testCompound()
     {
@@ -7171,20 +7317,196 @@ public class HDF5RoundtripTest
         assertEquals("s1", arrayType.getCompoundMemberInformation()[0].getName());
         assertEquals(HDF5DataClass.STRING, arrayType.getCompoundMemberInformation()[0].getType()
                 .getDataClass());
-        assertEquals(recordArrayWritten[0].s1.length(), arrayType.getCompoundMemberInformation()[0].getType()
-                .getSize());
+        assertEquals(recordArrayWritten[0].s1.length(), arrayType.getCompoundMemberInformation()[0]
+                .getType().getSize());
         assertEquals("s2", arrayType.getCompoundMemberInformation()[1].getName());
         assertEquals(HDF5DataClass.STRING, arrayType.getCompoundMemberInformation()[1].getType()
                 .getDataClass());
-        assertEquals(recordArrayWritten[1].s2.length(), arrayType.getCompoundMemberInformation()[1].getType()
-                .getSize());
-        final SimpleStringRecord[] recordArrayRead = reader.compound().readArray("stringsArray", SimpleStringRecord.class);
+        assertEquals(recordArrayWritten[1].s2.length(), arrayType.getCompoundMemberInformation()[1]
+                .getType().getSize());
+        final SimpleStringRecord[] recordArrayRead =
+                reader.compound().readArray("stringsArray", SimpleStringRecord.class);
         assertEquals(2, recordArrayRead.length);
         assertEquals(recordArrayWritten[0], recordArrayRead[0]);
         assertEquals(recordArrayWritten[1], recordArrayRead[1]);
-        
+
         reader.close();
 
+    }
+
+    static class SimpleRecordWithStringsAndInts
+    {
+        @CompoundElement(variableLength = true)
+        String s1;
+
+        int i1;
+
+        @CompoundElement(variableLength = true)
+        String s2;
+
+        int i2;
+
+        SimpleRecordWithStringsAndInts()
+        {
+        }
+
+        SimpleRecordWithStringsAndInts(String s1, int i1, String s2, int i2)
+        {
+            this.s1 = s1;
+            this.i1 = i1;
+            this.s2 = s2;
+            this.i2 = i2;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + i1;
+            result = prime * result + i2;
+            result = prime * result + ((s1 == null) ? 0 : s1.hashCode());
+            result = prime * result + ((s2 == null) ? 0 : s2.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            SimpleRecordWithStringsAndInts other = (SimpleRecordWithStringsAndInts) obj;
+            if (i1 != other.i1)
+            {
+                return false;
+            }
+            if (i2 != other.i2)
+            {
+                return false;
+            }
+            if (s1 == null)
+            {
+                if (other.s1 != null)
+                {
+                    return false;
+                }
+            } else if (!s1.equals(other.s1))
+            {
+                return false;
+            }
+            if (s2 == null)
+            {
+                if (other.s2 != null)
+                {
+                    return false;
+                }
+            } else if (!s2.equals(other.s2))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "SimpleRecordWithStringsAndInts [s1=" + s1 + ", i1=" + i1 + ", s2=" + s2
+                    + ", i2=" + i2 + "]";
+        }
+
+    }
+
+    @Test
+    public void testCompoundVariableLengthString()
+    {
+        final File file = new File(workingDirectory, "variableLengthStringsInCompound.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        final HDF5CompoundType<SimpleRecordWithStringsAndInts> typeWritten =
+                writer.compound().getInferredType(SimpleRecordWithStringsAndInts.class);
+        final SimpleRecordWithStringsAndInts recordWritten =
+                new SimpleRecordWithStringsAndInts("hello", 17, "world", 1);
+        writer.compound().write("stringAntInt", typeWritten, recordWritten);
+        final SimpleRecordWithStringsAndInts[] recordArrayWritten =
+                new SimpleRecordWithStringsAndInts[]
+                    { new SimpleRecordWithStringsAndInts("hello", 3, "0123456789", 100000),
+                            new SimpleRecordWithStringsAndInts("Y2", -1, "What?", -100000) };
+        writer.compound().writeArray("stringsArray", typeWritten, recordArrayWritten);
+        writer.close();
+
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<SimpleRecordWithStringsAndInts> typeRead =
+                reader.compound().getDataSetType("stringAntInt",
+                        SimpleRecordWithStringsAndInts.class);
+        assertEquals(4, typeRead.getCompoundMemberInformation().length);
+        assertEquals("s1", typeRead.getCompoundMemberInformation()[0].getName());
+        assertEquals(HDF5DataClass.STRING, typeRead.getCompoundMemberInformation()[0].getType()
+                .getDataClass());
+        assertTrue(typeRead.getCompoundMemberInformation()[0].getType().isVariableLengthString());
+        assertEquals(HDFNativeData.getMachineWordSize(), typeRead.getCompoundMemberInformation()[0]
+                .getType().getSize());
+        assertEquals("i1", typeRead.getCompoundMemberInformation()[1].getName());
+        assertEquals(HDF5DataClass.INTEGER, typeRead.getCompoundMemberInformation()[1].getType()
+                .getDataClass());
+        assertEquals("s2", typeRead.getCompoundMemberInformation()[2].getName());
+        assertEquals(HDF5DataClass.STRING, typeRead.getCompoundMemberInformation()[2].getType()
+                .getDataClass());
+        assertTrue(typeRead.getCompoundMemberInformation()[2].getType().isVariableLengthString());
+        assertEquals(HDFNativeData.getMachineWordSize(), typeRead.getCompoundMemberInformation()[2]
+                .getType().getSize());
+        assertEquals("i2", typeRead.getCompoundMemberInformation()[3].getName());
+        assertEquals(HDF5DataClass.INTEGER, typeRead.getCompoundMemberInformation()[3].getType()
+                .getDataClass());
+        assertFalse(typeRead.getCompoundMemberInformation()[3].getType().isVariableLengthString());
+        final SimpleRecordWithStringsAndInts recordRead =
+                reader.compound().read("stringAntInt", typeRead);
+        assertEquals(recordWritten, recordRead);
+
+        final HDF5CompoundType<SimpleRecordWithStringsAndInts> arrayTypeRead =
+                reader.compound().getDataSetType("stringsArray",
+                        SimpleRecordWithStringsAndInts.class);
+        assertEquals(4, arrayTypeRead.getCompoundMemberInformation().length);
+        assertEquals("s1", arrayTypeRead.getCompoundMemberInformation()[0].getName());
+        assertEquals(HDF5DataClass.STRING, arrayTypeRead.getCompoundMemberInformation()[0]
+                .getType().getDataClass());
+        assertTrue(arrayTypeRead.getCompoundMemberInformation()[0].getType()
+                .isVariableLengthString());
+        assertEquals(HDFNativeData.getMachineWordSize(),
+                arrayTypeRead.getCompoundMemberInformation()[0].getType().getSize());
+        assertEquals("i1", arrayTypeRead.getCompoundMemberInformation()[1].getName());
+        assertEquals(HDF5DataClass.INTEGER, arrayTypeRead.getCompoundMemberInformation()[1]
+                .getType().getDataClass());
+        assertEquals("s2", arrayTypeRead.getCompoundMemberInformation()[2].getName());
+        assertEquals(HDF5DataClass.STRING, arrayTypeRead.getCompoundMemberInformation()[2]
+                .getType().getDataClass());
+        assertTrue(arrayTypeRead.getCompoundMemberInformation()[2].getType()
+                .isVariableLengthString());
+        assertEquals(HDFNativeData.getMachineWordSize(),
+                arrayTypeRead.getCompoundMemberInformation()[2].getType().getSize());
+        assertEquals("i2", arrayTypeRead.getCompoundMemberInformation()[3].getName());
+        assertEquals(HDF5DataClass.INTEGER, arrayTypeRead.getCompoundMemberInformation()[3]
+                .getType().getDataClass());
+        assertFalse(arrayTypeRead.getCompoundMemberInformation()[3].getType()
+                .isVariableLengthString());
+        final SimpleRecordWithStringsAndInts[] recordArrayRead =
+                reader.compound().readArray("stringsArray", arrayTypeRead);
+        assertEquals(recordArrayWritten.length, recordArrayRead.length);
+        assertEquals(recordArrayWritten[0], recordArrayRead[0]);
+        assertEquals(recordArrayWritten[1], recordArrayRead[1]);
+
+        reader.close();
     }
 
     @Test

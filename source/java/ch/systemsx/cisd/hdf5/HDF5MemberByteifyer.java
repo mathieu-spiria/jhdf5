@@ -21,6 +21,7 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.H5T.H5Tinsert;
 import java.lang.reflect.Field;
 
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A class that byteifies member fields of objects.
@@ -33,47 +34,65 @@ abstract class HDF5MemberByteifyer
 
     private final String memberName;
 
+    protected final int maxCharacters;
+
     protected final int size;
 
-    protected final int sizeInBytes;
+    protected final int offsetOnDisk;
 
-    protected final int offset;
+    protected final int offsetInMemory;
 
     protected final CharacterEncoding encoding;
 
     private final HDF5DataTypeVariant typeVariant;
 
-    HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int offset,
-            HDF5DataTypeVariant typeVariantOrNull)
+    private final boolean isVariableLengthType;
+
+    HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int offset, int memOffset,
+            boolean isVariableLengthType, HDF5DataTypeVariant typeVariantOrNull)
     {
-        this(fieldOrNull, memberName, size, size, offset, CharacterEncoding.ASCII,
-                typeVariantOrNull);
+        this(fieldOrNull, memberName, size, offset, memOffset, CharacterEncoding.ASCII, size,
+                isVariableLengthType, typeVariantOrNull);
     }
 
-    HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int sizeInBytes,
-            int offset, CharacterEncoding encoding)
+    HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int offset, int memOffset,
+            CharacterEncoding encoding, int maxCharacters, boolean isVariableLengthType)
     {
-        this(fieldOrNull, memberName, size, sizeInBytes, offset, encoding, HDF5DataTypeVariant.NONE);
+        this(fieldOrNull, memberName, size, offset, memOffset, encoding, maxCharacters,
+                isVariableLengthType, HDF5DataTypeVariant.NONE);
     }
 
-    HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int sizeInBytes,
-            int offset, CharacterEncoding encoding, HDF5DataTypeVariant typeVariantOrNull)
+    private HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int offset,
+            int memOffset, CharacterEncoding encoding, int maxCharacters,
+            boolean isVariableLengthType, HDF5DataTypeVariant typeVariantOrNull)
     {
+        this.isVariableLengthType = isVariableLengthType;
         this.fieldOrNull = fieldOrNull;
         this.memberName = memberName;
-        this.size = size;
-        this.sizeInBytes = sizeInBytes;
-        this.offset = offset;
+        this.maxCharacters = maxCharacters;
+        if (isVariableLengthType)
+        {
+            this.size = HDFNativeData.getMachineWordSize();
+        } else
+        {
+            this.size = size;
+        }
+        this.offsetOnDisk = offset;
+        this.offsetInMemory = PaddingUtils.padOffset(memOffset, getElementSize());
         this.encoding = encoding;
         this.typeVariant = HDF5DataTypeVariant.maskNull(typeVariantOrNull);
     }
 
-    abstract byte[] byteify(int compoundDataTypeId, Object obj)
-            throws IllegalAccessException;
+    /**
+     * Returns the size of one element of this data type in bytes.
+     */
+    abstract int getElementSize();
+
+    abstract byte[] byteify(int compoundDataTypeId, Object obj) throws IllegalAccessException;
 
     abstract void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
             int arrayOffset) throws IllegalAccessException;
-    
+
     abstract int getMemberStorageTypeId();
 
     /**
@@ -88,18 +107,18 @@ abstract class HDF5MemberByteifyer
 
     void insertType(int dataTypeId)
     {
-        H5Tinsert(dataTypeId, memberName, offset, getMemberStorageTypeId());
+        H5Tinsert(dataTypeId, memberName, offsetOnDisk, getMemberStorageTypeId());
     }
 
     void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
     {
         if (getMemberNativeTypeId() < 0)
         {
-            H5Tinsert(dataTypeId, memberName, offset,
+            H5Tinsert(dataTypeId, memberName, offsetInMemory,
                     h5.getNativeDataType(getMemberStorageTypeId(), registry));
         } else
         {
-            H5Tinsert(dataTypeId, memberName, offset, getMemberNativeTypeId());
+            H5Tinsert(dataTypeId, memberName, offsetInMemory, getMemberNativeTypeId());
         }
     }
 
@@ -107,10 +126,15 @@ abstract class HDF5MemberByteifyer
     {
         return memberName;
     }
-    
+
     Field tryGetField()
     {
         return fieldOrNull;
+    }
+
+    int getMaxCharacters()
+    {
+        return maxCharacters;
     }
 
     int getSize()
@@ -118,24 +142,34 @@ abstract class HDF5MemberByteifyer
         return size;
     }
 
-    int getSizeInBytes()
+    int getOffsetOnDisk()
     {
-        return sizeInBytes;
+        return offsetOnDisk;
     }
 
-    int getOffset()
+    int getTotalSizeOnDisk()
     {
-        return offset;
+        return offsetOnDisk + size;
     }
 
-    int getTotalSize()
+    int getOffsetInMemory()
     {
-        return offset + sizeInBytes;
+        return offsetInMemory;
+    }
+
+    int getTotalSizeInMemory()
+    {
+        return offsetInMemory + size;
     }
 
     HDF5DataTypeVariant getTypeVariant()
     {
         return typeVariant;
+    }
+
+    boolean isVariableLengthType()
+    {
+        return isVariableLengthType;
     }
 
     String describe()
@@ -149,12 +183,12 @@ abstract class HDF5MemberByteifyer
             return "member '" + memberName + "'";
         }
     }
-    
+
     boolean isDummy()
     {
         return false;
     }
-    
+
     boolean mayBeCut()
     {
         return false;

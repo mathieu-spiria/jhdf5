@@ -77,7 +77,7 @@ class HDF5CompoundByteifyerFactory
                 HDF5CompoundMemberMapping member,
                 HDF5CompoundMemberInformation compoundMemberInfoOrNull,
                 HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
-                FileInfoProvider fileInfoProvider);
+                int memOffset, FileInfoProvider fileInfoProvider);
 
         /**
          * Returns a suitable Java type, if this factory has one, or <code>null</code> otherwise.
@@ -110,12 +110,13 @@ class HDF5CompoundByteifyerFactory
             HDF5CompoundMemberMapping[] members)
     {
         final HDF5MemberByteifyer[] result = new HDF5MemberByteifyer[members.length];
-        int offset = 0;
+        int offsetOnDisk = 0;
+        int offsetInMemory = 0;
         for (int i = 0; i < result.length; ++i)
         {
             final AccessType accessType = getAccessType(clazz);
             final HDF5CompoundMemberInformation compoundMemberInfoOrNull =
-                    (compoundTypeInfoOrNull == null) ? null : compoundTypeInfoOrNull.members[i];
+                    (compoundTypeInfoOrNull == null) ? null : compoundTypeInfoOrNull.getMember(i);
             final Field fieldOrNull =
                     (accessType == AccessType.FIELD) ? members[i].tryGetField(clazz,
                             (compoundMemberInfoOrNull != null)) : null;
@@ -126,21 +127,32 @@ class HDF5CompoundByteifyerFactory
                             members[i].getMemberName());
             final HDF5EnumerationType enumTypeOrNullOrNull =
                     (compoundTypeInfoOrNull == null) ? null : compoundTypeInfoOrNull.enumTypes[i];
+            if (compoundMemberInfoOrNull != null)
+            {
+                offsetOnDisk = compoundMemberInfoOrNull.getOffsetOnDisk();
+                offsetInMemory = compoundMemberInfoOrNull.getOffsetInMemory();
+            }
             if (isDummy(accessType, fieldOrNull))
             {
                 result[i] =
                         new HDF5DummyMemberByteifyer(factory.createBytifyer(accessType,
                                 fieldOrNull, members[i], compoundMemberInfoOrNull,
-                                enumTypeOrNullOrNull, memberClazzOrNull, i, offset,
-                                fileInfoProvider));
+                                enumTypeOrNullOrNull, memberClazzOrNull, i, offsetOnDisk,
+                                offsetInMemory, fileInfoProvider));
             } else
             {
                 result[i] =
                         factory.createBytifyer(accessType, fieldOrNull, members[i],
                                 compoundMemberInfoOrNull, enumTypeOrNullOrNull, memberClazzOrNull,
-                                i, offset, fileInfoProvider);
+                                i, offsetOnDisk, offsetInMemory, fileInfoProvider);
             }
-            offset += result[i].getSizeInBytes();
+            if (compoundMemberInfoOrNull == null)
+            {
+                final int size = result[i].getSize();
+                final int elementSize = result[i].getElementSize();
+                offsetOnDisk += size;
+                offsetInMemory = PaddingUtils.padOffset(offsetInMemory + size, elementSize);
+            }
         }
         return result;
     }
@@ -160,15 +172,21 @@ class HDF5CompoundByteifyerFactory
 
         public HDF5DummyMemberByteifyer(HDF5MemberByteifyer delegate)
         {
-            super(null, null, 0, 0, null);
+            super(null, null, 0, 0, 0, false, null);
             this.delegate = delegate;
+        }
+
+        @Override
+        int getElementSize()
+        {
+            return 0;
         }
 
         @Override
         public byte[] byteify(int compoundDataTypeId, Object obj) throws IllegalAccessException
         {
             // Dummy implementation
-            return new byte[delegate.getSizeInBytes()];
+            return new byte[delegate.getSize()];
         }
 
         @Override
@@ -209,27 +227,39 @@ class HDF5CompoundByteifyerFactory
         }
 
         @Override
+        public int getMaxCharacters()
+        {
+            return delegate.getMaxCharacters();
+        }
+
+        @Override
         public int getSize()
         {
             return delegate.getSize();
         }
 
         @Override
-        public int getSizeInBytes()
+        public int getOffsetOnDisk()
         {
-            return delegate.getSizeInBytes();
+            return delegate.getOffsetOnDisk();
         }
 
         @Override
-        public int getOffset()
+        public int getOffsetInMemory()
         {
-            return delegate.getOffset();
+            return delegate.getOffsetInMemory();
         }
 
         @Override
-        public int getTotalSize()
+        public int getTotalSizeOnDisk()
         {
-            return delegate.getTotalSize();
+            return delegate.getTotalSizeOnDisk();
+        }
+
+        @Override
+        public int getTotalSizeInMemory()
+        {
+            return delegate.getTotalSizeInMemory();
         }
 
         @Override

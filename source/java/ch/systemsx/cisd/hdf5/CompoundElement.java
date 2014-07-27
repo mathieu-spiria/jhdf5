@@ -58,6 +58,11 @@ public @interface CompoundElement
      * If <code>true</code>, map this integer field to an unsigned integer type. 
      */
     boolean unsigned() default false;
+    
+    /**
+     * If <code>true</code>, map this string field to a variable-length string type.
+     */
+    boolean variableLength() default false;
 
     /**
      * The {@link HDF5DataTypeVariant} of this compound element, if any.

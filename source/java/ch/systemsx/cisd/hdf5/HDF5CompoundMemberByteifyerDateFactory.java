@@ -75,7 +75,7 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
             HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull,
             HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
-            FileInfoProvider fileInfoProvider)
+            int memOffset, FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final HDF5DataTypeVariant typeVariant =
@@ -85,24 +85,33 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
         switch (accessType)
         {
             case FIELD:
-                return createByteifyerForField(fieldOrNull, memberName, offset, typeVariant);
+                return createByteifyerForField(fieldOrNull, memberName, offset, memOffset,
+                        typeVariant);
             case MAP:
-                return createByteifyerForMap(memberName, offset, typeVariant);
+                return createByteifyerForMap(memberName, offset, memOffset, typeVariant);
             case LIST:
-                return createByteifyerForList(memberName, index, offset, typeVariant);
+                return createByteifyerForList(memberName, index, offset, memOffset, typeVariant);
             case ARRAY:
-                return createByteifyerForArray(memberName, index, offset, typeVariant);
+                return createByteifyerForArray(memberName, index, offset, memOffset,
+                        typeVariant);
             default:
                 throw new Error("Unknown access type");
         }
     }
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
-            final int offset, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, LONG_SIZE, offset, typeVariant)
+        return new HDF5MemberByteifyer(field, memberName, LONG_SIZE, offset, memOffset,
+                false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -129,16 +138,23 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                     field.set(
                             obj,
                             new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset)));
+                                    + offsetInMemory)));
                 }
             };
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final HDF5DataTypeVariant typeVariant)
+            int memOffset, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, memOffset,
+                false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -172,16 +188,23 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                     putMap(obj,
                             memberName,
                             new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset)));
+                                    + offsetInMemory)));
                 }
             };
     }
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
-            final int offset, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, memOffset,
+                false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -215,16 +238,23 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                     setList(obj,
                             index,
                             new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset)));
+                                    + offsetInMemory)));
                 }
             };
     }
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
-            final int offset, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, memOffset,
+                false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -259,7 +289,7 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                             obj,
                             index,
                             new java.util.Date(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset)));
+                                    + offsetInMemory)));
                 }
             };
     }

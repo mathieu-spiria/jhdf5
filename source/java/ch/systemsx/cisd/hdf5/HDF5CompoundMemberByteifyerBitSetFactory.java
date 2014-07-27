@@ -66,7 +66,7 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
             final HDF5CompoundMemberMapping member,
             final HDF5CompoundMemberInformation compoundMemberInfoOrNull,
             HDF5EnumerationType enumTypeOrNull, final Class<?> memberClazz, final int index,
-            final int offset, final FileInfoProvider fileInfoProvider)
+            final int offset, int memOffset, final FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final int memberTypeLengthInLongs;
@@ -93,30 +93,36 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
         switch (accessType)
         {
             case FIELD:
-                return createByteifyerForField(fieldOrNull, memberName, offset,
+                return createByteifyerForField(fieldOrNull, memberName, offset, memOffset,
                         memberTypeLengthInLongs, memberTypeId, member.tryGetTypeVariant());
             case MAP:
-                return createByteifyerForMap(memberName, offset, memberTypeLengthInLongs,
-                        memberTypeId, member.tryGetTypeVariant());
+                return createByteifyerForMap(memberName, offset, memOffset,
+                        memberTypeLengthInLongs, memberTypeId, member.tryGetTypeVariant());
             case LIST:
-                return createByteifyerForList(memberName, index, offset, memberTypeLengthInLongs,
-                        memberTypeId, member.tryGetTypeVariant());
+                return createByteifyerForList(memberName, index, offset, memOffset,
+                        memberTypeLengthInLongs, memberTypeId, member.tryGetTypeVariant());
             case ARRAY:
-                return createByteifyerForArray(memberName, index, offset, memberTypeLengthInLongs,
-                        memberTypeId, member.tryGetTypeVariant());
+                return createByteifyerForArray(memberName, index, offset, memOffset,
+                        memberTypeLengthInLongs, memberTypeId, member.tryGetTypeVariant());
             default:
                 throw new Error("Unknown access type");
         }
     }
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
-            final int offset, final int memberTypeLengthInLongs, final int memberTypeId,
-            final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final int memberTypeLengthInLongs,
+            final int memberTypeId, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
         return new HDF5MemberByteifyer(field, memberName, memberTypeLengthInLongs * LONG_SIZE,
-                offset, typeVariant)
+                offset, memOffset, false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -143,19 +149,25 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
                 {
                     final BitSet bs =
                             BitSetConversionUtils.fromStorageForm(HDFNativeData.byteToLong(byteArr,
-                                    arrayOffset + offset, memberTypeLengthInLongs));
+                                    arrayOffset + offsetInMemory, memberTypeLengthInLongs));
                     field.set(obj, bs);
                 }
             };
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final int memberTypeLengthInLongs, final int memberTypeId,
+            int memOffset, final int memberTypeLengthInLongs, final int memberTypeId,
             final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, memberTypeLengthInLongs * LONG_SIZE,
-                offset, typeVariant)
+                offset, memOffset, false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -182,19 +194,25 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
                 {
                     final BitSet bitSet =
                             BitSetConversionUtils.fromStorageForm(HDFNativeData.byteToLong(byteArr,
-                                    arrayOffset + offset, memberTypeLengthInLongs));
+                                    arrayOffset + offsetInMemory, memberTypeLengthInLongs));
                     putMap(obj, memberName, bitSet);
                 }
             };
     }
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
-            final int offset, final int memberTypeLengthInLongs, final int memberTypeId,
-            final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final int memberTypeLengthInLongs,
+            final int memberTypeId, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, memberTypeLengthInLongs * LONG_SIZE,
-                offset, typeVariant)
+                offset, memOffset, false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -221,19 +239,25 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
                 {
                     final BitSet bitSet =
                             BitSetConversionUtils.fromStorageForm(HDFNativeData.byteToLong(byteArr,
-                                    arrayOffset + offset, memberTypeLengthInLongs));
+                                    arrayOffset + offsetInMemory, memberTypeLengthInLongs));
                     setList(obj, index, bitSet);
                 }
             };
     }
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
-            final int offset, final int memberTypeLengthInLongs, final int memberTypeId,
-            final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final int memberTypeLengthInLongs,
+            final int memberTypeId, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, memberTypeLengthInLongs * LONG_SIZE,
-                offset, typeVariant)
+                offset, memOffset, false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -260,7 +284,7 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
                 {
                     final BitSet bitSet =
                             BitSetConversionUtils.fromStorageForm(HDFNativeData.byteToLong(byteArr,
-                                    arrayOffset + offset, memberTypeLengthInLongs));
+                                    arrayOffset + offsetInMemory, memberTypeLengthInLongs));
                     setArray(obj, index, bitSet);
                 }
             };

@@ -41,27 +41,30 @@ public final class HDF5CompoundMemberInformation implements
 
     private final HDF5DataTypeInformation dataTypeInformation;
 
-    private final int offset;
+    private final int offsetOnDisk;
+
+    private final int offsetInMemory;
 
     private final String[] enumValuesOrNull;
 
     HDF5CompoundMemberInformation(String memberName, HDF5DataTypeInformation dataTypeInformation,
-            int offset, String[] enumValuesOrNull)
+            int offsetOnDisk, int offsetInMemory, String[] enumValuesOrNull)
     {
         assert memberName != null;
         assert dataTypeInformation != null;
-        assert offset >= 0;
+        assert offsetOnDisk >= 0;
 
         this.memberName = memberName;
         this.dataTypeInformation = dataTypeInformation;
         this.enumValuesOrNull = enumValuesOrNull;
-        this.offset = offset;
+        this.offsetOnDisk = offsetOnDisk;
+        this.offsetInMemory = offsetInMemory;
     }
 
     HDF5CompoundMemberInformation(String memberName, HDF5DataTypeInformation dataTypeInformation,
-            int offset)
+            int offsetOnDisk, int offsetInMemory)
     {
-        this(memberName, dataTypeInformation, offset, null);
+        this(memberName, dataTypeInformation, offsetOnDisk, offsetInMemory, null);
     }
 
     /**
@@ -92,10 +95,35 @@ public final class HDF5CompoundMemberInformation implements
     /**
      * Returns the byte offset of this member within the compound data type, 0 meaning that the
      * member is the first one in the compound data type.
+     * 
+     * @deprecated Use {@link #getOffsetOnDisk()} instead.
      */
+    @Deprecated
     public int getOffset()
     {
-        return offset;
+        return offsetOnDisk;
+    }
+
+    /**
+     * Returns the byte offset of this member within the compound data type on disk. 0 meaning that
+     * the member is the first one in the compound data type.
+     * <p>
+     * The on-disk representation is packed.
+     */
+    public int getOffsetOnDisk()
+    {
+        return offsetOnDisk;
+    }
+
+    /**
+     * Returns the byte offset of this member within the compound data type in memory. 0 meaning that
+     * the member is the first one in the compound data type. 
+     * <p>
+     * The in-memory representation may contain padding to ensure that read access is always aligned. 
+     */
+    public int getOffsetInMemory()
+    {
+        return offsetInMemory;
     }
 
     /**
@@ -115,14 +143,18 @@ public final class HDF5CompoundMemberInformation implements
         assert compoundClass != null;
         final HDF5CompoundMemberInformation[] info =
                 new HDF5CompoundMemberInformation[members.length];
-        int offset = 0;
+        int offsetOnDisk = 0;
+        int offsetInMemory = 0;
         for (int i = 0; i < info.length; ++i)
         {
             info[i] =
                     new HDF5CompoundMemberInformation(members[i].getMemberName(),
                             getTypeInformation(compoundClass, houseKeepingNameSuffix, members[i]),
-                            offset);
-            offset += info[i].getType().getSize();
+                            offsetOnDisk, offsetInMemory);
+            final int elementSize = info[i].getType().getElementSize();
+            final int size = info[i].getType().getSize();
+            offsetOnDisk += size;
+            offsetInMemory = PaddingUtils.padOffset(offsetInMemory + size, elementSize);
         }
         Arrays.sort(info);
         return info;

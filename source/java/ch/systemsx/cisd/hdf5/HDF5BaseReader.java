@@ -24,6 +24,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.getDataTypeGroup;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getTypeVariantMembersAttributeName;
+import static ch.systemsx.cisd.hdf5.HDF5Utils.getVariableLengthStringDataTypePath;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.removeInternalNames;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
@@ -101,6 +102,8 @@ class HDF5BaseReader
 
     protected final int booleanDataTypeId;
 
+    protected final int variableLengthStringDataTypeId;
+
     protected final HDF5EnumerationType typeVariantDataType;
 
     protected State state;
@@ -142,6 +145,7 @@ class HDF5BaseReader
                 (houseKeepingNameSuffixFromFileOrNull == null) ? preferredHouseKeepingNameSuffix
                         : houseKeepingNameSuffixFromFileOrNull;
         readNamedDataTypes();
+        variableLengthStringDataTypeId = openOrCreateVLStringType();
         booleanDataTypeId = openOrCreateBooleanDataType();
         typeVariantDataType = openOrCreateTypeVariantDataType();
     }
@@ -1140,8 +1144,12 @@ class HDF5BaseReader
             final CharacterEncoding dataSetEncoding =
                     (dataClass == HDF5DataClass.STRING) ? h5.getCharacterEncoding(baseTypeId)
                             : CharacterEncoding.ASCII;
+            final boolean variableLengthString =
+                    (dataClass == HDF5DataClass.STRING) ? h5.isVariableLengthString(baseTypeId)
+                            : false;
             return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass,
-                    dataSetEncoding, houseKeepingNameSuffix, size, arrayDimensions, true, signed);
+                    dataSetEncoding, houseKeepingNameSuffix, size, arrayDimensions, true, signed,
+                    variableLengthString);
         } else
         {
             dataClass = getDataClassForClassType(classTypeId, dataTypeId);
@@ -1161,8 +1169,12 @@ class HDF5BaseReader
             final CharacterEncoding dataSetEncoding =
                     (dataClass == HDF5DataClass.STRING) ? h5.getCharacterEncoding(dataTypeId)
                             : CharacterEncoding.ASCII;
+            final boolean variableLengthString =
+                    (dataClass == HDF5DataClass.STRING) ? h5.isVariableLengthString(dataTypeId)
+                            : false;
             return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass,
-                    dataSetEncoding, houseKeepingNameSuffix, totalSize, 1, signed, opaqueTagOrNull);
+                    dataSetEncoding, houseKeepingNameSuffix, totalSize, 1, signed,
+                    variableLengthString, opaqueTagOrNull);
         }
     }
 
@@ -1253,6 +1265,12 @@ class HDF5BaseReader
                                     return new HDF5EnumerationType(fileId, storageDataTypeId,
                                             nativeDataTypeId, null, options, HDF5BaseReader.this);
                                 }
+
+                                @Override
+                                public int getVariableLengthStringDataTypeId()
+                                {
+                                    return variableLengthStringDataTypeId;
+                                }
                             }, compoundTypeInfoOrNull, compoundMembers);
         return objectByteifyer;
     }
@@ -1260,7 +1278,7 @@ class HDF5BaseReader
     int createStorageCompoundDataType(HDF5ValueObjectByteifyer<?> objectArrayifyer)
     {
         final int storageDataTypeId =
-                h5.createDataTypeCompound(objectArrayifyer.getRecordSize(), fileRegistry);
+                h5.createDataTypeCompound(objectArrayifyer.getRecordSizeOnDisk(), fileRegistry);
         objectArrayifyer.insertMemberTypes(storageDataTypeId);
         return storageDataTypeId;
     }
@@ -1268,7 +1286,7 @@ class HDF5BaseReader
     int createNativeCompoundDataType(HDF5ValueObjectByteifyer<?> objectArrayifyer)
     {
         final int nativeDataTypeId =
-                h5.createDataTypeCompound(objectArrayifyer.getRecordSize(), fileRegistry);
+                h5.createDataTypeCompound(objectArrayifyer.getRecordSizeInMemory(), fileRegistry);
         objectArrayifyer.insertNativeMemberTypes(nativeDataTypeId, h5, fileRegistry);
         return nativeDataTypeId;
     }
@@ -1376,6 +1394,19 @@ class HDF5BaseReader
     //
     // String
     //
+
+    private int openOrCreateVLStringType()
+    {
+        final String variableLengthStringTypePath =
+                getVariableLengthStringDataTypePath(houseKeepingNameSuffix);
+        int dataTypeId = getDataTypeId(variableLengthStringTypePath);
+        if (dataTypeId < 0)
+        {
+            dataTypeId = h5.createDataTypeVariableString(fileRegistry);
+            commitDataType(variableLengthStringTypePath, dataTypeId);
+        }
+        return dataTypeId;
+    }
 
     String getStringAttribute(final int objectId, final String objectPath,
             final String attributeName, final boolean readRaw, final ICleanUpRegistry registry)

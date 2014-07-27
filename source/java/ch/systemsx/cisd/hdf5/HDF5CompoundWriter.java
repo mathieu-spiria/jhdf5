@@ -375,6 +375,8 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                                         type.getStorageTypeId(), type.getNativeTypeId(), -1,
                                         byteArray, registry);
                             }
+                            baseWriter.h5.reclaimCompoundVL(type, byteArray);
+
                             return null; // Nothing to return.
                         }
                     };
@@ -409,6 +411,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         }
         baseWriter.writeScalar(objectPath, type.getStorageTypeId(), type.getNativeTypeId(),
                 byteArray);
+        baseWriter.h5.reclaimCompoundVL(type, byteArray);
     }
 
     @Override
@@ -460,7 +463,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(),
                                     new long[]
-                                        { data.length }, type.getObjectByteifyer().getRecordSize(),
+                                        { data.length }, type.getObjectByteifyer().getRecordSizeOnDisk(),
                                     features, registry);
                     @SuppressWarnings("unchecked")
                     final byte[] byteArray =
@@ -472,6 +475,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             byteArray);
+                    baseWriter.h5.reclaimCompoundVL(type, byteArray);
                     return null; // Nothing to return.
                 }
             };
@@ -539,6 +543,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, byteArray);
+                    baseWriter.h5.reclaimCompoundVL(type, byteArray);
                     return null; // Nothing to return.
                 }
             };
@@ -591,6 +596,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, byteArray);
+                    baseWriter.h5.reclaimCompoundVL(type, byteArray);
                     return null; // Nothing to return.
                 }
             };
@@ -630,7 +636,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                             new long[]
                                 { size }, new long[]
-                                { blockSize }, type.getObjectByteifyer().getRecordSize(), registry);
+                                { blockSize }, type.getObjectByteifyer().getRecordSizeOnDisk(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -657,12 +663,12 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                         baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                                 new long[]
                                     { 0 }, new long[]
-                                    { size }, type.getObjectByteifyer().getRecordSize(), registry);
+                                    { size }, type.getObjectByteifyer().getRecordSizeOnDisk(), registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                                 new long[]
-                                    { size }, null, type.getObjectByteifyer().getRecordSize(),
+                                    { size }, null, type.getObjectByteifyer().getRecordSizeOnDisk(),
                                 registry);
                     }
                     return null; // Nothing to return.
@@ -711,7 +717,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(),
                                     MDAbstractArray.toLong(data.dimensions()), type
-                                            .getObjectByteifyer().getRecordSize(), features,
+                                            .getObjectByteifyer().getRecordSizeOnDisk(), features,
                                     registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(),
@@ -722,6 +728,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             byteArray);
+                    baseWriter.h5.reclaimCompoundVL(type, byteArray);
                     return null; // Nothing to return.
                 }
             };
@@ -807,6 +814,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, byteArray);
+                    baseWriter.h5.reclaimCompoundVL(type, byteArray);
                     return null; // Nothing to return.
                 }
             };
@@ -865,6 +873,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     }
                     H5Dwrite(dataSetId, type.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, byteArray);
+                    baseWriter.h5.reclaimCompoundVL(type, byteArray);
                     return null; // Nothing to return.
                 }
             };
@@ -905,7 +914,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 {
                     baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                             dimensions, MDAbstractArray.toLong(blockDimensions), type
-                                    .getObjectByteifyer().getRecordSize(), registry);
+                                    .getObjectByteifyer().getRecordSizeOnDisk(), registry);
                     return null; // Nothing to return.
                 }
             };
@@ -932,12 +941,12 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                         final long[] nullDimensions = new long[dimensions.length];
                         baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                                 nullDimensions, MDAbstractArray.toLong(dimensions), type
-                                        .getObjectByteifyer().getRecordSize(), registry);
+                                        .getObjectByteifyer().getRecordSizeOnDisk(), registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                                 MDAbstractArray.toLong(dimensions), null, type.getObjectByteifyer()
-                                        .getRecordSize(), registry);
+                                        .getRecordSizeOnDisk(), registry);
                     }
                     return null; // Nothing to return.
                 }

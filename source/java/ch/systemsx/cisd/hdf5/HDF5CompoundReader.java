@@ -102,7 +102,7 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
             final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException
     {
-        final ICallableWithCleanUp<T> writeRunnable = new ICallableWithCleanUp<T>()
+        final ICallableWithCleanUp<T> readRunnable = new ICallableWithCleanUp<T>()
             {
                 @Override
                 public T call(final ICleanUpRegistry registry)
@@ -117,23 +117,25 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                     final int nativeDataTypeId = type.getNativeTypeId();
                     final byte[] byteArr =
                             baseReader.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId,
-                                    type.getObjectByteifyer().getRecordSize());
+                                    type.getObjectByteifyer().getRecordSizeInMemory());
                     if (inspectorOrNull != null)
                     {
                         inspectorOrNull.inspect(byteArr);
                     }
-                    return type.getObjectByteifyer().arrayifyScalar(storageDataTypeId, byteArr,
+                    final T scalar = type.getObjectByteifyer().arrayifyScalar(storageDataTypeId, byteArr,
                             type.getCompoundType());
+                    baseReader.h5.reclaimCompoundVL(type, byteArr);
+                    return scalar;
                 }
             };
-        return baseReader.runner.call(writeRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     private <T> T[] primGetCompoundArrayAttribute(final String objectPath,
             final String attributeName, final HDF5CompoundType<T> type,
             final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
-        final ICallableWithCleanUp<T[]> writeRunnable = new ICallableWithCleanUp<T[]>()
+        final ICallableWithCleanUp<T[]> readRunnable = new ICallableWithCleanUp<T[]>()
             {
                 @Override
                 public T[] call(final ICleanUpRegistry registry)
@@ -176,23 +178,25 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                     checkCompoundType(compoundTypeId, objectPath, type);
                     final byte[] byteArr =
                             baseReader.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId,
-                                    len * type.getRecordSize());
+                                    len * type.getRecordSizeInMemory());
                     if (inspectorOrNull != null)
                     {
                         inspectorOrNull.inspect(byteArr);
                     }
-                    return type.getObjectByteifyer().arrayify(storageDataTypeId, byteArr,
+                    final T[] array = type.getObjectByteifyer().arrayify(storageDataTypeId, byteArr,
                             type.getCompoundType());
+                    baseReader.h5.reclaimCompoundVL(type, byteArr);
+                    return array;
                 }
             };
-        return baseReader.runner.call(writeRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     private <T> MDArray<T> primGetCompoundMDArrayAttribute(final String objectPath,
             final String attributeName, final HDF5CompoundType<T> type,
             final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
-        final ICallableWithCleanUp<MDArray<T>> writeRunnable =
+        final ICallableWithCleanUp<MDArray<T>> readRunnable =
                 new ICallableWithCleanUp<MDArray<T>>()
                     {
                         @Override
@@ -240,17 +244,19 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                             checkCompoundType(compoundTypeId, objectPath, type);
                             final byte[] byteArr =
                                     baseReader.h5.readAttributeAsByteArray(attributeId,
-                                            nativeDataTypeId, len * type.getRecordSize());
+                                            nativeDataTypeId, len * type.getRecordSizeInMemory());
                             if (inspectorOrNull != null)
                             {
                                 inspectorOrNull.inspect(byteArr);
                             }
-                            return new MDArray<T>(type.getObjectByteifyer().arrayify(
+                            final MDArray<T> array = new MDArray<T>(type.getObjectByteifyer().arrayify(
                                     storageDataTypeId, byteArr, type.getCompoundType()),
                                     arrayDimensions);
+                            baseReader.h5.reclaimCompoundVL(type, byteArr);
+                            return array;
                         }
                     };
-        return baseReader.runner.call(writeRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     @Override
@@ -417,7 +423,7 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
             final HDF5CompoundType<T> type, final IByteArrayInspector inspectorOrNull)
             throws HDF5JavaException
     {
-        final ICallableWithCleanUp<T> writeRunnable = new ICallableWithCleanUp<T>()
+        final ICallableWithCleanUp<T> readRunnable = new ICallableWithCleanUp<T>()
             {
                 @Override
                 public T call(final ICleanUpRegistry registry)
@@ -432,25 +438,27 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                     final int nativeDataTypeId = type.getNativeTypeId();
                     final byte[] byteArr =
                             new byte[spaceParams.blockSize
-                                    * type.getObjectByteifyer().getRecordSize()];
+                                    * type.getObjectByteifyer().getRecordSizeInMemory()];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
                     if (inspectorOrNull != null)
                     {
                         inspectorOrNull.inspect(byteArr);
                     }
-                    return type.getObjectByteifyer().arrayifyScalar(storageDataTypeId, byteArr,
+                    final T scalar = type.getObjectByteifyer().arrayifyScalar(storageDataTypeId, byteArr,
                             type.getCompoundType());
+                    baseReader.h5.reclaimCompoundVL(type, byteArr);
+                    return scalar;
                 }
             };
-        return baseReader.runner.call(writeRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     private <T> T[] primReadCompoundArray(final String objectPath, final int blockSize,
             final long offset, final HDF5CompoundType<T> type,
             final IByteArrayInspector inspectorOrNull) throws HDF5JavaException
     {
-        final ICallableWithCleanUp<T[]> writeRunnable = new ICallableWithCleanUp<T[]>()
+        final ICallableWithCleanUp<T[]> readRunnable = new ICallableWithCleanUp<T[]>()
             {
                 @Override
                 public T[] call(final ICleanUpRegistry registry)
@@ -465,18 +473,20 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                     final int nativeDataTypeId = type.getNativeTypeId();
                     final byte[] byteArr =
                             new byte[spaceParams.blockSize
-                                    * type.getObjectByteifyer().getRecordSize()];
+                                    * type.getObjectByteifyer().getRecordSizeInMemory()];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
                     if (inspectorOrNull != null)
                     {
                         inspectorOrNull.inspect(byteArr);
                     }
-                    return type.getObjectByteifyer().arrayify(storageDataTypeId, byteArr,
+                    final T[] array = type.getObjectByteifyer().arrayify(storageDataTypeId, byteArr,
                             type.getCompoundType());
+                    baseReader.h5.reclaimCompoundVL(type, byteArr);
+                    return array;
                 }
             };
-        return baseReader.runner.call(writeRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     private void checkCompoundType(final int dataTypeId, final String path,
@@ -556,7 +566,7 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
     {
         baseReader.checkOpen();
         type.check(baseReader.fileId);
-        final ICallableWithCleanUp<MDArray<T>> writeRunnable =
+        final ICallableWithCleanUp<MDArray<T>> readRunnable =
                 new ICallableWithCleanUp<MDArray<T>>()
                     {
                         @Override
@@ -574,19 +584,21 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                             final int nativeDataTypeId = type.getNativeTypeId();
                             final byte[] byteArr =
                                     new byte[spaceParams.blockSize
-                                            * type.getObjectByteifyer().getRecordSize()];
+                                            * type.getObjectByteifyer().getRecordSizeInMemory()];
                             baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                                     spaceParams.memorySpaceId, spaceParams.dataSpaceId, byteArr);
                             if (inspectorOrNull != null)
                             {
                                 inspectorOrNull.inspect(byteArr);
                             }
-                            return new MDArray<T>(type.getObjectByteifyer().arrayify(
+                            final MDArray<T> array = new MDArray<T>(type.getObjectByteifyer().arrayify(
                                     storageDataTypeId, byteArr, type.getCompoundType()),
                                     spaceParams.dimensions);
+                            baseReader.h5.reclaimCompoundVL(type, byteArr);
+                            return array;
                         }
                     };
-        return baseReader.runner.call(writeRunnable);
+        return baseReader.runner.call(readRunnable);
     }
 
     @Override

@@ -23,10 +23,14 @@ import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 public class HDFNativeData
 {
 
+    static final int pointerSize;
+    
     static
     {
         NativeData.ensureNativeLibIsLoaded();
+        pointerSize = H5.getPointerSize();
     }
+    
 
     /**
      * Converts a <code>byte</code> value into a <code>byte[]</code>.
@@ -273,6 +277,42 @@ public class HDFNativeData
     public static byte[] doubleToByte(double[] data)
     {
         return NativeData.doubleToByte(data, ByteOrder.NATIVE);
+    }
+
+    // String copying methods
+    
+    
+    /**
+     * Returns the size of a machine word on this platform.
+     */
+    public static int getMachineWordSize()
+    {
+        return pointerSize;
+    }
+    
+    /**
+     * Creates a C copy of str (using calloc) and put the reference of it into buf at bufOfs.
+     */
+    public static int compoundCpyVLStr(String str, byte[] buf, int bufOfs)
+    {
+        return H5.compoundCpyVLStr(str, buf, bufOfs);
+    }
+    
+    /**
+     * Creates a Java copy from a C char* pointer in the buf at bufOfs. 
+     */
+    public static String createVLStrFromCompound(byte[] buf, int bufOfs)
+    {
+        return H5.createVLStrFromCompound(buf, bufOfs);
+    }
+    
+    /**
+     * Frees the variable-length strings in compound buf, where one compound has size recordSize and the 
+     * variable-length members can be found at byte-offsets vlIndices.
+     */
+    public static int freeCompoundVLStr(byte[] buf, int recordSize, int[] vlIndices)
+    {
+        return H5.freeCompoundVLStr(buf, recordSize, vlIndices);
     }
 
 }

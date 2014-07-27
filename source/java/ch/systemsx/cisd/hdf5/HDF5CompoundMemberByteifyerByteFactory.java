@@ -125,7 +125,7 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
             HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull,
             HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
-            FileInfoProvider fileInfoProvider)
+            int memOffset, FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final Rank rank = classToRankMap.get(memberClazz);
@@ -143,29 +143,36 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
         switch (accessType)
         {
             case FIELD:
-                return createByteifyerForField(fieldOrNull, memberName, offset, dimensions, len,
-                        memberTypeId, rank, member.tryGetTypeVariant());
+                return createByteifyerForField(fieldOrNull, memberName, offset, memOffset,
+                        dimensions, len, memberTypeId, rank, member.tryGetTypeVariant());
             case MAP:
-                return createByteifyerForMap(memberName, offset, dimensions, len, memberTypeId,
-                        rank, member.tryGetTypeVariant());
+                return createByteifyerForMap(memberName, offset, memOffset, dimensions, len,
+                        memberTypeId, rank, member.tryGetTypeVariant());
             case LIST:
-                return createByteifyerForList(memberName, index, offset, dimensions, len,
-                        memberTypeId, rank, member.tryGetTypeVariant());
+                return createByteifyerForList(memberName, index, offset, memOffset, dimensions,
+                        len, memberTypeId, rank, member.tryGetTypeVariant());
             case ARRAY:
-                return createByteifyerForArray(memberName, index, offset, dimensions, len,
-                        memberTypeId, rank, member.tryGetTypeVariant());
+                return createByteifyerForArray(memberName, index, offset, memOffset, dimensions,
+                        len, memberTypeId, rank, member.tryGetTypeVariant());
             default:
                 throw new Error("Unknown access type");
         }
     }
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
-            final int offset, final int[] dimensions, final int len, final int memberTypeId,
-            final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final int[] dimensions, final int len,
+            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, len, offset, typeVariant)
+        return new HDF5MemberByteifyer(field, memberName, len, offset, memOffset, false,
+                typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 1;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -212,26 +219,29 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
                     switch (rank)
                     {
                         case SCALAR:
-                            field.setByte(obj, byteArr[arrayOffset + offset]);
+                            field.setByte(obj, byteArr[arrayOffset + offsetInMemory]);
                             break;
                         case ARRAY1D:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             field.set(obj, array);
                             break;
                         }
                         case ARRAY2D:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             field.set(obj, MatrixUtils.shapen(array, dimensions));
                             break;
                         }
                         case ARRAYMD:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             field.set(obj, new MDByteArray(array, dimensions));
                             break;
                         }
@@ -243,11 +253,18 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final int[] dimensions, final int len, final int memberTypeId, final Rank rank,
-            final HDF5DataTypeVariant typeVariant)
+            int memOffset, final int[] dimensions, final int len, final int memberTypeId,
+            final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, len, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, len, offset, memOffset, false,
+                typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 1;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -295,26 +312,29 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
                     switch (rank)
                     {
                         case SCALAR:
-                            putMap(obj, memberName, byteArr[arrayOffset + offset]);
+                            putMap(obj, memberName, byteArr[arrayOffset + offsetInMemory]);
                             break;
                         case ARRAY1D:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             putMap(obj, memberName, array);
                             break;
                         }
                         case ARRAY2D:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             putMap(obj, memberName, MatrixUtils.shapen(array, dimensions));
                             break;
                         }
                         case ARRAYMD:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             putMap(obj, memberName, new MDByteArray(array, dimensions));
                             break;
                         }
@@ -326,11 +346,18 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
     }
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
-            final int offset, final int[] dimensions, final int len, final int memberTypeId,
-            final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final int[] dimensions, final int len,
+            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, len, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, len, offset, memOffset, false,
+                typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 1;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -378,26 +405,29 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
                     switch (rank)
                     {
                         case SCALAR:
-                            setList(obj, index, byteArr[arrayOffset + offset]);
+                            setList(obj, index, byteArr[arrayOffset + offsetInMemory]);
                             break;
                         case ARRAY1D:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             setList(obj, index, array);
                             break;
                         }
                         case ARRAY2D:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             setList(obj, index, MatrixUtils.shapen(array, dimensions));
                             break;
                         }
                         case ARRAYMD:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             setList(obj, index, new MDByteArray(array, dimensions));
                             break;
                         }
@@ -409,11 +439,18 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
     }
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
-            final int offset, final int[] dimensions, final int len, final int memberTypeId,
-            final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final int[] dimensions, final int len,
+            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, len, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, len, offset, memOffset, false,
+                typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 1;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -461,26 +498,29 @@ class HDF5CompoundMemberByteifyerByteFactory implements IHDF5CompoundMemberBytif
                     switch (rank)
                     {
                         case SCALAR:
-                            setArray(obj, index, byteArr[arrayOffset + offset]);
+                            setArray(obj, index, byteArr[arrayOffset + offsetInMemory]);
                             break;
                         case ARRAY1D:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             setArray(obj, index, array);
                             break;
                         }
                         case ARRAY2D:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             setArray(obj, index, MatrixUtils.shapen(array, dimensions));
                             break;
                         }
                         case ARRAYMD:
                         {
                             final byte[] array = new byte[len];
-                            System.arraycopy(byteArr, arrayOffset + offset, array, 0, array.length);
+                            System.arraycopy(byteArr, arrayOffset + offsetInMemory, array, 0,
+                                    array.length);
                             setArray(obj, index, new MDByteArray(array, dimensions));
                             break;
                         }

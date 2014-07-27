@@ -76,6 +76,7 @@ import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A wrapper around {@link ch.systemsx.cisd.hdf5.hdf5lib.H5General} that handles closing of
@@ -1409,6 +1410,16 @@ class HDF5
     }
 
     /**
+     * Returns the offset of a compound member for the given <var>index</var>.
+     * <p>
+     * Must not be called on a <var>dateTypeId</var> that is not a compound type.
+     */
+    public int getOffsetForCompoundMemberIndex(int dataTypeId, int index)
+    {
+        return (int) H5Tget_member_offset(dataTypeId, index);
+    }
+
+    /**
      * Returns the names of an enum value or compound members.
      * <p>
      * Must not be called on a <var>dateTypeId</var> that is not an enum or compound type.
@@ -1687,6 +1698,18 @@ class HDF5
             H5Iget_name(dataTypeId, result, len + 1);
         }
         return result[0];
+    }
+
+    /**
+     * Reclaims the variable-length data structures from a compound buffer, if any.
+     */
+    public void reclaimCompoundVL(HDF5CompoundType<?> type, byte[] buf)
+    {
+        int[] vlMemberIndices = type.getObjectByteifyer().getVLMemberIndices();
+        if (vlMemberIndices.length > 0) // This type has variable-length data members
+        {
+            HDFNativeData.freeCompoundVLStr(buf, type.getRecordSizeInMemory(), vlMemberIndices);
+        }
     }
 
     //

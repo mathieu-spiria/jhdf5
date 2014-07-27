@@ -72,8 +72,9 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
     @Override
     public HDF5MemberByteifyer createBytifyer(AccessType accessType, Field fieldOrNull,
             HDF5CompoundMemberMapping member,
-            HDF5CompoundMemberInformation compoundMemberInfoOrNull, HDF5EnumerationType enumTypeOrNull,
-            Class<?> memberClazz, int index, int offset, FileInfoProvider fileInfoProvider)
+            HDF5CompoundMemberInformation compoundMemberInfoOrNull,
+            HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
+            int memOffset, FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final HDF5DataTypeVariant typeVariant =
@@ -82,25 +83,34 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
         switch (accessType)
         {
             case FIELD:
-                return createByteifyerForField(fieldOrNull, memberName, offset, typeVariant);
+                return createByteifyerForField(fieldOrNull, memberName, offset, memOffset,
+                        typeVariant);
             case MAP:
-                return createByteifyerForMap(memberName, offset, typeVariant);
+                return createByteifyerForMap(memberName, offset, memOffset, typeVariant);
             case LIST:
-                return createByteifyerForList(memberName, index, offset, typeVariant);
+                return createByteifyerForList(memberName, index, offset, memOffset, typeVariant);
             case ARRAY:
-                return createByteifyerForArray(memberName, index, offset, typeVariant);
+                return createByteifyerForArray(memberName, index, offset, memOffset,
+                        typeVariant);
             default:
                 throw new Error("Unknown access type");
         }
     }
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
-            final int offset, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, LONG_SIZE, offset, typeVariant)
+        return new HDF5MemberByteifyer(field, memberName, LONG_SIZE, offset, memOffset,
+                false, typeVariant)
             {
                 final HDF5TimeUnit timeUnit = HDF5DataTypeVariant.getTimeUnit(typeVariant);
+
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
 
                 @Override
                 protected int getMemberStorageTypeId()
@@ -130,17 +140,24 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                     field.set(
                             obj,
                             new HDF5TimeDuration(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset), timeUnit));
+                                    + offsetInMemory), timeUnit));
                 }
             };
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final HDF5DataTypeVariant typeVariant)
+            int memOffset, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, memOffset,
+                false, typeVariant)
             {
                 final HDF5TimeUnit timeUnit = HDF5DataTypeVariant.getTimeUnit(typeVariant);
+
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
 
                 @Override
                 protected int getMemberStorageTypeId()
@@ -177,17 +194,24 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                     putMap(obj,
                             memberName,
                             new HDF5TimeDuration(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset), timeUnit));
+                                    + offsetInMemory), timeUnit));
                 }
             };
     }
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
-            final int offset, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, memOffset,
+                false, typeVariant)
             {
                 final HDF5TimeUnit timeUnit = HDF5DataTypeVariant.getTimeUnit(typeVariant);
+
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
 
                 @Override
                 protected int getMemberStorageTypeId()
@@ -224,17 +248,24 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                     setList(obj,
                             index,
                             new HDF5TimeDuration(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset), timeUnit));
+                                    + offsetInMemory), timeUnit));
                 }
             };
     }
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
-            final int offset, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, LONG_SIZE, offset, memOffset,
+                false, typeVariant)
             {
                 final HDF5TimeUnit timeUnit = HDF5DataTypeVariant.getTimeUnit(typeVariant);
+
+                @Override
+                int getElementSize()
+                {
+                    return 8;
+                }
 
                 @Override
                 protected int getMemberStorageTypeId()
@@ -272,7 +303,7 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
                             obj,
                             index,
                             new HDF5TimeDuration(HDFNativeData.byteToLong(byteArr, arrayOffset
-                                    + offset), timeUnit));
+                                    + offsetInMemory), timeUnit));
                 }
             };
     }

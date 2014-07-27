@@ -124,7 +124,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
             HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull,
             HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
-            FileInfoProvider fileInfoProvider)
+            int memOffset, FileInfoProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final Rank rank = classToRankMap.get(memberClazz);
@@ -140,29 +140,36 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
         switch (accessType)
         {
             case FIELD:
-                return createByteifyerForField(fieldOrNull, memberName, offset, dimensions, len,
-                        memberTypeId, rank, member.tryGetTypeVariant());
+                return createByteifyerForField(fieldOrNull, memberName, offset, memOffset,
+                        dimensions, len, memberTypeId, rank, member.tryGetTypeVariant());
             case MAP:
-                return createByteifyerForMap(memberName, offset, dimensions, len, memberTypeId,
-                        rank, member.tryGetTypeVariant());
+                return createByteifyerForMap(memberName, offset, memOffset, dimensions, len,
+                        memberTypeId, rank, member.tryGetTypeVariant());
             case LIST:
-                return createByteifyerForList(memberName, index, offset, dimensions, len,
-                        memberTypeId, rank, member.tryGetTypeVariant());
+                return createByteifyerForList(memberName, index, offset, memOffset, dimensions,
+                        len, memberTypeId, rank, member.tryGetTypeVariant());
             case ARRAY:
-                return createByteifyerForArray(memberName, index, offset, dimensions, len,
-                        memberTypeId, rank, member.tryGetTypeVariant());
+                return createByteifyerForArray(memberName, index, offset, memOffset, dimensions,
+                        len, memberTypeId, rank, member.tryGetTypeVariant());
             default:
                 throw new Error("Unknown access type");
         }
     }
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
-            final int offset, final int[] dimensions, final int len, final int memberTypeId,
-            final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final int[] dimensions, final int len,
+            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
-        return new HDF5MemberByteifyer(field, memberName, FLOAT_SIZE * len, offset, typeVariant)
+        return new HDF5MemberByteifyer(field, memberName, FLOAT_SIZE * len, offset, memOffset,
+                false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 4;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -210,23 +217,25 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                     {
                         case SCALAR:
                             field.setFloat(obj,
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset));
+                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            field.set(obj,
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len));
+                            field.set(obj, HDFNativeData.byteToFloat(byteArr, arrayOffset
+                                    + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final float[] array =
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len);
+                                    HDFNativeData
+                                            .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             field.set(obj, MatrixUtils.shapen(array, dimensions));
                             break;
                         }
                         case ARRAYMD:
                         {
                             final float[] array =
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len);
+                                    HDFNativeData
+                                            .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             field.set(obj, new MDFloatArray(array, dimensions));
                             break;
                         }
@@ -238,11 +247,18 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            final int[] dimensions, final int len, final int memberTypeId, final Rank rank,
-            final HDF5DataTypeVariant typeVariant)
+            int memOffset, final int[] dimensions, final int len, final int memberTypeId,
+            final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, FLOAT_SIZE * len, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, FLOAT_SIZE * len, offset, memOffset,
+                false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 4;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -291,23 +307,25 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                     {
                         case SCALAR:
                             putMap(obj, memberName,
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset));
+                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            putMap(obj, memberName,
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len));
+                            putMap(obj, memberName, HDFNativeData.byteToFloat(byteArr, arrayOffset
+                                    + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final float[] array =
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len);
+                                    HDFNativeData
+                                            .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             putMap(obj, memberName, MatrixUtils.shapen(array, dimensions));
                             break;
                         }
                         case ARRAYMD:
                         {
                             final float[] array =
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len);
+                                    HDFNativeData
+                                            .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             putMap(obj, memberName, new MDFloatArray(array, dimensions));
                             break;
                         }
@@ -319,11 +337,18 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
     }
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
-            final int offset, final int[] dimensions, final int len, final int memberTypeId,
-            final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final int[] dimensions, final int len,
+            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, FLOAT_SIZE * len, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, FLOAT_SIZE * len, offset, memOffset,
+                false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 4;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -372,23 +397,25 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                     {
                         case SCALAR:
                             setList(obj, index,
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset));
+                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            putMap(obj, memberName,
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len));
+                            putMap(obj, memberName, HDFNativeData.byteToFloat(byteArr, arrayOffset
+                                    + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final float[] array =
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len);
+                                    HDFNativeData
+                                            .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             setList(obj, index, MatrixUtils.shapen(array, dimensions));
                             break;
                         }
                         case ARRAYMD:
                         {
                             final float[] array =
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len);
+                                    HDFNativeData
+                                            .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             setList(obj, index, new MDFloatArray(array, dimensions));
                             break;
                         }
@@ -400,11 +427,18 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
     }
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
-            final int offset, final int[] dimensions, final int len, final int memberTypeId,
-            final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final int offset, int memOffset, final int[] dimensions, final int len,
+            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
-        return new HDF5MemberByteifyer(null, memberName, FLOAT_SIZE * len, offset, typeVariant)
+        return new HDF5MemberByteifyer(null, memberName, FLOAT_SIZE * len, offset, memOffset,
+                false, typeVariant)
             {
+                @Override
+                int getElementSize()
+                {
+                    return 4;
+                }
+
                 @Override
                 protected int getMemberStorageTypeId()
                 {
@@ -453,23 +487,25 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                     {
                         case SCALAR:
                             setArray(obj, index,
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset));
+                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            setArray(obj, index,
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len));
+                            setArray(obj, index, HDFNativeData.byteToFloat(byteArr, arrayOffset
+                                    + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final float[] array =
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len);
+                                    HDFNativeData
+                                            .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             setArray(obj, index, MatrixUtils.shapen(array, dimensions));
                             break;
                         }
                         case ARRAYMD:
                         {
                             final float[] array =
-                                    HDFNativeData.byteToFloat(byteArr, arrayOffset + offset, len);
+                                    HDFNativeData
+                                            .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             setArray(obj, index, new MDFloatArray(array, dimensions));
                             break;
                         }

@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5;
 import org.apache.commons.lang.ObjectUtils;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A class that holds relevant information about a data type.
@@ -120,6 +121,8 @@ public final class HDF5DataTypeInformation
 
     private final boolean signed;
 
+    private final boolean variableLengthString;
+
     private final String dataTypePathOrNull;
 
     private final String nameOrNull;
@@ -145,7 +148,7 @@ public final class HDF5DataTypeInformation
     {
         this(dataTypePathOrNull, options, dataClass, CharacterEncoding.ASCII,
                 houseKeepingNameSuffix, elementSize, new int[]
-                    { 1 }, false, signed, null);
+                    { 1 }, false, signed, false, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, String houseKeepingNameSuffix,
@@ -153,7 +156,7 @@ public final class HDF5DataTypeInformation
     {
         this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
                 houseKeepingNameSuffix, elementSize, new int[]
-                    { 1 }, false, signed, null);
+                    { 1 }, false, signed, false, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, String houseKeepingNameSuffix,
@@ -161,32 +164,34 @@ public final class HDF5DataTypeInformation
     {
         this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
                 houseKeepingNameSuffix, elementSize, new int[]
-                    { numberOfElements }, false, signed, null);
+                    { numberOfElements }, false, signed, false, null);
 
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
             HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
-            int elementSize, int numberOfElements, boolean signed, String opaqueTagOrNull)
+            int elementSize, int numberOfElements, boolean signed, boolean variableLengthString,
+            String opaqueTagOrNull)
     {
         this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
                 new int[]
-                    { numberOfElements }, false, signed, opaqueTagOrNull);
-    }
-
-    HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
-            HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
-            int elementSize, int[] dimensions, boolean arrayType, boolean signed)
-    {
-        this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
-                dimensions, arrayType, signed, null);
-
+                    { numberOfElements }, false, signed, variableLengthString, opaqueTagOrNull);
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
             HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
             int elementSize, int[] dimensions, boolean arrayType, boolean signed,
-            String opaqueTagOrNull)
+            boolean variableLengthString)
+    {
+        this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
+                dimensions, arrayType, signed, variableLengthString, null);
+
+    }
+
+    private HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
+            HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
+            int elementSize, int[] dimensions, boolean arrayType, boolean signed,
+            boolean variableLengthString, String opaqueTagOrNull)
     {
         if (dataClass == HDF5DataClass.BOOLEAN || dataClass == HDF5DataClass.STRING)
         {
@@ -201,6 +206,7 @@ public final class HDF5DataTypeInformation
         }
         this.arrayType = arrayType;
         this.signed = signed;
+        this.variableLengthString = variableLengthString;
         this.dataClass = dataClass;
         this.elementSize = elementSize;
         this.dimensions = dimensions;
@@ -240,7 +246,7 @@ public final class HDF5DataTypeInformation
     }
 
     /**
-     * Returns the size of one element (in bytes) of this type.
+     * Returns the size of one element (in bytes) of this type. For strings, the total length.
      */
     public int getElementSize()
     {
@@ -255,11 +261,30 @@ public final class HDF5DataTypeInformation
     {
         if (dataClass == HDF5DataClass.STRING && elementSize > 0)
         {
-            return elementSize / encoding.getMaxBytesPerChar();
+            return variableLengthString ? -1 : elementSize / encoding.getMaxBytesPerChar();
         } else
         {
             return elementSize;
         }
+    }
+    
+    /**
+     * The element size as is relevant for padding to ensure memory alignment.
+     */
+    public int getElementSizeForPadding()
+    {
+        // Variable-length strings store a pointer.
+        if (variableLengthString)
+        {
+            return HDFNativeData.getMachineWordSize();
+        }
+        // Fixed-length strings are accessing single bytes.
+        if (dataClass == HDF5DataClass.STRING)
+        {
+            return 1;
+        }
+        // Otherwise: use elementSize.
+        return elementSize;
     }
 
     void setElementSize(int elementSize)
@@ -309,10 +334,13 @@ public final class HDF5DataTypeInformation
 
     /**
      * Returns <code>true</code> if this type is an HDF5 VL (variable-length) type.
+     * 
+     * @deprecated Use {@link #isVariableLengthString()} instead.
      */
+    @Deprecated
     public boolean isVariableLengthType()
     {
-        return elementSize < 0;
+        return variableLengthString;
     }
 
     /**
@@ -321,6 +349,15 @@ public final class HDF5DataTypeInformation
     public boolean isSigned()
     {
         return signed;
+    }
+
+    /**
+     * Returns <code>true</code>, if this data set type is a variable-length string, or
+     * <code>false</code> otherwise.
+     */
+    public boolean isVariableLengthString()
+    {
+        return variableLengthString;
     }
 
     /**

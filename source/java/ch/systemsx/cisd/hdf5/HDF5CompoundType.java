@@ -101,9 +101,17 @@ public class HDF5CompoundType<T> extends HDF5DataType
     /**
      * Returns the size of the record on disk (in bytes).
      */
-    public int getRecordSize()
+    public int getRecordSizeOnDisk()
     {
-        return objectByteifyer.getRecordSize();
+        return objectByteifyer.getRecordSizeOnDisk();
+    }
+
+    /**
+     * Returns the size of the record in memory (in bytes).
+     */
+    public int getRecordSizeInMemory()
+    {
+        return objectByteifyer.getRecordSizeInMemory();
     }
 
     /**

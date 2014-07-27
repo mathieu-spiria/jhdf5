@@ -29,16 +29,20 @@ final class CompoundTypeInformation
 
     final int nativeCompoundDataTypeId;
 
-    final HDF5CompoundMemberInformation[] members;
+    private final HDF5CompoundMemberInformation[] members;
 
     final int[] dataTypeIds;
     
     final HDF5EnumerationType[] enumTypes;
 
-    final int recordSize;
+    final int recordSizeOnDisk;
+    
+    final int recordSizeInMemory;
+    
+    private int numberOfVLMembers;
 
     CompoundTypeInformation(String name, int compoundDataTypeId, int nativeCompoundDataTypeId,
-            int numberOfElements, int recordSize)
+            int numberOfElements, int recordSizeOnDisk, int recordSizeInMemory)
     {
         this.name = name;
         this.compoundDataTypeId = compoundDataTypeId;
@@ -46,6 +50,47 @@ final class CompoundTypeInformation
         this.members = new HDF5CompoundMemberInformation[numberOfElements];
         this.dataTypeIds = new int[numberOfElements];
         this.enumTypes = new HDF5EnumerationType[numberOfElements];
-        this.recordSize = recordSize;
+        this.recordSizeOnDisk = recordSizeOnDisk;
+        this.recordSizeInMemory = recordSizeInMemory;
     }
+    
+    private void calcNumberOfVLMembers()
+    {
+        int countOfVLMembers = 0;
+        for (HDF5CompoundMemberInformation m : members)
+        {
+            if (m != null && m.getType().isVariableLengthString())
+            {
+                ++countOfVLMembers;
+            }
+        }
+        this.numberOfVLMembers = countOfVLMembers;
+    }
+    
+    int getNumberOfMembers()
+    {
+        return members.length;
+    }
+
+    HDF5CompoundMemberInformation getMember(int i)
+    {
+        return members[i];
+    }
+    
+    HDF5CompoundMemberInformation[] getCopyOfMembers()
+    {
+        return members.clone();
+    }
+    
+    void setMember(int i, HDF5CompoundMemberInformation member)
+    {
+        members[i] = member;
+        calcNumberOfVLMembers();
+    }
+    
+    int getNumberOfVLMembers()
+    {
+        return numberOfVLMembers;
+    }
+
 }

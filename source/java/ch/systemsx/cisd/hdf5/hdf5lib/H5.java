@@ -99,6 +99,33 @@ class H5
 
     // ////////////////////////////////////////////////////////////
     // //
+    // Functions related to variable-length string copying       //
+    // //
+    // ////////////////////////////////////////////////////////////
+    
+    /**
+     * Returns the size of a pointer on this platform.
+     */
+    public static native int getPointerSize();
+    
+    /**
+     * Creates a C copy of str (using calloc) and put the reference of it into buf at bufOfs.
+     */
+    public static native int compoundCpyVLStr(String str, byte[] buf, int bufOfs);
+    
+    /**
+     * Creates a Java copy from a C char* pointer in the buf at bufOfs. 
+     */
+    public static native String createVLStrFromCompound(byte[] buf, int bufOfs);
+    
+    /**
+     * Frees the variable-length strings in compound buf, where one compound has size recordSize and the 
+     * variable-length members can be found at byte-offsets vlIndices.
+     */
+    public static native int freeCompoundVLStr(byte[] buf, int recordSize, int[] vlIndices);
+
+    // ////////////////////////////////////////////////////////////
+    // //
     // H5: General Library Functions //
     // //
     // ////////////////////////////////////////////////////////////

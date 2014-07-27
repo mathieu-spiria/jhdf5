@@ -124,6 +124,8 @@ public final class HDF5CompoundMemberMapping
 
     private boolean unsigned;
 
+    private boolean variableLength;
+
     private int[] memberTypeDimensions;
 
     private HDF5EnumerationType enumTypeOrNull;
@@ -155,14 +157,15 @@ public final class HDF5CompoundMemberMapping
      *            dimensions of the array).
      * @param storageDataTypeId The storage data type id of the member, if known, or -1 else
      * @param unsigned If <code>true</code>, map to an unsigned integer type.
+     * @param variableLength if <code>true</code>, map to a variable-length string type.
      * @param typeVariantOrNull The data type variant of this mapping or <code>null</code>
      */
     static HDF5CompoundMemberMapping mappingArrayWithStorageId(String fieldName, String memberName,
             Class<?> memberClass, int[] memberDimensions, int storageDataTypeId, boolean unsigned,
-            HDF5DataTypeVariant typeVariantOrNull)
+            boolean variableLength, HDF5DataTypeVariant typeVariantOrNull)
     {
         return new HDF5CompoundMemberMapping(fieldName, null, memberClass, memberName, null, null,
-                memberDimensions, storageDataTypeId, unsigned, typeVariantOrNull);
+                memberDimensions, storageDataTypeId, unsigned, variableLength, typeVariantOrNull);
     }
 
     /**
@@ -181,7 +184,7 @@ public final class HDF5CompoundMemberMapping
     {
         assert enumType != null;
         return new HDF5CompoundMemberMapping(fieldName, null, HDF5EnumerationValueArray.class,
-                memberName, enumType, null, memberTypeDimensions, storageTypeId, false,
+                memberName, enumType, null, memberTypeDimensions, storageTypeId, false, false,
                 typeVariantOrNull);
     }
 
@@ -309,8 +312,9 @@ public final class HDF5CompoundMemberMapping
                 {
                     result.add(new HDF5CompoundMemberMapping(f.getName(), f, f.getType(),
                             StringUtils.defaultIfEmpty(e.memberName(), f.getName()),
-                            enumTypeOrNull, e.typeName(), e.dimensions(), e.unsigned(),
-                            HDF5DataTypeVariant.unmaskNone(e.typeVariant())));
+                            enumTypeOrNull, e.typeName(), e.dimensions(), e.unsigned(), e
+                                    .variableLength(), HDF5DataTypeVariant.unmaskNone(e
+                                    .typeVariant())));
                 } else if (includeAllFields)
                 {
                     result.add(new HDF5CompoundMemberMapping(f.getName(), f, f.getType(), f
@@ -322,8 +326,7 @@ public final class HDF5CompoundMemberMapping
     }
 
     /**
-     * @see #inferMapping(Class, Map)
-     * <p>
+     * @see #inferMapping(Class, Map) <p>
      *      This method is using <var>pojo</var> to infer length and dimension information.
      */
     public static HDF5CompoundMemberMapping[] inferMapping(final Object pojo,
@@ -358,7 +361,8 @@ public final class HDF5CompoundMemberMapping
                                 if (firstElement != null)
                                 {
                                     final int dimY = Array.getLength(firstElement);
-                                    m.dimensions(new int[] { dimX, dimY });
+                                    m.dimensions(new int[]
+                                        { dimX, dimY });
                                 }
                             }
                         }
@@ -378,8 +382,7 @@ public final class HDF5CompoundMemberMapping
     }
 
     /**
-     * @see #inferMapping(Class, Map)
-     * <p>
+     * @see #inferMapping(Class, Map) <p>
      *      This method is using <var>pojo</var> to infer length and dimension information.
      */
     public static HDF5CompoundMemberMapping[] inferMapping(final Object[] pojo,
@@ -421,11 +424,13 @@ public final class HDF5CompoundMemberMapping
                                 if (firstElement != null)
                                 {
                                     final int dimY = Array.getLength(firstElement);
-                                    m.dimensions(new int[] { dimX, dimY });
+                                    m.dimensions(new int[]
+                                        { dimX, dimY });
                                 }
                             }
                         }
-                    } else if (MDAbstractArray.class.isAssignableFrom(memberClass) && pojo.length > 0)
+                    } else if (MDAbstractArray.class.isAssignableFrom(memberClass)
+                            && pojo.length > 0)
                     {
                         ReflectionUtils.ensureAccessible(m.fieldOrNull);
                         final Object o = m.fieldOrNull.get(pojo[0]);
@@ -870,7 +875,7 @@ public final class HDF5CompoundMemberMapping
             int[] memberTypeDimensions, boolean unsigned)
     {
         this(fieldName, fieldOrNull, memberClassOrNull, memberName, enumTypeOrNull, null,
-                memberTypeDimensions, -1, unsigned, null);
+                memberTypeDimensions, -1, unsigned, false, null);
     }
 
     /**
@@ -881,13 +886,12 @@ public final class HDF5CompoundMemberMapping
      * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
      * @param memberName The name of the member in the HDF5 compound data type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
-     * @param unsigned If <code>true</code>, the type will be mapped to an unsigned integer type.
      */
     private HDF5CompoundMemberMapping(String fieldName, Class<?> memberClassOrNull,
             String memberName, HDF5EnumerationType enumTypeOrNull, int[] memberTypeDimensions)
     {
         this(fieldName, null, memberClassOrNull, memberName, enumTypeOrNull, null,
-                memberTypeDimensions, -1, false, null);
+                memberTypeDimensions, -1, false, false, null);
     }
 
     /**
@@ -909,7 +913,7 @@ public final class HDF5CompoundMemberMapping
             int[] memberTypeDimensions, boolean unsigned, HDF5DataTypeVariant typeVariantOrNull)
     {
         this(fieldName, null, memberClassOrNull, memberName, enumTypeOrNull, enumTypeName,
-                memberTypeDimensions, -1, unsigned, typeVariantOrNull);
+                memberTypeDimensions, -1, unsigned, false, typeVariantOrNull);
     }
 
     /**
@@ -930,10 +934,10 @@ public final class HDF5CompoundMemberMapping
     private HDF5CompoundMemberMapping(String fieldName, Field fieldOrNull,
             Class<?> memberClassOrNull, String memberName, HDF5EnumerationType enumTypeOrNull,
             String enumTypeName, int[] memberTypeDimensions, boolean unsigned,
-            HDF5DataTypeVariant typeVariantOrNull)
+            boolean variableLength, HDF5DataTypeVariant typeVariantOrNull)
     {
         this(fieldName, fieldOrNull, memberClassOrNull, memberName, enumTypeOrNull, enumTypeName,
-                memberTypeDimensions, -1, unsigned, typeVariantOrNull);
+                memberTypeDimensions, -1, unsigned, variableLength, typeVariantOrNull);
     }
 
     /**
@@ -948,12 +952,14 @@ public final class HDF5CompoundMemberMapping
      * @param enumTypeName The name of the committed HDF5 enum type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
      * @param unsigned If <code>true</code>, the type will be mapped to an unsigned integer type.
+     * @param variableLength If <code>true</code>, the type will be mapped to a variable-length
+     *            string type.
      * @param storageMemberTypeId The storage data type id of member, or -1, if not available
      */
     private HDF5CompoundMemberMapping(String fieldName, Field fieldOrNull,
             Class<?> memberClassOrNull, String memberName, HDF5EnumerationType enumTypeOrNull,
             String enumTypeName, int[] memberTypeDimensions, int storageMemberTypeId,
-            boolean unsigned, HDF5DataTypeVariant typeVariantOrNull)
+            boolean unsigned, boolean variableLength, HDF5DataTypeVariant typeVariantOrNull)
     {
         this.fieldOrNull = fieldOrNull;
         this.fieldName = fieldName;
@@ -965,6 +971,7 @@ public final class HDF5CompoundMemberMapping
         this.memberTypeLength = MDAbstractArray.getLength(memberTypeDimensions);
         this.storageDataTypeId = storageMemberTypeId;
         this.unsigned = unsigned;
+        this.variableLength = variableLength;
         if (typeVariantMap.containsKey(typeVariantOrNull))
         {
             this.typeVariantOrNull = typeVariantMap.get(typeVariantOrNull);
@@ -1037,8 +1044,8 @@ public final class HDF5CompoundMemberMapping
                     }
 
                 } else if (memberTypeLength == 0
-                        && (field.getType() == String.class || isArray || isMDArray || field
-                                .getType() == java.util.BitSet.class))
+                        && ((field.getType() == String.class && false == variableLength) || isArray
+                                || isMDArray || field.getType() == java.util.BitSet.class))
                 {
                     throw new HDF5JavaException("Field '" + fieldName + "' of class '"
                             + clazz.getCanonicalName()
@@ -1150,6 +1157,34 @@ public final class HDF5CompoundMemberMapping
     boolean isUnsigned()
     {
         return this.unsigned;
+    }
+
+    /**
+     * Sets this field to a variable-length type. Must be a string.
+     */
+    public HDF5CompoundMemberMapping variableLength()
+    {
+        this.variableLength = true;
+        return this;
+    }
+
+    /**
+     * Sets this field to a variable-length type, if <var>variableLength</var> is <code>true</code>.
+     * Must be a string.
+     */
+    public HDF5CompoundMemberMapping variableLength(@SuppressWarnings("hiding")
+    boolean variableLength)
+    {
+        this.variableLength = variableLength;
+        return this;
+    }
+
+    /**
+     * Returns <code>true</code> if this field should be mapped to a variable-length string.
+     */
+    public boolean isVariableLength()
+    {
+        return this.variableLength;
     }
 
     /**

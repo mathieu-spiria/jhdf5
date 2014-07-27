@@ -38,7 +38,11 @@ class HDF5ValueObjectByteifyer<T>
 
     private final HDF5MemberByteifyer[] byteifyers;
 
-    private final int recordSize;
+    private final int recordSizeInMemory;
+
+    private final int recordSizeOnDisk;
+
+    private final int[] vlMemberIndices;
 
     private Class<?> cachedRecordClass;
 
@@ -69,6 +73,8 @@ class HDF5ValueObjectByteifyer<T>
 
         public int getStringDataTypeId(int maxLength);
 
+        public int getVariableLengthStringDataTypeId();
+
         public int getArrayTypeId(int baseTypeId, int length);
 
         public int getArrayTypeId(int baseTypeId, int[] dimensions);
@@ -84,15 +90,39 @@ class HDF5ValueObjectByteifyer<T>
         byteifyers =
                 HDF5CompoundByteifyerFactory.createMemberByteifyers(clazz, fileInfoProvider,
                         compoundTypeInfoOrNull, members);
+        int numberOfVLMembers = 0;
         if (compoundTypeInfoOrNull != null)
         {
-            recordSize = compoundTypeInfoOrNull.recordSize;
+            recordSizeOnDisk = compoundTypeInfoOrNull.recordSizeOnDisk;
+            recordSizeInMemory = compoundTypeInfoOrNull.recordSizeInMemory;
+            numberOfVLMembers = compoundTypeInfoOrNull.getNumberOfVLMembers();
         } else if (byteifyers.length > 0)
         {
-            recordSize = byteifyers[byteifyers.length - 1].getTotalSize();
+            recordSizeOnDisk = byteifyers[byteifyers.length - 1].getTotalSizeOnDisk();
+            recordSizeInMemory =
+                    PaddingUtils.padOffset(
+                            byteifyers[byteifyers.length - 1].getTotalSizeInMemory(),
+                            PaddingUtils.findMaxElementSize(byteifyers));
+            for (HDF5MemberByteifyer byteifyer : byteifyers)
+            {
+                if (byteifyer.isVariableLengthType())
+                {
+                    ++numberOfVLMembers;
+                }
+            }
         } else
         {
-            recordSize = 0;
+            recordSizeOnDisk = 0;
+            recordSizeInMemory = 0;
+        }
+        vlMemberIndices = new int[numberOfVLMembers];
+        int idx = 0;
+        for (HDF5MemberByteifyer byteifyer : byteifyers)
+        {
+            if (byteifyer.isVariableLengthType())
+            {
+                vlMemberIndices[idx++] = byteifyer.getOffsetInMemory();
+            }
         }
     }
 
@@ -120,7 +150,7 @@ class HDF5ValueObjectByteifyer<T>
      */
     public byte[] byteify(int compoundDataTypeId, T[] arr) throws HDF5JavaException
     {
-        final byte[] barray = new byte[arr.length * recordSize];
+        final byte[] barray = new byte[arr.length * recordSizeInMemory];
         int offset = 0;
         int counter = 0;
         for (Object obj : arr)
@@ -130,21 +160,21 @@ class HDF5ValueObjectByteifyer<T>
                 try
                 {
                     final byte[] b = byteifyer.byteify(compoundDataTypeId, obj);
-                    if (b.length > byteifyer.getSizeInBytes() && byteifyer.mayBeCut() == false)
+                    if (b.length > byteifyer.getSize() && byteifyer.mayBeCut() == false)
                     {
                         throw new HDF5JavaException("Compound " + byteifyer.describe()
                                 + " of array element " + counter + " must not exceed "
-                                + byteifyer.getSizeInBytes() + " bytes, but is of size " + b.length
+                                + byteifyer.getSize() + " bytes, but is of size " + b.length
                                 + " bytes.");
                     }
-                    System.arraycopy(b, 0, barray, offset + byteifyer.getOffset(),
-                            Math.min(b.length, byteifyer.getSizeInBytes()));
+                    System.arraycopy(b, 0, barray, offset + byteifyer.getOffsetInMemory(),
+                            Math.min(b.length, byteifyer.getSize()));
                 } catch (IllegalAccessException ex)
                 {
                     throw new HDF5JavaException("Error accessing " + byteifyer.describe());
                 }
             }
-            offset += recordSize;
+            offset += recordSizeInMemory;
             ++counter;
         }
         return barray;
@@ -155,19 +185,20 @@ class HDF5ValueObjectByteifyer<T>
      */
     public byte[] byteify(int compoundDataTypeId, T obj) throws HDF5JavaException
     {
-        final byte[] barray = new byte[recordSize];
+        final byte[] barray = new byte[recordSizeInMemory];
         for (HDF5MemberByteifyer byteifyer : byteifyers)
         {
             try
             {
                 final byte[] b = byteifyer.byteify(compoundDataTypeId, obj);
-                if (b.length > byteifyer.getSizeInBytes() && byteifyer.mayBeCut() == false)
+                if (b.length > byteifyer.getSize() && byteifyer.mayBeCut() == false)
                 {
                     throw new HDF5JavaException("Compound " + byteifyer.describe()
-                            + " must not exceed " + byteifyer.getSizeInBytes()
-                            + " bytes, but is of size " + b.length + " bytes.");
+                            + " must not exceed " + byteifyer.getSize() + " bytes, but is of size "
+                            + b.length + " bytes.");
                 }
-                System.arraycopy(b, 0, barray, byteifyer.getOffset(), Math.min(b.length, byteifyer.getSizeInBytes()));
+                System.arraycopy(b, 0, barray, byteifyer.getOffsetInMemory(),
+                        Math.min(b.length, byteifyer.getSize()));
             } catch (IllegalAccessException ex)
             {
                 throw new HDF5JavaException("Error accessing " + byteifyer.describe());
@@ -178,28 +209,29 @@ class HDF5ValueObjectByteifyer<T>
 
     public T[] arrayify(int compoundDataTypeId, byte[] byteArr, Class<T> recordClass)
     {
-        final int length = byteArr.length / recordSize;
-        if (length * recordSize != byteArr.length)
+        final int length = byteArr.length / recordSizeInMemory;
+        if (length * recordSizeInMemory != byteArr.length)
         {
             throw new HDF5JavaException("Illegal byte array for compound type (length "
-                    + byteArr.length + " is not a multiple of record size " + recordSize + ")");
+                    + byteArr.length + " is not a multiple of record size " + recordSizeInMemory
+                    + ")");
         }
         final T[] result = HDF5Utils.createArray(recordClass, length);
         int offset = 0;
         for (int i = 0; i < length; ++i)
         {
             result[i] = primArrayifyScalar(compoundDataTypeId, byteArr, recordClass, offset);
-            offset += recordSize;
+            offset += recordSizeInMemory;
         }
         return result;
     }
 
     public T arrayifyScalar(int compoundDataTypeId, byte[] byteArr, Class<T> recordClass)
     {
-        if (byteArr.length < recordSize)
+        if (byteArr.length < recordSizeInMemory)
         {
             throw new HDF5JavaException("Illegal byte array for scalar compound type (length "
-                    + byteArr.length + " is smaller than record size " + recordSize + ")");
+                    + byteArr.length + " is smaller than record size " + recordSizeInMemory + ")");
         }
         return primArrayifyScalar(compoundDataTypeId, byteArr, recordClass, 0);
     }
@@ -252,9 +284,14 @@ class HDF5ValueObjectByteifyer<T>
         }
     }
 
-    public int getRecordSize()
+    public int getRecordSizeOnDisk()
     {
-        return recordSize;
+        return recordSizeOnDisk;
+    }
+
+    public int getRecordSizeInMemory()
+    {
+        return recordSizeInMemory;
     }
 
     public HDF5MemberByteifyer[] getByteifyers()
@@ -299,6 +336,16 @@ class HDF5ValueObjectByteifyer<T>
         {
             return new String[0];
         }
+    }
+
+    boolean hasVLMembers()
+    {
+        return vlMemberIndices.length > 0;
+    }
+
+    int[] getVLMemberIndices()
+    {
+        return vlMemberIndices;
     }
 
     //

@@ -36,14 +36,14 @@ public final class StringUtils
      * Converts string <var>s</var> to a byte array of a 0-terminated string, using
      * <var>encoding</var> and cutting it to <var>maxLength</var> if necessary.
      */
-    public static byte[] toBytes0Term(String s, int maxLength, CharacterEncoding encoding)
+    public static byte[] toBytes0Term(String s, int maxCharacters, CharacterEncoding encoding)
     {
         try
         {
-            return (cut(s, maxLength) + '\0').getBytes(encoding.getCharSetName());
+            return (cut(s, maxCharacters) + '\0').getBytes(encoding.getCharSetName());
         } catch (UnsupportedEncodingException ex)
         {
-            return (cut(s, maxLength) + '\0').getBytes();
+            return (cut(s, maxCharacters) + '\0').getBytes();
         }
     }
 
