@@ -194,6 +194,7 @@ LINK32_OBJS= \
 	"$(INTDIR)\h5tImpJHDF5.obj" \
 	"$(INTDIR)\h5utilJHDF5.obj" \
 	"$(INTDIR)\h5zImpJHDF5.obj" \
+	"$(INTDIR)\strcpyJHDF5.obj" \
 	"$(INTDIR)\h5aImp.obj" \
 	"$(INTDIR)\h5Constants.obj" \
 	"$(INTDIR)\h5dImp.obj" \
@@ -312,6 +313,13 @@ SOURCE=$(SRCDIR1)\h5zImpJHDF5.c
 
 "$(INTDIR)\h5zImpJHDF5.obj" : $(SOURCE) "$(INTDIR)"
 	$(CPP) $(CPP_PROJ) $(SOURCE)
+
+
+SOURCE=$(SRCDIR1)\strcpyJHDF5.c
+
+"$(INTDIR)\strcpyJHDF5.obj" : $(SOURCE) "$(INTDIR)"
+        $(CPP) $(CPP_PROJ) $(SOURCE)
+
 
 
 
@@ -435,6 +443,7 @@ CLEAN :
 	-@erase "$(INTDIR)\h5oImpJHDF5.obj"
 	-@erase "$(INTDIR)\h5zImpJHDF5.obj"
 	-@erase "$(INTDIR)\h5utilJHDF5.obj"
+        -@erase "$(INTDIR)\strcpyJHDF5.obj"
 	-@erase "$(INTDIR)\h5aImp.obj"
 	-@erase "$(INTDIR)\h5Constants.obj"
 	-@erase "$(INTDIR)\h5dImp.obj"

@@ -75,7 +75,7 @@ JNIEXPORT jstring JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_createVLStrFromC
    jint offset /* IN: The offset in the compound or compound array where the pointer to the string is located. */
   )
 {
-    void *byteP, *ptr;
+    char *byteP;
     char **strP;
     jstring str;
 
@@ -90,7 +90,7 @@ JNIEXPORT jstring JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_createVLStrFromC
         return NULL;
     }
     
-	strP = byteP + offset;
+	strP = (char**) (byteP + offset);
 	str = (*env)->NewStringUTF(env, *strP);
 	
     (*env)->ReleasePrimitiveArrayCritical(env, buf, byteP, 0);
@@ -111,7 +111,7 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_freeCompoundVLStr
    jintArray vlIndices /* IN: The indices of the variable-length compound members in the record. */
   )
 {
-    void *byteP, *ptr;
+    char *byteP, *ptr;
     char **strP;
     jsize bufLen, idxLen;
     int *idxP, i;
@@ -145,7 +145,7 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_freeCompoundVLStr
 	{
 	    for (i = 0; i < idxLen; ++i)
 	    {
-	    	strP = ptr + idxP[i];
+	    	strP = (char**) (ptr + idxP[i]);
 	        free(*strP);
 	    }
 	    ptr += recordSize; 
