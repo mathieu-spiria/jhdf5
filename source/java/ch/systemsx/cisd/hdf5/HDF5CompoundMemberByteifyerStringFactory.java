@@ -102,7 +102,10 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
     {
         final String memberName = member.getMemberName();
         final int maxCharacters = member.getMemberTypeLength();
-        final boolean isVariableLengthType = member.isVariableLength();
+        final boolean isVariableLengthType =
+                member.isVariableLength()
+                        || (maxCharacters == 0 && member.tryGetHints() != null && member
+                                .tryGetHints().isUseVariableLengthStrings());
         // May be -1 if not known
         final int memberTypeId =
                 isVariableLengthType ? fileInfoProvider.getVariableLengthStringDataTypeId()

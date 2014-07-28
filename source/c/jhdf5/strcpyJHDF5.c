@@ -36,7 +36,7 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_compoundCpyVLStr
 {
     jbyte *byteP;
     char *strPCpy;
-    int len;
+    int numberOfBytes, numberOfCharacters;
 
 
     if ( str == NULL ) {
@@ -48,9 +48,10 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_compoundCpyVLStr
         return -1;
     }
 
-	len = (*env)->GetStringUTFLength(env, str);
-	strPCpy = calloc(1, len);
-    (*env)->GetStringUTFRegion(env, str, 0, len, strPCpy);
+	numberOfBytes = (*env)->GetStringUTFLength(env, str);
+	strPCpy = calloc(1, numberOfBytes);
+	numberOfCharacters = (*env)->GetStringLength(env, str);
+    (*env)->GetStringUTFRegion(env, str, 0, numberOfCharacters, strPCpy);
 
     byteP = (*env)->GetPrimitiveArrayCritical(env, buf, NULL);
     if (byteP == NULL) {

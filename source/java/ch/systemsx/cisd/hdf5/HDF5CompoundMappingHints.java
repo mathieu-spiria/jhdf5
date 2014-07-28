@@ -33,6 +33,8 @@ public class HDF5CompoundMappingHints
 
     private EnumReturnType enumReturnType = EnumReturnType.HDF5ENUMERATIONVALUE;
 
+    private boolean useVariableLengthStrings = false;
+
     private Map<String, HDF5EnumerationType> enumerationTypeMap;
 
     /**
@@ -64,7 +66,7 @@ public class HDF5CompoundMappingHints
     }
 
     /**
-     * Ads an enum type mapping to this hints object.
+     * Adds an enum type mapping to this hints object.
      * 
      * @return The hint object.
      */
@@ -98,5 +100,54 @@ public class HDF5CompoundMappingHints
     {
         return (mapping.tryGetHints() == null) ? EnumReturnType.HDF5ENUMERATIONVALUE : mapping
                 .tryGetHints().getEnumReturnType();
+    }
+
+    /**
+     * Returns whether variable-length-string types should be used if the length is not set
+     * explicitly.
+     */
+    public static boolean isUseVariableLengthStrings(HDF5CompoundMappingHints hintsOrNull)
+    {
+        return hintsOrNull == null ? false : hintsOrNull.useVariableLengthStrings;
+    }
+
+    /**
+     * Returns whether variable-length-string types should be used if the length is not set
+     * explicitly.
+     */
+    public boolean isUseVariableLengthStrings()
+    {
+        return useVariableLengthStrings;
+    }
+
+    /**
+     * Sets whether variable-length-string types should be used if the length is not set explicitly.
+     */
+    public void setUseVariableLengthStrings(boolean useVariableLengthStrings)
+    {
+        this.useVariableLengthStrings = useVariableLengthStrings;
+    }
+
+    /**
+     * Sets that variable-length-string types should be used if the length is not set explicitly.
+     * 
+     * @return The hint object.
+     */
+    public HDF5CompoundMappingHints useVariableLengthStrings()
+    {
+        this.useVariableLengthStrings = true;
+        return this;
+    }
+
+    /**
+     * Sets whether variable-length-string types should be used if the length is not set explicitly.
+     * 
+     * @return The hint object.
+     */
+    public HDF5CompoundMappingHints useVariableLengthStrings(@SuppressWarnings("hiding")
+    boolean useVariableLengthStrings)
+    {
+        this.useVariableLengthStrings = useVariableLengthStrings;
+        return this;
     }
 }

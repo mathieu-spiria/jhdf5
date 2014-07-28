@@ -265,7 +265,9 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             final HDF5DataTypeInformation typeInfo = compoundInfo.getMember(i).getType();
             final int size = typeInfo.getSize();
             offsetOnDisk += size;
-            offsetInMemory = PaddingUtils.padOffset(offsetInMemory + size, typeInfo.getElementSizeForPadding());
+            offsetInMemory =
+                    PaddingUtils.padOffset(offsetInMemory + size,
+                            typeInfo.getElementSizeForPadding());
 
         }
         return compoundInfo;
@@ -346,6 +348,13 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     }
 
     @Override
+    public <T> HDF5CompoundType<T> getInferredType(Class<T> pojoClass,
+            HDF5CompoundMappingHints hints)
+    {
+        return getInferredType(null, pojoClass, hints);
+    }
+
+    @Override
     public <T> HDF5CompoundType<T> getInferredType(final String name, final Class<T> pojoClass)
     {
         return getInferredType(name, pojoClass, null);
@@ -378,7 +387,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             final Class<T> pojoClass = (Class<T>) pojo.getClass();
             return getType(name, pojoClass, addEnumTypes(HDF5CompoundMemberMapping.addHints(
                     HDF5CompoundMemberMapping.inferMapping(pojo, HDF5CompoundMemberMapping
-                            .inferEnumerationTypeMap(pojo, enumTypeRetriever)), hints)));
+                            .inferEnumerationTypeMap(pojo, enumTypeRetriever),
+                            HDF5CompoundMappingHints.isUseVariableLengthStrings(hints)), hints)));
         }
     }
 

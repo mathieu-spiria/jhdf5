@@ -158,8 +158,21 @@ public interface IHDF5CompoundInformationRetriever
      * on the simple name of <var>pojoClass</var>.
      * 
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
+     * @see HDF5CompoundMemberMapping#inferMapping
      */
     public <T> HDF5CompoundType<T> getInferredType(Class<T> pojoClass);
+
+    /**
+     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
+     * Java compound type to the HDF5 type by reflection and using the default name chosen by JHDF5 which is based
+     * on the simple name of <var>pojoClass</var>.
+     * 
+     * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
+     * @param hints The hints to provide to the mapping procedure.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public <T> HDF5CompoundType<T> getInferredType(Class<T> pojoClass,
+            HDF5CompoundMappingHints hints);
 
     /**
      * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
@@ -223,6 +236,7 @@ public interface IHDF5CompoundInformationRetriever
      */
     public <T> HDF5CompoundType<T> getInferredType(String name, T[] template,
             HDF5CompoundMappingHints hints);
+
     /**
      * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
      * the members.
@@ -283,8 +297,7 @@ public interface IHDF5CompoundInformationRetriever
      *            length than <var>memberNames</var>.
      * @see HDF5CompoundMemberMapping#inferMapping
      */
-    public HDF5CompoundType<Object[]> getInferredType(String[] memberNames,
-            Object[] template);
+    public HDF5CompoundType<Object[]> getInferredType(String[] memberNames, Object[] template);
 
     /**
      * Returns the compound type for the given compound data set in <var>objectPath</var>, mapping
@@ -297,7 +310,7 @@ public interface IHDF5CompoundInformationRetriever
      */
     public <T> HDF5CompoundType<T> getDataSetType(String objectPath, Class<T> pojoClass,
             HDF5CompoundMemberMapping... members);
-    
+
     /**
      * Returns the compound type for the given compound data set in <var>objectPath</var>, mapping
      * it to <var>pojoClass</var>.
@@ -327,8 +340,8 @@ public interface IHDF5CompoundInformationRetriever
      * @param attributeName The name of the attribute to get the type for.
      * @param pojoClass The class to use for the mapping.
      */
-    public <T> HDF5CompoundType<T> getAttributeType(String objectPath,
-            String attributeName, Class<T> pojoClass);
+    public <T> HDF5CompoundType<T> getAttributeType(String objectPath, String attributeName,
+            Class<T> pojoClass);
 
     /**
      * Returns the compound type for the given compound attribute in <var>attributeName</var> of
@@ -339,8 +352,8 @@ public interface IHDF5CompoundInformationRetriever
      * @param pojoClass The class to use for the mapping.
      * @param hints The hints to provide to the mapping procedure.
      */
-    public <T> HDF5CompoundType<T> getAttributeType(String objectPath,
-            String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints);
+    public <T> HDF5CompoundType<T> getAttributeType(String objectPath, String attributeName,
+            Class<T> pojoClass, HDF5CompoundMappingHints hints);
 
     /**
      * Returns the compound type for the given compound attribute in <var>attributeName</var> of
@@ -353,8 +366,8 @@ public interface IHDF5CompoundInformationRetriever
      * @param dataTypeInfoOptions The options on which information to get about the member data
      *            types.
      */
-    public <T> HDF5CompoundType<T> getAttributeType(String objectPath,
-            String attributeName, Class<T> pojoClass, HDF5CompoundMappingHints hints,
+    public <T> HDF5CompoundType<T> getAttributeType(String objectPath, String attributeName,
+            Class<T> pojoClass, HDF5CompoundMappingHints hints,
             DataTypeInfoOptions dataTypeInfoOptions);
 
     /**

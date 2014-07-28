@@ -359,6 +359,7 @@ public class HDF5RoundtripTest
         test.testCompound();
         test.testCompoundInferStringLength();
         test.testCompoundVariableLengthString();
+        test.testCompoundHintVLString();
         test.testClosedCompoundType();
         test.testAnonCompound();
         test.testOverwriteCompound();
@@ -7136,7 +7137,8 @@ public class HDF5RoundtripTest
                 reader.compound().getArrayAttr("val", "attr1d", RecordRequiringMemAlignment.class);
         assertTrue(Arrays.equals(recordArrayWritten, recordArrayRead));
         final MDArray<RecordRequiringMemAlignment> recordMDArrayRead =
-                reader.compound().getMDArrayAttr("val", "attr2d", RecordRequiringMemAlignment.class);
+                reader.compound()
+                        .getMDArrayAttr("val", "attr2d", RecordRequiringMemAlignment.class);
         assertTrue(recordMDArrayWritten.equals(recordMDArrayRead));
         reader.close();
     }
@@ -7913,6 +7915,39 @@ public class HDF5RoundtripTest
         assertEquals(recordWritten.getI(), recordRead.getI());
         assertEquals(recordWritten.getD(), recordRead.getD());
         assertEquals(recordWritten.getS(), recordRead.getS());
+        reader.close();
+    }
+
+    @Test
+    public void testCompoundHintVLString()
+    {
+        final File file = new File(workingDirectory, "testCompoundHintVLString.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.configure(file).useUTF8CharacterEncoding().writer();
+        writer.compound().getInferredType(SimpleStringRecord.class,
+                new HDF5CompoundMappingHints().useVariableLengthStrings());
+        final HDF5CompoundType<SimpleStringRecord> typeWritten =
+                writer.compound().getInferredType("SimpleStringRecordByTemplate",
+                        new SimpleStringRecord("aaa", "bb"),
+                        new HDF5CompoundMappingHints().useVariableLengthStrings());
+        final SimpleStringRecord recordWritten = new SimpleStringRecord("aaa", "\u3453");
+        writer.compound().write("cpd", typeWritten, recordWritten);
+        writer.close();
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<SimpleStringRecord> typeRead =
+                reader.compound().getNamedType(SimpleStringRecord.class);
+        final HDF5CompoundType<SimpleStringRecord> type2Read =
+                reader.compound().getNamedType("SimpleStringRecordByTemplate",
+                        SimpleStringRecord.class);
+        assertEquals(2, typeRead.getCompoundMemberInformation().length);
+        assertTrue(typeRead.getCompoundMemberInformation()[0].getType().isVariableLengthString());
+        assertTrue(typeRead.getCompoundMemberInformation()[1].getType().isVariableLengthString());
+        assertTrue(type2Read.getCompoundMemberInformation()[0].getType().isVariableLengthString());
+        assertTrue(type2Read.getCompoundMemberInformation()[1].getType().isVariableLengthString());
+        final SimpleStringRecord recordRead = reader.compound().read("cpd", type2Read);
+        assertEquals(recordWritten, recordRead);
         reader.close();
     }
 
@@ -9898,7 +9933,7 @@ public class HDF5RoundtripTest
         final File file = new File(workingDirectory, "inferredCompoundType.h5");
         file.delete();
         assertFalse(file.exists());
-        file.deleteOnExit();
+        // file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         final HDF5CompoundType<SimpleRecord> typeW =
                 writer.compound().getInferredType(SimpleRecord.class);

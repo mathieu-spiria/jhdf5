@@ -52,16 +52,22 @@ public class FullVoltageMeasurementCompoundExample
         @CompoundElement(memberName = "voltageInMilliVolts")
         private double voltage;
 
+        // Mark this to be a variable-length string
+        @CompoundElement(variableLength = true)
+        private String comment;
+
         // Important: needs to have a default constructor, otherwise JHDF5 will bail out on reading.
         Measurement()
         {
         }
 
-        Measurement(Date date, float temperatureInDegreeCelsius, double voltageInMilliVolts)
+        Measurement(Date date, float temperatureInDegreeCelsius, double voltageInMilliVolts,
+                String comment)
         {
             this.date = date;
             this.temperature = temperatureInDegreeCelsius;
             this.voltage = voltageInMilliVolts;
+            this.comment = comment;
         }
 
         Date getDate()
@@ -98,7 +104,7 @@ public class FullVoltageMeasurementCompoundExample
         public String toString()
         {
             return "Measurement [date=" + date + ", temperature=" + temperature + ", voltage="
-                    + voltage + "]";
+                    + voltage + ", comment='" + comment + "']";
         }
 
     }
@@ -132,12 +138,13 @@ public class FullVoltageMeasurementCompoundExample
      * @param measurementDate The date when the measurement was performed.
      * @param measuredTemperature The measured temperature (in degree Celsius).
      * @param measuredVoltage The measured voltage (in milli Volts).
+     * @param comment A comment on the measurement.
      */
     void writeMeasurement(String datasetName, Date measurementDate, float measuredTemperature,
-            double measuredVoltage)
+            double measuredVoltage, String comment)
     {
-        hdf5Writer.compound().write(datasetName, new Measurement(measurementDate, measuredTemperature,
-                measuredVoltage));
+        hdf5Writer.compound().write(datasetName,
+                new Measurement(measurementDate, measuredTemperature, measuredVoltage, comment));
     }
 
     /**
@@ -147,14 +154,16 @@ public class FullVoltageMeasurementCompoundExample
      * @param measurementDate The date when the measurement was performed.
      * @param measuredTemperature The measured temperature (in degree Celsius).
      * @param measuredVoltage The measured voltage (in milli Volts).
+     * @param comment A comment on the measurement.
      */
     void writeMeasurementAsMap(String datasetName, Date measurementDate, float measuredTemperature,
-            double measuredVoltage)
+            double measuredVoltage, String comment)
     {
         HDF5CompoundDataMap map = new HDF5CompoundDataMap();
         map.put("date", measurementDate);
         map.put("temperatureInDegreeCelsius", measuredTemperature);
         map.put("voltageInMilliVolts", measuredVoltage);
+        map.put("comment", comment);
         hdf5Writer.compound().write(datasetName, map);
     }
 
@@ -165,17 +174,20 @@ public class FullVoltageMeasurementCompoundExample
      * @param measurementDate The date when the measurement was performed.
      * @param measuredTemperature The measured temperature (in degree Celsius).
      * @param measuredVoltage The measured voltage (in milli Volts).
+     * @param comment A comment on the measurement.
      */
     void writeMeasurementAsList(String datasetName, Date measurementDate,
-            float measuredTemperature, double measuredVoltage)
+            float measuredTemperature, double measuredVoltage, String comment)
     {
         List<Object> list =
-                Arrays.<Object> asList(measurementDate, measuredTemperature, measuredVoltage);
+                Arrays.<Object> asList(measurementDate, measuredTemperature, measuredVoltage,
+                        comment);
         // The compound type name is optional
         HDF5CompoundType<List<?>> type =
-                hdf5Writer.compound().getInferredType("Measurement",
-                        Arrays.asList("date", "temperatureInDegreeCelsius", "voltageInMilliVolts"),
-                        list);
+                hdf5Writer.compound().getInferredType(
+                        "Measurement",
+                        Arrays.asList("date", "temperatureInDegreeCelsius", "voltageInMilliVolts",
+                                "comment"), list);
         hdf5Writer.compound().write(datasetName, type, list);
     }
 
@@ -186,16 +198,17 @@ public class FullVoltageMeasurementCompoundExample
      * @param measurementDate The date when the measurement was performed.
      * @param measuredTemperature The measured temperature (in degree Celsius).
      * @param measuredVoltage The measured voltage (in milli Volts).
+     * @param comment A comment on the measurement.
      */
     void writeMeasurementAsArray(String datasetName, Date measurementDate,
-            float measuredTemperature, double measuredVoltage)
+            float measuredTemperature, double measuredVoltage, String comment)
     {
         Object[] array = new Object[]
-            { measurementDate, measuredTemperature, measuredVoltage };
+            { measurementDate, measuredTemperature, measuredVoltage, comment };
         // The compound type name is optional
         HDF5CompoundType<Object[]> type =
                 hdf5Writer.compound().getInferredType("Measurement", new String[]
-                    { "date", "temperatureInDegreeCelsius", "voltageInMilliVolts" }, array);
+                    { "date", "temperatureInDegreeCelsius", "voltageInMilliVolts", "comment" }, array);
         hdf5Writer.compound().write(datasetName, type, array);
     }
 
@@ -244,17 +257,20 @@ public class FullVoltageMeasurementCompoundExample
         // Open "voltageMeasurements.h5" for writing
         FullVoltageMeasurementCompoundExample e =
                 new FullVoltageMeasurementCompoundExample("voltageMeasurements.h5", false);
-        e.writeMeasurement("/experiment3/measurement1", new Date(), 18.6f, 15.38937516);
+        e.writeMeasurement("/experiment3/measurement1", new Date(), 18.6f, 15.38937516,
+                "Temperature measurement seems to be flaky.");
         // See what we've written out
         System.out.println("Compound record: " + e.readMeasurement("/experiment3/measurement1"));
 
         // Alternative approaches to writing a compound data set
+        // Note: all of those use their own compound data type.
+        // If you rely on all having the same compound data type, you need to specify 
         e.writeMeasurementAsMap("/experiment3/measurement2", new Date(
-                System.currentTimeMillis() - 10000L), 18.5f, 12.74630652);
+                System.currentTimeMillis() - 10000L), 18.5f, 12.74630652, "-");
         e.writeMeasurementAsList("/experiment3/measurement3", new Date(
-                System.currentTimeMillis() - 20000L), 18.1f, 11.275649054);
+                System.currentTimeMillis() - 20000L), 18.1f, 11.275649054, "-");
         e.writeMeasurementAsArray("/experiment3/measurement4", new Date(
-                System.currentTimeMillis() - 30000L), 17.84f, 9.58736193);
+                System.currentTimeMillis() - 30000L), 17.84f, 9.58736193, "-");
         e.close();
 
         // Open "voltageMeasurements.h5" for reading

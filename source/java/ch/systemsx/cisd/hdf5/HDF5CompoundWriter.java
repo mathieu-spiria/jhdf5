@@ -127,7 +127,8 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
             final Class<T> pojoClass = (Class<T>) pojo.getClass();
             return getType(null, true, pojoClass, addEnumTypes(HDF5CompoundMemberMapping.addHints(
                     HDF5CompoundMemberMapping.inferMapping(pojo, HDF5CompoundMemberMapping
-                            .inferEnumerationTypeMap(pojo, enumTypeRetriever)), hints)));
+                            .inferEnumerationTypeMap(pojo, enumTypeRetriever),
+                            HDF5CompoundMappingHints.isUseVariableLengthStrings(hints)), hints)));
         }
     }
 
@@ -463,8 +464,8 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     final int dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(),
                                     new long[]
-                                        { data.length }, type.getObjectByteifyer().getRecordSizeOnDisk(),
-                                    features, registry);
+                                        { data.length }, type.getObjectByteifyer()
+                                            .getRecordSizeOnDisk(), features, registry);
                     @SuppressWarnings("unchecked")
                     final byte[] byteArray =
                             ((HDF5CompoundType<T>) type).getObjectByteifyer().byteify(
@@ -636,7 +637,8 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                             new long[]
                                 { size }, new long[]
-                                { blockSize }, type.getObjectByteifyer().getRecordSizeOnDisk(), registry);
+                                { blockSize }, type.getObjectByteifyer().getRecordSizeOnDisk(),
+                            registry);
                     return null; // Nothing to return.
                 }
             };
@@ -663,13 +665,14 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                         baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                                 new long[]
                                     { 0 }, new long[]
-                                    { size }, type.getObjectByteifyer().getRecordSizeOnDisk(), registry);
+                                    { size }, type.getObjectByteifyer().getRecordSizeOnDisk(),
+                                registry);
                     } else
                     {
                         baseWriter.createDataSet(objectPath, type.getStorageTypeId(), features,
                                 new long[]
-                                    { size }, null, type.getObjectByteifyer().getRecordSizeOnDisk(),
-                                registry);
+                                    { size }, null,
+                                type.getObjectByteifyer().getRecordSizeOnDisk(), registry);
                     }
                     return null; // Nothing to return.
                 }
