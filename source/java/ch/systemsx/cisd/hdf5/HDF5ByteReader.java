@@ -16,8 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -26,13 +26,13 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5SpaceRankMismatch;
 
-import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
-import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
-import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
+import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 
 /**
  * The implementation of {@link IHDF5ByteReader}.
@@ -77,8 +77,7 @@ class HDF5ByteReader implements IHDF5ByteReader
                     final int attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
                     final byte[] data =
-                            baseReader.h5
-                                    .readAttributeAsByteArray(attributeId, H5T_NATIVE_INT8, 1);
+                            baseReader.h5.readAttributeAsByteArray(attributeId, H5T_NATIVE_INT8, 1);
                     return data[0];
                 }
             };
@@ -358,6 +357,36 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
+    public MDByteArray readSlicedMDArray(String objectPath, IndexMap boundIndices)
+    {
+        baseReader.checkOpen();
+        final long[] fullDimensions = baseReader.getDimensions(objectPath);
+        final int[] fullBlockDimensions = new int[fullDimensions.length];
+        final long[] fullOffset = new long[fullDimensions.length];
+        final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - MatrixUtils.cardinality(boundIndices)];
+        Arrays.fill(effectiveBlockDimensions, -1);
+        MatrixUtils.createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
+                fullBlockDimensions, fullOffset);
+        final MDByteArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
+        return new MDByteArray(result.getAsFlatArray(), effectiveBlockDimensions);
+    }
+
+    @Override
+    public MDByteArray readSlicedMDArray(String objectPath, long[] boundIndices)
+    {
+        baseReader.checkOpen();
+        final long[] fullDimensions = baseReader.getDimensions(objectPath);
+        final int[] fullBlockDimensions = new int[fullDimensions.length];
+        final long[] fullOffset = new long[fullDimensions.length];
+        final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - MatrixUtils.cardinality(boundIndices)];
+        Arrays.fill(effectiveBlockDimensions, -1);
+        MatrixUtils.createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
+                fullBlockDimensions, fullOffset);
+        final MDByteArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
+        return new MDByteArray(result.getAsFlatArray(), effectiveBlockDimensions);
+    }
+
+    @Override
     public MDByteArray readMDArray(final String objectPath)
     {
         assert objectPath != null;
@@ -427,6 +456,30 @@ class HDF5ByteReader implements IHDF5ByteReader
     }
 
     @Override
+    public MDByteArray readSlicedMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber, IndexMap boundIndices)
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readSlicedMDArrayBlockWithOffset(objectPath, blockDimensions, offset, boundIndices);
+    }
+
+    @Override
+    public MDByteArray readSlicedMDArrayBlock(String objectPath, int[] blockDimensions,
+            long[] blockNumber, long[] boundIndices)
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readSlicedMDArrayBlockWithOffset(objectPath, blockDimensions, offset, boundIndices);
+    }
+
+    @Override
     public MDByteArray readMDArrayBlock(final String objectPath, final int[] blockDimensions,
             final long[] blockNumber)
     {
@@ -436,6 +489,36 @@ class HDF5ByteReader implements IHDF5ByteReader
             offset[i] = blockNumber[i] * blockDimensions[i];
         }
         return readMDArrayBlockWithOffset(objectPath, blockDimensions, offset);
+    }
+
+    @Override
+    public MDByteArray readSlicedMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
+            long[] offset, IndexMap boundIndices)
+    {
+        baseReader.checkOpen();
+        final int[] effectiveBlockDimensions = blockDimensions.clone();
+        final long[] fullDimensions = baseReader.getDimensions(objectPath);
+        final int[] fullBlockDimensions = new int[fullDimensions.length];
+        final long[] fullOffset = new long[fullDimensions.length];
+        MatrixUtils.createFullBlockDimensionsAndOffset(effectiveBlockDimensions, offset, boundIndices, fullDimensions,
+                fullBlockDimensions, fullOffset);
+        final MDByteArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
+        return new MDByteArray(result.getAsFlatArray(), effectiveBlockDimensions);
+    }
+
+    @Override
+    public MDByteArray readSlicedMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
+            long[] offset, long[] boundIndices)
+    {
+        baseReader.checkOpen();
+        final int[] effectiveBlockDimensions = blockDimensions.clone();
+        final long[] fullDimensions = baseReader.getDimensions(objectPath);
+        final int[] fullBlockDimensions = new int[fullDimensions.length];
+        final long[] fullOffset = new long[fullDimensions.length];
+        MatrixUtils.createFullBlockDimensionsAndOffset(effectiveBlockDimensions, offset, boundIndices, fullDimensions,
+                fullBlockDimensions, fullOffset);
+        final MDByteArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
+        return new MDByteArray(result.getAsFlatArray(), effectiveBlockDimensions);
     }
 
     @Override

@@ -589,11 +589,9 @@ class HDF5BaseReader
                     }
                     throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
                 }
-                if (blockDimensionsOrNull[i] < 0)
-                {
-                    blockDimensionsOrNull[i] = (int) maxBlockSize;
-                }
-                effectiveBlockDimensions[i] =  Math.min(blockDimensionsOrNull[i], maxBlockSize);
+                effectiveBlockDimensions[i] =
+                        (blockDimensionsOrNull[i] < 0) ? (int) maxBlockSize : Math.min(
+                                blockDimensionsOrNull[i], maxBlockSize);
             }
             h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
             memorySpaceId = h5.createSimpleDataSpace(effectiveBlockDimensions, registry);
@@ -870,8 +868,22 @@ class HDF5BaseReader
     }
 
     /**
-     * Returns the rank of the data set. It is a failure condition if the
-     * <var>dataSetPath</var> does not exist or does not identify a data set.
+     * Returns the dimensions of the space of <var>objectPath</var> (empty if this is a scalar
+     * space). It is a failure condition if the <var>objectPath</var> does not exist or does not
+     * identify a data set. This method follows symbolic links.
+     */
+    long[] getDimensions(String dataSetPath)
+    {
+        assert dataSetPath != null;
+
+        final HDF5DataSetInformation info =
+                getDataSetInformation(dataSetPath, DataTypeInfoOptions.MINIMAL, true);
+        return MatrixUtils.concat(info.getDimensions(), info.getTypeInformation().getDimensions());
+    }
+
+    /**
+     * Returns the rank of the data set. It is a failure condition if the <var>dataSetPath</var>
+     * does not exist or does not identify a data set.
      * 
      * @param dataSetPath The name (including path information) of the data set to return
      *            information about.

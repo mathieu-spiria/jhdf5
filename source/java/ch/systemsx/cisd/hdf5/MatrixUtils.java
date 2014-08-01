@@ -18,6 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Map;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -323,4 +324,73 @@ public final class MatrixUtils
         }
         return result;
     }
+
+    static int cardinality(Map<?, ?> boundIndices)
+    {
+        return boundIndices.size();
+    }
+    
+    static int cardinality(long[] boundIndices)
+    {
+        int card = 0;
+        for (int i = 0; i < boundIndices.length; ++i)
+        {
+            if (boundIndices[i] >= 0)
+            {
+                ++card;
+            }
+        }
+        return card;
+    }
+    
+    static void createFullBlockDimensionsAndOffset(int[] blockDimensions, long[] offsetOrNull,
+            Map<Integer, Long> boundIndices, final long[] fullDimensions,
+            final int[] fullBlockDimensions, final long[] fullOffset)
+    {
+        int j = 0;
+        for (int i = 0; i < fullDimensions.length; ++i)
+        {
+            final Long boundIndexOrNull = boundIndices.get(i);
+            if (boundIndexOrNull == null)
+            {
+                if (blockDimensions[j] < 0)
+                {
+                    blockDimensions[j] = (int) fullDimensions[i];
+                }
+                fullBlockDimensions[i] = blockDimensions[j];
+                fullOffset[i] = (offsetOrNull == null) ? 0 : offsetOrNull[j];
+                ++j;
+            } else
+            {
+                fullBlockDimensions[i] = 1;
+                fullOffset[i] = boundIndexOrNull;
+            }
+        }
+    }
+
+    static void createFullBlockDimensionsAndOffset(int[] blockDimensions, long[] offsetOrNull,
+            long[] boundIndices, final long[] fullDimensions,
+            final int[] fullBlockDimensions, final long[] fullOffset)
+    {
+        int j = 0;
+        for (int i = 0; i < fullDimensions.length; ++i)
+        {
+            final long boundIndex = boundIndices[i];
+            if (boundIndex < 0)
+            {
+                if (blockDimensions[j] < 0)
+                {
+                    blockDimensions[j] = (int) fullDimensions[i];
+                }
+                fullBlockDimensions[i] = blockDimensions[j];
+                fullOffset[i] = (offsetOrNull == null) ? 0 : offsetOrNull[j];
+                ++j;
+            } else
+            {
+                fullBlockDimensions[i] = 1;
+                fullOffset[i] = boundIndex;
+            }
+        }
+    }
+
 }

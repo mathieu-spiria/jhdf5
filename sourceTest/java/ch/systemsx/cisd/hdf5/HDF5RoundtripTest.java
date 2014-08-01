@@ -211,7 +211,7 @@ public class HDF5RoundtripTest
         test.testStringMDArrayVLBlocks();
         test.testMDIntArrayDifferentSizesElementType();
         test.testMDIntArrayDifferentSizesElementTypeUnsignedByte();
-        test.testReadMDFloatArray();
+        test.testReadMDFloatArrayWithSlicing();
         test.testReadToFloatMDArray();
         test.testFloatArrayTypeDataSet();
         test.testFloatArrayTypeDataSetOverwrite();
@@ -665,7 +665,7 @@ public class HDF5RoundtripTest
     }
 
     @Test
-    public void testReadMDFloatArray()
+    public void testReadMDFloatArrayWithSlicing()
     {
         final File datasetFile = new File(workingDirectory, "mdArray.h5");
         datasetFile.delete();
@@ -691,9 +691,68 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final MDFloatArray arrayRead = reader.float32().readMDArray(floatDatasetName);
-        reader.close();
         assertEquals(arrayWritten, arrayRead);
-
+        final IndexMap boundIndex1 = new IndexMap().bind(1, 0);
+        final long[] boundIndex1Arr = new long[]
+            { -1, 0, -1 };
+        final MDFloatArray slice1 = new MDFloatArray(new float[]
+            { 1f, 2f, 3f, 4f, 9f, 10f, 11f, 12f, 17f, 18f, 19f, 20f }, new int[]
+            { 3, 4 });
+        final MDFloatArray slice1BlockOfs00 = new MDFloatArray(new float[]
+            { 1f, 2f, 9f, 10f }, new int[]
+            { 2, 2 });
+        final MDFloatArray slice1BlockOfs01 = new MDFloatArray(new float[]
+            { 2f, 3f, 10f, 11f }, new int[]
+            { 2, 2 });
+        final MDFloatArray slice1BlockOfs10 = new MDFloatArray(new float[]
+            { 9f, 10f, 17f, 18f }, new int[]
+            { 2, 2 });
+        final MDFloatArray slice1BlockOfs11 = new MDFloatArray(new float[]
+                { 10f, 11f, 18f, 19f }, new int[]
+                { 2, 2 });
+        final IndexMap boundIndex2 = new IndexMap().bind(2, 3).bind(0, 1);
+        final long[] boundIndex2Arr = new long[]
+            { 1, -1, 3 };
+        final MDFloatArray slice2 = new MDFloatArray(new float[]
+            { 12f, 16f }, new int[]
+            { 2 });
+        assertEquals(slice1, reader.float32().readSlicedMDArray(floatDatasetName, boundIndex1));
+        assertEquals(slice1, reader.float32().readSlicedMDArray(floatDatasetName, boundIndex1Arr));
+        assertEquals(slice1BlockOfs00,
+                reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
+                    { 2, 2 }, new long[]
+                    { 0, 0 }, boundIndex1));
+        assertEquals(slice1BlockOfs00,
+                reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
+                    { 2, 2 }, new long[]
+                    { 0, 0 }, boundIndex1Arr));
+        assertEquals(slice1BlockOfs01,
+                reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
+                    { 2, 2 }, new long[]
+                    { 0, 1 }, boundIndex1));
+        assertEquals(slice1BlockOfs01,
+                reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
+                    { 2, 2 }, new long[]
+                    { 0, 1 }, boundIndex1Arr));
+        assertEquals(slice1BlockOfs10,
+                reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
+                    { 2, 2 }, new long[]
+                    { 1, 0 }, boundIndex1));
+        assertEquals(slice1BlockOfs10,
+                reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
+                    { 2, 2 }, new long[]
+                    { 1, 0 }, boundIndex1Arr));
+        assertEquals(slice1BlockOfs11,
+                reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
+                    { 2, 2 }, new long[]
+                    { 1, 1 }, boundIndex1));
+        assertEquals(slice1BlockOfs11,
+                reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
+                    { 2, 2 }, new long[]
+                    { 1, 1 }, boundIndex1Arr));
+        assertEquals(slice2, reader.float32().readSlicedMDArray(floatDatasetName, boundIndex2));
+        assertEquals(slice2, reader.float32().readSlicedMDArray(floatDatasetName, boundIndex2Arr));
+        reader.close();
     }
 
     @Test

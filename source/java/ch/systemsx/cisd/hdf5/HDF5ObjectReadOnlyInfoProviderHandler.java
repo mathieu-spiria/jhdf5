@@ -379,9 +379,8 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
     @Override
     public long[] getDimensions(String objectPath)
     {
-        final HDF5DataSetInformation info =
-                getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL, true);
-        return MatrixUtils.concat(info.getDimensions(), info.getTypeInformation().getDimensions());
+        baseReader.checkOpen();
+        return baseReader.getDimensions(objectPath);
     }
 
     // /////////////////////
