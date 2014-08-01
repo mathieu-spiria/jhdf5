@@ -21,8 +21,9 @@ import java.util.List;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 
 /**
- * An interface for getting information on HDF5 objects like links, groups, data sets and data types.  
- *
+ * An interface for getting information on HDF5 objects like links, groups, data sets and data
+ * types.
+ * 
  * @author Bernd Rinn
  */
 public interface IHDF5ObjectReadOnlyInfoProviderHandler
@@ -215,13 +216,13 @@ public interface IHDF5ObjectReadOnlyInfoProviderHandler
 
     /**
      * Returns the information about a data set as a {@link HDF5DataSetInformation} object. It is a
-     * failure condition if the <var>dataSetPath</var> does not exist or does not identify a data
+     * failure condition if the <var>objectPath</var> does not exist or does not identify a data
      * set.
      * 
-     * @param dataSetPath The name (including path information) of the data set to return
-     *            information about.
+     * @param objectPath The name (including path information) of the data set to return information
+     *            about.
      */
-    public HDF5DataSetInformation getDataSetInformation(final String dataSetPath);
+    public HDF5DataSetInformation getDataSetInformation(final String objectPath);
 
     // /////////////////////
     // Data Sets
@@ -229,38 +230,80 @@ public interface IHDF5ObjectReadOnlyInfoProviderHandler
 
     /**
      * Returns the information about a data set as a {@link HDF5DataSetInformation} object. It is a
-     * failure condition if the <var>dataSetPath</var> does not exist or does not identify a data
+     * failure condition if the <var>objectPath</var> does not exist or does not identify a data
      * set.
      * 
-     * @param dataSetPath The name (including path information) of the data set to return
-     *            information about.
+     * @param objectPath The name (including path information) of the data set to return information
+     *            about.
      * @param dataTypeInfoOptions The options on which information to get about the member data
      *            types.
      */
-    public HDF5DataSetInformation getDataSetInformation(final String dataSetPath,
+    public HDF5DataSetInformation getDataSetInformation(final String objectPath,
             final DataTypeInfoOptions dataTypeInfoOptions);
 
     /**
      * Returns the total size (in bytes) of <var>objectPath</var>. It is a failure condition if the
-     * <var>dataSetPath</var> does not exist or does not identify a data set. This method follows
+     * <var>objectPath</var> does not exist or does not identify a data set. This method follows
      * symbolic links.
      */
     public long getSize(final String objectPath);
 
     /**
      * Returns the total number of elements of <var>objectPath</var>. It is a failure condition if
-     * the <var>dataSetPath</var> does not exist or does not identify a data set. This method
-     * follows symbolic links.
+     * the <var>objectPath</var> does not exist or does not identify a data set. This method follows
+     * symbolic links.
      */
     public long getNumberOfElements(final String objectPath);
 
     /**
-     * Returns the size of one element of <var>objectPath</var>. It is a failure condition if
-     * the <var>dataSetPath</var> does not exist or does not identify a data set. This method
-     * follows symbolic links.
+     * Returns the size of one element of <var>objectPath</var>. It is a failure condition if the
+     * <var>objectPath</var> does not exist or does not identify a data set. This method follows
+     * symbolic links.
      */
     public int getElementSize(final String objectPath);
-    
+
+    /**
+     * Returns the rank of the space of <var>objectPath</var> (0 if this is a scalar space). It is a
+     * failure condition if the <var>objectPath</var> does not exist or does not identify a data
+     * set. This method follows symbolic links.
+     */
+    public int getSpaceRank(final String objectPath);
+
+    /**
+     * Returns the dimensions of the space of <var>objectPath</var> (empty if this is a scalar
+     * space). It is a failure condition if the <var>objectPath</var> does not exist or does not
+     * identify a data set. This method follows symbolic links.
+     */
+    public long[] getSpaceDimensions(final String objectPath);
+
+    /**
+     * Returns the rank of the array of <var>objectPath</var> (0 if this is no array type). It is a
+     * failure condition if the <var>objectPath</var> does not exist or does not identify a data
+     * set. This method follows symbolic links.
+     */
+    public int getArrayRank(final String objectPath);
+
+    /**
+     * Returns the dimensions of <var>objectPath</var>(empty if this isno array type). It is a
+     * failure condition if the <var>objectPath</var> does not exist or does not identify a data
+     * set. This method follows symbolic links.
+     */
+    public int[] getArrayDimensions(final String objectPath);
+
+    /**
+     * Returns the rank of this data set of <var>objectPath</var>. This combines the space rank and
+     * the array rank into one rank. It is a failure condition if the <var>objectPath</var> does not
+     * exist or does not identify a data set. This method follows symbolic links.
+     */
+    public int getRank(final String objectPath);
+
+    /**
+     * Returns the dimensions of <var>objectPath</var>. This combines the space dimensions and the
+     * array dimensions into one rank. It is a failure condition if the <var>objectPath</var> does
+     * not exist or does not identify a data set. This method follows symbolic links.
+     */
+    public long[] getDimensions(final String objectPath);
+
     // /////////////////////
     // Copies
     // /////////////////////

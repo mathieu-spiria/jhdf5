@@ -338,6 +338,52 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
                 .getTypeInformation().getElementSize();
     }
 
+    @Override
+    public int getSpaceRank(String objectPath)
+    {
+        baseReader.checkOpen();
+        return baseReader.getSpaceRank(objectPath);
+    }
+
+    @Override
+    public long[] getSpaceDimensions(String objectPath)
+    {
+        baseReader.checkOpen();
+        return baseReader.getSpaceDimensions(objectPath);
+    }
+
+    @Override
+    public int getArrayRank(String objectPath)
+    {
+        final HDF5DataSetInformation info =
+                getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL, false);
+        return info.getTypeInformation().getRank();
+    }
+
+    @Override
+    public int[] getArrayDimensions(String objectPath)
+    {
+        final HDF5DataSetInformation info =
+                getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL, false);
+        return info.getTypeInformation().getDimensions();
+    }
+
+    @Override
+    public int getRank(String objectPath)
+    {
+        final HDF5DataSetInformation info =
+                getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL, true);
+        return info.getRank() + info.getTypeInformation().getRank();
+    }
+
+    @Override
+    public long[] getDimensions(String objectPath)
+    {
+        final HDF5DataSetInformation info =
+                getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL, true);
+        return MatrixUtils.concat(info.getDimensions(), info.getTypeInformation().getDimensions());
+    }
+
     // /////////////////////
     // Copies
     // /////////////////////

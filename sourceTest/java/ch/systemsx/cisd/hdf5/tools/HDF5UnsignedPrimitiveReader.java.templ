@@ -19,10 +19,12 @@ package ch.systemsx.cisd.hdf5;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.__Memorytype__;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
 
+import java.util.Arrays;
 import java.util.Iterator;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
+import ncsa.hdf.hdf5lib.exceptions.HDF5SpaceRankMismatch;
 
 import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -30,6 +32,7 @@ import ch.systemsx.cisd.base.mdarray.MD__Name__Array;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 
 /**
  * The implementation of {@link IHDF5__Name__Reader}.
@@ -402,13 +405,25 @@ class HDF5Unsigned__Name__Reader implements IHDF5__Name__Reader
     private MD__Name__Array read__Name__MDArrayFromArrayType(int dataSetId, final int dataTypeId,
             ICleanUpRegistry registry)
     {
-        final int spaceId = baseReader.h5.createScalarDataSpace();
-        final int[] dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
-        final __name__[] data = new __name__[MDArray.getLength(dimensions)];
+        final int[] arrayDimensions = baseReader.h5.getArrayDimensions(dataTypeId);
         final int memoryDataTypeId =
-                baseReader.h5.createArrayType(__Memorytype__, dimensions, registry);
-        baseReader.h5.readDataSet(dataSetId, memoryDataTypeId, spaceId, spaceId, data);
-        return new MD__Name__Array(data, dimensions);
+                baseReader.h5.createArrayType(__Memorytype__, arrayDimensions, registry);
+        final DataSpaceParameters spaceParams = baseReader.getSpaceParameters(dataSetId, registry);
+        if (spaceParams.blockSize == 0)
+        {
+            final int spaceId = baseReader.h5.createScalarDataSpace();
+            final __name__[] data = new __name__[MDArray.getLength(arrayDimensions)];
+            baseReader.h5.readDataSet(dataSetId, memoryDataTypeId, spaceId, spaceId, data);
+            return new MD__Name__Array(data, arrayDimensions);
+        } else
+        {
+            final __name__[] data =
+                    new __name__[MDArray.getLength(arrayDimensions) * spaceParams.blockSize];
+            baseReader.h5.readDataSet(dataSetId, memoryDataTypeId, spaceParams.memorySpaceId,
+                    spaceParams.dataSpaceId, data);
+            return new MD__Name__Array(data, MatrixUtils.concat(MDArray.toInt(spaceParams.dimensions),
+                    arrayDimensions));
+        }
     }
 
     @Override
@@ -439,18 +454,70 @@ class HDF5Unsigned__Name__Reader implements IHDF5__Name__Reader
                 {
                     final int dataSetId = 
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final DataSpaceParameters spaceParams =
-                            baseReader.getSpaceParameters(dataSetId, offset, blockDimensions, 
-                                    registry);
-                    final __name__[] dataBlock = new __name__[spaceParams.blockSize];
-                    baseReader.h5.readDataSet(dataSetId, __Memorytype__, spaceParams.memorySpaceId,
-                            spaceParams.dataSpaceId, dataBlock);
-                    return new MD__Name__Array(dataBlock, blockDimensions);
+                    try
+                    {
+                        final DataSpaceParameters spaceParams =
+                                baseReader.getSpaceParameters(dataSetId, offset,
+                                        blockDimensions, registry);
+                        final __name__[] dataBlock = new __name__[spaceParams.blockSize];
+                        baseReader.h5.readDataSet(dataSetId, __Memorytype__,
+                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                dataBlock);
+                        return new MD__Name__Array(dataBlock, blockDimensions);
+                    } catch (HDF5SpaceRankMismatch ex)
+                    {
+                        final HDF5DataSetInformation info =
+                                baseReader.getDataSetInformation(objectPath,
+                                        DataTypeInfoOptions.MINIMAL, false);
+                        if (ex.getSpaceRankExpected() - ex.getSpaceRankFound() == info
+                                .getTypeInformation().getRank())
+                        {
+                            return readMDArrayBlockOfArrays(dataSetId, blockDimensions,
+                                    offset, info, ex.getSpaceRankFound(), registry);
+                        } else
+                        {
+                            throw ex;
+                        }
+                    }
                 }
             };
         return baseReader.runner.call(readCallable);
     }
     
+    private MD__Name__Array readMDArrayBlockOfArrays(final int dataSetId, final int[] blockDimensions,
+            final long[] offset, final HDF5DataSetInformation info, final int spaceRank,
+            final ICleanUpRegistry registry)
+    {
+        final int[] arrayDimensions = info.getTypeInformation().getDimensions();
+        // We do not support block-wise reading of array types, check
+        // that we do not have to and bail out otherwise.
+        for (int i = 0; i < arrayDimensions.length; ++i)
+        {
+            final int j = spaceRank + i;
+            if (blockDimensions[j] < 0)
+            {
+                blockDimensions[j] = arrayDimensions[i];
+            }
+            if (blockDimensions[j] != arrayDimensions[i])
+            {
+                throw new HDF5JavaException(
+                        "Block-wise reading of array type data sets is not supported.");
+            }
+        }
+        final int[] spaceBlockDimensions = Arrays.copyOfRange(blockDimensions, 0, spaceRank);
+        final long[] spaceOfs = Arrays.copyOfRange(offset, 0, spaceRank);
+        final DataSpaceParameters spaceParams =
+                baseReader.getSpaceParameters(dataSetId, spaceOfs, spaceBlockDimensions, registry);
+        final __name__[] dataBlock =
+                new __name__[spaceParams.blockSize * info.getTypeInformation().getNumberOfElements()];
+        final int memoryDataTypeId =
+                baseReader.h5.createArrayType(__Memorytype__, info.getTypeInformation()
+                        .getDimensions(), registry);
+        baseReader.h5.readDataSet(dataSetId, memoryDataTypeId, spaceParams.memorySpaceId,
+                spaceParams.dataSpaceId, dataBlock);
+        return new MD__Name__Array(dataBlock, blockDimensions);
+    }
+
     @Override
     public Iterable<HDF5DataBlock<__name__[]>> getArrayNaturalBlocks(final String dataSetPath)
             throws HDF5JavaException

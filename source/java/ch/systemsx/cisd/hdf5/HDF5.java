@@ -1795,6 +1795,11 @@ class HDF5
         return dimensions;
     }
 
+    public int getDataSpaceRank(int dataSpaceId)
+    {
+        return H5Sget_simple_extent_ndims(dataSpaceId);
+    }
+
     public long[] getDataSpaceDimensions(int dataSpaceId)
     {
         final int rank = H5Sget_simple_extent_ndims(dataSpaceId);
@@ -1828,6 +1833,56 @@ class HDF5
     }
 
     /**
+     * @param dataSetOrAttributeId The id of either the data set or the attribute to get the rank
+     *            for.
+     * @param isAttribute If <code>true</code>, <var>dataSetOrAttributeId</var> will be interpreted
+     *            as an attribute, otherwise as a data set.
+     */
+    public int getRank(final int dataSetOrAttributeId, final boolean isAttribute,
+            ICleanUpRegistry registry)
+    {
+        final int dataSpaceId =
+                isAttribute ? H5Aget_space(dataSetOrAttributeId)
+                        : H5Dget_space(dataSetOrAttributeId);
+        registry.registerCleanUp(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    H5Sclose(dataSpaceId);
+                }
+            });
+        return H5Sget_simple_extent_ndims(dataSpaceId);
+    }
+
+    /**
+     * @param dataSetOrAttributeId The id of either the data set or the attribute to get the rank
+     *            for.
+     * @param isAttribute If <code>true</code>, <var>dataSetOrAttributeId</var> will be interpreted
+     *            as an attribute, otherwise as a data set.
+     */
+    public long[] getDimensions(final int dataSetOrAttributeId, final boolean isAttribute,
+            ICleanUpRegistry registry)
+    {
+        final int dataSpaceId =
+                isAttribute ? H5Aget_space(dataSetOrAttributeId)
+                        : H5Dget_space(dataSetOrAttributeId);
+        registry.registerCleanUp(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    H5Sclose(dataSpaceId);
+                }
+            });
+        final long[] dimensions = new long[H5S_MAX_RANK];
+        final int rank = H5Sget_simple_extent_dims(dataSpaceId, dimensions, null);
+        final long[] realDimensions = new long[rank];
+        System.arraycopy(dimensions, 0, realDimensions, 0, rank);
+        return realDimensions;
+    }
+
+    /**
      * @param dataSetOrAttributeId The id of either the data set or the attribute to get the
      *            dimensions for.
      * @param isAttribute If <code>true</code>, <var>dataSetOrAttributeId</var> will be interpreted
@@ -1835,52 +1890,42 @@ class HDF5
      * @param dataSetInfo The info object to fill.
      */
     public void fillDataDimensions(final int dataSetOrAttributeId, final boolean isAttribute,
-            final HDF5DataSetInformation dataSetInfo)
+            final HDF5DataSetInformation dataSetInfo, ICleanUpRegistry registry)
     {
-        ICallableWithCleanUp<Object> dataDimensionRunnable = new ICallableWithCleanUp<Object>()
+        final int dataSpaceId =
+                isAttribute ? H5Aget_space(dataSetOrAttributeId)
+                        : H5Dget_space(dataSetOrAttributeId);
+        registry.registerCleanUp(new Runnable()
             {
                 @Override
-                public long[][] call(ICleanUpRegistry registry)
+                public void run()
                 {
-                    final int dataSpaceId =
-                            isAttribute ? H5Aget_space(dataSetOrAttributeId)
-                                    : H5Dget_space(dataSetOrAttributeId);
-                    registry.registerCleanUp(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                H5Sclose(dataSpaceId);
-                            }
-                        });
-                    final long[] dimensions = new long[H5S_MAX_RANK];
-                    final long[] maxDimensions = new long[H5S_MAX_RANK];
-                    final int rank =
-                            H5Sget_simple_extent_dims(dataSpaceId, dimensions, maxDimensions);
-                    final long[] realDimensions = new long[rank];
-                    System.arraycopy(dimensions, 0, realDimensions, 0, rank);
-                    final long[] realMaxDimensions = new long[rank];
-                    System.arraycopy(maxDimensions, 0, realMaxDimensions, 0, rank);
-                    dataSetInfo.setDimensions(realDimensions);
-                    dataSetInfo.setMaxDimensions(realMaxDimensions);
-                    if (isAttribute == false)
-                    {
-                        final long[] chunkSizes = new long[rank];
-                        final int creationPropertyList =
-                                getCreationPropertyList(dataSetOrAttributeId, registry);
-                        final HDF5StorageLayout layout =
-                                HDF5StorageLayout.fromId(H5Pget_layout(creationPropertyList));
-                        dataSetInfo.setStorageLayout(layout);
-                        if (layout == HDF5StorageLayout.CHUNKED)
-                        {
-                            H5Pget_chunk(creationPropertyList, rank, chunkSizes);
-                            dataSetInfo.setChunkSizes(MDAbstractArray.toInt(chunkSizes));
-                        }
-                    }
-                    return null; // Nothing to return
+                    H5Sclose(dataSpaceId);
                 }
-            };
-        runner.call(dataDimensionRunnable);
+            });
+        final long[] dimensions = new long[H5S_MAX_RANK];
+        final long[] maxDimensions = new long[H5S_MAX_RANK];
+        final int rank = H5Sget_simple_extent_dims(dataSpaceId, dimensions, maxDimensions);
+        final long[] realDimensions = new long[rank];
+        System.arraycopy(dimensions, 0, realDimensions, 0, rank);
+        final long[] realMaxDimensions = new long[rank];
+        System.arraycopy(maxDimensions, 0, realMaxDimensions, 0, rank);
+        dataSetInfo.setDimensions(realDimensions);
+        dataSetInfo.setMaxDimensions(realMaxDimensions);
+        if (isAttribute == false)
+        {
+            final long[] chunkSizes = new long[rank];
+            final int creationPropertyList =
+                    getCreationPropertyList(dataSetOrAttributeId, registry);
+            final HDF5StorageLayout layout =
+                    HDF5StorageLayout.fromId(H5Pget_layout(creationPropertyList));
+            dataSetInfo.setStorageLayout(layout);
+            if (layout == HDF5StorageLayout.CHUNKED)
+            {
+                H5Pget_chunk(creationPropertyList, rank, chunkSizes);
+                dataSetInfo.setChunkSizes(MDAbstractArray.toInt(chunkSizes));
+            }
+        }
     }
 
     public int[] getArrayDimensions(int arrayTypeId)

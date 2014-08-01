@@ -20,6 +20,7 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * Utilities for working with primitive matrices.
@@ -288,4 +289,38 @@ public final class MatrixUtils
         return true;
     }
 
+    static int[] concat(int[] array1, int[] array2)
+    {
+        if (array1.length == 0)
+        {
+            return array2;
+        }
+        if (array2.length == 0)
+        {
+            return array1;
+        }
+        final int[] result = new int[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        System.arraycopy(array2, 0, result, array1.length, array2.length);
+        return result;
+    }
+
+    static long[] concat(long[] array1, int[] array2)
+    {
+        if (array1.length == 0)
+        {
+            return MDArray.toLong(array2);
+        }
+        if (array2.length == 0)
+        {
+            return array1;
+        }
+        final long[] result = new long[array1.length + array2.length];
+        System.arraycopy(array1, 0, result, 0, array1.length);
+        for (int i = 0; i < array2.length; ++i)
+        {
+            result[array1.length + i] = array2[i];
+        }
+        return result;
+    }
 }

@@ -42,6 +42,7 @@ import java.util.Map;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5FileNotFoundException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import ncsa.hdf.hdf5lib.exceptions.HDF5SpaceRankMismatch;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -574,8 +575,7 @@ class HDF5BaseReader
             final long[] dimensions = h5.getDataSpaceDimensions(dataSpaceId);
             if (dimensions.length != blockDimensionsOrNull.length)
             {
-                throw new HDF5JavaException("Data Set is expected to be of rank "
-                        + blockDimensionsOrNull.length + " (rank=" + dimensions.length + ")");
+                throw new HDF5SpaceRankMismatch(blockDimensionsOrNull.length, dimensions.length);
             }
             effectiveBlockDimensions = new long[blockDimensionsOrNull.length];
             for (int i = 0; i < offset.length; ++i)
@@ -589,7 +589,11 @@ class HDF5BaseReader
                     }
                     throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
                 }
-                effectiveBlockDimensions[i] = Math.min(blockDimensionsOrNull[i], maxBlockSize);
+                if (blockDimensionsOrNull[i] < 0)
+                {
+                    blockDimensionsOrNull[i] = (int) maxBlockSize;
+                }
+                effectiveBlockDimensions[i] =  Math.min(blockDimensionsOrNull[i], maxBlockSize);
             }
             h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
             memorySpaceId = h5.createSimpleDataSpace(effectiveBlockDimensions, registry);
@@ -833,9 +837,57 @@ class HDF5BaseReader
                             }
                             if (fillDimensions)
                             {
-                                h5.fillDataDimensions(dataSetId, false, dataSetInfo);
+                                h5.fillDataDimensions(dataSetId, false, dataSetInfo, registry);
                             }
                             return dataSetInfo;
+                        }
+                    };
+        return runner.call(informationDeterminationRunnable);
+    }
+
+    /**
+     * Returns the dimensions of the data set. It is a failure condition if the
+     * <var>dataSetPath</var> does not exist or does not identify a data set.
+     * 
+     * @param dataSetPath The name (including path information) of the data set to return
+     *            information about.
+     */
+    long[] getSpaceDimensions(final String dataSetPath)
+    {
+        assert dataSetPath != null;
+
+        final ICallableWithCleanUp<long[]> informationDeterminationRunnable =
+                new ICallableWithCleanUp<long[]>()
+                    {
+                        @Override
+                        public long[] call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId = h5.openDataSet(fileId, dataSetPath, registry);
+                            return h5.getDimensions(dataSetId, false, registry);
+                        }
+                    };
+        return runner.call(informationDeterminationRunnable);
+    }
+
+    /**
+     * Returns the rank of the data set. It is a failure condition if the
+     * <var>dataSetPath</var> does not exist or does not identify a data set.
+     * 
+     * @param dataSetPath The name (including path information) of the data set to return
+     *            information about.
+     */
+    int getSpaceRank(final String dataSetPath)
+    {
+        assert dataSetPath != null;
+
+        final ICallableWithCleanUp<Integer> informationDeterminationRunnable =
+                new ICallableWithCleanUp<Integer>()
+                    {
+                        @Override
+                        public Integer call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId = h5.openDataSet(fileId, dataSetPath, registry);
+                            return h5.getRank(dataSetId, false, registry);
                         }
                     };
         return runner.call(informationDeterminationRunnable);
@@ -1173,7 +1225,7 @@ class HDF5BaseReader
                     (dataClass == HDF5DataClass.STRING) ? h5.isVariableLengthString(dataTypeId)
                             : false;
             return new HDF5DataTypeInformation(dataTypePathOrNull, options, dataClass,
-                    dataSetEncoding, houseKeepingNameSuffix, totalSize, 1, signed,
+                    dataSetEncoding, houseKeepingNameSuffix, totalSize, signed,
                     variableLengthString, opaqueTagOrNull);
         }
     }

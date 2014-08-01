@@ -147,35 +147,32 @@ public final class HDF5DataTypeInformation
             HDF5DataClass dataClass, String houseKeepingNameSuffix, int elementSize, boolean signed)
     {
         this(dataTypePathOrNull, options, dataClass, CharacterEncoding.ASCII,
-                houseKeepingNameSuffix, elementSize, new int[]
-                    { 1 }, false, signed, false, null);
+                houseKeepingNameSuffix, elementSize, 1, new int[0], false, signed, false, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, String houseKeepingNameSuffix,
             int elementSize, boolean signed)
     {
         this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
-                houseKeepingNameSuffix, elementSize, new int[]
-                    { 1 }, false, signed, false, null);
+                houseKeepingNameSuffix, elementSize, 1, new int[0], false, signed, false, null);
     }
 
     HDF5DataTypeInformation(HDF5DataClass dataClass, String houseKeepingNameSuffix,
             int elementSize, int numberOfElements, boolean signed)
     {
         this(null, DataTypeInfoOptions.ALL, dataClass, CharacterEncoding.ASCII,
-                houseKeepingNameSuffix, elementSize, new int[]
+                houseKeepingNameSuffix, elementSize, numberOfElements, new int[]
                     { numberOfElements }, false, signed, false, null);
 
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
             HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
-            int elementSize, int numberOfElements, boolean signed, boolean variableLengthString,
+            int elementSize, boolean signed, boolean variableLengthString,
             String opaqueTagOrNull)
     {
         this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
-                new int[]
-                    { numberOfElements }, false, signed, variableLengthString, opaqueTagOrNull);
+                1, new int[0], false, signed, variableLengthString, opaqueTagOrNull);
     }
 
     HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
@@ -184,14 +181,15 @@ public final class HDF5DataTypeInformation
             boolean variableLengthString)
     {
         this(dataTypePathOrNull, options, dataClass, encoding, houseKeepingNameSuffix, elementSize,
-                dimensions, arrayType, signed, variableLengthString, null);
+                MDAbstractArray.getLength(dimensions), dimensions, arrayType, signed,
+                variableLengthString, null);
 
     }
 
     private HDF5DataTypeInformation(String dataTypePathOrNull, DataTypeInfoOptions options,
             HDF5DataClass dataClass, CharacterEncoding encoding, String houseKeepingNameSuffix,
-            int elementSize, int[] dimensions, boolean arrayType, boolean signed,
-            boolean variableLengthString, String opaqueTagOrNull)
+            int elementSize, int numberOfElements, int[] dimensions, boolean arrayType,
+            boolean signed, boolean variableLengthString, String opaqueTagOrNull)
     {
         if (dataClass == HDF5DataClass.BOOLEAN || dataClass == HDF5DataClass.STRING)
         {
@@ -209,8 +207,8 @@ public final class HDF5DataTypeInformation
         this.variableLengthString = variableLengthString;
         this.dataClass = dataClass;
         this.elementSize = elementSize;
+        this.numberOfElements = numberOfElements;
         this.dimensions = dimensions;
-        this.numberOfElements = MDAbstractArray.getLength(dimensions);
         this.encoding = encoding;
         this.opaqueTagOrNull = opaqueTagOrNull;
         this.options = options;
@@ -267,7 +265,7 @@ public final class HDF5DataTypeInformation
             return elementSize;
         }
     }
-    
+
     /**
      * The element size as is relevant for padding to ensure memory alignment.
      */
@@ -311,7 +309,15 @@ public final class HDF5DataTypeInformation
     }
 
     /**
-     * Returns the dimensions along each axis of this type.
+     * Returns the rank (number of dimensions) of this type (0 for a scalar type).
+     */
+    public int getRank()
+    {
+        return dimensions.length;
+    }
+
+    /**
+     * Returns the dimensions along each axis of this type (an empty array for a scalar type).
      */
     public int[] getDimensions()
     {

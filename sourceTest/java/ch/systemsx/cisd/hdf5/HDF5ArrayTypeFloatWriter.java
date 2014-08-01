@@ -30,6 +30,7 @@ import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
 
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
@@ -136,6 +137,36 @@ public class HDF5ArrayTypeFloatWriter
                     final int dataSetId =
                             baseWriter.h5.createScalarDataSet(baseWriter.fileId, storageTypeId,
                                     objectPath, true, registry);
+                    H5Dwrite(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                            data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    public void writeFloat2DArrayArrayType1DSpace1d(final String objectPath, final MDFloatArray data)
+    {
+        assert objectPath != null;
+        assert data != null;
+        assert data.rank() == 2;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int memoryTypeId =
+                            baseWriter.h5.createArrayType(H5T_NATIVE_FLOAT, data.dimensions()[1],
+                                    registry);
+                    final int storageTypeId =
+                            baseWriter.h5.createArrayType(H5T_IEEE_F32LE, data.dimensions()[1], registry);
+                    final int dataSetId =
+                            baseWriter.h5.createDataSet(baseWriter.fileId, new long[]
+                                { data.dimensions()[0] }, null, storageTypeId,
+                                    HDF5FloatStorageFeatures.FLOAT_CONTIGUOUS, objectPath,
+                                    HDF5StorageLayout.CONTIGUOUS, FileFormat.ALLOW_1_8, registry);
                     H5Dwrite(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             data.getAsFlatArray());
                     return null; // Nothing to return.
