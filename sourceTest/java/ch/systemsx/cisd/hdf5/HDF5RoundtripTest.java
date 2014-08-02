@@ -633,11 +633,14 @@ public class HDF5RoundtripTest
             { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, (byte) 128, (byte) 255 };
         writer.uint8().writeArray(byteDatasetName, valuesWritten);
         writer.uint8().setAttr(byteDatasetName, "attr", (byte) 224);
+        final byte[] valuesRead1 = writer.uint8().readArray(byteDatasetName);
+        assertTrue(Arrays.equals(valuesWritten, valuesRead1));
+        assertEquals(224, UnsignedIntUtils.toUint8(writer.uint8().getAttr(byteDatasetName, "attr")));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertFalse(reader.getDataSetInformation(byteDatasetName).isSigned());
-        final byte[] valuesRead = reader.uint8().readArray(byteDatasetName);
-        assertTrue(Arrays.equals(valuesWritten, valuesRead));
+        final byte[] valuesRead2 = reader.uint8().readArray(byteDatasetName);
+        assertTrue(Arrays.equals(valuesWritten, valuesRead2));
         assertEquals(224, UnsignedIntUtils.toUint8(reader.uint8().getAttr(byteDatasetName, "attr")));
         reader.close();
     }
