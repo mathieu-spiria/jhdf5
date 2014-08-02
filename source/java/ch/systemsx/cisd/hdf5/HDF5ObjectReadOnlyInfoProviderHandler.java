@@ -371,9 +371,8 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
     @Override
     public int getRank(String objectPath)
     {
-        final HDF5DataSetInformation info =
-                getDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL, true);
-        return info.getRank() + info.getTypeInformation().getRank();
+        baseReader.checkOpen();
+        return baseReader.getRank(objectPath);
     }
 
     @Override

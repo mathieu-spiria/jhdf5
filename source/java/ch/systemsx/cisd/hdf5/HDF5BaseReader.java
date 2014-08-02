@@ -868,6 +868,19 @@ class HDF5BaseReader
     }
 
     /**
+     * Returns the rank of this data set of <var>objectPath</var>. This combines the space rank and
+     * the array rank into one rank. It is a failure condition if the <var>objectPath</var> does not
+     * exist or does not identify a data set. This method follows symbolic links.
+     */
+    int getRank(String dataSetPath)
+    {
+        final HDF5DataSetInformation info =
+                getDataSetInformation(dataSetPath, DataTypeInfoOptions.MINIMAL, true);
+        return info.getRank() + info.getTypeInformation().getRank();
+        
+    }
+    
+    /**
      * Returns the dimensions of the space of <var>objectPath</var> (empty if this is a scalar
      * space). It is a failure condition if the <var>objectPath</var> does not exist or does not
      * identify a data set. This method follows symbolic links.
