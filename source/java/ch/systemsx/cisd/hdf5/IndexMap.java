@@ -32,7 +32,7 @@ public class IndexMap extends HashMap<Integer, Long>
      * 
      * @return The map itself (for chained calls).
      */
-    public IndexMap mapTo(int index, long indexValue)
+    public IndexMap bind(int index, long indexValue)
     {
         put(index, indexValue);
         return this;
