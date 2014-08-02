@@ -27,33 +27,37 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
  * Utilities for working with primitive matrices.
  * <p>
  * <i>This is an internal API that should not be expected to be stable between releases!</i>
- *
+ * 
  * @author Bernd Rinn
  */
-public final class MatrixUtils
+final class MatrixUtils
 {
+
+    private MatrixUtils()
+    {
+        // Cannot be instantiated
+    }
 
     static void checkMDArrayDimensions(final String name, final int[] dimensions,
             final MDAbstractArray<?> array)
     {
         if (Arrays.equals(dimensions, array.dimensions()) == false)
         {
-            throw new IllegalArgumentException("The member '" + name
-                    + "' has dimensions " + Arrays.toString(array.dimensions())
-                    + " but is supposed to have dimensions " + Arrays.toString(dimensions) + ".");
+            throw new IllegalArgumentException("The member '" + name + "' has dimensions "
+                    + Arrays.toString(array.dimensions()) + " but is supposed to have dimensions "
+                    + Arrays.toString(dimensions) + ".");
         }
     }
 
-    static void checkMatrixDimensions(final String name, final int[] dimensions,
-            final Object matrix)
+    static void checkMatrixDimensions(final String name, final int[] dimensions, final Object matrix)
     {
         final int dimX = Array.getLength(matrix);
         final int dimY = Array.getLength(Array.get(matrix, 0));
         if (dimensions.length != 2 || dimensions[0] != dimX || dimensions[1] != dimY)
         {
-            throw new IllegalArgumentException("The member '" + name
-                    + "' has dimensions [" + dimX + "," + dimY + "]."
-                    + " but is supposed to have dimensions " + Arrays.toString(dimensions) + ".");
+            throw new IllegalArgumentException("The member '" + name + "' has dimensions [" + dimX
+                    + "," + dimY + "]." + " but is supposed to have dimensions "
+                    + Arrays.toString(dimensions) + ".");
         }
     }
 
@@ -329,7 +333,7 @@ public final class MatrixUtils
     {
         return boundIndices.size();
     }
-    
+
     static int cardinality(long[] boundIndices)
     {
         int card = 0;
@@ -342,20 +346,36 @@ public final class MatrixUtils
         }
         return card;
     }
-    
+
     static void createFullBlockDimensionsAndOffset(int[] blockDimensions, long[] offsetOrNull,
             Map<Integer, Long> boundIndices, final long[] fullDimensions,
             final int[] fullBlockDimensions, final long[] fullOffset)
     {
+        createFullBlockDimensionsAndOffset(blockDimensions, offsetOrNull, boundIndices,
+                fullDimensions.length, fullDimensions, fullBlockDimensions, fullOffset);
+    }
+
+    static void createFullBlockDimensionsAndOffset(int[] blockDimensions, long[] offsetOrNull,
+            Map<Integer, Long> boundIndices, final int fullRank, final int[] fullBlockDimensions,
+            final long[] fullOffset)
+    {
+        createFullBlockDimensionsAndOffset(blockDimensions, offsetOrNull, boundIndices, fullRank,
+                null, fullBlockDimensions, fullOffset);
+    }
+
+    static void createFullBlockDimensionsAndOffset(int[] blockDimensions, long[] offsetOrNull,
+            Map<Integer, Long> boundIndices, final int fullRank, final long[] fullDimensionsOrNull,
+            final int[] fullBlockDimensions, final long[] fullOffset)
+    {
         int j = 0;
-        for (int i = 0; i < fullDimensions.length; ++i)
+        for (int i = 0; i < fullRank; ++i)
         {
             final Long boundIndexOrNull = boundIndices.get(i);
             if (boundIndexOrNull == null)
             {
-                if (blockDimensions[j] < 0)
+                if (blockDimensions[j] < 0 && fullDimensionsOrNull != null)
                 {
-                    blockDimensions[j] = (int) fullDimensions[i];
+                    blockDimensions[j] = (int) fullDimensionsOrNull[i];
                 }
                 fullBlockDimensions[i] = blockDimensions[j];
                 fullOffset[i] = (offsetOrNull == null) ? 0 : offsetOrNull[j];
@@ -369,18 +389,34 @@ public final class MatrixUtils
     }
 
     static void createFullBlockDimensionsAndOffset(int[] blockDimensions, long[] offsetOrNull,
-            long[] boundIndices, final long[] fullDimensions,
+            long[] boundIndices, final long[] fullDimensions, final int[] fullBlockDimensions,
+            final long[] fullOffset)
+    {
+        createFullBlockDimensionsAndOffset(blockDimensions, offsetOrNull, boundIndices,
+                fullDimensions.length, fullDimensions, fullBlockDimensions, fullOffset);
+    }
+
+    static void createFullBlockDimensionsAndOffset(int[] blockDimensions, long[] offsetOrNull,
+            long[] boundIndices, final int fullRank, final int[] fullBlockDimensions,
+            final long[] fullOffset)
+    {
+        createFullBlockDimensionsAndOffset(blockDimensions, offsetOrNull, boundIndices, fullRank,
+                null, fullBlockDimensions, fullOffset);
+    }
+
+    static void createFullBlockDimensionsAndOffset(int[] blockDimensions, long[] offsetOrNull,
+            long[] boundIndices, final int fullRank, final long[] fullDimensionsOrNull,
             final int[] fullBlockDimensions, final long[] fullOffset)
     {
         int j = 0;
-        for (int i = 0; i < fullDimensions.length; ++i)
+        for (int i = 0; i < fullRank; ++i)
         {
             final long boundIndex = boundIndices[i];
             if (boundIndex < 0)
             {
-                if (blockDimensions[j] < 0)
+                if (blockDimensions[j] < 0 && fullDimensionsOrNull != null)
                 {
-                    blockDimensions[j] = (int) fullDimensions[i];
+                    blockDimensions[j] = (int) fullDimensionsOrNull[i];
                 }
                 fullBlockDimensions[i] = blockDimensions[j];
                 fullOffset[i] = (offsetOrNull == null) ? 0 : offsetOrNull[j];
