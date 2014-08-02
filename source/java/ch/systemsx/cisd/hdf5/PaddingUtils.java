@@ -20,18 +20,25 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A class with methods for padding of memory structures.
+ * <p>
+ * <i>This is an internal API that should not be expected to be stable between releases!</i>
  * 
  * @author Bernd Rinn
  */
-public class PaddingUtils
+class PaddingUtils
 {
     private static final int machineWordSize = HDFNativeData.getMachineWordSize(); 
     
+    private PaddingUtils()
+    {
+        // Cannot be instantiated
+    }
+
     /**
      * Compute the padded <code>offset</code> to have aligned access to variables of
      * <code>elementSize</code>, or the size of the machine word, whatever is smaller.
      */
-    public static int padOffset(int offset, int elementSize)
+    static int padOffset(int offset, int elementSize)
     {
         if (elementSize > 0)
         {
@@ -48,7 +55,7 @@ public class PaddingUtils
      * Compute the maximal element size (in bytes). If the maximal element size is larger than the
      * size of a machine word on this platform, return the size of a machine word instead.
      */
-    public static int findMaxElementSize(HDF5MemberByteifyer[] byteifyers)
+    static int findMaxElementSize(HDF5MemberByteifyer[] byteifyers)
     {
         int maxElementSize = 0;
         for (HDF5MemberByteifyer b : byteifyers)
