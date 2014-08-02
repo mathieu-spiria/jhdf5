@@ -20,6 +20,12 @@ import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
 
 /**
  * An interface that provides methods for writing <code>double</code> values to HDF5 files.
+ * <p>
+ * <i>Note:</i> This interface supports block access and sliced access (which is a special cases of 
+ * block access) to arrays. The performance of this block access can vary greatly depending on how 
+ * the data are layed out in the HDF5 file. For best performance, the block (or slice) dimension should 
+ * be chosen to be equal to the chunk dimensions of the array, as in this case the block written / read 
+ * are stored as consecutive value in the HDF5 file and one write / read access will suffice.   
  * 
  * @author Bernd Rinn
  */
@@ -170,11 +176,6 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * Writes out a block of a <code>double</code> array (of rank 1). The data set needs to have
      * been created by {@link #createArray(String, long, int, HDF5FloatStorageFeatures)}
      * beforehand.
-     * <p>
-     * <i>Note:</i> For best performance, the block size in this method should be chosen to be equal
-     * to the <var>blockSize</var> argument of the
-     * {@link #createArray(String, long, int, HDF5FloatStorageFeatures)} call that was used to
-     * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -191,11 +192,6 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * <p>
      * Use this method instead of {@link #writeArrayBlock(String, double[], long)} if the
      * total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createArray(String, long, int, HDF5FloatStorageFeatures)} call that was used to
-     * create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -288,11 +284,6 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * Use this method instead of
      * {@link #createMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} if the total
      * size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the size of <var>data</var> in this method should match
-     * the <var>blockSizeX/Y</var> arguments of the
-     * {@link #createMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
-     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. The length defines the block size. Must not be
@@ -312,11 +303,6 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * <p>
      * Use this method instead of {@link #writeMatrixBlock(String, double[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
-     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
@@ -333,11 +319,6 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * <p>
      * Use this method instead of {@link #writeMatrixBlock(String, double[][], long, long)} if
      * the total size of the data set is not a multiple of the block size.
-     * <p>
-     * <i>Note:</i> For best performance, the typical <var>dataSize</var> in this method should be
-     * chosen to be equal to the <var>blockSize</var> argument of the
-     * {@link #createMatrix(String, long, long, int, int, HDF5FloatStorageFeatures)} call that was
-     * used to create the data set.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write.
@@ -370,6 +351,41 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      */
     public void writeMDArray(String objectPath, MDDoubleArray data,
             HDF5FloatStorageFeatures features);
+
+    /**
+     * Writes out a slice of a multi-dimensional <code>double</code> array. The slice is defined by
+     * "bound indices", each of which is fixed to a given value. The <var>data</var> object only  
+     * contains the free (i.e. non-fixed) indices.
+     * <p> 
+     * <i>Note:</i>The object identified by <var>objectPath</var> needs to exist when this method is 
+     * called. This method will <i>not</i> create the array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param boundIndices The mapping of indices to index values which should be bound. For example
+     *            a map of <code>new IndexMap().mapTo(2, 5).mapTo(4, 7)</code> has 2 and 4 as bound
+     *            indices and binds them to the values 5 and 7, respectively.
+     */
+    public void writeMDArraySlice(String objectPath, MDDoubleArray data, IndexMap boundIndices);
+
+    /**
+     * Writes out a slice of a multi-dimensional <code>double</code> array. The slice is defined by
+     * "bound indices", each of which is fixed to a given value. The <var>data</var> object only  
+     * contains the free (i.e. non-fixed) indices.
+     * <p> 
+     * <i>Note:</i>The object identified by <var>objectPath</var> needs to exist when this method is 
+     * called. This method will <i>not</i> create the array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     */
+    public void writeMDArraySlice(String objectPath, MDDoubleArray data, long[] boundIndices);
 
     /**
      * Creates a multi-dimensional <code>double</code> array.
@@ -437,6 +453,41 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
             long[] blockNumber);
 
     /**
+     * Writes out a sliced block of a multi-dimensional <code>double</code> array. The slice is
+     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
+     * object only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
+     *            the according dimension).
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     */
+    public void writeSlicedMDArrayBlock(String objectPath, MDDoubleArray data, long[] blockNumber,
+            IndexMap boundIndices);
+
+    /**
+     * Writes out a sliced block of a multi-dimensional <code>double</code> array. The slice is
+     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
+     * object only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
+     *            the according dimension).
+     * @param boundIndices The mapping of indices to index values which should be bound. For example
+     *            a map of <code>new IndexMap().mapTo(2, 5).mapTo(4, 7)</code> has 2 and 4 as bound
+     *            indices and binds them to the values 5 and 7, respectively.
+     */
+    public void writeSlicedMDArrayBlock(String objectPath, MDDoubleArray data, long[] blockNumber,
+            long[] boundIndices);
+
+    /**
      * Writes out a block of a multi-dimensional <code>double</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -446,6 +497,40 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      */
     public void writeMDArrayBlockWithOffset(String objectPath, MDDoubleArray data,
             long[] offset);
+
+    /**
+     * Writes out a sliced block of a multi-dimensional <code>double</code> array. The slice is
+     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
+     * object only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param offset The offset in the data set to start writing to in each dimension.
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     */
+    public void writeSlicedMDArrayBlockWithOffset(String objectPath, MDDoubleArray data,
+            long[] offset, IndexMap boundIndices);
+
+    /**
+     * Writes out a sliced block of a multi-dimensional <code>double</code> array. The slice is
+     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
+     * object only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param offset The offset in the data set to start writing to in each dimension.
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     */
+    public void writeSlicedMDArrayBlockWithOffset(String objectPath, MDDoubleArray data,
+            long[] offset, long[] boundIndices);
 
    /**
      * Writes out a block of a multi-dimensional <code>double</code> array.

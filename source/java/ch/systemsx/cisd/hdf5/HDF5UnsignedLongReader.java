@@ -357,7 +357,7 @@ class HDF5UnsignedLongReader implements IHDF5LongReader
     }
 
     @Override
-    public MDLongArray readSlicedMDArray(String objectPath, IndexMap boundIndices)
+    public MDLongArray readMDArraySlice(String objectPath, IndexMap boundIndices)
     {
         baseReader.checkOpen();
         final long[] fullDimensions = baseReader.getDimensions(objectPath);
@@ -372,7 +372,7 @@ class HDF5UnsignedLongReader implements IHDF5LongReader
     }
 
     @Override
-    public MDLongArray readSlicedMDArray(String objectPath, long[] boundIndices)
+    public MDLongArray readMDArraySlice(String objectPath, long[] boundIndices)
     {
         baseReader.checkOpen();
         final long[] fullDimensions = baseReader.getDimensions(objectPath);
@@ -546,7 +546,7 @@ class HDF5UnsignedLongReader implements IHDF5LongReader
                         baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_UINT64,
                                 spaceParams.memorySpaceId, spaceParams.dataSpaceId,
                                 dataBlock);
-                        return new MDLongArray(dataBlock, blockDimensions);
+                        return new MDLongArray(dataBlock, spaceParams.dimensions);
                     } catch (HDF5SpaceRankMismatch ex)
                     {
                         final HDF5DataSetInformation info =
@@ -572,16 +572,21 @@ class HDF5UnsignedLongReader implements IHDF5LongReader
             final ICleanUpRegistry registry)
     {
         final int[] arrayDimensions = info.getTypeInformation().getDimensions();
+        int[] effectiveBlockDimensions = blockDimensions;
         // We do not support block-wise reading of array types, check
         // that we do not have to and bail out otherwise.
         for (int i = 0; i < arrayDimensions.length; ++i)
         {
             final int j = spaceRank + i;
-            if (blockDimensions[j] < 0)
+            if (effectiveBlockDimensions[j] < 0)
             {
-                blockDimensions[j] = arrayDimensions[i];
+                if (effectiveBlockDimensions == blockDimensions)
+                {
+                    effectiveBlockDimensions = blockDimensions.clone();
             }
-            if (blockDimensions[j] != arrayDimensions[i])
+                effectiveBlockDimensions[j] = arrayDimensions[i];
+            }
+            if (effectiveBlockDimensions[j] != arrayDimensions[i])
             {
                 throw new HDF5JavaException(
                         "Block-wise reading of array type data sets is not supported.");
@@ -598,7 +603,7 @@ class HDF5UnsignedLongReader implements IHDF5LongReader
                         .getDimensions(), registry);
         baseReader.h5.readDataSet(dataSetId, memoryDataTypeId, spaceParams.memorySpaceId,
                 spaceParams.dataSpaceId, dataBlock);
-        return new MDLongArray(dataBlock, blockDimensions);
+        return new MDLongArray(dataBlock, effectiveBlockDimensions);
     }
 
     @Override

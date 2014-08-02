@@ -23,7 +23,13 @@ import ch.systemsx.cisd.base.mdarray.MDByteArray;
 /**
  * An interface that provides methods for reading <code>byte</code> values from HDF5 files.
  * <p>
- * Note: If the values read are unsigned, use the methods in {@link UnsignedIntUtils} to convert 
+ * <i>Note:</i> This interface supports block access and sliced access (which is a special cases of 
+ * block access) to arrays. The performance of this block access can vary greatly depending on how 
+ * the data are layed out in the HDF5 file. For best performance, the block (or slice) dimension should 
+ * be chosen to be equal to the chunk dimensions of the array, as in this case the block written / read 
+ * are stored as consecutive value in the HDF5 file and one write / read access will suffice.   
+ * <p>
+ * <i>Note:<i> If the values read are unsigned, use the methods in {@link UnsignedIntUtils} to convert 
  * to a larger Java integer type that can hold all values as unsigned.
  * 
  * @author Bernd Rinn
@@ -219,7 +225,7 @@ public interface IHDF5ByteReader
      *            indices and binds them to the values 5 and 7, respectively.
      * @return The data block read from the data set.
      */
-    public MDByteArray readSlicedMDArray(String objectPath, IndexMap boundIndices);
+    public MDByteArray readMDArraySlice(String objectPath, IndexMap boundIndices);
 
     /**
      * Reads a slice of a multi-dimensional <code>byte</code> array from the data set
@@ -233,7 +239,7 @@ public interface IHDF5ByteReader
      *            binds them to the values 5 and 7, respectively.
      * @return The data block read from the data set.
      */
-    public MDByteArray readSlicedMDArray(String objectPath, long[] boundIndices);
+    public MDByteArray readMDArraySlice(String objectPath, long[] boundIndices);
 
     /**
      * Reads a block from a multi-dimensional <code>byte</code> array from the data set 

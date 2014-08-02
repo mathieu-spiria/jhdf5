@@ -276,6 +276,7 @@ public class HDF5RoundtripTest
                 { 1, 2 } });
         test.testSetExtentBug();
         test.testMDFloatArrayBlockWise();
+        test.testMDFloatArraySliced();
         test.testMDFloatArrayBlockWiseWithMemoryOffset();
         test.testDoubleArrayAsByteArray();
         test.testCompressedDataSet();
@@ -708,16 +709,16 @@ public class HDF5RoundtripTest
             { 9f, 10f, 17f, 18f }, new int[]
             { 2, 2 });
         final MDFloatArray slice1BlockOfs11 = new MDFloatArray(new float[]
-                { 10f, 11f, 18f, 19f }, new int[]
-                { 2, 2 });
+            { 10f, 11f, 18f, 19f }, new int[]
+            { 2, 2 });
         final IndexMap boundIndex2 = new IndexMap().bind(2, 3).bind(0, 1);
         final long[] boundIndex2Arr = new long[]
             { 1, -1, 3 };
         final MDFloatArray slice2 = new MDFloatArray(new float[]
             { 12f, 16f }, new int[]
             { 2 });
-        assertEquals(slice1, reader.float32().readSlicedMDArray(floatDatasetName, boundIndex1));
-        assertEquals(slice1, reader.float32().readSlicedMDArray(floatDatasetName, boundIndex1Arr));
+        assertEquals(slice1, reader.float32().readMDArraySlice(floatDatasetName, boundIndex1));
+        assertEquals(slice1, reader.float32().readMDArraySlice(floatDatasetName, boundIndex1Arr));
         assertEquals(slice1BlockOfs00,
                 reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
                     { 2, 2 }, new long[]
@@ -750,8 +751,8 @@ public class HDF5RoundtripTest
                 reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName, new int[]
                     { 2, 2 }, new long[]
                     { 1, 1 }, boundIndex1Arr));
-        assertEquals(slice2, reader.float32().readSlicedMDArray(floatDatasetName, boundIndex2));
-        assertEquals(slice2, reader.float32().readSlicedMDArray(floatDatasetName, boundIndex2Arr));
+        assertEquals(slice2, reader.float32().readMDArraySlice(floatDatasetName, boundIndex2));
+        assertEquals(slice2, reader.float32().readMDArraySlice(floatDatasetName, boundIndex2Arr));
         reader.close();
     }
 
@@ -940,11 +941,13 @@ public class HDF5RoundtripTest
         datasetFile.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
         final String floatDatasetName = "/floatMatrix";
+        final String floatDatasetName2 = "/floatMatrix2";
         final long[] shape = new long[]
             { 10, 10, 10 };
         final int[] blockShape = new int[]
             { 5, 5, 5 };
         writer.float32().createMDArray(floatDatasetName, shape, blockShape);
+        writer.float32().createMDArray(floatDatasetName2, shape, blockShape);
         final float[] flatArray = new float[MDArray.getLength(blockShape)];
         for (int i = 0; i < flatArray.length; ++i)
         {
@@ -957,12 +960,33 @@ public class HDF5RoundtripTest
             {
                 for (int k = 0; k < 2; ++k)
                 {
+                    final long[] blockIndex = new long[]
+                        { i, j, k };
                     writer.float32().writeMDArrayBlock(floatDatasetName, arrayBlockWritten,
-                            new long[]
-                                { i, j, k });
+                            blockIndex);
+                    writer.float32().writeMDArrayBlock(floatDatasetName2, arrayBlockWritten,
+                            blockIndex);
                 }
             }
         }
+
+        final MDFloatArray arraySliceWritten1 = new MDFloatArray(new float[]
+            { 1000f, 2000f, 3000f, 4000f, 5000f }, new int[]
+            { 1, 5 });
+        final long[] slicedBlock1 = new long[]
+            { 4, 1 };
+        final IndexMap imap1 = new IndexMap().bind(1, 7);
+        writer.float32().writeSlicedMDArrayBlock(floatDatasetName2, arraySliceWritten1,
+                slicedBlock1, imap1);
+
+        final MDFloatArray arraySliceWritten2 = new MDFloatArray(new float[]
+            { -1f, -2f, -3f, -4f, -5f, -6f }, new int[]
+            { 3, 2 });
+        final long[] slicedBlockOffs2 = new long[]
+            { 2, 6 };
+        final IndexMap imap2 = new IndexMap().bind(0, 9);
+        writer.float32().writeSlicedMDArrayBlockWithOffset(floatDatasetName2, arraySliceWritten2,
+                slicedBlockOffs2, imap2);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         for (int i = 0; i < 2; ++i)
@@ -971,16 +995,87 @@ public class HDF5RoundtripTest
             {
                 for (int k = 0; k < 2; ++k)
                 {
+                    final long[] blockIndex = new long[]
+                        { i, j, k };
                     final MDFloatArray arrayRead =
                             reader.float32().readMDArrayBlock(floatDatasetName, blockShape,
-                                    new long[]
-                                        { i, j, k });
-                    assertEquals(arrayBlockWritten, arrayRead);
+                                    blockIndex);
+                    assertEquals(Arrays.toString(blockIndex), arrayBlockWritten, arrayRead);
+                    // {0, 1, 1} is the first block we overwrote, { 1, 0, 1} the second block.
+                    if (false == Arrays.equals(new long[]
+                        { 0, 1, 1 }, blockIndex) && false == Arrays.equals(new long[]
+                        { 1, 0, 1 }, blockIndex))
+                    {
+                        assertEquals(
+                                Arrays.toString(blockIndex),
+                                arrayBlockWritten,
+                                reader.float32().readMDArrayBlock(floatDatasetName2, blockShape,
+                                        blockIndex));
+                    }
                 }
             }
         }
+        final MDFloatArray arraySliceRead1 =
+                reader.float32().readSlicedMDArrayBlock(floatDatasetName2,
+                        arraySliceWritten1.dimensions(), slicedBlock1, imap1);
+        assertEquals(arraySliceWritten1, arraySliceRead1);
+        final MDFloatArray arraySliceRead2 =
+                reader.float32().readSlicedMDArrayBlockWithOffset(floatDatasetName2,
+                        arraySliceWritten2.dimensions(), slicedBlockOffs2, imap2);
+        assertEquals(arraySliceWritten2, arraySliceRead2);
         reader.close();
+    }
 
+    @Test
+    public void testMDFloatArraySliced()
+    {
+        final File datasetFile = new File(workingDirectory, "mdArraySliced.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String floatDatasetName = "/floatMatrix";
+        final long[] shape = new long[]
+            { 10, 10, 10 };
+        final int[] sliceShape = new int[]
+            { 10, 10 };
+        final int[] sliceBlockShape = new int[]
+            { 1, 10, 10 };
+        writer.float32().createMDArray(floatDatasetName, shape, sliceBlockShape);
+        final float[] baseArray = new float[MDArray.getLength(sliceShape)];
+        for (int i = 0; i < baseArray.length; ++i)
+        {
+            baseArray[i] = i;
+        }
+        float[] floatArrayWritten = baseArray.clone();
+        for (int i = 0; i < 10; ++i)
+        {
+            writer.float32().writeMDArraySlice(floatDatasetName,
+                    new MDFloatArray(timesTwo(floatArrayWritten), sliceShape), new long[]
+                        { i, -1, -1 });
+        }
+        writer.close();
+
+        floatArrayWritten = baseArray.clone();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        for (int i = 0; i < 10; ++i)
+        {
+            final MDFloatArray arrayRead =
+                    reader.float32().readMDArraySlice(floatDatasetName, new long[]
+                        { i, -1, -1 });
+            assertEquals(Integer.toString(i), new MDFloatArray(timesTwo(floatArrayWritten),
+                    sliceShape), arrayRead);
+        }
+        reader.close();
+    }
+
+    private static float[] timesTwo(float[] array)
+    {
+        for (int i = 0; i < array.length; ++i)
+        {
+            array[i] *= 2;
+        }
+        return array;
     }
 
     @Test

@@ -357,7 +357,7 @@ class HDF5FloatReader implements IHDF5FloatReader
     }
 
     @Override
-    public MDFloatArray readSlicedMDArray(String objectPath, IndexMap boundIndices)
+    public MDFloatArray readMDArraySlice(String objectPath, IndexMap boundIndices)
     {
         baseReader.checkOpen();
         final long[] fullDimensions = baseReader.getDimensions(objectPath);
@@ -372,7 +372,7 @@ class HDF5FloatReader implements IHDF5FloatReader
     }
 
     @Override
-    public MDFloatArray readSlicedMDArray(String objectPath, long[] boundIndices)
+    public MDFloatArray readMDArraySlice(String objectPath, long[] boundIndices)
     {
         baseReader.checkOpen();
         final long[] fullDimensions = baseReader.getDimensions(objectPath);
