@@ -64,19 +64,19 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
 
     private final IHDF5ByteWriter byteWriter;
 
-    private final IHDF5UnsignedByteWriter ubyteWriter;
+    private final IHDF5ByteWriter ubyteWriter;
 
     private final IHDF5ShortWriter shortWriter;
 
-    private final IHDF5UnsignedShortWriter ushortWriter;
+    private final IHDF5ShortWriter ushortWriter;
 
     private final IHDF5IntWriter intWriter;
 
-    private final IHDF5UnsignedIntWriter uintWriter;
+    private final IHDF5IntWriter uintWriter;
 
     private final IHDF5LongWriter longWriter;
 
-    private final IHDF5UnsignedLongWriter ulongWriter;
+    private final IHDF5LongWriter ulongWriter;
 
     private final IHDF5FloatWriter floatWriter;
 
@@ -3051,7 +3051,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
-    public IHDF5UnsignedByteWriter uint8()
+    public IHDF5ByteWriter uint8()
     {
         return ubyteWriter;
     }
@@ -3063,7 +3063,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
-    public IHDF5UnsignedShortWriter uint16()
+    public IHDF5ShortWriter uint16()
     {
         return ushortWriter;
     }
@@ -3075,7 +3075,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
-    public IHDF5UnsignedIntWriter uint32()
+    public IHDF5IntWriter uint32()
     {
         return uintWriter;
     }
@@ -3087,7 +3087,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
-    public IHDF5UnsignedLongWriter uint64()
+    public IHDF5LongWriter uint64()
     {
         return ulongWriter;
     }

@@ -34,7 +34,7 @@ import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
  * 
  * @author Bernd Rinn
  */
-class HDF5UnsignedIntWriter extends HDF5UnsignedIntReader implements IHDF5UnsignedIntWriter
+class HDF5UnsignedIntWriter extends HDF5UnsignedIntReader implements IHDF5IntWriter
 {
     private final HDF5BaseWriter baseWriter;
 

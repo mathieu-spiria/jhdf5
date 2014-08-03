@@ -56,9 +56,12 @@ public class HDF5CodeGenerator
 
         final boolean isUnsigned;
 
+        final boolean isInteger;
+
         TemplateParameters(String name, String capitalizedName, String capitalizedClassName,
                 String wrapperName, String storageType, String featureBasedStorageType,
-                String storageTypeImport, String memoryType, String elementSize, boolean isUnsigned)
+                String storageTypeImport, String memoryType, String elementSize,
+                boolean isUnsigned, boolean isInteger)
         {
             this.name = name;
             this.capitalizedName = capitalizedName;
@@ -71,22 +74,24 @@ public class HDF5CodeGenerator
             this.memoryType = memoryType;
             this.elementSize = elementSize;
             this.isUnsigned = isUnsigned;
+            this.isInteger = isInteger;
         }
 
     }
 
     static TemplateParameters tp(String name, String capitalizedName, String capitalizedClassName,
             String wrapperName, String storageType, String featureBasedStorageType,
-            String storageTypeImport, String memoryType, String elementSize, boolean isUnsigned)
+            String storageTypeImport, String memoryType, String elementSize, boolean isUnsigned,
+            boolean isInteger)
     {
         return new TemplateParameters(name, capitalizedName, capitalizedClassName, wrapperName,
                 storageType, featureBasedStorageType, storageTypeImport, memoryType, elementSize,
-                isUnsigned);
+                isUnsigned, isInteger);
     }
 
     static final TemplateParameters PLACEHOLDERS = tp("__name__", "__Name__", "__Classname__",
             "__Wrappername__", "__Storagetype__", "__FeatureBasedStoragetype__",
-            "__StoragetypeImport__", "__Memorytype__", "__elementsize__", false);
+            "__StoragetypeImport__", "__Memorytype__", "__elementsize__", false, false);
 
     static final TemplateParameters[] NUMERICAL_TYPES =
             new TemplateParameters[]
@@ -99,7 +104,7 @@ public class HDF5CodeGenerator
                                 "features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE",
                                 "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;\n"
                                         + "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U8LE;",
-                                "H5T_NATIVE_INT8", "1", false),
+                                "H5T_NATIVE_INT8", "1", false, true),
                         tp("byte",
                                 "Byte",
                                 "Int",
@@ -107,7 +112,7 @@ public class HDF5CodeGenerator
                                 "H5T_STD_U8LE",
                                 "H5T_STD_U8LE",
                                 "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U8LE;",
-                                "H5T_NATIVE_UINT8", "1", true),
+                                "H5T_NATIVE_UINT8", "1", true, true),
                         tp("short",
                                 "Short",
                                 "Int",
@@ -116,7 +121,7 @@ public class HDF5CodeGenerator
                                 "features.isSigned() ? H5T_STD_I16LE : H5T_STD_U16LE",
                                 "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;\n"
                                         + "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;",
-                                "H5T_NATIVE_INT16", "2", false),
+                                "H5T_NATIVE_INT16", "2", false, true),
                         tp("short",
                                 "Short",
                                 "Int",
@@ -124,7 +129,7 @@ public class HDF5CodeGenerator
                                 "H5T_STD_U16LE",
                                 "H5T_STD_U16LE",
                                 "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;",
-                                "H5T_NATIVE_UINT16", "2", true),
+                                "H5T_NATIVE_UINT16", "2", true, true),
                         tp("int",
                                 "Int",
                                 "Int",
@@ -133,7 +138,7 @@ public class HDF5CodeGenerator
                                 "features.isSigned() ? H5T_STD_I32LE : H5T_STD_U32LE",
                                 "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;\n"
                                         + "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U32LE;",
-                                "H5T_NATIVE_INT32", "4", false),
+                                "H5T_NATIVE_INT32", "4", false, true),
                         tp("int",
                                 "Int",
                                 "Int",
@@ -141,7 +146,7 @@ public class HDF5CodeGenerator
                                 "H5T_STD_U32LE",
                                 "H5T_STD_U32LE",
                                 "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U32LE;",
-                                "H5T_NATIVE_UINT32", "4", true),
+                                "H5T_NATIVE_UINT32", "4", true, true),
                         tp("long",
                                 "Long",
                                 "Int",
@@ -150,7 +155,7 @@ public class HDF5CodeGenerator
                                 "features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE",
                                 "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;\n"
                                         + "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;",
-                                "H5T_NATIVE_INT64", "8", false),
+                                "H5T_NATIVE_INT64", "8", false, true),
                         tp("long",
                                 "Long",
                                 "Int",
@@ -158,7 +163,7 @@ public class HDF5CodeGenerator
                                 "H5T_STD_U64LE",
                                 "H5T_STD_U64LE",
                                 "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;",
-                                "H5T_NATIVE_UINT64", "8", true),
+                                "H5T_NATIVE_UINT64", "8", true, true),
                         tp("float",
                                 "Float",
                                 "Float",
@@ -166,7 +171,7 @@ public class HDF5CodeGenerator
                                 "H5T_IEEE_F32LE",
                                 "H5T_IEEE_F32LE",
                                 "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;",
-                                "H5T_NATIVE_FLOAT", "4", false),
+                                "H5T_NATIVE_FLOAT", "4", false, false),
                         tp("double",
                                 "Double",
                                 "Float",
@@ -174,7 +179,7 @@ public class HDF5CodeGenerator
                                 "H5T_IEEE_F64LE",
                                 "H5T_IEEE_F64LE",
                                 "import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F64LE;",
-                                "H5T_NATIVE_DOUBLE", "8", false) };
+                                "H5T_NATIVE_DOUBLE", "8", false, false) };
 
     /**
      * Generate the code for all numerical types from <var>codeTemplate</var> and write it to
@@ -196,6 +201,36 @@ public class HDF5CodeGenerator
             final PrintStream out)
     {
         String s = codeTemplate;
+        if (params.isInteger)
+        {
+            s = StringUtils.replace(s, "__SuperInterface__", "IHDF5Unsigned__Name__Writer");
+            s = StringUtils.replace(s, "__OverrideIfInt__", "@Override\n    ");
+            s =
+                    StringUtils
+                            .replace(
+                                    s,
+                                    "__SupressWarning__ ",
+                                    " // Note: It is a trick for keeping backward compatibility to let this interface extend \n"
+                                            + " // IHDF5Unsigned__Name__Writer instead of IHDF5__Name__Reader as it logically should.\n"
+                                            + " // Once we remove IHDF5Unsigned__Name__Writer, uncomment the following line and remove\n"
+                                            + " // all @Override annotations and we are fine again.\n"
+                                            + "//public interface IHDF5__Name__Writer extends IHDF5__Name__Reader\n"
+                                            + "@SuppressWarnings(\"deprecation\")\n");
+            s =
+                    StringUtils
+                            .replace(
+                                    s,
+                                    "__NoteUnsigned__",
+                                    " * <p>   \n"
+                                            + " * <i>Note:</i> If you need to convert from and to unsigned values, use the methods of \n"
+                                            + " * {@link UnsignedIntUtils}.\n");
+        } else
+        {
+            s = StringUtils.replace(s, "__SuperInterface__", "IHDF5__Name__Reader");
+            s = StringUtils.replace(s, "__OverrideIfInt__", "");
+            s = StringUtils.replace(s, "__SupressWarning__ ", "");
+            s = StringUtils.replace(s, "__NoteUnsigned__", "");
+        }
         s = StringUtils.replace(s, PLACEHOLDERS.name, params.name);
         s = StringUtils.replace(s, PLACEHOLDERS.capitalizedName, params.capitalizedName);
         s = StringUtils.replace(s, PLACEHOLDERS.capitalizedClassName, params.capitalizedClassName);

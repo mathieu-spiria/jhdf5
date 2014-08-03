@@ -25,11 +25,20 @@ import ch.systemsx.cisd.base.mdarray.MDIntArray;
  * block access) to arrays. The performance of this block access can vary greatly depending on how 
  * the data are layed out in the HDF5 file. For best performance, the block (or slice) dimension should 
  * be chosen to be equal to the chunk dimensions of the array, as in this case the block written / read 
- * are stored as consecutive value in the HDF5 file and one write / read access will suffice.   
+ * are stored as consecutive value in the HDF5 file and one write / read access will suffice.
+ * <p>   
+ * <i>Note:</i> If you need to convert from and to unsigned values, use the methods of 
+ * {@link UnsignedIntUtils}.
  * 
  * @author Bernd Rinn
  */
-public interface IHDF5IntWriter extends IHDF5IntReader
+ // Note: It is a trick for keeping backward compatibility to let this interface extend 
+ // IHDF5UnsignedIntWriter instead of IHDF5IntReader as it logically should.
+ // Once we remove IHDF5UnsignedIntWriter, uncomment the following line and remove
+ // all @Override annotations and we are fine again.
+//public interface IHDF5IntWriter extends IHDF5IntReader
+@SuppressWarnings("deprecation")
+public interface IHDF5IntWriter extends IHDF5UnsignedIntWriter
 {
     // /////////////////////
     // Attributes
@@ -45,6 +54,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
+    @Override
     public void setAttr(String objectPath, String name, int value);
 
     /**
@@ -57,6 +67,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
+    @Override
     public void setArrayAttr(String objectPath, String name, int[] value);
 
     /**
@@ -69,6 +80,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
+    @Override
     public void setMDArrayAttr(String objectPath, String name, MDIntArray value);
 
     /**
@@ -81,6 +93,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param name The name of the attribute.
      * @param value The value of the attribute.
      */
+    @Override
     public void setMatrixAttr(String objectPath, String name, int[][] value);
     
     // /////////////////////
@@ -93,6 +106,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param value The value to write.
      */
+    @Override
     public void write(String objectPath, int value);
 
     /**
@@ -101,6 +115,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      */
+    @Override
     public void writeArray(String objectPath, int[] data);
 
     /**
@@ -110,6 +125,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param data The data to write. Must not be <code>null</code>.
      * @param features The storage features of the data set.
      */
+    @Override
     public void writeArray(String objectPath, int[] data, 
             HDF5IntStorageFeatures features);
 
@@ -120,9 +136,10 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param size When the writer is configured to use extendable data types (see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
      *            and the chunk size of the array will be <var>size</var>. When the writer is
-     *            configured to <i>enforce</i> a on-extendable data set, the initial size equals the
+     *            configured to <i>enforce</i> a non-extendable data set, the initial size equals the
      *            total size and will be <var>size</var>.
      */
+    @Override
     public void createArray(String objectPath, int size);
 
     /**
@@ -135,6 +152,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      */
+    @Override
     public void createArray(String objectPath, long size, int blockSize);
 
     /**
@@ -154,6 +172,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *            the total size and will be <var>arraySize</var>.
      * @param features The storage features of the data set.
      */
+    @Override
     public void createArray(String objectPath, int size,
             HDF5IntStorageFeatures features);
     
@@ -169,6 +188,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *                <code>features</code> is <code>HDF5IntStorageFeature.INT_NO_COMPRESSION</code>.
      * @param features The storage features of the data set.
      */
+    @Override
     public void createArray(String objectPath, long size, int blockSize,
             HDF5IntStorageFeatures features);
 
@@ -182,6 +202,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
      */
+    @Override
     public void writeArrayBlock(String objectPath, int[] data,
             long blockNumber);
 
@@ -200,6 +221,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *            )
      * @param offset The offset in the data set to start writing to.
      */
+    @Override
     public void writeArrayBlockWithOffset(String objectPath, int[] data,
             int dataSize, long offset);
 
@@ -210,6 +232,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      */
+    @Override
     public void writeMatrix(String objectPath, int[][] data);
 
     /**
@@ -220,6 +243,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *            same length.
      * @param features The storage features of the data set.
      */
+    @Override
     public void writeMatrix(String objectPath, int[][] data, 
             HDF5IntStorageFeatures features);
 
@@ -234,6 +258,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *            {@link #createMDArray(String, int[])} on the different
      *            meanings of this parameter.
      */
+    @Override
     public void createMatrix(String objectPath, int sizeX, int sizeY);
 
     /**
@@ -248,6 +273,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *            meanings of this parameter.
      * @param features The storage features of the data set.
      */
+    @Override
     public void createMatrix(String objectPath, int sizeX, int sizeY,
     		HDF5IntStorageFeatures features);
 
@@ -260,6 +286,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param blockSizeX The size of one block in the x dimension.
      * @param blockSizeY The size of one block in the y dimension.
      */
+    @Override
     public void createMatrix(String objectPath, long sizeX, long sizeY,
             int blockSizeX, int blockSizeY);
 
@@ -273,6 +300,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param blockSizeY The size of one block in the y dimension.
      * @param features The storage features of the data set.
      */
+    @Override
     public void createMatrix(String objectPath, long sizeX, long sizeY,
             int blockSizeX, int blockSizeY, HDF5IntStorageFeatures features);
 
@@ -293,6 +321,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param blockNumberY The block number in the y dimension (offset: multiply with
      *            <code>data[0.length</code>).
      */
+    @Override
     public void writeMatrixBlock(String objectPath, int[][] data,
             long blockNumberX, long blockNumberY);
 
@@ -309,6 +338,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
+    @Override
     public void writeMatrixBlockWithOffset(String objectPath, int[][] data,
             long offsetX, long offsetY);
 
@@ -329,6 +359,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param offsetX The x offset in the data set to start writing to.
      * @param offsetY The y offset in the data set to start writing to.
      */
+    @Override
     public void writeMatrixBlockWithOffset(String objectPath, int[][] data,
             int dataSizeX, int dataSizeY, long offsetX, long offsetY);
 
@@ -339,6 +370,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param data The data to write. Must not be <code>null</code>. All columns need to have the
      *            same length.
      */
+    @Override
     public void writeMDArray(String objectPath, MDIntArray data);
 
     /**
@@ -349,6 +381,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *            same length.
      * @param features The storage features of the data set.
      */
+    @Override
     public void writeMDArray(String objectPath, MDIntArray data,
             HDF5IntStorageFeatures features);
 
@@ -394,9 +427,10 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param dimensions When the writer is configured to use extendable data types (see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial dimensions
      *            and the dimensions of a chunk of the array will be <var>dimensions</var>. When the 
-     *            writer is configured to <i>enforce</i> a on-extendable data set, the initial dimensions 
+     *            writer is configured to <i>enforce</i> a non-extendable data set, the initial dimensions 
      *            equal the dimensions and will be <var>dimensions</var>.
      */
+    @Override
     public void createMDArray(String objectPath, int[] dimensions);
 
     /**
@@ -406,6 +440,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param dimensions The dimensions of the array.
      * @param blockDimensions The dimensions of one block (chunk) of the array.
      */
+    @Override
     public void createMDArray(String objectPath, long[] dimensions,
             int[] blockDimensions);
 
@@ -426,6 +461,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *            the total size and will be <var>dimensions</var>.
      * @param features The storage features of the data set.
      */
+    @Override
     public void createMDArray(String objectPath, int[] dimensions,
             HDF5IntStorageFeatures features);
 
@@ -437,6 +473,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param blockDimensions The dimensions of one block (chunk) of the array.
      * @param features The storage features of the data set.
      */
+    @Override
     public void createMDArray(String objectPath, long[] dimensions,
             int[] blockDimensions, HDF5IntStorageFeatures features);
 
@@ -449,6 +486,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param blockNumber The block number in each dimension (offset: multiply with the extend in
      *            the according dimension).
      */
+    @Override
     public void writeMDArrayBlock(String objectPath, MDIntArray data,
             long[] blockNumber);
 
@@ -495,6 +533,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      *            same length.
      * @param offset The offset in the data set  to start writing to in each dimension.
      */
+    @Override
     public void writeMDArrayBlockWithOffset(String objectPath, MDIntArray data,
             long[] offset);
 
@@ -541,6 +580,7 @@ public interface IHDF5IntWriter extends IHDF5IntReader
      * @param offset The offset of the block in the data set to start writing to in each dimension.
      * @param memoryOffset The offset of the block in the <var>data</var> array.
      */
+    @Override
     public void writeMDArrayBlockWithOffset(String objectPath, MDIntArray data,
             int[] blockDimensions, long[] offset, int[] memoryOffset);
 }

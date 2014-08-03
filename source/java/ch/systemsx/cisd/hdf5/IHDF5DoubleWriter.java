@@ -25,7 +25,7 @@ import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
  * block access) to arrays. The performance of this block access can vary greatly depending on how 
  * the data are layed out in the HDF5 file. For best performance, the block (or slice) dimension should 
  * be chosen to be equal to the chunk dimensions of the array, as in this case the block written / read 
- * are stored as consecutive value in the HDF5 file and one write / read access will suffice.   
+ * are stored as consecutive value in the HDF5 file and one write / read access will suffice.
  * 
  * @author Bernd Rinn
  */
@@ -120,7 +120,7 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * @param size When the writer is configured to use extendable data types (see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
      *            and the chunk size of the array will be <var>size</var>. When the writer is
-     *            configured to <i>enforce</i> a on-extendable data set, the initial size equals the
+     *            configured to <i>enforce</i> a non-extendable data set, the initial size equals the
      *            total size and will be <var>size</var>.
      */
     public void createArray(String objectPath, int size);
@@ -394,7 +394,7 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      * @param dimensions When the writer is configured to use extendable data types (see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial dimensions
      *            and the dimensions of a chunk of the array will be <var>dimensions</var>. When the 
-     *            writer is configured to <i>enforce</i> a on-extendable data set, the initial dimensions 
+     *            writer is configured to <i>enforce</i> a non-extendable data set, the initial dimensions 
      *            equal the dimensions and will be <var>dimensions</var>.
      */
     public void createMDArray(String objectPath, int[] dimensions);

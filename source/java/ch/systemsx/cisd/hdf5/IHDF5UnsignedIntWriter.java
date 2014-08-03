@@ -29,8 +29,11 @@ import ch.systemsx.cisd.base.mdarray.MDIntArray;
  * <p>
  * <i>Note:</i> Use the methods in {@link UnsignedIntUtils} to convert from and to unsigned values.
  * 
+ * @deprecated Use {@link IHDF5IntWriter} instead, it has all methods of this interface.
+ * 
  * @author Bernd Rinn
  */
+@Deprecated
 public interface IHDF5UnsignedIntWriter extends IHDF5IntReader
 {
     // /////////////////////
@@ -122,7 +125,7 @@ public interface IHDF5UnsignedIntWriter extends IHDF5IntReader
      * @param size When the writer is configured to use extendable data types (see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
      *            and the chunk size of the array will be <var>size</var>. When the writer is
-     *            configured to <i>enforce</i> a on-extendable data set, the initial size equals the
+     *            configured to <i>enforce</i> a non-extendable data set, the initial size equals the
      *            total size and will be <var>size</var>.
      */
     public void createArray(String objectPath, int size);
@@ -355,48 +358,13 @@ public interface IHDF5UnsignedIntWriter extends IHDF5IntReader
             HDF5IntStorageFeatures features);
 
     /**
-     * Writes out a slice of a multi-dimensional <code>int</code> array. The slice is defined by
-     * "bound indices", each of which is fixed to a given value. The <var>data</var> object only  
-     * contains the free (i.e. non-fixed) indices.
-     * <p> 
-     * <i>Note:</i>The object identified by <var>objectPath</var> needs to exist when this method is 
-     * called. This method will <i>not</i> create the array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param boundIndices The mapping of indices to index values which should be bound. For example
-     *            a map of <code>new IndexMap().mapTo(2, 5).mapTo(4, 7)</code> has 2 and 4 as bound
-     *            indices and binds them to the values 5 and 7, respectively.
-     */
-    public void writeMDArraySlice(String objectPath, MDIntArray data, IndexMap boundIndices);
-
-    /**
-     * Writes out a slice of a multi-dimensional <code>int</code> array. The slice is defined by
-     * "bound indices", each of which is fixed to a given value. The <var>data</var> object only  
-     * contains the free (i.e. non-fixed) indices.
-     * <p> 
-     * <i>Note:</i>The object identified by <var>objectPath</var> needs to exist when this method is 
-     * called. This method will <i>not</i> create the array.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param boundIndices The array containing the values of the bound indices at the respective
-     *            index positions, and -1 at the free index positions. For example an array of
-     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
-     *            binds them to the values 5 and 7, respectively.
-     */
-    public void writeMDArraySlice(String objectPath, MDIntArray data, long[] boundIndices);
-
-    /**
      * Creates a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param dimensions When the writer is configured to use extendable data types (see
      *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial dimensions
      *            and the dimensions of a chunk of the array will be <var>dimensions</var>. When the 
-     *            writer is configured to <i>enforce</i> a on-extendable data set, the initial dimensions 
+     *            writer is configured to <i>enforce</i> a non-extendable data set, the initial dimensions 
      *            equal the dimensions and will be <var>dimensions</var>.
      */
     public void createMDArray(String objectPath, int[] dimensions);
@@ -455,41 +423,6 @@ public interface IHDF5UnsignedIntWriter extends IHDF5IntReader
             long[] blockNumber);
 
     /**
-     * Writes out a sliced block of a multi-dimensional <code>int</code> array. The slice is
-     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
-     * object only contains the free (i.e. non-fixed) indices.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
-     *            the according dimension).
-     * @param boundIndices The array containing the values of the bound indices at the respective
-     *            index positions, and -1 at the free index positions. For example an array of
-     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
-     *            binds them to the values 5 and 7, respectively.
-     */
-    public void writeSlicedMDArrayBlock(String objectPath, MDIntArray data, long[] blockNumber,
-            IndexMap boundIndices);
-
-    /**
-     * Writes out a sliced block of a multi-dimensional <code>int</code> array. The slice is
-     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
-     * object only contains the free (i.e. non-fixed) indices.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
-     *            the according dimension).
-     * @param boundIndices The mapping of indices to index values which should be bound. For example
-     *            a map of <code>new IndexMap().mapTo(2, 5).mapTo(4, 7)</code> has 2 and 4 as bound
-     *            indices and binds them to the values 5 and 7, respectively.
-     */
-    public void writeSlicedMDArrayBlock(String objectPath, MDIntArray data, long[] blockNumber,
-            long[] boundIndices);
-
-    /**
      * Writes out a block of a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -499,40 +432,6 @@ public interface IHDF5UnsignedIntWriter extends IHDF5IntReader
      */
     public void writeMDArrayBlockWithOffset(String objectPath, MDIntArray data,
             long[] offset);
-
-    /**
-     * Writes out a sliced block of a multi-dimensional <code>int</code> array. The slice is
-     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
-     * object only contains the free (i.e. non-fixed) indices.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param offset The offset in the data set to start writing to in each dimension.
-     * @param boundIndices The array containing the values of the bound indices at the respective
-     *            index positions, and -1 at the free index positions. For example an array of
-     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
-     *            binds them to the values 5 and 7, respectively.
-     */
-    public void writeSlicedMDArrayBlockWithOffset(String objectPath, MDIntArray data,
-            long[] offset, IndexMap boundIndices);
-
-    /**
-     * Writes out a sliced block of a multi-dimensional <code>int</code> array. The slice is
-     * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
-     * object only contains the free (i.e. non-fixed) indices.
-     * 
-     * @param objectPath The name (including path information) of the data set object in the file.
-     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
-     *            same length.
-     * @param offset The offset in the data set to start writing to in each dimension.
-     * @param boundIndices The array containing the values of the bound indices at the respective
-     *            index positions, and -1 at the free index positions. For example an array of
-     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
-     *            binds them to the values 5 and 7, respectively.
-     */
-    public void writeSlicedMDArrayBlockWithOffset(String objectPath, MDIntArray data,
-            long[] offset, long[] boundIndices);
 
    /**
      * Writes out a block of a multi-dimensional <code>int</code> array.
