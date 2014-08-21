@@ -228,7 +228,7 @@ publishing {
     publications {
         artifacts(IvyPublication) {
             module "${project.group}-jhdf5"
-            revision project.ext.revisionForPublication
+            revision project.revisionForPublication
             from components.java
             artifact(toolsJar) {
                 name = "${project.group}-jhdf5-tools"
