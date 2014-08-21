@@ -1,6 +1,6 @@
 apply from: '../gradle/javaproject.gradle'
 
-group="sis"
+group='sis'
 
 dependencies {
     compile 'cisd:cisd-args4j:+',
@@ -16,7 +16,7 @@ tasks.withType(Test) {
 }
 
 jar {
-    baseName 'sis-jhdf5-core'
+    baseName "${project.group}-jhdf5-core"
     from (sourceSets.main.output.classesDir) { 
         exclude('ch/systemsx/cisd/hdf5/h5ar') 
         exclude('ch/systemsx/cisd/hdf5/io')
@@ -69,7 +69,7 @@ task nativeJarWindowsIntel(type: Jar) {
 }
 
 task toolsJar(type: Jar, dependsOn: [compileJava]) {
-    baseName 'sis-jhdf5-tools'
+    baseName "${project.group}-jhdf5-tools"
     from (sourceSets.main.output.classesDir) {
         include('ch/systemsx/cisd/hdf5/h5ar/**/*') 
         include('ch/systemsx/cisd/hdf5/io/**/*') 
@@ -81,12 +81,12 @@ task toolsJar(type: Jar, dependsOn: [compileJava]) {
     
     manifest {
         attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
-        attributes 'Class-Path': configurations.runtime.collect { it.getName() }.join(' ') + " sis-jhdf5-core.jar " + [nativeJarLinuxIntel, nativeJarMacIntel, nativeJarWindowsIntel].collect {it.archiveName}.join(' ')
+        attributes 'Class-Path': configurations.runtime.collect { it.getName() }.join(' ') + " ${project.group}-jhdf5-core.jar " + [nativeJarLinuxIntel, nativeJarMacIntel, nativeJarWindowsIntel].collect {it.archiveName}.join(' ')
     }
 }
 
 task allJar(type: Jar, dependsOn: [compileJava]) {
-    baseName 'sis-jhdf5'
+    baseName "${project.group}-jhdf5"
 
     from (sourceSets.main.output.classesDir) {
         include '**/*'
@@ -109,7 +109,7 @@ task allJar(type: Jar, dependsOn: [compileJava]) {
 
 
 task batteriesIncluded(type: Jar, dependsOn: [allJar, nativeJarLinuxIntel, nativeJarMacIntel, nativeJarWindowsIntel]) {
-    archiveName 'sis-jhdf5-batteries_included.jar'
+    archiveName "${project.group}-jhdf5-batteries_included.jar"
     from (zipTree(allJar.archivePath)) {
         include '**/*'
     }
@@ -134,12 +134,12 @@ task batteriesIncluded(type: Jar, dependsOn: [allJar, nativeJarLinuxIntel, nativ
 }
 
 task javadocZip(type: Zip, dependsOn: javadoc) {
-    archiveName 'sis-jhdf5-javadoc.zip'
+    archiveName "${project.group}-jhdf5-javadoc.zip"
     from javadoc.destinationDir
 }
 
 task exampleZip(type: Jar) {
-    archiveName 'sis-jhdf5-examples-src.zip'
+    archiveName "${project.group}-jhdf5-examples-src.zip"
 
     from ("sourceExamples/java") {
         include '**/*'
@@ -151,65 +151,65 @@ task exampleZip(type: Jar) {
 }
 
 task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar, nativeJarLinuxIntel, nativeJarMacIntel, nativeJarWindowsIntel, batteriesIncluded, javadocZip, sourcesJar, exampleZip]) {
-    baseName 'sis-jhdf5'
+    baseName "${project.group}-jhdf5"
 
     from (jar.archivePath) {
-        into 'sis-jhdf5/lib'
-        rename '(.*)', 'sis-jhdf5-core.jar'
+        into "${project.group}-jhdf5/lib"
+        rename '(.*)', "${project.group}-jhdf5-core.jar"
     }
     
     from (toolsJar.archivePath) {
-        into 'sis-jhdf5/lib'
-        rename '(.*)', 'sis-jhdf5-tools.jar'
+        into "${project.group}-jhdf5/lib"
+        rename '(.*)', "${project.group}-jhdf5-tools.jar"
     }
 
     from (allJar.archivePath) {
-        into 'sis-jhdf5/lib'
-        rename '(.*)', 'sis-jhdf5.jar'
+        into "${project.group}-jhdf5/lib"
+        rename '(.*)', "${project.group}-jhdf5.jar"
     }
     
     from (configurations.runtime) {
         exclude '*restriction*'
         exclude '*bcel*'
-        into 'sis-jhdf5/lib'
+        into "${project.group}-jhdf5/lib"
     }
     
     from (zipTree(batteriesIncluded.archivePath)) {
-        into 'sis-jhdf5/lib/native'
+        into "${project.group}-jhdf5/lib/native"
         include 'native/**'
     }
     
     from (nativeJarLinuxIntel.archivePath) {
-        into 'sis-jhdf5/lib/nativejar'
+        into "${project.group}-jhdf5/lib/nativejar"
     }
     
     from (nativeJarMacIntel.archivePath) {
-        into 'sis-jhdf5/lib/nativejar'
+        into "${project.group}-jhdf5/lib/nativejar"
     }
     
     from (nativeJarWindowsIntel.archivePath) {
-        into 'sis-jhdf5/lib/nativejar'
+        into "${project.group}-jhdf5/lib/nativejar"
     }
 
     from (batteriesIncluded.archivePath) {
-        into 'sis-jhdf5/lib/batteries_included'
+        into "${project.group}-jhdf5/lib/batteries_included"
     }
 
     from ("dist") {
-        into 'sis-jhdf5'
+        into "${project.group}-jhdf5"
     }
     
     from (javadocZip.archivePath) {
-        into 'sis-jhdf5/doc'
+        into "${project.group}-jhdf5/doc"
     }
     
     from (exampleZip.archivePath) {
-        into 'sis-jhdf5/doc'
+        into "${project.group}-jhdf5/doc"
     }    
     
     from (sourcesJar.archivePath) {
-        into 'sis-jhdf5/src'
-        rename '(.*)', 'sis-jhdf5-src.zip'
+        into "${project.group}-jhdf5/src"
+        rename '(.*)', "${project.group}-jhdf5-src.zip"
     }
 
 	// BR 2014-06-09:
@@ -227,9 +227,11 @@ task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar, nativeJarLinu
 publishing {
     publications {
         artifacts(IvyPublication) {
+            module "${project.group}-jhdf5"
+            revision project.ext.revisionForPublication
             from components.java
             artifact(toolsJar) {
-                name = "sis-jhdf5-tools"
+                name = "${project.group}-jhdf5-tools"
                 conf = "runtime"
             }
             artifact(nativeJarLinuxIntel) {
@@ -246,9 +248,15 @@ publishing {
             }
             artifact(sourcesJar) {
                 type = "source"
-            }            
+            }
+            descriptor {
+                withXml {
+                    asNode().dependencies.dependency.find { it.@org == 'rinn' }.replaceNode {}
+                }
+            }
         }
     }
 }
 
 build.dependsOn distributionZip
+
