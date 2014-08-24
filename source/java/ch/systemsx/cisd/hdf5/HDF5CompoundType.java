@@ -100,6 +100,17 @@ public class HDF5CompoundType<T> extends HDF5DataType
 
     /**
      * Returns the size of the record on disk (in bytes).
+     * 
+     * @deprecated Use {@link #getRecordSizeOnDisk()} instead.
+     */
+    @Deprecated
+    public int getRecordSize()
+    {
+        return getRecordSizeOnDisk();
+    }
+    
+    /**
+     * Returns the size of the record on disk (in bytes).
      */
     public int getRecordSizeOnDisk()
     {
