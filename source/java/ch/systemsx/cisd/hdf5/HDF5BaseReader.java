@@ -318,7 +318,7 @@ class HDF5BaseReader
 
     void renameNamedDataType(String oldPath, String newPath)
     {
-        final Integer typeIdOrNull = namedDataTypeMap.get(oldPath);
+        final Integer typeIdOrNull = namedDataTypeMap.remove(oldPath);
         if (typeIdOrNull != null)
         {
             namedDataTypeMap.put(newPath, typeIdOrNull);
