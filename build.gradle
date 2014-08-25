@@ -224,34 +224,37 @@ task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar, nativeJarLinu
 
 }
 
-publishing {
-    publications {
-        artifacts(IvyPublication) {
-            module "${project.group}-jhdf5"
-            revision project.revisionForPublication
-            from components.java
-            artifact(toolsJar) {
-                name = "${project.group}-jhdf5-tools"
-                conf = "runtime"
-            }
-            artifact(nativeJarLinuxIntel) {
-                name = "hdf5-linux-intel"
-                conf = "runtime"
-            }
-            artifact(nativeJarMacIntel) {
-                name = "hdf5-macosx-intel"
-                conf = "runtime"
-            }
-            artifact(nativeJarWindowsIntel) {
-                name = "hdf5-windows-intel"
-                conf = "runtime"
-            }
-            artifact(sourcesJar) {
-                type = "source"
-            }
-            descriptor {
-                withXml {
-                    asNode().dependencies.dependency.find { it.@org == 'rinn' }.replaceNode {}
+if (project == project.rootProject)
+{
+    publishing {
+        publications {
+            artifacts(IvyPublication) {
+                module "${project.group}-jhdf5"
+                revision project.revisionForPublication
+                from components.java
+                artifact(toolsJar) {
+                    name = "${project.group}-jhdf5-tools"
+                    conf = "runtime"
+                }
+                artifact(nativeJarLinuxIntel) {
+                    name = "hdf5-linux-intel"
+                    conf = "runtime"
+                }
+                artifact(nativeJarMacIntel) {
+                    name = "hdf5-macosx-intel"
+                    conf = "runtime"
+                }
+                artifact(nativeJarWindowsIntel) {
+                    name = "hdf5-windows-intel"
+                    conf = "runtime"
+                }
+                artifact(sourcesJar) {
+                    type = "source"
+                }
+                descriptor {
+                    withXml {
+                        asNode().dependencies.dependency.find { it.@org == 'rinn' }.replaceNode {}
+                    }
                 }
             }
         }
