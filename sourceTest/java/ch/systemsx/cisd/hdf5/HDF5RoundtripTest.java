@@ -10142,7 +10142,7 @@ public class HDF5RoundtripTest
         final File file = new File(workingDirectory, "inferredCompoundType.h5");
         file.delete();
         assertFalse(file.exists());
-        // file.deleteOnExit();
+        file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         final HDF5CompoundType<SimpleRecord> typeW =
                 writer.compound().getInferredType(SimpleRecord.class);
@@ -10219,10 +10219,18 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().configureForReading(file).reader();
         final IncompleteMappedCompound cpd =
                 reader.compound().read("cpd", IncompleteMappedCompound.class);
+        final HDF5CompoundType<IncompleteMappedCompound> type =
+                reader.compound().getType("incomplete_mapped_compound",
+                        IncompleteMappedCompound.class,
+                        HDF5CompoundMemberMapping.inferMapping(IncompleteMappedCompound.class));
+        final IncompleteMappedCompound cpd2 = reader.compound().read("cpd", type);
         reader.close();
         assertEquals(-1.111f, cpd.a);
         assertEquals(11, cpd.b);
         assertNull(cpd.c);
+        assertEquals(-1.111f, cpd2.a);
+        assertEquals(11, cpd2.b);
+        assertNull(cpd2.c);
     }
 
     @Test
