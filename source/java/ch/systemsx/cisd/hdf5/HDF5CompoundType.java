@@ -56,6 +56,8 @@ public class HDF5CompoundType<T> extends HDF5DataType
 
     private final Class<T> compoundType;
 
+    private final boolean mapAllFields;
+
     private final HDF5ValueObjectByteifyer<T> objectByteifyer;
 
     private final IHDF5InternalCompoundMemberInformationRetriever informationRetriever;
@@ -86,6 +88,8 @@ public class HDF5CompoundType<T> extends HDF5DataType
 
         this.nameOrNull = nameOrNull;
         this.compoundType = compoundType;
+        final CompoundType ct = compoundType.getAnnotation(CompoundType.class);
+        this.mapAllFields = (ct == null) || ct.mapAllFields();
         this.objectByteifyer = objectByteifer;
         this.informationRetriever = informationRetriever;
     }
@@ -108,7 +112,7 @@ public class HDF5CompoundType<T> extends HDF5DataType
     {
         return getRecordSizeOnDisk();
     }
-    
+
     /**
      * Returns the size of the record on disk (in bytes).
      */
@@ -226,7 +230,7 @@ public class HDF5CompoundType<T> extends HDF5DataType
     {
         final String[] unmappedMembers = getUnmappedCompoundMemberNames();
         final String[] unmappedFields = getUnmappedFieldNames();
-        if (unmappedMembers.length > 0 || unmappedFields.length > 0)
+        if ((unmappedMembers.length > 0 && mapAllFields) || unmappedFields.length > 0)
         {
             final StringBuilder b = new StringBuilder();
             b.append("Incomplete mapping for compound type '");
@@ -275,11 +279,10 @@ public class HDF5CompoundType<T> extends HDF5DataType
         } else
         {
             final Set<Field> fieldSet =
-                    new HashSet<Field>(ReflectionUtils.getFieldMap(compoundType).values());
+                    new HashSet<Field>(ReflectionUtils.getFieldMap(compoundType, false).values());
             // If the compound type is annotated with @CompoundType(mapAllFields = false)
             // then remove all fields that do not have an @CompoundElement annotation
-            final CompoundType ct = compoundType.getAnnotation(CompoundType.class);
-            if (ct != null && ct.mapAllFields() == false)
+            if (mapAllFields == false)
             {
                 final Iterator<Field> it = fieldSet.iterator();
                 while (it.hasNext())
@@ -292,9 +295,9 @@ public class HDF5CompoundType<T> extends HDF5DataType
                     }
                 }
             }
-            for (HDF5MemberByteifyer byteiyfer : objectByteifyer.getByteifyers())
+            for (HDF5MemberByteifyer byteifyer : objectByteifyer.getByteifyers())
             {
-                fieldSet.remove(byteiyfer.tryGetField());
+                fieldSet.remove(byteifyer.tryGetField());
             }
             return fieldSet;
         }
@@ -322,7 +325,8 @@ public class HDF5CompoundType<T> extends HDF5DataType
     public Map<String, HDF5EnumerationType> getEnumTypeMap()
     {
         final HDF5MemberByteifyer[] bytefier = objectByteifyer.getByteifyers();
-        final Map<String, HDF5EnumerationType> result = new LinkedHashMap<String, HDF5EnumerationType>();
+        final Map<String, HDF5EnumerationType> result =
+                new LinkedHashMap<String, HDF5EnumerationType>();
         int idx = 0;
         for (HDF5CompoundMemberInformation info : getCompoundMemberInformation(DataTypeInfoOptions.MINIMAL))
         {

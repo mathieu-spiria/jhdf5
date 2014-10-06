@@ -44,9 +44,23 @@ public final class ReflectionUtils
      */
     public static Map<String, Field> getFieldMap(final Class<?> clazz)
     {
+        return getFieldMap(clazz, true);
+    }
+
+    /**
+     * Returns a map from field names to fields for all fields in the given <var>clazz</var>.
+     * 
+     * @param clazz The clazz to get the fields from.
+     * @param excludeNonMappedFields If <code>true</code>, do not include fields to the map which
+     *            are not supposed to be mapped to HDF5 members.
+     */
+    public static Map<String, Field> getFieldMap(final Class<?> clazz,
+            boolean excludeNonMappedFields)
+    {
         final Map<String, Field> map = new HashMap<String, Field>();
         final CompoundType ct = clazz.getAnnotation(CompoundType.class);
-        final boolean includeAllFields = (ct != null) ? ct.mapAllFields() : true;
+        final boolean includeAllFields =
+                excludeNonMappedFields ? ((ct != null) ? ct.mapAllFields() : true) : true;
         for (Class<?> c = clazz; c != null; c = c.getSuperclass())
         {
             for (Field f : c.getDeclaredFields())
@@ -55,7 +69,7 @@ public final class ReflectionUtils
                 if (e != null && org.apache.commons.lang.StringUtils.isNotEmpty(e.memberName()))
                 {
                     map.put(e.memberName(), f);
-                } else if (includeAllFields)
+                } else if (e != null || includeAllFields)
                 {
                     map.put(f.getName(), f);
                 }
@@ -79,9 +93,9 @@ public final class ReflectionUtils
      * Creates an object of <var>clazz</var> using the default constructor, making the default
      * constructor accessible if necessary.
      */
-    public static <T> Constructor<T> getDefaultConstructor(final Class<T> clazz) throws SecurityException,
-            NoSuchMethodException, IllegalArgumentException, InstantiationException,
-            IllegalAccessException, InvocationTargetException
+    public static <T> Constructor<T> getDefaultConstructor(final Class<T> clazz)
+            throws SecurityException, NoSuchMethodException, IllegalArgumentException,
+            InstantiationException, IllegalAccessException, InvocationTargetException
     {
         final Constructor<T> defaultConstructor = clazz.getDeclaredConstructor();
         ensureAccessible(defaultConstructor);
