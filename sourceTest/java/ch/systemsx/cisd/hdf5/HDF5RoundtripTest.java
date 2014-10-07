@@ -9721,7 +9721,7 @@ public class HDF5RoundtripTest
         } catch (HDF5JavaException ex)
         {
             assertEquals(
-                    "The compound type 'UNKNOWN' is not suitable for data set '/testCompound'.",
+                    "The compound type 'UNKNOWN' does not equal the compound type of data set '/testCompound'.",
                     ex.getMessage());
         }
         reader.close();
@@ -10181,6 +10181,30 @@ public class HDF5RoundtripTest
         assertTrue(equals(arrayWritten, recordInheritedRead.getL()));
     }
 
+    static class CompleteMappedCompound
+    {
+        @CompoundElement
+        float a;
+
+        @CompoundElement
+        int b;
+
+        @CompoundElement(variableLength = true)
+        String c;
+
+        public CompleteMappedCompound()
+        {
+        }
+
+        public CompleteMappedCompound(float a, int b, String c)
+        {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
+
+    }
+
     @CompoundType(mapAllFields = false)
     static class IncompleteMappedCompound
     {
@@ -10214,20 +10238,20 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
-        writer.compound().write("cpd", new IncompleteMappedCompound(-1.111f, 11, "Not mapped"));
+        writer.compound().write("cpd", new CompleteMappedCompound(-1.111f, 11, "Not mapped"));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().configureForReading(file).reader();
         final IncompleteMappedCompound cpd =
                 reader.compound().read("cpd", IncompleteMappedCompound.class);
         final HDF5CompoundType<IncompleteMappedCompound> type =
                 reader.compound().getType("incomplete_mapped_compound",
-                        IncompleteMappedCompound.class,
+                        IncompleteMappedCompound.class, false,
                         HDF5CompoundMemberMapping.inferMapping(IncompleteMappedCompound.class));
         final IncompleteMappedCompound cpd2 = reader.compound().read("cpd", type);
         reader.close();
         assertEquals(-1.111f, cpd.a);
         assertEquals(11, cpd.b);
-        assertNull(cpd.c);
+        assertEquals("Not mapped", cpd.c);
         assertEquals(-1.111f, cpd2.a);
         assertEquals(11, cpd2.b);
         assertNull(cpd2.c);

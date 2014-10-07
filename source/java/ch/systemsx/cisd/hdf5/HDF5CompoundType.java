@@ -62,6 +62,8 @@ public class HDF5CompoundType<T> extends HDF5DataType
 
     private final IHDF5InternalCompoundMemberInformationRetriever informationRetriever;
 
+    private final boolean requireTypesToBeEqual;
+
     /**
      * Creates a new {@link HDF5CompoundType} for the given <var>compoundType</var> and the mapping
      * defined by <var>members</var>.
@@ -70,6 +72,8 @@ public class HDF5CompoundType<T> extends HDF5DataType
      * @param storageTypeId The storage data type id.
      * @param nativeTypeId The native (memory) data type id.
      * @param compoundType The Java type that corresponds to this type.
+     * @param requireEqualsType If <code>true</code>, check that this type is equal to the type it
+     *            is used to read.
      * @param objectByteifer The byteifer to use to convert between the Java object and the HDF5
      *            file.
      * @param informationRetriever A role that allows to retrieve compound member information for a
@@ -77,7 +81,8 @@ public class HDF5CompoundType<T> extends HDF5DataType
      * @param baseReader The base reader that this types was derived from.
      */
     HDF5CompoundType(int fileId, int storageTypeId, int nativeTypeId, String nameOrNull,
-            Class<T> compoundType, HDF5ValueObjectByteifyer<T> objectByteifer,
+            Class<T> compoundType, boolean requireEqualsType,
+            HDF5ValueObjectByteifyer<T> objectByteifer,
             IHDF5InternalCompoundMemberInformationRetriever informationRetriever,
             HDF5BaseReader baseReader)
     {
@@ -89,6 +94,7 @@ public class HDF5CompoundType<T> extends HDF5DataType
         this.nameOrNull = nameOrNull;
         this.compoundType = compoundType;
         final CompoundType ct = compoundType.getAnnotation(CompoundType.class);
+        this.requireTypesToBeEqual = requireEqualsType;
         this.mapAllFields = (ct == null) || ct.mapAllFields();
         this.objectByteifyer = objectByteifer;
         this.informationRetriever = informationRetriever;
@@ -163,6 +169,15 @@ public class HDF5CompoundType<T> extends HDF5DataType
     public boolean isMemoryRepresentationIncomplete()
     {
         return objectByteifyer.hasUnmappedMembers();
+    }
+
+    /**
+     * Returns <code>true</code>, if this type is expected to be equal to the type of a data set it
+     * is used to read.
+     */
+    public boolean isRequireTypesToBeEqual()
+    {
+        return requireTypesToBeEqual;
     }
 
     /**

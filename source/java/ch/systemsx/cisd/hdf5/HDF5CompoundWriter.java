@@ -45,7 +45,8 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
     }
 
     private <T> HDF5CompoundType<T> getType(final String nameOrNull, final boolean anonymousType,
-            Class<T> pojoClass, HDF5CompoundMemberMapping... members)
+            Class<T> pojoClass, final boolean requireEqualsType,
+            HDF5CompoundMemberMapping... members)
     {
         baseWriter.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectByteifyer =
@@ -58,7 +59,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                         baseWriter.keepDataSetIfExists);
         final int nativeDataTypeId = baseWriter.createNativeCompoundDataType(objectByteifyer);
         return new HDF5CompoundType<T>(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
-                dataTypeName, pojoClass, objectByteifyer,
+                dataTypeName, pojoClass, requireEqualsType, objectByteifyer,
                 new HDF5CompoundType.IHDF5InternalCompoundMemberInformationRetriever()
                     {
                         @Override
@@ -72,17 +73,24 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
     }
 
     @Override
+    public <T> HDF5CompoundType<T> getType(final String name, final Class<T> pojoClass,
+            boolean requireTypesToBeEqual, final HDF5CompoundMemberMapping... members)
+    {
+        return getType(name, false, pojoClass, requireTypesToBeEqual, members);
+    }
+
+    @Override
     public <T> HDF5CompoundType<T> getType(final String name, Class<T> pojoClass,
             HDF5CompoundMemberMapping... members)
     {
-        return getType(name, false, pojoClass, members);
+        return getType(name, false, pojoClass, true, members);
     }
 
     @Override
     public <T> HDF5CompoundType<T> getAnonType(Class<T> pojoClass,
             HDF5CompoundMemberMapping... members)
     {
-        return getType(null, true, pojoClass, members);
+        return getType(null, true, pojoClass, true, members);
     }
 
     @Override
@@ -93,6 +101,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 null,
                 true,
                 pojoClass,
+                true,
                 addEnumTypes(HDF5CompoundMemberMapping.addHints(
                         HDF5CompoundMemberMapping.inferMapping(pojoClass), hints)));
     }
@@ -120,15 +129,17 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     null,
                     true,
                     Map.class,
+                    true,
                     addEnumTypes(HDF5CompoundMemberMapping.addHints(
                             HDF5CompoundMemberMapping.inferMapping((Map) pojo), hints)));
         } else
         {
             final Class<T> pojoClass = (Class<T>) pojo.getClass();
-            return getType(null, true, pojoClass, addEnumTypes(HDF5CompoundMemberMapping.addHints(
-                    HDF5CompoundMemberMapping.inferMapping(pojo, HDF5CompoundMemberMapping
-                            .inferEnumerationTypeMap(pojo, enumTypeRetriever),
-                            HDF5CompoundMappingHints.isUseVariableLengthStrings(hints)), hints)));
+            return getType(null, true, pojoClass, true,
+                    addEnumTypes(HDF5CompoundMemberMapping.addHints(HDF5CompoundMemberMapping
+                            .inferMapping(pojo, HDF5CompoundMemberMapping.inferEnumerationTypeMap(
+                                    pojo, enumTypeRetriever), HDF5CompoundMappingHints
+                                    .isUseVariableLengthStrings(hints)), hints)));
         }
     }
 
@@ -143,7 +154,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         final int storageDataTypeId =
                 getOrCreateCompoundDataType(dataTypeName, objectByteifyer,
                         baseWriter.keepDataSetIfExists);
-        return getType(dataTypeName, storageDataTypeId, templateType.getCompoundType(),
+        return getType(dataTypeName, storageDataTypeId, templateType.getCompoundType(), true,
                 objectByteifyer);
     }
 
@@ -169,11 +180,12 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     null,
                     true,
                     Map.class,
+                    true,
                     addEnumTypes(HDF5CompoundMemberMapping.addHints(
                             HDF5CompoundMemberMapping.inferMapping((Map) template[0]), hints)));
         } else
         {
-            return (HDF5CompoundType<T>) getType(null, true, componentType,
+            return (HDF5CompoundType<T>) getType(null, true, componentType, true,
                     addEnumTypes(HDF5CompoundMemberMapping.addHints(HDF5CompoundMemberMapping
                             .inferMapping(template, HDF5CompoundMemberMapping
                                     .inferEnumerationTypeMap(template, enumTypeRetriever)), hints)));
@@ -186,7 +198,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
             List<?> template, HDF5CompoundMappingHints hints)
     {
         final HDF5CompoundType<?> type =
-                getType(null, true, List.class, HDF5CompoundMemberMapping.addHints(
+                getType(null, true, List.class, true, HDF5CompoundMemberMapping.addHints(
                         HDF5CompoundMemberMapping.inferMapping(memberNames, template), hints));
         return (HDF5CompoundType<List<?>>) type;
     }
@@ -209,7 +221,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
             HDF5CompoundMappingHints hints)
     {
         final HDF5CompoundType<?> type =
-                getType(null, true, List.class, HDF5CompoundMemberMapping.addHints(
+                getType(null, true, List.class, true, HDF5CompoundMemberMapping.addHints(
                         HDF5CompoundMemberMapping.inferMapping(memberNames, template), hints));
         return (HDF5CompoundType<Object[]>) type;
     }

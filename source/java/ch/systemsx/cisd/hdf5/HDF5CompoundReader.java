@@ -497,12 +497,15 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
         {
             throw new HDF5JavaException("Data set '" + path + "' is no compound.");
         }
-        final boolean isEqual =
-                (baseReader.h5.dataTypesAreEqual(dataTypeId, type.getStorageTypeId()));
-        if (isEqual == false)
+        if (type.isRequireTypesToBeEqual())
         {
-            throw new HDF5JavaException("The compound type '" + type.getName()
-                    + "' is not suitable for data set '" + path + "'.");
+            final boolean isEqual =
+                    (baseReader.h5.dataTypesAreEqual(dataTypeId, type.getStorageTypeId()));
+            if (isEqual == false)
+            {
+                throw new HDF5JavaException("The compound type '" + type.getName()
+                        + "' does not equal the compound type of data set '" + path + "'.");
+            }
         }
     }
 

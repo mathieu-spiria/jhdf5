@@ -275,23 +275,31 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
 
     @Override
     public <T> HDF5CompoundType<T> getType(final String name, final Class<T> pojoClass,
-            final HDF5CompoundMemberMapping... members)
+            boolean requireTypesToBeEqual, final HDF5CompoundMemberMapping... members)
     {
         baseReader.checkOpen();
         final HDF5ValueObjectByteifyer<T> objectArrayifyer =
                 baseReader.createCompoundByteifyers(pojoClass, members, null);
-        return getType(name, -1, pojoClass, objectArrayifyer);
+        return getType(name, -1, pojoClass, requireTypesToBeEqual, objectArrayifyer);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getType(final String name, final Class<T> pojoClass,
+            final HDF5CompoundMemberMapping... members)
+    {
+        return getType(name, pojoClass, true, members);
     }
 
     <T> HDF5CompoundType<T> getType(final String name, int committedDataTypeId,
-            final Class<T> compoundType, final HDF5ValueObjectByteifyer<T> objectArrayifyer)
+            final Class<T> compoundType, final boolean requireEqualsType,
+            final HDF5ValueObjectByteifyer<T> objectArrayifyer)
     {
         final int storageDataTypeId =
                 (committedDataTypeId < 0) ? baseReader
                         .createStorageCompoundDataType(objectArrayifyer) : committedDataTypeId;
         final int nativeDataTypeId = baseReader.createNativeCompoundDataType(objectArrayifyer);
         return new HDF5CompoundType<T>(baseReader.fileId, storageDataTypeId, nativeDataTypeId,
-                name, compoundType, objectArrayifyer,
+                name, compoundType, requireEqualsType, objectArrayifyer,
                 new HDF5CompoundType.IHDF5InternalCompoundMemberInformationRetriever()
                     {
                         @Override
@@ -536,7 +544,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 getFullCompoundDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass, true,
                         createByteifyers(pojoClass, cpdTypeInfo, members));
         return typeForClass;
     }
@@ -552,7 +560,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 getFullCompoundDataSetInformation(objectPath, DataTypeInfoOptions.ALL,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass, true,
                         createByteifyers(pojoClass, cpdTypeInfo, hints));
         return typeForClass;
     }
@@ -587,7 +595,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 getFullCompoundAttributeInformation(objectPath, attributeName, dataTypeInfoOptions,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass, true,
                         createByteifyers(pojoClass, cpdTypeInfo, hints));
         return typeForClass;
     }
@@ -629,7 +637,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 getFullCompoundDataTypeInformation(dataTypePath, dataTypeInfoOptions,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getType(dataTypeName, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                getType(dataTypeName, cpdTypeInfo.compoundDataTypeId, pojoClass, true,
                         createByteifyers(pojoClass, cpdTypeInfo, hints));
         return typeForClass;
     }

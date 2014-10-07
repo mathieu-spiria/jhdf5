@@ -116,6 +116,18 @@ public interface IHDF5CompoundInformationRetriever
      * 
      * @param name The name of the compound in the HDF5 file.
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
+     * @param requireTypesToBeEqual If <code>true</code>, this type is required to be equal to the
+     *            type it tries to read, or else an {@link HDF5JavaException} will be thrown.
+     * @param members The mapping from the Java compound type to the HDF5 type.
+     */
+    public <T> HDF5CompoundType<T> getType(String name, Class<T> pojoClass,
+            boolean requireTypesToBeEqual, HDF5CompoundMemberMapping... members);
+
+    /**
+     * Returns the compound type <var>name></var> for this HDF5 file.
+     * 
+     * @param name The name of the compound in the HDF5 file.
+     * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
      * @param members The mapping from the Java compound type to the HDF5 type.
      */
     public <T> HDF5CompoundType<T> getType(String name, Class<T> pojoClass,
@@ -164,8 +176,8 @@ public interface IHDF5CompoundInformationRetriever
 
     /**
      * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
-     * Java compound type to the HDF5 type by reflection and using the default name chosen by JHDF5 which is based
-     * on the simple name of <var>pojoClass</var>.
+     * Java compound type to the HDF5 type by reflection and using the default name chosen by JHDF5
+     * which is based on the simple name of <var>pojoClass</var>.
      * 
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
      * @param hints The hints to provide to the mapping procedure.
