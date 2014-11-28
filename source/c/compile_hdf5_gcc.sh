@@ -4,7 +4,7 @@ source version.sh
 PLATFORM="$1"
 PATCHES="$2"
 
-if [ "$PLATFORM" != "i386" -a "$PLATFORM" != "x86" -a "$PLATFORM" != "amd64" -a "$PLATFORM" != "x86_64" ]; then
+if [ "$PLATFORM" != "i386" -a "$PLATFORM" != "x86" -a "$PLATFORM" != "amd64" -a "$PLATFORM" != "x86_64" -a "$PLATFORM" != "armv6l" ]; then
   echo "Syntax: compile_hdf5.sh <platform>"
   echo "where <platform> is one of i386, x86, amd64, or x86_64"
   exit 1
