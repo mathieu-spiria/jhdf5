@@ -409,7 +409,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     @Override
     public <T> HDF5CompoundType<T> getInferredType(final T[] pojo)
     {
-        return getInferredType(null, pojo, null);
+        return getInferredType((String) null, pojo, null);
     }
 
     @Override
@@ -438,7 +438,9 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             return (HDF5CompoundType<T>) getType(name, componentType,
                     addEnumTypes(HDF5CompoundMemberMapping.addHints(HDF5CompoundMemberMapping
                             .inferMapping(pojo, HDF5CompoundMemberMapping.inferEnumerationTypeMap(
-                                    pojo, enumTypeRetriever)), hints)));
+                                    pojo, enumTypeRetriever),
+                                    hints == null ? false : hints.isUseVariableLengthStrings()),
+                            hints)));
         }
     }
 
@@ -455,8 +457,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                     final Class<? extends Enum<?>> enumClass =
                             (Class<? extends Enum<?>>) memberClass;
                     final String typeName =
-                            (StringUtils.isBlank(m.getEnumTypeName())) ? memberClass
-                                    .getSimpleName() : m.getEnumTypeName();
+                            (StringUtils.isBlank(m.tryGetEnumTypeName())) ? memberClass
+                                    .getSimpleName() : m.tryGetEnumTypeName();
                     m.setEnumerationType(enumTypeRetriever.getType(typeName,
                             ReflectionUtils.getEnumOptions(enumClass)));
                 } else if (memberClass == HDF5EnumerationValue.class
@@ -519,6 +521,13 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     }
 
     @Override
+    public HDF5CompoundType<List<?>> getInferredType(List<String> memberNames, List<?> data,
+            HDF5CompoundMappingHints hints)
+    {
+        return getInferredType(null, memberNames, data, hints);
+    }
+
+    @Override
     public HDF5CompoundType<Object[]> getInferredType(String[] memberNames, Object[] data)
     {
         return getInferredType(null, memberNames, data);
@@ -533,6 +542,24 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                         Arrays.asList(memberNames), false) : name;
         return getType(compoundTypeName, Object[].class,
                 HDF5CompoundMemberMapping.inferMapping(memberNames, data));
+    }
+
+    @Override
+    public HDF5CompoundType<Object[]> getInferredType(String name, String[] memberNames,
+            Object[] data, HDF5CompoundMappingHints hints)
+    {
+        final String compoundTypeName =
+                (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(
+                        Arrays.asList(memberNames), false) : name;
+        return getType(compoundTypeName, Object[].class,
+                HDF5CompoundMemberMapping.inferMapping(memberNames, data, hints));
+    }
+
+    @Override
+    public HDF5CompoundType<Object[]> getInferredType(String[] memberNames, Object[] data,
+            HDF5CompoundMappingHints hints)
+    {
+        return getInferredType(null, memberNames, data, hints);
     }
 
     @Override

@@ -188,7 +188,9 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
             return (HDF5CompoundType<T>) getType(null, true, componentType, true,
                     addEnumTypes(HDF5CompoundMemberMapping.addHints(HDF5CompoundMemberMapping
                             .inferMapping(template, HDF5CompoundMemberMapping
-                                    .inferEnumerationTypeMap(template, enumTypeRetriever)), hints)));
+                                    .inferEnumerationTypeMap(template, enumTypeRetriever),
+                                    hints == null ? false : hints.isUseVariableLengthStrings()),
+                            hints)));
         }
     }
 

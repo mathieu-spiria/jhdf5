@@ -360,6 +360,7 @@ public class HDF5RoundtripTest
         test.testCompound();
         test.testCompoundInferStringLength();
         test.testCompoundVariableLengthString();
+        test.testCompoundVariableLengthStringUsingHints();
         test.testCompoundHintVLString();
         test.testClosedCompoundType();
         test.testAnonCompound();
@@ -7545,7 +7546,7 @@ public class HDF5RoundtripTest
 
     }
 
-    static class SimpleRecordWithStringsAndInts
+    static class SimpleRecordWithStringsAndIntsAnnoted
     {
         @CompoundElement(variableLength = true)
         String s1;
@@ -7553,6 +7554,99 @@ public class HDF5RoundtripTest
         int i1;
 
         @CompoundElement(variableLength = true)
+        String s2;
+
+        int i2;
+
+        SimpleRecordWithStringsAndIntsAnnoted()
+        {
+        }
+
+        SimpleRecordWithStringsAndIntsAnnoted(String s1, int i1, String s2, int i2)
+        {
+            this.s1 = s1;
+            this.i1 = i1;
+            this.s2 = s2;
+            this.i2 = i2;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + i1;
+            result = prime * result + i2;
+            result = prime * result + ((s1 == null) ? 0 : s1.hashCode());
+            result = prime * result + ((s2 == null) ? 0 : s2.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            SimpleRecordWithStringsAndIntsAnnoted other =
+                    (SimpleRecordWithStringsAndIntsAnnoted) obj;
+            if (i1 != other.i1)
+            {
+                return false;
+            }
+            if (i2 != other.i2)
+            {
+                return false;
+            }
+            if (s1 == null)
+            {
+                if (other.s1 != null)
+                {
+                    return false;
+                }
+            } else if (!s1.equals(other.s1))
+            {
+                return false;
+            }
+            if (s2 == null)
+            {
+                if (other.s2 != null)
+                {
+                    return false;
+                }
+            } else if (!s2.equals(other.s2))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "SimpleRecordWithStringsAndIntsAnnotated [s1=" + s1 + ", i1=" + i1 + ", s2="
+                    + s2 + ", i2=" + i2 + "]";
+        }
+
+    }
+
+    static class SimpleRecordWithStringsAndInts
+    {
+        String s1;
+
+        int i1;
+
+        @CompoundElement(dimensions =
+            { 10 })
         String s2;
 
         int i2;
@@ -7645,8 +7739,93 @@ public class HDF5RoundtripTest
         assertFalse(file.exists());
         file.deleteOnExit();
         final IHDF5Writer writer = HDF5Factory.open(file);
+        final HDF5CompoundType<SimpleRecordWithStringsAndIntsAnnoted> typeWritten =
+                writer.compound().getInferredType(SimpleRecordWithStringsAndIntsAnnoted.class);
+        final SimpleRecordWithStringsAndIntsAnnoted recordWritten =
+                new SimpleRecordWithStringsAndIntsAnnoted("hello", 17, "world", 1);
+        writer.compound().write("stringAntInt", typeWritten, recordWritten);
+        final SimpleRecordWithStringsAndIntsAnnoted[] recordArrayWritten =
+                new SimpleRecordWithStringsAndIntsAnnoted[]
+                    { new SimpleRecordWithStringsAndIntsAnnoted("hello", 3, "0123456789", 100000),
+                            new SimpleRecordWithStringsAndIntsAnnoted("Y2", -1, "What?", -100000) };
+        writer.compound().writeArray("stringsArray", typeWritten, recordArrayWritten);
+        writer.close();
+
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<SimpleRecordWithStringsAndIntsAnnoted> typeRead =
+                reader.compound().getDataSetType("stringAntInt",
+                        SimpleRecordWithStringsAndIntsAnnoted.class);
+        assertEquals(4, typeRead.getCompoundMemberInformation().length);
+        assertEquals("s1", typeRead.getCompoundMemberInformation()[0].getName());
+        assertEquals(HDF5DataClass.STRING, typeRead.getCompoundMemberInformation()[0].getType()
+                .getDataClass());
+        assertTrue(typeRead.getCompoundMemberInformation()[0].getType().isVariableLengthString());
+        assertEquals(HDFNativeData.getMachineWordSize(), typeRead.getCompoundMemberInformation()[0]
+                .getType().getSize());
+        assertEquals("i1", typeRead.getCompoundMemberInformation()[1].getName());
+        assertEquals(HDF5DataClass.INTEGER, typeRead.getCompoundMemberInformation()[1].getType()
+                .getDataClass());
+        assertEquals("s2", typeRead.getCompoundMemberInformation()[2].getName());
+        assertEquals(HDF5DataClass.STRING, typeRead.getCompoundMemberInformation()[2].getType()
+                .getDataClass());
+        assertTrue(typeRead.getCompoundMemberInformation()[2].getType().isVariableLengthString());
+        assertEquals(HDFNativeData.getMachineWordSize(), typeRead.getCompoundMemberInformation()[2]
+                .getType().getSize());
+        assertEquals("i2", typeRead.getCompoundMemberInformation()[3].getName());
+        assertEquals(HDF5DataClass.INTEGER, typeRead.getCompoundMemberInformation()[3].getType()
+                .getDataClass());
+        assertFalse(typeRead.getCompoundMemberInformation()[3].getType().isVariableLengthString());
+        final SimpleRecordWithStringsAndIntsAnnoted recordRead =
+                reader.compound().read("stringAntInt", typeRead);
+        assertEquals(recordWritten, recordRead);
+
+        final HDF5CompoundType<SimpleRecordWithStringsAndIntsAnnoted> arrayTypeRead =
+                reader.compound().getDataSetType("stringsArray",
+                        SimpleRecordWithStringsAndIntsAnnoted.class);
+        assertEquals(4, arrayTypeRead.getCompoundMemberInformation().length);
+        assertEquals("s1", arrayTypeRead.getCompoundMemberInformation()[0].getName());
+        assertEquals(HDF5DataClass.STRING, arrayTypeRead.getCompoundMemberInformation()[0]
+                .getType().getDataClass());
+        assertTrue(arrayTypeRead.getCompoundMemberInformation()[0].getType()
+                .isVariableLengthString());
+        assertEquals(HDFNativeData.getMachineWordSize(),
+                arrayTypeRead.getCompoundMemberInformation()[0].getType().getSize());
+        assertEquals("i1", arrayTypeRead.getCompoundMemberInformation()[1].getName());
+        assertEquals(HDF5DataClass.INTEGER, arrayTypeRead.getCompoundMemberInformation()[1]
+                .getType().getDataClass());
+        assertEquals("s2", arrayTypeRead.getCompoundMemberInformation()[2].getName());
+        assertEquals(HDF5DataClass.STRING, arrayTypeRead.getCompoundMemberInformation()[2]
+                .getType().getDataClass());
+        assertTrue(arrayTypeRead.getCompoundMemberInformation()[2].getType()
+                .isVariableLengthString());
+        assertEquals(HDFNativeData.getMachineWordSize(),
+                arrayTypeRead.getCompoundMemberInformation()[2].getType().getSize());
+        assertEquals("i2", arrayTypeRead.getCompoundMemberInformation()[3].getName());
+        assertEquals(HDF5DataClass.INTEGER, arrayTypeRead.getCompoundMemberInformation()[3]
+                .getType().getDataClass());
+        assertFalse(arrayTypeRead.getCompoundMemberInformation()[3].getType()
+                .isVariableLengthString());
+        final SimpleRecordWithStringsAndIntsAnnoted[] recordArrayRead =
+                reader.compound().readArray("stringsArray", arrayTypeRead);
+        assertEquals(recordArrayWritten.length, recordArrayRead.length);
+        assertEquals(recordArrayWritten[0], recordArrayRead[0]);
+        assertEquals(recordArrayWritten[1], recordArrayRead[1]);
+
+        reader.close();
+    }
+
+    @Test
+    public void testCompoundVariableLengthStringUsingHints()
+    {
+        final File file =
+                new File(workingDirectory, "variableLengthStringsInCompoundUsingHints.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
         final HDF5CompoundType<SimpleRecordWithStringsAndInts> typeWritten =
-                writer.compound().getInferredType(SimpleRecordWithStringsAndInts.class);
+                writer.compound().getInferredType(SimpleRecordWithStringsAndInts.class,
+                        new HDF5CompoundMappingHints().useVariableLengthStrings());
         final SimpleRecordWithStringsAndInts recordWritten =
                 new SimpleRecordWithStringsAndInts("hello", 17, "world", 1);
         writer.compound().write("stringAntInt", typeWritten, recordWritten);
@@ -7674,8 +7853,9 @@ public class HDF5RoundtripTest
         assertEquals("s2", typeRead.getCompoundMemberInformation()[2].getName());
         assertEquals(HDF5DataClass.STRING, typeRead.getCompoundMemberInformation()[2].getType()
                 .getDataClass());
-        assertTrue(typeRead.getCompoundMemberInformation()[2].getType().isVariableLengthString());
-        assertEquals(HDFNativeData.getMachineWordSize(), typeRead.getCompoundMemberInformation()[2]
+        assertFalse(typeRead.getCompoundMemberInformation()[2].getType().isVariableLengthString());
+        assertEquals(10, typeRead.getCompoundMemberInformation()[2].getType().getElementSize());
+        assertEquals(10, typeRead.getCompoundMemberInformation()[2]
                 .getType().getSize());
         assertEquals("i2", typeRead.getCompoundMemberInformation()[3].getName());
         assertEquals(HDF5DataClass.INTEGER, typeRead.getCompoundMemberInformation()[3].getType()
@@ -7702,9 +7882,11 @@ public class HDF5RoundtripTest
         assertEquals("s2", arrayTypeRead.getCompoundMemberInformation()[2].getName());
         assertEquals(HDF5DataClass.STRING, arrayTypeRead.getCompoundMemberInformation()[2]
                 .getType().getDataClass());
-        assertTrue(arrayTypeRead.getCompoundMemberInformation()[2].getType()
+        assertFalse(arrayTypeRead.getCompoundMemberInformation()[2].getType()
                 .isVariableLengthString());
-        assertEquals(HDFNativeData.getMachineWordSize(),
+        assertEquals(10,
+                arrayTypeRead.getCompoundMemberInformation()[2].getType().getElementSize());
+        assertEquals(10,
                 arrayTypeRead.getCompoundMemberInformation()[2].getType().getSize());
         assertEquals("i2", arrayTypeRead.getCompoundMemberInformation()[3].getName());
         assertEquals(HDF5DataClass.INTEGER, arrayTypeRead.getCompoundMemberInformation()[3]

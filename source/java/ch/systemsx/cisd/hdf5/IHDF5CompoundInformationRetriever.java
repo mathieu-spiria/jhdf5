@@ -20,11 +20,35 @@ import java.util.List;
 
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 
 /**
- * An interface to get information about HDF5 compound data sets and types and map to map compound
- * types to plain old Java classes.
+ * An interface to get information on HDF5 compound data sets and compound data types, and to create
+ * compound types from mappings to Java classes.
+ * <p>
+ * <h2>What is an {@link HDF5CompoundType}?</h2><p>
+ * A {@link HDF5CompoundType} is a Java object representing both an HDF5 compound type in a particular 
+ * HDF5 file and the mapping of this HDF5 compound type to a representation in Java. A Java representation
+ * can be either a plain-old Java object (POJO) where Java fields correspond to HDF5 compound members, a map 
+ * (see {@link HDF5CompoundDataMap}) where each HDF5 compound member is represented by one key-value pair,
+ * pr a list (see {@link HDF5CompoundDataList}) or <code>Object[]</code>, where the members of the HDF5 
+ * compound type are stored by their position (or order) in the HDF5 compound type. Only the POJO 
+ * representation contains information on what  
+ * It has to be noted that a
+ * <p>
+ * The following Java types can be mapped to compound members:
+ * <ul>
+ * <li>Primitive values</li>
+ * <li>Primitive arrays</li>
+ * <li>Primitive matrices (except <code>char[][]</code>)</li>
+ * <li>{@link String}</li>
+ * <li>{@link java.util.BitSet}</li>
+ * <li>{@link java.util.Date}</li>
+ * <li>{@link HDF5EnumerationValue}</li>
+ * <li>{@link HDF5EnumerationValueArray}</li>
+ * <li>Sub-classes of {@link MDAbstractArray}</li>
+ * </ul>
  * 
  * @author Bernd Rinn
  */
@@ -112,7 +136,8 @@ public interface IHDF5CompoundInformationRetriever
     // /////////////////////
 
     /**
-     * Returns the compound type <var>name></var> for this HDF5 file.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>pojoClass</var>. The mapping is defined by <var>members</var>.
      * 
      * @param name The name of the compound in the HDF5 file.
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
@@ -134,8 +159,9 @@ public interface IHDF5CompoundInformationRetriever
             HDF5CompoundMemberMapping... members);
 
     /**
-     * Returns the compound type for this HDF5 file, using the default name chosen by JHDF5 which is
-     * based on the simple name of <var>pojoClass</var>.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>pojoClass</var>. The name of the compound data type is chosen to be the simple name of
+     * <var>pojoClass</var>. The mapping is defined by <var>members</var>.
      * 
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
      * @param members The mapping from the Java compound type to the HDF5 type.
@@ -143,8 +169,10 @@ public interface IHDF5CompoundInformationRetriever
     public <T> HDF5CompoundType<T> getType(Class<T> pojoClass, HDF5CompoundMemberMapping... members);
 
     /**
-     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
-     * Java compound type to the HDF5 type by reflection.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>pojoClass</var>. The mapping of the Java compound type to the HDF5 type is inferred by
+     * reflection from <var>pojoClass</var> following basic rules on how Java data types are mapped
+     * to HDF5 data types.
      * 
      * @param name The name of the compound in the HDF5 file.
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
@@ -155,8 +183,10 @@ public interface IHDF5CompoundInformationRetriever
             HDF5CompoundMappingHints hints);
 
     /**
-     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
-     * Java compound type to the HDF5 type by reflection.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>pojoClass</var>. The mapping of the Java compound type to the HDF5 type is inferred by
+     * reflection from <var>pojoClass</var> following basic rules on how Java data types are mapped
+     * to HDF5 data types.
      * 
      * @param name The name of the compound in the HDF5 file.
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
@@ -165,9 +195,11 @@ public interface IHDF5CompoundInformationRetriever
     public <T> HDF5CompoundType<T> getInferredType(String name, Class<T> pojoClass);
 
     /**
-     * Returns the compound type for this HDF5 file, inferring the mapping from the Java compound
-     * type to the HDF5 type by reflection and using the default name chosen by JHDF5 which is based
-     * on the simple name of <var>pojoClass</var>.
+     * Returns a compound type for this HDF5 file, compatible with
+     * <var>pojoClass</var>. The mapping of the Java compound type to the HDF5 type is inferred by
+     * reflection from <var>pojoClass</var> following basic rules on how Java data types are mapped
+     * to HDF5 data types. As name of the HDF5 compound type, the simple name of
+     * <var>pojoClass</var> is chosen.
      * 
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
      * @see HDF5CompoundMemberMapping#inferMapping
@@ -175,9 +207,11 @@ public interface IHDF5CompoundInformationRetriever
     public <T> HDF5CompoundType<T> getInferredType(Class<T> pojoClass);
 
     /**
-     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
-     * Java compound type to the HDF5 type by reflection and using the default name chosen by JHDF5
-     * which is based on the simple name of <var>pojoClass</var>.
+     * Returns a compound type for this HDF5 file, compatible with
+     * <var>pojoClass</var>. The mapping of the Java compound type to the HDF5 type is inferred by
+     * reflection from <var>pojoClass</var> following basic rules on how Java data types are mapped
+     * to HDF5 data types. As name of the HDF5 compound type, the simple name of
+     * <var>pojoClass</var> is chosen.
      * 
      * @param pojoClass The plain old Java type that corresponds to this HDF5 type.
      * @param hints The hints to provide to the mapping procedure.
@@ -187,8 +221,10 @@ public interface IHDF5CompoundInformationRetriever
             HDF5CompoundMappingHints hints);
 
     /**
-     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
-     * Java compound type to the HDF5 type by reflection.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var>. The mapping of the Java compound type to the HDF5 type is inferred by
+     * reflection from <var>template</var> following basic rules on how Java data types are mapped
+     * to HDF5 data types.
      * 
      * @param name The name of the compound type in the HDF5 file.
      * @param template The compound to infer the HDF5 compound type from.
@@ -199,8 +235,10 @@ public interface IHDF5CompoundInformationRetriever
             HDF5CompoundMappingHints hints);
 
     /**
-     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
-     * Java compound type to the HDF5 type by reflection.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var>. The mapping of the Java compound type to the HDF5 type is inferred by
+     * reflection from <var>template</var> following basic rules on how Java data types are mapped
+     * to HDF5 data types.
      * 
      * @param name The name of the compound type in the HDF5 file.
      * @param template The compound to infer the HDF5 compound type from.
@@ -209,9 +247,11 @@ public interface IHDF5CompoundInformationRetriever
     public <T> HDF5CompoundType<T> getInferredType(String name, T template);
 
     /**
-     * Returns the compound type for this HDF5 file, inferring the mapping from the Java compound
-     * type to the HDF5 type by reflection and using the default name chosen by JHDF5 which is based
-     * on the simple name of <var>T</var>.
+     * Returns a compound type for this HDF5 file, compatible with
+     * <var>template</var>. The mapping of the Java compound type to the HDF5 type is inferred by
+     * reflection from <var>template</var> following basic rules on how Java data types are mapped
+     * to HDF5 data types. As name of the HDF5 compound type, the simple name of the class of
+     * <var>template</var> is chosen.
      * 
      * @param template The compound to infer the HDF5 compound type from.
      * @see HDF5CompoundMemberMapping#inferMapping
@@ -219,8 +259,10 @@ public interface IHDF5CompoundInformationRetriever
     public <T> HDF5CompoundType<T> getInferredType(T template);
 
     /**
-     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
-     * Java compound type to the HDF5 type by reflection.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var>. The mapping of the Java compound type to the HDF5 type is inferred by
+     * reflection from <var>template</var> following basic rules on how Java data types are mapped
+     * to HDF5 data types.
      * 
      * @param name The name of the compound type in the HDF5 file.
      * @param template The compound array to infer the HDF5 compound type from.
@@ -229,8 +271,11 @@ public interface IHDF5CompoundInformationRetriever
     public <T> HDF5CompoundType<T> getInferredType(final String name, final T[] template);
 
     /**
-     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
-     * Java compound type to the HDF5 type by reflection.
+     * Returns a compound type for this HDF5 file, compatible with
+     * <var>template</var>. The mapping of the Java compound type to the HDF5 type is inferred by
+     * reflection from <var>template</var> following basic rules on how Java data types are mapped
+     * to HDF5 data types. As name of the HDF5 compound type, the simple name of the class of
+     * <var>template</var> is chosen.
      * 
      * @param template The compound array to infer the HDF5 compound type from.
      * @see HDF5CompoundMemberMapping#inferMapping
@@ -238,8 +283,10 @@ public interface IHDF5CompoundInformationRetriever
     public <T> HDF5CompoundType<T> getInferredType(final T[] template);
 
     /**
-     * Returns the compound type <var>name></var> for this HDF5 file, inferring the mapping from the
-     * Java compound type to the HDF5 type by reflection.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var>. The mapping of the Java compound type to the HDF5 type is inferred by
+     * reflection from <var>template</var> following basic rules on how Java data types are mapped
+     * to HDF5 data types.
      * 
      * @param name The name of the compound type in the HDF5 file.
      * @param template The compound array to infer the HDF5 compound type from.
@@ -250,8 +297,29 @@ public interface IHDF5CompoundInformationRetriever
             HDF5CompoundMappingHints hints);
 
     /**
-     * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
-     * the members.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var> and <var>memberNames</var>. The mapping of the Java compound type to the
+     * HDF5 type is inferred by reflection of the elements of <var>template</var> following basic
+     * rules on how Java data types are mapped to HDF5 data types. Each element of
+     * <var>template</var> is considered a member of the compound. The names are taken from
+     * <var>memberNames</var> in the same order as in <var>template</var>.
+     * 
+     * @param name The name of the compound type in the HDF5 file.
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length as <var>memberNames</var>.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<List<?>> getInferredType(String name, List<String> memberNames,
+            List<?> template);
+
+    /**
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var> and <var>memberNames</var>. The mapping of the Java compound type to the
+     * HDF5 type is inferred by reflection of the elements of <var>template</var> following basic
+     * rules on how Java data types are mapped to HDF5 data types. Each element of
+     * <var>template</var> is considered a member of the compound. The names are taken from
+     * <var>memberNames</var> in the same order as in <var>template</var>.
      * 
      * @param name The name of the compound type in the HDF5 file.
      * @param memberNames The names of the members.
@@ -264,21 +332,12 @@ public interface IHDF5CompoundInformationRetriever
             List<?> template, HDF5CompoundMappingHints hints);
 
     /**
-     * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
-     * the members.
-     * 
-     * @param name The name of the compound type in the HDF5 file.
-     * @param memberNames The names of the members.
-     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
-     *            length as <var>memberNames</var>.
-     * @see HDF5CompoundMemberMapping#inferMapping
-     */
-    public HDF5CompoundType<List<?>> getInferredType(String name, List<String> memberNames,
-            List<?> template);
-
-    /**
-     * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
-     * the members.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var> and <var>memberNames</var>. The mapping of the Java compound type to the
+     * HDF5 type is inferred by reflection of the elements of <var>template</var> following basic
+     * rules on how Java data types are mapped to HDF5 data types. Each element of
+     * <var>template</var> is considered a member of the compound. The names are taken from
+     * <var>memberNames</var> in the same order as in <var>template</var>.
      * 
      * @param memberNames The names of the members.
      * @param template The compound to infer the HDF5 compound type from. Needs to have the same
@@ -288,8 +347,29 @@ public interface IHDF5CompoundInformationRetriever
     public HDF5CompoundType<List<?>> getInferredType(List<String> memberNames, List<?> template);
 
     /**
-     * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
-     * the members.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var> and <var>memberNames</var>. The mapping of the Java compound type to the
+     * HDF5 type is inferred by reflection of the elements of <var>template</var> following basic
+     * rules on how Java data types are mapped to HDF5 data types. Each element of
+     * <var>template</var> is considered a member of the compound. The names are taken from
+     * <var>memberNames</var> in the same order as in <var>template</var>.
+     * 
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length as <var>memberNames</var>.
+     * @param hints The hints to provide to the mapping procedure.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<List<?>> getInferredType(List<String> memberNames, List<?> template,
+            HDF5CompoundMappingHints hints);
+
+    /**
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var> and <var>memberNames</var>. The mapping of the Java compound type to the
+     * HDF5 type is inferred by reflection of the elements of <var>template</var> following basic
+     * rules on how Java data types are mapped to HDF5 data types. Each element of
+     * <var>template</var> is considered a member of the compound. The names are taken from
+     * <var>memberNames</var> in the same order as in <var>template</var>.
      * 
      * @param name The name of the compound type in the HDF5 file.
      * @param memberNames The names of the members.
@@ -301,8 +381,30 @@ public interface IHDF5CompoundInformationRetriever
             Object[] template);
 
     /**
-     * Returns the compound type for this HDF5 file, inferring the mapping from the Java types of
-     * the members.
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var> and <var>memberNames</var>. The mapping of the Java compound type to the
+     * HDF5 type is inferred by reflection of the elements of <var>template</var> following basic
+     * rules on how Java data types are mapped to HDF5 data types. Each element of
+     * <var>template</var> is considered a member of the compound. The names are taken from
+     * <var>memberNames</var> in the same order as in <var>template</var>.
+     * 
+     * @param name The name of the compound type in the HDF5 file.
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length than <var>memberNames</var>.
+     * @param hints The hints to provide to the mapping procedure.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<Object[]> getInferredType(String name, String[] memberNames,
+            Object[] template, HDF5CompoundMappingHints hints);
+
+    /**
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var> and <var>memberNames</var>. The mapping of the Java compound type to the
+     * HDF5 type is inferred by reflection of the elements of <var>template</var> following basic
+     * rules on how Java data types are mapped to HDF5 data types. Each element of
+     * <var>template</var> is considered a member of the compound. The names are taken from
+     * <var>memberNames</var> in the same order as in <var>template</var>.
      * 
      * @param memberNames The names of the members.
      * @param template The compound to infer the HDF5 compound type from. Needs to have the same
@@ -310,6 +412,23 @@ public interface IHDF5CompoundInformationRetriever
      * @see HDF5CompoundMemberMapping#inferMapping
      */
     public HDF5CompoundType<Object[]> getInferredType(String[] memberNames, Object[] template);
+
+    /**
+     * Returns a compound type <var>name></var> for this HDF5 file, compatible with
+     * <var>template</var> and <var>memberNames</var>. The mapping of the Java compound type to the
+     * HDF5 type is inferred by reflection of the elements of <var>template</var> following basic
+     * rules on how Java data types are mapped to HDF5 data types. Each element of
+     * <var>template</var> is considered a member of the compound. The names are taken from
+     * <var>memberNames</var> in the same order as in <var>template</var>.
+     * 
+     * @param memberNames The names of the members.
+     * @param template The compound to infer the HDF5 compound type from. Needs to have the same
+     *            length than <var>memberNames</var>.
+     * @param hints The hints to provide to the mapping procedure.
+     * @see HDF5CompoundMemberMapping#inferMapping
+     */
+    public HDF5CompoundType<Object[]> getInferredType(String[] memberNames, Object[] template,
+            HDF5CompoundMappingHints hints);
 
     /**
      * Returns the compound type for the given compound data set in <var>objectPath</var>, mapping

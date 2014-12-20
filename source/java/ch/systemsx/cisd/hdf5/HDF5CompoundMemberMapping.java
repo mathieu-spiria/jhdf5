@@ -90,19 +90,6 @@ import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
  * 
  * A simpler form is to let JHDF5 infer the mapping between fields in the Java object and members of
  * the compound data type, see {@link #inferMapping(Class)} and {@link #inferMapping(Class, Map)}
- * <p>
- * The following Java types can be mapped to compound members:
- * <ul>
- * <li>Primitive values</li>
- * <li>Primitive arrays</li>
- * <li>Primitive matrices (except <code>char[][]</code>)</li>
- * <li>{@link String}</li>
- * <li>{@link java.util.BitSet}</li>
- * <li>{@link java.util.Date}</li>
- * <li>{@link HDF5EnumerationValue}</li>
- * <li>{@link HDF5EnumerationValueArray}</li>
- * <li>Sub-classes of {@link MDAbstractArray}</li>
- * </ul>
  * 
  * @author Bernd Rinn
  */
@@ -118,7 +105,7 @@ public final class HDF5CompoundMemberMapping
 
     private Class<?> memberClassOrNull;
 
-    private String enumTypeName;
+    private String enumTypeNameOrNull;
 
     private int memberTypeLength;
 
@@ -239,7 +226,7 @@ public final class HDF5CompoundMemberMapping
      */
     public static HDF5CompoundMemberMapping[] inferMapping(final Class<?> pojoClass)
     {
-        return inferMapping(pojoClass, null);
+        return inferMapping(pojoClass, (HDF5CompoundMappingHints) null);
     }
 
     /**
@@ -297,6 +284,65 @@ public final class HDF5CompoundMemberMapping
     public static HDF5CompoundMemberMapping[] inferMapping(final Class<?> pojoClass,
             final Map<String, HDF5EnumerationType> fieldNameToEnumTypeMapOrNull)
     {
+        return inferMapping(pojoClass,
+                new HDF5CompoundMappingHints().enumTypeMapping(fieldNameToEnumTypeMapOrNull));
+    }
+
+    /**
+     * Returns the inferred compound member mapping for the given <var>pojoClass</var>. This method
+     * honors the annotations {@link CompoundType} and {@link CompoundElement}.
+     * <p>
+     * <em>Note 1:</em> All fields that correspond to members with a dimension (e.g. Strings,
+     * primitive arrays and matrices and objects of type <code>MDXXXArray</code>) need to be
+     * annotated with {@link CompoundElement} specifying their dimensions using
+     * {@link CompoundElement#dimensions()}. Strings can alternatively also be annotated as
+     * <code>CompoundElement.variableLength = true</code>.
+     * <p>
+     * <em>Note 2:</em> <var>pojoClass</var> containing HDF5 enumerations need to have their
+     * {@link HDF5EnumerationType} specified in the <var>fieldNameToEnumTypeMapOrNull</var>. You may
+     * use {@link #inferEnumerationTypeMap(Object, IHDF5EnumTypeRetriever)} to create
+     * <var>fieldNameToEnumTypeMapOrNull</var>.
+     * <p>
+     * <em>Example 1:</em>
+     * 
+     * <pre>
+     * class Record1
+     * {
+     *     &#064;CompoundElement(dimension = 10)
+     *     String s;
+     * 
+     *     float f;
+     * }
+     * </pre>
+     * 
+     * will lead to:
+     * 
+     * <pre>
+     * inferMapping(Record1.class) -> { mapping("s", 10), mapping("f") }
+     * </pre>
+     * 
+     * <em>Example 2:</em>
+     * 
+     * <pre>
+     * &#064;CompoundType(mapAllFields = false)
+     * class Record2
+     * {
+     *     &#064;CompoundElement(memberName = &quot;someString&quot;, dimension = 10)
+     *     String s;
+     * 
+     *     float f;
+     * }
+     * </pre>
+     * 
+     * will lead to:
+     * 
+     * <pre>
+     * inferMapping(Record2.class) -> { mapping("s", "someString", 10) }
+     * </pre>
+     */
+    public static HDF5CompoundMemberMapping[] inferMapping(final Class<?> pojoClass,
+            final HDF5CompoundMappingHints hintsOrNull)
+    {
         final List<HDF5CompoundMemberMapping> result =
                 new ArrayList<HDF5CompoundMemberMapping>(pojoClass.getDeclaredFields().length);
         final CompoundType ct = pojoClass.getAnnotation(CompoundType.class);
@@ -306,8 +352,7 @@ public final class HDF5CompoundMemberMapping
             for (Field f : c.getDeclaredFields())
             {
                 final HDF5EnumerationType enumTypeOrNull =
-                        (fieldNameToEnumTypeMapOrNull != null) ? fieldNameToEnumTypeMapOrNull.get(f
-                                .getName()) : null;
+                        (hintsOrNull != null) ? hintsOrNull.tryGetEnumType(f.getName()) : null;
                 final CompoundElement e = f.getAnnotation(CompoundElement.class);
                 if (e != null)
                 {
@@ -318,8 +363,12 @@ public final class HDF5CompoundMemberMapping
                                     .typeVariant())));
                 } else if (includeAllFields)
                 {
+                    final boolean variableLength =
+                            (hintsOrNull == null) ? false : hintsOrNull
+                                    .isUseVariableLengthStrings();
                     result.add(new HDF5CompoundMemberMapping(f.getName(), f, f.getType(), f
-                            .getName(), enumTypeOrNull, new int[0], false));
+                            .getName(), enumTypeOrNull, null, new int[0], false, variableLength,
+                            null));
                 }
             }
         }
@@ -337,10 +386,14 @@ public final class HDF5CompoundMemberMapping
     }
 
     /**
+     * This method is using <var>pojo</var> to infer length and dimension information.
+     * 
+     * @param pojo The popo to infer member names, length and dimension information from.
+     * @param fieldNameToEnumTypeMapOrNull The map to get member name to enumeration type mapping
+     *            from.
      * @param useVariableLengthStringTypes If <code>true</code>, use variable-length string types
      *            for all strings in the <var>pojo</var> template.
      * @see #inferMapping(Class, Map) <p>
-     *      This method is using <var>pojo</var> to infer length and dimension information.
      */
     public static HDF5CompoundMemberMapping[] inferMapping(final Object pojo,
             final Map<String, HDF5EnumerationType> fieldNameToEnumTypeMapOrNull,
@@ -403,11 +456,32 @@ public final class HDF5CompoundMemberMapping
     }
 
     /**
+     * This method is using <var>pojo</var> to infer length and dimension information.
+     * 
+     * @param pojo The popo arrau to infer member names, length and dimension information from.
+     * @param fieldNameToEnumTypeMapOrNull The map to get member name to enumeration type mapping
+     *            from.
      * @see #inferMapping(Class, Map) <p>
-     *      This method is using <var>pojo</var> to infer length and dimension information.
      */
     public static HDF5CompoundMemberMapping[] inferMapping(final Object[] pojo,
             final Map<String, HDF5EnumerationType> fieldNameToEnumTypeMapOrNull)
+    {
+        return inferMapping(pojo, fieldNameToEnumTypeMapOrNull);
+    }
+
+    /**
+     * This method is using <var>pojo</var> to infer length and dimension information.
+     * 
+     * @param pojo The popo arrau to infer member names, length and dimension information from.
+     * @param fieldNameToEnumTypeMapOrNull The map to get member name to enumeration type mapping
+     *            from.
+     * @param useVariableLengthStringTypes If <code>true</code>, use variable-length string types
+     *            for all strings in the <var>pojo</var> template.
+     * @see #inferMapping(Class, Map) <p>
+     */
+    public static HDF5CompoundMemberMapping[] inferMapping(final Object[] pojo,
+            final Map<String, HDF5EnumerationType> fieldNameToEnumTypeMapOrNull,
+            final boolean useVariableLengthStringTypes)
     {
         final HDF5CompoundMemberMapping[] result =
                 inferMapping(pojo.getClass().getComponentType(), fieldNameToEnumTypeMapOrNull);
@@ -421,14 +495,20 @@ public final class HDF5CompoundMemberMapping
                     if (memberClass == String.class)
                     {
                         ReflectionUtils.ensureAccessible(m.fieldOrNull);
-                        int maxLen = 0;
-                        for (int i = 0; i < pojo.length; ++i)
+                        if (useVariableLengthStringTypes)
                         {
-                            maxLen =
-                                    Math.max(maxLen,
-                                            ((String) (m.fieldOrNull.get(pojo[i]))).length());
+                            m.variableLength(true);
+                        } else
+                        {
+                            int maxLen = 0;
+                            for (int i = 0; i < pojo.length; ++i)
+                            {
+                                maxLen =
+                                        Math.max(maxLen,
+                                                ((String) (m.fieldOrNull.get(pojo[i]))).length());
+                            }
+                            m.length(maxLen);
                         }
-                        m.length(maxLen);
                     } else if (memberClass.isArray())
                     {
                         if (memberClass.isArray() && pojo.length > 0)
@@ -508,8 +588,36 @@ public final class HDF5CompoundMemberMapping
      */
     public static HDF5CompoundMemberMapping[] inferMapping(final Map<String, Object> compoundMap)
     {
+        return inferMapping(compoundMap, (HDF5CompoundMappingHints) null);
+    }
+
+    /**
+     * Returns the inferred compound member mapping for the given <var>compoundMap</var>. All
+     * entries that correspond to members with length or dimension information take this information
+     * from the values supplied.
+     * <p>
+     * <em>Example:</em>
+     * 
+     * <pre>
+     * Map&lt;String, Object&gt; mw = new HashMap&lt;String, Object&gt;();
+     * mw.put(&quot;date&quot;, new Date());
+     * mw.put(&quot;temperatureInDegreeCelsius&quot;, 19.5f);
+     * mw.put(&quot;voltagesInMilliVolts&quot;, new double[][] { 1, 2, 3 }, { 4, 5, 6 } });
+     * </pre>
+     * 
+     * will lead to:
+     * 
+     * <pre>
+     * inferMapping(mw) -> { mapping("date").memberClass(Date.class), 
+     *                       mapping("temperatureInDegreeCelsius").memberClass(float.class), 
+     *                       mapping("voltagesInMilliVolts").memberClass(double[][].class).dimensions(new int[] { 3, 3 } }
+     * </pre>
+     */
+    public static HDF5CompoundMemberMapping[] inferMapping(final Map<String, Object> compoundMap,
+            final HDF5CompoundMappingHints hintsOrNull)
+    {
         final List<HDF5CompoundMemberMapping> result =
-                inferMapping(compoundMap.size(), compoundMap.entrySet());
+                inferMapping(compoundMap.size(), compoundMap.entrySet(), hintsOrNull);
         Collections.sort(result, new Comparator<HDF5CompoundMemberMapping>()
             {
                 @Override
@@ -544,12 +652,39 @@ public final class HDF5CompoundMemberMapping
     public static HDF5CompoundMemberMapping[] inferMapping(final List<String> memberNames,
             final List<?> memberValues)
     {
+        return inferMapping(memberNames, memberValues, (HDF5CompoundMappingHints) null);
+    }
+
+    /**
+     * Returns the inferred compound member mapping for the given <var>memberNames</var> and
+     * <var>memberValues</var>. All entries that correspond to members with length or dimension
+     * information take this information from the values supplied.
+     * <p>
+     * <em>Example:</em>
+     * 
+     * <pre>
+     * List&lt;String&gt; n = Arrays.asList("date", "temperatureInDegreeCelsius", "voltagesInMilliVolts");
+     * List&lt;Object&gt; l = Arrays. &lt;Object&gt;asList(new Date(), 19.5f, new double[][] { 1, 2, 3 }, { 4, 5, 6 } });
+     * </pre>
+     * 
+     * will lead to:
+     * 
+     * <pre>
+     * inferMapping(n, l) -> { mapping("date").memberClass(Date.class), 
+     *                       mapping("temperatureInDegreeCelsius").memberClass(float.class), 
+     *                       mapping("voltagesInMilliVolts").memberClass(double[][].class).dimensions(new int[] { 3, 3 } }
+     * </pre>
+     */
+    public static HDF5CompoundMemberMapping[] inferMapping(final List<String> memberNames,
+            final List<?> memberValues, final HDF5CompoundMappingHints hintsOrNull)
+    {
         assert memberNames != null;
         assert memberValues != null;
         assert memberNames.size() == memberValues.size();
 
         final List<HDF5CompoundMemberMapping> result =
-                inferMapping(memberNames.size(), createEntryIterable(memberNames, memberValues));
+                inferMapping(memberNames.size(), createEntryIterable(memberNames, memberValues),
+                        hintsOrNull);
         return result.toArray(new HDF5CompoundMemberMapping[result.size()]);
     }
 
@@ -576,12 +711,39 @@ public final class HDF5CompoundMemberMapping
     public static HDF5CompoundMemberMapping[] inferMapping(final String[] memberNames,
             final Object[] memberValues)
     {
+        return inferMapping(memberNames, memberValues, (HDF5CompoundMappingHints) null);
+    }
+
+    /**
+     * Returns the inferred compound member mapping for the given <var>memberNames</var> and
+     * <var>memberValues</var>. All entries that correspond to members with length or dimension
+     * information take this information from the values supplied.
+     * <p>
+     * <em>Example:</em>
+     * 
+     * <pre>
+     * String[] n = new String[] { "date", "temperatureInDegreeCelsius", "voltagesInMilliVolts" };
+     * Object[] l = new Object[] { new Date(), 19.5f, new double[][] { 1, 2, 3 }, { 4, 5, 6 } } };
+     * </pre>
+     * 
+     * will lead to:
+     * 
+     * <pre>
+     * inferMapping(n, l) -> { mapping("date").memberClass(Date.class), 
+     *                       mapping("temperatureInDegreeCelsius").memberClass(float.class), 
+     *                       mapping("voltagesInMilliVolts").memberClass(double[][].class).dimensions(new int[] { 3, 3 } }
+     * </pre>
+     */
+    public static HDF5CompoundMemberMapping[] inferMapping(final String[] memberNames,
+            final Object[] memberValues, final HDF5CompoundMappingHints hints)
+    {
         assert memberNames != null;
         assert memberValues != null;
         assert memberNames.length == memberValues.length;
 
         final List<HDF5CompoundMemberMapping> result =
-                inferMapping(memberNames.length, createEntryIterable(memberNames, memberValues));
+                inferMapping(memberNames.length, createEntryIterable(memberNames, memberValues),
+                        hints);
         return result.toArray(new HDF5CompoundMemberMapping[result.size()]);
     }
 
@@ -694,7 +856,8 @@ public final class HDF5CompoundMemberMapping
     }
 
     private static List<HDF5CompoundMemberMapping> inferMapping(final int size,
-            final Iterable<Map.Entry<String, Object>> entries)
+            final Iterable<Map.Entry<String, Object>> entries,
+            final HDF5CompoundMappingHints hintsOrNull)
     {
         final List<HDF5CompoundMemberMapping> result =
                 new ArrayList<HDF5CompoundMemberMapping>(size);
@@ -733,6 +896,8 @@ public final class HDF5CompoundMemberMapping
             } else
             {
                 HDF5EnumerationType enumTypeOrNull = null;
+                final boolean variableLength =
+                        (hintsOrNull == null) ? false : hintsOrNull.isUseVariableLengthStrings();
                 final int[] dimensions;
                 if (memberClass == HDF5EnumerationValue.class)
                 {
@@ -745,7 +910,7 @@ public final class HDF5CompoundMemberMapping
                         { ((HDF5EnumerationValueArray) memberValue).getLength() };
                 } else if (memberClass == String.class)
                 {
-                    dimensions = new int[]
+                    dimensions = (variableLength) ? new int[0] : new int[]
                         { ((String) memberValue).length() };
                 } else if (memberClass == BitSet.class)
                 {
@@ -757,7 +922,8 @@ public final class HDF5CompoundMemberMapping
                     dimensions = new int[0];
                 }
                 result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
-                        enumTypeOrNull, null, dimensions, false, variantOrNull));
+                        enumTypeOrNull, null, dimensions, false, variableLength, variantOrNull)
+                        .hints(hintsOrNull));
             }
         }
         return result;
@@ -884,26 +1050,6 @@ public final class HDF5CompoundMemberMapping
      * that differs from the <var>fieldName</var> and the maximal length in case of a String member.
      * 
      * @param fieldName The name of the field in the <var>clazz</var>
-     * @param fieldOrNull The {@link Field} in the compound class (may be <code>null</code>)
-     *            <code>null</code>)
-     * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
-     * @param memberName The name of the member in the HDF5 compound data type.
-     * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
-     * @param unsigned If <code>true</code>, the type will be mapped to an unsigned integer type.
-     */
-    private HDF5CompoundMemberMapping(String fieldName, Field fieldOrNull,
-            Class<?> memberClassOrNull, String memberName, HDF5EnumerationType enumTypeOrNull,
-            int[] memberTypeDimensions, boolean unsigned)
-    {
-        this(fieldName, fieldOrNull, memberClassOrNull, memberName, enumTypeOrNull, null,
-                memberTypeDimensions, -1, unsigned, false, null);
-    }
-
-    /**
-     * A {@link HDF5CompoundMemberMapping} that allows to provide an explicit <var>memberName</var>
-     * that differs from the <var>fieldName</var> and the maximal length in case of a String member.
-     * 
-     * @param fieldName The name of the field in the <var>clazz</var>
      * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
      * @param memberName The name of the member in the HDF5 compound data type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
@@ -923,17 +1069,17 @@ public final class HDF5CompoundMemberMapping
      * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
      * @param memberName The name of the member in the HDF5 compound data type.
      * @param enumTypeOrNull The HDF5 enumeration type of this member.
-     * @param enumTypeName The name to be used for the HDF5 enumeration type.
+     * @param enumTypeNameOrNull The name to be used for the HDF5 enumeration type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
      * @param unsigned If <code>true</code>, the type will be mapped to an unsigned integer type.
      * @param typeVariantOrNull The data type variant of this mapping, or <code>null</code> if this
      *            mapping has no type variant.
      */
     private HDF5CompoundMemberMapping(String fieldName, Class<?> memberClassOrNull,
-            String memberName, HDF5EnumerationType enumTypeOrNull, String enumTypeName,
+            String memberName, HDF5EnumerationType enumTypeOrNull, String enumTypeNameOrNull,
             int[] memberTypeDimensions, boolean unsigned, HDF5DataTypeVariant typeVariantOrNull)
     {
-        this(fieldName, null, memberClassOrNull, memberName, enumTypeOrNull, enumTypeName,
+        this(fieldName, null, memberClassOrNull, memberName, enumTypeOrNull, enumTypeNameOrNull,
                 memberTypeDimensions, -1, unsigned, false, typeVariantOrNull);
     }
 
@@ -942,22 +1088,23 @@ public final class HDF5CompoundMemberMapping
      * that differs from the <var>fieldName</var> and the maximal length in case of a String member.
      * 
      * @param fieldName The name of the field in the <var>clazz</var>
-     * @param fieldOrNull The {@link Field} in the compound class (may be <code>null</code>)
      * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
      * @param memberName The name of the member in the HDF5 compound data type.
      * @param enumTypeOrNull The HDF5 enumeration type of this member.
-     * @param enumTypeName The name to be used for the HDF5 enumeration type.
+     * @param enumTypeNameOrNull The name to be used for the HDF5 enumeration type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
      * @param unsigned If <code>true</code>, the type will be mapped to an unsigned integer type.
+     * @param variableLength If <code>true</code>, the type will be mapped to a variable-length
+     *            type.
      * @param typeVariantOrNull The data type variant of this mapping, or <code>null</code> if this
      *            mapping has no type variant.
      */
-    private HDF5CompoundMemberMapping(String fieldName, Field fieldOrNull,
-            Class<?> memberClassOrNull, String memberName, HDF5EnumerationType enumTypeOrNull,
-            String enumTypeName, int[] memberTypeDimensions, boolean unsigned,
-            boolean variableLength, HDF5DataTypeVariant typeVariantOrNull)
+    private HDF5CompoundMemberMapping(String fieldName, Class<?> memberClassOrNull,
+            String memberName, HDF5EnumerationType enumTypeOrNull, String enumTypeNameOrNull,
+            int[] memberTypeDimensions, boolean unsigned, boolean variableLength,
+            HDF5DataTypeVariant typeVariantOrNull)
     {
-        this(fieldName, fieldOrNull, memberClassOrNull, memberName, enumTypeOrNull, enumTypeName,
+        this(fieldName, null, memberClassOrNull, memberName, enumTypeOrNull, enumTypeNameOrNull,
                 memberTypeDimensions, -1, unsigned, variableLength, typeVariantOrNull);
     }
 
@@ -969,8 +1116,35 @@ public final class HDF5CompoundMemberMapping
      * @param fieldOrNull The {@link Field} in the compound class (may be <code>null</code>)
      * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
      * @param memberName The name of the member in the HDF5 compound data type.
+     * @param enumTypeOrNull The HDF5 enumeration type of this member.
+     * @param enumTypeNameOrNull The name to be used for the HDF5 enumeration type.
+     * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
+     * @param unsigned If <code>true</code>, the type will be mapped to an unsigned integer type.
+     * @param variableLength If <code>true</code>, the type will be mapped to a variable-length
+     *            type.
+     * @param typeVariantOrNull The data type variant of this mapping, or <code>null</code> if this
+     *            mapping has no type variant.
+     */
+    private HDF5CompoundMemberMapping(String fieldName, Field fieldOrNull,
+            Class<?> memberClassOrNull, String memberName, HDF5EnumerationType enumTypeOrNull,
+            String enumTypeNameOrNull, int[] memberTypeDimensions, boolean unsigned,
+            boolean variableLength, HDF5DataTypeVariant typeVariantOrNull)
+    {
+        this(fieldName, fieldOrNull, memberClassOrNull, memberName, enumTypeOrNull,
+                enumTypeNameOrNull, memberTypeDimensions, -1, unsigned, variableLength,
+                typeVariantOrNull);
+    }
+
+    /**
+     * A {@link HDF5CompoundMemberMapping} that allows to provide an explicit <var>memberName</var>
+     * that differs from the <var>fieldName</var> and the maximal length in case of a String member.
+     * 
+     * @param fieldName The name of the field in the <var>clazz</var>
+     * @param fieldOrNull The {@link Field} in the compound class (may be <code>null</code>)
+     * @param memberClassOrNull The class of the member, if a map is used as the compound pojo.
+     * @param memberName The name of the member in the HDF5 compound data type.
      * @param enumTypeOrNull The enumeation type (only for enumerations, obviously).
-     * @param enumTypeName The name of the committed HDF5 enum type.
+     * @param enumTypeNameOrNull The name of the committed HDF5 enum type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
      * @param unsigned If <code>true</code>, the type will be mapped to an unsigned integer type.
      * @param variableLength If <code>true</code>, the type will be mapped to a variable-length
@@ -979,7 +1153,7 @@ public final class HDF5CompoundMemberMapping
      */
     private HDF5CompoundMemberMapping(String fieldName, Field fieldOrNull,
             Class<?> memberClassOrNull, String memberName, HDF5EnumerationType enumTypeOrNull,
-            String enumTypeName, int[] memberTypeDimensions, int storageMemberTypeId,
+            String enumTypeNameOrNull, int[] memberTypeDimensions, int storageMemberTypeId,
             boolean unsigned, boolean variableLength, HDF5DataTypeVariant typeVariantOrNull)
     {
         this.fieldOrNull = fieldOrNull;
@@ -987,7 +1161,7 @@ public final class HDF5CompoundMemberMapping
         this.memberClassOrNull = memberClassOrNull;
         this.memberName = memberName;
         this.enumTypeOrNull = enumTypeOrNull;
-        this.enumTypeName = enumTypeName;
+        this.enumTypeNameOrNull = enumTypeNameOrNull;
         this.memberTypeDimensions = memberTypeDimensions;
         this.memberTypeLength = MDAbstractArray.getLength(memberTypeDimensions);
         this.storageDataTypeId = storageMemberTypeId;
@@ -1017,17 +1191,16 @@ public final class HDF5CompoundMemberMapping
      * Sets the name to be used for the comitted HDF5 datatype (for Java enum types only, overriding
      * the simple class name which is used by default as the type name.
      */
-    @SuppressWarnings("hiding")
     public HDF5CompoundMemberMapping enumTypeName(String enumTypeName)
     {
-        this.enumTypeName =
+        this.enumTypeNameOrNull =
                 (enumTypeName != null && enumTypeName.length() == 0) ? null : enumTypeName;
         return this;
     }
 
-    String getEnumTypeName()
+    String tryGetEnumTypeName()
     {
-        return enumTypeName;
+        return enumTypeNameOrNull;
     }
 
     Field tryGetField(Class<?> clazz, boolean skipChecks) throws HDF5JavaException

@@ -81,6 +81,17 @@ public class HDF5CompoundMappingHints
     }
 
     /**
+     * Replaces the enum type mapping of this hints object.
+     * 
+     * @return The hint object.
+     */
+    public HDF5CompoundMappingHints enumTypeMapping(Map<String, HDF5EnumerationType> enumTypeMapping)
+    {
+        enumerationTypeMap = enumTypeMapping;
+        return this;
+    }
+
+    /**
      * Returns the {@link HDF5EnumerationType} for the given <var>memberName</var>, or
      * <code>null</code>, if no mapping is available for this member.
      */
