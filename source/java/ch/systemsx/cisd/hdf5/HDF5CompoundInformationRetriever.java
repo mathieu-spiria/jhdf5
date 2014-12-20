@@ -348,9 +348,17 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     public <T> HDF5CompoundType<T> getInferredType(String name, Class<T> pojoClass,
             HDF5CompoundMappingHints hints)
     {
+        return getInferredType(name, pojoClass, hints, true);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getInferredType(String name, Class<T> pojoClass,
+            HDF5CompoundMappingHints hints, boolean requireTypesToBeEqual)
+    {
         return getType(
                 name,
                 pojoClass,
+                requireTypesToBeEqual,
                 addEnumTypes(HDF5CompoundMemberMapping.addHints(
                         HDF5CompoundMemberMapping.inferMapping(pojoClass), hints)));
     }
@@ -375,10 +383,17 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     }
 
     @Override
+    public <T> HDF5CompoundType<T> getInferredType(String name, T pojo,
+            HDF5CompoundMappingHints hints)
+    {
+        return getInferredType(name, pojo, hints, true);
+    }
+
+    @Override
     @SuppressWarnings(
         { "unchecked", "rawtypes" })
     public <T> HDF5CompoundType<T> getInferredType(String name, T pojo,
-            HDF5CompoundMappingHints hints)
+            HDF5CompoundMappingHints hints, boolean requireTypesToBeEqual)
     {
         if (Map.class.isInstance(pojo))
         {
@@ -388,15 +403,17 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             return (HDF5CompoundType<T>) getType(
                     compoundTypeName,
                     Map.class,
+                    requireTypesToBeEqual,
                     addEnumTypes(HDF5CompoundMemberMapping.addHints(
                             HDF5CompoundMemberMapping.inferMapping((Map) pojo), hints)));
         } else
         {
             final Class<T> pojoClass = (Class<T>) pojo.getClass();
-            return getType(name, pojoClass, addEnumTypes(HDF5CompoundMemberMapping.addHints(
-                    HDF5CompoundMemberMapping.inferMapping(pojo, HDF5CompoundMemberMapping
-                            .inferEnumerationTypeMap(pojo, enumTypeRetriever),
-                            HDF5CompoundMappingHints.isUseVariableLengthStrings(hints)), hints)));
+            return getType(name, pojoClass, requireTypesToBeEqual,
+                    addEnumTypes(HDF5CompoundMemberMapping.addHints(HDF5CompoundMemberMapping
+                            .inferMapping(pojo, HDF5CompoundMemberMapping.inferEnumerationTypeMap(
+                                    pojo, enumTypeRetriever), HDF5CompoundMappingHints
+                                    .isUseVariableLengthStrings(hints)), hints)));
         }
     }
 
@@ -413,10 +430,17 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     }
 
     @Override
+    public <T> HDF5CompoundType<T> getInferredType(String name, T[] pojo,
+            HDF5CompoundMappingHints hints)
+    {
+        return getInferredType(name, pojo, hints, true);
+    }
+    
+    @Override
     @SuppressWarnings(
         { "unchecked", "rawtypes" })
     public <T> HDF5CompoundType<T> getInferredType(String name, T[] pojo,
-            HDF5CompoundMappingHints hints)
+            HDF5CompoundMappingHints hints, boolean requireTypesToBeEqual)
     {
         final Class<?> componentType = pojo.getClass().getComponentType();
         if (pojo.length == 0)
@@ -430,12 +454,13 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                             ((Map) pojo[0]).keySet(), true) : name;
             return (HDF5CompoundType<T>) getType(
                     compoundTypeName,
-                    Map.class,
+                    Map.class, 
+                    requireTypesToBeEqual,
                     addEnumTypes(HDF5CompoundMemberMapping.addHints(
                             HDF5CompoundMemberMapping.inferMapping((Map) pojo[0]), hints)));
         } else
         {
-            return (HDF5CompoundType<T>) getType(name, componentType,
+            return (HDF5CompoundType<T>) getType(name, componentType, requireTypesToBeEqual,
                     addEnumTypes(HDF5CompoundMemberMapping.addHints(HDF5CompoundMemberMapping
                             .inferMapping(pojo, HDF5CompoundMemberMapping.inferEnumerationTypeMap(
                                     pojo, enumTypeRetriever),
@@ -492,9 +517,16 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public HDF5CompoundType<List<?>> getInferredType(String name, List<String> memberNames,
             List<?> data, HDF5CompoundMappingHints hints)
+    {
+        return getInferredType(name, memberNames, data, hints, true);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public HDF5CompoundType<List<?>> getInferredType(String name, List<String> memberNames,
+            List<?> data, HDF5CompoundMappingHints hints, boolean requireTypesToBeEqual)
     {
         final String compoundTypeName =
                 (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(memberNames,
@@ -502,6 +534,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
         final HDF5CompoundType<?> type =
                 getType(compoundTypeName,
                         List.class,
+                        requireTypesToBeEqual,
                         HDF5CompoundMemberMapping.addHints(
                                 HDF5CompoundMemberMapping.inferMapping(memberNames, data), hints));
         return (HDF5CompoundType<List<?>>) type;
@@ -548,10 +581,17 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     public HDF5CompoundType<Object[]> getInferredType(String name, String[] memberNames,
             Object[] data, HDF5CompoundMappingHints hints)
     {
+        return getInferredType(name, memberNames, data, hints, true);
+    }
+
+    @Override
+    public HDF5CompoundType<Object[]> getInferredType(String name, String[] memberNames,
+            Object[] data, HDF5CompoundMappingHints hints, boolean requireTypesToBeEqual)
+    {
         final String compoundTypeName =
                 (name == null) ? HDF5CompoundMemberMapping.constructCompoundTypeName(
                         Arrays.asList(memberNames), false) : name;
-        return getType(compoundTypeName, Object[].class,
+        return getType(compoundTypeName, Object[].class, requireTypesToBeEqual,
                 HDF5CompoundMemberMapping.inferMapping(memberNames, data, hints));
     }
 
@@ -566,19 +606,33 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     public <T> HDF5CompoundType<T> getDataSetType(String objectPath, Class<T> pojoClass,
             HDF5CompoundMemberMapping... members)
     {
+        return getDataSetType(objectPath, pojoClass, true, members);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getDataSetType(String objectPath, Class<T> pojoClass,
+            boolean requireTypesToBeEqual, HDF5CompoundMemberMapping... members)
+    {
         baseReader.checkOpen();
         final CompoundTypeInformation cpdTypeInfo =
                 getFullCompoundDataSetInformation(objectPath, DataTypeInfoOptions.MINIMAL,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass, true,
-                        createByteifyers(pojoClass, cpdTypeInfo, members));
+                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                        requireTypesToBeEqual, createByteifyers(pojoClass, cpdTypeInfo, members));
         return typeForClass;
     }
 
     @Override
     public <T> HDF5CompoundType<T> getDataSetType(String objectPath, Class<T> pojoClass,
             HDF5CompoundMappingHints hints)
+    {
+        return getDataSetType(objectPath, pojoClass, hints, true);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getDataSetType(String objectPath, Class<T> pojoClass,
+            HDF5CompoundMappingHints hints, boolean requireTypesToBeEqual)
     {
         baseReader.checkOpen();
         // We need to get ALL information for the type as otherwise the mapping might be wrong (due
@@ -587,8 +641,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 getFullCompoundDataSetInformation(objectPath, DataTypeInfoOptions.ALL,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass, true,
-                        createByteifyers(pojoClass, cpdTypeInfo, hints));
+                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                        requireTypesToBeEqual, createByteifyers(pojoClass, cpdTypeInfo, hints));
         return typeForClass;
     }
 
@@ -618,12 +672,21 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
             Class<T> pojoClass, HDF5CompoundMappingHints hints,
             DataTypeInfoOptions dataTypeInfoOptions)
     {
+        return getAttributeType(objectPath, attributeName, pojoClass, hints, dataTypeInfoOptions,
+                true);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getAttributeType(String objectPath, String attributeName,
+            Class<T> pojoClass, HDF5CompoundMappingHints hints,
+            DataTypeInfoOptions dataTypeInfoOptions, boolean requireTypesToBeEqual)
+    {
         final CompoundTypeInformation cpdTypeInfo =
                 getFullCompoundAttributeInformation(objectPath, attributeName, dataTypeInfoOptions,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass, true,
-                        createByteifyers(pojoClass, cpdTypeInfo, hints));
+                getType(cpdTypeInfo.name, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                        requireTypesToBeEqual, createByteifyers(pojoClass, cpdTypeInfo, hints));
         return typeForClass;
     }
 
@@ -657,6 +720,14 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
     public <T> HDF5CompoundType<T> getNamedType(String dataTypeName, Class<T> pojoClass,
             HDF5CompoundMappingHints hints, DataTypeInfoOptions dataTypeInfoOptions)
     {
+        return getNamedType(dataTypeName, pojoClass, hints, dataTypeInfoOptions, true);
+    }
+
+    @Override
+    public <T> HDF5CompoundType<T> getNamedType(String dataTypeName, Class<T> pojoClass,
+            HDF5CompoundMappingHints hints, DataTypeInfoOptions dataTypeInfoOptions,
+            boolean requireTypesToBeEqual)
+    {
         final String dataTypePath =
                 HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX,
                         baseReader.houseKeepingNameSuffix, dataTypeName);
@@ -664,8 +735,8 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 getFullCompoundDataTypeInformation(dataTypePath, dataTypeInfoOptions,
                         baseReader.fileRegistry);
         final HDF5CompoundType<T> typeForClass =
-                getType(dataTypeName, cpdTypeInfo.compoundDataTypeId, pojoClass, true,
-                        createByteifyers(pojoClass, cpdTypeInfo, hints));
+                getType(dataTypeName, cpdTypeInfo.compoundDataTypeId, pojoClass,
+                        requireTypesToBeEqual, createByteifyers(pojoClass, cpdTypeInfo, hints));
         return typeForClass;
     }
 

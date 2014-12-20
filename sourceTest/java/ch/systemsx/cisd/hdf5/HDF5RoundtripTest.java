@@ -8306,6 +8306,17 @@ public class HDF5RoundtripTest
         assertEquals(recordWritten.getI(), recordRead.getI());
         assertEquals(recordWritten.getD(), recordRead.getD());
         assertEquals(recordWritten.getS(), recordRead.getS());
+        final HDF5CompoundType<SimpleRecord> type2 =
+                reader.compound().getInferredType("cpd", SimpleRecord.class, null, false);
+        assertFalse(type2.isMappingIncomplete());
+        assertFalse(type2.isDiskRepresentationIncomplete());
+        assertFalse(type2.isMemoryRepresentationIncomplete());
+        type2.checkMappingComplete();
+        final SimpleRecord recordRead2 = reader.compound().read("cpd", type2);
+        assertEquals(recordWritten.getF(), recordRead2.getF());
+        assertEquals(recordWritten.getI(), recordRead2.getI());
+        assertEquals(recordWritten.getD(), recordRead2.getD());
+        assertEquals(recordWritten.getS(), recordRead2.getS());
         reader.close();
     }
 
