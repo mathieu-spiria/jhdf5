@@ -33,7 +33,7 @@ import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.EnumReturnType;
-import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for
@@ -74,7 +74,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
             final HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull,
             HDF5EnumerationType compoundMemberInfoEnumTypeOrNull, Class<?> memberClazz,
-            final int index, final int offset, int memOffset, final FileInfoProvider fileInfoProvider)
+            final int index, final int offset, int memOffset, final IFileAccessProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         HDF5EnumerationType enumTypeOrNull =

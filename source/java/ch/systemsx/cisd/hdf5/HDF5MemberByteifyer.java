@@ -52,19 +52,21 @@ abstract class HDF5MemberByteifyer
             boolean isVariableLengthType, HDF5DataTypeVariant typeVariantOrNull)
     {
         this(fieldOrNull, memberName, size, offset, memOffset, CharacterEncoding.ASCII, size,
-                isVariableLengthType, typeVariantOrNull);
+                isVariableLengthType, false, typeVariantOrNull);
     }
 
     HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int offset, int memOffset,
-            CharacterEncoding encoding, int maxCharacters, boolean isVariableLengthType)
+            CharacterEncoding encoding, int maxCharacters, boolean isVariableLengthType,
+            boolean isReferenceType)
     {
         this(fieldOrNull, memberName, size, offset, memOffset, encoding, maxCharacters,
-                isVariableLengthType, HDF5DataTypeVariant.NONE);
+                isVariableLengthType, isReferenceType, HDF5DataTypeVariant.NONE);
     }
 
     private HDF5MemberByteifyer(Field fieldOrNull, String memberName, int size, int offset,
             int memOffset, CharacterEncoding encoding, int maxCharacters,
-            boolean isVariableLengthType, HDF5DataTypeVariant typeVariantOrNull)
+            boolean isVariableLengthType, boolean isReferenceType,
+            HDF5DataTypeVariant typeVariantOrNull)
     {
         this.isVariableLengthType = isVariableLengthType;
         this.fieldOrNull = fieldOrNull;
@@ -73,6 +75,9 @@ abstract class HDF5MemberByteifyer
         if (isVariableLengthType)
         {
             this.size = HDFNativeData.getMachineWordSize();
+        } else if (isReferenceType)
+        {
+            this.size = HDF5BaseReader.REFERENCE_SIZE_IN_BYTES;
         } else
         {
             this.size = size;

@@ -113,6 +113,8 @@ public final class HDF5CompoundMemberMapping
 
     private boolean variableLength;
 
+    private boolean reference;
+
     private int[] memberTypeDimensions;
 
     private HDF5EnumerationType enumTypeOrNull;
@@ -130,7 +132,7 @@ public final class HDF5CompoundMemberMapping
      */
     public static HDF5CompoundMemberMapping mapping(String memberName)
     {
-        return new HDF5CompoundMemberMapping(memberName, null, memberName, null, new int[0]);
+        return new HDF5CompoundMemberMapping(memberName);
     }
 
     /**
@@ -145,14 +147,16 @@ public final class HDF5CompoundMemberMapping
      * @param storageDataTypeId The storage data type id of the member, if known, or -1 else
      * @param unsigned If <code>true</code>, map to an unsigned integer type.
      * @param variableLength if <code>true</code>, map to a variable-length string type.
+     * @param reference if <code>true</code>, map to a reference type.
      * @param typeVariantOrNull The data type variant of this mapping or <code>null</code>
      */
     static HDF5CompoundMemberMapping mappingArrayWithStorageId(String fieldName, String memberName,
             Class<?> memberClass, int[] memberDimensions, int storageDataTypeId, boolean unsigned,
-            boolean variableLength, HDF5DataTypeVariant typeVariantOrNull)
+            boolean variableLength, boolean reference, HDF5DataTypeVariant typeVariantOrNull)
     {
         return new HDF5CompoundMemberMapping(fieldName, null, memberClass, memberName, null, null,
-                memberDimensions, storageDataTypeId, unsigned, variableLength, typeVariantOrNull);
+                memberDimensions, storageDataTypeId, unsigned, variableLength, reference,
+                typeVariantOrNull);
     }
 
     /**
@@ -172,7 +176,7 @@ public final class HDF5CompoundMemberMapping
         assert enumType != null;
         return new HDF5CompoundMemberMapping(fieldName, null, HDF5EnumerationValueArray.class,
                 memberName, enumType, null, memberTypeDimensions, storageTypeId, false, false,
-                typeVariantOrNull);
+                false, typeVariantOrNull);
     }
 
     /**
@@ -359,8 +363,8 @@ public final class HDF5CompoundMemberMapping
                     result.add(new HDF5CompoundMemberMapping(f.getName(), f, f.getType(),
                             StringUtils.defaultIfEmpty(e.memberName(), f.getName()),
                             enumTypeOrNull, e.typeName(), e.dimensions(), e.unsigned(), e
-                                    .variableLength(), HDF5DataTypeVariant.unmaskNone(e
-                                    .typeVariant())));
+                                    .variableLength(), e.reference(), HDF5DataTypeVariant
+                                    .unmaskNone(e.typeVariant())));
                 } else if (includeAllFields)
                 {
                     final boolean variableLength =
@@ -368,7 +372,7 @@ public final class HDF5CompoundMemberMapping
                                     .isUseVariableLengthStrings();
                     result.add(new HDF5CompoundMemberMapping(f.getName(), f, f.getType(), f
                             .getName(), enumTypeOrNull, null, new int[0], false, variableLength,
-                            null));
+                            false, null));
                 }
             }
         }
@@ -882,17 +886,17 @@ public final class HDF5CompoundMemberMapping
                     final int leny = Array.getLength(Array.get(memberValue, 0));
                     result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
                             null, null, new int[]
-                                { lenx, leny }, false, variantOrNull));
+                                { lenx, leny }, variantOrNull));
                 } else
                 {
                     result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName,
                             null, null, new int[]
-                                { lenx }, false, variantOrNull));
+                                { lenx }, variantOrNull));
                 }
             } else if (MDAbstractArray.class.isInstance(memberValue))
             {
                 result.add(new HDF5CompoundMemberMapping(memberName, memberClass, memberName, null,
-                        null, ((MDAbstractArray<?>) memberValue).dimensions(), false, variantOrNull));
+                        null, ((MDAbstractArray<?>) memberValue).dimensions(), variantOrNull));
             } else
             {
                 HDF5EnumerationType enumTypeOrNull = null;
@@ -1054,11 +1058,10 @@ public final class HDF5CompoundMemberMapping
      * @param memberName The name of the member in the HDF5 compound data type.
      * @param memberTypeDimensions The dimensions of the member type, or 0 for a scalar value.
      */
-    private HDF5CompoundMemberMapping(String fieldName, Class<?> memberClassOrNull,
-            String memberName, HDF5EnumerationType enumTypeOrNull, int[] memberTypeDimensions)
+    private HDF5CompoundMemberMapping(String fieldName)
     {
-        this(fieldName, null, memberClassOrNull, memberName, enumTypeOrNull, null,
-                memberTypeDimensions, -1, false, false, null);
+        this(fieldName, null, null, fieldName, null, null, new int[0], -1, false, false, false,
+                null);
     }
 
     /**
@@ -1077,10 +1080,10 @@ public final class HDF5CompoundMemberMapping
      */
     private HDF5CompoundMemberMapping(String fieldName, Class<?> memberClassOrNull,
             String memberName, HDF5EnumerationType enumTypeOrNull, String enumTypeNameOrNull,
-            int[] memberTypeDimensions, boolean unsigned, HDF5DataTypeVariant typeVariantOrNull)
+            int[] memberTypeDimensions, HDF5DataTypeVariant typeVariantOrNull)
     {
         this(fieldName, null, memberClassOrNull, memberName, enumTypeOrNull, enumTypeNameOrNull,
-                memberTypeDimensions, -1, unsigned, false, typeVariantOrNull);
+                memberTypeDimensions, -1, false, false, false, typeVariantOrNull);
     }
 
     /**
@@ -1105,7 +1108,7 @@ public final class HDF5CompoundMemberMapping
             HDF5DataTypeVariant typeVariantOrNull)
     {
         this(fieldName, null, memberClassOrNull, memberName, enumTypeOrNull, enumTypeNameOrNull,
-                memberTypeDimensions, -1, unsigned, variableLength, typeVariantOrNull);
+                memberTypeDimensions, -1, unsigned, variableLength, false, typeVariantOrNull);
     }
 
     /**
@@ -1122,16 +1125,17 @@ public final class HDF5CompoundMemberMapping
      * @param unsigned If <code>true</code>, the type will be mapped to an unsigned integer type.
      * @param variableLength If <code>true</code>, the type will be mapped to a variable-length
      *            type.
+     * @param reference If <code>true</code>, the type will be mapped to a reference type. type.
      * @param typeVariantOrNull The data type variant of this mapping, or <code>null</code> if this
      *            mapping has no type variant.
      */
     private HDF5CompoundMemberMapping(String fieldName, Field fieldOrNull,
             Class<?> memberClassOrNull, String memberName, HDF5EnumerationType enumTypeOrNull,
             String enumTypeNameOrNull, int[] memberTypeDimensions, boolean unsigned,
-            boolean variableLength, HDF5DataTypeVariant typeVariantOrNull)
+            boolean variableLength, boolean reference, HDF5DataTypeVariant typeVariantOrNull)
     {
         this(fieldName, fieldOrNull, memberClassOrNull, memberName, enumTypeOrNull,
-                enumTypeNameOrNull, memberTypeDimensions, -1, unsigned, variableLength,
+                enumTypeNameOrNull, memberTypeDimensions, -1, unsigned, variableLength, reference,
                 typeVariantOrNull);
     }
 
@@ -1149,12 +1153,14 @@ public final class HDF5CompoundMemberMapping
      * @param unsigned If <code>true</code>, the type will be mapped to an unsigned integer type.
      * @param variableLength If <code>true</code>, the type will be mapped to a variable-length
      *            string type.
+     * @param reference If <code>true</code>, the type will be mapped to a reference type.
      * @param storageMemberTypeId The storage data type id of member, or -1, if not available
      */
     private HDF5CompoundMemberMapping(String fieldName, Field fieldOrNull,
             Class<?> memberClassOrNull, String memberName, HDF5EnumerationType enumTypeOrNull,
             String enumTypeNameOrNull, int[] memberTypeDimensions, int storageMemberTypeId,
-            boolean unsigned, boolean variableLength, HDF5DataTypeVariant typeVariantOrNull)
+            boolean unsigned, boolean variableLength, boolean reference,
+            HDF5DataTypeVariant typeVariantOrNull)
     {
         this.fieldOrNull = fieldOrNull;
         this.fieldName = fieldName;
@@ -1167,6 +1173,7 @@ public final class HDF5CompoundMemberMapping
         this.storageDataTypeId = storageMemberTypeId;
         this.unsigned = unsigned;
         this.variableLength = variableLength;
+        this.reference = reference;
         if (typeVariantMap.containsKey(typeVariantOrNull))
         {
             this.typeVariantOrNull = typeVariantMap.get(typeVariantOrNull);
@@ -1219,29 +1226,20 @@ public final class HDF5CompoundMemberMapping
         try
         {
             final Field field = clazz.getDeclaredField(fieldName);
-            final Class<?> fieldType = field.getType();
-            final boolean isArray = fieldType.isArray();
-            final boolean isMDArray = MDAbstractArray.class.isAssignableFrom(fieldType);
+            final boolean isArray = isArray(field);
             if (skipChecks == false)
             {
                 if (memberTypeLength > 1)
                 {
 
-                    if (field.getType() != String.class && isArray == false
-                            && field.getType() != java.util.BitSet.class
-                            && field.getType() != HDF5EnumerationValueArray.class
-                            && isMDArray == false)
+                    if (field.getType() != String.class && false == isArray)
                     {
                         throw new HDF5JavaException("Field '" + fieldName + "' of class '"
                                 + clazz.getCanonicalName()
                                 + "' is no String or array, but a length > 1 is given.");
                     }
 
-                } else if (memberTypeLength == 0
-                        && ((field.getType() == String.class && false == variableLength)
-                                && (hintsOrNull != null && false == hintsOrNull
-                                        .isUseVariableLengthStrings()) || isArray || isMDArray || field
-                                .getType() == java.util.BitSet.class))
+                } else if (memberTypeLength == 0 && (isFixedLengthString(field) || isArray))
                 {
                     throw new HDF5JavaException("Field '" + fieldName + "' of class '"
                             + clazz.getCanonicalName()
@@ -1260,6 +1258,20 @@ public final class HDF5CompoundMemberMapping
                 return tryGetField(superClassOrNull, searchClass, skipChecks);
             }
         }
+    }
+
+    private boolean isArray(final Field field)
+    {
+        final Class<?> fieldType = field.getType();
+        return fieldType.isArray() || MDAbstractArray.class.isAssignableFrom(fieldType)
+                || field.getType() == java.util.BitSet.class
+                || field.getType() == HDF5EnumerationValueArray.class;
+    }
+
+    private boolean isFixedLengthString(final Field field)
+    {
+        return (field.getType() == String.class && false == variableLength && false == reference)
+                && (hintsOrNull != null && false == hintsOrNull.isUseVariableLengthStrings());
     }
 
     String getMemberName()
@@ -1381,6 +1393,34 @@ public final class HDF5CompoundMemberMapping
     public boolean isVariableLength()
     {
         return this.variableLength;
+    }
+
+    /**
+     * Sets this field to a reference type. Must be a string.
+     */
+    public HDF5CompoundMemberMapping reference()
+    {
+        this.reference = true;
+        return this;
+    }
+
+    /**
+     * Sets this field to a reference type, if <var>reference</var> is <code>true</code>. Must be a
+     * string.
+     */
+    public HDF5CompoundMemberMapping reference(@SuppressWarnings("hiding")
+    boolean reference)
+    {
+        this.reference = reference;
+        return this;
+    }
+
+    /**
+     * Returns <code>true</code> if this field should be mapped to a refernce type.
+     */
+    public boolean isReference()
+    {
+        return this.reference;
     }
 
     /**

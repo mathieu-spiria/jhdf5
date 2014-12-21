@@ -802,8 +802,19 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 mapping.add(HDF5CompoundMemberMapping.mappingArrayWithStorageId(fieldName,
                         memberName, String.class, new int[]
                             { typeInfo.getElementSize() }, compoundMemberTypeId, false,
-                        typeInfo.isVariableLengthString(), typeInfo.tryGetTypeVariant()));
-
+                        typeInfo.isVariableLengthString(), false, typeInfo.tryGetTypeVariant()));
+            } else if (typeInfo.getDataClass() == HDF5DataClass.REFERENCE)
+            {
+                if (fieldOrNull != null && (fieldOrNull.getType() != String.class)
+                        && (fieldOrNull.getType() != char[].class))
+                {
+                    throw new HDF5JavaException(
+                            "Field of rererence type does not correspond to string or char[] value");
+                }
+                mapping.add(HDF5CompoundMemberMapping.mappingArrayWithStorageId(fieldName,
+                        memberName, String.class, new int[]
+                            { typeInfo.getElementSize() }, compoundMemberTypeId, false,
+                        false, true, typeInfo.tryGetTypeVariant()));
             } else
             {
                 final Class<?> memberClazz;
@@ -816,7 +827,7 @@ abstract class HDF5CompoundInformationRetriever implements IHDF5CompoundInformat
                 }
                 mapping.add(HDF5CompoundMemberMapping.mappingArrayWithStorageId(fieldName,
                         memberName, memberClazz, dimensions, compoundMemberTypeId,
-                        false == compoundMember.getType().isSigned(), false,
+                        false == compoundMember.getType().isSigned(), false, false, 
                         typeInfo.tryGetTypeVariant()));
             }
         }

@@ -29,7 +29,7 @@ import java.lang.reflect.Field;
 
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
-import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
@@ -74,7 +74,7 @@ class HDF5CompoundMemberByteifyerHDF5TimeDurationFactory implements
             HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull,
             HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
-            int memOffset, FileInfoProvider fileInfoProvider)
+            int memOffset, IFileAccessProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final HDF5DataTypeVariant typeVariant =

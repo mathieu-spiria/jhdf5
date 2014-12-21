@@ -1293,7 +1293,7 @@ class HDF5BaseReader
     {
         final HDF5ValueObjectByteifyer<T> objectByteifyer =
                 new HDF5ValueObjectByteifyer<T>(compoundClazz,
-                        new HDF5ValueObjectByteifyer.FileInfoProvider()
+                        new HDF5ValueObjectByteifyer.IFileAccessProvider()
                             {
                                 @Override
                                 public int getBooleanDataTypeId()
@@ -1347,6 +1347,12 @@ class HDF5BaseReader
                                 public int getVariableLengthStringDataTypeId()
                                 {
                                     return variableLengthStringDataTypeId;
+                                }
+
+                                @Override
+                                public byte[] createObjectReference(String referencedObjectPath)
+                                {
+                                    return h5.createObjectReference(fileId, referencedObjectPath);
                                 }
                             }, compoundTypeInfoOrNull, compoundMembers);
         return objectByteifyer;

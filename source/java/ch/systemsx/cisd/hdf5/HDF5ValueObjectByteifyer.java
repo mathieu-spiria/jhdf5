@@ -66,8 +66,8 @@ class HDF5ValueObjectByteifyer<T>
         return (T) new Object[size];
     }
 
-    /** A role that provides some information about the HDF5 file to this byteifyer. */
-    interface FileInfoProvider
+    /** A role that provides direct access to the HDF5 file to this byteifyer. */
+    interface IFileAccessProvider
     {
         public int getBooleanDataTypeId();
 
@@ -82,9 +82,11 @@ class HDF5ValueObjectByteifyer<T>
         public HDF5EnumerationType getEnumType(String[] options);
 
         public CharacterEncoding getCharacterEncoding(int dataTypeId);
+        
+        public byte[] createObjectReference(String referencedObjectPath);
     }
 
-    HDF5ValueObjectByteifyer(Class<T> clazz, FileInfoProvider fileInfoProvider,
+    HDF5ValueObjectByteifyer(Class<T> clazz, IFileAccessProvider fileInfoProvider,
             CompoundTypeInformation compoundTypeInfoOrNull, HDF5CompoundMemberMapping... members)
     {
         byteifyers =

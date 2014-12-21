@@ -361,6 +361,7 @@ public class HDF5RoundtripTest
         test.testCompoundInferStringLength();
         test.testCompoundVariableLengthString();
         test.testCompoundVariableLengthStringUsingHints();
+        test.testCompoundReference();
         test.testCompoundHintVLString();
         test.testClosedCompoundType();
         test.testAnonCompound();
@@ -7855,8 +7856,7 @@ public class HDF5RoundtripTest
                 .getDataClass());
         assertFalse(typeRead.getCompoundMemberInformation()[2].getType().isVariableLengthString());
         assertEquals(10, typeRead.getCompoundMemberInformation()[2].getType().getElementSize());
-        assertEquals(10, typeRead.getCompoundMemberInformation()[2]
-                .getType().getSize());
+        assertEquals(10, typeRead.getCompoundMemberInformation()[2].getType().getSize());
         assertEquals("i2", typeRead.getCompoundMemberInformation()[3].getName());
         assertEquals(HDF5DataClass.INTEGER, typeRead.getCompoundMemberInformation()[3].getType()
                 .getDataClass());
@@ -7884,10 +7884,8 @@ public class HDF5RoundtripTest
                 .getType().getDataClass());
         assertFalse(arrayTypeRead.getCompoundMemberInformation()[2].getType()
                 .isVariableLengthString());
-        assertEquals(10,
-                arrayTypeRead.getCompoundMemberInformation()[2].getType().getElementSize());
-        assertEquals(10,
-                arrayTypeRead.getCompoundMemberInformation()[2].getType().getSize());
+        assertEquals(10, arrayTypeRead.getCompoundMemberInformation()[2].getType().getElementSize());
+        assertEquals(10, arrayTypeRead.getCompoundMemberInformation()[2].getType().getSize());
         assertEquals("i2", arrayTypeRead.getCompoundMemberInformation()[3].getName());
         assertEquals(HDF5DataClass.INTEGER, arrayTypeRead.getCompoundMemberInformation()[3]
                 .getType().getDataClass());
@@ -7899,6 +7897,108 @@ public class HDF5RoundtripTest
         assertEquals(recordArrayWritten[0], recordArrayRead[0]);
         assertEquals(recordArrayWritten[1], recordArrayRead[1]);
 
+        reader.close();
+    }
+
+    static class SimpleRecordWithReference
+    {
+        @CompoundElement(reference = true)
+        String ref;
+
+        SimpleRecordWithReference()
+        {
+        }
+
+        SimpleRecordWithReference(String ref)
+        {
+            this.ref = ref;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((ref == null) ? 0 : ref.hashCode());
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj)
+            {
+                return true;
+            }
+            if (obj == null)
+            {
+                return false;
+            }
+            if (getClass() != obj.getClass())
+            {
+                return false;
+            }
+            SimpleRecordWithReference other = (SimpleRecordWithReference) obj;
+            if (ref == null)
+            {
+                if (other.ref != null)
+                {
+                    return false;
+                }
+            } else if (!ref.equals(other.ref))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "SimpleRecordWithReference [ref=" + ref + "]";
+        }
+    }
+
+    @Test
+    public void testCompoundReference()
+    {
+        final File file = new File(workingDirectory, "compoundReference.h5");
+        file.delete();
+        assertFalse(file.exists());
+        file.deleteOnExit();
+        final IHDF5Writer writer = HDF5Factory.open(file);
+        writer.int32().write("a", 17);
+        writer.float64().write("b", 0.001);
+        writer.compound().write("cpd1", new SimpleRecordWithReference("a"));
+        writer.compound().write("cpd2", new SimpleRecordWithReference("b"));
+        writer.close();
+
+        final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundMemberInformation[] infoFromJavaObjs =
+                HDF5CompoundMemberInformation.create(SimpleRecordWithReference.class, "",
+                        HDF5CompoundMemberMapping.inferMapping(SimpleRecordWithReference.class));
+        assertEquals(1, infoFromJavaObjs.length);
+        assertEquals("ref:REFERENCE(8)", infoFromJavaObjs[0].toString());
+        final HDF5CompoundMemberInformation[] infoFromHDF5Objs =
+                reader.compound().getDataSetInfo("cpd1");
+        assertEquals(1, infoFromHDF5Objs.length);
+        assertEquals("ref:REFERENCE(8)", infoFromHDF5Objs[0].toString());
+        final SimpleRecordWithReference recordRead1 =
+                reader.compound().read("cpd1", SimpleRecordWithReference.class);
+        assertEquals("/a", reader.reference().resolvePath(recordRead1.ref));
+        assertEquals("INTEGER(4):{}", reader.object().getDataSetInformation(recordRead1.ref)
+                .toString());
+        assertEquals(17, reader.int32().read(recordRead1.ref));
+
+        final HDF5CompoundMemberInformation[] info2 = reader.compound().getDataSetInfo("cpd2");
+        assertEquals(1, info2.length);
+        assertEquals("ref:REFERENCE(8)", info2[0].toString());
+        final SimpleRecordWithReference recordRead2 =
+                reader.compound().read("cpd2", SimpleRecordWithReference.class);
+        assertEquals("/b", reader.reference().resolvePath(recordRead2.ref));
+        assertEquals("FLOAT(8):{}", reader.object().getDataSetInformation(recordRead2.ref)
+                .toString());
+        assertEquals(0.001, reader.float64().read(recordRead2.ref));
         reader.close();
     }
 

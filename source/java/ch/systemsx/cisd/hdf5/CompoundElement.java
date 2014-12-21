@@ -63,6 +63,11 @@ public @interface CompoundElement
      * If <code>true</code>, map this string field to a variable-length string type.
      */
     boolean variableLength() default false;
+    
+    /**
+     * If <code>true</code>, map this string field to an HDF5 reference type.
+     */
+    boolean reference() default false;
 
     /**
      * The {@link HDF5DataTypeVariant} of this compound element, if any.

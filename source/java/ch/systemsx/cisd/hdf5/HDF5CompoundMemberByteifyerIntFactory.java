@@ -33,7 +33,7 @@ import java.util.Map;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
-import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
@@ -126,7 +126,7 @@ class HDF5CompoundMemberByteifyerIntFactory implements IHDF5CompoundMemberBytify
             HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull,
             HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
-            int memOffset, FileInfoProvider fileInfoProvider)
+            int memOffset, IFileAccessProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         final Rank rank = classToRankMap.get(memberClazz);

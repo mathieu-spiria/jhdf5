@@ -27,7 +27,7 @@ import java.lang.reflect.Field;
 
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
-import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
@@ -65,7 +65,7 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
             final HDF5CompoundMemberMapping member,
             final HDF5CompoundMemberInformation compoundMemberInfoOrNull,
             HDF5EnumerationType enumTypeOrNull, final Class<?> memberClazz, final int index,
-            final int offset, int memOffset, final FileInfoProvider fileInfoProvider)
+            final int offset, int memOffset, final IFileAccessProvider fileInfoProvider)
     {
         final String memberName = member.getMemberName();
         // May be -1 if not known

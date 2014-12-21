@@ -22,12 +22,15 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.putMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setArray;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setList;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
 
 import java.lang.reflect.Field;
 
+import ch.systemsx.cisd.base.convert.NativeData;
+import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
-import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
@@ -41,13 +44,12 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
 
     private static abstract class HDF5StringMemberByteifyer extends HDF5MemberByteifyer
     {
-
         HDF5StringMemberByteifyer(Field fieldOrNull, String memberName, int size, int offset,
                 int memOffset, CharacterEncoding encoding, int maxCharacters,
-                boolean isVariableLengthType)
+                boolean isVariableLengthType, boolean isReferenceType)
         {
             super(fieldOrNull, memberName, size, offset, memOffset, encoding, maxCharacters,
-                    isVariableLengthType);
+                    isVariableLengthType, isReferenceType);
         }
 
         /**
@@ -78,8 +80,9 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
     {
         if (memberInfoOrNull != null)
         {
+            final HDF5DataClass dataClass = memberInfoOrNull.getType().getDataClass();
             return ((clazz == String.class) || (clazz == char[].class))
-                    && memberInfoOrNull.getType().getDataClass() == HDF5DataClass.STRING;
+                    && (dataClass == HDF5DataClass.STRING || dataClass == HDF5DataClass.REFERENCE);
         } else
         {
             return (clazz == String.class) || (clazz == char[].class);
@@ -98,7 +101,7 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
             HDF5CompoundMemberMapping member,
             HDF5CompoundMemberInformation compoundMemberInfoOrNull,
             HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
-            int memOffset, FileInfoProvider fileInfoProvider)
+            int memOffset, IFileAccessProvider fileAccessProvider)
     {
         final String memberName = member.getMemberName();
         final int maxCharacters = member.getMemberTypeLength();
@@ -106,52 +109,82 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                 member.isVariableLength()
                         || (maxCharacters == 0 && member.tryGetHints() != null && member
                                 .tryGetHints().isUseVariableLengthStrings());
+        final boolean isReferenceType = member.isReference();
         // May be -1 if not known
         final int memberTypeId =
-                isVariableLengthType ? fileInfoProvider.getVariableLengthStringDataTypeId()
+                isVariableLengthType ? fileAccessProvider.getVariableLengthStringDataTypeId()
                         : member.getStorageDataTypeId();
-        final CharacterEncoding encoding = fileInfoProvider.getCharacterEncoding(memberTypeId);
+        final CharacterEncoding encoding =
+                isReferenceType ? CharacterEncoding.ASCII : fileAccessProvider
+                        .getCharacterEncoding(memberTypeId);
         final int size =
                 (compoundMemberInfoOrNull != null) ? compoundMemberInfoOrNull.getType().getSize()
                         : encoding.getMaxBytesPerChar() * maxCharacters;
-        final int stringDataTypeId =
-                (memberTypeId < 0) ? fileInfoProvider.getStringDataTypeId(size) : memberTypeId;
+        final int stringOrRefDataTypeId =
+                (memberTypeId < 0) ? (isReferenceType ? H5T_STD_REF_OBJ : fileAccessProvider
+                        .getStringDataTypeId(size)) : memberTypeId;
         final boolean isCharArray = (memberClazz == char[].class);
         switch (accessType)
         {
             case FIELD:
-                return createByteifyerForField(fieldOrNull, memberName, offset, memOffset,
-                        stringDataTypeId, maxCharacters, size, encoding, isCharArray,
-                        isVariableLengthType);
+                return createByteifyerForField(fieldOrNull, memberName, fileAccessProvider, offset,
+                        memOffset, stringOrRefDataTypeId, maxCharacters, size, encoding,
+                        isCharArray, isVariableLengthType, isReferenceType);
             case MAP:
-                return createByteifyerForMap(memberName, offset, memOffset, stringDataTypeId,
-                        maxCharacters, size, encoding, isCharArray, isVariableLengthType);
+                return createByteifyerForMap(memberName, fileAccessProvider, offset, memOffset,
+                        stringOrRefDataTypeId, maxCharacters, size, encoding, isCharArray,
+                        isVariableLengthType, isReferenceType);
             case LIST:
-                return createByteifyerForList(memberName, index, offset, memOffset,
-                        stringDataTypeId, maxCharacters, size, encoding, isCharArray,
-                        isVariableLengthType);
+                return createByteifyerForList(memberName, fileAccessProvider, index, offset,
+                        memOffset, stringOrRefDataTypeId, maxCharacters, size, encoding,
+                        isCharArray, isVariableLengthType, isReferenceType);
             case ARRAY:
-                return createByteifyerForArray(memberName, index, offset, memOffset,
-                        stringDataTypeId, maxCharacters, size, encoding, isCharArray,
-                        isVariableLengthType);
+                return createByteifyerForArray(memberName, fileAccessProvider, index, offset,
+                        memOffset, stringOrRefDataTypeId, maxCharacters, size, encoding,
+                        isCharArray, isVariableLengthType, isReferenceType);
             default:
                 throw new Error("Unknown access type");
         }
     }
 
+    private static String refToStr(byte[] byteArr, int offset)
+    {
+        final long reference = NativeData.byteToLong(byteArr, ByteOrder.NATIVE, offset, 1)[0];
+        return '\0' + Long.toString(reference);
+    }
+
+    static String bytesToString(byte[] byteArr, final int totalOffset, final int maxIdx,
+            CharacterEncoding encoding, final boolean isVariableLengthType,
+            final boolean isReferenceType)
+    {
+        final String s;
+        if (isVariableLengthType)
+        {
+            s = HDFNativeData.createVLStrFromCompound(byteArr, totalOffset);
+        } else if (isReferenceType)
+        {
+            s = refToStr(byteArr, totalOffset);
+        } else
+        {
+            s = StringUtils.fromBytes0Term(byteArr, totalOffset, maxIdx, encoding);
+        }
+        return s;
+    }
+
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
-            final int offset, int memOffset, final int stringDataTypeId, final int maxCharacters,
-            final int size, final CharacterEncoding encoding, final boolean isCharArray,
-            final boolean isVariableLengthType)
+            final IFileAccessProvider fileAccessProvider, final int offset, int memOffset,
+            final int stringOrRefDataTypeId, final int maxCharacters, final int size,
+            final CharacterEncoding encoding, final boolean isCharArray,
+            final boolean isVariableLengthType, final boolean isReferenceType)
     {
         ReflectionUtils.ensureAccessible(field);
         return new HDF5StringMemberByteifyer(field, memberName, size, offset, memOffset, encoding,
-                maxCharacters, isVariableLengthType)
+                maxCharacters, isVariableLengthType, isReferenceType)
             {
                 @Override
                 protected int getMemberStorageTypeId()
                 {
-                    return stringDataTypeId;
+                    return stringOrRefDataTypeId;
                 }
 
                 @Override
@@ -170,6 +203,9 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                         final byte[] result = new byte[HDFNativeData.getMachineWordSize()];
                         HDFNativeData.compoundCpyVLStr(s, result, 0);
                         return result;
+                    } else if (isReferenceType)
+                    {
+                        return fileAccessProvider.createObjectReference(s);
                     } else
                     {
                         return StringUtils.toBytes0Term(s, getMaxCharacters(), encoding);
@@ -183,26 +219,26 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                     final int totalOffset = arrayOffset + offsetInMemory;
                     final int maxIdx = totalOffset + maxCharacters;
                     final String s =
-                            isVariableLengthType ? HDFNativeData.createVLStrFromCompound(byteArr,
-                                    totalOffset) : StringUtils.fromBytes0Term(byteArr, totalOffset,
-                                    maxIdx, encoding);
+                            bytesToString(byteArr, totalOffset, maxIdx, encoding,
+                                    isVariableLengthType, isReferenceType);
                     field.set(obj, isCharArray ? s.toCharArray() : s);
                 }
             };
     }
 
-    private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            int memOffset, final int stringDataTypeId, final int maxCharacters, final int size,
+    private HDF5MemberByteifyer createByteifyerForMap(final String memberName,
+            final IFileAccessProvider fileAccessProvider, final int offset, int memOffset,
+            final int stringOrRefDataTypeId, final int maxCharacters, final int size,
             final CharacterEncoding encoding, final boolean isCharArray,
-            final boolean isVariableLengthType)
+            final boolean isVariableLengthType, final boolean isReferenceType)
     {
         return new HDF5StringMemberByteifyer(null, memberName, size, offset, memOffset, encoding,
-                maxCharacters, isVariableLengthType)
+                maxCharacters, isVariableLengthType, isReferenceType)
             {
                 @Override
                 protected int getMemberStorageTypeId()
                 {
-                    return stringDataTypeId;
+                    return stringOrRefDataTypeId;
                 }
 
                 @Override
@@ -223,6 +259,9 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                         final byte[] result = new byte[HDFNativeData.getMachineWordSize()];
                         HDFNativeData.compoundCpyVLStr(s, result, 0);
                         return result;
+                    } else if (isReferenceType)
+                    {
+                        return fileAccessProvider.createObjectReference(s);
                     } else
                     {
                         return StringUtils.toBytes0Term(s, getMaxCharacters(), encoding);
@@ -236,7 +275,8 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                     final int totalOffset = arrayOffset + offsetInMemory;
                     final int maxIdx = totalOffset + maxCharacters;
                     final String s =
-                            StringUtils.fromBytes0Term(byteArr, totalOffset, maxIdx, encoding);
+                            bytesToString(byteArr, totalOffset, maxIdx, encoding,
+                                    isVariableLengthType, isReferenceType);
                     if (isCharArray)
                     {
                         putMap(obj, memberName, s.toCharArray());
@@ -248,18 +288,19 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
             };
     }
 
-    private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
-            final int offset, int memOffset, final int stringDataTypeId, final int maxCharacters,
+    private HDF5MemberByteifyer createByteifyerForList(final String memberName,
+            final IFileAccessProvider fileAccessProvider, final int index, final int offset,
+            int memOffset, final int stringOrRefDataTypeId, final int maxCharacters,
             final int size, final CharacterEncoding encoding, final boolean isCharArray,
-            final boolean isVariableLengthType)
+            final boolean isVariableLengthType, final boolean isReferenceType)
     {
         return new HDF5StringMemberByteifyer(null, memberName, size, offset, memOffset, encoding,
-                maxCharacters, isVariableLengthType)
+                maxCharacters, isVariableLengthType, isReferenceType)
             {
                 @Override
                 protected int getMemberStorageTypeId()
                 {
-                    return stringDataTypeId;
+                    return stringOrRefDataTypeId;
                 }
 
                 @Override
@@ -280,6 +321,9 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                         final byte[] result = new byte[HDFNativeData.getMachineWordSize()];
                         HDFNativeData.compoundCpyVLStr(s, result, 0);
                         return result;
+                    } else if (isReferenceType)
+                    {
+                        return fileAccessProvider.createObjectReference(s);
                     } else
                     {
                         return StringUtils.toBytes0Term(s, getMaxCharacters(), encoding);
@@ -293,7 +337,8 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                     final int totalOffset = arrayOffset + offsetInMemory;
                     final int maxIdx = totalOffset + maxCharacters;
                     final String s =
-                            StringUtils.fromBytes0Term(byteArr, totalOffset, maxIdx, encoding);
+                            bytesToString(byteArr, totalOffset, maxIdx, encoding,
+                                    isVariableLengthType, isReferenceType);
                     if (isCharArray)
                     {
                         setList(obj, index, s.toCharArray());
@@ -305,18 +350,19 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
             };
     }
 
-    private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
-            final int offset, int memOffset, final int stringDataTypeId, final int maxCharacters,
+    private HDF5MemberByteifyer createByteifyerForArray(final String memberName,
+            final IFileAccessProvider fileAccessProvider, final int index, final int offset,
+            int memOffset, final int stringOrRefDataTypeId, final int maxCharacters,
             final int size, final CharacterEncoding encoding, final boolean isCharArray,
-            final boolean isVariableLengthType)
+            final boolean isVariableLengthType, final boolean isReferenceType)
     {
         return new HDF5StringMemberByteifyer(null, memberName, size, offset, memOffset, encoding,
-                maxCharacters, isVariableLengthType)
+                maxCharacters, isVariableLengthType, isReferenceType)
             {
                 @Override
                 protected int getMemberStorageTypeId()
                 {
-                    return stringDataTypeId;
+                    return stringOrRefDataTypeId;
                 }
 
                 @Override
@@ -337,6 +383,9 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                         final byte[] result = new byte[HDFNativeData.getMachineWordSize()];
                         HDFNativeData.compoundCpyVLStr(s, result, 0);
                         return result;
+                    } else if (isReferenceType)
+                    {
+                        return fileAccessProvider.createObjectReference(s);
                     } else
                     {
                         return StringUtils.toBytes0Term(s, getMaxCharacters(), encoding);
@@ -350,7 +399,8 @@ class HDF5CompoundMemberByteifyerStringFactory implements IHDF5CompoundMemberByt
                     final int totalOffset = arrayOffset + offsetInMemory;
                     final int maxIdx = totalOffset + maxCharacters;
                     final String s =
-                            StringUtils.fromBytes0Term(byteArr, totalOffset, maxIdx, encoding);
+                            bytesToString(byteArr, totalOffset, maxIdx, encoding,
+                                    isVariableLengthType, isReferenceType);
                     if (isCharArray)
                     {
                         setArray(obj, index, s.toCharArray());

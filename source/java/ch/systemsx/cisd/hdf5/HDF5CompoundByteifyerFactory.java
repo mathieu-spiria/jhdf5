@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.FileInfoProvider;
+import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
 /**
@@ -77,7 +77,7 @@ class HDF5CompoundByteifyerFactory
                 HDF5CompoundMemberMapping member,
                 HDF5CompoundMemberInformation compoundMemberInfoOrNull,
                 HDF5EnumerationType enumTypeOrNull, Class<?> memberClazz, int index, int offset,
-                int memOffset, FileInfoProvider fileInfoProvider);
+                int memOffset, IFileAccessProvider fileInfoProvider);
 
         /**
          * Returns a suitable Java type, if this factory has one, or <code>null</code> otherwise.
@@ -106,7 +106,7 @@ class HDF5CompoundByteifyerFactory
     }
 
     static HDF5MemberByteifyer[] createMemberByteifyers(Class<?> clazz,
-            FileInfoProvider fileInfoProvider, CompoundTypeInformation compoundTypeInfoOrNull,
+            IFileAccessProvider fileInfoProvider, CompoundTypeInformation compoundTypeInfoOrNull,
             HDF5CompoundMemberMapping[] members)
     {
         final HDF5MemberByteifyer[] result = new HDF5MemberByteifyer[members.length];

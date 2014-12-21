@@ -116,10 +116,11 @@ public final class HDF5CompoundMemberInformation implements
     }
 
     /**
-     * Returns the byte offset of this member within the compound data type in memory. 0 meaning that
-     * the member is the first one in the compound data type. 
+     * Returns the byte offset of this member within the compound data type in memory. 0 meaning
+     * that the member is the first one in the compound data type.
      * <p>
-     * The in-memory representation may contain padding to ensure that read access is always aligned. 
+     * The in-memory representation may contain padding to ensure that read access is always
+     * aligned.
      */
     public int getOffsetInMemory()
     {
@@ -215,9 +216,17 @@ public final class HDF5CompoundMemberInformation implements
                             true);
         } else if (fieldTypeOrNull == String.class || fieldTypeOrNull == char[].class)
         {
-            typeInfo =
-                    new HDF5DataTypeInformation(HDF5DataClass.STRING, houseKeepingNameSuffix,
-                            member.getMemberTypeLength(), false);
+            if (member.isReference())
+            {
+                typeInfo =
+                        new HDF5DataTypeInformation(HDF5DataClass.REFERENCE, houseKeepingNameSuffix,
+                                HDF5BaseReader.REFERENCE_SIZE_IN_BYTES, false);
+            } else
+            {
+                typeInfo =
+                        new HDF5DataTypeInformation(HDF5DataClass.STRING, houseKeepingNameSuffix,
+                                member.getMemberTypeLength(), false);
+            }
         } else if (fieldTypeOrNull == HDF5EnumerationValue.class)
         {
             final DataTypeInfoOptions options =
