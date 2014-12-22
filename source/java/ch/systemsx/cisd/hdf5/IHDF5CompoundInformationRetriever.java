@@ -35,20 +35,29 @@ import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
  * HDF5 compound members, a map (see {@link HDF5CompoundDataMap}) where each HDF5 compound member is
  * represented by one key-value pair, a list (see {@link HDF5CompoundDataList}) or
  * <code>Object[]</code>, where the members of the HDF5 compound type are stored by their position
- * (or order) in the HDF5 compound type. Only the POJO representation contains information on what
- * It has to be noted that a
+ * (or order) in the HDF5 compound type.
+ * <p>
+ * It is important to understand that creating the HDF5 compound type in memory (what members of what types 
+ * it contains in what order) and mapping the members to Java (including the Java type and, for POJOs, the 
+ * field) are two distinct steps. Different methods of this interface use two different approaches on how 
+ * to create the HDF5 compound type: <code>getType()</code> and <code>getInferredType()</code> create them 
+ * anew, based on the POJO class and the <code>HDF5CompoundMemberMapping</code>s provided, while 
+ * <code>getNamedType()</code>, <code>getDataSetType()</code> and <code>getAttributeType()</code> read them 
+ * from the HDF5 file. Whenever you are reading a compound from an HDF5 file, the second approach should be 
+ * preferred as the HDF5 file is the authorative source of information on HDF5 types.
  * <p>
  * The following Java types can be mapped to compound members:
  * <ul>
  * <li>Primitive values</li>
  * <li>Primitive arrays</li>
  * <li>Primitive matrices (except <code>char[][]</code>)</li>
- * <li>{@link String}</li>
+ * <li>{@link String} (fixed-length and variable-lengt)</li>
  * <li>{@link java.util.BitSet}</li>
  * <li>{@link java.util.Date}</li>
  * <li>{@link HDF5EnumerationValue}</li>
  * <li>{@link HDF5EnumerationValueArray}</li>
  * <li>Sub-classes of {@link MDAbstractArray}</li>
+ * <li>References to data sets</li>
  * </ul>
  * 
  * @author Bernd Rinn
