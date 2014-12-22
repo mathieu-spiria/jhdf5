@@ -283,7 +283,14 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
     public HDF5EnumerationType getAnonType(final Class<? extends Enum<?>> enumClass)
             throws HDF5JavaException
     {
-        return getType(null, ReflectionUtils.getEnumOptions(enumClass));
+        return getType(null, ReflectionUtils.getEnumOptions(enumClass), false);
+    }
+
+    @Override
+    public HDF5EnumerationType getAnonType(final EnumerationType enumType)
+            throws HDF5JavaException
+    {
+        return getType(null, enumType.getValueArray(), false);
     }
 
     @Override

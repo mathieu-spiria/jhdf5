@@ -34,22 +34,23 @@ public interface IHDF5EnumWriter extends IHDF5EnumReader, IHDF5EnumValueCreator
      * Returns an anonymous enumeration type for this HDF5 file.
      * 
      * @param options The values of the enumeration type.
-     * @throws HDF5JavaException If the data type exists and is not compatible with the
-     *             <var>values</var> provided.
      */
-    public HDF5EnumerationType getAnonType(String[] options)
-            throws HDF5JavaException;
+    public HDF5EnumerationType getAnonType(String[] options);
 
     /**
      * Returns an anonymous enumeration type for this HDF5 file.
      * 
      * @param enumClass The enumeration class to get the values from.
-     * @throws HDF5JavaException If the data type exists and is not compatible with the
-     *             <var>enumClass</var> provided.
      */
-    public HDF5EnumerationType getAnonType(Class<? extends Enum<?>> enumClass)
-            throws HDF5JavaException;
+    public HDF5EnumerationType getAnonType(Class<? extends Enum<?>> enumClass);
 
+    /**
+     * Returns an anonymous enumeration type for this HDF5 file.
+     * 
+     * @param enumType The (file-independent) enumeration type to get the values from.
+     */
+    public HDF5EnumerationType getAnonType(final EnumerationType enumType);
+    
     // /////////////////////
     // Attributes
     // /////////////////////
