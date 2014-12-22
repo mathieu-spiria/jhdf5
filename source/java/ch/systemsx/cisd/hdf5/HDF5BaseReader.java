@@ -877,9 +877,9 @@ class HDF5BaseReader
         final HDF5DataSetInformation info =
                 getDataSetInformation(dataSetPath, DataTypeInfoOptions.MINIMAL, true);
         return info.getRank() + info.getTypeInformation().getRank();
-        
+
     }
-    
+
     /**
      * Returns the dimensions of the space of <var>objectPath</var> (empty if this is a scalar
      * space). It is a failure condition if the <var>objectPath</var> does not exist or does not
@@ -1424,11 +1424,12 @@ class HDF5BaseReader
     }
 
     void checkEnumValues(int dataTypeId, final String[] values, final String nameOrNull)
+            throws HDF5JavaException
     {
         final String[] valuesStored = h5.getNamesForEnumOrCompoundMembers(dataTypeId);
         if (valuesStored.length != values.length)
         {
-            throw new IllegalStateException("Enum " + getEnumDataTypeName(nameOrNull, dataTypeId)
+            throw new HDF5JavaException("Enum " + getEnumDataTypeName(nameOrNull, dataTypeId)
                     + " has " + valuesStored.length + " members, but should have " + values.length);
         }
         for (int i = 0; i < values.length; ++i)
