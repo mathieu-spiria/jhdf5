@@ -20,6 +20,8 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Map;
 
+import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 
@@ -329,12 +331,12 @@ final class MatrixUtils
         return result;
     }
 
-    static int cardinality(Map<?, ?> boundIndices)
+    static int cardinalityBoundIndices(Map<?, ?> boundIndices)
     {
         return boundIndices.size();
     }
 
-    static int cardinality(long[] boundIndices)
+    static int cardinalityBoundIndices(long[] boundIndices)
     {
         int card = 0;
         for (int i = 0; i < boundIndices.length; ++i)
@@ -426,6 +428,39 @@ final class MatrixUtils
                 fullBlockDimensions[i] = 1;
                 fullOffset[i] = boundIndex;
             }
+        }
+    }
+
+    static void checkBoundIndices(String objectPath, long[] dimensions, int cardBoundIndices)
+            throws HDF5JavaException
+    {
+        if (cardBoundIndices > dimensions.length)
+        {
+            throw new HDF5JavaException("Dataset " + objectPath + ": more bound indices (#"
+                    + cardBoundIndices + ") than dataset dimensions (#" + dimensions.length + ")");
+        }
+    }
+
+    static void checkBoundIndices(String objectPath, long[] dimensions, long[] boundIndices)
+            throws HDF5JavaException
+    {
+        if (dimensions.length != boundIndices.length)
+        {
+            throw new HDF5JavaException("Dataset " + objectPath + ": boundIndices array (#"
+                    + boundIndices.length + ") differs from dataset dimensions (#"
+                    + dimensions.length + ")");
+        }
+    }
+
+    static void checkBoundIndices(String objectPath, long[] dimensions, int[] blockDimensions,
+            int cardBoundIndices) throws HDF5JavaException
+    {
+        if (dimensions.length != blockDimensions.length + cardBoundIndices)
+        {
+            throw new HDF5JavaException("Dataset " + objectPath
+                    + ": cardinality of bound indices (#" + cardBoundIndices
+                    + ") plus rank of blocks (#" + blockDimensions.length
+                    + ") not equal to rank of dataset (#" + dimensions.length + ")");
         }
     }
 

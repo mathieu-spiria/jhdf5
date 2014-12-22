@@ -16,6 +16,9 @@
 
 package ch.systemsx.cisd.hdf5;
 
+import static ch.systemsx.cisd.hdf5.MatrixUtils.cardinalityBoundIndices;
+import static ch.systemsx.cisd.hdf5.MatrixUtils.checkBoundIndices;
+import static ch.systemsx.cisd.hdf5.MatrixUtils.createFullBlockDimensionsAndOffset;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
 
@@ -363,12 +366,20 @@ class HDF5ShortReader implements IHDF5ShortReader
         final long[] fullDimensions = baseReader.getDimensions(objectPath);
         final int[] fullBlockDimensions = new int[fullDimensions.length];
         final long[] fullOffset = new long[fullDimensions.length];
-        final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - MatrixUtils.cardinality(boundIndices)];
+        final int cardBoundIndices = cardinalityBoundIndices(boundIndices);
+        checkBoundIndices(objectPath, fullDimensions, cardBoundIndices);
+        final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - cardBoundIndices];
         Arrays.fill(effectiveBlockDimensions, -1);
-        MatrixUtils.createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
+        createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
         final MDShortArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
-        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+        if (fullBlockDimensions.length == cardBoundIndices) // no free indices
+        {
+	        return new MDShortArray(result.getAsFlatArray(), new int[] { 1 });
+	    } else
+	    {
+	        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+	    }
     }
 
     @Override
@@ -378,12 +389,20 @@ class HDF5ShortReader implements IHDF5ShortReader
         final long[] fullDimensions = baseReader.getDimensions(objectPath);
         final int[] fullBlockDimensions = new int[fullDimensions.length];
         final long[] fullOffset = new long[fullDimensions.length];
-        final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - MatrixUtils.cardinality(boundIndices)];
+        final int cardBoundIndices = cardinalityBoundIndices(boundIndices);
+        checkBoundIndices(objectPath, fullDimensions, boundIndices);
+        final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - cardBoundIndices];
         Arrays.fill(effectiveBlockDimensions, -1);
-        MatrixUtils.createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
+        createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
         final MDShortArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
-        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+        if (fullBlockDimensions.length == cardBoundIndices) // no free indices
+        {
+	        return new MDShortArray(result.getAsFlatArray(), new int[] { 1 });
+	    } else
+	    {
+	        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+	    }
     }
 
     @Override
@@ -500,7 +519,9 @@ class HDF5ShortReader implements IHDF5ShortReader
         final long[] fullDimensions = baseReader.getDimensions(objectPath);
         final int[] fullBlockDimensions = new int[fullDimensions.length];
         final long[] fullOffset = new long[fullDimensions.length];
-        MatrixUtils.createFullBlockDimensionsAndOffset(effectiveBlockDimensions, offset, boundIndices, fullDimensions,
+        checkBoundIndices(objectPath, fullDimensions, blockDimensions,
+                cardinalityBoundIndices(boundIndices));
+        createFullBlockDimensionsAndOffset(effectiveBlockDimensions, offset, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
         final MDShortArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
         return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
@@ -515,7 +536,9 @@ class HDF5ShortReader implements IHDF5ShortReader
         final long[] fullDimensions = baseReader.getDimensions(objectPath);
         final int[] fullBlockDimensions = new int[fullDimensions.length];
         final long[] fullOffset = new long[fullDimensions.length];
-        MatrixUtils.createFullBlockDimensionsAndOffset(effectiveBlockDimensions, offset, boundIndices, fullDimensions,
+        checkBoundIndices(objectPath, fullDimensions, blockDimensions,
+                cardinalityBoundIndices(boundIndices));
+        createFullBlockDimensionsAndOffset(effectiveBlockDimensions, offset, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
         final MDShortArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
         return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
