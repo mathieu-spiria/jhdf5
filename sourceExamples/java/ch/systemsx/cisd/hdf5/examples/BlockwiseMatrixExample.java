@@ -28,7 +28,7 @@ import ch.systemsx.cisd.hdf5.IHDF5Writer;
 
 /**
  * An example for block-wise reading and writing of an integer matrix. This can be used to read and
- * write arrays and matrices that are too big to fit into memory. Only the block 
+ * write arrays and matrices that are too big to fit into memory. Only the block
  */
 public class BlockwiseMatrixExample
 {
@@ -60,6 +60,13 @@ public class BlockwiseMatrixExample
             System.out.println(ArrayUtils.toString(block.getIndex()) + " -> "
                     + block.getData().toString());
         }
+
+        // Read a 1d sliced block of size 10 where the first index is fixed
+        System.out.println(reader.int32().readSlicedMDArrayBlock("mydata", new int[]
+            { 10 }, new long[]
+            { 4 }, new long[]
+            { 30, -1 }));
+
         reader.close();
     }
 
