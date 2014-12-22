@@ -133,7 +133,23 @@ task batteriesIncluded(type: Jar, dependsOn: [allJar, nativeJarLinuxIntel, nativ
     }
 }
 
-task javadocZip(type: Zip, dependsOn: javadoc) {
+task myJavadoc(type: Javadoc) {
+	source = [ sourceSets.main.allJava, "base-src" ]
+	classpath = configurations.compile
+	options.memberLevel = JavadocMemberLevel.PUBLIC
+	options.overview = "overview.html"
+	include "ch/systemsx/cisd/hdf5/**"
+	include "ncsa/hdf/hdf5lib/exceptions/**"
+	exclude "ch/systemsx/cisd/hdf5/hdf5lib/**"
+	exclude "ch/systemsx/cisd/hdf5/cleanup/**"
+	exclude "ch/systemsx/cisd/hdf5/BitSetConversionUtils.java"
+	exclude "ch/systemsx/cisd/hdf5/MatrixUtils.java"
+	exclude "ch/systemsx/cisd/hdf5/StringUtils.java"
+	exclude "ch/systemsx/cisd/hdf5/PaddingUtils.java"
+	exclude "ch/systemsx/cisd/hdf5/ReflectionUtils.java"
+}
+
+task javadocZip(type: Zip, dependsOn: myJavadoc) {
     archiveName "${project.group}-jhdf5-javadoc.zip"
     from javadoc.destinationDir
 }
