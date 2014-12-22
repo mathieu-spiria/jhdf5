@@ -1064,6 +1064,20 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * <p>
      * Keep existing data set and apply only if a new data set has to be created.
      */
+    public static HDF5IntStorageFeatures createIntegerScalingUnsignedKeep(int scalingFactor)
+    {
+        return createIntegerScaling(scalingFactor, true, false);
+    }
+
+    /**
+     * Creates a {@link HDF5IntStorageFeatures} object that represents integer scaling with the
+     * given <var>scalingFactor</var>.
+     * <p>
+     * Keep existing data set and apply only if a new data set has to be created.
+     * 
+     * @deprecated Use {@link #createIntegerScalingUnsigned(int)} instead.
+     */
+    @Deprecated
     public static HDF5IntStorageFeatures createIntegerScalingUnsigedKeep(int scalingFactor)
     {
         return createIntegerScaling(scalingFactor, true, false);
