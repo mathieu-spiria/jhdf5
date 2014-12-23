@@ -25,6 +25,34 @@
 	<property name="dist.hdf5" value="${dist}/${mainfolder}" />
 	<property name="dist.hdf5.lib" value="${dist.hdf5}/lib" />
 
+	<!--
+      // Compile Java classes using the Eclipse compiler 
+      // Note: THIS IS A PRIVATE TARGET. It isn't intended to be used in other build scripts.
+      // Parameter: src = source folder
+      -->
+	<target name="_plain-compile">
+		<echo level="info">Compile all classes in ${basedir}/${src} and subfolders</echo>
+		<javac srcdir="${src}"
+		       destdir="${classes}"
+		       classpath="${ecp}"
+		       source="1.7"
+		       target="1.7"
+			     encoding="UTF-8"
+		       debug="true">
+			<compilerarg line="-warn:none" />
+		</javac>
+		<copy todir="${classes}">
+			<fileset dir="${src}">
+				<include name="**/*.xml" />
+				<include name="**/*.xsd" />
+				<include name="**/*.properties" />
+				<include name="**/*.jpg" />
+				<include name="**/*.png" />
+				<include name="**/*.gif" />
+			</fileset>
+		</copy>
+	</target>
+
 	<target name="clean">
 		<delete dir="${dist}" />
 		<delete dir="${targets}/ant" />
