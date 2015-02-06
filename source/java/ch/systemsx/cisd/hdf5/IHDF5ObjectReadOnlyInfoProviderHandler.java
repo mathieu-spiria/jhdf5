@@ -75,6 +75,8 @@ public interface IHDF5ObjectReadOnlyInfoProviderHandler
      * link target exists, that is, this method will follow symbolic links.
      */
     public boolean exists(final String objectPath);
+    
+    public HDF5DataSet openDataSet(final String objectPath);
 
     /**
      * Creates and returns an internal (house-keeping) version of <var>objectPath</var>.

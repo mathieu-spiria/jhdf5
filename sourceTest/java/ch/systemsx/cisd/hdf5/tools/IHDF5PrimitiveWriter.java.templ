@@ -190,6 +190,23 @@ __SupressWarning__ public interface IHDF5__Name__Writer extends __SuperInterface
      * been created by {@link #createArray(String, long, int, HDF5__Classname__StorageFeatures)}
      * beforehand.
      * <p>
+     * <i>This method is faster than {@link #writeArrayBlock(String, __name__[], long)} 
+     * when called many times on the same data set.</i>
+     * 
+     * @param dataSet The data set object in the file which has been created by using
+     	 		  {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet}.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param blockNumber The number of the block to write.
+     */
+    __OverrideIfInt__public void writeArrayBlock(final HDF5DataSet dataSet, final __name__[] data,
+            final long blockNumber);
+
+    /**
+     * Writes out a block of a <code>__name__</code> array (of rank 1). The data set needs to have
+     * been created by {@link #createArray(String, long, int, HDF5__Classname__StorageFeatures)}
+     * beforehand.
+     * <p>
      * Use this method instead of {@link #writeArrayBlock(String, __name__[], long)} if the
      * total size of the data set is not a multiple of the block size.
      * 
@@ -203,6 +220,26 @@ __SupressWarning__ public interface IHDF5__Name__Writer extends __SuperInterface
     __OverrideIfInt__public void writeArrayBlockWithOffset(String objectPath, __name__[] data,
             int dataSize, long offset);
 
+    /**
+     * Writes out a block of a <code>__name__</code> array (of rank 1). The data set needs to have
+     * been created by {@link #createArray(String, long, int, HDF5__Classname__StorageFeatures)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #writeArrayBlock(HDF5DataSet, __name__[], long)} if the
+     * total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>This method is faster than {@link #writeArrayBlockWithOffset(String, __name__[], int, long)} 
+     * when called many times on the same data set.</i>
+     * 
+     * @param dataSet The data set object in the file which has been created by using
+     	 		  {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet}.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param offset The offset in the data set to start writing to.
+     */
+    __OverrideIfInt__public void writeArrayBlockWithOffset(HDF5DataSet dataSet, __name__[] data,
+            int dataSize, long offset);
+            
     /**
      * Writes out a <code>__name__</code> matrix (array of rank 2).
      * 

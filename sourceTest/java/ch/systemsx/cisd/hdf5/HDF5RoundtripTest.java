@@ -167,6 +167,7 @@ public class HDF5RoundtripTest
         test.testScaleOffsetFilterFloat();
         test.testBooleanArray();
         test.testBooleanArrayBlock();
+        test.testFloatArrayBlockWithPreopenedDataSet();
         test.testBitFieldArray();
         test.testBitFieldArrayBlockWise();
         test.testSmallString();
@@ -2967,6 +2968,46 @@ public class HDF5RoundtripTest
         assertEquals(StringUtils.rightPad("abc", 8, "\0"), dataStored[0]);
         assertEquals(StringUtils.rightPad("ABCxxx", 8, "\0"), dataStored[1]);
         assertEquals("\u00b6\000\u00bc\u09ab", dataStored[2]);
+        reader.close();
+    }
+
+    private static void fillArray(float mult, float[] data) {
+        for (int i = 0; i < data.length; ++i) {
+            data[i] = mult * i;
+        }
+    }
+
+    @Test
+    public void testFloatArrayBlockWithPreopenedDataSet()
+    {
+        final File floatArrayFile = new File(workingDirectory, "floatArrayBlock.h5");
+        floatArrayFile.delete();
+        assertFalse(floatArrayFile.exists());
+        floatArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(floatArrayFile);
+        final float[] dataWritten = new float[128];
+        writer.int32().createArray("ds", dataWritten.length);
+        try (final HDF5DataSet ds = writer.object().openDataSet("ds"))
+        {
+            for (long bx = 0; bx < 8; ++bx)
+            {
+                fillArray(bx + 1, dataWritten);
+                writer.float32().writeArrayBlock(ds, dataWritten, bx);
+            }
+        }
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(floatArrayFile);
+        try (final HDF5DataSet ds = reader.object().openDataSet("ds"))
+        {
+            for (long bx = 0; bx < 8; ++bx)
+            {
+                fillArray(bx + 1, dataWritten);
+                final float[] dataRead =
+                        reader.float32().readArrayBlock(ds, dataWritten.length, bx);
+                assertTrue("" + bx, Arrays.equals(dataWritten, dataRead));
+            }
+        }
         reader.close();
     }
 

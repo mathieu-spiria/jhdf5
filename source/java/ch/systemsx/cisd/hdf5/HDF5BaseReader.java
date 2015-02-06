@@ -257,6 +257,38 @@ class HDF5BaseReader
         return runner.call(readRunnable);
     }
 
+    public HDF5DataSet openDataSet(final String objectPath)
+    {
+        final ICallableWithCleanUp<HDF5DataSet> openDataSetCallable =
+                new ICallableWithCleanUp<HDF5DataSet>()
+                    {
+                        @Override
+                        public HDF5DataSet call(ICleanUpRegistry registry)
+                        {
+                            final int dataSetId =
+                                    h5.openDataSet(fileId, objectPath, null);
+                            final HDF5StorageLayout layout =
+                                    h5.getLayout(dataSetId, registry);
+                            final int dataSpaceId =
+                                    h5.getDataSpaceForDataSet(dataSetId, null);
+                            final long[] dimensions = h5.getDataSpaceDimensions(dataSpaceId);
+                            final HDF5DataSet dataSet =
+                                    new HDF5DataSet(objectPath, dataSetId, dataSpaceId, dimensions,
+                                            layout);
+                            fileRegistry.registerCleanUp(new Runnable()
+                                {
+                                    @Override
+                                    public void run()
+                                    {
+                                        dataSet.close();
+                                    }
+                                });
+                            return dataSet;
+                        }
+                    };
+        return runner.call(openDataSetCallable);
+    }
+
     byte[] getAttributeAsByteArray(final int objectId, final String attributeName,
             ICleanUpRegistry registry)
     {
@@ -477,6 +509,50 @@ class HDF5BaseReader
             final int blockSize, ICleanUpRegistry registry)
     {
         return tryGetSpaceParameters(dataSetId, 0, offset, blockSize, false, registry);
+    }
+
+    /**
+     * Returns the {@link DataSpaceParameters} for a 1d block of the given <var>dataSetId</var>.
+     */
+    DataSpaceParameters getSpaceParameters(final HDF5DataSet dataset, final long offset,
+            final int blockSize, ICleanUpRegistry registry)
+    {
+        final int memorySpaceId;
+        final int dataSpaceId;
+        final int effectiveBlockSize;
+        final long[] dimensions;
+        if (blockSize > 0)
+        {
+            dataSpaceId = dataset.getDataspaceId();
+            dimensions = dataset.getDimensions();
+            if (dimensions.length != 1)
+            {
+                throw new HDF5JavaException("Data Set is expected to be of rank 1 (rank="
+                        + dimensions.length + ")");
+            }
+            final long size = dimensions[0];
+            final long maxFileBlockSize = size - offset;
+            if (maxFileBlockSize <= 0)
+            {
+                throw new HDF5JavaException("Offset " + offset + " >= Size " + size);
+            }
+            effectiveBlockSize =
+                    (int) Math.min(blockSize, Math.min(size, maxFileBlockSize));
+            final long[] blockShape = new long[]
+                { effectiveBlockSize };
+            h5.setHyperslabBlock(dataSpaceId, new long[]
+                { offset }, blockShape);
+            memorySpaceId = h5.createSimpleDataSpace(blockShape, registry);
+            h5.setHyperslabBlock(memorySpaceId, new long[]
+                { 0 }, blockShape);
+        } else
+        {
+            memorySpaceId = HDF5Constants.H5S_ALL;
+            dataSpaceId = HDF5Constants.H5S_ALL;
+            dimensions = h5.getDataDimensions(dataset.getDatasetId(), registry);
+            effectiveBlockSize = getOneDimensionalArraySize(dimensions);
+        }
+        return new DataSpaceParameters(memorySpaceId, dataSpaceId, effectiveBlockSize, dimensions);
     }
 
     /**

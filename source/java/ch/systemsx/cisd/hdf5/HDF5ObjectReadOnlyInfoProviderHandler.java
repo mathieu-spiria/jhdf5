@@ -108,6 +108,13 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
     }
 
     @Override
+    public HDF5DataSet openDataSet(final String objectPath)
+    {
+        baseReader.checkOpen();
+        return baseReader.openDataSet(objectPath);
+    }
+
+    @Override
     public String toHouseKeepingPath(String objectPath)
     {
         return HDF5Utils.toHouseKeepingPath(objectPath, baseReader.houseKeepingNameSuffix);

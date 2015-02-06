@@ -195,6 +195,23 @@ public interface IHDF5UnsignedShortWriter extends IHDF5ShortReader
      * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)}
      * beforehand.
      * <p>
+     * <i>This method is faster than {@link #writeArrayBlock(String, short[], long)} 
+     * when called many times on the same data set.</i>
+     * 
+     * @param dataSet The data set object in the file which has been created by using
+     	 		  {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet}.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param blockNumber The number of the block to write.
+     */
+    public void writeArrayBlock(final HDF5DataSet dataSet, final short[] data,
+            final long blockNumber);
+
+    /**
+     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
+     * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)}
+     * beforehand.
+     * <p>
      * Use this method instead of {@link #writeArrayBlock(String, short[], long)} if the
      * total size of the data set is not a multiple of the block size.
      * 
@@ -208,6 +225,26 @@ public interface IHDF5UnsignedShortWriter extends IHDF5ShortReader
     public void writeArrayBlockWithOffset(String objectPath, short[] data,
             int dataSize, long offset);
 
+    /**
+     * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
+     * been created by {@link #createArray(String, long, int, HDF5IntStorageFeatures)}
+     * beforehand.
+     * <p>
+     * Use this method instead of {@link #writeArrayBlock(HDF5DataSet, short[], long)} if the
+     * total size of the data set is not a multiple of the block size.
+     * <p>
+     * <i>This method is faster than {@link #writeArrayBlockWithOffset(String, short[], int, long)} 
+     * when called many times on the same data set.</i>
+     * 
+     * @param dataSet The data set object in the file which has been created by using
+     	 		  {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet}.
+     * @param data The data to write. The length defines the block size. Must not be
+     *            <code>null</code> or of length 0.
+     * @param offset The offset in the data set to start writing to.
+     */
+    public void writeArrayBlockWithOffset(HDF5DataSet dataSet, short[] data,
+            int dataSize, long offset);
+            
     /**
      * Writes out a <code>short</code> matrix (array of rank 2).
      * 

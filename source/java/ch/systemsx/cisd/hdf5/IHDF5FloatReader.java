@@ -146,6 +146,24 @@ public interface IHDF5FloatReader
             long blockNumber);
 
     /**
+     * Reads a block from a <code>int</code> array (of rank 1) from the <var>dataSet</var>.
+     * <p>
+     * <i>This method is faster than {@link #readArrayBlock(String, int, long)} 
+     * when called many times on the same data set.</i>
+     * 
+     * @param dataSet The data set object in the file which has been created by using
+                  {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet}.
+     * @param blockSize The block size (this will be the length of the <code>int[]</code> returned
+     *            if the data set is long enough).
+     * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
+     *            <var>blockSize</var>).
+     * @return The data read from the data set. The length will be min(size - blockSize*blockNumber,
+     *         blockSize).
+     */
+    public float[] readArrayBlock(HDF5DataSet dataSet, int blockSize,
+            long blockNumber);
+
+    /**
      * Reads a block from <code>float</code> array (of rank 1) from the data set
      * <var>objectPath</var>.
      * 
@@ -156,6 +174,22 @@ public interface IHDF5FloatReader
      * @return The data block read from the data set.
      */
     public float[] readArrayBlockWithOffset(String objectPath, int blockSize,
+            long offset);
+
+    /**
+     * Reads a block from <code>int</code> array (of rank 1) from the <var>dataSet</var>.
+     * <p>
+     * <i>This method is faster than {@link #readArrayBlockWithOffset(String, int, long)} 
+     * when called many times on the same data set.</i>
+     * 
+     * @param dataSet The data set object in the file which has been created by using
+                  {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet}.
+     * @param blockSize The block size (this will be the length of the <code>int[]</code>
+     *            returned).
+     * @param offset The offset of the block in the data set to start reading from (starting with 0).
+     * @return The data block read from the data set.
+     */
+    public float[] readArrayBlockWithOffset(HDF5DataSet dataSet, int blockSize,
             long offset);
 
     /**

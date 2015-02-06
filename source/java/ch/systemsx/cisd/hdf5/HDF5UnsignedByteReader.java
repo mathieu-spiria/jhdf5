@@ -292,6 +292,12 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
     }
 
     @Override
+    public byte[] readArrayBlock(HDF5DataSet dataSet, int blockSize, long blockNumber)
+    {
+        return readArrayBlockWithOffset(dataSet, blockSize, blockNumber * blockSize);
+    }
+
+    @Override
     public byte[] readArrayBlockWithOffset(final String objectPath, final int blockSize,
             final long offset)
     {
@@ -309,6 +315,28 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final byte[] data = new byte[spaceParams.blockSize];
                     baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_UINT8, spaceParams.memorySpaceId,
+                            spaceParams.dataSpaceId, data);
+                    return data;
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+
+    @Override
+    public byte[] readArrayBlockWithOffset(final HDF5DataSet dataSet, final int blockSize, final long offset)
+    {
+        assert dataSet != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<byte[]> readCallable = new ICallableWithCleanUp<byte[]>()
+            {
+                @Override
+                public byte[] call(ICleanUpRegistry registry)
+                {
+                    final DataSpaceParameters spaceParams =
+                            baseReader.getSpaceParameters(dataSet, offset, blockSize, registry);
+                    final byte[] data = new byte[spaceParams.blockSize];
+                    baseReader.h5.readDataSet(dataSet.getDatasetId(), H5T_NATIVE_UINT8, spaceParams.memorySpaceId,
                             spaceParams.dataSpaceId, data);
                     return data;
                 }
@@ -633,6 +661,8 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
                 {
                     return new Iterator<HDF5DataBlock<byte[]>>()
                         {
+                            final HDF5DataSet dataset = baseReader.openDataSet(dataSetPath);
+                        
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
 
@@ -647,7 +677,7 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final byte[] block =
-                                        readArrayBlockWithOffset(dataSetPath, index
+                                        readArrayBlockWithOffset(dataset, index
                                                 .getBlockSize(), offset);
                                 return new HDF5DataBlock<byte[]>(block, index.getAndIncIndex(), 
                                         offset);

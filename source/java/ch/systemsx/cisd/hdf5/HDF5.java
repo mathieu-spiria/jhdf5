@@ -753,14 +753,17 @@ class HDF5
         final int dataSetId =
                 isReference(path) ? H5Rdereference(fileId, Long.parseLong(path.substring(1)))
                         : H5Dopen(fileId, path, H5P_DEFAULT);
-        registry.registerCleanUp(new Runnable()
-            {
-                @Override
-                public void run()
+        if (registry != null)
+        {
+            registry.registerCleanUp(new Runnable()
                 {
-                    H5Dclose(dataSetId);
-                }
-            });
+                    @Override
+                    public void run()
+                    {
+                        H5Dclose(dataSetId);
+                    }
+                });
+        }
         return dataSetId;
     }
 
@@ -777,7 +780,6 @@ class HDF5
             throws HDF5JavaException
     {
         checkMaxLength(path);
-        final boolean overwriteMode = (storageDataTypeId > -1);
         final int dataSetId =
                 isReference(path) ? H5Rdereference(fileId, Long.parseLong(path.substring(1)))
                         : H5Dopen(fileId, path, H5P_DEFAULT);
@@ -789,10 +791,20 @@ class HDF5
                     H5Dclose(dataSetId);
                 }
             });
+        extendDataSet(fileId, dataSetId, null, dimensions, storageDataTypeId, registry);
+        return dataSetId;
+    }
+
+    public void extendDataSet(int fileId, int dataSetId, HDF5StorageLayout layoutOrNull,
+            long[] dimensions, int storageDataTypeId, ICleanUpRegistry registry)
+            throws HDF5JavaException
+    {
+        final boolean overwriteMode = (storageDataTypeId > -1);
         final long[] oldDimensions = getDataDimensions(dataSetId, registry);
         if (Arrays.equals(oldDimensions, dimensions) == false)
         {
-            final HDF5StorageLayout layout = getLayout(dataSetId, registry);
+            final HDF5StorageLayout layout =
+                    (layoutOrNull != null) ? layoutOrNull : getLayout(dataSetId, registry);
             if (layout == HDF5StorageLayout.CHUNKED)
             {
                 // Safety check. JHDF5 creates CHUNKED data sets always with unlimited max
@@ -822,7 +834,6 @@ class HDF5
                 }
             }
         }
-        return dataSetId;
     }
 
     private long[] computeNewDimensions(long[] oldDimensions, long[] newDimensions,
@@ -1718,16 +1729,19 @@ class HDF5
 
     public int getDataSpaceForDataSet(int dataSetId, ICleanUpRegistry registry)
     {
-        final int dataTypeId = H5Dget_space(dataSetId);
-        registry.registerCleanUp(new Runnable()
-            {
-                @Override
-                public void run()
+        final int dataSpaceId = H5Dget_space(dataSetId);
+        if (registry != null)
+        {
+            registry.registerCleanUp(new Runnable()
                 {
-                    H5Sclose(dataTypeId);
-                }
-            });
-        return dataTypeId;
+                    @Override
+                    public void run()
+                    {
+                        H5Sclose(dataSpaceId);
+                    }
+                });
+        }
+        return dataSpaceId;
     }
 
     public long[] getDataDimensionsForAttribute(final int attributeId, ICleanUpRegistry registry)

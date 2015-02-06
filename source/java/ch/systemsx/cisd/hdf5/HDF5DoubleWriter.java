@@ -277,6 +277,13 @@ class HDF5DoubleWriter extends HDF5DoubleReader implements IHDF5DoubleWriter
     }
 
     @Override
+    public void writeArrayBlock(final HDF5DataSet dataSet, final double[] data,
+            final long blockNumber)
+    {
+        writeArrayBlockWithOffset(dataSet, data, data.length, data.length * blockNumber);
+    }
+
+    @Override
     public void writeArrayBlockWithOffset(final String objectPath, final double[] data,
             final int dataSize, final long offset)
     {
@@ -303,6 +310,38 @@ class HDF5DoubleWriter extends HDF5DoubleReader implements IHDF5DoubleWriter
                     final int memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId, 
+                            H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    @Override
+    public void writeArrayBlockWithOffset(final HDF5DataSet dataSet, final double[] data,
+            final int dataSize, final long offset)
+    {
+        assert dataSet != null;
+        assert data != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] blockDimensions = new long[]
+                        { dataSize };
+                    final long[] slabStartOrNull = new long[]
+                        { offset };
+                    baseWriter.h5.extendDataSet(baseWriter.fileId, dataSet.getDatasetId(), dataSet.getLayout(), 
+                    	new long[] { offset + dataSize }, -1, registry);
+                    final int dataSpaceId =
+                            baseWriter.h5.getDataSpaceForDataSet(dataSet.getDatasetId(), registry);
+                    baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
+                    final int memorySpaceId =
+                            baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
+                    H5Dwrite(dataSet.getDatasetId(), H5T_NATIVE_DOUBLE, memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data);
                     return null; // Nothing to return.
                 }
