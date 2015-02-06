@@ -401,7 +401,13 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
         final MDByteArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
-        return new MDByteArray(result.getAsFlatArray(), effectiveBlockDimensions);
+        if (fullBlockDimensions.length == cardBoundIndices) // no free indices
+        {
+	        return new MDByteArray(result.getAsFlatArray(), new int[] { 1 });
+	    } else
+	    {
+	        return new MDByteArray(result.getAsFlatArray(), effectiveBlockDimensions);
+	    }
     }
 
     @Override
@@ -419,7 +425,13 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
         final MDByteArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
-        return new MDByteArray(result.getAsFlatArray(), effectiveBlockDimensions);
+        if (fullBlockDimensions.length == cardBoundIndices) // no free indices
+        {
+	        return new MDByteArray(result.getAsFlatArray(), new int[] { 1 });
+	    } else
+	    {
+	        return new MDByteArray(result.getAsFlatArray(), effectiveBlockDimensions);
+	    }
     }
 
     @Override
@@ -632,7 +644,7 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
                         "Block-wise reading of array type data sets is not supported.");
             }
         }
-        final int[] spaceBlockDimensions = Arrays.copyOfRange(blockDimensions, 0, spaceRank);
+        final int[] spaceBlockDimensions = Arrays.copyOfRange(effectiveBlockDimensions, 0, spaceRank);
         final long[] spaceOfs = Arrays.copyOfRange(offset, 0, spaceRank);
         final DataSpaceParameters spaceParams =
                 baseReader.getSpaceParameters(dataSetId, spaceOfs, spaceBlockDimensions, registry);

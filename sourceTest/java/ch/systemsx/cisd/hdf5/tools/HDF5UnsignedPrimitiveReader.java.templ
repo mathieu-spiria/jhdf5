@@ -401,7 +401,13 @@ class HDF5Unsigned__Name__Reader implements IHDF5__Name__Reader
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
         final MD__Name__Array result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
-        return new MD__Name__Array(result.getAsFlatArray(), effectiveBlockDimensions);
+        if (fullBlockDimensions.length == cardBoundIndices) // no free indices
+        {
+	        return new MD__Name__Array(result.getAsFlatArray(), new int[] { 1 });
+	    } else
+	    {
+	        return new MD__Name__Array(result.getAsFlatArray(), effectiveBlockDimensions);
+	    }
     }
 
     @Override
@@ -419,7 +425,13 @@ class HDF5Unsigned__Name__Reader implements IHDF5__Name__Reader
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
         final MD__Name__Array result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
-        return new MD__Name__Array(result.getAsFlatArray(), effectiveBlockDimensions);
+        if (fullBlockDimensions.length == cardBoundIndices) // no free indices
+        {
+	        return new MD__Name__Array(result.getAsFlatArray(), new int[] { 1 });
+	    } else
+	    {
+	        return new MD__Name__Array(result.getAsFlatArray(), effectiveBlockDimensions);
+	    }
     }
 
     @Override
@@ -632,7 +644,7 @@ class HDF5Unsigned__Name__Reader implements IHDF5__Name__Reader
                         "Block-wise reading of array type data sets is not supported.");
             }
         }
-        final int[] spaceBlockDimensions = Arrays.copyOfRange(blockDimensions, 0, spaceRank);
+        final int[] spaceBlockDimensions = Arrays.copyOfRange(effectiveBlockDimensions, 0, spaceRank);
         final long[] spaceOfs = Arrays.copyOfRange(offset, 0, spaceRank);
         final DataSpaceParameters spaceParams =
                 baseReader.getSpaceParameters(dataSetId, spaceOfs, spaceBlockDimensions, registry);

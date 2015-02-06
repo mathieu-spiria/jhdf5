@@ -401,7 +401,13 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
         final MDShortArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
-        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+        if (fullBlockDimensions.length == cardBoundIndices) // no free indices
+        {
+	        return new MDShortArray(result.getAsFlatArray(), new int[] { 1 });
+	    } else
+	    {
+	        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+	    }
     }
 
     @Override
@@ -419,7 +425,13 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
         createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
                 fullBlockDimensions, fullOffset);
         final MDShortArray result = readMDArrayBlockWithOffset(objectPath, fullBlockDimensions, fullOffset);
-        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+        if (fullBlockDimensions.length == cardBoundIndices) // no free indices
+        {
+	        return new MDShortArray(result.getAsFlatArray(), new int[] { 1 });
+	    } else
+	    {
+	        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+	    }
     }
 
     @Override
@@ -632,7 +644,7 @@ class HDF5UnsignedShortReader implements IHDF5ShortReader
                         "Block-wise reading of array type data sets is not supported.");
             }
         }
-        final int[] spaceBlockDimensions = Arrays.copyOfRange(blockDimensions, 0, spaceRank);
+        final int[] spaceBlockDimensions = Arrays.copyOfRange(effectiveBlockDimensions, 0, spaceRank);
         final long[] spaceOfs = Arrays.copyOfRange(offset, 0, spaceRank);
         final DataSpaceParameters spaceParams =
                 baseReader.getSpaceParameters(dataSetId, spaceOfs, spaceBlockDimensions, registry);
