@@ -370,8 +370,14 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                         { dataSize };
                     final long[] slabStartOrNull = new long[]
                         { offset };
-                    baseWriter.h5.extendDataSet(baseWriter.fileId, dataSet.getDatasetId(), dataSet.getLayout(), 
-                    	new long[] { offset + dataSize }, -1, registry);
+                    final long[] requiredDimensions = new long[]
+                        { offset + dataSize };
+                    if (baseWriter.h5.extendDataSet(baseWriter.fileId, dataSet.getDatasetId(),
+                            dataSet.getLayout(), dataSet.getDimensions(), requiredDimensions,
+                            dataSet.getMaxDimensions(), -1, registry))
+                    {
+                        dataSet.setDimensions(requiredDimensions);
+                    }
                     final int dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSet.getDatasetId(), registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);

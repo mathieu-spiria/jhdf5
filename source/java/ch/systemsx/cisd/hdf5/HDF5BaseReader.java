@@ -265,16 +265,15 @@ class HDF5BaseReader
                         @Override
                         public HDF5DataSet call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
-                                    h5.openDataSet(fileId, objectPath, null);
-                            final HDF5StorageLayout layout =
-                                    h5.getLayout(dataSetId, registry);
-                            final int dataSpaceId =
-                                    h5.getDataSpaceForDataSet(dataSetId, null);
+                            final int dataSetId = h5.openDataSet(fileId, objectPath, null);
+                            final HDF5StorageLayout layout = h5.getLayout(dataSetId, registry);
+                            final int dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, null);
                             final long[] dimensions = h5.getDataSpaceDimensions(dataSpaceId);
+                            final long[] maxDimensions =
+                                    h5.getDataMaxDimensions(dataSetId, registry);
                             final HDF5DataSet dataSet =
                                     new HDF5DataSet(objectPath, dataSetId, dataSpaceId, dimensions,
-                                            layout);
+                                            maxDimensions, layout);
                             fileRegistry.registerCleanUp(new Runnable()
                                 {
                                     @Override
@@ -536,8 +535,7 @@ class HDF5BaseReader
             {
                 throw new HDF5JavaException("Offset " + offset + " >= Size " + size);
             }
-            effectiveBlockSize =
-                    (int) Math.min(blockSize, Math.min(size, maxFileBlockSize));
+            effectiveBlockSize = (int) Math.min(blockSize, Math.min(size, maxFileBlockSize));
             final long[] blockShape = new long[]
                 { effectiveBlockSize };
             h5.setHyperslabBlock(dataSpaceId, new long[]

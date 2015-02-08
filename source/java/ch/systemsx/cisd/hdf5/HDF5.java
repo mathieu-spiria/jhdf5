@@ -865,17 +865,19 @@ class HDF5
                     H5Dclose(dataSetId);
                 }
             });
-        extendDataSet(fileId, dataSetId, null, dimensions, storageDataTypeId, registry);
+        extendDataSet(fileId, dataSetId, null, null, dimensions, null, storageDataTypeId, registry);
         return dataSetId;
     }
 
-    public void extendDataSet(int fileId, int dataSetId, HDF5StorageLayout layoutOrNull,
-            long[] dimensions, int storageDataTypeId, ICleanUpRegistry registry)
-            throws HDF5JavaException
+    public boolean extendDataSet(int fileId, int dataSetId, HDF5StorageLayout layoutOrNull,
+            long[] oldDimensionsOrNull, long[] newDimensions, long[] maxDimensionsOrNull,
+            int storageDataTypeId, ICleanUpRegistry registry) throws HDF5JavaException
     {
         final boolean overwriteMode = (storageDataTypeId > -1);
-        final long[] oldDimensions = getDataDimensions(dataSetId, registry);
-        if (Arrays.equals(oldDimensions, dimensions) == false)
+        final long[] oldDimensions =
+                (oldDimensionsOrNull != null) ? oldDimensionsOrNull : getDataDimensions(dataSetId,
+                        registry);
+        if (Arrays.equals(oldDimensions, newDimensions) == false)
         {
             final HDF5StorageLayout layout =
                     (layoutOrNull != null) ? layoutOrNull : getLayout(dataSetId, registry);
@@ -883,11 +885,11 @@ class HDF5
             {
                 // Safety check. JHDF5 creates CHUNKED data sets always with unlimited max
                 // dimensions but we may have to work on a file we haven't created.
-                if (areDimensionsInBounds(dataSetId, dimensions, registry))
+                if (areDimensionsInBounds(dataSetId, newDimensions, maxDimensionsOrNull, registry))
                 {
-                    final long[] newDimensions =
-                            computeNewDimensions(oldDimensions, dimensions, overwriteMode);
-                    setDataSetExtentChunked(dataSetId, newDimensions);
+                    setDataSetExtentChunked(dataSetId,
+                            computeNewDimensions(oldDimensions, newDimensions, overwriteMode));
+                    return true;
                 } else
                 {
                     throw new HDF5JavaException("New data set dimensions are out of bounds.");
@@ -902,12 +904,13 @@ class HDF5
                 {
                     throw new HDF5JavaException("Cannot partially overwrite array type.");
                 }
-                if (HDF5Utils.isInBounds(oldDimensions, dimensions) == false)
+                if (HDF5Utils.isInBounds(oldDimensions, newDimensions) == false)
                 {
                     throw new HDF5JavaException("New data set dimensions are out of bounds.");
                 }
             }
         }
+        return false;
     }
 
     private long[] computeNewDimensions(long[] oldDimensions, long[] newDimensions,
@@ -931,9 +934,11 @@ class HDF5
      * Checks whether the given <var>dimensions</var> are in bounds for <var>dataSetId</var>.
      */
     private boolean areDimensionsInBounds(final int dataSetId, final long[] dimensions,
-            ICleanUpRegistry registry)
+            final long[] maxDimensionsOrNull, ICleanUpRegistry registry)
     {
-        final long[] maxDimensions = getDataMaxDimensions(dataSetId, registry);
+        final long[] maxDimensions =
+                (maxDimensionsOrNull != null) ? maxDimensionsOrNull : getDataMaxDimensions(
+                        dataSetId, registry);
 
         if (dimensions.length != maxDimensions.length) // Actually an error condition
         {
@@ -1868,7 +1873,7 @@ class HDF5
         return runner.call(dataDimensionRunnable);
     }
 
-    private long[] getDataMaxDimensions(final int dataSetId, ICleanUpRegistry registry)
+    long[] getDataMaxDimensions(final int dataSetId, ICleanUpRegistry registry)
     {
         final int dataSpaceId = H5Dget_space(dataSetId);
         registry.registerCleanUp(new Runnable()
