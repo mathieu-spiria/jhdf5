@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2015 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -206,6 +206,27 @@ class HDF5FloatWriter extends HDF5FloatReader implements IHDF5FloatWriter
     }
 
     @Override
+    public void writeArray(final String objectPath, final float[] data,
+            final HDF5DataSetTemplate template)
+    {
+        assert data != null;
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseWriter.createDataSetFromTemplate(objectPath,
+                                    template, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    @Override
     public void createArray(final String objectPath, final int size)
     {
         createArray(objectPath, size, FLOAT_NO_COMPRESSION);
@@ -267,6 +288,20 @@ class HDF5FloatWriter extends HDF5FloatReader implements IHDF5FloatWriter
                 }
             };
         baseWriter.runner.call(createRunnable);
+    }
+
+    @Override
+    public HDF5DataSetTemplate createArrayTemplate(final long size, final int blockSize,
+            final HDF5FloatStorageFeatures features)
+    {
+        assert size >= 0;
+        assert blockSize >= 0 && (blockSize <= size || size == 0);
+
+        baseWriter.checkOpen();
+        return baseWriter.createDataSetTemplate(
+                H5T_IEEE_F32LE, features, new long[]
+                    { size }, new long[]
+                    { blockSize }, 4);
     }
 
     @Override

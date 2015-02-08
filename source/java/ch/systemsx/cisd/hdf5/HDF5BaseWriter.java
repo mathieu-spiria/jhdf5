@@ -1030,6 +1030,59 @@ final class HDF5BaseWriter extends HDF5BaseReader
         return dataSetId;
     }
 
+    /**
+     * Creates a data set template.
+     */
+    HDF5DataSetTemplate createDataSetTemplate(final int storageDataTypeId,
+            final HDF5AbstractStorageFeatures features, final long[] dimensions,
+            final long[] chunkSizeOrNull, int elementLength)
+    {
+        final boolean empty = isEmpty(dimensions);
+        final boolean chunkSizeProvided =
+                (chunkSizeOrNull != null && isNonPositive(chunkSizeOrNull) == false);
+        final long[] definitiveChunkSizeOrNull;
+        if (empty)
+        {
+            definitiveChunkSizeOrNull =
+                    chunkSizeProvided ? chunkSizeOrNull : HDF5Utils.tryGetChunkSize(dimensions,
+                            elementLength, features.requiresChunking(), true);
+        } else if (features.tryGetProposedLayout() == HDF5StorageLayout.COMPACT
+                || features.tryGetProposedLayout() == HDF5StorageLayout.CONTIGUOUS
+                || (useExtentableDataTypes == false) && features.requiresChunking() == false)
+        {
+            definitiveChunkSizeOrNull = null;
+        } else if (chunkSizeProvided)
+        {
+            definitiveChunkSizeOrNull = chunkSizeOrNull;
+        } else
+        {
+            definitiveChunkSizeOrNull =
+                    HDF5Utils
+                            .tryGetChunkSize(
+                                    dimensions,
+                                    elementLength,
+                                    features.requiresChunking(),
+                                    useExtentableDataTypes
+                                            || features.tryGetProposedLayout() == HDF5StorageLayout.CHUNKED);
+        }
+        final HDF5StorageLayout layout =
+                determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull,
+                        features.tryGetProposedLayout());
+        return h5.createDataSetTemplateLowLevel(fileId, dimensions, definitiveChunkSizeOrNull,
+                storageDataTypeId, features, layout, fileFormat);
+    }
+
+    /**
+     * Creates a new data set from a template. The data set must not yet exist or elese an exception
+     * from the HDF5 library is thrown.
+     */
+    int createDataSetFromTemplate(final String objectPath,
+            final HDF5DataSetTemplate dataSetTemplate, final ICleanUpRegistry registry)
+    {
+        return h5.createDataSetSimple(fileId, dataSetTemplate.getStorageDataTypeId(),
+                dataSetTemplate.getDataspaceId(), objectPath, registry);
+    }
+
     boolean keepDataIfExists(final HDF5AbstractStorageFeatures features)
     {
         switch (features.getDatasetReplacementPolicy())

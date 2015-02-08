@@ -168,6 +168,7 @@ public class HDF5RoundtripTest
         test.testBooleanArray();
         test.testBooleanArrayBlock();
         test.testFloatArrayBlockWithPreopenedDataSet();
+        test.testFloatArraysFromTemplates();
         test.testBitFieldArray();
         test.testBitFieldArrayBlockWise();
         test.testSmallString();
@@ -2971,8 +2972,10 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
-    private static void fillArray(float mult, float[] data) {
-        for (int i = 0; i < data.length; ++i) {
+    private static void fillArray(float mult, float[] data)
+    {
+        for (int i = 0; i < data.length; ++i)
+        {
             data[i] = mult * i;
         }
     }
@@ -3007,6 +3010,38 @@ public class HDF5RoundtripTest
                         reader.float32().readArrayBlock(ds, dataWritten.length, bx);
                 assertTrue("" + bx, Arrays.equals(dataWritten, dataRead));
             }
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testFloatArraysFromTemplates()
+    {
+        final File floatArrayFile = new File(workingDirectory, "floatArraysFromTemplates.h5");
+        floatArrayFile.delete();
+        assertFalse(floatArrayFile.exists());
+        floatArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(floatArrayFile);
+        final float[] dataWritten = new float[128];
+        try (final HDF5DataSetTemplate tmpl =
+                writer.int32().createArrayTemplate(dataWritten.length, dataWritten.length,
+                        HDF5IntStorageFeatures.INT_CONTIGUOUS))
+        {
+            for (long bx = 0; bx < 8; ++bx)
+            {
+                fillArray(bx + 1, dataWritten);
+                writer.float32().writeArray("ds" + bx, dataWritten, tmpl);
+            }
+        }
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(floatArrayFile);
+        for (long bx = 0; bx < 8; ++bx)
+        {
+            fillArray(bx + 1, dataWritten);
+            final float[] dataRead =
+                    reader.float32().readArray("ds" + bx);
+            assertTrue("" + bx, Arrays.equals(dataWritten, dataRead));
         }
         reader.close();
     }

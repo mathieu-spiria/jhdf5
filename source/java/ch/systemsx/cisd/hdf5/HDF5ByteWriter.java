@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2015 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -207,6 +207,27 @@ class HDF5ByteWriter extends HDF5ByteReader implements IHDF5ByteWriter
     }
 
     @Override
+    public void writeArray(final String objectPath, final byte[] data,
+            final HDF5DataSetTemplate template)
+    {
+        assert data != null;
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseWriter.createDataSetFromTemplate(objectPath,
+                                    template, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    @Override
     public void createArray(final String objectPath, final int size)
     {
         createArray(objectPath, size, INT_NO_COMPRESSION);
@@ -268,6 +289,20 @@ class HDF5ByteWriter extends HDF5ByteReader implements IHDF5ByteWriter
                 }
             };
         baseWriter.runner.call(createRunnable);
+    }
+
+    @Override
+    public HDF5DataSetTemplate createArrayTemplate(final long size, final int blockSize,
+            final HDF5IntStorageFeatures features)
+    {
+        assert size >= 0;
+        assert blockSize >= 0 && (blockSize <= size || size == 0);
+
+        baseWriter.checkOpen();
+        return baseWriter.createDataSetTemplate(
+                features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE, features, new long[]
+                    { size }, new long[]
+                    { blockSize }, 1);
     }
 
     @Override

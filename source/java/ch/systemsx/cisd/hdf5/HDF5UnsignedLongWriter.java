@@ -206,6 +206,27 @@ class HDF5UnsignedLongWriter extends HDF5UnsignedLongReader implements IHDF5Long
     }
 
     @Override
+    public void writeArray(final String objectPath, final long[] data,
+            final HDF5DataSetTemplate template)
+    {
+        assert data != null;
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final int dataSetId =
+                            baseWriter.createDataSetFromTemplate(objectPath,
+                                    template, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_UINT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    @Override
     public void createArray(final String objectPath, final int size)
     {
         createArray(objectPath, size, INT_NO_COMPRESSION);
@@ -267,6 +288,20 @@ class HDF5UnsignedLongWriter extends HDF5UnsignedLongReader implements IHDF5Long
                 }
             };
         baseWriter.runner.call(createRunnable);
+    }
+
+    @Override
+    public HDF5DataSetTemplate createArrayTemplate(final long size, final int blockSize,
+            final HDF5IntStorageFeatures features)
+    {
+        assert size >= 0;
+        assert blockSize >= 0 && (blockSize <= size || size == 0);
+
+        baseWriter.checkOpen();
+        return baseWriter.createDataSetTemplate(
+                H5T_STD_U64LE, features, new long[]
+                    { size }, new long[]
+                    { blockSize }, 8);
     }
 
     @Override

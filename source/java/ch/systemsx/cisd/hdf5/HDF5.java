@@ -632,17 +632,91 @@ class HDF5
         return dataSetId;
     }
 
-    private int createDataSetCreationPropertyList(ICleanUpRegistry registry)
+    public HDF5DataSetTemplate createDataSetTemplateLowLevel(int fileId, long[] dimensions,
+            long[] chunkSizeOrNull, int dataTypeId, HDF5AbstractStorageFeatures compression,
+            HDF5StorageLayout layout, FileFormat fileFormat)
     {
-        final int dataSetCreationPropertyListId = H5Pcreate(H5P_DATASET_CREATE);
+        final int dataSpaceId =
+                H5Screate_simple(dimensions.length, dimensions,
+                        createMaxDimensions(dimensions, (layout == HDF5StorageLayout.CHUNKED)));
+        final int dataSetCreationPropertyListId;
+        final boolean closeCreationPropertyListId;
+        if (layout == HDF5StorageLayout.CHUNKED && chunkSizeOrNull != null)
+        {
+            dataSetCreationPropertyListId = createDataSetCreationPropertyList(null);
+            closeCreationPropertyListId = true;
+            setChunkedLayout(dataSetCreationPropertyListId, chunkSizeOrNull);
+            if (compression.isScaling())
+            {
+                compression.checkScalingOK(fileFormat);
+                final int classTypeId = getClassType(dataTypeId);
+                assert compression.isCompatibleWithDataClass(classTypeId);
+                if (classTypeId == H5T_INTEGER)
+                {
+                    H5Pset_scaleoffset(dataSetCreationPropertyListId, H5Z_SO_INT,
+                            compression.getScalingFactor());
+                } else if (classTypeId == H5T_FLOAT)
+                {
+                    H5Pset_scaleoffset(dataSetCreationPropertyListId, H5Z_SO_FLOAT_DSCALE,
+                            compression.getScalingFactor());
+                }
+            }
+            if (compression.isShuffleBeforeDeflate())
+            {
+                setShuffle(dataSetCreationPropertyListId);
+            }
+            if (compression.isDeflating())
+            {
+                setDeflate(dataSetCreationPropertyListId, compression.getDeflateLevel());
+            }
+        } else if (layout == HDF5StorageLayout.COMPACT)
+        {
+            dataSetCreationPropertyListId =
+                    dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc;
+            closeCreationPropertyListId = false;
+        } else
+        {
+            dataSetCreationPropertyListId = dataSetCreationPropertyListFillTimeAlloc;
+            closeCreationPropertyListId = false;
+        }
+
+        return new HDF5DataSetTemplate(dataSpaceId, dataSetCreationPropertyListId,
+                closeCreationPropertyListId, dataTypeId, dimensions, layout);
+    }
+
+    public int createDataSetSimple(int fileId, int dataTypeId, int dataSpaceId, String dataSetName,
+            ICleanUpRegistry registry)
+    {
+        final int dataSetId =
+                H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
+                        lcplCreateIntermediateGroups, dataSetCreationPropertyListFillTimeAlloc,
+                        H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
                 public void run()
                 {
-                    H5Pclose(dataSetCreationPropertyListId);
+                    H5Dclose(dataSetId);
                 }
             });
+
+        return dataSetId;
+    }
+
+    private int createDataSetCreationPropertyList(ICleanUpRegistry registry)
+    {
+        final int dataSetCreationPropertyListId = H5Pcreate(H5P_DATASET_CREATE);
+        if (registry != null)
+        {
+            registry.registerCleanUp(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+                        H5Pclose(dataSetCreationPropertyListId);
+                    }
+                });
+        }
         H5Pset_fill_time(dataSetCreationPropertyListId, H5D_FILL_TIME_ALLOC);
         return dataSetCreationPropertyListId;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2015 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,6 +114,18 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
             HDF5FloatStorageFeatures features);
 
     /**
+     * Writes out a <code>double</code> array (of rank 1). When creating many data sets with the same
+     * features, this method will be faster than
+     * {@link #writeArray(String, double[], HDF5FloatStorageFeatures)}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param template The template to be used to determine the features of the data set.
+     * @throws ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
+     */
+    public void writeArray(String objectPath, double[] data, HDF5DataSetTemplate template);
+
+    /**
      * Creates a <code>double</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -171,6 +183,26 @@ public interface IHDF5DoubleWriter extends IHDF5DoubleReader
      */
     public void createArray(String objectPath, long size, int blockSize,
             HDF5FloatStorageFeatures features);
+
+    /**
+     * Creates a <code>double</code> array template (of rank 1) which can be used in
+     * {@link #writeArray(String, double[], HDF5DataSetTemplate)} to create data sets.
+     * It is meant to be used when creating many data sets with the same features.
+     * <p>
+     * <i>The template returned by this method must be closed after work, as otherwise resources of
+     * the HDF5 library are leaked.</i>
+     * 
+     * @param size The size of the double array to be created. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>features</code> is <code>HDF5FloatStorageFeature.FLOAT_NO_COMPRESSION</code>
+     *            .
+     * @param features The storage features of the data set.
+     */
+    public HDF5DataSetTemplate createArrayTemplate(final long size, final int blockSize,
+            final HDF5FloatStorageFeatures features);
 
     /**
      * Writes out a block of a <code>double</code> array (of rank 1). The data set needs to have
