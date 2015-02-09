@@ -17,6 +17,15 @@ tasks.withType(Test) {
     systemProperty "java.library.path", "libs/native/jhdf5/amd64-Linux:libs/native/jhdf5/amd64-Linux:libs/native/jhdf5/x86_64-Mac OS X:libs/native/jhdf5/x86_64-Mac OS X"
 }
 
+// Eclipse Gradle plugin always uses the default JRE, so we need to explicitly set it to 1.7.
+// (https://issues.gradle.org/browse/GRADLE-3100)
+eclipse {
+    classpath {
+         containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
+         containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7'
+    }
+}
+
 jar {
     baseName "${project.group}-jhdf5-core"
     from (sourceSets.main.output.classesDir) { 
