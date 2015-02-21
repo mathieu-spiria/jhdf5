@@ -574,11 +574,11 @@ public class HDF5ArchiverTest
         ar.close();
     }
     
-    private static final String ARCHIVE_LISTING = "drwxrwxr-x\tbernd\tbernd\t       DIR\t2015-02-21 14:01:31\t        \t/tmp\n" + 
-    		"drwxrwxr-x\tbernd\tbernd\t       DIR\t2015-02-21 14:01:40\t        \t/tmp/c\n" + 
-    		"-rw-rw-r--\tbernd\tbernd\t         7\t2015-02-21 14:01:40\t046d0418\t/tmp/c/d\n" + 
-    		"-rw-rw-r--\tbernd\tbernd\t         7\t2015-02-21 14:01:21\t791af05d\t/tmp/a\n" + 
-    		"-rw-rw-r--\tbernd\tbernd\t         7\t2015-02-21 14:01:27\t5237a39e\t/tmp/b";
+    private static final String ARCHIVE_LISTING = "775\t1001\t1001\t       DIR\t2015-02-21 14:01:31\t        \t/tmp\n" + 
+    		"775\t1001\t1001\t       DIR\t2015-02-21 14:01:40\t        \t/tmp/c\n" + 
+    		"664\t1001\t1001\t         7\t2015-02-21 14:01:40\t046d0418\t/tmp/c/d\n" + 
+    		"664\t1001\t1001\t         7\t2015-02-21 14:01:21\t791af05d\t/tmp/a\n" + 
+    		"664\t1001\t1001\t         7\t2015-02-21 14:01:27\t5237a39e\t/tmp/b";
     
     @Test
     public void testReadExistingArchive()
@@ -587,8 +587,7 @@ public class HDF5ArchiverTest
         System.out.println(h5arfile);
         assertTrue(h5arfile.exists());
         final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
-        final String archiveListing = org.apache.commons.lang.StringUtils.join(ar.list().toArray(), "\n");
-        assertEquals(ARCHIVE_LISTING, archiveListing);
+        assertEquals(ARCHIVE_LISTING, toStringNumeric(ar));
         final List<ArchiveEntry> testResult = ar.test();
         assertTrue(ArrayUtils.toString(testResult), testResult.isEmpty());
         ar.close();
@@ -601,11 +600,22 @@ public class HDF5ArchiverTest
         System.out.println(h5arfile);
         assertTrue(h5arfile.exists());
         final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
-        final String archiveListing = org.apache.commons.lang.StringUtils.join(ar.list().toArray(), "\n");
-        assertEquals(ARCHIVE_LISTING, archiveListing);
+        assertEquals(ARCHIVE_LISTING, toStringNumeric(ar));
         final List<ArchiveEntry> testResult = ar.test();
         assertTrue(ArrayUtils.toString(testResult), testResult.isEmpty());
         ar.close();
+    }
+
+    private String toStringNumeric(final IHDF5ArchiveReader ar)
+    {
+        final StringBuilder b = new StringBuilder();
+        for (ArchiveEntry e : ar.list())
+        {
+            b.append(e.describeLink(true, true));
+            b.append('\n');
+        }
+        b.setLength(b.length() - 1);
+        return b.toString();
     }
 
     private void checkSorted(List<ArchiveEntry> entries)
