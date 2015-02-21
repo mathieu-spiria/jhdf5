@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.ArrayUtils;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
@@ -57,6 +58,8 @@ public class HDF5ArchiverTest
     private static final File rootDirectory = new File("targets", "unit-test-wd");
 
     private static final File workingDirectory = new File(rootDirectory, "hdf5-archivertest-wd");
+
+    private static final File srcDirectory = new File("sourceTest/java/ch/systemsx/cisd/hdf5/h5ar");
 
     @BeforeSuite
     public void init()
@@ -568,6 +571,40 @@ public class HDF5ArchiverTest
         assertTrue(ar.isSymLink("dir_somedir/link_todir3"));
         assertEquals("../dir_someotherdir", ar.tryGetEntry("dir_somedir/link_todir3", true)
                 .getLinkTarget());
+        ar.close();
+    }
+    
+    private static final String ARCHIVE_LISTING = "drwxrwxr-x\tbernd\tbernd\t       DIR\t2015-02-21 14:01:31\t        \t/tmp\n" + 
+    		"drwxrwxr-x\tbernd\tbernd\t       DIR\t2015-02-21 14:01:40\t        \t/tmp/c\n" + 
+    		"-rw-rw-r--\tbernd\tbernd\t         7\t2015-02-21 14:01:40\t046d0418\t/tmp/c/d\n" + 
+    		"-rw-rw-r--\tbernd\tbernd\t         7\t2015-02-21 14:01:21\t791af05d\t/tmp/a\n" + 
+    		"-rw-rw-r--\tbernd\tbernd\t         7\t2015-02-21 14:01:27\t5237a39e\t/tmp/b";
+    
+    @Test
+    public void testReadExistingArchive()
+    {
+        final File h5arfile = new File(srcDirectory, "test.h5ar");
+        System.out.println(h5arfile);
+        assertTrue(h5arfile.exists());
+        final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
+        final String archiveListing = org.apache.commons.lang.StringUtils.join(ar.list().toArray(), "\n");
+        assertEquals(ARCHIVE_LISTING, archiveListing);
+        final List<ArchiveEntry> testResult = ar.test();
+        assertTrue(ArrayUtils.toString(testResult), testResult.isEmpty());
+        ar.close();
+    }
+
+    @Test
+    public void testReadLegacy_14_12_0_Archive()
+    {
+        final File h5arfile = new File(srcDirectory, "test_14_12_0.h5ar");
+        System.out.println(h5arfile);
+        assertTrue(h5arfile.exists());
+        final IHDF5ArchiveReader ar = HDF5ArchiverFactory.openForReading(h5arfile);
+        final String archiveListing = org.apache.commons.lang.StringUtils.join(ar.list().toArray(), "\n");
+        assertEquals(ARCHIVE_LISTING, archiveListing);
+        final List<ArchiveEntry> testResult = ar.test();
+        assertTrue(ArrayUtils.toString(testResult), testResult.isEmpty());
         ar.close();
     }
 

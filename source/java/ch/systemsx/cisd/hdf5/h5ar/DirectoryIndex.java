@@ -35,8 +35,10 @@ import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.hdf5.CharacterEncoding;
+import ch.systemsx.cisd.hdf5.HDF5CompoundMemberInformation;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping;
 import ch.systemsx.cisd.hdf5.HDF5CompoundType;
+import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
@@ -226,6 +228,8 @@ class DirectoryIndex implements IDirectoryIndex
                         getHDF5LinkCompoundType(hdf5Reader);
                 final CRC32 crc32Digester = new CRC32();
                 final String indexDataSetName = getIndexDataSetName();
+                final HDF5CompoundMemberInformation[] info =
+                        linkCompoundType.getCompoundMemberInformation(DataTypeInfoOptions.MINIMAL);
                 final LinkRecord[] work =
                         hdf5Reader.compound().readArray(indexDataSetName, linkCompoundType,
                                 new IHDF5CompoundInformationRetriever.IByteArrayInspector()
@@ -233,7 +237,8 @@ class DirectoryIndex implements IDirectoryIndex
                                         @Override
                                         public void inspect(byte[] byteArray)
                                         {
-                                            crc32Digester.update(byteArray);
+                                            updateCRC32(byteArray, linkCompoundType, info,
+                                                    crc32Digester);
                                         }
                                     });
                 int crc32 = (int) crc32Digester.getValue();
@@ -241,10 +246,13 @@ class DirectoryIndex implements IDirectoryIndex
                         hdf5Reader.int32().getAttr(indexDataSetName, CRC32_ATTRIBUTE_NAME);
                 if (crc32 != crc32Stored)
                 {
-                    throw new ListArchiveException(groupPath,
-                            "CRC checksum mismatch on index (links). Expected: "
-                                    + Utils.crc32ToString(crc32Stored) + ", found: "
-                                    + Utils.crc32ToString(crc32));
+                    if (calcLegacy_14_12_0_Checksum(indexDataSetName, linkCompoundType) != crc32Stored)
+                    {
+                        throw new ListArchiveException(groupPath,
+                                "CRC checksum mismatch on index (links). Expected: "
+                                        + Utils.crc32ToString(crc32Stored) + ", found: "
+                                        + Utils.crc32ToString(crc32));
+                    }
                 }
                 final String indexNamesDataSetName = getIndexNamesDataSetName();
                 final String concatenatedNames = hdf5Reader.readString(indexNamesDataSetName);
@@ -278,7 +286,8 @@ class DirectoryIndex implements IDirectoryIndex
                 for (HDF5LinkInformation linfo : hdf5LinkInfos)
                 {
                     final long size =
-                            linfo.isDataSet() ? hdf5Reader.object().getSize(linfo.getPath()) : Utils.UNKNOWN;
+                            linfo.isDataSet() ? hdf5Reader.object().getSize(linfo.getPath())
+                                    : Utils.UNKNOWN;
                     work[idx++] = new LinkRecord(linfo, size);
                 }
                 Arrays.sort(work);
@@ -290,6 +299,22 @@ class DirectoryIndex implements IDirectoryIndex
         }
         readLinkTargets = withLinkTargets;
         dirty = false;
+    }
+
+    private int calcLegacy_14_12_0_Checksum(final String indexDataSetName,
+            final HDF5CompoundType<LinkRecord> linkCompoundType)
+    {
+        final CRC32 crc32Digester = new CRC32();
+                hdf5Reader.compound().readArray(indexDataSetName, linkCompoundType,
+                        new IHDF5CompoundInformationRetriever.IByteArrayInspector()
+                            {
+                                @Override
+                                public void inspect(byte[] byteArray)
+                                {
+                                    crc32Digester.update(byteArray);
+                                }
+                            });
+        return (int) crc32Digester.getValue();
     }
 
     private void initLinks(final LinkRecord[] work, final String concatenatedNames,
@@ -378,24 +403,28 @@ class DirectoryIndex implements IDirectoryIndex
             }
             final String indexNamesDataSetName = getIndexNamesDataSetName();
             final String concatenatedNamesStr = concatenatedNames.toString();
-            hdf5WriterOrNull.string().write(indexNamesDataSetName, concatenatedNamesStr, HDF5GenericStorageFeatures.GENERIC_DEFLATE);
+            hdf5WriterOrNull.string().write(indexNamesDataSetName, concatenatedNamesStr,
+                    HDF5GenericStorageFeatures.GENERIC_DEFLATE);
             hdf5WriterOrNull.int32().setAttr(indexNamesDataSetName, CRC32_ATTRIBUTE_NAME,
                     calcCrc32(concatenatedNamesStr));
             final String indexDataSetName = getIndexDataSetName();
-            final CRC32 crc32 = new CRC32();
-            hdf5WriterOrNull.compound().writeArray(indexDataSetName,
-                    getHDF5LinkCompoundType(hdf5WriterOrNull), links.getLinkArray(),
-                    HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
+            final CRC32 crc32Digester = new CRC32();
+            final HDF5CompoundType<LinkRecord> linkCompoundType =
+                    getHDF5LinkCompoundType(hdf5WriterOrNull);
+            final HDF5CompoundMemberInformation[] info =
+                    linkCompoundType.getCompoundMemberInformation(DataTypeInfoOptions.MINIMAL);
+            hdf5WriterOrNull.compound().writeArray(indexDataSetName, linkCompoundType,
+                    links.getLinkArray(), HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                     new IHDF5CompoundInformationRetriever.IByteArrayInspector()
                         {
                             @Override
                             public void inspect(byte[] byteArray)
                             {
-                                crc32.update(byteArray);
+                                updateCRC32(byteArray, linkCompoundType, info, crc32Digester);
                             }
                         });
             hdf5WriterOrNull.int32().setAttr(indexDataSetName, CRC32_ATTRIBUTE_NAME,
-                    (int) crc32.getValue());
+                    (int) crc32Digester.getValue());
         } catch (HDF5Exception ex)
         {
             errorStrategy.dealWithError(new ListArchiveException(groupPath, ex));
@@ -465,6 +494,26 @@ class DirectoryIndex implements IDirectoryIndex
         final CRC32 crc32 = new CRC32();
         crc32.update(StringUtils.toBytes0Term(names, names.length(), CharacterEncoding.UTF8));
         return (int) crc32.getValue();
+    }
+
+    private void updateCRC32(byte[] byteArray, final HDF5CompoundType<LinkRecord> linkCompoundType,
+            final HDF5CompoundMemberInformation[] info, final CRC32 crc32Digester)
+    {
+        final int numberOfRecords = byteArray.length / linkCompoundType.getRecordSizeInMemory();
+        for (int i = 0; i < numberOfRecords; ++i)
+        {
+            final int recordOfs = i * linkCompoundType.getRecordSizeInMemory();
+            for (int j = 0; j < info.length; ++j)
+            {
+                final int ofs = recordOfs + info[j].getOffsetInMemory();
+                final int diskOfs = info[j].getOffsetOnDisk();
+                final int nextDiskOfs =
+                        (j + 1 < info.length) ? info[j + 1].getOffsetOnDisk() : linkCompoundType
+                                .getRecordSizeOnDisk();
+                final int sizeOnDisk = nextDiskOfs - diskOfs;
+                crc32Digester.update(byteArray, ofs, sizeOnDisk);
+            }
+        }
     }
 
     //
