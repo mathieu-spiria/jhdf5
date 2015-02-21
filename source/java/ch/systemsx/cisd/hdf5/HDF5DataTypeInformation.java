@@ -35,13 +35,13 @@ public final class HDF5DataTypeInformation
      */
     public static final class DataTypeInfoOptions
     {
-        static final DataTypeInfoOptions MINIMAL = new DataTypeInfoOptions(false, false);
+        public static final DataTypeInfoOptions MINIMAL = new DataTypeInfoOptions(false, false);
 
-        static final DataTypeInfoOptions ALL = new DataTypeInfoOptions(true, true);
+        public static final DataTypeInfoOptions ALL = new DataTypeInfoOptions(true, true);
 
-        static final DataTypeInfoOptions DEFAULT = new DataTypeInfoOptions(false, true);
+        public static final DataTypeInfoOptions DEFAULT = new DataTypeInfoOptions(false, true);
 
-        static final DataTypeInfoOptions PATH = new DataTypeInfoOptions(true, false);
+        public static final DataTypeInfoOptions PATH = new DataTypeInfoOptions(true, false);
 
         private boolean knowsDataTypePath;
 
