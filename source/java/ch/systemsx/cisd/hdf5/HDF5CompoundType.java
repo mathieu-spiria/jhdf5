@@ -136,6 +136,46 @@ public class HDF5CompoundType<T> extends HDF5DataType
     }
 
     /**
+     * Returns the number of compound members.
+     */
+    public int getNumberOfMembers()
+    {
+        return objectByteifyer.getByteifyers().length;
+    }
+
+    /**
+     * Returns the name of compound member <var>idx</var>.
+     */
+    public String getMemberName(int idx)
+    {
+        return objectByteifyer.getByteifyers()[idx].getMemberName();
+    }
+
+    /**
+     * Returns the size of compound member <var>idx</var> (in bytes).
+     */
+    public int getMemberSize(int idx)
+    {
+        return objectByteifyer.getByteifyers()[idx].getSize();
+    }
+
+    /**
+     * Returns the disk offset (within the record) of compound member <var>idx</var> (in bytes).
+     */
+    public int getMemberOffSetOnDisk(int idx)
+    {
+        return objectByteifyer.getByteifyers()[idx].getOffsetOnDisk();
+    }
+
+    /**
+     * Returns the memory offset (within the record) of compound member <var>idx</var> (in bytes).
+     */
+    public int getMemberOffsetInMemory(int idx)
+    {
+        return objectByteifyer.getByteifyers()[idx].getOffsetInMemory();
+    }
+
+    /**
      * Returns an array with the {@link HDF5CompoundMemberInformation} of all compound members.
      */
     public HDF5CompoundMemberInformation[] getCompoundMemberInformation()

@@ -35,10 +35,8 @@ import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.hdf5.CharacterEncoding;
-import ch.systemsx.cisd.hdf5.HDF5CompoundMemberInformation;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMemberMapping;
 import ch.systemsx.cisd.hdf5.HDF5CompoundType;
-import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5LinkInformation;
@@ -228,8 +226,6 @@ class DirectoryIndex implements IDirectoryIndex
                         getHDF5LinkCompoundType(hdf5Reader);
                 final CRC32 crc32Digester = new CRC32();
                 final String indexDataSetName = getIndexDataSetName();
-                final HDF5CompoundMemberInformation[] info =
-                        linkCompoundType.getCompoundMemberInformation(DataTypeInfoOptions.MINIMAL);
                 final LinkRecord[] work =
                         hdf5Reader.compound().readArray(indexDataSetName, linkCompoundType,
                                 new IHDF5CompoundInformationRetriever.IByteArrayInspector()
@@ -237,8 +233,7 @@ class DirectoryIndex implements IDirectoryIndex
                                         @Override
                                         public void inspect(byte[] byteArray)
                                         {
-                                            updateCRC32(byteArray, linkCompoundType, info,
-                                                    crc32Digester);
+                                            updateCRC32(byteArray, linkCompoundType, crc32Digester);
                                         }
                                     });
                 int crc32 = (int) crc32Digester.getValue();
@@ -411,8 +406,6 @@ class DirectoryIndex implements IDirectoryIndex
             final CRC32 crc32Digester = new CRC32();
             final HDF5CompoundType<LinkRecord> linkCompoundType =
                     getHDF5LinkCompoundType(hdf5WriterOrNull);
-            final HDF5CompoundMemberInformation[] info =
-                    linkCompoundType.getCompoundMemberInformation(DataTypeInfoOptions.MINIMAL);
             hdf5WriterOrNull.compound().writeArray(indexDataSetName, linkCompoundType,
                     links.getLinkArray(), HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION,
                     new IHDF5CompoundInformationRetriever.IByteArrayInspector()
@@ -420,7 +413,7 @@ class DirectoryIndex implements IDirectoryIndex
                             @Override
                             public void inspect(byte[] byteArray)
                             {
-                                updateCRC32(byteArray, linkCompoundType, info, crc32Digester);
+                                updateCRC32(byteArray, linkCompoundType, crc32Digester);
                             }
                         });
             hdf5WriterOrNull.int32().setAttr(indexDataSetName, CRC32_ATTRIBUTE_NAME,
@@ -497,20 +490,17 @@ class DirectoryIndex implements IDirectoryIndex
     }
 
     private void updateCRC32(byte[] byteArray, final HDF5CompoundType<LinkRecord> linkCompoundType,
-            final HDF5CompoundMemberInformation[] info, final CRC32 crc32Digester)
+            final CRC32 crc32Digester)
     {
         final int numberOfRecords = byteArray.length / linkCompoundType.getRecordSizeInMemory();
+        final int numberOfMembers = linkCompoundType.getNumberOfMembers();
         for (int i = 0; i < numberOfRecords; ++i)
         {
             final int recordOfs = i * linkCompoundType.getRecordSizeInMemory();
-            for (int j = 0; j < info.length; ++j)
+            for (int j = 0; j < numberOfMembers; ++j)
             {
-                final int ofs = recordOfs + info[j].getOffsetInMemory();
-                final int diskOfs = info[j].getOffsetOnDisk();
-                final int nextDiskOfs =
-                        (j + 1 < info.length) ? info[j + 1].getOffsetOnDisk() : linkCompoundType
-                                .getRecordSizeOnDisk();
-                final int sizeOnDisk = nextDiskOfs - diskOfs;
+                final int ofs = recordOfs + linkCompoundType.getMemberOffsetInMemory(j);
+                final int sizeOnDisk = linkCompoundType.getMemberSize(j);
                 crc32Digester.update(byteArray, ofs, sizeOnDisk);
             }
         }
