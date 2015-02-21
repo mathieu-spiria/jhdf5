@@ -58,7 +58,8 @@ public final class HDF5CompoundMemberInformation implements
         this.dataTypeInformation = dataTypeInformation;
         this.enumValuesOrNull = enumValuesOrNull;
         this.offsetOnDisk = offsetOnDisk;
-        this.offsetInMemory = offsetInMemory;
+        this.offsetInMemory = PaddingUtils.padOffset(offsetInMemory, dataTypeInformation.getElementSizeForPadding());
+
     }
 
     HDF5CompoundMemberInformation(String memberName, HDF5DataTypeInformation dataTypeInformation,

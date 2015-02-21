@@ -3039,8 +3039,7 @@ public class HDF5RoundtripTest
         for (long bx = 0; bx < 8; ++bx)
         {
             fillArray(bx + 1, dataWritten);
-            final float[] dataRead =
-                    reader.float32().readArray("ds" + bx);
+            final float[] dataRead = reader.float32().readArray("ds" + bx);
             assertTrue("" + bx, Arrays.equals(dataWritten, dataRead));
         }
         reader.close();
@@ -7417,6 +7416,18 @@ public class HDF5RoundtripTest
         writer.close();
 
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
+        final HDF5CompoundType<RecordRequiringMemAlignment> type =
+                reader.compound().getInferredType(RecordRequiringMemAlignment.class);
+        final HDF5CompoundMemberInformation[] infos = type.getCompoundMemberInformation();
+        for (int i = 0; i < infos.length; ++i)
+        {
+            assertEquals(infos[i].getName() + "(" + i + ")", type.getObjectByteifyer()
+                    .getByteifyers()[i].getOffsetOnDisk(), infos[i].getOffsetOnDisk());
+            assertEquals(infos[i].getName() + "(" + i + ")", type.getObjectByteifyer()
+                    .getByteifyers()[i].getOffsetInMemory(), infos[i].getOffsetInMemory());
+            assertEquals(infos[i].getName() + "(" + i + ")", type.getObjectByteifyer()
+                    .getByteifyers()[i].getSize(), infos[i].getType().getElementSize());
+        }
         final RecordRequiringMemAlignment recordRead =
                 reader.compound().getAttr("val", "attr0d", RecordRequiringMemAlignment.class);
         assertEquals(recordWritten, recordRead);
@@ -7488,6 +7499,14 @@ public class HDF5RoundtripTest
         final SimpleInheretingRecord3 recordRead3 =
                 reader.compound().read("cpd3", SimpleInheretingRecord3.class);
         assertEquals(recordWritten3, recordRead3);
+        HDF5CompoundMemberInformation[] infos = type.getCompoundMemberInformation();
+        for (int i = 0; i < infos.length; ++i)
+        {
+            assertEquals("" + i, type.getObjectByteifyer().getByteifyers()[i].getOffsetOnDisk(),
+                    infos[i].getOffsetOnDisk());
+            assertEquals("" + i, type.getObjectByteifyer().getByteifyers()[i].getOffsetInMemory(),
+                    infos[i].getOffsetInMemory());
+        }
         reader.close();
 
         final IHDF5Reader reader2 = HDF5Factory.openForReading(file2);
