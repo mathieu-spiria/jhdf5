@@ -22,6 +22,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.base.unix.Unix;
+import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5ObjectType;
 
 /**
@@ -114,6 +115,14 @@ final class Utils
         return path.substring(path.lastIndexOf('/') + 1);
     }
 
+    private static String normalizeToUnix(String unixOrWindowsPath)
+    {
+        final String pathToNormalize =
+                OSUtilities.isWindows() ? unixOrWindowsPath.replace('/', '\\') : unixOrWindowsPath;
+        final String normalized = FilenameUtils.normalize(pathToNormalize);
+        return OSUtilities.isWindows() ? normalized.replace('\\', '/') : normalized;
+    }
+
     /**
      * Returns a normalized path: it starts with "/" and doesn't have "/" at the end, except if it
      * is the root path "/". This method internally calls {@link FilenameUtils#normalize(String)}
@@ -121,10 +130,10 @@ final class Utils
      */
     static String normalizePath(String hdf5ObjectPath)
     {
-        String prenormalizedPath = FilenameUtils.normalize(hdf5ObjectPath);
+        String prenormalizedPath = normalizeToUnix(hdf5ObjectPath);
         if (prenormalizedPath == null)
         {
-            prenormalizedPath = FilenameUtils.normalize(hdf5ObjectPath.replace("//", "/"));
+            prenormalizedPath = normalizeToUnix(hdf5ObjectPath.replace("//", "/"));
             if (prenormalizedPath == null)
             {
                 prenormalizedPath = hdf5ObjectPath.replace("//", "/");
