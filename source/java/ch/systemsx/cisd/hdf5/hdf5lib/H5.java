@@ -36,43 +36,36 @@ class H5
 
     static
     {
-        if (NativeLibraryUtilities.loadNativeLibrary("jhdf5") == false)
+        synchronized (ncsa.hdf.hdf5lib.H5.class)
         {
-            throw new UnsupportedOperationException("No suitable HDF5 native library found for this platform.");
-        }
-
-        // Important! Exit quietly
-        try
-        {
-            synchronized (ncsa.hdf.hdf5lib.H5.class)
+            if (NativeLibraryUtilities.loadNativeLibrary("jhdf5") == false)
+            {
+                throw new UnsupportedOperationException("No suitable HDF5 native library found for this platform.");
+            }
+    
+            // Important! Exit quietly
+            try
             {
                 H5dont_atexit();
+            } catch (final HDF5LibraryException e)
+            {
+                System.exit(1);
             }
-        } catch (final HDF5LibraryException e)
-        {
-            System.exit(1);
-        }
-
-        // Important! Disable error output to C stdout
-        synchronized (ncsa.hdf.hdf5lib.H5.class)
-        {
+    
             H5error_off();
-        }
-
-        // Ensure we have the expected version of the library (with at least the expected release
-        // number)
-        final int[] libversion = new int[3];
-        synchronized (ncsa.hdf.hdf5lib.H5.class)
-        {
+    
+            // Ensure we have the expected version of the library (with at least the expected release
+            // number)
+            final int[] libversion = new int[3];
             H5get_libversion(libversion);
-        }
-        if (libversion[0] != expectedMajnum || libversion[1] != expectedMinnum
-                || libversion[2] < expectedRelnum)
-        {
-            throw new UnsupportedOperationException("The HDF5 native library is outdated! It is version "
-                    + libversion[0] + "." + libversion[1] + "." + libversion[2]
-                    + ", but we require " + expectedMajnum + "." + expectedMinnum + ".x with x >= "
-                    + expectedRelnum + ".");
+            if (libversion[0] != expectedMajnum || libversion[1] != expectedMinnum
+                    || libversion[2] < expectedRelnum)
+            {
+                throw new UnsupportedOperationException("The HDF5 native library is outdated! It is version "
+                        + libversion[0] + "." + libversion[1] + "." + libversion[2]
+                        + ", but we require " + expectedMajnum + "." + expectedMinnum + ".x with x >= "
+                        + expectedRelnum + ".");
+            }
         }
     }
 
