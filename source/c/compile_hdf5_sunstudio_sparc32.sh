@@ -5,9 +5,16 @@ export PATH
 
 source version.sh
 
-tar xf hdf5-$VERSION.tar
+tar xvf hdf5-$VERSION.tar
+
+if [ -n "$POSTFIX" ]; then
+  mv hdf5-$VERSION hdf5-$VERSION-$POSTFIX
+  VERSION="$VERSION-$POSTFIX"
+fi
 
 cd hdf5-$VERSION
+
+patch -p1 < ../HDFFV-9670-1.8.16.patch
 
 CPPFLAGS='-D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_LARGEFILE_SOURCE' ./configure --prefix=/opt/hdf5-$VERSION-32 --enable-shared --enable-debug=none --enable-production
 

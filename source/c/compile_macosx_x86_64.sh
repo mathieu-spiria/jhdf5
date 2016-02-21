@@ -2,4 +2,8 @@
 
 source version.sh
 
+if [ -n "$POSTFIX" ]; then
+  VERSION="$VERSION-$POSTFIX"
+fi
+
 gcc -m64 -mmacosx-version-min=10.6 -dynamiclib -O3 jhdf5/*.c hdf-java/*.c -I/System/Library/Frameworks/JavaVM.framework/Versions/Current/Headers -I/opt/hdf5-${VERSION}-x86_64/include /opt/hdf5-${VERSION}-x86_64/lib/libhdf5.a -lz -o libjhdf5.jnilib

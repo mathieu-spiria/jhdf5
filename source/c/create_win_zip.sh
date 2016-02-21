@@ -4,10 +4,15 @@ source version.sh
 
 rm -f hdf5-$VERSION-win.zip
 rm -fR hdf5-$VERSION
-tar xf hdf5-$VERSION.tar
+tar xvf hdf5-$VERSION.tar
+if [ -n "$POSTFIX" ]; then
+  mv hdf5-$VERSION hdf5-$VERSION-$POSTFIX
+  VERSION="$VERSION-$POSTFIX"
+fi
 cd hdf5-$VERSION
 
-patch -s -p0 < ../hdf5_win_compile.diff
+patch -p1 < ../HDFFV-9670-1.8.16.patch
+patch -p0 < ../hdf5_win_compile.diff
 find . -name "*.orig" -exec rm {} \;
 
 cp -f config/cmake/UserMacros/Windows_MT.cmake UserMacros.cmake
