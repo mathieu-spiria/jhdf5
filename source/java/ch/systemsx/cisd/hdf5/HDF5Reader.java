@@ -102,6 +102,9 @@ class HDF5Reader implements IHDF5Reader
         assert baseReader != null;
 
         this.baseReader = baseReader;
+        // Ensure the finalizer of this HDF5Reader doesn't close the file behind the back of the 
+        // specialized readers when they are still in operation.
+        baseReader.setMyReader(this);
         this.fileHandler = new HDF5FileLevelReadOnlyHandler(baseReader);
         this.objectHandler = new HDF5ObjectReadOnlyInfoProviderHandler(baseReader);
         this.byteReader = new HDF5ByteReader(baseReader);

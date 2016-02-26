@@ -112,6 +112,12 @@ class HDF5BaseReader
     final String houseKeepingNameSuffix;
 
     final CharacterEncoding encodingForNewDataSets;
+    
+    // We keep this reference in order to not have the reader garbage collected and thus
+    // closing the file when specialized readers are still open and need access to this base 
+    // reader.
+    @SuppressWarnings("unused")
+    private HDF5Reader myReader;
 
     HDF5BaseReader(File hdf5File, boolean performNumericConversions, boolean autoDereference,
             FileFormat fileFormat, boolean overwrite, String preferredHouseKeepingNameSuffix)
@@ -149,6 +155,11 @@ class HDF5BaseReader
         variableLengthStringDataTypeId = openOrCreateVLStringType();
         booleanDataTypeId = openOrCreateBooleanDataType();
         typeVariantDataType = openOrCreateTypeVariantDataType();
+    }
+
+    void setMyReader(HDF5Reader myReader)
+    {
+        this.myReader = myReader;
     }
 
     void copyObject(String srcPath, int dstFileId, String dstPath)

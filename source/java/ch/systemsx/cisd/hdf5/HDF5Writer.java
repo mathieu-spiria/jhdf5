@@ -102,6 +102,9 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     {
         super(baseWriter);
         this.baseWriter = baseWriter;
+        // Ensure the finalizer of this HDF5Writer doesn't close the file behind the back of the 
+        // specialized writers when they are still in operation.
+        baseWriter.setMyReader(this);
         this.fileHandler = new HDF5FileLevelReadWriteHandler(baseWriter);
         this.objectHandler = new HDF5ObjectReadWriteInfoProviderHandler(baseWriter);
         this.byteWriter = new HDF5ByteWriter(baseWriter);
