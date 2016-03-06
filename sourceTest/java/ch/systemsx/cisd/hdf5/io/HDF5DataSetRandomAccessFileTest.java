@@ -144,6 +144,32 @@ public class HDF5DataSetRandomAccessFileTest
     }
 
     @Test
+    public void testReadEmptyDataSetByByte()
+    {
+        final File dataSetFile = new File(workingDirectory, "testReadEmptyDataSetByByte.h5");
+        final String dataSetName = "ds";
+        dataSetFile.delete();
+        assertFalse(dataSetFile.exists());
+        dataSetFile.deleteOnExit();
+
+        final IHDF5Writer writer =
+                HDF5FactoryProvider.get().configure(dataSetFile).keepDataSetsIfTheyExist().writer();
+        writer.opaque().writeArray(dataSetName, "FILE", new byte[0]);
+        writer.close();
+        
+        final HDF5DataSetRandomAccessFile raFile =
+                asRandomAccessFileReadOnly(dataSetFile, dataSetName);
+        assertEquals(-1, raFile.read());
+        raFile.close();
+
+        final HDF5DataSetRandomAccessFile raFile2 =
+                asRandomAccessFileReadOnly(dataSetFile, dataSetName);
+        assertEquals(-1, raFile2.read(new byte[10]));
+        assertEquals(-1, raFile2.read());
+        raFile2.close();
+    }
+    
+    @Test
     public void testReadChunkedByteByByte()
     {
         final File dataSetFile = new File(workingDirectory, "testReadChunkedByteByByte.h5");

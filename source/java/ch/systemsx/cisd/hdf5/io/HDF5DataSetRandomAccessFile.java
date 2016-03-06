@@ -246,14 +246,20 @@ public class HDF5DataSetRandomAccessFile implements IRandomAccessFile, Flushable
     {
         if (realBlockSize < 0)
         {
-            try
+            if (eof())
             {
-                this.realBlockSize =
-                        reader.opaque().readArrayToBlockWithOffset(dataSetPath, block, blockSize,
-                                blockOffset, 0);
-            } catch (HDF5Exception ex)
+                this.realBlockSize = 0;
+            } else
             {
-                throw new IOExceptionUnchecked(ex);
+                try
+                {
+                    this.realBlockSize =
+                            reader.opaque().readArrayToBlockWithOffset(dataSetPath, block, blockSize,
+                                    blockOffset, 0);
+                } catch (HDF5Exception ex)
+                {
+                    throw new IOExceptionUnchecked(ex);
+                }
             }
         }
     }
