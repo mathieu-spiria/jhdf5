@@ -151,6 +151,8 @@ public class HDF5RoundtripTest
         test.testOverwriteScalar();
         test.testOverwriteScalarKeepDataSet();
         test.testDataSets();
+        test.testFixedLengthStringArray();
+        test.testVLStringCrash();
         test.testDataTypeInfoOptions();
         test.testCompactDataset();
         test.testCreateEmptyFixedSizeDataSets();
@@ -1155,6 +1157,89 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
+    @Test
+    public void testFixedLengthStringArray()
+    {
+        final File datasetFile = new File(workingDirectory, "stringArray.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String[] s = new String[100];
+        for (int i = 0; i < s.length; ++i)
+        {
+            s[i] = "a";
+        }
+        writer.string().writeArray("ds", s);
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        for (int i = 0; i < 100; ++i)
+        {
+            final String[] s2 = reader.string().readArray("ds");
+            assertEquals(100, s2.length);
+            for (int j = 0; j < s2.length; ++j)
+            {
+                assertEquals("a", s2[j]);
+            }
+        }
+        reader.close();
+    }
+    
+    private String repeatStr(String s, int count)
+    {
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < count; ++i)
+        {
+            b.append(s);
+        }
+        return b.toString();
+    }
+    
+    @Test
+    public void testVLStringCrash()
+    {
+        final File datasetFile = new File(workingDirectory, "testVLStrinCrash.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        IHDF5Writer writer = HDF5Factory.open(datasetFile);
+
+        List<String> memberNames = Arrays.asList("StringA", "StringB");
+        List<String> typeValues = Arrays.asList("", "");
+
+        HDF5CompoundMappingHints hints = new HDF5CompoundMappingHints();
+        hints.setUseVariableLengthStrings(true);
+
+        HDF5CompoundType<List<?>> hdf5CompoundType = writer.compound().getInferredType("RowData", memberNames, typeValues, hints);
+
+        HDF5GenericStorageFeatures storageFeatures = (HDF5GenericStorageFeatures) HDF5GenericStorageFeatures.build()
+            .chunkedStorageLayout()
+            .features();
+
+        writer.compound().createArray("SomeReport", hdf5CompoundType, 0L, 1, storageFeatures);
+
+        int index = 0;
+        Random random = new Random(12);
+
+        for(int i = 0; i < 100; ++i) {
+            int sizeA = random.nextInt(100);
+            int sizeB = random.nextInt(100);
+
+            // System.out.println("i = " + i + ".  sizeA = " + sizeA + ", sizeB = " + sizeB + ".");
+
+            List<String> rowData = Arrays.asList(repeatStr("a", sizeA), repeatStr("a", sizeB));
+            @SuppressWarnings("unchecked")
+            List<String>[] dataSet = new List[1];
+            dataSet[0] = rowData;
+
+            writer.compound().writeArrayBlock("SomeReport", hdf5CompoundType, dataSet, index);
+            ++index;
+        }
+        writer.close();
+        
+    }
+    
     @Test
     public void testDataSets()
     {

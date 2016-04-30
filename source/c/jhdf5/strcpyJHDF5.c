@@ -49,7 +49,7 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_compoundCpyVLStr
     }
 
 	numberOfBytes = (*env)->GetStringUTFLength(env, str);
-	strPCpy = calloc(1, numberOfBytes);
+	strPCpy = calloc(1, numberOfBytes + 1);
 	numberOfCharacters = (*env)->GetStringLength(env, str);
     (*env)->GetStringUTFRegion(env, str, 0, numberOfCharacters, strPCpy);
 
