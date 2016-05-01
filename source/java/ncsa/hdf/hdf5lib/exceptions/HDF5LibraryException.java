@@ -14,9 +14,11 @@ package ncsa.hdf.hdf5lib.exceptions;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5General.H5open;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-
-import org.apache.commons.io.FileUtils;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 
 
 /**
@@ -180,6 +182,20 @@ public class HDF5LibraryException extends HDF5Exception
         return minorErrorMessage;
     }
 
+    private static FileInputStream openInputStream(File file) throws IOException {
+        if (file.exists()) {
+            if (file.isDirectory()) {
+                throw new IOException("File '" + file + "' exists but is a directory");
+            }
+            if (file.canRead() == false) {
+                throw new IOException("File '" + file + "' cannot be read");
+            }
+        } else {
+            throw new FileNotFoundException("File '" + file + "' does not exist");
+        }
+        return new FileInputStream(file);
+    }
+    
     /**
      * Returns the error stack as retrieved from the HDF5 library as a string.
      */
@@ -191,7 +207,16 @@ public class HDF5LibraryException extends HDF5Exception
             try
             {
                 printStackTrace0(tempFile.getPath());
-                return FileUtils.readFileToString(tempFile).trim();
+                StringWriter sw = new StringWriter();
+                try (InputStreamReader in = new InputStreamReader(new FileInputStream(tempFile)))
+                {
+                    char[] buffer = new char[4096];
+                    int n = 0;
+                    while (-1 != (n = in.read(buffer))) {
+                        sw.write(buffer, 0, n);
+                    }
+                    return sw.toString();
+                }
             } finally
             {
                 tempFile.delete();
