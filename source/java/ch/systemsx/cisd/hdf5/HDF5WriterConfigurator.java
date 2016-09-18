@@ -95,8 +95,7 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     }
 
     @Override
-    public IHDF5WriterConfigurator houseKeepingNameSuffix(@SuppressWarnings("hiding")
-    String houseKeepingNameSuffix)
+    public IHDF5WriterConfigurator houseKeepingNameSuffix(String houseKeepingNameSuffix)
     {
         this.houseKeepingNameSuffix = houseKeepingNameSuffix;
         return this;

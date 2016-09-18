@@ -551,8 +551,7 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
          * Sets that the integer values should be stored as signed integers if
          * <code>signed==true</code> and as unsigned integers if <code>signed==false</code>.
          */
-        public HDF5IntStorageFeatureBuilder signed(@SuppressWarnings("hiding")
-        boolean signed)
+        public HDF5IntStorageFeatureBuilder signed(boolean signed)
         {
             this.signed = signed;
             return this;

@@ -163,15 +163,13 @@ abstract class HDF5AbstractStorageFeatures
             return this;
         }
 
-        public HDF5AbstractStorageFeatureBuilder deflateLevel(@SuppressWarnings("hiding")
-        byte deflateLevel)
+        public HDF5AbstractStorageFeatureBuilder deflateLevel(byte deflateLevel)
         {
             this.deflateLevel = deflateLevel;
             return this;
         }
 
-        public HDF5AbstractStorageFeatureBuilder scalingFactor(@SuppressWarnings("hiding")
-        byte scalingFactor)
+        public HDF5AbstractStorageFeatureBuilder scalingFactor(byte scalingFactor)
         {
             this.scalingFactor = scalingFactor;
             return this;
@@ -183,8 +181,7 @@ abstract class HDF5AbstractStorageFeatures
             return this;
         }
 
-        public HDF5AbstractStorageFeatureBuilder shuffleBeforeDeflate(@SuppressWarnings("hiding")
-        boolean shuffleBeforeDeflate)
+        public HDF5AbstractStorageFeatureBuilder shuffleBeforeDeflate(boolean shuffleBeforeDeflate)
         {
             this.shuffleBeforeDeflate = shuffleBeforeDeflate;
             return this;
@@ -202,8 +199,7 @@ abstract class HDF5AbstractStorageFeatures
             return this;
         }
 
-        public HDF5AbstractStorageFeatureBuilder storageLayout(@SuppressWarnings("hiding")
-        HDF5StorageLayout storageLayout)
+        public HDF5AbstractStorageFeatureBuilder storageLayout(HDF5StorageLayout storageLayout)
         {
             this.storageLayout = storageLayout;
             return this;
@@ -234,7 +230,6 @@ abstract class HDF5AbstractStorageFeatures
         }
 
         public HDF5AbstractStorageFeatureBuilder datasetReplacementPolicy(
-                @SuppressWarnings("hiding")
                 DataSetReplacementPolicy datasetReplacementPolicy)
         {
             this.datasetReplacementPolicy = datasetReplacementPolicy;

@@ -493,7 +493,6 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return verifyErrors;
     }
 
-    @SuppressWarnings("null")
     @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             IArchiveEntryVisitor visitor, IArchiveEntryVisitor missingArchiveEntryVisitorOrNull,
@@ -526,7 +525,6 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, visitor, null, params);
     }
 
-    @SuppressWarnings("null")
     @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive, IArchiveEntryVisitor visitor,

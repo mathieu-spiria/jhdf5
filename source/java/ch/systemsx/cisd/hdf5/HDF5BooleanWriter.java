@@ -323,7 +323,6 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                     return null; // Nothing to return.
                 }
 
-                @SuppressWarnings("hiding")
                 void create(final String objectPath, final long[] dimensions,
                         final long[] blockDimensionsOrNull, final HDF5IntStorageFeatures features,
                         ICleanUpRegistry registry)

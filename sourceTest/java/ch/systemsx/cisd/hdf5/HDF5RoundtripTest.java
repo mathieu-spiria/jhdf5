@@ -10035,9 +10035,7 @@ public class HDF5RoundtripTest
             this.col = col;
         }
 
-        boolean equals(@SuppressWarnings("hiding")
-        int row, @SuppressWarnings("hiding")
-        int col)
+        boolean equals(int row, int col)
         {
             return this.row == row && this.col == col;
         }

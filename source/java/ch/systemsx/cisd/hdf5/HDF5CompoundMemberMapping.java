@@ -1187,7 +1187,6 @@ public final class HDF5CompoundMemberMapping
      * Sets the field name in the Java class to use for the mapping, overriding the member name
      * which is used by default to find the field.
      */
-    @SuppressWarnings("hiding")
     public HDF5CompoundMemberMapping fieldName(String fieldName)
     {
         this.fieldName = fieldName;
@@ -1298,7 +1297,6 @@ public final class HDF5CompoundMemberMapping
      * Can be used as a convenience method replacing {@link #dimensions(int[])} for array members of
      * rank 1.
      */
-    @SuppressWarnings("hiding")
     public HDF5CompoundMemberMapping length(int memberTypeLength)
     {
         return dimensions(new int[]
@@ -1326,7 +1324,6 @@ public final class HDF5CompoundMemberMapping
      * Sets the dimensions of the member type to use for the mapping. Must be set for array members
      * of rank N.
      */
-    @SuppressWarnings("hiding")
     public HDF5CompoundMemberMapping dimensions(int[] memberTypeDimensions)
     {
         this.memberTypeDimensions = memberTypeDimensions;
@@ -1352,8 +1349,7 @@ public final class HDF5CompoundMemberMapping
      * Sets this field to an unsigned type, if <var>unsigned</var> is <code>true</code>. Must be an
      * integer.
      */
-    public HDF5CompoundMemberMapping unsigned(@SuppressWarnings("hiding")
-    boolean unsigned)
+    public HDF5CompoundMemberMapping unsigned(boolean unsigned)
     {
         this.unsigned = unsigned;
         return this;
@@ -1380,8 +1376,7 @@ public final class HDF5CompoundMemberMapping
      * Sets this field to a variable-length type, if <var>variableLength</var> is <code>true</code>.
      * Must be a string.
      */
-    public HDF5CompoundMemberMapping variableLength(@SuppressWarnings("hiding")
-    boolean variableLength)
+    public HDF5CompoundMemberMapping variableLength(boolean variableLength)
     {
         this.variableLength = variableLength;
         return this;
@@ -1408,8 +1403,7 @@ public final class HDF5CompoundMemberMapping
      * Sets this field to a reference type, if <var>reference</var> is <code>true</code>. Must be a
      * string.
      */
-    public HDF5CompoundMemberMapping reference(@SuppressWarnings("hiding")
-    boolean reference)
+    public HDF5CompoundMemberMapping reference(boolean reference)
     {
         this.reference = reference;
         return this;

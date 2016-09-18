@@ -63,8 +63,7 @@ public final class VerifyParameters
          * <code>false</code>, perform a non-recursive listing, i.e. do not traverse
          * sub-directories.
          */
-        public VerifyParametersBuilder recursive(@SuppressWarnings("hiding")
-        boolean recursive)
+        public VerifyParametersBuilder recursive(boolean recursive)
         {
             this.recursive = recursive;
             return this;
@@ -90,8 +89,7 @@ public final class VerifyParameters
          * This is a pure display parameter that is only relevant if {@link #verifyAttributes()} has
          * been set.
          */
-        public VerifyParametersBuilder numeric(@SuppressWarnings("hiding")
-        boolean numeric)
+        public VerifyParametersBuilder numeric(boolean numeric)
         {
             this.numeric = numeric;
             return this;
@@ -111,8 +109,7 @@ public final class VerifyParameters
          * time, file ownership and access permissions, if it is <code>false</code>, check only the
          * types and content of entries.
          */
-        public VerifyParametersBuilder verifyAttributes(@SuppressWarnings("hiding")
-        boolean verifyAttributes)
+        public VerifyParametersBuilder verifyAttributes(boolean verifyAttributes)
         {
             this.verifyAttributes = verifyAttributes;
             return this;

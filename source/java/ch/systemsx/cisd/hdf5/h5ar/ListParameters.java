@@ -104,8 +104,7 @@ public final class ListParameters
          * <code>false</code>, perform a non-recursive listing, i.e. do not traverse
          * sub-directories.
          */
-        public ListParametersBuilder recursive(@SuppressWarnings("hiding")
-        boolean recursive)
+        public ListParametersBuilder recursive(boolean recursive)
         {
             this.recursive = recursive;
             return this;
@@ -124,8 +123,7 @@ public final class ListParameters
          * If <var>readLinkTargets</var> is <code>true</code>, then read the link targets of
          * symbolic links, if it is <code>false</code>, do not read the link targets.
          */
-        public ListParametersBuilder readLinkTargets(@SuppressWarnings("hiding")
-        boolean readLinkTargets)
+        public ListParametersBuilder readLinkTargets(boolean readLinkTargets)
         {
             this.readLinkTargets = readLinkTargets;
             return this;
@@ -146,8 +144,7 @@ public final class ListParameters
          * i.e. see whether the index and the content of the archive match with respect to types,
          * sizes and checksums, if it is <code>false</code>, do not perform an integrity check.
          */
-        public ListParametersBuilder testArchive(@SuppressWarnings("hiding")
-        boolean testArchive)
+        public ListParametersBuilder testArchive(boolean testArchive)
         {
             this.testArchive = testArchive;
             return this;
@@ -167,8 +164,7 @@ public final class ListParameters
          * from being listed. Only files and links will be listed, if it is <code>false</code>, list
          * also directories.
          */
-        public ListParametersBuilder suppressDirectoryEntries(@SuppressWarnings("hiding")
-        boolean suppressDirectoryEntries)
+        public ListParametersBuilder suppressDirectoryEntries(boolean suppressDirectoryEntries)
         {
             this.suppressDirectoryEntries = suppressDirectoryEntries;
             return this;
@@ -194,8 +190,7 @@ public final class ListParameters
          * Note that the root directory "/" will never be listed, so this parameter is only
          * effective when the top-level directory of the listing is <i>not</i> the root directory.
          */
-        public ListParametersBuilder includeTopLevelDirectoryEntry(@SuppressWarnings("hiding")
-        boolean includeTopLevelDirectoryEntry)
+        public ListParametersBuilder includeTopLevelDirectoryEntry(boolean includeTopLevelDirectoryEntry)
         {
             this.includeTopLevelDirectoryEntry = includeTopLevelDirectoryEntry;
             return this;
@@ -223,8 +218,7 @@ public final class ListParameters
          * the listing. Note, however, that symbolic links to directories being resolved do not lead
          * to the directory being traversed expect if also {@link #followSymbolicLinks()} is given.
          */
-        public ListParametersBuilder resolveSymbolicLinks(@SuppressWarnings("hiding")
-        boolean resolveSymbolicLinks)
+        public ListParametersBuilder resolveSymbolicLinks(boolean resolveSymbolicLinks)
         {
             this.resolveSymbolicLinks = resolveSymbolicLinks;
             return this;
@@ -248,8 +242,7 @@ public final class ListParameters
          * <p>
          * Only effective if recursive listing is enabled.
          */
-        public ListParametersBuilder followSymbolicLinks(@SuppressWarnings("hiding")
-        boolean followSymbolicLinks)
+        public ListParametersBuilder followSymbolicLinks(boolean followSymbolicLinks)
         {
             this.followSymbolicLinks = followSymbolicLinks;
             return this;
