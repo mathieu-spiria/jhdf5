@@ -1,4 +1,4 @@
-apply from: '../gradle/javaproject.gradle'
+apply from: 'javaproject.gradle'
 
 group='sis'
 sourceCompatibility='1.8'
