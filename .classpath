@@ -15,7 +15,7 @@
 	<classpathentry kind="lib" path="/libraries/jmock/hamcrest/hamcrest-library.jar"/>
 	<classpathentry kind="lib" path="/libraries/jmock/objenesis/objenesis-1.0.jar"/>
 	<classpathentry kind="lib" path="libs"/>
-	<classpathentry kind="lib" path="/libraries/sis-base/sis-base.jar"/>
+	<classpathentry kind="lib" path="/libraries/sis-base/sis-base.jar" sourcepath="/libraries/sis-base/sis-base-src.zip"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="output" path="targets/classes"/>
 </classpath>
