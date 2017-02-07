@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -5231,6 +5232,29 @@ public class HDF5RoundtripTest
         writer.int8().setArrayAttr(datasetName, byteArrayAttributeName, byteArrayAttribute);
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(attributeFile);
+        final List<String> attributeNames = reader.object().getAttributeNames(datasetName);
+        attributeNames.sort(new Comparator<String>() {
+			@Override
+			public int compare(String o1, String o2) {
+				return o1.compareTo(o2);
+			}
+		});
+        assertEquals(15, attributeNames.size());
+        assertEquals(Arrays.asList("Boolean Attribute", 
+        		"Byte Array Attribute", 
+        		"Byte Attribute", 
+        		"Enum Array Attribute", 
+        		"Enum Array MD Attribute",
+        		"Enum Attribute",
+        		"Float Array Attribute",
+        		"Float Array Multi-dimensional Attribute",
+        		"Integer Array Attribute",
+        		"Integer Attribute",
+        		"String 2D Array Attribute",
+        		"String Array Attribute",
+        		"String Attribute",
+        		"String Attribute VL",
+        		"Unsigned Byte Attribute"), attributeNames);
         assertTrue(reader.object().hasAttribute(datasetName, booleanAttributeName));
         final boolean booleanAttributeValueRead =
                 reader.bool().getAttr(datasetName, booleanAttributeName);
