@@ -18,10 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
 import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5DwriteString;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
 import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
 import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
 import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
@@ -31,6 +29,7 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseWriter.StringArrayBuffer;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * The implementation of {@link IHDF5StringWriter}.
@@ -821,9 +820,10 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                                         baseWriter.variableLengthStringDataTypeId, objectPath,
                                         true, registry);
                     }
-                    H5DwriteString(dataSetId, baseWriter.variableLengthStringDataTypeId,
-                            H5S_SCALAR, H5S_SCALAR, H5P_DEFAULT, new String[]
-                                { data });
+                    final byte[] result = new byte[HDFNativeData.getMachineWordSize()];
+                	HDFNativeData.compoundCpyVLStr(data, result, 0);
+                    H5Dwrite(dataSetId, baseWriter.variableLengthStringDataTypeId, 
+                    		H5S_ALL, H5S_ALL, H5P_DEFAULT, result);
                     return null; // Nothing to return.
                 }
             };

@@ -556,13 +556,23 @@ class HDF5
 
     public void writeStringVL(int dataSetId, int dataTypeId, String[] value)
     {
-        H5DwriteString(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, value);
+        final byte[] result = new byte[HDFNativeData.getMachineWordSize() * value.length];
+        for (int i = 0; i < value.length; ++i)
+        {
+        	HDFNativeData.compoundCpyVLStr(value[i], result, i * HDFNativeData.getMachineWordSize());
+        }
+        H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, result);
     }
 
     public void writeStringVL(int dataSetId, int dataTypeId, int memorySpaceId, int fileSpaceId,
             String[] value)
     {
-        H5DwriteString(dataSetId, dataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, value);
+        final byte[] result = new byte[HDFNativeData.getMachineWordSize() * value.length];
+        for (int i = 0; i < value.length; ++i)
+        {
+        	HDFNativeData.compoundCpyVLStr(value[i], result, i * HDFNativeData.getMachineWordSize());
+        }
+        H5Dwrite(dataSetId, dataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, result);
     }
 
     public int createDataSet(int fileId, long[] dimensions, long[] chunkSizeOrNull, int dataTypeId,
@@ -1267,7 +1277,12 @@ class HDF5
 
     public void writeAttributeStringVL(int attributeId, int dataTypeId, String[] value)
     {
-        H5AwriteString(attributeId, dataTypeId, value);
+        final byte[] result = new byte[HDFNativeData.getMachineWordSize() * value.length];
+        for (int i = 0; i < value.length; ++i)
+        {
+        	HDFNativeData.compoundCpyVLStr(value[i], result, i * HDFNativeData.getMachineWordSize());
+        }
+        H5Awrite(attributeId, dataTypeId, result);
     }
 
     //
