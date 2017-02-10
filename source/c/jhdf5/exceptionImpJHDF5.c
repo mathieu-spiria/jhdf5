@@ -1,12 +1,14 @@
 /****************************************************************************
- * NCSA HDF                                                                 *
- * National Comptational Science Alliance                                   *
- * University of Illinois at Urbana-Champaign                               *
- * 605 E. Springfield, Champaign IL 61820                                   *
+ * Copyright by The HDF Group.                                               *
+ * Copyright by the Board of Trustees of the University of Illinois.         *
+ * All rights reserved.                                                      *
  *                                                                          *
- * For conditions of distribution and use, see the accompanying             *
- * hdf-java/COPYING file.                                                   *
- *                                                                          *
+ * This file is part of HDF Java Products. The full HDF Java copyright       *
+ * notice, including terms governing use, modification, and redistribution,  *
+ * is contained in the file, COPYING.  COPYING can be found at the root of   *
+ * the source code distribution tree. You can also access it online  at      *
+ * http://www.hdfgroup.org/products/licenses.html.  If you do not have       *
+ * access to the file, you may request a copy from help@hdfgroup.org.        *
  ****************************************************************************/
 
 /*
@@ -21,7 +23,10 @@ extern "C" {
 
 #include "hdf5.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include "jni.h"
+#include "../hdf-java/h5jni.h"
+
 /*
 #include "H5Eprivate.h"
 */
@@ -53,10 +58,11 @@ typedef struct H5E_num_t {
 
 int getMajorErrorNumber();
 int getMinorErrorNumber();
+int getErrorNumbers(hid_t stk_id, H5E_num_t*);
 
-/* get the major and minor error numbers on the top of the erroe stack */
+/* get the major and minor error numbers on the top of the error stack */
 static
-herr_t walk_error_callback(unsigned n, const H5E_error_t *err_desc, void *_err_nums)
+herr_t walk_error_callback(unsigned n, const H5E_error2_t *err_desc, void *_err_nums)
 {
     H5E_num_t *err_nums = (H5E_num_t *)_err_nums;
 
@@ -81,7 +87,8 @@ char *defineHDF5LibraryException(int maj_num);
 JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_H5error_1off
   (JNIEnv *env, jclass clss )
 {
-    return H5Eset_auto(H5E_DEFAULT, NULL, NULL);
+    H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+    return 0;
 }
 
 /*
@@ -93,7 +100,8 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_H5_H5error_1off
 JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_H5_H5error_1off
   (JNIEnv *env, jclass clss )
 {
-    return H5Eset_auto(H5E_DEFAULT, NULL, NULL);
+    H5Eset_auto2(H5E_DEFAULT, NULL, NULL);
+    return 0;
 }
 
 /*
@@ -109,22 +117,14 @@ JNIEXPORT void JNICALL Java_ncsa_hdf_hdf5lib_exceptions_HDF5LibraryException_pri
     FILE *stream;
     char *file;
 
-    if (file_name == NULL)
-        H5Eprint(H5E_DEFAULT, stderr);
-    else
-    {
-#ifdef __cplusplus
-        file = (char *)env->GetStringUTFChars(file_name,0);
-#else
-        file = (char *)(*env)->GetStringUTFChars(env,file_name,0);
-#endif
+    if (file_name == NULL) {
+        H5Eprint2(H5E_DEFAULT, stderr);
+    }
+    else {
+        file = (char *)ENVPTR->GetStringUTFChars(ENVPAR file_name,0);
         stream = fopen(file, "a+");
-        H5Eprint(H5E_DEFAULT, stream);
-#ifdef __cplusplus
-        env->ReleaseStringUTFChars(file_name, file);
-#else
-        (*env)->ReleaseStringUTFChars(env, file_name, file);
-#endif
+        H5Eprint2(H5E_DEFAULT, stream);
+        ENVPTR->ReleaseStringUTFChars(ENVPAR file_name, file);
         if (stream) fclose(stream);
     }
 }
@@ -145,7 +145,7 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_exceptions_HDF5LibraryException_get
 {
     H5E_num_t err_nums;
 
-    H5Ewalk(H5E_DEFAULT, H5E_WALK_DOWNWARD, walk_error_callback, &err_nums);
+    H5Ewalk2(H5E_DEFAULT, H5E_WALK_DOWNWARD, walk_error_callback, &err_nums);
 
     return (int) err_nums.maj_num;
 }
@@ -153,8 +153,10 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_exceptions_HDF5LibraryException_get
 int getMajorErrorNumber()
 {
     H5E_num_t err_nums;
+    err_nums.maj_num = 0;
+    err_nums.min_num = 0;
 
-    H5Ewalk(H5E_DEFAULT, H5E_WALK_DOWNWARD, walk_error_callback, &err_nums);
+    H5Ewalk2(H5E_DEFAULT, H5E_WALK_DOWNWARD, walk_error_callback, &err_nums);
 
     return (int) err_nums.maj_num;
 }
@@ -179,10 +181,19 @@ JNIEXPORT jint JNICALL Java_ncsa_hdf_hdf5lib_exceptions_HDF5LibraryException_get
 int getMinorErrorNumber()
 {
     H5E_num_t err_nums;
+    err_nums.maj_num = 0;
+    err_nums.min_num = 0;
 
-    H5Ewalk(H5E_DEFAULT, H5E_WALK_DOWNWARD, walk_error_callback, &err_nums);
+    H5Ewalk2(H5E_DEFAULT, H5E_WALK_DOWNWARD, walk_error_callback, &err_nums);
 
     return (int) err_nums.min_num;
+}
+
+int getErrorNumbers(hid_t stk_id, H5E_num_t *err_nums)
+{
+    err_nums->maj_num = 0;
+    err_nums->min_num = 0;
+    return H5Ewalk2(stk_id, H5E_WALK_DOWNWARD, walk_error_callback, err_nums);
 }
 
 /*
@@ -205,40 +216,21 @@ jboolean h5outOfMemory( JNIEnv *env, char *functName)
     jstring str;
     int rval;
 
-#ifdef __cplusplus
-    jc = env->FindClass("java/lang/OutOfMemoryError");
-#else
-    jc = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
-#endif
+    jc = ENVPTR->FindClass(ENVPAR "java/lang/OutOfMemoryError");
     if (jc == NULL) {
         return JNI_FALSE;
     }
-#ifdef __cplusplus
-    jm = env->GetMethodID(jc, "<init>", "(Ljava/lang/String;)V");
-#else
-    jm = (*env)->GetMethodID(env, jc, "<init>", "(Ljava/lang/String;)V");
-#endif
+    jm = ENVPTR->GetMethodID(ENVPAR jc, "<init>", "(Ljava/lang/String;)V");
     if (jm == NULL) {
         return JNI_FALSE;
     }
 
-#ifdef __cplusplus
-    str = (env)->NewStringUTF(functName);
-#else
-    str = (*env)->NewStringUTF(env,functName);
-#endif
+    str = ENVPTR->NewStringUTF(ENVPAR functName);
     args[0] = (char *)str;
     args[1] = 0;
 
-#ifdef __cplusplus
-    ex = env->NewObjectA ( jc, jm, (jvalue *)args );
-
-    rval = env->Throw( (jthrowable ) ex );
-#else
-    ex = (*env)->NewObjectA ( env, jc, jm, (jvalue *)args );
-
-    rval = (*env)->Throw(env, ex );
-#endif
+    ex = ENVPTR->NewObjectA (ENVPAR jc, jm, (jvalue *)args );
+    rval = ENVPTR->Throw(ENVPAR (jthrowable ) ex );
     if (rval < 0) {
         fprintf(stderr, "FATAL ERROR:  OutOfMemoryError: Throw failed\n");
         return JNI_FALSE;
@@ -265,39 +257,20 @@ jboolean h5JNIFatalError( JNIEnv *env, char *functName)
     jstring str;
     int rval;
 
-#ifdef __cplusplus
-    jc = env->FindClass("java/lang/InternalError");
-#else
-    jc = (*env)->FindClass(env, "java/lang/InternalError");
-#endif
+    jc = ENVPTR->FindClass(ENVPAR "java/lang/InternalError");
     if (jc == NULL) {
         return JNI_FALSE;
     }
-#ifdef __cplusplus
-    jm = env->GetMethodID(jc, "<init>", "(Ljava/lang/String;)V");
-#else
-    jm = (*env)->GetMethodID(env, jc, "<init>", "(Ljava/lang/String;)V");
-#endif
+    jm = ENVPTR->GetMethodID(ENVPAR jc, "<init>", "(Ljava/lang/String;)V");
     if (jm == NULL) {
         return JNI_FALSE;
     }
 
-#ifdef __cplusplus
-    str = env->NewStringUTF(functName);
-#else
-    str = (*env)->NewStringUTF(env,functName);
-#endif
+    str = ENVPTR->NewStringUTF(ENVPAR functName);
     args[0] = (char *)str;
     args[1] = 0;
-#ifdef __cplusplus
-    ex = env->NewObjectA ( jc, jm, (jvalue *)args );
-
-    rval = env->Throw( (jthrowable) ex );
-#else
-    ex = (*env)->NewObjectA ( env, jc, jm, (jvalue *)args );
-
-    rval = (*env)->Throw(env, ex );
-#endif
+    ex = ENVPTR->NewObjectA (ENVPAR jc, jm, (jvalue *)args );
+    rval = ENVPTR->Throw(ENVPAR  (jthrowable) ex );
     if (rval < 0) {
         fprintf(stderr, "FATAL ERROR:  JNIFatal: Throw failed\n");
         return JNI_FALSE;
@@ -323,39 +296,20 @@ jboolean h5nullArgument( JNIEnv *env, char *functName)
     jstring str;
     int rval;
 
-#ifdef __cplusplus
-    jc = env->FindClass("java/lang/NullPointerException");
-#else
-    jc = (*env)->FindClass(env, "java/lang/NullPointerException");
-#endif
+    jc = ENVPTR->FindClass(ENVPAR "java/lang/NullPointerException");
     if (jc == NULL) {
         return JNI_FALSE;
     }
-#ifdef __cplusplus
-    jm = env->GetMethodID(jc, "<init>", "(Ljava/lang/String;)V");
-#else
-    jm = (*env)->GetMethodID(env, jc, "<init>", "(Ljava/lang/String;)V");
-#endif
+    jm = ENVPTR->GetMethodID(ENVPAR jc, "<init>", "(Ljava/lang/String;)V");
     if (jm == NULL) {
         return JNI_FALSE;
     }
 
-#ifdef __cplusplus
-    str = env->NewStringUTF(functName);
-#else
-    str = (*env)->NewStringUTF(env,functName);
-#endif
+    str = ENVPTR->NewStringUTF(ENVPAR functName);
     args[0] = (char *)str;
     args[1] = 0;
-#ifdef __cplusplus
-    ex = env->NewObjectA ( jc, jm, (jvalue *)args );
-
-    rval = env->Throw((jthrowable) ex );
-#else
-    ex = (*env)->NewObjectA ( env, jc, jm, (jvalue *)args );
-
-    rval = (*env)->Throw(env, ex );
-#endif
+    ex = ENVPTR->NewObjectA (ENVPAR jc, jm, (jvalue *)args );
+    rval = ENVPTR->Throw(ENVPAR (jthrowable) ex );
 
     if (rval < 0) {
         fprintf(stderr, "FATAL ERROR:  NullPointer: Throw failed\n");
@@ -382,39 +336,20 @@ jboolean h5badArgument( JNIEnv *env, char *functName)
     jstring str;
     int rval;
 
-#ifdef __cplusplus
-    jc = env->FindClass("java/lang/IllegalArgumentException");
-#else
-    jc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-#endif
+    jc = ENVPTR->FindClass(ENVPAR "java/lang/IllegalArgumentException");
     if (jc == NULL) {
         return JNI_FALSE;
     }
-#ifdef __cplusplus
-    jm = env->GetMethodID(jc, "<init>", "(Ljava/lang/String;)V");
-#else
-    jm = (*env)->GetMethodID(env, jc, "<init>", "(Ljava/lang/String;)V");
-#endif
+    jm = ENVPTR->GetMethodID(ENVPAR jc, "<init>", "(Ljava/lang/String;)V");
     if (jm == NULL) {
         return JNI_FALSE;
     }
 
-#ifdef __cplusplus
-    str = env->NewStringUTF(functName);
-#else
-    str = (*env)->NewStringUTF(env,functName);
-#endif
+    str = ENVPTR->NewStringUTF(ENVPAR functName);
     args[0] = (char *)str;
     args[1] = 0;
-#ifdef __cplusplus
-    ex = env->NewObjectA ( jc, jm, (jvalue *)args );
-
-    rval = env->Throw((jthrowable) ex );
-#else
-    ex = (*env)->NewObjectA ( env, jc, jm, (jvalue *)args );
-
-    rval = (*env)->Throw(env, ex );
-#endif
+    ex = ENVPTR->NewObjectA (ENVPAR jc, jm, (jvalue *)args );
+    rval = ENVPTR->Throw(ENVPAR (jthrowable) ex );
     if (rval < 0) {
         fprintf(stderr, "FATAL ERROR:  BadArgument: Throw failed\n");
         return JNI_FALSE;
@@ -440,39 +375,20 @@ jboolean h5unimplemented( JNIEnv *env, char *functName)
     jstring str;
     int rval;
 
-#ifdef __cplusplus
-    jc = env->FindClass("java/lang/UnsupportedOperationException");
-#else
-    jc = (*env)->FindClass(env, "java/lang/UnsupportedOperationException");
-#endif
+    jc = ENVPTR->FindClass(ENVPAR "java/lang/UnsupportedOperationException");
     if (jc == NULL) {
         return JNI_FALSE;
     }
-#ifdef __cplusplus
-    jm = env->GetMethodID(jc, "<init>", "(Ljava/lang/String;)V");
-#else
-    jm = (*env)->GetMethodID(env, jc, "<init>", "(Ljava/lang/String;)V");
-#endif
+    jm = ENVPTR->GetMethodID(ENVPAR jc, "<init>", "(Ljava/lang/String;)V");
     if (jm == NULL) {
         return JNI_FALSE;
     }
 
-#ifdef __cplusplus
-    str = env->NewStringUTF(functName);
-#else
-    str = (*env)->NewStringUTF(env,functName);
-#endif
+    str = ENVPTR->NewStringUTF(ENVPAR functName);
     args[0] = (char *)str;
     args[1] = 0;
-#ifdef __cplusplus
-    ex = env->NewObjectA ( jc, jm, (jvalue *)args );
-
-    rval = env->Throw((jthrowable) ex );
-#else
-    ex = (*env)->NewObjectA ( env, jc, jm, (jvalue *)args );
-
-    rval = (*env)->Throw(env, ex );
-#endif
+    ex = ENVPTR->NewObjectA (ENVPAR jc, jm, (jvalue *)args );
+    rval = ENVPTR->Throw(ENVPAR (jthrowable) ex );
     if (rval < 0) {
         fprintf(stderr, "FATAL ERROR:  Unsupported: Throw failed\n");
         return JNI_FALSE;
@@ -499,41 +415,60 @@ jboolean h5libraryError( JNIEnv *env )
     jvalue args[4];
     char *exception;
     jobject ex;
-    jstring min_msg_str, maj_msg_str;
+    jstring min_msg_str = NULL, maj_msg_str = NULL;
     char *min_msg, *maj_msg;
     int rval, min_num, maj_num;
+    ssize_t min_msg_size = 0, maj_msg_size = 0;
+    H5E_type_t min_error_msg_type, maj_error_msg_type;
+    hid_t stk_id = -1;
+    H5E_num_t exceptionNumbers;
 
-    maj_num = (int)getMajorErrorNumber();
-    maj_msg = (char *)H5Eget_major((H5E_major_t)maj_num);
+    /* Save current stack contents for future use */
+    stk_id = H5Eget_current_stack(); /* This will clear current stack  */
+    getErrorNumbers(stk_id, &exceptionNumbers);
+    maj_num = exceptionNumbers.maj_num;
+    min_num = exceptionNumbers.min_num;
+
     exception = (char *)defineHDF5LibraryException(maj_num);
-
-#ifdef __cplusplus
-    jc = env->FindClass(exception);
-#else
-    jc = (*env)->FindClass(env, exception);
-#endif
+    jc = ENVPTR->FindClass(ENVPAR exception);
     if (jc == NULL) {
         return JNI_FALSE;
     }
-#ifdef __cplusplus
-    jm = env->GetMethodID(jc, "<init>", "(ILjava/lang/String;ILjava/lang/String;)V");
-#else
-    jm = (*env)->GetMethodID(env, jc, "<init>", "(ILjava/lang/String;ILjava/lang/String;)V");
-#endif
+    jm = ENVPTR->GetMethodID(ENVPAR jc, "<init>", "(ILjava/lang/String;ILjava/lang/String;)V");
     if (jm == NULL) {
         fprintf(stderr, "FATAL ERROR:  h5libraryError: Cannot find constructor\n");
         return JNI_FALSE;
     }
 
-    min_num = (int)getMinorErrorNumber();
-    min_msg = (char *)H5Eget_minor((H5E_minor_t)min_num);
-#ifdef __cplusplus
-    maj_msg_str = env->NewStringUTF(maj_msg);
-    min_msg_str = env->NewStringUTF(min_msg);
-#else
-    maj_msg_str = (*env)->NewStringUTF(env,maj_msg);
-    min_msg_str = (*env)->NewStringUTF(env,min_msg);
-#endif
+    /* get the length of the name (maj_error) */
+    maj_msg_size = H5Eget_msg(maj_num, NULL, NULL, 0);
+    if(maj_msg_size>0) {
+        maj_msg_size++; /* add extra space for the null terminator */
+        maj_msg = (char*)malloc(sizeof(char)*maj_msg_size);
+        if(maj_msg) {
+            maj_msg_size = H5Eget_msg((hid_t)maj_num, &maj_error_msg_type, (char *)maj_msg, (size_t)maj_msg_size);
+            maj_msg_str = ENVPTR->NewStringUTF(ENVPAR maj_msg);
+            free(maj_msg);
+        }
+    }
+    else
+        maj_msg_str = NULL;
+
+    /* get the length of the name (min_error) */
+    min_msg_size = H5Eget_msg(min_num, NULL, NULL, 0);
+    if(min_msg_size>0) {
+        min_msg_size++; /* add extra space for the null terminator */
+        min_msg = (char*)malloc(sizeof(char)*min_msg_size);
+        if(min_msg) {
+            min_msg_size = H5Eget_msg((hid_t)min_num, &min_error_msg_type, (char *)min_msg, (size_t)min_msg_size);
+            min_msg_str = ENVPTR->NewStringUTF(ENVPAR min_msg);
+            free(min_msg);
+        }
+    }
+    else
+        min_msg_str = NULL;
+    H5Eset_current_stack(stk_id);
+
     if (maj_msg_str == NULL || min_msg_str == NULL)
     {
         fprintf(stderr, "FATAL ERROR: h5libraryError: Out of Memory\n");
@@ -544,15 +479,8 @@ jboolean h5libraryError( JNIEnv *env )
     args[1].l = maj_msg_str;
     args[2].i = min_num;
     args[3].l = min_msg_str;
-#ifdef __cplusplus
-    ex = env->NewObjectA ( jc, jm, args );
-
-    rval = env->Throw((jthrowable) ex );
-#else
-    ex = (*env)->NewObjectA ( env, jc, jm, (jvalue *)args );
-
-    rval = (*env)->Throw(env, ex );
-#endif
+    ex = ENVPTR->NewObjectA (ENVPAR jc, jm, args );
+    rval = ENVPTR->Throw(ENVPAR (jthrowable) ex );
     if (rval < 0) {
         fprintf(stderr, "FATAL ERROR:  h5libraryError: Throw failed\n");
         return JNI_FALSE;
@@ -578,39 +506,20 @@ jboolean h5illegalConstantError(JNIEnv *env)
     jstring str;
     int rval;
 
-#ifdef __cplusplus
-    jc = env->FindClass("java/lang/IllegalArgumentException");
-#else
-    jc = (*env)->FindClass(env, "java/lang/IllegalArgumentException");
-#endif
+    jc = ENVPTR->FindClass(ENVPAR "java/lang/IllegalArgumentException");
     if (jc == NULL) {
         return JNI_FALSE;
     }
-#ifdef __cplusplus
-    jm = env->GetMethodID(jc, "<init>", "(Ljava/lang/String;)V");
-#else
-    jm = (*env)->GetMethodID(env, jc, "<init>", "(Ljava/lang/String;)V");
-#endif
+    jm = ENVPTR->GetMethodID(ENVPAR jc, "<init>", "(Ljava/lang/String;)V");
     if (jm == NULL) {
         return JNI_FALSE;
     }
 
-#ifdef __cplusplus
-    str = env->NewStringUTF("Illegal java constant");
-#else
-    str = (*env)->NewStringUTF(env,"Illegal java constant");
-#endif
+    str = ENVPTR->NewStringUTF(ENVPAR "Illegal java constant");
     args[0] = (char *)str;
     args[1] = 0;
-#ifdef __cplusplus
-    ex = env->NewObjectA ( jc, jm, (jvalue *)args );
-
-    rval = env->Throw((jthrowable) ex );
-#else
-    ex = (*env)->NewObjectA ( env, jc, jm, (jvalue *)args );
-
-    rval = (*env)->Throw(env, ex );
-#endif
+    ex = ENVPTR->NewObjectA (ENVPAR jc, jm, (jvalue *)args );
+    rval = ENVPTR->Throw(ENVPAR (jthrowable)ex );
     if (rval < 0) {
         fprintf(stderr, "FATAL ERROR:  Unsupported: Throw failed\n");
         return JNI_FALSE;
@@ -635,39 +544,20 @@ jboolean h5raiseException( JNIEnv *env, char *exception, char *message)
     jstring str;
     int rval;
 
-#ifdef __cplusplus
-    jc = env->FindClass(exception);
-#else
-    jc = (*env)->FindClass(env, exception);
-#endif
+    jc = ENVPTR->FindClass(ENVPAR exception);
     if (jc == NULL) {
         return JNI_FALSE;
     }
-#ifdef __cplusplus
-    jm = env->GetMethodID(jc, "<init>", "(Ljava/lang/String;)V");
-#else
-    jm = (*env)->GetMethodID(env, jc, "<init>", "(Ljava/lang/String;)V");
-#endif
+    jm = ENVPTR->GetMethodID(ENVPAR jc, "<init>", "(Ljava/lang/String;)V");
     if (jm == NULL) {
         return JNI_FALSE;
     }
 
-#ifdef __cplusplus
-    str = env->NewStringUTF(message);
-#else
-    str = (*env)->NewStringUTF(env,message);
-#endif
+    str = ENVPTR->NewStringUTF(ENVPAR message);
     args[0] = (char *)str;
     args[1] = 0;
-#ifdef __cplusplus
-    ex = env->NewObjectA (  jc, jm, (jvalue *)args );
-
-    rval = env->Throw( (jthrowable)ex );
-#else
-    ex = (*env)->NewObjectA ( env, jc, jm, (jvalue *)args );
-
-    rval = (*env)->Throw(env, ex );
-#endif
+    ex = ENVPTR->NewObjectA (ENVPAR jc, jm, (jvalue *)args );
+    rval = ENVPTR->Throw(ENVPAR (jthrowable)ex );
     if (rval < 0) {
         fprintf(stderr, "FATAL ERROR:  raiseException: Throw failed\n");
         return JNI_FALSE;
@@ -686,20 +576,20 @@ jboolean buildException( JNIEnv *env, char *exception, jint HDFerr)
     int rval;
 
 
-    jc = (*env)->FindClass(env, exception);
+    jc = ENVPTR->FindClass(ENVPAR exception);
     if (jc == NULL) {
         return JNI_FALSE;
     }
-    jm = (*env)->GetMethodID(env, jc, "<init>", "(I)V");
+    jm = ENVPTR->GetMethodID(ENVPAR jc, "<init>", "(I)V");
     if (jm == NULL) {
         return JNI_FALSE;
     }
     args[0] = HDFerr;
     args[1] = 0;
 
-    ex = (*env)->NewObjectA ( env, jc, jm, (jvalue *)args );
+    ex = ENVPTR->NewObjectA (ENVPAR jc, jm, (jvalue *)args );
 
-    rval = (*env)->Throw(env, ex );
+    rval = ENVPTR->Throw(ENVPAR  ex );
     if (rval < 0) {
         fprintf(stderr, "FATAL ERROR:  raiseException: Throw failed\n");
         return JNI_FALSE;
@@ -717,50 +607,49 @@ char *defineHDF5LibraryException(int maj_num)
 {
     H5E_major_t err_num = (H5E_major_t) maj_num;
 
-    if (err_num == H5E_ARGS)
+    if (H5E_ARGS == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5FunctionArgumentException";
-    else if (err_num == H5E_RESOURCE)
+    else if (H5E_RESOURCE == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5ResourceUnavailableException";
-    else if (err_num == H5E_INTERNAL)
+    else if (H5E_INTERNAL == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5InternalErrorException";
-    else if (err_num == H5E_FILE)
+    else if (H5E_FILE == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5FileInterfaceException";
-    else if (err_num == H5E_IO)
+    else if (H5E_IO == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5LowLevelIOException";
-    else if (err_num == H5E_FUNC)
+    else if (H5E_FUNC == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5FunctionEntryExitException";
-    else if (err_num == H5E_ATOM)
+    else if (H5E_ATOM == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5AtomException";
-    else if (err_num == H5E_CACHE)
+    else if (H5E_CACHE == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5MetaDataCacheException";
-    else if (err_num == H5E_BTREE)
+    else if (H5E_BTREE == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5BtreeException";
-    else if (err_num == H5E_SYM)
+    else if (H5E_SYM == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5SymbolTableException";
-    else if (err_num == H5E_HEAP)
+    else if (H5E_HEAP == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5HeapException";
-    else if (err_num == H5E_OHDR)
+    else if (H5E_OHDR == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5ObjectHeaderException";
-    else if (err_num == H5E_DATATYPE)
+    else if (H5E_DATATYPE == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5DatatypeInterfaceException";
-    else if (err_num == H5E_DATASPACE)
+    else if (H5E_DATASPACE == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5DataspaceInterfaceException";
-    else if (err_num == H5E_DATASET)
+    else if (H5E_DATASET == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5DatasetInterfaceException";
-    else if (err_num == H5E_STORAGE)
+    else if (H5E_STORAGE == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5DataStorageException";
-    else if (err_num == H5E_PLIST)
+    else if (H5E_PLIST == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5PropertyListInterfaceException";
-    else if (err_num == H5E_ATTR)
+    else if (H5E_ATTR == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5AttributeException";
-    else if (err_num == H5E_PLINE)
+    else if (H5E_PLINE == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5DataFiltersException";
-    else if (err_num == H5E_EFL)
+    else if (H5E_EFL == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5ExternalFileListException";
-    else if (err_num == H5E_REFERENCE)
+    else if (H5E_REFERENCE == err_num)
         return "ncsa/hdf/hdf5lib/exceptions/HDF5ReferenceException";
-    else
-        return "ncsa/hdf/hdf5lib/exceptions/HDF5LibraryException";
+    return "ncsa/hdf/hdf5lib/exceptions/HDF5LibraryException";
 
 }
 
