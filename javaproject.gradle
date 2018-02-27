@@ -50,7 +50,7 @@ sourceSets {
 buildDir = 'targets/gradle'
 
 buildscript {
-    apply from: '../jhdf5/repository.gradle'
+    apply from: '../repository.gradle'
     
     repositories repositoryConfig
     
