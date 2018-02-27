@@ -95,6 +95,10 @@ def isSvnProject() {
    return new java.io.File(projectDir, ".svn").isDirectory() || new java.io.File(projectDir, "../.svn").isDirectory() 
 }
 
+def isGitProject() {
+   return new java.io.File(projectDir, ".git").isDirectory() || new java.io.File(projectDir, "../.git").isDirectory() 
+}
+
 def executeSVN(arguments) {
     arguments.add(0, '--non-interactive')
     return execute(svnCommand, arguments)
@@ -111,9 +115,11 @@ def calculateCleanFlag() {
         def output = executeSVN(['status', '../' + project.name])
         def lines = output.findAll({ (it.startsWith('?') || it.trim().isEmpty()) == false})
         return lines.isEmpty() ? 'clean' : 'dirty'
-    } else {
+    } else if (isGitProject()) {
         def output = execute_working_dir('git', ['status', '--porcelain'], '../' + project.name)
         return output.length == 0 ? 'clean' : 'dirty'
+    } else {
+    	return 'dirty'
     }
 }
 
@@ -136,9 +142,17 @@ def calculateBuildInfo() {
             def pathElements = url.split('/')
             project.ext.versionNumber = 'libraries' == pathElements[-2] ? pathElements[-3] : pathElements[-2]
         }
-    } else {
+    } else if (isGitProject()) {
         def gitlogoutput = execute_working_dir('git', ['log', '-1', '--format=%at'], '../' + project.name)
         project.ext.revisionNumber = Integer.parseInt(gitlogoutput[0])
+        def tag = 'git describe --tags'.execute().text.trim()
+        if (tag == null || tag.isEmpty()) {
+            project.ext.versionNumber = 'SNAPSHOT'
+        } else {
+            project.ext.versionNumber = tag
+        }
+    } else {
+        project.ext.revisionNumber = 1
         project.ext.versionNumber = 'SNAPSHOT'
     }
 
