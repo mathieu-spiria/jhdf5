@@ -116,7 +116,7 @@ def calculateCleanFlag() {
         def lines = output.findAll({ (it.startsWith('?') || it.trim().isEmpty()) == false})
         return lines.isEmpty() ? 'clean' : 'dirty'
     } else if (isGitProject()) {
-        def output = execute_working_dir('git', ['status', '--porcelain'], '../' + project.name)
+        def output = execute_working_dir('git', ['status', '--porcelain'], '.')
         return output.length == 0 ? 'clean' : 'dirty'
     } else {
     	return 'dirty'
