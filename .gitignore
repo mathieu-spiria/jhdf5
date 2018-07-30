@@ -2,3 +2,6 @@
 /build
 /.gradle
 /targets
+/.project
+/.settings
+/test-output
