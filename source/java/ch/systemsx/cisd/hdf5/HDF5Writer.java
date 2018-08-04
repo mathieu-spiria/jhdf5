@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import java.util.BitSet;
 import java.util.Date;
 import java.util.List;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
-import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
@@ -33,7 +33,7 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.IHDF5CompoundInformationRetriever.IByteArrayInspector;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 
 /**
  * A class for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).
@@ -150,7 +150,7 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
-    public FileFormat getFileFormat()
+    public FileFormatVersionBounds getFileFormat()
     {
         return baseWriter.fileFormat;
     }

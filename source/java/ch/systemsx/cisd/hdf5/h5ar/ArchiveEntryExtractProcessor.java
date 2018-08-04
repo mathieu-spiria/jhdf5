@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.CRC32;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5Exception;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;

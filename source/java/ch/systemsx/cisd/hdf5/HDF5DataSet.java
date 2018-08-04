@@ -16,8 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dclose;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Sclose;
+import static hdf.hdf5lib.H5.H5Dclose;
+import static hdf.hdf5lib.H5.H5Sclose;
 
 /**
  * An object to represent an HDF5 data set.
@@ -30,15 +30,15 @@ public class HDF5DataSet implements AutoCloseable
 
     private final HDF5StorageLayout layout;
 
-    private final int dataspaceId;
+    private final long dataspaceId;
 
     private final long[] maxDimensions;
 
     private long[] dimensions;
 
-    private int datasetId;
+    private long datasetId;
 
-    HDF5DataSet(String datasetPath, int datasetId, int dataspaceId, long[] dimensions,
+    HDF5DataSet(String datasetPath, long datasetId, long dataspaceId, long[] dimensions,
             long[] maxDimensions, HDF5StorageLayout layout)
     {
         this.datasetPath = datasetPath;
@@ -57,12 +57,12 @@ public class HDF5DataSet implements AutoCloseable
         return datasetPath;
     }
 
-    int getDatasetId()
+    long getDatasetId()
     {
         return datasetId;
     }
 
-    int getDataspaceId()
+    long getDataspaceId()
     {
         return dataspaceId;
     }
@@ -104,7 +104,7 @@ public class HDF5DataSet implements AutoCloseable
         final int prime = 31;
         int result = 1;
         result = prime * result + ((datasetPath == null) ? 0 : datasetPath.hashCode());
-        result = prime * result + datasetId;
+        result = prime * result + (int) datasetId;
         return result;
     }
 

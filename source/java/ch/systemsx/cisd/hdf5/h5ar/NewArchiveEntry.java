@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -93,7 +93,8 @@ public abstract class NewArchiveEntry
             return this;
         }
 
-        public NewFileArchiveEntry compress(boolean compress)
+        public NewFileArchiveEntry compress(@SuppressWarnings("hiding")
+        boolean compress)
         {
             this.compress = compress;
             return this;
@@ -107,7 +108,8 @@ public abstract class NewArchiveEntry
         /**
          * @param chunkSize The chunk size of the file in the archive. Will be capped to 10MB.
          */
-        public NewFileArchiveEntry chunkSize(int chunkSize)
+        public NewFileArchiveEntry chunkSize(@SuppressWarnings("hiding")
+        int chunkSize)
         {
             this.chunkSize = chunkSize;
             return this;
@@ -283,7 +285,8 @@ public abstract class NewArchiveEntry
         return lastModified;
     }
 
-    public NewArchiveEntry lastModified(long lastModified)
+    public NewArchiveEntry lastModified(@SuppressWarnings("hiding")
+    long lastModified)
     {
         this.lastModified = lastModified;
         return this;
@@ -294,7 +297,8 @@ public abstract class NewArchiveEntry
         return uid;
     }
 
-    public NewArchiveEntry uid(int uid)
+    public NewArchiveEntry uid(@SuppressWarnings("hiding")
+    int uid)
     {
         this.uid = uid;
         return this;
@@ -305,7 +309,8 @@ public abstract class NewArchiveEntry
         return gid;
     }
 
-    public NewArchiveEntry gid(int gid)
+    public NewArchiveEntry gid(@SuppressWarnings("hiding")
+    int gid)
     {
         this.gid = gid;
         return this;
@@ -316,7 +321,8 @@ public abstract class NewArchiveEntry
         return permissions;
     }
 
-    public NewArchiveEntry permissions(short permissions)
+    public NewArchiveEntry permissions(@SuppressWarnings("hiding")
+    short permissions)
     {
         this.permissions = permissions;
         return this;

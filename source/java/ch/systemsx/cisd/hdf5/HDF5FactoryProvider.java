@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import java.io.File;
 
-import ch.systemsx.cisd.hdf5.hdf5lib.H5F;
+import hdf.hdf5lib.H5;
 
 /**
  * Provides access to a factory for HDF5 readers and writers.
@@ -57,7 +57,7 @@ public final class HDF5FactoryProvider
         @Override
         public boolean isHDF5File(File file)
         {
-            return H5F.H5Fis_hdf5(file.getPath());
+            return H5.H5Fis_hdf5(file.getPath());
         }
 
     }

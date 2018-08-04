@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.zip.CRC32;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -37,8 +35,9 @@ import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures;
 import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersion;
 import ch.systemsx.cisd.hdf5.io.HDF5IOAdapterFactory;
+import hdf.hdf5lib.exceptions.HDF5Exception;
 
 /**
  * A class to create or update <code>h5ar</code> archives.
@@ -468,7 +467,7 @@ class HDF5ArchiveUpdater
         if ("/".equals(hdf5GroupPath) == false)
             try
             {
-                if (hdf5Writer.file().getFileFormat() != FileFormat.STRICTLY_1_8
+                if (hdf5Writer.file().getFileFormatVersionBounds().getLowBound() == FileFormatVersion.EARLIEST
                         && fileEntries.length > MIN_GROUP_MEMBER_COUNT_TO_COMPUTE_SIZEHINT)
                 {
                     // Compute size hint and pre-create group in order to improve performance.

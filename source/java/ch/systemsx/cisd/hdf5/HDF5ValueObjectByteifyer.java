@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 
@@ -69,19 +69,19 @@ class HDF5ValueObjectByteifyer<T>
     /** A role that provides direct access to the HDF5 file to this byteifyer. */
     interface IFileAccessProvider
     {
-        public int getBooleanDataTypeId();
+        public long getBooleanDataTypeId();
 
-        public int getStringDataTypeId(int maxLength);
+        public long getStringDataTypeId(int maxLength);
 
-        public int getVariableLengthStringDataTypeId();
+        public long getVariableLengthStringDataTypeId();
 
-        public int getArrayTypeId(int baseTypeId, int length);
+        public long getArrayTypeId(long baseTypeId, int length);
 
-        public int getArrayTypeId(int baseTypeId, int[] dimensions);
+        public long getArrayTypeId(long baseTypeId, int[] dimensions);
 
         public HDF5EnumerationType getEnumType(String[] options);
 
-        public CharacterEncoding getCharacterEncoding(int dataTypeId);
+        public CharacterEncoding getCharacterEncoding(long dataTypeId);
         
         public byte[] createObjectReference(String referencedObjectPath);
     }
@@ -128,7 +128,7 @@ class HDF5ValueObjectByteifyer<T>
         }
     }
 
-    public int insertMemberTypes(int dataTypeId)
+    public long insertMemberTypes(long dataTypeId)
     {
         for (HDF5MemberByteifyer byteifyer : byteifyers)
         {
@@ -137,7 +137,7 @@ class HDF5ValueObjectByteifyer<T>
         return dataTypeId;
     }
 
-    public int insertNativeMemberTypes(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
+    public long insertNativeMemberTypes(long dataTypeId, HDF5 h5, ICleanUpRegistry registry)
     {
         for (HDF5MemberByteifyer byteifyer : byteifyers)
         {
@@ -150,7 +150,7 @@ class HDF5ValueObjectByteifyer<T>
      * @throw {@link HDF5JavaException} if one of the elements in <var>arr</var> exceeding its
      *        pre-defined size.
      */
-    public byte[] byteify(int compoundDataTypeId, T[] arr) throws HDF5JavaException
+    public byte[] byteify(long compoundDataTypeId, T[] arr) throws HDF5JavaException
     {
         final byte[] barray = new byte[arr.length * recordSizeInMemory];
         int offset = 0;
@@ -185,7 +185,7 @@ class HDF5ValueObjectByteifyer<T>
     /**
      * @throw {@link HDF5JavaException} if <var>obj</var> exceeding its pre-defined size.
      */
-    public byte[] byteify(int compoundDataTypeId, T obj) throws HDF5JavaException
+    public byte[] byteify(long compoundDataTypeId, T obj) throws HDF5JavaException
     {
         final byte[] barray = new byte[recordSizeInMemory];
         for (HDF5MemberByteifyer byteifyer : byteifyers)
@@ -209,7 +209,7 @@ class HDF5ValueObjectByteifyer<T>
         return barray;
     }
 
-    public T[] arrayify(int compoundDataTypeId, byte[] byteArr, Class<T> recordClass)
+    public T[] arrayify(long compoundDataTypeId, byte[] byteArr, Class<T> recordClass)
     {
         final int length = byteArr.length / recordSizeInMemory;
         if (length * recordSizeInMemory != byteArr.length)
@@ -228,7 +228,7 @@ class HDF5ValueObjectByteifyer<T>
         return result;
     }
 
-    public T arrayifyScalar(int compoundDataTypeId, byte[] byteArr, Class<T> recordClass)
+    public T arrayifyScalar(long compoundDataTypeId, byte[] byteArr, Class<T> recordClass)
     {
         if (byteArr.length < recordSizeInMemory)
         {
@@ -238,7 +238,7 @@ class HDF5ValueObjectByteifyer<T>
         return primArrayifyScalar(compoundDataTypeId, byteArr, recordClass, 0);
     }
 
-    private T primArrayifyScalar(int compoundDataTypeId, byte[] byteArr, Class<T> recordClass,
+    private T primArrayifyScalar(long compoundDataTypeId, byte[] byteArr, Class<T> recordClass,
             int offset)
     {
         T result = newInstance(recordClass);

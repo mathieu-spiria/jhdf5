@@ -27,18 +27,18 @@ import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_AUTO_SCALING_DEFL
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_CHUNKED;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_DEFLATE;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_SHUFFLE_DEFLATE;
+import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.toInt32;
 import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.toInt8;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_FLOAT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_INTEGER;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_REFERENCE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
+import static hdf.hdf5lib.HDF5Constants.H5T_ENUM;
+import static hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
+import static hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
+import static hdf.hdf5lib.HDF5Constants.H5T_REFERENCE;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertNull;
 import static org.testng.AssertJUnit.assertTrue;
 import static org.testng.AssertJUnit.fail;
-import static ch.systemsx.cisd.hdf5.UnsignedIntUtils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,11 +54,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
-import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
-import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
@@ -69,6 +64,7 @@ import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -80,11 +76,13 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.EnumReturnType;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
-import ch.systemsx.cisd.hdf5.hdf5lib.H5General;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.H5;
+import hdf.hdf5lib.HDF5Constants;
+import hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5LibraryException;
+import hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 
 /**
  * Test cases for {@link IHDF5Writer} and {@link IHDF5Reader}, doing "round-trips" to the HDF5 disk
@@ -138,7 +136,7 @@ public class HDF5RoundtripTest
 
         // Print Library Version
         final int[] libversion = new int[3];
-        H5General.H5get_libversion(libversion);
+        H5.H5get_libversion(libversion);
         System.out.println("HDF5 Version: " + libversion[0] + "." + libversion[1] + "."
                 + libversion[2]);
 
@@ -317,14 +315,16 @@ public class HDF5RoundtripTest
         try
         {
             test.testRenameLinkOverwriteFails();
-        } catch (HDF5SymbolTableException ex)
+            fail("testRenameLinkOverwriteFails(): failure not detected.");
+        } catch (HDF5LibraryException ex)
         {
             // Expected.
         }
         try
         {
             test.testRenameLinkSrcNonExistentFails();
-        } catch (HDF5SymbolTableException ex)
+            fail("testRenameLinkSrcNonExistentFails(): failure not detected.");
+        } catch (HDF5LibraryException ex)
         {
             // Expected.
         }
@@ -342,7 +342,7 @@ public class HDF5RoundtripTest
         try
         {
             test.testConfusedEnum();
-            System.err.println("testConfusedEnum(): failure not detected.");
+            fail("testConfusedEnum(): failure not detected.");
         } catch (HDF5JavaException ex)
         {
             assertEquals("Enum member index 0 of enum testEnum is 'ONE', but should be 'THREE'",
@@ -393,7 +393,7 @@ public class HDF5RoundtripTest
         try
         {
             test.testMatrixCompoundSizeMismatch();
-            System.err.println("testMatrixCompoundSizeMismatch(): failure not detected.");
+            fail("testMatrixCompoundSizeMismatch(): failure not detected.");
         } catch (IllegalArgumentException ex)
         {
             // Expected
@@ -401,8 +401,7 @@ public class HDF5RoundtripTest
         try
         {
             test.testMatrixCompoundDifferentNumberOfColumnsPerRow();
-            System.err
-                    .println("testMatrixCompoundDifferentNumberOfColumnsPerRow(): failure not detected.");
+           fail("testMatrixCompoundDifferentNumberOfColumnsPerRow(): failure not detected.");
         } catch (IllegalArgumentException ex)
         {
             // Expected
@@ -424,7 +423,7 @@ public class HDF5RoundtripTest
         try
         {
             test.testGetLinkInformationFailed();
-            System.err.println("testGetObjectTypeFailed(): failure not detected.");
+            fail("testGetObjectTypeFailed(): failure not detected.");
         } catch (HDF5JavaException ex)
         {
             // Expected
@@ -461,7 +460,6 @@ public class HDF5RoundtripTest
         test.testObjectReference();
         test.testObjectReferenceArray();
         test.testObjectReferenceOverwriteWithKeep();
-        test.testObjectReferenceOverwriteWithKeepOverridden();
         test.testObjectReferenceArrayBlockWise();
         test.testObjectReferenceAttribute();
         test.testObjectReferenceArrayAttribute();
@@ -1200,7 +1198,7 @@ public class HDF5RoundtripTest
     @Test
     public void testVLStringCrash()
     {
-        final File datasetFile = new File(workingDirectory, "testVLStrinCrash.h5");
+        final File datasetFile = new File(workingDirectory, "testVLStringCrash.h5");
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
@@ -1328,24 +1326,6 @@ public class HDF5RoundtripTest
         final int[] intRead = reader.int32().readArray("ds");
         assertTrue(Arrays.equals(intRead, intWritten));
         reader.close();
-
-        // Shouldn't work in strict HDF5 1.6 mode.
-        final File file2 = new File(workingDirectory, "scaleoffsetfilterintfailed.h5");
-        file2.delete();
-        assertFalse(file2.exists());
-        file2.deleteOnExit();
-        final IHDF5Writer writer2 =
-                HDF5FactoryProvider.get().configure(file2).fileFormat(FileFormat.STRICTLY_1_6)
-                        .writer();
-        try
-        {
-            writer2.int32().writeArray("ds", intWritten, INT_AUTO_SCALING_DEFLATE);
-            fail("Usage of scaling compression in strict HDF5 1.6 mode not detected");
-        } catch (IllegalStateException ex)
-        {
-            assertTrue(ex.getMessage().indexOf("not allowed") >= 0);
-        }
-        writer2.close();
     }
 
     @Test
@@ -1365,7 +1345,11 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final float[] floatRead = reader.float32().readArray("ds");
-        assertTrue(Arrays.equals(floatRead, floatWritten));
+        assertEquals(floatWritten.length, floatRead.length);
+        for (int i = 0; i < floatWritten.length; ++i)
+        {
+            assertEquals(floatWritten[i], floatRead[i], 1.0e-7);
+        }
         reader.close();
     }
 
@@ -4486,7 +4470,7 @@ public class HDF5RoundtripTest
         writer.close();
     }
 
-    @Test(expectedExceptions = HDF5SymbolTableException.class)
+    @Test(expectedExceptions = HDF5LibraryException.class)
     public void testRenameLinkOverwriteFails()
     {
         final File file = new File(workingDirectory, "renameLinkOverwriteFails.h5");
@@ -4496,6 +4480,7 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
         writer.writeBoolean("/some/boolean/value", true);
         writer.int32().write("/a/new/home", 4);
+        // This will fail.
         writer.object().move("/some/boolean/value", "/a/new/home");
         writer.close();
     }
@@ -5411,11 +5396,11 @@ public class HDF5RoundtripTest
         final float attributeValue = reader.float32().getAttr(datasetName, floatAttrName);
         assertEquals(17.0f, attributeValue);
         final HDF5BaseReader baseReader = ((HDF5FloatReader) reader.float32()).getBaseReader();
-        final int objectId =
+        final long objectId =
                 baseReader.h5.openObject(baseReader.fileId, datasetName, baseReader.fileRegistry);
-        int attributeId =
+        long attributeId =
                 baseReader.h5.openAttribute(objectId, floatAttrName, baseReader.fileRegistry);
-        int attributeTypeId =
+        long attributeTypeId =
                 baseReader.h5.getDataTypeForAttribute(attributeId, baseReader.fileRegistry);
         assertEquals(H5T_FLOAT, baseReader.h5.getClassType(attributeTypeId));
         assertTrue(reader.object().hasAttribute(datasetName, floatAttrArrayName));
@@ -6015,7 +6000,10 @@ public class HDF5RoundtripTest
         final String groupName2 = "/dataSetGroup";
         final String dataSetName = groupName2 + "/dataset";
         final String dataSetName2 = "ds2";
-        final String linkName = "/link";
+        final String sLinkName = "/slink";
+        final String tFileName = "target.h5";
+        final String dataSetName3 = "ds3";
+        final String eLinkName = "/elink";
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(groupFile);
         try
         {
@@ -6023,7 +6011,8 @@ public class HDF5RoundtripTest
             writer.int8().writeArray(dataSetName, new byte[]
                 { 1 });
             writer.string().write(dataSetName2, "abc");
-            writer.object().createSoftLink(dataSetName2, linkName);
+            writer.object().createSoftLink(dataSetName2, sLinkName);
+            writer.object().createExternalLink(tFileName, dataSetName3, eLinkName);
         } finally
         {
             writer.close();
@@ -6035,6 +6024,38 @@ public class HDF5RoundtripTest
             map.put(info.getPath(), info);
         }
         HDF5LinkInformation info;
+        assertEquals(6, map.size());
+        info = map.get(groupName1);
+        assertNotNull(info);
+        assertTrue(info.exists());
+        assertEquals(HDF5ObjectType.GROUP, info.getType());
+        assertNull(info.tryGetSymbolicLinkTarget());
+        info = map.get(groupName2);
+        assertNotNull(info);
+        assertTrue(info.exists());
+        assertEquals(HDF5ObjectType.GROUP, info.getType());
+        assertNull(info.tryGetSymbolicLinkTarget());
+        info = map.get("/" + dataSetName2);
+        assertNotNull(info);
+        assertTrue(info.exists());
+        assertEquals(HDF5ObjectType.DATASET, info.getType());
+        assertNull(info.tryGetSymbolicLinkTarget());
+        info = map.get(sLinkName);
+        assertNotNull(info);
+        assertTrue(info.exists());
+        assertEquals(HDF5ObjectType.SOFT_LINK, info.getType());
+        assertNull(info.tryGetSymbolicLinkTarget());
+        info = map.get(eLinkName);
+        assertNotNull(info);
+        assertTrue(info.exists());
+        assertEquals(HDF5ObjectType.EXTERNAL_LINK, info.getType());
+        assertNull(info.tryGetSymbolicLinkTarget());
+
+        map.clear();
+        for (HDF5LinkInformation info2 : reader.object().getGroupMemberInformation("/", true))
+        {
+            map.put(info2.getPath(), info2);
+        }
         assertEquals(5, map.size());
         info = map.get(groupName1);
         assertNotNull(info);
@@ -6051,38 +6072,16 @@ public class HDF5RoundtripTest
         assertTrue(info.exists());
         assertEquals(HDF5ObjectType.DATASET, info.getType());
         assertNull(info.tryGetSymbolicLinkTarget());
-        info = map.get(linkName);
-        assertNotNull(info);
-        assertTrue(info.exists());
-        assertEquals(HDF5ObjectType.SOFT_LINK, info.getType());
-        assertNull(info.tryGetSymbolicLinkTarget());
-
-        map.clear();
-        for (HDF5LinkInformation info2 : reader.object().getGroupMemberInformation("/", true))
-        {
-            map.put(info2.getPath(), info2);
-        }
-        assertEquals(4, map.size());
-        info = map.get(groupName1);
-        assertNotNull(info);
-        assertTrue(info.exists());
-        assertEquals(HDF5ObjectType.GROUP, info.getType());
-        assertNull(info.tryGetSymbolicLinkTarget());
-        info = map.get(groupName2);
-        assertNotNull(info);
-        assertTrue(info.exists());
-        assertEquals(HDF5ObjectType.GROUP, info.getType());
-        assertNull(info.tryGetSymbolicLinkTarget());
-        info = map.get("/" + dataSetName2);
-        assertNotNull(info);
-        assertTrue(info.exists());
-        assertEquals(HDF5ObjectType.DATASET, info.getType());
-        assertNull(info.tryGetSymbolicLinkTarget());
-        info = map.get(linkName);
+        info = map.get(sLinkName);
         assertNotNull(info);
         assertTrue(info.exists());
         assertEquals(HDF5ObjectType.SOFT_LINK, info.getType());
         assertEquals(dataSetName2, info.tryGetSymbolicLinkTarget());
+        info = map.get(eLinkName);
+        assertNotNull(info);
+        assertTrue(info.exists());
+        assertEquals(HDF5ObjectType.EXTERNAL_LINK, info.getType());
+        assertEquals("EXTERNAL::" + tFileName + "::" + dataSetName3, info.tryGetSymbolicLinkTarget());
 
         reader.close();
     }
@@ -7049,28 +7048,6 @@ public class HDF5RoundtripTest
             assertEquals("Index " + i, arrayWritten.getValue(i), stringArrayRead[i]);
         }
         reader.close();
-
-        // Shouldn't work in strict HDF5 1.6 mode.
-        final File file2 = new File(workingDirectory, "scaleoffsetfilterenumfailed.h5");
-        file2.delete();
-        assertFalse(file2.exists());
-        file2.deleteOnExit();
-        final IHDF5Writer writer2 =
-                HDF5FactoryProvider.get().configure(file2).fileFormat(FileFormat.STRICTLY_1_6)
-                        .writer();
-        HDF5EnumerationType enumType2 = writer2.enumeration().getType(enumTypeName, new String[]
-            { "A", "C", "G", "T" }, false);
-        final HDF5EnumerationValueArray arrayWritten2 =
-                new HDF5EnumerationValueArray(enumType2, arrayWrittenString);
-        try
-        {
-            writer2.enumeration().writeArray("/testEnum", arrayWritten2, INT_AUTO_SCALING);
-            fail("Usage of scaling compression in strict HDF5 1.6 mode not detected");
-        } catch (IllegalStateException ex)
-        {
-            assertTrue(ex.getMessage().indexOf("not allowed") >= 0);
-        }
-        writer2.close();
     }
 
     @Test
@@ -7965,7 +7942,7 @@ public class HDF5RoundtripTest
         assertEquals(HDF5DataClass.STRING, typeRead.getCompoundMemberInformation()[0].getType()
                 .getDataClass());
         assertTrue(typeRead.getCompoundMemberInformation()[0].getType().isVariableLengthString());
-        assertEquals(HDFNativeData.getMachineWordSize(), typeRead.getCompoundMemberInformation()[0]
+        assertEquals(HDFHelper.getMachineWordSize(), typeRead.getCompoundMemberInformation()[0]
                 .getType().getSize());
         assertEquals("i1", typeRead.getCompoundMemberInformation()[1].getName());
         assertEquals(HDF5DataClass.INTEGER, typeRead.getCompoundMemberInformation()[1].getType()
@@ -7974,7 +7951,7 @@ public class HDF5RoundtripTest
         assertEquals(HDF5DataClass.STRING, typeRead.getCompoundMemberInformation()[2].getType()
                 .getDataClass());
         assertTrue(typeRead.getCompoundMemberInformation()[2].getType().isVariableLengthString());
-        assertEquals(HDFNativeData.getMachineWordSize(), typeRead.getCompoundMemberInformation()[2]
+        assertEquals(HDFHelper.getMachineWordSize(), typeRead.getCompoundMemberInformation()[2]
                 .getType().getSize());
         assertEquals("i2", typeRead.getCompoundMemberInformation()[3].getName());
         assertEquals(HDF5DataClass.INTEGER, typeRead.getCompoundMemberInformation()[3].getType()
@@ -7993,7 +7970,7 @@ public class HDF5RoundtripTest
                 .getType().getDataClass());
         assertTrue(arrayTypeRead.getCompoundMemberInformation()[0].getType()
                 .isVariableLengthString());
-        assertEquals(HDFNativeData.getMachineWordSize(),
+        assertEquals(HDFHelper.getMachineWordSize(),
                 arrayTypeRead.getCompoundMemberInformation()[0].getType().getSize());
         assertEquals("i1", arrayTypeRead.getCompoundMemberInformation()[1].getName());
         assertEquals(HDF5DataClass.INTEGER, arrayTypeRead.getCompoundMemberInformation()[1]
@@ -8003,7 +7980,7 @@ public class HDF5RoundtripTest
                 .getType().getDataClass());
         assertTrue(arrayTypeRead.getCompoundMemberInformation()[2].getType()
                 .isVariableLengthString());
-        assertEquals(HDFNativeData.getMachineWordSize(),
+        assertEquals(HDFHelper.getMachineWordSize(),
                 arrayTypeRead.getCompoundMemberInformation()[2].getType().getSize());
         assertEquals("i2", arrayTypeRead.getCompoundMemberInformation()[3].getName());
         assertEquals(HDF5DataClass.INTEGER, arrayTypeRead.getCompoundMemberInformation()[3]
@@ -8050,7 +8027,7 @@ public class HDF5RoundtripTest
         assertEquals(HDF5DataClass.STRING, typeRead.getCompoundMemberInformation()[0].getType()
                 .getDataClass());
         assertTrue(typeRead.getCompoundMemberInformation()[0].getType().isVariableLengthString());
-        assertEquals(HDFNativeData.getMachineWordSize(), typeRead.getCompoundMemberInformation()[0]
+        assertEquals(HDFHelper.getMachineWordSize(), typeRead.getCompoundMemberInformation()[0]
                 .getType().getSize());
         assertEquals("i1", typeRead.getCompoundMemberInformation()[1].getName());
         assertEquals(HDF5DataClass.INTEGER, typeRead.getCompoundMemberInformation()[1].getType()
@@ -8078,7 +8055,7 @@ public class HDF5RoundtripTest
                 .getType().getDataClass());
         assertTrue(arrayTypeRead.getCompoundMemberInformation()[0].getType()
                 .isVariableLengthString());
-        assertEquals(HDFNativeData.getMachineWordSize(),
+        assertEquals(HDFHelper.getMachineWordSize(),
                 arrayTypeRead.getCompoundMemberInformation()[0].getType().getSize());
         assertEquals("i1", arrayTypeRead.getCompoundMemberInformation()[1].getName());
         assertEquals(HDF5DataClass.INTEGER, arrayTypeRead.getCompoundMemberInformation()[1]
@@ -11230,31 +11207,6 @@ public class HDF5RoundtripTest
     }
 
     @Test
-    public void testObjectReferenceOverwriteWithKeepOverridden()
-    {
-        final File file =
-                new File(workingDirectory, "testObjectReferenceOverwriteWithKeepOverridden.h5");
-        file.delete();
-        assertFalse(file.exists());
-        file.deleteOnExit();
-        final IHDF5Writer writer =
-                HDF5FactoryProvider.get().configure(file).keepDataSetsIfTheyExist().writer();
-        writer.string().write("a", "TestA");
-        writer.string().write("aa", "TestAA");
-        writer.reference().write("b", "aa");
-        writer.delete("a");
-        // As we override keepDataSetsIfTheyExist() by
-        // HDF5GenericStorageFeatures.GENERIC_COMPACT_DELETE,
-        // the dataset will be deleted and the header of the new dataset will be written at the old
-        // position of "a", thus the object
-        // reference "b" will be dangling.
-        writer.string().write("aa", "TestX", HDF5GenericStorageFeatures.GENERIC_COMPACT_DELETE);
-        // Check for dangling reference.
-        assertEquals("", writer.reference().read("/b"));
-        writer.close();
-    }
-
-    @Test
     public void testObjectReference()
     {
         final File file = new File(workingDirectory, "testObjectReference.h5");
@@ -11269,6 +11221,10 @@ public class HDF5RoundtripTest
         assertEquals("/C", writer.reference().read("/b"));
         assertEquals("TestA", writer.readString(writer.reference().read("/b", false)));
         writer.close();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
+        assertEquals("/C", reader.reference().read("/b"));
+        assertEquals("TestA", reader.readString(reader.reference().read("/b", false)));
+        reader.close();
     }
 
     @Test
@@ -11284,11 +11240,13 @@ public class HDF5RoundtripTest
         writer.string().write("a3", "TestC");
         writer.reference().writeArray("b", new String[]
             { "a1", "a2", "a3" });
+        String[] arrayBVal = writer.reference().readArray("/b");
         assertTrue(ArrayUtils.isEquals(new String[]
-            { "/a1", "/a2", "/a3" }, writer.reference().readArray("/b")));
+            { "/a1", "/a2", "/a3" }, arrayBVal));
         writer.object().move("/a1", "/C");
+        arrayBVal = writer.reference().readArray("/b");
         assertTrue(ArrayUtils.isEquals(new String[]
-            { "/C", "/a2", "/a3" }, writer.reference().readArray("/b")));
+            { "/C", "/a2", "/a3" }, arrayBVal));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         assertTrue(ArrayUtils.isEquals(new String[]
@@ -11523,56 +11481,54 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        int fileId =
-                ch.systemsx.cisd.hdf5.hdf5lib.H5F.H5Fcreate(file.getAbsolutePath(),
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_ACC_TRUNC,
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT,
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT);
-        int groupId =
-                ch.systemsx.cisd.hdf5.hdf5lib.H5GLO.H5Gcreate(fileId, "constants",
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT,
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT,
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT);
-        int spcId =
-                ch.systemsx.cisd.hdf5.hdf5lib.H5S
-                        .H5Screate(ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR);
-        int dsId =
-                ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dcreate(groupId, "pi",
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32LE, spcId,
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT,
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT,
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT);
-        ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite(dsId,
-                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT,
-                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR,
-                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR,
-                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT, new float[]
+        long fileId =
+                hdf.hdf5lib.H5.H5Fcreate(file.getAbsolutePath(),
+                        hdf.hdf5lib.HDF5Constants.H5F_ACC_TRUNC,
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+        long groupId =
+                hdf.hdf5lib.H5.H5Gcreate(fileId, "constants",
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+        long spcId =
+                hdf.hdf5lib.H5.H5Screate(hdf.hdf5lib.HDF5Constants.H5S_SCALAR);
+        long dsId =
+                hdf.hdf5lib.H5.H5Dcreate(groupId, "pi",
+                        hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE, spcId,
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT,
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+        hdf.hdf5lib.H5.H5Dwrite(dsId,
+                hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT,
+                hdf.hdf5lib.HDF5Constants.H5S_SCALAR,
+                hdf.hdf5lib.HDF5Constants.H5S_SCALAR,
+                hdf.hdf5lib.HDF5Constants.H5P_DEFAULT, new float[]
                     { 3.14159f });
-        ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dclose(dsId);
-        ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Sclose(spcId);
-        ch.systemsx.cisd.hdf5.hdf5lib.H5GLO.H5Gclose(groupId);
-        ch.systemsx.cisd.hdf5.hdf5lib.H5F.H5Fclose(fileId);
+        hdf.hdf5lib.H5.H5Dclose(dsId);
+        hdf.hdf5lib.H5.H5Sclose(spcId);
+        hdf.hdf5lib.H5.H5Gclose(groupId);
+        hdf.hdf5lib.H5.H5Fclose(fileId);
 
         fileId =
-                ch.systemsx.cisd.hdf5.hdf5lib.H5F.H5Fopen(file.getAbsolutePath(),
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_ACC_RDONLY,
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT);
+                hdf.hdf5lib.H5.H5Fopen(file.getAbsolutePath(),
+                        hdf.hdf5lib.HDF5Constants.H5F_ACC_RDONLY,
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
         spcId =
-                ch.systemsx.cisd.hdf5.hdf5lib.H5S
-                        .H5Screate(ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR);
+                hdf.hdf5lib.H5.H5Screate(hdf.hdf5lib.HDF5Constants.H5S_SCALAR);
         dsId =
-                ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dopen(fileId, "/constants/pi",
-                        ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT);
+                hdf.hdf5lib.H5.H5Dopen(fileId, "/constants/pi",
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
         final float[] data = new float[1];
-        ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dread(dsId,
-                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT,
-                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL,
-                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL,
-                ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT, data);
+        hdf.hdf5lib.H5.H5Dread(dsId,
+                hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT,
+                hdf.hdf5lib.HDF5Constants.H5S_ALL,
+                hdf.hdf5lib.HDF5Constants.H5S_ALL,
+                hdf.hdf5lib.HDF5Constants.H5P_DEFAULT, data);
         assertEquals(3.14159f, data[0], 0f);
 
-        ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dclose(dsId);
-        ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Sclose(spcId);
-        ch.systemsx.cisd.hdf5.hdf5lib.H5F.H5Fclose(fileId);
+        hdf.hdf5lib.H5.H5Dclose(dsId);
+        hdf.hdf5lib.H5.H5Sclose(spcId);
+        hdf.hdf5lib.H5.H5Fclose(fileId);
     }
 }

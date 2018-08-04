@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 
@@ -28,15 +28,15 @@ import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 public abstract class HDF5DataType
 {
 
-    private int fileId;
+    private long fileId;
 
-    private int storageTypeId;
+    private long storageTypeId;
 
-    private int nativeTypeId;
+    private long nativeTypeId;
 
     private final HDF5BaseReader baseReader;
 
-    HDF5DataType(int fileId, int storageTypeId, int nativeTypeId, HDF5BaseReader baseReader)
+    HDF5DataType(long fileId, long storageTypeId, long nativeTypeId, HDF5BaseReader baseReader)
     {
         assert fileId >= 0;
 
@@ -59,7 +59,7 @@ public abstract class HDF5DataType
     /**
      * Returns the storage data type id of this type.
      */
-    int getStorageTypeId()
+    long getStorageTypeId()
     {
         return storageTypeId;
     }
@@ -67,7 +67,7 @@ public abstract class HDF5DataType
     /**
      * Returns the native data type id of this type.
      */
-    int getNativeTypeId()
+    long getNativeTypeId()
     {
         return nativeTypeId;
     }
@@ -77,7 +77,7 @@ public abstract class HDF5DataType
      * 
      * @throws HDF5JavaException If this type is not for file <var>expectedFileId</var>.
      */
-    void check(final int expectedFileId) throws HDF5JavaException
+    void check(final long expectedFileId) throws HDF5JavaException
     {
         if (fileId < 0)
         {
@@ -154,8 +154,8 @@ public abstract class HDF5DataType
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + fileId;
-        result = prime * result + storageTypeId;
+        result = prime * result + (int)fileId;
+        result = prime * result + (int)storageTypeId;
         return result;
     }
 

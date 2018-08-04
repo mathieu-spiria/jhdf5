@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_BITFIELD;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_COMPOUND;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_FLOAT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_INTEGER;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_OPAQUE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_REFERENCE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STRING;
+import static hdf.hdf5lib.HDF5Constants.H5T_BITFIELD;
+import static hdf.hdf5lib.HDF5Constants.H5T_COMPOUND;
+import static hdf.hdf5lib.HDF5Constants.H5T_ENUM;
+import static hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
+import static hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
+import static hdf.hdf5lib.HDF5Constants.H5T_OPAQUE;
+import static hdf.hdf5lib.HDF5Constants.H5T_REFERENCE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STRING;
 
 import java.util.BitSet;
 import java.util.Map;

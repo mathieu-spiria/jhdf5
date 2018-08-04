@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import org.apache.commons.lang.time.StopWatch;
 
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 import ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverFactory;
 import ch.systemsx.cisd.hdf5.h5ar.IArchiveEntryVisitor;
 import ch.systemsx.cisd.hdf5.h5ar.IHDF5Archiver;
@@ -45,7 +45,7 @@ public class Dir2HDF5
         final StopWatch watch = new StopWatch();
         watch.start();
         final IHDF5Archiver archiver =
-                HDF5ArchiverFactory.open(hdf5File, true, FileFormat.ALLOW_1_8, null);
+                HDF5ArchiverFactory.open(hdf5File, true, FileFormatVersionBounds.getDefault(), null);
         if (args.length > 1)
         {
             for (int i = 1; i < args.length; ++i)

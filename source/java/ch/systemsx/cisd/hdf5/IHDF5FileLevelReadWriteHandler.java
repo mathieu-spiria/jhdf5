@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import java.io.Flushable;
 
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 
 /**
  * An interface for handling file-level information and status of the writer. 
@@ -40,9 +40,9 @@ public interface IHDF5FileLevelReadWriteHandler extends IHDF5FileLevelReadOnlyHa
     public boolean isUseExtendableDataTypes();
 
     /**
-     * Returns the {@link FileFormat} compatibility setting for this writer.
+     * Returns the {@link FileFormatVersionBounds} compatibility setting for this writer.
      */
-    public FileFormat getFileFormat();
+    public FileFormatVersionBounds getFileFormatVersionBounds();
 
     // /////////////////////
     // Flushing and Syncing

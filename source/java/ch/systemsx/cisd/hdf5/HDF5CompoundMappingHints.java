@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,8 @@ public class HDF5CompoundMappingHints
      * 
      * @return This object (for chaining)
      */
-    public HDF5CompoundMappingHints enumReturnType(EnumReturnType enumReturnType)
+    public HDF5CompoundMappingHints enumReturnType(@SuppressWarnings("hiding")
+    EnumReturnType enumReturnType)
     {
         this.enumReturnType = enumReturnType;
         return this;
@@ -154,7 +155,8 @@ public class HDF5CompoundMappingHints
      * 
      * @return The hint object.
      */
-    public HDF5CompoundMappingHints useVariableLengthStrings(boolean useVariableLengthStrings)
+    public HDF5CompoundMappingHints useVariableLengthStrings(@SuppressWarnings("hiding")
+    boolean useVariableLengthStrings)
     {
         this.useVariableLengthStrings = useVariableLengthStrings;
         return this;

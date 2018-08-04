@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,8 @@ public final class VerifyParameters
          * <code>false</code>, perform a non-recursive listing, i.e. do not traverse
          * sub-directories.
          */
-        public VerifyParametersBuilder recursive(boolean recursive)
+        public VerifyParametersBuilder recursive(@SuppressWarnings("hiding")
+        boolean recursive)
         {
             this.recursive = recursive;
             return this;
@@ -89,7 +90,8 @@ public final class VerifyParameters
          * This is a pure display parameter that is only relevant if {@link #verifyAttributes()} has
          * been set.
          */
-        public VerifyParametersBuilder numeric(boolean numeric)
+        public VerifyParametersBuilder numeric(@SuppressWarnings("hiding")
+        boolean numeric)
         {
             this.numeric = numeric;
             return this;
@@ -109,7 +111,8 @@ public final class VerifyParameters
          * time, file ownership and access permissions, if it is <code>false</code>, check only the
          * types and content of entries.
          */
-        public VerifyParametersBuilder verifyAttributes(boolean verifyAttributes)
+        public VerifyParametersBuilder verifyAttributes(@SuppressWarnings("hiding")
+        boolean verifyAttributes)
         {
             this.verifyAttributes = verifyAttributes;
             return this;

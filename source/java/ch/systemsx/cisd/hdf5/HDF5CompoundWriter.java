@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
+import static hdf.hdf5lib.H5.H5Dwrite;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
 
 import java.util.List;
 import java.util.Map;
@@ -54,10 +54,10 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         final String dataTypeName =
                 anonymousType ? null : (nameOrNull != null) ? nameOrNull
                         : deriveCompoundNameFromClass(pojoClass);
-        final int storageDataTypeId =
+        final long storageDataTypeId =
                 getOrCreateCompoundDataType(dataTypeName, objectByteifyer,
                         baseWriter.keepDataSetIfExists);
-        final int nativeDataTypeId = baseWriter.createNativeCompoundDataType(objectByteifyer);
+        final long nativeDataTypeId = baseWriter.createNativeCompoundDataType(objectByteifyer);
         return new HDF5CompoundType<T>(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
                 dataTypeName, pojoClass, requireEqualsType, objectByteifyer,
                 new HDF5CompoundType.IHDF5InternalCompoundMemberInformationRetriever()
@@ -151,7 +151,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         final HDF5ValueObjectByteifyer<T> objectByteifyer = templateType.getObjectByteifyer();
         final String dataTypeName =
                 anonymousType ? null : (name == null) ? templateType.getName() : name;
-        final int storageDataTypeId =
+        final long storageDataTypeId =
                 getOrCreateCompoundDataType(dataTypeName, objectByteifyer,
                         baseWriter.keepDataSetIfExists);
         return getType(dataTypeName, storageDataTypeId, templateType.getCompoundType(), true,
@@ -241,7 +241,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         return name.length() == 0 ? pojoClass.getSimpleName() : name;
     }
 
-    private <T> int getOrCreateCompoundDataType(final String dataTypeName,
+    private <T> long getOrCreateCompoundDataType(final String dataTypeName,
             final HDF5ValueObjectByteifyer<T> objectByteifyer,
             boolean committedDataTypeHasPreference)
     {
@@ -250,10 +250,10 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
         final String dataTypePath =
                 dataTypeNameGiven ? HDF5Utils.createDataTypePath(HDF5Utils.COMPOUND_PREFIX,
                         baseWriter.houseKeepingNameSuffix, dataTypeName) : null;
-        final int committedStorageDataTypeId =
+        final long committedStorageDataTypeId =
                 dataTypeNameGiven ? baseWriter.getDataTypeId(dataTypePath) : -1;
         final boolean typeExists = (committedStorageDataTypeId >= 0);
-        int storageDataTypeId = committedStorageDataTypeId;
+        long storageDataTypeId = committedStorageDataTypeId;
         final boolean commitType;
         if (((typeExists == false) || (committedDataTypeHasPreference == false)))
         {
@@ -378,7 +378,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                         {
                             if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
-                                final int dataSpaceId =
+                                final long dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]
                                             { 1 }, registry);
                                 baseWriter.setAttribute(objectPath, attributeName,
@@ -475,7 +475,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 @Override
                 public Void call(final ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(),
                                     new long[]
                                         { data.length }, type.getObjectByteifyer()
@@ -541,14 +541,14 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                         { size };
                     final long[] offset = new long[]
                         { size * blockNumber };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { data.length * (blockNumber + 1) }, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
@@ -594,14 +594,14 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 @Override
                 public Void call(final ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + data.length }, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offsetArray, dimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
@@ -731,7 +731,7 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 @Override
                 public Void call(final ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, type.getStorageTypeId(),
                                     MDAbstractArray.toLong(data.dimensions()), type
                                             .getObjectByteifyer().getRecordSizeOnDisk(), features,
@@ -815,13 +815,13 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                 @Override
                 public Void call(final ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     final byte[] byteArray =
                             type.getObjectByteifyer().byteify(type.getStorageTypeId(), data);
@@ -871,13 +871,13 @@ class HDF5CompoundWriter extends HDF5CompoundReader implements IHDF5CompoundWrit
                     {
                         dataSetDimensions[i] = offset[i] + blockDimensions[i];
                     }
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
                     baseWriter.h5.setHyperslabBlock(memorySpaceId,
                             MDAbstractArray.toLong(memoryOffset), longBlockDimensions);

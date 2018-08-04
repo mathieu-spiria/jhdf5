@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,17 +17,17 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;
+import static hdf.hdf5lib.H5.H5Dwrite;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_U64LE;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.HDFNativeData;
 
 /**
  * Implementation of {@link IHDF5TimeDurationWriter}.
@@ -60,7 +60,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 {
                     if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
-                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                        final long dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { 1 }, registry);
                         baseWriter.setAttribute(objectPath, name, timeUnit.getTypeVariant(),
                                 H5T_STD_I64LE, H5T_NATIVE_INT64, dataSpaceId, new long[]
@@ -99,7 +99,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 {
                     if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
-                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                        final long dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { timeDurations.timeDurations.length }, registry);
                         baseWriter.setAttribute(objectPath, name,
                                 timeDurations.timeUnit.getTypeVariant(), H5T_STD_I64LE,
@@ -107,10 +107,10 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                                 registry);
                     } else
                     {
-                        final int memoryTypeId =
+                        final long memoryTypeId =
                                 baseWriter.h5.createArrayType(H5T_NATIVE_INT64,
                                         timeDurations.timeDurations.length, registry);
-                        final int storageTypeId =
+                        final long storageTypeId =
                                 baseWriter.h5.createArrayType(H5T_STD_I64LE,
                                         timeDurations.timeDurations.length, registry);
                         baseWriter.setAttribute(objectPath, name,
@@ -139,7 +139,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 {
                     if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
-                        final int dataSpaceId =
+                        final long dataSpaceId =
                                 baseWriter.h5.createSimpleDataSpace(
                                         timeDurations.timeDurations.longDimensions(), registry);
                         baseWriter.setAttribute(objectPath, attributeName,
@@ -148,10 +148,10 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                                 timeDurations.timeDurations.getAsFlatArray(), registry);
                     } else
                     {
-                        final int memoryTypeId =
+                        final long memoryTypeId =
                                 baseWriter.h5.createArrayType(H5T_NATIVE_INT64,
                                         timeDurations.timeDurations.dimensions(), registry);
-                        final int storageTypeId =
+                        final long storageTypeId =
                                 baseWriter.h5.createArrayType(H5T_STD_I64LE,
                                         timeDurations.timeDurations.dimensions(), registry);
                         baseWriter.setAttribute(objectPath, attributeName,
@@ -181,7 +181,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 @Override
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64,
                                     HDFNativeData.longToByte(timeDuration), true, true, registry);
                     baseWriter.setTypeVariant(dataSetId, timeUnit.getTypeVariant(), registry);
@@ -225,7 +225,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int longBytes = 8;
-                    final int dataSetId;
+                    final long dataSetId;
                     if (features.requiresChunking())
                     {
                         dataSetId =
@@ -261,7 +261,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int longBytes = 8;
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
                                     new long[]
                                         { size }, new long[]
@@ -299,7 +299,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int longBytes = 8;
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE, new long[]
                                 { timeDurations.timeDurations.length }, longBytes, features,
                                     registry);
@@ -370,16 +370,16 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                         { dataSize };
                     final long[] slabStartOrNull = new long[]
                         { offset };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
                     final HDF5TimeUnit storedUnit =
                             baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
                             storedUnit.convert(data));
@@ -429,7 +429,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath,
                                     features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE,
                                     data.longDimensions(), 8, features, registry);
@@ -475,7 +475,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId;
+                    final long dataSetId;
                     if (features.requiresChunking())
                     {
                         final long[] nullDimensions = new long[dimensions.length];
@@ -513,7 +513,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.createDataSet(objectPath,
                                     features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE, features,
                                     dimensions, MDArray.toLong(blockDimensions), 8, registry);
@@ -560,15 +560,15 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                     {
                         dataSetDimensions[i] = offset[i] + dimensions[i];
                     }
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
                     final HDF5TimeUnit storedUnit =
                             baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
                             data.getAsFlatArray(storedUnit));
@@ -602,15 +602,15 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                     {
                         dataSetDimensions[i] = offset[i] + blockDimensions[i];
                     }
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     final HDF5TimeUnit storedUnit =
                             baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
                     baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
                             longBlockDimensions);

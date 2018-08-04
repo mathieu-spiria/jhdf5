@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,21 +18,21 @@ package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_UINT64;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_B64LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;
+import static hdf.hdf5lib.H5.H5Dwrite;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_UINT64;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_B64LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_U64LE;
 
 import java.util.BitSet;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.HDFNativeData;
 
 /**
  * Implementation of {@link IHDF5BooleanWriter}.
@@ -68,7 +68,7 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                             final byte byteValue = (byte) (value ? 1 : 0);
                             if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
-                                final int dataSpaceId =
+                                final long dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]
                                             { 1 }, registry);
                                 baseWriter.setAttribute(objectPath, name, baseWriter.booleanDataTypeId,
@@ -121,7 +121,7 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                     final int longBits = longBytes * 8;
                     final int msb = data.length();
                     final int realLength = msb / longBits + (msb % longBits != 0 ? 1 : 0);
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_B64LE, new long[]
                                 { realLength }, longBytes, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_B64, H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -221,14 +221,14 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                         { dataSize };
                     final long[] slabStartOrNull = new long[]
                         { offset };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_B64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
                             BitSetConversionUtils.toStorageForm(data, dataSize));
@@ -263,11 +263,10 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                     final int numberOfWords = msb / longBits + (msb % longBits != 0 ? 1 : 0);
                     if (features.isScaling() && msb < longBits)
                     {
-                        features.checkScalingOK(baseWriter.fileFormat);
                         final HDF5IntStorageFeatures actualFeatures =
                                 HDF5IntStorageFeatures.build(features).scalingFactor((byte) msb)
                                         .features();
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_U64LE,
                                         new long[]
                                             { numberOfWords, data.length }, longBytes,
@@ -280,7 +279,7 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                     {
                         final HDF5IntStorageFeatures actualFeatures =
                                 HDF5IntStorageFeatures.build(features).noScaling().features();
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_B64LE,
                                         new long[]
                                             { numberOfWords, data.length }, longBytes,
@@ -323,6 +322,7 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                     return null; // Nothing to return.
                 }
 
+                @SuppressWarnings("hiding")
                 void create(final String objectPath, final long[] dimensions,
                         final long[] blockDimensionsOrNull, final HDF5IntStorageFeatures features,
                         ICleanUpRegistry registry)
@@ -331,11 +331,10 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                     final int longBits = longBytes * 8;
                     if (features.isScaling() && bitFieldSize < longBits)
                     {
-                        features.checkScalingOK(baseWriter.fileFormat);
                         final HDF5IntStorageFeatures actualFeatures =
                                 HDF5IntStorageFeatures.build(features)
                                         .scalingFactor((byte) bitFieldSize).features();
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.createDataSet(objectPath, H5T_STD_U64LE, actualFeatures,
                                         dimensions, blockDimensionsOrNull, longBytes, registry);
                         baseWriter
@@ -385,7 +384,7 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { -1, offset + dataSize }, -1, registry);
@@ -401,10 +400,10 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                         { numberOfWords, dataSize };
                     final long[] slabStartOrNull = new long[]
                         { 0, offset };
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
 
                     if (baseWriter.isScaledBitField(dataSetId, registry))

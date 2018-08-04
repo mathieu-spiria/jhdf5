@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,71 +16,68 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5F.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5A.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5GLO.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5P.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5RI.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5T.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5D_CHUNKED;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5D_COMPACT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5D_FILL_TIME_ALLOC;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_ACC_RDONLY;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_ACC_RDWR;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_ACC_TRUNC;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_LIBVER_LATEST;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5F_SCOPE_GLOBAL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_ATTRIBUTE_CREATE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DATASET_CREATE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_FILE_ACCESS;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_GROUP_CREATE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_LINK_CREATE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5R_OBJECT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_MAX_RANK;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SCALAR;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_SELECT_SET;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_UNLIMITED;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_COMPOUND;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_C_S1;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ENUM;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_FLOAT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_INTEGER;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_OPAQUE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_OPAQUE_TAG_MAX;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_SGN_NONE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I32LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I8LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STR_NULLPAD;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_VARIABLE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5Z_SO_FLOAT_DSCALE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5Z_SO_INT;
+import static hdf.hdf5lib.H5.*;
+import static hdf.hdf5lib.HDF5Constants.H5_INDEX_NAME;
+import static hdf.hdf5lib.HDF5Constants.H5_ITER_NATIVE;
+import static hdf.hdf5lib.HDF5Constants.H5D_CHUNKED;
+import static hdf.hdf5lib.HDF5Constants.H5D_COMPACT;
+import static hdf.hdf5lib.HDF5Constants.H5D_FILL_TIME_ALLOC;
+import static hdf.hdf5lib.HDF5Constants.H5F_ACC_RDONLY;
+import static hdf.hdf5lib.HDF5Constants.H5F_ACC_RDWR;
+import static hdf.hdf5lib.HDF5Constants.H5F_ACC_TRUNC;
+import static hdf.hdf5lib.HDF5Constants.H5F_SCOPE_GLOBAL;
+import static hdf.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
+import static hdf.hdf5lib.HDF5Constants.H5P_ATTRIBUTE_CREATE;
+import static hdf.hdf5lib.HDF5Constants.H5P_DATASET_CREATE;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5P_FILE_ACCESS;
+import static hdf.hdf5lib.HDF5Constants.H5P_GROUP_CREATE;
+import static hdf.hdf5lib.HDF5Constants.H5P_LINK_CREATE;
+import static hdf.hdf5lib.HDF5Constants.H5R_OBJECT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static hdf.hdf5lib.HDF5Constants.H5S_MAX_RANK;
+import static hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
+import static hdf.hdf5lib.HDF5Constants.H5S_SELECT_SET;
+import static hdf.hdf5lib.HDF5Constants.H5S_UNLIMITED;
+import static hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static hdf.hdf5lib.HDF5Constants.H5T_COMPOUND;
+import static hdf.hdf5lib.HDF5Constants.H5T_C_S1;
+import static hdf.hdf5lib.HDF5Constants.H5T_ENUM;
+import static hdf.hdf5lib.HDF5Constants.H5T_FLOAT;
+import static hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
+import static hdf.hdf5lib.HDF5Constants.H5T_OPAQUE;
+import static hdf.hdf5lib.HDF5Constants.H5T_OPAQUE_TAG_MAX;
+import static hdf.hdf5lib.HDF5Constants.H5T_SGN_NONE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_I16LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_I32LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_I8LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STR_NULLPAD;
+import static hdf.hdf5lib.HDF5Constants.H5T_VARIABLE;
+import static hdf.hdf5lib.HDF5Constants.H5Z_SO_FLOAT_DSCALE;
+import static hdf.hdf5lib.HDF5Constants.H5Z_SO_INT;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.HDF5Constants;
+import hdf.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.exceptions.HDF5Exception;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
+import hdf.hdf5lib.structs.H5O_info_t;
+import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
+import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
- * A wrapper around {@link ch.systemsx.cisd.hdf5.hdf5lib.H5General} that handles closing of
- * resources automatically by means of registering clean-up {@link Runnable}s.
+ * A wrapper around {@link hdf.hdf5lib.H5General} that handles closing of resources automatically by means of registering clean-up {@link Runnable}s.
  * 
  * @author Bernd Rinn
  */
@@ -91,13 +88,13 @@ class HDF5
 
     private final CleanUpCallable runner;
 
-    private final int dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc;
+    private final long dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc;
 
-    private final int dataSetCreationPropertyListFillTimeAlloc;
+    private final long dataSetCreationPropertyListFillTimeAlloc;
 
-    private final int numericConversionXferPropertyListID;
+    private final long numericConversionXferPropertyListID;
 
-    private final int lcplCreateIntermediateGroups;
+    private final long lcplCreateIntermediateGroups;
 
     private final boolean useUTF8CharEncoding;
 
@@ -140,11 +137,11 @@ class HDF5
     // File
     //
 
-    public int createFile(String fileName, boolean useLatestFormat, ICleanUpRegistry registry)
+    public long createFile(String fileName, FileFormatVersionBounds fileFormatVersionBounds, ICleanUpRegistry registry)
     {
-        final int fileAccessPropertyListId =
-                createFileAccessPropertyListId(useLatestFormat, registry);
-        final int fileId =
+        final long fileAccessPropertyListId =
+                createFileAccessPropertyListId(fileFormatVersionBounds, registry);
+        final long fileId =
                 H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, fileAccessPropertyListId);
         registry.registerCleanUp(new Runnable()
             {
@@ -157,12 +154,12 @@ class HDF5
         return fileId;
     }
 
-    private int createFileAccessPropertyListId(boolean enforce_1_8, ICleanUpRegistry registry)
+    private long createFileAccessPropertyListId(FileFormatVersionBounds fileFormatVersionBounds, ICleanUpRegistry registry)
     {
-        int fileAccessPropertyListId = H5P_DEFAULT;
-        if (enforce_1_8)
+        long fileAccessPropertyListId = H5P_DEFAULT;
+        if (fileFormatVersionBounds != FileFormatVersionBounds.getDefault())
         {
-            final int fapl = H5Pcreate(H5P_FILE_ACCESS);
+            final long fapl = H5Pcreate(H5P_FILE_ACCESS);
             registry.registerCleanUp(new Runnable()
                 {
                     @Override
@@ -171,15 +168,16 @@ class HDF5
                         H5Pclose(fapl);
                     }
                 });
-            H5Pset_libver_bounds(fapl, H5F_LIBVER_LATEST, H5F_LIBVER_LATEST);
+            H5Pset_libver_bounds(fapl, fileFormatVersionBounds.getLowBound().getHdf5Constant(), 
+                    fileFormatVersionBounds.getHighBound().getHdf5Constant());
             fileAccessPropertyListId = fapl;
         }
         return fileAccessPropertyListId;
     }
 
-    public int openFileReadOnly(String fileName, ICleanUpRegistry registry)
+    public long openFileReadOnly(String fileName, ICleanUpRegistry registry)
     {
-        final int fileId = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
+        final long fileId = H5Fopen(fileName, H5F_ACC_RDONLY, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -191,16 +189,16 @@ class HDF5
         return fileId;
     }
 
-    public int openFileReadWrite(String fileName, boolean enforce_1_8, ICleanUpRegistry registry)
+    public long openFileReadWrite(String fileName, FileFormatVersionBounds fileFormatVersionBounds, ICleanUpRegistry registry)
     {
-        final int fileAccessPropertyListId = createFileAccessPropertyListId(enforce_1_8, registry);
+        final long fileAccessPropertyListId = createFileAccessPropertyListId(fileFormatVersionBounds, registry);
         final File f = new File(fileName);
         if (f.exists() && f.isFile() == false)
         {
             throw new HDF5Exception("An entry with name '" + fileName
                     + "' exists but is not a file.");
         }
-        final int fileId = H5Fopen(fileName, H5F_ACC_RDWR, fileAccessPropertyListId);
+        final long fileId = H5Fopen(fileName, H5F_ACC_RDWR, fileAccessPropertyListId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -212,7 +210,7 @@ class HDF5
         return fileId;
     }
 
-    public void flushFile(int fileId)
+    public void flushFile(long fileId)
     {
         H5Fflush(fileId, H5F_SCOPE_GLOBAL);
     }
@@ -221,11 +219,11 @@ class HDF5
     // Object
     //
 
-    public int openObject(int fileId, String path, ICleanUpRegistry registry)
+    public long openObject(long fileId, String path, ICleanUpRegistry registry)
     {
         checkMaxLength(path);
-        final int objectId =
-                isReference(path) ? H5Rdereference(fileId, Long.parseLong(path.substring(1)))
+        final long objectId =
+                isReference(path) ? H5Oopen_by_addr(fileId, Long.parseLong(path.substring(1)))
                         : H5Oopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
@@ -238,29 +236,29 @@ class HDF5
         return objectId;
     }
 
-    public int deleteObject(int fileId, String path)
+    public int deleteObject(long fileId, String path)
     {
         checkMaxLength(path);
-        final int success = H5Gunlink(fileId, path);
-        return success;
+        H5Ldelete(fileId, path, H5P_DEFAULT);
+        return 0;
     }
 
-    public int copyObject(int srcFileId, String srcPath, int dstFileId, String dstPath)
+    public int copyObject(long srcFileId, String srcPath, long dstFileId, String dstPath)
     {
         checkMaxLength(srcPath);
         checkMaxLength(dstPath);
-        final int success =
-                H5Ocopy(srcFileId, srcPath, dstFileId, dstPath, H5P_DEFAULT, H5P_DEFAULT);
+        final int success = 0;
+        H5Ocopy(srcFileId, srcPath, dstFileId, dstPath, H5P_DEFAULT, H5P_DEFAULT);
         return success;
     }
 
-    public int moveLink(int fileId, String srcLinkPath, String dstLinkPath)
+    public int moveLink(long fileId, String srcLinkPath, String dstLinkPath)
     {
         checkMaxLength(srcLinkPath);
         checkMaxLength(dstLinkPath);
-        final int success =
-                H5Lmove(fileId, srcLinkPath, fileId, dstLinkPath, lcplCreateIntermediateGroups,
-                        H5P_DEFAULT);
+        final int success = 0;
+        H5Lmove(fileId, srcLinkPath, fileId, dstLinkPath, lcplCreateIntermediateGroups,
+                H5P_DEFAULT);
         return success;
     }
 
@@ -268,19 +266,19 @@ class HDF5
     // Group
     //
 
-    public void createGroup(int fileId, String groupName)
+    public void createGroup(long fileId, String groupName)
     {
         checkMaxLength(groupName);
-        final int groupId =
+        final long groupId =
                 H5Gcreate(fileId, groupName, lcplCreateIntermediateGroups, H5P_DEFAULT, H5P_DEFAULT);
         H5Gclose(groupId);
     }
 
-    public void createOldStyleGroup(int fileId, String groupName, int sizeHint,
+    public void createOldStyleGroup(long fileId, String groupName, int sizeHint,
             ICleanUpRegistry registry)
     {
         checkMaxLength(groupName);
-        final int gcplId = H5Pcreate(H5P_GROUP_CREATE);
+        final long gcplId = H5Pcreate(H5P_GROUP_CREATE);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -290,16 +288,16 @@ class HDF5
                 }
             });
         H5Pset_local_heap_size_hint(gcplId, sizeHint);
-        final int groupId =
+        final long groupId =
                 H5Gcreate(fileId, groupName, lcplCreateIntermediateGroups, gcplId, H5P_DEFAULT);
         H5Gclose(groupId);
     }
 
-    public void createNewStyleGroup(int fileId, String groupName, int maxCompact, int minDense,
+    public void createNewStyleGroup(long fileId, String groupName, int maxCompact, int minDense,
             ICleanUpRegistry registry)
     {
         checkMaxLength(groupName);
-        final int gcplId = H5Pcreate(H5P_GROUP_CREATE);
+        final long gcplId = H5Pcreate(H5P_GROUP_CREATE);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -309,17 +307,16 @@ class HDF5
                 }
             });
         H5Pset_link_phase_change(gcplId, maxCompact, minDense);
-        final int groupId =
+        final long groupId =
                 H5Gcreate(fileId, groupName, lcplCreateIntermediateGroups, gcplId, H5P_DEFAULT);
         H5Gclose(groupId);
     }
 
-    public int openGroup(int fileId, String path, ICleanUpRegistry registry)
+    public long openGroup(long fileId, String path, ICleanUpRegistry registry)
     {
         checkMaxLength(path);
-        final int groupId =
-                isReference(path) ? H5Rdereference(fileId, Long.parseLong(path.substring(1)))
-                        : H5Gopen(fileId, path, H5P_DEFAULT);
+        final long groupId = isReference(path) ? H5Oopen_by_addr(fileId, Long.parseLong(path.substring(1)))
+                : H5Gopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -331,10 +328,10 @@ class HDF5
         return groupId;
     }
 
-    public long getNumberOfGroupMembers(int fileId, String path, ICleanUpRegistry registry)
+    public long getNumberOfGroupMembers(long fileId, String path, ICleanUpRegistry registry)
     {
         checkMaxLength(path);
-        final int groupId = H5Gopen(fileId, path, H5P_DEFAULT);
+        final long groupId = H5Gopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -343,22 +340,29 @@ class HDF5
                     H5Gclose(groupId);
                 }
             });
-        return H5Gget_nlinks(groupId);
+        return H5Gget_info(groupId).nlinks;
     }
 
-    public boolean existsAttribute(final int objectId, final String attributeName)
+    public boolean existsAttribute(final long objectId, final String attributeName)
     {
         checkMaxLength(attributeName);
         return H5Aexists(objectId, attributeName);
     }
 
-    public boolean exists(final int fileId, final String linkName)
+    public boolean exists(final long fileId, final String linkName)
     {
+        boolean result = false;
         checkMaxLength(linkName);
-        return H5Lexists(fileId, linkName);
+        try
+        {
+            result = H5Lexists(fileId, linkName, H5P_DEFAULT);
+        } catch (Exception e)
+        {
+        }
+        return result;
     }
 
-    public HDF5LinkInformation getLinkInfo(final int fileId, final String objectName,
+    public HDF5LinkInformation getLinkInfo(final long fileId, final String objectName,
             boolean exceptionIfNonExistent)
     {
         checkMaxLength(objectName);
@@ -367,11 +371,11 @@ class HDF5
             return HDF5LinkInformation.ROOT_LINK_INFO;
         }
         final String[] lname = new String[1];
-        final int typeId = H5Lget_link_info(fileId, objectName, lname, exceptionIfNonExistent);
-        return HDF5LinkInformation.create(objectName, typeId, lname[0]);
+        final int typeId = HDFHelper.H5Lget_link_info(fileId, objectName, lname, exceptionIfNonExistent);
+        return HDF5LinkInformation.create(objectName, typeId, lname);
     }
 
-    public HDF5ObjectType getLinkTypeInfo(final int fileId, final String objectName,
+    public HDF5ObjectType getLinkTypeInfo(final long fileId, final String objectName,
             boolean exceptionWhenNonExistent)
     {
         checkMaxLength(objectName);
@@ -379,21 +383,20 @@ class HDF5
         {
             return HDF5ObjectType.GROUP;
         }
-        final int typeId = H5Lget_link_info(fileId, objectName, null, exceptionWhenNonExistent);
+        final int typeId = HDFHelper.H5Lget_link_info(fileId, objectName, null, exceptionWhenNonExistent);
         return HDF5CommonInformation.objectTypeIdToObjectType(typeId);
     }
 
-    public HDF5ObjectInformation getObjectInfo(final int fileId, final String objectName,
+    public HDF5ObjectInformation getObjectInfo(final long fileId, final String objectName,
             boolean exceptionWhenNonExistent)
     {
         checkMaxLength(objectName);
-        final long[] info = new long[5];
-        final int typeId = H5Oget_info_by_name(fileId, objectName, info, exceptionWhenNonExistent);
+        final H5O_info_t info = HDFHelper.H5Oget_info_by_name(fileId, objectName, exceptionWhenNonExistent);
         return new HDF5ObjectInformation(objectName,
-                HDF5CommonInformation.objectTypeIdToObjectType(typeId), info);
+                HDF5CommonInformation.objectTypeIdToObjectType(info.type), info);
     }
 
-    public int getObjectTypeId(final int fileId, final String objectName,
+    public int getObjectTypeId(final long fileId, final String objectName,
             boolean exceptionWhenNonExistent)
     {
         checkMaxLength(objectName);
@@ -401,17 +404,17 @@ class HDF5
         {
             return H5O_TYPE_GROUP;
         }
-        return H5Oget_info_by_name(fileId, objectName, null, exceptionWhenNonExistent);
+        return HDFHelper.H5Oget_info_by_name(fileId, objectName, exceptionWhenNonExistent).type;
     }
 
-    public HDF5ObjectType getObjectTypeInfo(final int fileId, final String objectName,
+    public HDF5ObjectType getObjectTypeInfo(final long fileId, final String objectName,
             boolean exceptionWhenNonExistent)
     {
         return HDF5CommonInformation.objectTypeIdToObjectType(getObjectTypeId(fileId, objectName,
                 exceptionWhenNonExistent));
     }
 
-    public String[] getGroupMembers(final int fileId, final String groupName)
+    public String[] getGroupMembers(final long fileId, final String groupName)
     {
         checkMaxLength(groupName);
         final ICallableWithCleanUp<String[]> dataDimensionRunnable =
@@ -420,8 +423,8 @@ class HDF5
                         @Override
                         public String[] call(ICleanUpRegistry registry)
                         {
-                            final int groupId = openGroup(fileId, groupName, registry);
-                            final long nLong = H5Gget_nlinks(groupId);
+                            final long groupId = openGroup(fileId, groupName, registry);
+                            final long nLong = H5Gget_info(groupId).nlinks;
                             final int n = (int) nLong;
                             if (n != nLong)
                             {
@@ -429,14 +432,14 @@ class HDF5
                                         "Number of group members is too large (n=" + nLong + ")");
                             }
                             final String[] names = new String[n];
-                            H5Lget_link_names_all(groupId, ".", names);
+                            HDFHelper.H5Lget_link_names_all(groupId, ".", names);
                             return names;
                         }
                     };
         return runner.call(dataDimensionRunnable);
     }
 
-    public List<HDF5LinkInformation> getGroupMemberLinkInfo(final int fileId,
+    public List<HDF5LinkInformation> getGroupMemberLinkInfo(final long fileId,
             final String groupName, final boolean includeInternal,
             final String houseKeepingNameSuffix)
     {
@@ -447,8 +450,8 @@ class HDF5
                         @Override
                         public List<HDF5LinkInformation> call(ICleanUpRegistry registry)
                         {
-                            final int groupId = openGroup(fileId, groupName, registry);
-                            final long nLong = H5Gget_nlinks(groupId);
+                            final long groupId = openGroup(fileId, groupName, registry);
+                            final long nLong = H5Gget_info(groupId).nlinks;
                             final int n = (int) nLong;
                             if (n != nLong)
                             {
@@ -458,7 +461,7 @@ class HDF5
                             final String[] names = new String[n];
                             final String[] linkNames = new String[n];
                             final int[] types = new int[n];
-                            H5Lget_link_info_all(groupId, ".", names, types, linkNames);
+                            HDFHelper.H5Lget_link_info_all(groupId, ".", names, types, linkNames);
                             final String superGroupName =
                                     (groupName.equals("/") ? "/" : groupName + "/");
                             final List<HDF5LinkInformation> info =
@@ -479,7 +482,7 @@ class HDF5
         return runner.call(dataDimensionRunnable);
     }
 
-    public List<HDF5LinkInformation> getGroupMemberTypeInfo(final int fileId,
+    public List<HDF5LinkInformation> getGroupMemberTypeInfo(final long fileId,
             final String groupName, final boolean includeInternal,
             final String houseKeepingNameSuffix)
     {
@@ -490,8 +493,8 @@ class HDF5
                         @Override
                         public List<HDF5LinkInformation> call(ICleanUpRegistry registry)
                         {
-                            final int groupId = openGroup(fileId, groupName, registry);
-                            final long nLong = H5Gget_nlinks(groupId);
+                            final long groupId = openGroup(fileId, groupName, registry);
+                            final long nLong = H5Gget_info(groupId).nlinks;
                             final int n = (int) nLong;
                             if (n != nLong)
                             {
@@ -500,7 +503,7 @@ class HDF5
                             }
                             final String[] names = new String[n];
                             final int[] types = new int[n];
-                            H5Lget_link_info_all(groupId, ".", names, types, null);
+                            HDFHelper.H5Lget_link_info_all(groupId, ".", names, types, null);
                             final String superGroupName =
                                     (groupName.equals("/") ? "/" : groupName + "/");
                             final List<HDF5LinkInformation> info =
@@ -512,7 +515,7 @@ class HDF5
                                                 houseKeepingNameSuffix) == false)
                                 {
                                     info.add(HDF5LinkInformation.create(superGroupName + names[i],
-                                            types[i], null));
+                                            types[i], (String) null));
                                 }
                             }
                             return info;
@@ -525,7 +528,7 @@ class HDF5
     // Link
     //
 
-    public void createHardLink(int fileId, String objectName, String linkName)
+    public void createHardLink(long fileId, String objectName, String linkName)
     {
         checkMaxLength(objectName);
         checkMaxLength(linkName);
@@ -533,14 +536,14 @@ class HDF5
                 H5P_DEFAULT);
     }
 
-    public void createSoftLink(int fileId, String linkName, String targetPath)
+    public void createSoftLink(long fileId, String linkName, String targetPath)
     {
         checkMaxLength(linkName);
         checkMaxLength(targetPath);
         H5Lcreate_soft(targetPath, fileId, linkName, lcplCreateIntermediateGroups, H5P_DEFAULT);
     }
 
-    public void createExternalLink(int fileId, String linkName, String targetFileName,
+    public void createExternalLink(long fileId, String linkName, String targetFileName,
             String targetPath)
     {
         checkMaxLength(linkName);
@@ -554,33 +557,23 @@ class HDF5
     // Data Set
     //
 
-    public void writeStringVL(int dataSetId, int dataTypeId, String[] value)
+    public void writeStringVL(long dataSetId, long dataTypeId, String[] value)
     {
-        final byte[] result = new byte[HDFNativeData.getMachineWordSize() * value.length];
-        for (int i = 0; i < value.length; ++i)
-        {
-        	HDFNativeData.compoundCpyVLStr(value[i], result, i * HDFNativeData.getMachineWordSize());
-        }
-        H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, result);
+        H5DwriteVL(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, value);
     }
 
-    public void writeStringVL(int dataSetId, int dataTypeId, int memorySpaceId, int fileSpaceId,
+    public void writeStringVL(long dataSetId, long dataTypeId, long memorySpaceId, long fileSpaceId,
             String[] value)
     {
-        final byte[] result = new byte[HDFNativeData.getMachineWordSize() * value.length];
-        for (int i = 0; i < value.length; ++i)
-        {
-        	HDFNativeData.compoundCpyVLStr(value[i], result, i * HDFNativeData.getMachineWordSize());
-        }
-        H5Dwrite(dataSetId, dataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, result);
+        H5DwriteVL(dataSetId, dataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, value);
     }
 
-    public int createDataSet(int fileId, long[] dimensions, long[] chunkSizeOrNull, int dataTypeId,
+    public long createDataSet(long fileId, long[] dimensions, long[] chunkSizeOrNull, long dataTypeId,
             HDF5AbstractStorageFeatures compression, String dataSetName, HDF5StorageLayout layout,
-            FileFormat fileFormat, ICleanUpRegistry registry)
+            ICleanUpRegistry registry)
     {
         checkMaxLength(dataSetName);
-        final int dataSpaceId =
+        final long dataSpaceId =
                 H5Screate_simple(dimensions.length, dimensions,
                         createMaxDimensions(dimensions, (layout == HDF5StorageLayout.CHUNKED)));
         registry.registerCleanUp(new Runnable()
@@ -591,14 +584,13 @@ class HDF5
                     H5Sclose(dataSpaceId);
                 }
             });
-        final int dataSetCreationPropertyListId;
+        final long dataSetCreationPropertyListId;
         if (layout == HDF5StorageLayout.CHUNKED && chunkSizeOrNull != null)
         {
             dataSetCreationPropertyListId = createDataSetCreationPropertyList(registry);
             setChunkedLayout(dataSetCreationPropertyListId, chunkSizeOrNull);
             if (compression.isScaling())
             {
-                compression.checkScalingOK(fileFormat);
                 final int classTypeId = getClassType(dataTypeId);
                 assert compression.isCompatibleWithDataClass(classTypeId);
                 if (classTypeId == H5T_INTEGER)
@@ -627,7 +619,7 @@ class HDF5
         {
             dataSetCreationPropertyListId = dataSetCreationPropertyListFillTimeAlloc;
         }
-        final int dataSetId =
+        final long dataSetId =
                 H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
                         lcplCreateIntermediateGroups, dataSetCreationPropertyListId, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
@@ -642,14 +634,14 @@ class HDF5
         return dataSetId;
     }
 
-    public HDF5DataSetTemplate createDataSetTemplateLowLevel(int fileId, long[] dimensions,
-            long[] chunkSizeOrNull, int dataTypeId, HDF5AbstractStorageFeatures compression,
-            HDF5StorageLayout layout, FileFormat fileFormat)
+    public HDF5DataSetTemplate createDataSetTemplateLowLevel(long fileId, long[] dimensions,
+            long[] chunkSizeOrNull, long dataTypeId, HDF5AbstractStorageFeatures compression,
+            HDF5StorageLayout layout, FileFormatVersionBounds fileFormat)
     {
-        final int dataSpaceId =
+        final long dataSpaceId =
                 H5Screate_simple(dimensions.length, dimensions,
                         createMaxDimensions(dimensions, (layout == HDF5StorageLayout.CHUNKED)));
-        final int dataSetCreationPropertyListId;
+        final long dataSetCreationPropertyListId;
         final boolean closeCreationPropertyListId;
         if (layout == HDF5StorageLayout.CHUNKED && chunkSizeOrNull != null)
         {
@@ -658,7 +650,6 @@ class HDF5
             setChunkedLayout(dataSetCreationPropertyListId, chunkSizeOrNull);
             if (compression.isScaling())
             {
-                compression.checkScalingOK(fileFormat);
                 final int classTypeId = getClassType(dataTypeId);
                 assert compression.isCompatibleWithDataClass(classTypeId);
                 if (classTypeId == H5T_INTEGER)
@@ -694,10 +685,10 @@ class HDF5
                 closeCreationPropertyListId, dataTypeId, dimensions, layout);
     }
 
-    public int createDataSetSimple(int fileId, int dataTypeId, int dataSpaceId, String dataSetName,
+    public long createDataSetSimple(long fileId, long dataTypeId, long dataSpaceId, String dataSetName,
             ICleanUpRegistry registry)
     {
-        final int dataSetId =
+        final long dataSetId =
                 H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
                         lcplCreateIntermediateGroups, dataSetCreationPropertyListFillTimeAlloc,
                         H5P_DEFAULT);
@@ -713,9 +704,9 @@ class HDF5
         return dataSetId;
     }
 
-    private int createDataSetCreationPropertyList(ICleanUpRegistry registry)
+    private long createDataSetCreationPropertyList(ICleanUpRegistry registry)
     {
-        final int dataSetCreationPropertyListId = H5Pcreate(H5P_DATASET_CREATE);
+        final long dataSetCreationPropertyListId = H5Pcreate(H5P_DATASET_CREATE);
         if (registry != null)
         {
             registry.registerCleanUp(new Runnable()
@@ -734,9 +725,9 @@ class HDF5
     /**
      * Returns one of: COMPACT, CHUNKED, CONTIGUOUS.
      */
-    public HDF5StorageLayout getLayout(int dataSetId, ICleanUpRegistry registry)
+    public HDF5StorageLayout getLayout(long dataSetId, ICleanUpRegistry registry)
     {
-        final int dataSetCreationPropertyListId = getCreationPropertyList(dataSetId, registry);
+        final long dataSetCreationPropertyListId = getCreationPropertyList(dataSetId, registry);
         final int layoutId = H5Pget_layout(dataSetCreationPropertyListId);
         if (layoutId == H5D_COMPACT)
         {
@@ -750,9 +741,9 @@ class HDF5
         }
     }
 
-    private int getCreationPropertyList(int dataSetId, ICleanUpRegistry registry)
+    private long getCreationPropertyList(long dataSetId, ICleanUpRegistry registry)
     {
-        final int dataSetCreationPropertyListId = H5Dget_create_plist(dataSetId);
+        final long dataSetCreationPropertyListId = H5Dget_create_plist(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -775,7 +766,7 @@ class HDF5
         return maxDimensions;
     }
 
-    private void setChunkedLayout(int dscpId, long[] chunkSize)
+    private void setChunkedLayout(long dscpId, long[] chunkSize)
     {
         assert dscpId >= 0;
 
@@ -783,14 +774,14 @@ class HDF5
         H5Pset_chunk(dscpId, chunkSize.length, chunkSize);
     }
 
-    private void setShuffle(int dscpId)
+    private void setShuffle(long dscpId)
     {
         assert dscpId >= 0;
 
         H5Pset_shuffle(dscpId);
     }
 
-    private void setDeflate(int dscpId, int deflateLevel)
+    private void setDeflate(long dscpId, int deflateLevel)
     {
         assert dscpId >= 0;
         assert deflateLevel >= 0;
@@ -798,11 +789,11 @@ class HDF5
         H5Pset_deflate(dscpId, deflateLevel);
     }
 
-    public int createScalarDataSet(int fileId, int dataTypeId, String dataSetName,
+    public long createScalarDataSet(long fileId, long dataTypeId, String dataSetName,
             boolean compactLayout, ICleanUpRegistry registry)
     {
         checkMaxLength(dataSetName);
-        final int dataSpaceId = H5Screate(H5S_SCALAR);
+        final long dataSpaceId = H5Screate(H5S_SCALAR);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -811,7 +802,7 @@ class HDF5
                     H5Sclose(dataSpaceId);
                 }
             });
-        final int dataSetId =
+        final long dataSetId =
                 H5Dcreate(
                         fileId,
                         dataSetName,
@@ -819,7 +810,8 @@ class HDF5
                         dataSpaceId,
                         lcplCreateIntermediateGroups,
                         compactLayout ? dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc
-                                : dataSetCreationPropertyListFillTimeAlloc, H5P_DEFAULT);
+                                : dataSetCreationPropertyListFillTimeAlloc,
+                        H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -831,12 +823,11 @@ class HDF5
         return dataSetId;
     }
 
-    public int openDataSet(int fileId, String path, ICleanUpRegistry registry)
+    public long openDataSet(long fileId, String path, ICleanUpRegistry registry)
     {
         checkMaxLength(path);
-        final int dataSetId =
-                isReference(path) ? H5Rdereference(fileId, Long.parseLong(path.substring(1)))
-                        : H5Dopen(fileId, path, H5P_DEFAULT);
+        final long dataSetId = isReference(path) ? H5Oopen_by_addr(fileId, Long.parseLong(path.substring(1)))
+                : H5Dopen(fileId, path, H5P_DEFAULT);
         if (registry != null)
         {
             registry.registerCleanUp(new Runnable()
@@ -859,13 +850,13 @@ class HDF5
     /**
      * @param storageDataTypeId The storage type id, if in overwrite mode, or else -1.
      */
-    public int openAndExtendDataSet(int fileId, String path, FileFormat fileFormat,
-            long[] dimensions, int storageDataTypeId, ICleanUpRegistry registry)
+    public long openAndExtendDataSet(long fileId, String path, FileFormatVersionBounds fileFormat,
+            long[] dimensions, long storageDataTypeId, ICleanUpRegistry registry)
             throws HDF5JavaException
     {
         checkMaxLength(path);
-        final int dataSetId =
-                isReference(path) ? H5Rdereference(fileId, Long.parseLong(path.substring(1)))
+        final long dataSetId =
+                isReference(path) ? H5Rdereference(fileId, H5P_DEFAULT, H5R_OBJECT, HDFNativeData.longToByte(Long.parseLong(path.substring(1))))
                         : H5Dopen(fileId, path, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
@@ -879,14 +870,15 @@ class HDF5
         return dataSetId;
     }
 
-    public boolean extendDataSet(int fileId, int dataSetId, HDF5StorageLayout layoutOrNull,
+    public boolean extendDataSet(long fileId, long dataSetId, HDF5StorageLayout layoutOrNull,
             long[] oldDimensionsOrNull, long[] newDimensions, long[] maxDimensionsOrNull,
-            int storageDataTypeId, ICleanUpRegistry registry) throws HDF5JavaException
+            long storageDataTypeId, ICleanUpRegistry registry) throws HDF5JavaException
     {
         final boolean overwriteMode = (storageDataTypeId > -1);
         final long[] oldDimensions =
-                (oldDimensionsOrNull != null) ? oldDimensionsOrNull : getDataDimensions(dataSetId,
-                        registry);
+                (oldDimensionsOrNull != null) ? oldDimensionsOrNull
+                        : getDataDimensions(dataSetId,
+                                registry);
         if (Arrays.equals(oldDimensions, newDimensions) == false)
         {
             final HDF5StorageLayout layout =
@@ -909,7 +901,7 @@ class HDF5
                 throw new HDF5JavaException("Cannot change dimensions on non-extendable data set.");
             } else
             {
-                int dataTypeId = getDataTypeForDataSet(dataSetId, registry);
+                long dataTypeId = getDataTypeForDataSet(dataSetId, registry);
                 if (getClassType(dataTypeId) == H5T_ARRAY)
                 {
                     throw new HDF5JavaException("Cannot partially overwrite array type.");
@@ -943,12 +935,13 @@ class HDF5
     /**
      * Checks whether the given <var>dimensions</var> are in bounds for <var>dataSetId</var>.
      */
-    private boolean areDimensionsInBounds(final int dataSetId, final long[] dimensions,
+    private boolean areDimensionsInBounds(final long dataSetId, final long[] dimensions,
             final long[] maxDimensionsOrNull, ICleanUpRegistry registry)
     {
         final long[] maxDimensions =
-                (maxDimensionsOrNull != null) ? maxDimensionsOrNull : getDataMaxDimensions(
-                        dataSetId, registry);
+                (maxDimensionsOrNull != null) ? maxDimensionsOrNull
+                        : getDataMaxDimensions(
+                                dataSetId, registry);
 
         if (dimensions.length != maxDimensions.length) // Actually an error condition
         {
@@ -965,7 +958,7 @@ class HDF5
         return true;
     }
 
-    public void setDataSetExtentChunked(int dataSetId, long[] dimensions)
+    public void setDataSetExtentChunked(long dataSetId, long[] dimensions)
     {
         assert dataSetId >= 0;
         assert dimensions != null;
@@ -973,113 +966,113 @@ class HDF5
         H5Dset_extent(dataSetId, dimensions);
     }
 
-    public void readDataSetNonNumeric(int dataSetId, int nativeDataTypeId, byte[] data)
+    public void readDataSetNonNumeric(long dataSetId, long nativeDataTypeId, byte[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
     }
 
-    public void readDataSetNonNumeric(int dataSetId, int nativeDataTypeId, int memorySpaceId,
-            int fileSpaceId, byte[] data)
+    public void readDataSetNonNumeric(long dataSetId, long nativeDataTypeId, long memorySpaceId,
+            long fileSpaceId, byte[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, data);
     }
 
-    public void readDataSetString(int dataSetId, int nativeDataTypeId, String[] data)
+    public void readDataSetString(long dataSetId, long nativeDataTypeId, String[] data)
     {
         H5Dread_string(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
     }
 
-    public void readDataSetString(int dataSetId, int nativeDataTypeId, int memorySpaceId,
-            int fileSpaceId, String[] data)
+    public void readDataSetString(long dataSetId, long nativeDataTypeId, long memorySpaceId,
+            long fileSpaceId, String[] data)
     {
         H5Dread_string(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, byte[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, byte[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
                 data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, short[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, short[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
                 data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, int[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, int[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
                 data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, long[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, long[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
                 data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, float[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, float[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
                 data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, double[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, double[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, H5S_ALL, H5S_ALL, numericConversionXferPropertyListID,
                 data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
-            int fileSpaceId, byte[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, long memorySpaceId,
+            long fileSpaceId, byte[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
-            int fileSpaceId, short[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, long memorySpaceId,
+            long fileSpaceId, short[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
-            int fileSpaceId, int[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, long memorySpaceId,
+            long fileSpaceId, int[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
-            int fileSpaceId, long[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, long memorySpaceId,
+            long fileSpaceId, long[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
-            int fileSpaceId, float[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, long memorySpaceId,
+            long fileSpaceId, float[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
-    public void readDataSet(int dataSetId, int nativeDataTypeId, int memorySpaceId,
-            int fileSpaceId, double[] data)
+    public void readDataSet(long dataSetId, long nativeDataTypeId, long memorySpaceId,
+            long fileSpaceId, double[] data)
     {
         H5Dread(dataSetId, nativeDataTypeId, memorySpaceId, fileSpaceId,
                 numericConversionXferPropertyListID, data);
     }
 
-    public void readDataSetVL(int dataSetId, int dataTypeId, String[] data)
+    public void readDataSetVL(long dataSetId, long dataTypeId, String[] data)
     {
         H5DreadVL(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
         replaceNullWithEmptyString(data);
     }
 
-    public void readDataSetVL(int dataSetId, int dataTypeId, int memorySpaceId, int fileSpaceId,
+    public void readDataSetVL(long dataSetId, long dataTypeId, long memorySpaceId, long fileSpaceId,
             String[] data)
     {
         H5DreadVL(dataSetId, dataTypeId, memorySpaceId, fileSpaceId, H5P_DEFAULT, data);
@@ -1104,11 +1097,11 @@ class HDF5
     // Attribute
     //
 
-    public int createAttribute(int locationId, String attributeName, int dataTypeId,
-            int dataSpaceIdOrMinusOne, ICleanUpRegistry registry)
+    public long createAttribute(long locationId, String attributeName, long dataTypeId,
+            long dataSpaceIdOrMinusOne, ICleanUpRegistry registry)
     {
         checkMaxLength(attributeName);
-        final int dataSpaceId =
+        final long dataSpaceId =
                 (dataSpaceIdOrMinusOne == -1) ? H5Screate(H5S_SCALAR) : dataSpaceIdOrMinusOne;
         if (dataSpaceIdOrMinusOne == -1)
         {
@@ -1121,7 +1114,7 @@ class HDF5
                     }
                 });
         }
-        final int attCreationPlistId;
+        final long attCreationPlistId;
         if (useUTF8CharEncoding)
         {
             attCreationPlistId = H5Pcreate(H5P_ATTRIBUTE_CREATE);
@@ -1130,7 +1123,7 @@ class HDF5
         {
             attCreationPlistId = H5P_DEFAULT;
         }
-        final int attributeId =
+        final long attributeId =
                 H5Acreate(locationId, attributeName, dataTypeId, dataSpaceId, attCreationPlistId,
                         H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
@@ -1144,17 +1137,17 @@ class HDF5
         return attributeId;
     }
 
-    public int deleteAttribute(int locationId, String attributeName)
+    public int deleteAttribute(long locationId, String attributeName)
     {
         checkMaxLength(attributeName);
         final int success = H5Adelete(locationId, attributeName);
         return success;
     }
 
-    public int openAttribute(int locationId, String attributeName, ICleanUpRegistry registry)
+    public long openAttribute(long locationId, String attributeName, ICleanUpRegistry registry)
     {
         checkMaxLength(attributeName);
-        final int attributeId = H5Aopen_name(locationId, attributeName);
+        final long attributeId = H5Aopen(locationId, attributeName, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1166,13 +1159,15 @@ class HDF5
         return attributeId;
     }
 
-    public List<String> getAttributeNames(int locationId, ICleanUpRegistry registry)
+    public List<String> getAttributeNames(long locationId, ICleanUpRegistry registry)
     {
-        final int numberOfAttributes = H5Aget_num_attrs(locationId);
+        final H5O_info_t info = H5Oget_info(locationId);
+        final int numberOfAttributes = (int) info.num_attrs;
         final List<String> attributeNames = new LinkedList<String>();
         for (int i = 0; i < numberOfAttributes; ++i)
         {
-            final int attributeId = H5Aopen_idx(locationId, i);
+            final long attributeId =
+                    H5Aopen_by_idx(locationId, ".", H5_INDEX_NAME, H5_ITER_NATIVE, (long) i, H5P_DEFAULT, H5P_DEFAULT);
             registry.registerCleanUp(new Runnable()
                 {
                     @Override
@@ -1181,117 +1176,100 @@ class HDF5
                         H5Aclose(attributeId);
                     }
                 });
-            final String[] nameContainer = new String[1];
-            // Find out length of attribute name.
-            final long nameLength = H5Aget_name(attributeId, 0L, null);
-            // Read attribute name
-            final long nameLengthRead = H5Aget_name(attributeId, nameLength + 1, nameContainer);
-            if (nameLengthRead != nameLength)
-            {
-                throw new HDF5JavaException(String.format(
-                        "Error reading attribute name [wrong name length "
-                                + "when reading attribute %d, expected: %d, found: %d]", i,
-                        nameLength, nameLengthRead));
-            }
-            attributeNames.add(nameContainer[0]);
+            attributeNames.add(H5Aget_name(attributeId));
         }
         return attributeNames;
     }
 
-    public byte[] readAttributeAsByteArray(int attributeId, int dataTypeId, int length)
+    public byte[] readAttributeAsByteArray(long attributeId, long dataTypeId, int length)
     {
         final byte[] data = new byte[length];
         H5Aread(attributeId, dataTypeId, data);
         return data;
     }
 
-    public short[] readAttributeAsShortArray(int attributeId, int dataTypeId, int length)
+    public short[] readAttributeAsShortArray(long attributeId, long dataTypeId, int length)
     {
         final short[] data = new short[length];
         H5Aread(attributeId, dataTypeId, data);
         return data;
     }
 
-    public int[] readAttributeAsIntArray(int attributeId, int dataTypeId, int length)
+    public int[] readAttributeAsIntArray(long attributeId, long dataTypeId, int length)
     {
         final int[] data = new int[length];
         H5Aread(attributeId, dataTypeId, data);
         return data;
     }
 
-    public long[] readAttributeAsLongArray(int attributeId, int dataTypeId, int length)
+    public long[] readAttributeAsLongArray(long attributeId, long dataTypeId, int length)
     {
         final long[] data = new long[length];
         H5Aread(attributeId, dataTypeId, data);
         return data;
     }
 
-    public float[] readAttributeAsFloatArray(int attributeId, int dataTypeId, int length)
+    public float[] readAttributeAsFloatArray(long attributeId, long dataTypeId, int length)
     {
         final float[] data = new float[length];
         H5Aread(attributeId, dataTypeId, data);
         return data;
     }
 
-    public double[] readAttributeAsDoubleArray(int attributeId, int dataTypeId, int length)
+    public double[] readAttributeAsDoubleArray(long attributeId, long dataTypeId, int length)
     {
         final double[] data = new double[length];
         H5Aread(attributeId, dataTypeId, data);
         return data;
     }
 
-    public void readAttributeVL(int attributeId, int dataTypeId, String[] data)
+    public void readAttributeVL(long attributeId, long dataTypeId, String[] data)
     {
         H5AreadVL(attributeId, dataTypeId, data);
     }
 
-    public void writeAttribute(int attributeId, int dataTypeId, byte[] value)
+    public void writeAttribute(long attributeId, long dataTypeId, byte[] value)
     {
         H5Awrite(attributeId, dataTypeId, value);
     }
 
-    public void writeAttribute(int attributeId, int dataTypeId, short[] value)
+    public void writeAttribute(long attributeId, long dataTypeId, short[] value)
     {
         H5Awrite(attributeId, dataTypeId, value);
     }
 
-    public void writeAttribute(int attributeId, int dataTypeId, int[] value)
+    public void writeAttribute(long attributeId, long dataTypeId, int[] value)
     {
         H5Awrite(attributeId, dataTypeId, value);
     }
 
-    public void writeAttribute(int attributeId, int dataTypeId, long[] value)
+    public void writeAttribute(long attributeId, long dataTypeId, long[] value)
     {
         H5Awrite(attributeId, dataTypeId, value);
     }
 
-    public void writeAttribute(int attributeId, int dataTypeId, float[] value)
+    public void writeAttribute(long attributeId, long dataTypeId, float[] value)
     {
         H5Awrite(attributeId, dataTypeId, value);
     }
 
-    public void writeAttribute(int attributeId, int dataTypeId, double[] value)
+    public void writeAttribute(long attributeId, long dataTypeId, double[] value)
     {
         H5Awrite(attributeId, dataTypeId, value);
     }
 
-    public void writeAttributeStringVL(int attributeId, int dataTypeId, String[] value)
+    public void writeAttributeStringVL(long attributeId, long dataTypeId, String[] value)
     {
-        final byte[] result = new byte[HDFNativeData.getMachineWordSize() * value.length];
-        for (int i = 0; i < value.length; ++i)
-        {
-        	HDFNativeData.compoundCpyVLStr(value[i], result, i * HDFNativeData.getMachineWordSize());
-        }
-        H5Awrite(attributeId, dataTypeId, result);
+        H5AwriteVL(attributeId, dataTypeId, value);
     }
 
     //
     // Data Type
     //
 
-    public int copyDataType(int dataTypeId, ICleanUpRegistry registry)
+    public long copyDataType(long dataTypeId, ICleanUpRegistry registry)
     {
-        final int copiedDataTypeId = H5Tcopy(dataTypeId);
+        final long copiedDataTypeId = H5Tcopy(dataTypeId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1303,9 +1281,9 @@ class HDF5
         return copiedDataTypeId;
     }
 
-    public int createDataTypeVariableString(ICleanUpRegistry registry)
+    public long createDataTypeVariableString(ICleanUpRegistry registry)
     {
-        final int dataTypeId = createDataTypeStringVariableLength();
+        final long dataTypeId = createDataTypeStringVariableLength();
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1321,18 +1299,18 @@ class HDF5
         return dataTypeId;
     }
 
-    private int createDataTypeStringVariableLength()
+    private long createDataTypeStringVariableLength()
     {
-        int dataTypeId = H5Tcopy(H5T_C_S1);
+        long dataTypeId = H5Tcopy(H5T_C_S1);
         H5Tset_size(dataTypeId, H5T_VARIABLE);
         return dataTypeId;
     }
 
-    public int createDataTypeString(int length, ICleanUpRegistry registry)
+    public long createDataTypeString(int length, ICleanUpRegistry registry)
     {
         assert length > 0;
 
-        final int dataTypeId = H5Tcopy(H5T_C_S1);
+        final long dataTypeId = H5Tcopy(H5T_C_S1);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1350,15 +1328,14 @@ class HDF5
         return dataTypeId;
     }
 
-    private void setCharacterEncodingDataType(int dataTypeId, CharacterEncoding encoding)
+    private void setCharacterEncodingDataType(long dataTypeId, CharacterEncoding encoding)
     {
         H5Tset_cset(dataTypeId, encoding.getCValue());
     }
 
-    public int createArrayType(int baseTypeId, int length, ICleanUpRegistry registry)
+    public long createArrayType(long baseTypeId, int length, ICleanUpRegistry registry)
     {
-        final int dataTypeId = H5Tarray_create(baseTypeId, 1, new int[]
-            { length });
+        final long dataTypeId = H5Tarray_create(baseTypeId, 1, new long[] { length });
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1370,9 +1347,14 @@ class HDF5
         return dataTypeId;
     }
 
-    public int createArrayType(int baseTypeId, int[] dimensions, ICleanUpRegistry registry)
+    public long createArrayType(long baseTypeId, int[] dimensions, ICleanUpRegistry registry)
     {
-        final int dataTypeId = H5Tarray_create(baseTypeId, dimensions.length, dimensions);
+        final long[] ldims = new long[dimensions.length];
+        for (int i = 0; i < ldims.length; ++i)
+        {
+            ldims[i] = (long) dimensions[i];
+        }
+        final long dataTypeId = H5Tarray_create(baseTypeId, ldims.length, ldims);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1389,7 +1371,7 @@ class HDF5
         BYTE8, SHORT16, INT32
     }
 
-    public int createDataTypeEnum(String[] names, ICleanUpRegistry registry)
+    public long createDataTypeEnum(String[] names, ICleanUpRegistry registry)
     {
         for (String name : names)
         {
@@ -1398,7 +1380,7 @@ class HDF5
         final EnumSize size =
                 (names.length < Byte.MAX_VALUE) ? EnumSize.BYTE8
                         : (names.length < Short.MAX_VALUE) ? EnumSize.SHORT16 : EnumSize.INT32;
-        final int baseDataTypeId;
+        final long baseDataTypeId;
         switch (size)
         {
             case BYTE8:
@@ -1413,7 +1395,7 @@ class HDF5
             default:
                 throw new InternalError();
         }
-        final int dataTypeId = H5Tenum_create(baseDataTypeId);
+        final long dataTypeId = H5Tenum_create(baseDataTypeId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1455,26 +1437,26 @@ class HDF5
     private short[] getLittleEndianSuccessiveShortValues(String[] names)
     {
         final short[] values = new short[names.length];
+        final boolean swap = (NativeData.getNativeByteOrder() == NativeData.ByteOrder.BIG_ENDIAN);
         for (short i = 0; i < names.length; ++i)
         {
-            values[i] = i;
+            values[i] = swap ? NativeData.changeByteOrder(i): i;
         }
-        H5Tconvert_to_little_endian(values);
         return values;
     }
 
     private int[] getLittleEndianSuccessiveIntValues(String[] names)
     {
         final int[] values = new int[names.length];
+        final boolean swap = (NativeData.getNativeByteOrder() == NativeData.ByteOrder.BIG_ENDIAN);
         for (int i = 0; i < names.length; ++i)
         {
-            values[i] = i;
+            values[i] = swap ? NativeData.changeByteOrder(i): i;
         }
-        H5Tconvert_to_little_endian(values);
         return values;
     }
 
-    private void insertMemberEnum(int dataTypeId, String name, byte value)
+    private void insertMemberEnum(long dataTypeId, String name, byte value)
     {
         assert dataTypeId >= 0;
         assert name != null;
@@ -1482,7 +1464,7 @@ class HDF5
         H5Tenum_insert(dataTypeId, name, value);
     }
 
-    private void insertMemberEnum(int dataTypeId, String name, short value)
+    private void insertMemberEnum(long dataTypeId, String name, short value)
     {
         assert dataTypeId >= 0;
         assert name != null;
@@ -1490,7 +1472,7 @@ class HDF5
         H5Tenum_insert(dataTypeId, name, value);
     }
 
-    private void insertMemberEnum(int dataTypeId, String name, int value)
+    private void insertMemberEnum(long dataTypeId, String name, int value)
     {
         assert dataTypeId >= 0;
         assert name != null;
@@ -1499,7 +1481,7 @@ class HDF5
     }
 
     /** Returns the number of members of an enum type or a compound type. */
-    public int getNumberOfMembers(int dataTypeId)
+    public int getNumberOfMembers(long dataTypeId)
     {
         return H5Tget_nmembers(dataTypeId);
     }
@@ -1509,7 +1491,7 @@ class HDF5
      * <p>
      * Must not be called on a <var>dateTypeId</var> that is not an enum or compound type.
      */
-    public String getNameForEnumOrCompoundMemberIndex(int dataTypeId, int index)
+    public String getNameForEnumOrCompoundMemberIndex(long dataTypeId, int index)
     {
         return H5Tget_member_name(dataTypeId, index);
     }
@@ -1519,7 +1501,7 @@ class HDF5
      * <p>
      * Must not be called on a <var>dateTypeId</var> that is not a compound type.
      */
-    public int getOffsetForCompoundMemberIndex(int dataTypeId, int index)
+    public int getOffsetForCompoundMemberIndex(long dataTypeId, int index)
     {
         return (int) H5Tget_member_offset(dataTypeId, index);
     }
@@ -1529,7 +1511,7 @@ class HDF5
      * <p>
      * Must not be called on a <var>dateTypeId</var> that is not an enum or compound type.
      */
-    public String[] getNamesForEnumOrCompoundMembers(int dataTypeId)
+    public String[] getNamesForEnumOrCompoundMembers(long dataTypeId)
     {
         final int len = getNumberOfMembers(dataTypeId);
         final String[] values = new String[len];
@@ -1541,10 +1523,9 @@ class HDF5
     }
 
     /**
-     * Returns the index of an enum value or compound member for the given <var>name</var>. Works on
-     * enum and compound data types.
+     * Returns the index of an enum value or compound member for the given <var>name</var>. Works on enum and compound data types.
      */
-    public int getIndexForMemberName(int dataTypeId, String name)
+    public int getIndexForMemberName(long dataTypeId, String name)
     {
         checkMaxLength(name);
         return H5Tget_member_index(dataTypeId, name);
@@ -1553,9 +1534,9 @@ class HDF5
     /**
      * Returns the data type id for a member of a compound data type, specified by index.
      */
-    public int getDataTypeForIndex(int compoundDataTypeId, int index, ICleanUpRegistry registry)
+    public long getDataTypeForIndex(long compoundDataTypeId, int index, ICleanUpRegistry registry)
     {
-        final int memberTypeId = H5Tget_member_type(compoundDataTypeId, index);
+        final long memberTypeId = H5Tget_member_type(compoundDataTypeId, index);
         registry.registerCleanUp(new Runnable()
             {
 
@@ -1571,14 +1552,14 @@ class HDF5
     /**
      * Returns the data type id for a member of a compound data type, specified by name.
      */
-    public int getDataTypeForMemberName(int compoundDataTypeId, String memberName)
+    public long getDataTypeForMemberName(long compoundDataTypeId, String memberName)
     {
         checkMaxLength(memberName);
         final int index = H5Tget_member_index(compoundDataTypeId, memberName);
         return H5Tget_member_type(compoundDataTypeId, index);
     }
 
-    public Boolean tryGetBooleanValue(final int dataTypeId, final int intValue)
+    public Boolean tryGetBooleanValue(final long dataTypeId, final int intValue)
     {
         if (getClassType(dataTypeId) != H5T_ENUM)
         {
@@ -1597,9 +1578,9 @@ class HDF5
         }
     }
 
-    public int createDataTypeCompound(int lengthInBytes, ICleanUpRegistry registry)
+    public long createDataTypeCompound(int lengthInBytes, ICleanUpRegistry registry)
     {
-        final int dataTypeId = H5Tcreate(H5T_COMPOUND, lengthInBytes);
+        final long dataTypeId = H5Tcreate(H5T_COMPOUND, lengthInBytes);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1611,10 +1592,10 @@ class HDF5
         return dataTypeId;
     }
 
-    public int createDataTypeOpaque(int lengthInBytes, String tag, ICleanUpRegistry registry)
+    public long createDataTypeOpaque(int lengthInBytes, String tag, ICleanUpRegistry registry)
     {
         checkMaxLength(tag);
-        final int dataTypeId = H5Tcreate(H5T_OPAQUE, lengthInBytes);
+        final long dataTypeId = H5Tcreate(H5T_OPAQUE, lengthInBytes);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1628,18 +1609,17 @@ class HDF5
         return dataTypeId;
     }
 
-    public void commitDataType(int fileId, String name, int dataTypeId)
+    public void commitDataType(long fileId, String name, long dataTypeId)
     {
         checkMaxLength(name);
         H5Tcommit(fileId, name, dataTypeId, lcplCreateIntermediateGroups, H5P_DEFAULT, H5P_DEFAULT);
     }
 
-    public int openDataType(int fileId, String name, ICleanUpRegistry registry)
+    public long openDataType(long fileId, String name, ICleanUpRegistry registry)
     {
         checkMaxLength(name);
-        final int dataTypeId =
-                isReference(name) ? H5Rdereference(fileId, Long.parseLong(name.substring(1)))
-                        : H5Topen(fileId, name, H5P_DEFAULT);
+        final long dataTypeId = isReference(name) ? H5Oopen_by_addr(fileId, Long.parseLong(name.substring(1)))
+                : H5Topen(fileId, name, H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1651,14 +1631,14 @@ class HDF5
         return dataTypeId;
     }
 
-    public boolean dataTypesAreEqual(int dataTypeId1, int dataTypeId2)
+    public boolean dataTypesAreEqual(long dataTypeId1, long dataTypeId2)
     {
         return H5Tequal(dataTypeId1, dataTypeId2);
     }
 
-    public int getDataTypeForDataSet(int dataSetId, ICleanUpRegistry registry)
+    public long getDataTypeForDataSet(long dataSetId, ICleanUpRegistry registry)
     {
-        final int dataTypeId = H5Dget_type(dataSetId);
+        final long dataTypeId = H5Dget_type(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1670,9 +1650,9 @@ class HDF5
         return dataTypeId;
     }
 
-    public int getDataTypeForAttribute(int attributeId, ICleanUpRegistry registry)
+    public long getDataTypeForAttribute(long attributeId, ICleanUpRegistry registry)
     {
-        final int dataTypeId = H5Aget_type(attributeId);
+        final long dataTypeId = H5Aget_type(attributeId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1684,14 +1664,14 @@ class HDF5
         return dataTypeId;
     }
 
-    public String tryGetOpaqueTag(int dataTypeId)
+    public String tryGetOpaqueTag(long dataTypeId)
     {
         return H5Tget_tag(dataTypeId);
     }
 
-    public int getNativeDataType(int dataTypeId, ICleanUpRegistry registry)
+    public long getNativeDataType(long dataTypeId, ICleanUpRegistry registry)
     {
-        final int nativeDataTypeId = H5Tget_native_type(dataTypeId);
+        final long nativeDataTypeId = H5Tget_native_type(dataTypeId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1703,9 +1683,9 @@ class HDF5
         return nativeDataTypeId;
     }
 
-    public int getNativeDataTypeForDataSet(int dataSetId, ICleanUpRegistry registry)
+    public long getNativeDataTypeForDataSet(long dataSetId, ICleanUpRegistry registry)
     {
-        final int dataTypeId = H5Dget_type(dataSetId);
+        final long dataTypeId = H5Dget_type(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1717,9 +1697,9 @@ class HDF5
         return getNativeDataType(dataTypeId, registry);
     }
 
-    public int getNativeDataTypeForAttribute(int attributeId, ICleanUpRegistry registry)
+    public long getNativeDataTypeForAttribute(long attributeId, ICleanUpRegistry registry)
     {
-        final int dataTypeId = H5Aget_type(attributeId);
+        final long dataTypeId = H5Aget_type(attributeId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1731,27 +1711,27 @@ class HDF5
         return getNativeDataType(dataTypeId, registry);
     }
 
-    public int getDataTypeSize(int dataTypeId)
+    public int getDataTypeSize(long dataTypeId)
+    {
+        return (int) H5Tget_size(dataTypeId);
+    }
+
+    public long getDataTypeSizeLong(long dataTypeId) throws HDF5JavaException
     {
         return H5Tget_size(dataTypeId);
     }
 
-    public long getDataTypeSizeLong(int dataTypeId) throws HDF5JavaException
-    {
-        return H5Tget_size_long(dataTypeId);
-    }
-
-    public boolean isVariableLengthString(int dataTypeId)
+    public boolean isVariableLengthString(long dataTypeId)
     {
         return H5Tis_variable_str(dataTypeId);
     }
 
-    public int getClassType(int dataTypeId)
+    public int getClassType(long dataTypeId)
     {
         return H5Tget_class(dataTypeId);
     }
 
-    public CharacterEncoding getCharacterEncoding(int dataTypeId)
+    public CharacterEncoding getCharacterEncoding(long dataTypeId)
     {
         final int cValue = H5Tget_cset(dataTypeId);
         if (cValue == CharacterEncoding.ASCII.getCValue())
@@ -1766,14 +1746,14 @@ class HDF5
         }
     }
 
-    public boolean hasClassType(int dataTypeId, int classTypeId)
+    public boolean hasClassType(long dataTypeId, int classTypeId)
     {
         return H5Tdetect_class(dataTypeId, classTypeId);
     }
 
-    public int getBaseDataType(int dataTypeId, ICleanUpRegistry registry)
+    public long getBaseDataType(long dataTypeId, ICleanUpRegistry registry)
     {
-        final int baseDataTypeId = H5Tget_super(dataTypeId);
+        final long baseDataTypeId = H5Tget_super(dataTypeId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1785,24 +1765,18 @@ class HDF5
         return baseDataTypeId;
     }
 
-    public boolean getSigned(int dataTypeId)
+    public boolean getSigned(long dataTypeId)
     {
         return H5Tget_sign(dataTypeId) != H5T_SGN_NONE;
     }
 
-    public String tryGetDataTypePath(int dataTypeId)
+    public String tryGetDataTypePath(long dataTypeId)
     {
         if (dataTypeId < 0 || H5Tcommitted(dataTypeId) == false)
         {
             return null;
         }
-        final String[] result = new String[1];
-        final long len = H5Iget_name(dataTypeId, result, 64);
-        if (len >= result[0].length())
-        {
-            H5Iget_name(dataTypeId, result, len + 1);
-        }
-        return result[0];
+        return H5Iget_name(dataTypeId);
     }
 
     /**
@@ -1813,7 +1787,7 @@ class HDF5
         int[] vlMemberIndices = type.getObjectByteifyer().getVLMemberIndices();
         if (vlMemberIndices.length > 0) // This type has variable-length data members
         {
-            HDFNativeData.freeCompoundVLStr(buf, type.getRecordSizeInMemory(), vlMemberIndices);
+            HDFHelper.freeCompoundVLStr(buf, type.getRecordSizeInMemory(), vlMemberIndices);
         }
     }
 
@@ -1821,9 +1795,9 @@ class HDF5
     // Data Space
     //
 
-    public int getDataSpaceForDataSet(int dataSetId, ICleanUpRegistry registry)
+    public long getDataSpaceForDataSet(long dataSetId, ICleanUpRegistry registry)
     {
-        final int dataSpaceId = H5Dget_space(dataSetId);
+        final long dataTypeId = H5Dget_space(dataSetId);
         if (registry != null)
         {
             registry.registerCleanUp(new Runnable()
@@ -1831,16 +1805,16 @@ class HDF5
                     @Override
                     public void run()
                     {
-                        H5Sclose(dataSpaceId);
+                        H5Sclose(dataTypeId);
                     }
                 });
         }
-        return dataSpaceId;
+        return dataTypeId;
     }
 
-    public long[] getDataDimensionsForAttribute(final int attributeId, ICleanUpRegistry registry)
+    public long[] getDataDimensionsForAttribute(final long attributeId, ICleanUpRegistry registry)
     {
-        final int dataSpaceId = H5Aget_space(attributeId);
+        final long dataSpaceId = H5Aget_space(attributeId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1853,9 +1827,9 @@ class HDF5
         return dimensions;
     }
 
-    public long[] getDataDimensions(final int dataSetId, ICleanUpRegistry registry)
+    public long[] getDataDimensions(final long dataSetId, ICleanUpRegistry registry)
     {
-        final int dataSpaceId = H5Dget_space(dataSetId);
+        final long dataSpaceId = H5Dget_space(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1874,7 +1848,7 @@ class HDF5
         return dimensions;
     }
 
-    public long[] getDataMaxDimensions(final int dataSetId)
+    public long[] getDataMaxDimensions(final long dataSetId)
     {
         ICallableWithCleanUp<long[]> dataDimensionRunnable = new ICallableWithCleanUp<long[]>()
             {
@@ -1888,9 +1862,9 @@ class HDF5
         return runner.call(dataDimensionRunnable);
     }
 
-    long[] getDataMaxDimensions(final int dataSetId, ICleanUpRegistry registry)
+    long[] getDataMaxDimensions(final long dataSetId, ICleanUpRegistry registry)
     {
-        final int dataSpaceId = H5Dget_space(dataSetId);
+        final long dataSpaceId = H5Dget_space(dataSetId);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -1903,18 +1877,18 @@ class HDF5
         return dimensions;
     }
 
-    public int getDataSpaceRank(int dataSpaceId)
+    public int getDataSpaceRank(long dataSpaceId)
     {
         return H5Sget_simple_extent_ndims(dataSpaceId);
     }
 
-    public long[] getDataSpaceDimensions(int dataSpaceId)
+    public long[] getDataSpaceDimensions(long dataSpaceId)
     {
         final int rank = H5Sget_simple_extent_ndims(dataSpaceId);
         return getDataSpaceDimensions(dataSpaceId, rank);
     }
 
-    public long[] getDataSpaceDimensions(int dataSpaceId, int rank)
+    public long[] getDataSpaceDimensions(long dataSpaceId, int rank)
     {
         assert dataSpaceId >= 0;
         assert rank >= 0;
@@ -1924,13 +1898,13 @@ class HDF5
         return dimensions;
     }
 
-    public long[] getDataSpaceMaxDimensions(int dataSpaceId)
+    public long[] getDataSpaceMaxDimensions(long dataSpaceId)
     {
         final int rank = H5Sget_simple_extent_ndims(dataSpaceId);
         return getDataSpaceMaxDimensions(dataSpaceId, rank);
     }
 
-    public long[] getDataSpaceMaxDimensions(int dataSpaceId, int rank)
+    public long[] getDataSpaceMaxDimensions(long dataSpaceId, int rank)
     {
         assert dataSpaceId >= 0;
         assert rank >= 0;
@@ -1941,15 +1915,13 @@ class HDF5
     }
 
     /**
-     * @param dataSetOrAttributeId The id of either the data set or the attribute to get the rank
-     *            for.
-     * @param isAttribute If <code>true</code>, <var>dataSetOrAttributeId</var> will be interpreted
-     *            as an attribute, otherwise as a data set.
+     * @param dataSetOrAttributeId The id of either the data set or the attribute to get the rank for.
+     * @param isAttribute If <code>true</code>, <var>dataSetOrAttributeId</var> will be interpreted as an attribute, otherwise as a data set.
      */
-    public int getRank(final int dataSetOrAttributeId, final boolean isAttribute,
+    public int getRank(final long dataSetOrAttributeId, final boolean isAttribute,
             ICleanUpRegistry registry)
     {
-        final int dataSpaceId =
+        final long dataSpaceId =
                 isAttribute ? H5Aget_space(dataSetOrAttributeId)
                         : H5Dget_space(dataSetOrAttributeId);
         registry.registerCleanUp(new Runnable()
@@ -1964,15 +1936,13 @@ class HDF5
     }
 
     /**
-     * @param dataSetOrAttributeId The id of either the data set or the attribute to get the rank
-     *            for.
-     * @param isAttribute If <code>true</code>, <var>dataSetOrAttributeId</var> will be interpreted
-     *            as an attribute, otherwise as a data set.
+     * @param dataSetOrAttributeId The id of either the data set or the attribute to get the rank for.
+     * @param isAttribute If <code>true</code>, <var>dataSetOrAttributeId</var> will be interpreted as an attribute, otherwise as a data set.
      */
-    public long[] getDimensions(final int dataSetOrAttributeId, final boolean isAttribute,
+    public long[] getDimensions(final long dataSetOrAttributeId, final boolean isAttribute,
             ICleanUpRegistry registry)
     {
-        final int dataSpaceId =
+        final long dataSpaceId =
                 isAttribute ? H5Aget_space(dataSetOrAttributeId)
                         : H5Dget_space(dataSetOrAttributeId);
         registry.registerCleanUp(new Runnable()
@@ -1991,16 +1961,14 @@ class HDF5
     }
 
     /**
-     * @param dataSetOrAttributeId The id of either the data set or the attribute to get the
-     *            dimensions for.
-     * @param isAttribute If <code>true</code>, <var>dataSetOrAttributeId</var> will be interpreted
-     *            as an attribute, otherwise as a data set.
+     * @param dataSetOrAttributeId The id of either the data set or the attribute to get the dimensions for.
+     * @param isAttribute If <code>true</code>, <var>dataSetOrAttributeId</var> will be interpreted as an attribute, otherwise as a data set.
      * @param dataSetInfo The info object to fill.
      */
-    public void fillDataDimensions(final int dataSetOrAttributeId, final boolean isAttribute,
+    public void fillDataDimensions(final long dataSetOrAttributeId, final boolean isAttribute,
             final HDF5DataSetInformation dataSetInfo, ICleanUpRegistry registry)
     {
-        final int dataSpaceId =
+        final long dataSpaceId =
                 isAttribute ? H5Aget_space(dataSetOrAttributeId)
                         : H5Dget_space(dataSetOrAttributeId);
         registry.registerCleanUp(new Runnable()
@@ -2023,7 +1991,7 @@ class HDF5
         if (isAttribute == false)
         {
             final long[] chunkSizes = new long[rank];
-            final int creationPropertyList =
+            final long creationPropertyList =
                     getCreationPropertyList(dataSetOrAttributeId, registry);
             final HDF5StorageLayout layout =
                     HDF5StorageLayout.fromId(H5Pget_layout(creationPropertyList));
@@ -2036,22 +2004,27 @@ class HDF5
         }
     }
 
-    public int[] getArrayDimensions(int arrayTypeId)
+    public int[] getArrayDimensions(long arrayTypeId)
     {
         final int rank = H5Tget_array_ndims(arrayTypeId);
-        final int[] dims = new int[rank];
+        final long[] dims = new long[rank];
         H5Tget_array_dims(arrayTypeId, dims);
-        return dims;
+        final int[] result = new int[rank];
+        for (int i = 0; i < rank; ++i)
+        {
+            result[i] = (int) dims[i];
+        }
+        return result;
     }
 
-    public int createScalarDataSpace()
+    public long createScalarDataSpace()
     {
         return H5Screate(H5S_SCALAR);
     }
 
-    public int createSimpleDataSpace(long[] dimensions, ICleanUpRegistry registry)
+    public long createSimpleDataSpace(long[] dimensions, ICleanUpRegistry registry)
     {
-        final int dataSpaceId = H5Screate_simple(dimensions.length, dimensions, null);
+        final long dataSpaceId = H5Screate_simple(dimensions.length, dimensions, null);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -2063,7 +2036,7 @@ class HDF5
         return dataSpaceId;
     }
 
-    public void setHyperslabBlock(int dataSpaceId, long[] start, long[] count)
+    public void setHyperslabBlock(long dataSpaceId, long[] start, long[] count)
     {
         assert dataSpaceId >= 0;
         assert start != null;
@@ -2076,10 +2049,10 @@ class HDF5
     // Properties
     //
 
-    private int createLinkCreationPropertyList(boolean createIntermediateGroups,
+    private long createLinkCreationPropertyList(boolean createIntermediateGroups,
             ICleanUpRegistry registry)
     {
-        final int linkCreationPropertyList = H5Pcreate(H5P_LINK_CREATE);
+        final long linkCreationPropertyList = H5Pcreate(H5P_LINK_CREATE);
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -2101,15 +2074,15 @@ class HDF5
     }
 
     // Only use with H5P_LINK_CREATE, H5P_ATTRIBUTE_CREATE and H5P_STRING_CREATE property list ids
-    private void setCharacterEncodingCreationPropertyList(int creationPropertyList,
+    private void setCharacterEncodingCreationPropertyList(long creationPropertyList,
             CharacterEncoding encoding)
     {
         H5Pset_char_encoding(creationPropertyList, encoding.getCValue());
     }
 
-    private int createDataSetXferPropertyListAbortOverflow(ICleanUpRegistry registry)
+    private long createDataSetXferPropertyListAbortOverflow(ICleanUpRegistry registry)
     {
-        final int datasetXferPropertyList = H5Pcreate_xfer_abort_overflow();
+        final long datasetXferPropertyList = HDFHelper.H5Pcreate_xfer_abort_overflow();
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -2121,9 +2094,9 @@ class HDF5
         return datasetXferPropertyList;
     }
 
-    private int createDataSetXferPropertyListAbort(ICleanUpRegistry registry)
+    private long createDataSetXferPropertyListAbort(ICleanUpRegistry registry)
     {
-        final int datasetXferPropertyList = H5Pcreate_xfer_abort();
+        final long datasetXferPropertyList = HDFHelper.H5Pcreate_xfer_abort();
         registry.registerCleanUp(new Runnable()
             {
                 @Override
@@ -2138,36 +2111,53 @@ class HDF5
     //
     // References
     //
+    
+    private final int BUFLEN = 128;
 
-    String getReferencedObjectName(int objectId, byte[] reference)
+    String getReferencedObjectName(long objectId, byte[] reference)
     {
-        return H5Rget_name(objectId, H5R_OBJECT, reference);
+        final String[] objectName = new String[1];
+        H5Rget_name(objectId, HDF5Constants.H5R_OBJECT, reference, objectName, BUFLEN);
+        return objectName[0];
     }
 
-    String getReferencedObjectName(int objectId, long reference)
+    String getReferencedObjectName(long objectId, long reference)
     {
-        return H5Rget_name(objectId, reference);
+        final String[] objectName = new String[1];
+        H5Rget_name(objectId, HDF5Constants.H5R_OBJECT, 
+                HDFHelper.longToByte(new long[] { reference }), objectName, BUFLEN);
+        return objectName[0];
     }
 
-    String[] getReferencedObjectNames(int objectId, long[] reference)
+    String[] getReferencedObjectNames(long objectId, long[] reference)
     {
-        return H5Rget_name(objectId, reference);
+        final String[] objectNames = new String[reference.length];
+        for (int i = 0; i < reference.length; ++i)
+        {
+            objectNames[i] = getReferencedObjectName(objectId, reference[i]);
+        }
+        return objectNames;
     }
 
-    String getReferencedObjectName(int objectId, byte[] references, int ofs)
+    String getReferencedObjectName(long objectId, byte[] references, int ofs)
     {
         final byte[] reference = new byte[HDF5BaseReader.REFERENCE_SIZE_IN_BYTES];
         System.arraycopy(references, ofs, reference, 0, HDF5BaseReader.REFERENCE_SIZE_IN_BYTES);
-        return H5Rget_name(objectId, H5R_OBJECT, reference);
+        return getReferencedObjectName(objectId, reference);
     }
 
-    byte[] createObjectReference(int fileId, String objectPath)
+    byte[] createObjectReference(long fileId, String objectPath)
     {
         return H5Rcreate(fileId, objectPath, H5R_OBJECT, -1);
     }
 
-    long[] createObjectReferences(int fileId, String[] objectPaths)
+    long[] createObjectReferences(long fileId, String[] objectPaths)
     {
-        return H5Rcreate(fileId, objectPaths);
+        final long[] references = new long[objectPaths.length];
+        for (int i = 0; i < objectPaths.length; ++i)
+        {
+            references[i] = HDFNativeData.byteToLong(createObjectReference(fileId, objectPaths[i]), 0);
+        }
+        return references;
     }
 }

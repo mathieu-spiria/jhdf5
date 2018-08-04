@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import java.io.Flushable;
 
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 
 /**
  * Implementation of {@link IHDF5FileLevelReadWriteHandler}.
@@ -48,7 +48,7 @@ final class HDF5FileLevelReadWriteHandler extends HDF5FileLevelReadOnlyHandler i
     }
 
     @Override
-    public FileFormat getFileFormat()
+    public FileFormatVersionBounds getFileFormatVersionBounds()
     {
         return baseWriter.fileFormat;
     }

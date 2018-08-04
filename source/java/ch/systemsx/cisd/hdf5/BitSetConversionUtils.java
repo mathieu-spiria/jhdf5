@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,11 @@ package ch.systemsx.cisd.hdf5;
 import java.lang.reflect.Field;
 import java.util.BitSet;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import org.apache.commons.lang.SystemUtils;
 
-import ch.rinn.restrictions.Private;
+//import ch.rinn.restrictions.Private;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
@@ -122,7 +122,7 @@ public final class BitSetConversionUtils
         }
     }
 
-    @Private
+    //@Private
     static BitSet fromStorageFormGeneric(final long[] serializedWordArray, int start, int length)
     {
         final BitSet result = new BitSet();

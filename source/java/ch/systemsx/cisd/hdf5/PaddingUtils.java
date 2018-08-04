@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 
 /**
  * A class with methods for padding of memory structures.
@@ -27,7 +27,7 @@ import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
  */
 class PaddingUtils
 {
-    private static final int machineWordSize = HDFNativeData.getMachineWordSize(); 
+    private static final int machineWordSize = HDFHelper.getMachineWordSize(); 
     
     private PaddingUtils()
     {

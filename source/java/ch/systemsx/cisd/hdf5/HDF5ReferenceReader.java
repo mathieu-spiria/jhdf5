@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,20 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_REFERENCE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
+import static hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static hdf.hdf5lib.HDF5Constants.H5T_REFERENCE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
 
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
+import hdf.hdf5lib.HDF5Constants;
 
 /**
  * A reader for HDF5 references.
@@ -81,7 +81,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
         return result;
     }
 
-    private void checkReference(final int dataTypeId, final String objectPath)
+    private void checkReference(final long dataTypeId, final String objectPath)
             throws HDF5JavaException
     {
         final boolean isReference = (baseReader.h5.getClassType(dataTypeId) == H5T_REFERENCE);
@@ -132,11 +132,11 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                 @Override
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
+                    final long attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final int dataTypeId =
+                    final long dataTypeId =
                             baseReader.h5.getDataTypeForAttribute(attributeId, registry);
                     checkReference(dataTypeId, objectPath);
                     final long[] reference =
@@ -169,18 +169,18 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                         @Override
                         public String[] call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            final int attributeId =
+                            final long attributeId =
                                     baseReader.h5.openAttribute(objectId, attributeName, registry);
-                            final int attributeTypeId =
+                            final long attributeTypeId =
                                     baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                            final int memoryTypeId;
+                            final long memoryTypeId;
                             final int len;
                             if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
                             {
-                                final int baseDataTypeId =
+                                final long baseDataTypeId =
                                         baseReader.h5.getBaseDataType(attributeTypeId, registry);
                                 checkReference(baseDataTypeId, objectPath);
                                 final int[] arrayDimensions =
@@ -233,20 +233,20 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                         {
                             try
                             {
-                                final int objectId =
+                                final long objectId =
                                         baseReader.h5.openObject(baseReader.fileId, objectPath,
                                                 registry);
-                                final int attributeId =
+                                final long attributeId =
                                         baseReader.h5.openAttribute(objectId, attributeName,
                                                 registry);
-                                final int attributeTypeId =
+                                final long attributeTypeId =
                                         baseReader.h5
                                                 .getDataTypeForAttribute(attributeId, registry);
-                                final int memoryTypeId;
+                                final long memoryTypeId;
                                 final int[] arrayDimensions;
                                 if (baseReader.h5.getClassType(attributeTypeId) == H5T_ARRAY)
                                 {
-                                    final int baseDataTypeId =
+                                    final long baseDataTypeId =
                                             baseReader.h5
                                                     .getBaseDataType(attributeTypeId, registry);
                                     checkReference(baseDataTypeId, objectPath);
@@ -303,9 +303,9 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                 @Override
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int objectReferenceDataTypeId =
+                    final long objectReferenceDataTypeId =
                             baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     checkReference(objectReferenceDataTypeId, objectPath);
                     final long[] reference = new long[1];
@@ -334,9 +334,9 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                 @Override
                 public String[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final int dataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
+                    final long dataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     final long[] references;
                     if (baseReader.h5.getClassType(dataTypeId) == H5T_REFERENCE)
                     {
@@ -350,12 +350,12 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                             && baseReader.h5.getClassType(baseReader.h5.getBaseDataType(dataTypeId,
                                     registry)) == H5T_REFERENCE)
                     {
-                        final int spaceId = baseReader.h5.createScalarDataSpace();
+                        final long spaceId = baseReader.h5.createScalarDataSpace();
                         final int[] dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
                         checkRank1(dimensions, objectPath);
                         final int len = dimensions[0];
                         references = new long[len];
-                        final int memoryTypeId =
+                        final long memoryTypeId =
                                 baseReader.h5.createArrayType(H5T_STD_REF_OBJ, len, registry);
                         baseReader.h5.readDataSet(dataSetId, memoryTypeId, spaceId, spaceId,
                                 references);
@@ -406,7 +406,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                 @Override
                 public String[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
@@ -439,10 +439,10 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                         @Override
                         public MDArray<String> call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
-                            final int dataTypeId =
+                            final long dataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                             final long[] references;
                             final int[] dimensions;
@@ -459,11 +459,11 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                                     && baseReader.h5.getClassType(baseReader.h5.getBaseDataType(
                                             dataTypeId, registry)) == H5T_REFERENCE)
                             {
-                                final int spaceId = baseReader.h5.createScalarDataSpace();
+                                final long spaceId = baseReader.h5.createScalarDataSpace();
                                 dimensions = baseReader.h5.getArrayDimensions(dataTypeId);
                                 final int len = MDAbstractArray.getLength(dimensions);
                                 references = new long[len];
-                                final int memoryTypeId =
+                                final long memoryTypeId =
                                         baseReader.h5.createArrayType(H5T_STD_REF_OBJ, len,
                                                 registry);
                                 baseReader.h5.readDataSet(dataSetId, memoryTypeId, spaceId,
@@ -524,7 +524,7 @@ public class HDF5ReferenceReader implements IHDF5ReferenceReader
                         @Override
                         public MDArray<String> call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final DataSpaceParameters spaceParams =

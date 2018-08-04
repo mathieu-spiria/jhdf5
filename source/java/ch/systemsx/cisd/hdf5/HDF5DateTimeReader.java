@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 
 import java.util.Date;
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
@@ -62,9 +62,9 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                 @Override
                 public Long call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
+                    final long attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
                     baseReader.checkIsTimeStamp(objectPath, attributeName, objectId, registry);
                     final long[] data =
@@ -95,7 +95,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                         @Override
                         public long[] call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
                             baseReader.checkIsTimeStamp(objectPath, attributeName, objectId,
@@ -119,7 +119,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                         @Override
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
                             baseReader.checkIsTimeStamp(objectPath, attributeName, objectId,
@@ -171,7 +171,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                 @Override
                 public Long call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     baseReader.checkIsTimeStamp(objectPath, dataSetId, registry);
                     final long[] data = new long[1];
@@ -193,7 +193,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                 @Override
                 public long[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     baseReader.checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
@@ -219,7 +219,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                 @Override
                 public long[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     baseReader.checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
@@ -246,7 +246,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                 @Override
                 public long[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     baseReader.checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
@@ -284,7 +284,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                         @Override
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             baseReader.checkIsTimeStamp(objectPath, dataSetId, registry);
                             return longReader.readLongMDArray(dataSetId, registry);
@@ -319,7 +319,7 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                         @Override
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                             baseReader.checkIsTimeStamp(objectPath, dataSetId, registry);
                             final DataSpaceParameters spaceParams =
@@ -345,13 +345,13 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                 @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = 
+                    final long dataSetId = 
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     baseReader.checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array.
@@ -374,13 +374,13 @@ class HDF5DateTimeReader implements IHDF5DateTimeReader
                 @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId = 
+                    final long dataSetId = 
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     baseReader.checkIsTimeStamp(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getBlockSpaceParameters(dataSetId, memoryOffset, array
                                     .dimensions(), offset, blockDimensions, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, 
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId, array

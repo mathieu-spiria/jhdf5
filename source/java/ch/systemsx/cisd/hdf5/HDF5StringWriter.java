@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,19 +17,19 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5GenericStorageFeatures.GENERIC_NO_COMPRESSION;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import ncsa.hdf.hdf5lib.exceptions.HDF5Exception;
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
-import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
+import static hdf.hdf5lib.H5.H5Dwrite;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static hdf.hdf5lib.HDF5Constants.H5S_SCALAR;
+import hdf.hdf5lib.exceptions.HDF5Exception;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseWriter.StringArrayBuffer;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * The implementation of {@link IHDF5StringWriter}.
@@ -70,7 +70,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                         @Override
                         public Object call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseWriter.h5.openObject(baseWriter.fileId, objectPath,
                                             registry);
                             baseWriter.setStringAttributeVariableLength(objectId, name, value,
@@ -108,7 +108,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                         @Override
                         public Object call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseWriter.h5.openObject(baseWriter.fileId, objectPath,
                                             registry);
                             baseWriter.setStringAttribute(objectId, name, value, maxLength,
@@ -146,7 +146,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
                     baseWriter.setStringArrayAttribute(objectId, name, value, maxLength,
                             lengthFitsValue, registry);
@@ -183,7 +183,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
                     baseWriter.setStringArrayAttribute(objectId, name, value, maxLength,
                             lengthFitsValue, registry);
@@ -261,7 +261,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                         baseWriter.h5.deleteObject(baseWriter.fileId, objectPath);
                         exists = false;
                     }
-                    final int stringDataTypeId =
+                    final long stringDataTypeId =
                             baseWriter.h5.createDataTypeString(realMaxLengthInBytes, registry);
                     if (features.requiresChunking() == false)
                     {
@@ -275,7 +275,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                         final long[] chunkSizeOrNull =
                                 HDF5Utils.tryGetChunkSizeForString(realMaxLengthInBytes,
                                         features.requiresChunking());
-                        final int dataSetId;
+                        final long dataSetId;
                         if (exists)
                         {
                             dataSetId =
@@ -291,7 +291,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                                     baseWriter.h5.createDataSet(baseWriter.fileId,
                                             HDF5Utils.SCALAR_DIMENSIONS, chunkSizeOrNull,
                                             stringDataTypeId, features, objectPath, layout,
-                                            baseWriter.fileFormat, registry);
+                                            registry);
                         }
                         H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, bytes);
                     }
@@ -364,8 +364,8 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                     if (variableLength)
                     {
                         final int elementSize = 8; // 64bit pointers
-                        final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
-                        final int dataSetId =
+                        final long stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
+                        final long dataSetId =
                                 baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
                                         new long[]
                                             { data.length }, elementSize, features, registry);
@@ -377,9 +377,9 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                         array.addAll(data);
                         final byte[] arrData = array.toArray();
                         final int elementSize = array.getMaxLengthInByte();
-                        final int stringDataTypeId =
+                        final long stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
                                         new long[]
                                             { data.length }, elementSize, features, registry);
@@ -427,7 +427,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int elementSize;
-                    final int stringDataTypeId;
+                    final long stringDataTypeId;
                     if (variableLength)
                     {
                         elementSize = 8; // 64bit pointers
@@ -478,7 +478,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int elementSize;
-                    final int stringDataTypeId;
+                    final long stringDataTypeId;
                     if (variableLength)
                     {
                         elementSize = 8; // 64bit pointers
@@ -524,16 +524,16 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                         { dataSize };
                     final long[] slabStartOrNull = new long[]
                         { offset };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
-                    final int stringDataTypeId =
+                    final long stringDataTypeId =
                             baseWriter.h5.getDataTypeForDataSet(dataSetId, registry);
                     if (baseWriter.h5.isVariableLengthString(stringDataTypeId))
                     {
@@ -599,8 +599,8 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                     if (variableLength)
                     {
                         final int elementSize = 8; // 64bit pointers
-                        final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
-                        final int dataSetId =
+                        final long stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
+                        final long dataSetId =
                                 baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
                                         data.longDimensions(), elementSize, features, registry);
                         baseWriter.writeStringVL(dataSetId, data.getAsFlatArray());
@@ -611,9 +611,9 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                         array.addAll(data.getAsFlatArray());
                         final byte[] arrData = array.toArray();
                         final int elementSize = array.getMaxLengthInByte();
-                        final int stringDataTypeId =
+                        final long stringDataTypeId =
                                 baseWriter.h5.createDataTypeString(elementSize, registry);
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
                                         data.longDimensions(), elementSize, features, registry);
                         H5Dwrite(dataSetId, stringDataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -662,7 +662,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int elementSize;
-                    final int stringDataTypeId;
+                    final long stringDataTypeId;
                     if (variableLength)
                     {
                         elementSize = 8; // 64bit pointers
@@ -713,7 +713,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int elementSize;
-                    final int stringDataTypeId;
+                    final long stringDataTypeId;
                     if (variableLength)
                     {
                         elementSize = 8; // 64bit pointers
@@ -770,15 +770,15 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                     {
                         dataSetDimensions[i] = offset[i] + dimensions[i];
                     }
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
-                    final int stringDataTypeId =
+                    final long stringDataTypeId =
                             baseWriter.h5.getDataTypeForDataSet(dataSetId, registry);
                     if (baseWriter.h5.isVariableLengthString(stringDataTypeId))
                     {
@@ -808,7 +808,7 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                 @Override
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId;
+                    final long dataSetId;
                     if (baseWriter.h5.exists(baseWriter.fileId, objectPath))
                     {
                         dataSetId =
@@ -820,10 +820,8 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                                         baseWriter.variableLengthStringDataTypeId, objectPath,
                                         true, registry);
                     }
-                    final byte[] result = new byte[HDFNativeData.getMachineWordSize()];
-                	HDFNativeData.compoundCpyVLStr(data, result, 0);
-                    H5Dwrite(dataSetId, baseWriter.variableLengthStringDataTypeId, 
-                    		H5S_ALL, H5S_ALL, H5P_DEFAULT, result);
+                    baseWriter.writeStringVL(dataSetId, H5S_SCALAR, H5S_SCALAR, new String[]
+                                    { data });
                     return null; // Nothing to return.
                 }
             };
@@ -913,8 +911,8 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
                 public Object call(ICleanUpRegistry registry)
                 {
                     final int pointerSize = 8; // 64bit pointers
-                    final int stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
-                    final int dataSetId =
+                    final long stringDataTypeId = baseWriter.variableLengthStringDataTypeId;
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, stringDataTypeId,
                                     MDAbstractArray.toLong(data.dimensions()), pointerSize,
                                     features, registry);
@@ -947,8 +945,8 @@ public class HDF5StringWriter extends HDF5StringReader implements IHDF5StringWri
      * @exception HDF5LibraryException - Error from the HDF-5 Library.
      * @exception NullPointerException - data object is null.
      */
-    private int writeStringArray(final int dataset_id, final int mem_type_id,
-            final int mem_space_id, final int file_space_id, final int xfer_plist_id,
+    private int writeStringArray(final long dataset_id, final long mem_type_id,
+            final long mem_space_id, final long file_space_id, final long xfer_plist_id,
             final String[] obj, final int maxLength) throws HDF5Exception, HDF5LibraryException,
             NullPointerException
     {

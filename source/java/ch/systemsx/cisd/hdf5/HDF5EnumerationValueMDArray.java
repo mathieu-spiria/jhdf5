@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import java.util.Iterator;
 
+import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.convert.NativeData.ByteOrder;
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
@@ -26,7 +27,6 @@ import ch.systemsx.cisd.base.mdarray.MDByteArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.HDF5EnumerationType.EnumStorageForm;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A class that represents a multi-dimensional array of HDF enumeration values.
@@ -659,10 +659,10 @@ public class HDF5EnumerationValueMDArray implements Iterable<MDArray<String>.Arr
                         dimensions));
             case SHORT:
                 return new HDF5EnumerationValueMDArray(enumType, new MDShortArray(
-                        HDFNativeData.byteToShort(data, offset, len), dimensions));
+                        HDFHelper.byteToShort(data, offset, len), dimensions));
             case INT:
                 return new HDF5EnumerationValueMDArray(enumType, new MDIntArray(
-                        HDFNativeData.byteToInt(data, offset, len), dimensions));
+                        HDFHelper.byteToInt(data, offset, len), dimensions));
         }
         throw new Error("Illegal storage form (" + enumType.getStorageForm() + ".)");
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.getEnumReturnType;
 
 import java.lang.reflect.Field;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
@@ -135,26 +135,26 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return enumType.getStorageTypeId();
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return enumType.getNativeTypeId();
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return getEnum(obj).toStorageForm();
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final Object enumValue =
@@ -203,26 +203,26 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return enumType.getStorageTypeId();
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return enumType.getNativeTypeId();
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return getEnum(obj).toStorageForm();
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final Object enumValue =
@@ -271,26 +271,26 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return enumType.getStorageTypeId();
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return enumType.getNativeTypeId();
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return getEnum(obj).toStorageForm();
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final Object enumValue =
@@ -339,26 +339,26 @@ class HDF5CompoundMemberByteifyerEnumFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return enumType.getStorageTypeId();
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return enumType.getNativeTypeId();
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return getEnum(obj).toStorageForm();
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final Object enumValue =

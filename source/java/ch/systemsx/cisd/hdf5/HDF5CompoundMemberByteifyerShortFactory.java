@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,18 +23,19 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.putMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setArray;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setList;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I16LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_I16LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_U16LE;
 
 import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.HDFNativeData;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>short</code>,
@@ -135,8 +136,8 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                         .getNumberOfElements() : rank.isScalar() ? 1 : member.getMemberTypeLength();
         final int[] dimensions = rank.isScalar() ? new int[]
             { 1 } : member.getMemberTypeDimensions();
-        final int storageTypeId = member.getStorageDataTypeId();
-        final int memberTypeId =
+        final long storageTypeId = member.getStorageDataTypeId();
+        final long memberTypeId =
                 rank.isScalar() ? (member.isUnsigned() ? H5T_STD_U16LE : H5T_STD_I16LE)
                         : ((storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
                                 member.isUnsigned() ? H5T_STD_U16LE : H5T_STD_I16LE, dimensions)
@@ -162,7 +163,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
             final int offset, int memOffset, final int[] dimensions, final int len,
-            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final long memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
         return new HDF5MemberByteifyer(field, memberName, SHORT_SIZE * len, offset, memOffset,
@@ -175,19 +176,19 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     switch (rank)
@@ -195,18 +196,18 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                         case SCALAR:
                             return HDFNativeData.shortToByte(field.getShort(obj));
                         case ARRAY1D:
-                            return HDFNativeData.shortToByte((short[]) field.get(obj));
+                            return HDFHelper.shortToByte((short[]) field.get(obj));
                         case ARRAY2D:
                         {
                             final short[][] array = (short[][]) field.get(obj);
                             MatrixUtils.checkMatrixDimensions(memberName, dimensions, array);
-                            return HDFNativeData.shortToByte(MatrixUtils.flatten(array));
+                            return HDFHelper.shortToByte(MatrixUtils.flatten(array));
                         }
                         case ARRAYMD:
                         {
                             final MDShortArray array = (MDShortArray) field.get(obj);
                             MatrixUtils.checkMDArrayDimensions(memberName, dimensions, array);
-                            return HDFNativeData.shortToByte(array.getAsFlatArray());
+                            return HDFHelper.shortToByte(array.getAsFlatArray());
                         }
                         default:
                             throw new Error("Unknown rank.");
@@ -214,7 +215,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     switch (rank)
@@ -224,13 +225,13 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                                     HDFNativeData.byteToShort(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            field.set(obj, HDFNativeData.byteToShort(byteArr, arrayOffset
+                            field.set(obj, HDFHelper.byteToShort(byteArr, arrayOffset
                                     + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final short[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToShort(byteArr, arrayOffset + offsetInMemory, len);
                             field.set(obj, MatrixUtils.shapen(array, dimensions));
                             break;
@@ -238,7 +239,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                         case ARRAYMD:
                         {
                             final short[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToShort(byteArr, arrayOffset + offsetInMemory, len);
                             field.set(obj, new MDShortArray(array, dimensions));
                             break;
@@ -251,7 +252,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            int memOffset, final int[] dimensions, final int len, final int memberTypeId,
+            int memOffset, final int[] dimensions, final int len, final long memberTypeId,
             final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, SHORT_SIZE * len, offset, memOffset,
@@ -264,19 +265,19 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     switch (rank)
@@ -285,18 +286,18 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                             return HDFNativeData.shortToByte(((Number) getMap(obj, memberName))
                                     .shortValue());
                         case ARRAY1D:
-                            return HDFNativeData.shortToByte((short[]) getMap(obj, memberName));
+                            return HDFHelper.shortToByte((short[]) getMap(obj, memberName));
                         case ARRAY2D:
                         {
                             final short[][] array = (short[][]) getMap(obj, memberName);
                             MatrixUtils.checkMatrixDimensions(memberName, dimensions, array);
-                            return HDFNativeData.shortToByte(MatrixUtils.flatten(array));
+                            return HDFHelper.shortToByte(MatrixUtils.flatten(array));
                         }
                         case ARRAYMD:
                         {
                             final MDShortArray array = (MDShortArray) getMap(obj, memberName);
                             MatrixUtils.checkMDArrayDimensions(memberName, dimensions, array);
-                            return HDFNativeData.shortToByte(array.getAsFlatArray());
+                            return HDFHelper.shortToByte(array.getAsFlatArray());
                         }
                         default:
                             throw new Error("Unknown rank.");
@@ -304,7 +305,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     switch (rank)
@@ -314,13 +315,13 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                                     HDFNativeData.byteToShort(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            putMap(obj, memberName, HDFNativeData.byteToShort(byteArr, arrayOffset
+                            putMap(obj, memberName, HDFHelper.byteToShort(byteArr, arrayOffset
                                     + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final short[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToShort(byteArr, arrayOffset + offsetInMemory, len);
                             putMap(obj, memberName, MatrixUtils.shapen(array, dimensions));
                             break;
@@ -328,7 +329,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                         case ARRAYMD:
                         {
                             final short[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToShort(byteArr, arrayOffset + offsetInMemory, len);
                             putMap(obj, memberName, new MDShortArray(array, dimensions));
                             break;
@@ -342,7 +343,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
             final int offset, int memOffset, final int[] dimensions, final int len,
-            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final long memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, SHORT_SIZE * len, offset, memOffset,
                 false, typeVariant)
@@ -354,19 +355,19 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     switch (rank)
@@ -375,18 +376,18 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                             return HDFNativeData.shortToByte(((Number) getList(obj, index))
                                     .shortValue());
                         case ARRAY1D:
-                            return HDFNativeData.shortToByte((short[]) getList(obj, index));
+                            return HDFHelper.shortToByte((short[]) getList(obj, index));
                         case ARRAY2D:
                         {
                             final short[][] array = (short[][]) getList(obj, index);
                             MatrixUtils.checkMatrixDimensions(memberName, dimensions, array);
-                            return HDFNativeData.shortToByte(MatrixUtils.flatten(array));
+                            return HDFHelper.shortToByte(MatrixUtils.flatten(array));
                         }
                         case ARRAYMD:
                         {
                             final MDShortArray array = (MDShortArray) getList(obj, index);
                             MatrixUtils.checkMDArrayDimensions(memberName, dimensions, array);
-                            return HDFNativeData.shortToByte(array.getAsFlatArray());
+                            return HDFHelper.shortToByte(array.getAsFlatArray());
                         }
                         default:
                             throw new Error("Unknown rank.");
@@ -394,7 +395,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     switch (rank)
@@ -404,13 +405,13 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                                     HDFNativeData.byteToShort(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            putMap(obj, memberName, HDFNativeData.byteToShort(byteArr, arrayOffset
+                            putMap(obj, memberName, HDFHelper.byteToShort(byteArr, arrayOffset
                                     + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final short[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToShort(byteArr, arrayOffset + offsetInMemory, len);
                             setList(obj, index, MatrixUtils.shapen(array, dimensions));
                             break;
@@ -418,7 +419,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                         case ARRAYMD:
                         {
                             final short[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToShort(byteArr, arrayOffset + offsetInMemory, len);
                             setList(obj, index, new MDShortArray(array, dimensions));
                             break;
@@ -432,7 +433,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
             final int offset, int memOffset, final int[] dimensions, final int len,
-            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final long memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, SHORT_SIZE * len, offset, memOffset,
                 false, typeVariant)
@@ -444,19 +445,19 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     switch (rank)
@@ -465,18 +466,18 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                             return HDFNativeData.shortToByte(((Number) getArray(obj, index))
                                     .shortValue());
                         case ARRAY1D:
-                            return HDFNativeData.shortToByte((short[]) getArray(obj, index));
+                            return HDFHelper.shortToByte((short[]) getArray(obj, index));
                         case ARRAY2D:
                         {
                             final short[][] array = (short[][]) getArray(obj, index);
                             MatrixUtils.checkMatrixDimensions(memberName, dimensions, array);
-                            return HDFNativeData.shortToByte(MatrixUtils.flatten(array));
+                            return HDFHelper.shortToByte(MatrixUtils.flatten(array));
                         }
                         case ARRAYMD:
                         {
                             final MDShortArray array = (MDShortArray) getArray(obj, index);
                             MatrixUtils.checkMDArrayDimensions(memberName, dimensions, array);
-                            return HDFNativeData.shortToByte(array.getAsFlatArray());
+                            return HDFHelper.shortToByte(array.getAsFlatArray());
                         }
                         default:
                             throw new Error("Unknown rank.");
@@ -484,7 +485,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     switch (rank)
@@ -494,13 +495,13 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                                     HDFNativeData.byteToShort(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            setArray(obj, index, HDFNativeData.byteToShort(byteArr, arrayOffset
+                            setArray(obj, index, HDFHelper.byteToShort(byteArr, arrayOffset
                                     + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final short[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToShort(byteArr, arrayOffset + offsetInMemory, len);
                             setArray(obj, index, MatrixUtils.shapen(array, dimensions));
                             break;
@@ -508,7 +509,7 @@ class HDF5CompoundMemberByteifyerShortFactory implements IHDF5CompoundMemberByti
                         case ARRAYMD:
                         {
                             final short[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToShort(byteArr, arrayOffset + offsetInMemory, len);
                             setArray(obj, index, new MDShortArray(array, dimensions));
                             break;

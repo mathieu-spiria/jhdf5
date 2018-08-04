@@ -22,7 +22,7 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
+import hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 

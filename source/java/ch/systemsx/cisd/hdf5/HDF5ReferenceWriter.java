@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,10 @@ package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5BaseReader.REFERENCE_SIZE_IN_BYTES;
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
+import static hdf.hdf5lib.H5.H5Dwrite;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_REF_OBJ;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -71,7 +71,7 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                                             referencedObjectPath);
                             if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
-                                final int dataSpaceId =
+                                final long dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]
                                             { 1 }, registry);
                                 baseWriter.setAttribute(objectPath, name, H5T_STD_REF_OBJ,
@@ -106,13 +106,13 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                                     referencedObjectPaths);
                     if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
-                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                        final long dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { references.length }, registry);
                         baseWriter.setAttribute(objectPath, name, H5T_STD_REF_OBJ, H5T_STD_REF_OBJ,
                                 dataSpaceId, references);
                     } else
                     {
-                        final int typeId =
+                        final long typeId =
                                 baseWriter.h5.createArrayType(H5T_STD_REF_OBJ,
                                         referencedObjectPaths.length, registry);
                         baseWriter.setAttribute(objectPath, name, typeId, typeId, -1, references);
@@ -142,14 +142,14 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                                     referencedObjectPaths.getAsFlatArray());
                     if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
-                        final int dataSpaceId =
+                        final long dataSpaceId =
                                 baseWriter.h5.createSimpleDataSpace(
                                         referencedObjectPaths.longDimensions(), registry);
                         baseWriter.setAttribute(objectPath, name, H5T_STD_REF_OBJ, H5T_STD_REF_OBJ,
                                 dataSpaceId, references);
                     } else
                     {
-                        final int typeId =
+                        final long typeId =
                                 baseWriter.h5.createArrayType(H5T_STD_REF_OBJ,
                                         referencedObjectPaths.dimensions(), registry);
                         baseWriter.setAttribute(objectPath, name, typeId, typeId, -1, references);
@@ -197,7 +197,7 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                     final long[] references =
                             baseWriter.h5.createObjectReferences(baseWriter.fileId,
                                     referencedObjectPaths);
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_REF_OBJ, new long[]
                                 { referencedObjectPaths.length }, REFERENCE_SIZE_IN_BYTES,
                                     features, registry);
@@ -298,14 +298,14 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                         { dataSize };
                     final long[] slabStartOrNull = new long[]
                         { offset };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     final long[] references =
                             baseWriter.h5.createObjectReferences(baseWriter.fileId,
@@ -339,7 +339,7 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                     final long[] references =
                             baseWriter.h5.createObjectReferences(baseWriter.fileId,
                                     referencedObjectPaths.getAsFlatArray());
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_REF_OBJ,
                                     referencedObjectPaths.longDimensions(),
                                     REFERENCE_SIZE_IN_BYTES, features, registry);
@@ -453,13 +453,13 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                     {
                         dataSetDimensions[i] = offset[i] + dimensions[i];
                     }
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     final long[] references =
                             baseWriter.h5.createObjectReferences(baseWriter.fileId,
@@ -495,13 +495,13 @@ public class HDF5ReferenceWriter extends HDF5ReferenceReader implements IHDF5Ref
                     {
                         dataSetDimensions[i] = offset[i] + blockDimensions[i];
                     }
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
                     baseWriter.h5.setHyperslabBlock(memorySpaceId,
                             MDAbstractArray.toLong(memoryOffset), longBlockDimensions);

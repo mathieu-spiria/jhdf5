@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_CSET_ASCII;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_CSET_UTF8;
+import static hdf.hdf5lib.HDF5Constants.H5T_CSET_ASCII;
+import static hdf.hdf5lib.HDF5Constants.H5T_CSET_UTF8;
 
 /**
  * An enum for character encodings of path names and strings in JHDF5. 

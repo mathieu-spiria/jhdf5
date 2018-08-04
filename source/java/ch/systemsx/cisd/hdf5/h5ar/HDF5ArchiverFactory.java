@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import java.io.File;
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 
 /**
  * A factory for {@link IHDF5Archiver}
@@ -52,7 +52,7 @@ public class HDF5ArchiverFactory
      */
     public static IHDF5Archiver open(File file, IErrorStrategy errorStrategyOrNull)
     {
-        return new HDF5Archiver(file, false, false, FileFormat.STRICTLY_1_6, errorStrategyOrNull);
+        return new HDF5Archiver(file, false, false, FileFormatVersionBounds.V1_8_V1_8, errorStrategyOrNull);
     }
 
     /**
@@ -67,7 +67,7 @@ public class HDF5ArchiverFactory
      *            archive. May be <code>null</code>, in which case every error just causes an
      *            exception.
      */
-    public static IHDF5Archiver open(File file, boolean noSync, FileFormat fileFormat,
+    public static IHDF5Archiver open(File file, boolean noSync, FileFormatVersionBounds fileFormat,
             IErrorStrategy errorStrategyOrNull)
     {
         return new HDF5Archiver(file, false, noSync, fileFormat, errorStrategyOrNull);
@@ -95,7 +95,7 @@ public class HDF5ArchiverFactory
      */
     public static IHDF5Archiver open(String filePath, IErrorStrategy errorStrategyOrNull)
     {
-        return new HDF5Archiver(new File(filePath), false, false, FileFormat.STRICTLY_1_6,
+        return new HDF5Archiver(new File(filePath), false, false, FileFormatVersionBounds.V1_8_V1_8,
                 errorStrategyOrNull);
     }
 
@@ -111,7 +111,7 @@ public class HDF5ArchiverFactory
      *            archive. May be <code>null</code>, in which case every error just causes an
      *            exception.
      */
-    public static IHDF5Archiver open(String filePath, boolean noSync, FileFormat fileFormat,
+    public static IHDF5Archiver open(String filePath, boolean noSync, FileFormatVersionBounds fileFormat,
             IErrorStrategy errorStrategyOrNull)
     {
         return new HDF5Archiver(new File(filePath), false, noSync, fileFormat, errorStrategyOrNull);
@@ -160,7 +160,7 @@ public class HDF5ArchiverFactory
      */
     public static IHDF5ArchiveReader openForReading(File file, IErrorStrategy errorStrategy)
     {
-        return new HDF5Archiver(file, true, true, FileFormat.STRICTLY_1_6, errorStrategy);
+        return new HDF5Archiver(file, true, true, FileFormatVersionBounds.V1_8_V1_8, errorStrategy);
     }
 
     /**
@@ -183,7 +183,7 @@ public class HDF5ArchiverFactory
      */
     public static IHDF5ArchiveReader openForReading(String filePath, IErrorStrategy errorStrategy)
     {
-        return new HDF5Archiver(new File(filePath), true, true, FileFormat.STRICTLY_1_6,
+        return new HDF5Archiver(new File(filePath), true, true, FileFormatVersionBounds.V1_8_V1_8,
                 errorStrategy);
     }
 

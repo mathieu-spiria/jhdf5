@@ -19,7 +19,7 @@ package ch.systemsx.cisd.hdf5;
 import java.io.File;
 import java.util.BitSet;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
+import hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 /**
  * @author Bernd Rinn

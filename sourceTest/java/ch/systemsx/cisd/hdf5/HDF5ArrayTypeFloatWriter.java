@@ -16,24 +16,23 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5A.H5Aclose;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5A.H5Acreate;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Sclose;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Screate_simple;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32BE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F64BE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
+import static hdf.hdf5lib.H5.H5Aclose;
+import static hdf.hdf5lib.H5.H5Acreate;
+import static hdf.hdf5lib.H5.H5Dwrite;
+import static hdf.hdf5lib.H5.H5Sclose;
+import static hdf.hdf5lib.H5.H5Screate_simple;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32BE;
+import static hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_IEEE_F64BE;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_DOUBLE;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_FLOAT;
 
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.HDFNativeData;;
 
 /**
  * A writer for array type data sets.
@@ -61,7 +60,7 @@ public class HDF5ArrayTypeFloatWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F32BE, new long[]
                                 { data.length }, 4, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
@@ -82,7 +81,7 @@ public class HDF5ArrayTypeFloatWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_IEEE_F64BE, new long[]
                                 { data.length }, 4, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
@@ -103,11 +102,11 @@ public class HDF5ArrayTypeFloatWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
+                    final long memoryTypeId =
                             baseWriter.h5.createArrayType(H5T_NATIVE_FLOAT, data.length, registry);
-                    final int storageTypeId =
+                    final long storageTypeId =
                             baseWriter.h5.createArrayType(H5T_IEEE_F32LE, data.length, registry);
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.createScalarDataSet(baseWriter.fileId, storageTypeId,
                                     objectPath, true, registry);
                     H5Dwrite(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
@@ -128,13 +127,13 @@ public class HDF5ArrayTypeFloatWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
+                    final long memoryTypeId =
                             baseWriter.h5.createArrayType(H5T_NATIVE_FLOAT, data.dimensions(),
                                     registry);
-                    final int storageTypeId =
+                    final long storageTypeId =
                             baseWriter.h5.createArrayType(H5T_IEEE_F32LE, data.dimensions(),
                                     registry);
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.createScalarDataSet(baseWriter.fileId, storageTypeId,
                                     objectPath, true, registry);
                     H5Dwrite(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
@@ -157,16 +156,16 @@ public class HDF5ArrayTypeFloatWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int memoryTypeId =
+                    final long memoryTypeId =
                             baseWriter.h5.createArrayType(H5T_NATIVE_FLOAT, data.dimensions()[1],
                                     registry);
-                    final int storageTypeId =
+                    final long storageTypeId =
                             baseWriter.h5.createArrayType(H5T_IEEE_F32LE, data.dimensions()[1], registry);
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.createDataSet(baseWriter.fileId, new long[]
                                 { data.dimensions()[0] }, null, storageTypeId,
                                     HDF5FloatStorageFeatures.FLOAT_CONTIGUOUS, objectPath,
-                                    HDF5StorageLayout.CONTIGUOUS, FileFormat.ALLOW_1_8, registry);
+                                    HDF5StorageLayout.CONTIGUOUS, registry);
                     H5Dwrite(dataSetId, memoryTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT,
                             data.getAsFlatArray());
                     return null; // Nothing to return.
@@ -190,7 +189,7 @@ public class HDF5ArrayTypeFloatWriter
                 {
                     final long[] dimensions = new long[]
                         { value.length };
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             H5Screate_simple(dimensions.length, dimensions, dimensions);
                     registry.registerCleanUp(new Runnable()
                         {
@@ -200,22 +199,22 @@ public class HDF5ArrayTypeFloatWriter
                                 H5Sclose(dataSpaceId);
                             }
                         });
-                    final int objectId =
+                    final long objectId =
                             baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
-                    final int attributeId =
+                    final long attributeId =
                             createAttribute(objectId, name, H5T_IEEE_F32LE, dataSpaceId, registry);
                     baseWriter.h5.writeAttribute(attributeId, H5T_NATIVE_FLOAT,
-                            HDFNativeData.floatToByte(value));
+                            HDFNativeData.floatToByte(0, value.length, value));
                     return null; // Nothing to return.
                 }
             };
         baseWriter.runner.call(addAttributeRunnable);
     }
 
-    private int createAttribute(int locationId, String attributeName, int dataTypeId,
-            int dataSpaceId, ICleanUpRegistry registry)
+    private long createAttribute(long locationId, String attributeName, long dataTypeId,
+            long dataSpaceId, ICleanUpRegistry registry)
     {
-        final int attributeId =
+        final long attributeId =
                 H5Acreate(locationId, attributeName, dataTypeId, dataSpaceId, H5P_DEFAULT,
                         H5P_DEFAULT);
         registry.registerCleanUp(new Runnable()

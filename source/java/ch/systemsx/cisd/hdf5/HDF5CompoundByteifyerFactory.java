@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -183,27 +183,27 @@ class HDF5CompoundByteifyerFactory
         }
 
         @Override
-        public byte[] byteify(int compoundDataTypeId, Object obj) throws IllegalAccessException
+        public byte[] byteify(long compoundDataTypeId, Object obj) throws IllegalAccessException
         {
             // Dummy implementation
             return new byte[delegate.getSize()];
         }
 
         @Override
-        public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+        public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                 int arrayOffset) throws IllegalAccessException
         {
             // Dummy implementation
         }
 
         @Override
-        protected int getMemberStorageTypeId()
+        protected long getMemberStorageTypeId()
         {
             return delegate.getMemberStorageTypeId();
         }
 
         @Override
-        protected int getMemberNativeTypeId()
+        protected long getMemberNativeTypeId()
         {
             return delegate.getMemberNativeTypeId();
         }
@@ -215,13 +215,13 @@ class HDF5CompoundByteifyerFactory
         }
 
         @Override
-        public void insertType(int dataTypeId)
+        public void insertType(long dataTypeId)
         {
             delegate.insertType(dataTypeId);
         }
 
         @Override
-        public void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
+        public void insertNativeType(long dataTypeId, HDF5 h5, ICleanUpRegistry registry)
         {
             delegate.insertNativeType(dataTypeId, h5, registry);
         }

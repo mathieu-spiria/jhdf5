@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import org.apache.commons.lang.ArrayUtils;
 
@@ -80,7 +80,7 @@ public class HDF5CompoundType<T> extends HDF5DataType
      *            given compound type id.
      * @param baseReader The base reader that this types was derived from.
      */
-    HDF5CompoundType(int fileId, int storageTypeId, int nativeTypeId, String nameOrNull,
+    HDF5CompoundType(long fileId, long storageTypeId, long nativeTypeId, String nameOrNull,
             Class<T> compoundType, boolean requireEqualsType,
             HDF5ValueObjectByteifyer<T> objectByteifer,
             IHDF5InternalCompoundMemberInformationRetriever informationRetriever,
@@ -133,46 +133,6 @@ public class HDF5CompoundType<T> extends HDF5DataType
     public int getRecordSizeInMemory()
     {
         return objectByteifyer.getRecordSizeInMemory();
-    }
-
-    /**
-     * Returns the number of compound members.
-     */
-    public int getNumberOfMembers()
-    {
-        return objectByteifyer.getByteifyers().length;
-    }
-
-    /**
-     * Returns the name of compound member <var>idx</var>.
-     */
-    public String getMemberName(int idx)
-    {
-        return objectByteifyer.getByteifyers()[idx].getMemberName();
-    }
-
-    /**
-     * Returns the size of compound member <var>idx</var> (in bytes).
-     */
-    public int getMemberSize(int idx)
-    {
-        return objectByteifyer.getByteifyers()[idx].getSize();
-    }
-
-    /**
-     * Returns the disk offset (within the record) of compound member <var>idx</var> (in bytes).
-     */
-    public int getMemberOffSetOnDisk(int idx)
-    {
-        return objectByteifyer.getByteifyers()[idx].getOffsetOnDisk();
-    }
-
-    /**
-     * Returns the memory offset (within the record) of compound member <var>idx</var> (in bytes).
-     */
-    public int getMemberOffsetInMemory(int idx)
-    {
-        return objectByteifyer.getByteifyers()[idx].getOffsetInMemory();
     }
 
     /**

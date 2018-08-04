@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5T.H5Tinsert;
+import static hdf.hdf5lib.H5.H5Tinsert;
 
 import java.lang.reflect.Field;
 
+import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A class that byteifies member fields of objects.
@@ -74,7 +74,7 @@ abstract class HDF5MemberByteifyer
         this.maxCharacters = maxCharacters;
         if (isVariableLengthType)
         {
-            this.size = HDFNativeData.getMachineWordSize();
+            this.size = HDFHelper.getMachineWordSize();
         } else if (isReferenceType)
         {
             this.size = HDF5BaseReader.REFERENCE_SIZE_IN_BYTES;
@@ -93,29 +93,29 @@ abstract class HDF5MemberByteifyer
      */
     abstract int getElementSize();
 
-    abstract byte[] byteify(int compoundDataTypeId, Object obj) throws IllegalAccessException;
+    abstract byte[] byteify(long compoundDataTypeId, Object obj) throws IllegalAccessException;
 
-    abstract void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+    abstract void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
             int arrayOffset) throws IllegalAccessException;
 
-    abstract int getMemberStorageTypeId();
+    abstract long getMemberStorageTypeId();
 
     /**
      * Returns -1 if the native type id should be inferred from the storage type id
      */
-    abstract int getMemberNativeTypeId();
+    abstract long getMemberNativeTypeId();
 
     HDF5EnumerationType tryGetEnumType()
     {
         return null;
     }
 
-    void insertType(int dataTypeId)
+    void insertType(long dataTypeId)
     {
         H5Tinsert(dataTypeId, memberName, offsetOnDisk, getMemberStorageTypeId());
     }
 
-    void insertNativeType(int dataTypeId, HDF5 h5, ICleanUpRegistry registry)
+    void insertNativeType(long dataTypeId, HDF5 h5, ICleanUpRegistry registry)
     {
         if (getMemberNativeTypeId() < 0)
         {

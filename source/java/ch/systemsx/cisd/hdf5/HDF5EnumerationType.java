@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,17 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U16LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U32LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U8LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT16;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT8;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_U16LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_U32LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_U8LE;
 
 import java.util.Iterator;
 import java.util.List;
 
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.HDFNativeData;
 
 /**
  * A class that represents an enumeration for a given HDF5 file and <var>values</var> array.
@@ -55,11 +55,11 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
 
         private final byte storageSize;
 
-        private final int intNativeType;
+        private final long intNativeType;
 
-        private final int intStorageType;
+        private final long intStorageType;
 
-        EnumStorageForm(int storageSize, int intNativeType, int intStorageType)
+        EnumStorageForm(int storageSize, long intNativeType, long intStorageType)
         {
             this.storageSize = (byte) storageSize;
             this.intNativeType = intNativeType;
@@ -74,12 +74,12 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
             return storageSize;
         }
 
-        int getIntNativeTypeId()
+        long getIntNativeTypeId()
         {
             return intNativeType;
         }
 
-        int getIntStorageTypeId()
+        long getIntStorageTypeId()
         {
             return intStorageType;
         }
@@ -90,7 +90,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     /**
      * Returns the storage data type id of the corresponding integer type of this type.
      */
-    int getIntStorageTypeId()
+    long getIntStorageTypeId()
     {
         return getStorageForm().getIntStorageTypeId();
     }
@@ -98,12 +98,12 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
     /**
      * Returns the native data type id of the corresponding integer type of this type.
      */
-    int getIntNativeTypeId()
+    long getIntNativeTypeId()
     {
         return getStorageForm().getIntNativeTypeId();
     }
 
-    HDF5EnumerationType(int fileId, int storageTypeId, int nativeTypeId, String nameOrNull,
+    HDF5EnumerationType(long fileId, long storageTypeId, long nativeTypeId, String nameOrNull,
             String[] values, HDF5BaseReader baseReader)
     {
         super(fileId, storageTypeId, nativeTypeId, baseReader);
@@ -113,7 +113,7 @@ public final class HDF5EnumerationType extends HDF5DataType implements Iterable<
         this.enumType = new EnumerationType(nameOrNull, values);
     }
 
-    HDF5EnumerationType(int fileId, int storageTypeId, int nativeTypeId, EnumerationType enumType,
+    HDF5EnumerationType(long fileId, long storageTypeId, long nativeTypeId, EnumerationType enumType,
             HDF5BaseReader baseReader)
     {
         super(fileId, storageTypeId, nativeTypeId, baseReader);

@@ -226,7 +226,7 @@ test {
     systemProperty "ant.project.name", project.name
 
     maxHeapSize = "6144m"
-    jvmArgs '-XX:MaxPermSize=1024m', '-Duser.timezone=Europe/Zurich'
+    jvmArgs '-Duser.timezone=Europe/Zurich'
     
     testLogging.showStandardStreams = true
     ignoreFailures = true

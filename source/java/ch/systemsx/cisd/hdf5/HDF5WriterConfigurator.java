@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
 
     private boolean useSimpleDataSpaceForAttributes = false;
 
-    private FileFormat fileFormat = FileFormat.ALLOW_1_8;
+    private FileFormatVersionBounds fileFormatVersionBounds = FileFormatVersionBounds.getDefault();
 
     private String houseKeepingNameSuffix = "";
 
@@ -81,9 +81,9 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     }
 
     @Override
-    public HDF5WriterConfigurator fileFormat(FileFormat newFileFormat)
+    public HDF5WriterConfigurator fileFormat(FileFormatVersionBounds newFileFormat)
     {
-        this.fileFormat = newFileFormat;
+        this.fileFormatVersionBounds = newFileFormat;
         return this;
     }
 
@@ -95,7 +95,8 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     }
 
     @Override
-    public IHDF5WriterConfigurator houseKeepingNameSuffix(String houseKeepingNameSuffix)
+    public IHDF5WriterConfigurator houseKeepingNameSuffix(@SuppressWarnings("hiding")
+    String houseKeepingNameSuffix)
     {
         this.houseKeepingNameSuffix = houseKeepingNameSuffix;
         return this;
@@ -127,7 +128,7 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
         {
             readerWriterOrNull =
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
-                            useUTF8CharEncoding, autoDereference, fileFormat,
+                            useUTF8CharEncoding, autoDereference, fileFormatVersionBounds,
                             useExtentableDataTypes, overwriteFile, keepDataSetIfExists,
                             useSimpleDataSpaceForAttributes, houseKeepingNameSuffix, syncMode));
         }

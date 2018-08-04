@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.putMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setArray;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setList;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
 
 import java.lang.reflect.Field;
 import java.util.Date;
@@ -31,7 +31,7 @@ import java.util.Date;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.HDFNativeData;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>Date</code>.
@@ -113,26 +113,26 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return H5T_STD_I64LE;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return HDFNativeData.longToByte(((java.util.Date) field.get(obj)).getTime());
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     field.set(
@@ -156,19 +156,19 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return H5T_STD_I64LE;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     final Object dateObj = getMap(obj, memberName);
@@ -182,7 +182,7 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     putMap(obj,
@@ -206,19 +206,19 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return H5T_STD_I64LE;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     final Object dateObj = getList(obj, index);
@@ -232,7 +232,7 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     setList(obj,
@@ -256,19 +256,19 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return H5T_STD_I64LE;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     final Object dateObj = getArray(obj, index);
@@ -282,7 +282,7 @@ class HDF5CompoundMemberByteifyerDateFactory implements IHDF5CompoundMemberBytif
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     setArray(

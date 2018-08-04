@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundMemberByteifyerEnumFactory.getEn
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
@@ -98,8 +98,8 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
         final int memberTypeLength =
                 (compoundMemberInfoOrNull != null) ? compoundMemberInfoOrNull.getType()
                         .getNumberOfElements() : member.getMemberTypeLength();
-        final int storageTypeId = member.getStorageDataTypeId();
-        final int memberStorageTypeId =
+        final long storageTypeId = member.getStorageDataTypeId();
+        final long memberStorageTypeId =
                 (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(
                         enumTypeOrNull.getStorageTypeId(), memberTypeLength) : storageTypeId;
         switch (accessType)
@@ -132,7 +132,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
             final int offset, int memOffset, final HDF5EnumerationType enumType,
-            final int memberTypeLength, final int memberStorageTypeId, final HDF5DataTypeVariant typeVariant,
+            final int memberTypeLength, final long memberStorageTypeId, final HDF5DataTypeVariant typeVariant,
             final EnumReturnType enumReturnType)
     {
         ReflectionUtils.ensureAccessible(field);
@@ -146,26 +146,26 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberStorageTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return getEnumArray(obj).toStorageForm();
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final Object enumValueArray =
@@ -186,7 +186,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
             int memOffset, final HDF5EnumerationType enumType, final int memberTypeLength,
-            final int memberStorageTypeId, final HDF5DataTypeVariant typeVariant,
+            final long memberStorageTypeId, final HDF5DataTypeVariant typeVariant,
             final HDF5CompoundMappingHints.EnumReturnType enumReturnType)
     {
         return new HDF5MemberByteifyer(null, memberName, enumType.getStorageForm().getStorageSize()
@@ -199,26 +199,26 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberStorageTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return getEnumArray(obj).toStorageForm();
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final Object enumValueArray =
@@ -239,7 +239,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
             final int offset, int memOffset, final HDF5EnumerationType enumType,
-            final int memberTypeLength, final int memberStorageTypeId, final HDF5DataTypeVariant typeVariant,
+            final int memberTypeLength, final long memberStorageTypeId, final HDF5DataTypeVariant typeVariant,
             final HDF5CompoundMappingHints.EnumReturnType enumReturnType)
     {
         return new HDF5MemberByteifyer(null, memberName, enumType.getStorageForm().getStorageSize()
@@ -252,26 +252,26 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberStorageTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return getEnumArray(obj).toStorageForm();
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final Object enumValueArray =
@@ -292,7 +292,7 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
             final int offset, int memOffset, final HDF5EnumerationType enumType,
-            final int memberTypeLength, final int memberStorageTypeId, final HDF5DataTypeVariant typeVariant,
+            final int memberTypeLength, final long memberStorageTypeId, final HDF5DataTypeVariant typeVariant,
             final HDF5CompoundMappingHints.EnumReturnType enumReturnType)
     {
         return new HDF5MemberByteifyer(null, memberName, enumType.getStorageForm().getStorageSize()
@@ -305,26 +305,26 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberStorageTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return getEnumArray(obj).toStorageForm();
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final Object enumValueArray =
@@ -434,11 +434,9 @@ class HDF5CompoundMemberByteifyerEnumArrayFactory implements IHDF5CompoundMember
     /**
      * Returns the value as Enum of type <var>enumClass</var>.
      */
-    @SuppressWarnings(
-        { "unchecked", "rawtypes" })
     private static Enum<?> getValue(Class<? extends Enum<?>> enumClass, String value)
     {
-        return Enum.valueOf((Class<Enum>) enumClass, value);
+        return Enum.valueOf(enumClass.asSubclass(Enum.class), value);
     }
 
 }

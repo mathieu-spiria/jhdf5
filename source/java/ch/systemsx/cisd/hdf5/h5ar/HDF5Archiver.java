@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ import ch.systemsx.cisd.hdf5.HDF5FactoryProvider;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewDirectoryArchiveEntry;
 import ch.systemsx.cisd.hdf5.h5ar.NewArchiveEntry.NewFileArchiveEntry;
@@ -89,7 +89,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return HDF5FactoryProvider.get().openForReading(archiveFile);
     }
 
-    static IHDF5Writer createHDF5Writer(File archiveFile, FileFormat fileFormat, boolean noSync)
+    static IHDF5Writer createHDF5Writer(File archiveFile, FileFormatVersionBounds fileFormat, boolean noSync)
     {
         final IHDF5WriterConfigurator config = HDF5FactoryProvider.get().configure(archiveFile);
         config.fileFormat(fileFormat);
@@ -104,15 +104,15 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
 
     HDF5Archiver(File archiveFile, boolean readOnly)
     {
-        this(archiveFile, readOnly, false, FileFormat.STRICTLY_1_6, null);
+        this(archiveFile, readOnly, false, FileFormatVersionBounds.V1_8_V1_8, null);
     }
 
-    HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormat fileFormat,
+    HDF5Archiver(File archiveFile, boolean readOnly, boolean noSync, FileFormatVersionBounds fileFormatVersionBounds,
             IErrorStrategy errorStrategyOrNull)
     {
         this.buffer = new byte[BUFFER_SIZE];
         this.closeReaderOnCloseFile = true;
-        this.hdf5WriterOrNull = readOnly ? null : createHDF5Writer(archiveFile, fileFormat, noSync);
+        this.hdf5WriterOrNull = readOnly ? null : createHDF5Writer(archiveFile, fileFormatVersionBounds, noSync);
         this.hdf5Reader =
                 (hdf5WriterOrNull != null) ? hdf5WriterOrNull : createHDF5Reader(archiveFile);
         if (errorStrategyOrNull == null)
@@ -493,6 +493,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return verifyErrors;
     }
 
+    @SuppressWarnings("null")
     @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             IArchiveEntryVisitor visitor, IArchiveEntryVisitor missingArchiveEntryVisitorOrNull,
@@ -525,6 +526,7 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
         return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, visitor, null, params);
     }
 
+    @SuppressWarnings("null")
     @Override
     public IHDF5Archiver verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS,
             String rootDirectoryInArchive, IArchiveEntryVisitor visitor,

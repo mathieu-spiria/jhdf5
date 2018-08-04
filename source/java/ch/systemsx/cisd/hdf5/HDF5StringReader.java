@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.getOneDimensionalArraySize;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STRING;
+import static hdf.hdf5lib.HDF5Constants.H5T_STRING;
 
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
@@ -73,7 +73,7 @@ public class HDF5StringReader implements IHDF5StringReader
                 @Override
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     return baseReader.getStringAttribute(objectId, objectPath, attributeName,
                             readRaw, registry);
@@ -106,7 +106,7 @@ public class HDF5StringReader implements IHDF5StringReader
                 @Override
                 public String[] call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     return baseReader.getStringArrayAttribute(objectId, objectPath, attributeName,
                             readRaw, registry);
@@ -140,7 +140,7 @@ public class HDF5StringReader implements IHDF5StringReader
                         @Override
                         public MDArray<String> call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
                             return baseReader.getStringMDArrayAttribute(objectId, objectPath,
@@ -176,9 +176,9 @@ public class HDF5StringReader implements IHDF5StringReader
                 @Override
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final int dataTypeId =
+                    final long dataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final boolean isString = (baseReader.h5.getClassType(dataTypeId) == H5T_STRING);
                     if (isString == false)
@@ -228,12 +228,12 @@ public class HDF5StringReader implements IHDF5StringReader
                 @Override
                 public String[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId, registry);
                     final int oneDimSize = getOneDimensionalArraySize(dimensions);
                     final String[] data = new String[oneDimSize];
-                    final int dataTypeId =
+                    final long dataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     if (baseReader.h5.isVariableLengthString(dataTypeId))
                     {
@@ -302,12 +302,12 @@ public class HDF5StringReader implements IHDF5StringReader
                 @Override
                 public String[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
                     final String[] data = new String[spaceParams.blockSize];
-                    final int dataTypeId =
+                    final long dataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     if (baseReader.h5.isVariableLengthString(dataTypeId))
                     {
@@ -391,13 +391,13 @@ public class HDF5StringReader implements IHDF5StringReader
                         @Override
                         public MDArray<String> call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, registry);
                             final String[] data = new String[spaceParams.blockSize];
-                            final int dataTypeId =
+                            final long dataTypeId =
                                     baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                             if (baseReader.h5.isVariableLengthString(dataTypeId))
                             {
@@ -458,14 +458,14 @@ public class HDF5StringReader implements IHDF5StringReader
                         @Override
                         public MDArray<String> call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, offset,
                                             blockDimensions, registry);
                             final String[] dataBlock = new String[spaceParams.blockSize];
-                            final int dataTypeId =
+                            final long dataTypeId =
                                     baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                             if (baseReader.h5.isVariableLengthString(dataTypeId))
                             {

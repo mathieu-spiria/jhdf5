@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
 
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
@@ -59,10 +59,10 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                         @Override
                         public HDF5TimeDuration call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            final int attributeId =
+                            final long attributeId =
                                     baseReader.h5.openAttribute(objectId, attributeName, registry);
                             final HDF5TimeUnit unit =
                                     baseReader.checkIsTimeDuration(objectPath, attributeName,
@@ -106,7 +106,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                         @Override
                         public HDF5TimeDurationArray call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
                             final HDF5TimeUnit storedUnit =
@@ -133,7 +133,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                         @Override
                         public HDF5TimeDurationMDArray call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
                             final HDF5TimeUnit storedUnit =
@@ -173,7 +173,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                         @Override
                         public HDF5TimeDuration call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final HDF5TimeUnit storedUnit =
@@ -210,7 +210,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                         @Override
                         public HDF5TimeDurationArray call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final HDF5TimeUnit storedUnit =
@@ -265,7 +265,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                         @Override
                         public HDF5TimeDurationArray call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final HDF5TimeUnit storedUnit =
@@ -358,7 +358,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                         @Override
                         public HDF5TimeDurationMDArray call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final HDF5TimeUnit storedUnit =
@@ -397,7 +397,7 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                         @Override
                         public HDF5TimeDurationMDArray call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final HDF5TimeUnit storedUnit =
@@ -427,14 +427,14 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                 @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final HDF5TimeUnit storedUnit =
                             baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getBlockSpaceParameters(dataSetId, memoryOffset,
                                     array.dimensions(), registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId,
@@ -464,14 +464,14 @@ class HDF5TimeDurationReader implements IHDF5TimeDurationReader
                 @Override
                 public int[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final HDF5TimeUnit storedUnit =
                             baseReader.checkIsTimeDuration(objectPath, dataSetId, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getBlockSpaceParameters(dataSetId, memoryOffset,
                                     array.dimensions(), offset, blockDimensions, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.getNativeDataTypeId(dataSetId, H5T_NATIVE_INT64, registry);
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId,
                             spaceParams.memorySpaceId, spaceParams.dataSpaceId,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.List;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import ch.rinn.restrictions.Private;
+//import ch.rinn.restrictions.Private;
 
 /**
  * Some utility methods used by {@link HDF5Reader} and {@link HDF5Writer}.
@@ -43,7 +43,7 @@ final class HDF5Utils
     static final String TYPE_VARIANT_ATTRIBUTE_NAME = "TYPE_VARIANT";
 
     /** The minimal size of a chunk. */
-    @Private
+    //@Private
     static final int MIN_CHUNK_SIZE = 1;
 
     /** The minimal size of a data set in order to allow for chunking. */

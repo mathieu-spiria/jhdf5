@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import java.io.Flushable;
 import java.util.BitSet;
 import java.util.Date;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
-import ncsa.hdf.hdf5lib.exceptions.HDF5SymbolTableException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDByteArray;
@@ -30,7 +30,7 @@ import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.base.mdarray.MDShortArray;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 
 /**
  * The legacy interface for writing HDF5 files. Do not use in any new code as it will be removed in
@@ -60,12 +60,12 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
     public boolean isUseExtendableDataTypes();
 
     /**
-     * Returns the {@link FileFormat} compatibility setting for this writer.
+     * Returns the {@link FileFormatVersionBounds} compatibility setting for this writer.
      * 
      * @deprecated Use the corresponding method in {@link IHDF5Writer#file()} instead.
      */
     @Deprecated
-    public FileFormat getFileFormat();
+    public FileFormatVersionBounds getFileFormat();
 
     // /////////////////////
     // Flushing and Syncing
@@ -550,7 +550,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
      * back by {@link IHDF5LongReader#readArray(String)} but will throw a
-     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
+     * {@link hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
@@ -564,7 +564,7 @@ public interface IHDF5LegacyWriter extends IHDF5EnumBasicWriter, IHDF5CompoundBa
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
      * back by {@link IHDF5LongReader#readArray(String)} but will throw a
-     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
+     * {@link hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.

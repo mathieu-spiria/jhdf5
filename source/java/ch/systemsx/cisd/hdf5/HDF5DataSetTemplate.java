@@ -16,8 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5P.H5Pclose;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.H5Sclose;
+import static hdf.hdf5lib.H5.H5Pclose;
+import static hdf.hdf5lib.H5.H5Sclose;
 
 /**
  * An object to represent a template of an HDF5 data set.
@@ -33,16 +33,16 @@ public class HDF5DataSetTemplate implements AutoCloseable
 
     private final long[] dimensions;
 
-    private final int dataSetCreationPropertyListId;
+    private final long dataSetCreationPropertyListId;
 
     private final boolean closeCreationPropertyListId;
 
-    private final int storageDataTypeId;
+    private final long storageDataTypeId;
 
-    private int dataspaceId;
+    private long dataspaceId;
 
-    HDF5DataSetTemplate(int dataspaceId, int dataSetCreationPropertyListId,
-            boolean closeCreationPropertyListId, int storageDataTypeId, long[] dimensions,
+    HDF5DataSetTemplate(long dataspaceId, long dataSetCreationPropertyListId,
+            boolean closeCreationPropertyListId, long storageDataTypeId, long[] dimensions,
             HDF5StorageLayout layout)
     {
         this.dataspaceId = dataspaceId;
@@ -53,17 +53,17 @@ public class HDF5DataSetTemplate implements AutoCloseable
         this.layout = layout;
     }
 
-    int getDataspaceId()
+    long getDataspaceId()
     {
         return dataspaceId;
     }
 
-    int getDataSetCreationPropertyListId()
+    long getDataSetCreationPropertyListId()
     {
         return dataSetCreationPropertyListId;
     }
 
-    int getStorageDataTypeId()
+    long getStorageDataTypeId()
     {
         return storageDataTypeId;
     }
@@ -97,7 +97,7 @@ public class HDF5DataSetTemplate implements AutoCloseable
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + dataspaceId;
+        result = prime * result + (int) dataspaceId;
         return result;
     }
 

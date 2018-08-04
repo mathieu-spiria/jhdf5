@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 
 package ch.systemsx.cisd.hdf5;
+
+import hdf.hdf5lib.structs.H5O_info_t;
 
 /**
  * Information about an object in an HDF5 file.
@@ -34,14 +36,14 @@ public final class HDF5ObjectInformation extends HDF5CommonInformation
 
     private final long numberOfAttributes;
 
-    HDF5ObjectInformation(String path, HDF5ObjectType objectType, long[] info)
+    HDF5ObjectInformation(String path, HDF5ObjectType objectType, H5O_info_t info)
     {
         super(path, objectType);
-        this.fileNumber = info[0];
-        this.address = info[1];
-        this.referenceCount = (int) info[2];
-        this.creationTime = info[3];
-        this.numberOfAttributes = info[4];
+        this.fileNumber = info.fileno;
+        this.address = info.addr;
+        this.referenceCount = info.rc;
+        this.creationTime = info.ctime;
+        this.numberOfAttributes = info.num_attrs;
     }
 
     /**

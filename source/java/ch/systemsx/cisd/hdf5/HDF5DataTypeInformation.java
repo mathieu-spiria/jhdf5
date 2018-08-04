@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 import org.apache.commons.lang.ObjectUtils;
 
+import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A class that holds relevant information about a data type.
@@ -274,7 +274,7 @@ public final class HDF5DataTypeInformation
         // Variable-length strings store a pointer.
         if (variableLengthString)
         {
-            return HDFNativeData.getMachineWordSize();
+            return HDFHelper.getMachineWordSize();
         }
         // Fixed-length strings are accessing single bytes.
         if (dataClass == HDF5DataClass.STRING)

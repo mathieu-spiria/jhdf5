@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
-import ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5LibraryException;
 
 import org.apache.commons.io.FilenameUtils;
 
@@ -35,7 +35,7 @@ import ch.systemsx.cisd.args4j.ExampleMode;
 import ch.systemsx.cisd.args4j.Option;
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo;
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 
 /**
  * The main class of the HDF5 based archiver.
@@ -164,7 +164,7 @@ public class HDF5ArchiverMain
     @Option(name = "m", longName = "check-missing-files", usage = "Check for files present on the filesystem but missing from the archive for VERIFY")
     private boolean checkMissingFile = false;
 
-    @Option(longName = "file-format", skipForExample = true, usage = "Specifies the file format version when creating an archive (N=1 -> HDF51.6 (default), N=2 -> HDF51.8)")
+    @Option(longName = "file-format", skipForExample = true, usage = "Specifies the file format version when creating an archive (N=1 -> HDF51.8 (default), N=2 -> HDF51.10)")
     private int fileFormat = 1;
 
     @Option(longName = "stop-on-error", skipForExample = true, usage = "Stop on first error and give detailed error report")
@@ -278,8 +278,8 @@ public class HDF5ArchiverMain
 
     private boolean createArchiver()
     {
-        final FileFormat fileFormatEnum =
-                (fileFormat == 1) ? FileFormat.STRICTLY_1_6 : FileFormat.STRICTLY_1_8;
+        final FileFormatVersionBounds fileFormatEnum =
+                (fileFormat == 1) ? FileFormatVersionBounds.V1_8_V1_8 : FileFormatVersionBounds.V1_10_V1_10;
         try
         {
             archiver =

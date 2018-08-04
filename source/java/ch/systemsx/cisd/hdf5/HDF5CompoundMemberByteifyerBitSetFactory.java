@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,15 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.putMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setArray;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setList;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_B64LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_B64LE;
 
 import java.lang.reflect.Field;
 import java.util.BitSet;
 
+import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>BitSet</code>
@@ -86,8 +86,8 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
                     "Length of a bit field must be a positive number (len="
                             + memberTypeLengthInLongs + ").");
         }
-        final int storageTypeId = member.getStorageDataTypeId();
-        final int memberTypeId =
+        final long storageTypeId = member.getStorageDataTypeId();
+        final long memberTypeId =
                 (storageTypeId < 0) ? fileInfoProvider.getArrayTypeId(H5T_STD_B64LE,
                         memberTypeLengthInLongs) : storageTypeId;
         switch (accessType)
@@ -111,7 +111,7 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
             final int offset, int memOffset, final int memberTypeLengthInLongs,
-            final int memberTypeId, final HDF5DataTypeVariant typeVariant)
+            final long memberTypeId, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
         return new HDF5MemberByteifyer(field, memberName, memberTypeLengthInLongs * LONG_SIZE,
@@ -124,31 +124,31 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     final BitSet bs = (BitSet) field.get(obj);
-                    return HDFNativeData.longToByte(BitSetConversionUtils.toStorageForm(bs));
+                    return HDFHelper.longToByte(BitSetConversionUtils.toStorageForm(bs));
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final BitSet bs =
-                            BitSetConversionUtils.fromStorageForm(HDFNativeData.byteToLong(byteArr,
+                            BitSetConversionUtils.fromStorageForm(HDFHelper.byteToLong(byteArr,
                                     arrayOffset + offsetInMemory, memberTypeLengthInLongs));
                     field.set(obj, bs);
                 }
@@ -156,7 +156,7 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            int memOffset, final int memberTypeLengthInLongs, final int memberTypeId,
+            int memOffset, final int memberTypeLengthInLongs, final long memberTypeId,
             final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, memberTypeLengthInLongs * LONG_SIZE,
@@ -169,31 +169,31 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     final BitSet bs = (BitSet) getMap(obj, memberName);
-                    return HDFNativeData.longToByte(BitSetConversionUtils.toStorageForm(bs));
+                    return HDFHelper.longToByte(BitSetConversionUtils.toStorageForm(bs));
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final BitSet bitSet =
-                            BitSetConversionUtils.fromStorageForm(HDFNativeData.byteToLong(byteArr,
+                            BitSetConversionUtils.fromStorageForm(HDFHelper.byteToLong(byteArr,
                                     arrayOffset + offsetInMemory, memberTypeLengthInLongs));
                     putMap(obj, memberName, bitSet);
                 }
@@ -202,7 +202,7 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
             final int offset, int memOffset, final int memberTypeLengthInLongs,
-            final int memberTypeId, final HDF5DataTypeVariant typeVariant)
+            final long memberTypeId, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, memberTypeLengthInLongs * LONG_SIZE,
                 offset, memOffset, false, typeVariant)
@@ -214,31 +214,31 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     final BitSet bs = (BitSet) getList(obj, index);
-                    return HDFNativeData.longToByte(BitSetConversionUtils.toStorageForm(bs));
+                    return HDFHelper.longToByte(BitSetConversionUtils.toStorageForm(bs));
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final BitSet bitSet =
-                            BitSetConversionUtils.fromStorageForm(HDFNativeData.byteToLong(byteArr,
+                            BitSetConversionUtils.fromStorageForm(HDFHelper.byteToLong(byteArr,
                                     arrayOffset + offsetInMemory, memberTypeLengthInLongs));
                     setList(obj, index, bitSet);
                 }
@@ -247,7 +247,7 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
             final int offset, int memOffset, final int memberTypeLengthInLongs,
-            final int memberTypeId, final HDF5DataTypeVariant typeVariant)
+            final long memberTypeId, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, memberTypeLengthInLongs * LONG_SIZE,
                 offset, memOffset, false, typeVariant)
@@ -259,31 +259,31 @@ class HDF5CompoundMemberByteifyerBitSetFactory implements IHDF5CompoundMemberByt
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     final BitSet bs = (BitSet) getArray(obj, index);
-                    return HDFNativeData.longToByte(BitSetConversionUtils.toStorageForm(bs));
+                    return HDFHelper.longToByte(BitSetConversionUtils.toStorageForm(bs));
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final BitSet bitSet =
-                            BitSetConversionUtils.fromStorageForm(HDFNativeData.byteToLong(byteArr,
+                            BitSetConversionUtils.fromStorageForm(HDFHelper.byteToLong(byteArr,
                                     arrayOffset + offsetInMemory, memberTypeLengthInLongs));
                     setArray(obj, index, bitSet);
                 }

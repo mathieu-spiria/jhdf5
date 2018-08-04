@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
-
-import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormat;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * An object representing the storage features that are to be used for a data set.
@@ -163,13 +161,15 @@ abstract class HDF5AbstractStorageFeatures
             return this;
         }
 
-        public HDF5AbstractStorageFeatureBuilder deflateLevel(byte deflateLevel)
+        public HDF5AbstractStorageFeatureBuilder deflateLevel(@SuppressWarnings("hiding")
+        byte deflateLevel)
         {
             this.deflateLevel = deflateLevel;
             return this;
         }
 
-        public HDF5AbstractStorageFeatureBuilder scalingFactor(byte scalingFactor)
+        public HDF5AbstractStorageFeatureBuilder scalingFactor(@SuppressWarnings("hiding")
+        byte scalingFactor)
         {
             this.scalingFactor = scalingFactor;
             return this;
@@ -181,7 +181,8 @@ abstract class HDF5AbstractStorageFeatures
             return this;
         }
 
-        public HDF5AbstractStorageFeatureBuilder shuffleBeforeDeflate(boolean shuffleBeforeDeflate)
+        public HDF5AbstractStorageFeatureBuilder shuffleBeforeDeflate(@SuppressWarnings("hiding")
+        boolean shuffleBeforeDeflate)
         {
             this.shuffleBeforeDeflate = shuffleBeforeDeflate;
             return this;
@@ -199,7 +200,8 @@ abstract class HDF5AbstractStorageFeatures
             return this;
         }
 
-        public HDF5AbstractStorageFeatureBuilder storageLayout(HDF5StorageLayout storageLayout)
+        public HDF5AbstractStorageFeatureBuilder storageLayout(@SuppressWarnings("hiding")
+        HDF5StorageLayout storageLayout)
         {
             this.storageLayout = storageLayout;
             return this;
@@ -230,6 +232,7 @@ abstract class HDF5AbstractStorageFeatures
         }
 
         public HDF5AbstractStorageFeatureBuilder datasetReplacementPolicy(
+                @SuppressWarnings("hiding")
                 DataSetReplacementPolicy datasetReplacementPolicy)
         {
             this.datasetReplacementPolicy = datasetReplacementPolicy;
@@ -326,15 +329,6 @@ abstract class HDF5AbstractStorageFeatures
     public boolean isScaling()
     {
         return scalingFactor >= 0;
-    }
-
-    void checkScalingOK(FileFormat fileFormat) throws IllegalStateException
-    {
-        if (fileFormat.isHDF5_1_8_OK() == false)
-        {
-            throw new IllegalStateException(
-                    "Scaling compression is not allowed in strict HDF5 1.6.x compatibility mode.");
-        }
     }
 
     /**

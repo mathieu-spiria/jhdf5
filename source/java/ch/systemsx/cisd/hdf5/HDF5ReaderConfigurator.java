@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
         {
             readerWriterOrNull =
                     new HDF5Reader(new HDF5BaseReader(hdf5File, performNumericConversions,
-                            autoDereference, IHDF5WriterConfigurator.FileFormat.ALLOW_1_8, false,
+                            autoDereference, IHDF5WriterConfigurator.FileFormatVersionBounds.getDefault(), false,
                             ""));
         }
         return readerWriterOrNull;

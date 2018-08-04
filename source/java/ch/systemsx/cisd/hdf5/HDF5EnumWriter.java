@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import static hdf.hdf5lib.H5.H5Dwrite;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -305,9 +305,9 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
             final boolean check) throws HDF5JavaException
     {
         baseWriter.checkOpen();
-        final int storageDataTypeId =
+        final long storageDataTypeId =
                 getOrCreateEnumDataType(nameOrNull, values, baseWriter.keepDataSetIfExists, check);
-        final int nativeDataTypeId =
+        final long nativeDataTypeId =
                 baseWriter.h5.getNativeDataType(storageDataTypeId, baseWriter.fileRegistry);
         return new HDF5EnumerationType(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
                 (nameOrNull == null) ? "__anonymous__" : nameOrNull, values, baseWriter);
@@ -318,10 +318,10 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
             throws HDF5JavaException
     {
         baseWriter.checkOpen();
-        final int storageDataTypeId =
+        final long storageDataTypeId =
                 getOrCreateEnumDataType(genericType.tryGetName(), genericType.getValueArray(),
                         baseWriter.keepDataSetIfExists, check);
-        final int nativeDataTypeId =
+        final long nativeDataTypeId =
                 baseWriter.h5.getNativeDataType(storageDataTypeId, baseWriter.fileRegistry);
         return new HDF5EnumerationType(baseWriter.fileId, storageDataTypeId, nativeDataTypeId,
                 (genericType.tryGetName() == null) ? new EnumerationType("__anonymous__",
@@ -356,17 +356,17 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
         return getType(enumClass.getSimpleName(), ReflectionUtils.getEnumOptions(enumClass), check);
     }
 
-    private int getOrCreateEnumDataType(final String dataTypeNameOrNull, final String[] values,
+    private long getOrCreateEnumDataType(final String dataTypeNameOrNull, final String[] values,
             boolean committedDataTypeHasPreference, boolean checkIfExists)
     {
         final String dataTypePathOrNull =
                 (dataTypeNameOrNull == null) ? null : HDF5Utils.createDataTypePath(
                         HDF5Utils.ENUM_PREFIX, baseWriter.houseKeepingNameSuffix,
                         dataTypeNameOrNull);
-        final int committedStorageDataTypeId =
+        final long committedStorageDataTypeId =
                 (dataTypePathOrNull == null) ? -1 : baseWriter.getDataTypeId(dataTypePathOrNull);
         final boolean typeExists = (committedStorageDataTypeId >= 0);
-        int storageDataTypeId = committedStorageDataTypeId;
+        long storageDataTypeId = committedStorageDataTypeId;
         final boolean commitType;
         if ((typeExists == false) || (committedDataTypeHasPreference == false))
         {
@@ -416,8 +416,8 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
 
         baseWriter.checkOpen();
         value.getType().check(baseWriter.fileId);
-        final int storageDataTypeId = value.getType().getStorageTypeId();
-        final int nativeDataTypeId = value.getType().getNativeTypeId();
+        final long storageDataTypeId = value.getType().getStorageTypeId();
+        final long nativeDataTypeId = value.getType().getNativeTypeId();
         final ICallableWithCleanUp<Object> addAttributeRunnable =
                 new ICallableWithCleanUp<Object>()
                     {
@@ -426,7 +426,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         {
                             if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
-                                final int dataSpaceId =
+                                final long dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]
                                             { 1 }, registry);
                                 baseWriter.setAttribute(objectPath, name,
@@ -475,8 +475,8 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
 
         baseWriter.checkOpen();
         value.getType().check(baseWriter.fileId);
-        final int storageDataTypeId = value.getType().getStorageTypeId();
-        final int nativeDataTypeId = value.getType().getNativeTypeId();
+        final long storageDataTypeId = value.getType().getStorageTypeId();
+        final long nativeDataTypeId = value.getType().getNativeTypeId();
         baseWriter.writeScalar(objectPath, storageDataTypeId, nativeDataTypeId,
                 value.toStorageForm());
     }
@@ -510,13 +510,12 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 {
                     if (features.isScaling())
                     {
-                        features.checkScalingOK(baseWriter.fileFormat);
                         final HDF5IntStorageFeatures actualFeatures =
                                 HDF5IntStorageFeatures.createDeflateAndIntegerScaling(
                                         features.getDeflateLevel(), data.getType().getEnumType()
                                                 .getNumberOfBits(),
                                         baseWriter.keepDataIfExists(features));
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.getOrCreateDataSetId(objectPath, data.getType()
                                         .getIntStorageTypeId(), new long[]
                                     { data.getLength() }, data.getStorageForm().getStorageSize(),
@@ -530,7 +529,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                                 registry);
                     } else
                     {
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.getOrCreateDataSetId(objectPath, data.getType()
                                         .getStorageTypeId(), new long[]
                                     { data.getLength() }, data.getStorageForm().getStorageSize(),
@@ -573,12 +572,11 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 {
                     if (features.isScaling())
                     {
-                        features.checkScalingOK(baseWriter.fileFormat);
                         final HDF5IntStorageFeatures actualCompression =
                                 HDF5IntStorageFeatures.createDeflateAndIntegerScaling(features
                                         .getDeflateLevel(), enumType.getEnumType()
                                         .getNumberOfBits());
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.createDataSet(objectPath,
                                         enumType.getIntStorageTypeId(), actualCompression,
                                         new long[]
@@ -634,12 +632,11 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 {
                     if (features.isScaling())
                     {
-                        features.checkScalingOK(baseWriter.fileFormat);
                         final HDF5IntStorageFeatures actualCompression =
                                 HDF5IntStorageFeatures.createDeflateAndIntegerScaling(features
                                         .getDeflateLevel(), enumType.getEnumType()
                                         .getNumberOfBits());
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.createDataSet(objectPath,
                                         enumType.getIntStorageTypeId(), actualCompression,
                                         dimensions, blockDimensionsOrNull, enumType
@@ -689,14 +686,14 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                         { dataSize };
                     final long[] slabStartOrNull = new long[]
                         { offset };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     if (baseWriter.isScaledEnum(dataSetId, registry))
                     {
@@ -736,13 +733,12 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 {
                     if (features.isScaling())
                     {
-                        features.checkScalingOK(baseWriter.fileFormat);
                         final HDF5IntStorageFeatures actualFeatures =
                                 HDF5IntStorageFeatures.createDeflateAndIntegerScaling(
                                         features.getDeflateLevel(), data.getType().getEnumType()
                                                 .getNumberOfBits(),
                                         baseWriter.keepDataIfExists(features));
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.getOrCreateDataSetId(objectPath, data.getType()
                                         .getIntStorageTypeId(), data.longDimensions(), data
                                         .getStorageForm().getStorageSize(), actualFeatures,
@@ -756,7 +752,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                                 registry);
                     } else
                     {
-                        final int dataSetId =
+                        final long dataSetId =
                                 baseWriter.getOrCreateDataSetId(objectPath, data.getType()
                                         .getStorageTypeId(), data.longDimensions(), data
                                         .getStorageForm().getStorageSize(), features, registry);
@@ -785,13 +781,13 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 @Override
                 public Void call(final ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     H5Dwrite(dataSetId, enumType.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data);

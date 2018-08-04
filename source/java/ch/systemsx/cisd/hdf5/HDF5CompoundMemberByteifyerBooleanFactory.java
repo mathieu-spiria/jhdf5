@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import java.lang.reflect.Field;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.HDFNativeData;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for
@@ -69,8 +69,8 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
     {
         final String memberName = member.getMemberName();
         // May be -1 if not known
-        final int memberTypeId = member.getStorageDataTypeId();
-        final int booleanDataTypeId =
+        final long memberTypeId = member.getStorageDataTypeId();
+        final long booleanDataTypeId =
                 (memberTypeId < 0) ? fileInfoProvider.getBooleanDataTypeId() : memberTypeId;
         switch (accessType)
         {
@@ -92,7 +92,7 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
     }
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
-            final int offset, int memOffset, final int booleanDataTypeId,
+            final int offset, int memOffset, final long booleanDataTypeId,
             final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
@@ -106,26 +106,26 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return booleanDataTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return HDFNativeData.byteToByte((byte) (field.getBoolean(obj) ? 1 : 0));
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final boolean value = (byteArr[arrayOffset + offsetInMemory] == 0) ? false : true;
@@ -135,7 +135,7 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            int memOffset, final int booleanDataTypeId, final HDF5DataTypeVariant typeVariant)
+            int memOffset, final long booleanDataTypeId, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, 1, offset, memOffset, false,
                 typeVariant)
@@ -147,19 +147,19 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return booleanDataTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return HDFNativeData.byteToByte((byte) (((Boolean) getMap(obj, memberName)) ? 1
@@ -167,7 +167,7 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final boolean value = (byteArr[arrayOffset + offsetInMemory] == 0) ? false : true;
@@ -177,7 +177,7 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
     }
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
-            final int offset, int memOffset, final int booleanDataTypeId,
+            final int offset, int memOffset, final long booleanDataTypeId,
             final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, 1, offset, memOffset, false,
@@ -190,19 +190,19 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return booleanDataTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return HDFNativeData
@@ -210,7 +210,7 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final boolean value = (byteArr[arrayOffset + offsetInMemory] == 0) ? false : true;
@@ -220,7 +220,7 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
     }
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
-            final int offset, int memOffset, final int booleanDataTypeId,
+            final int offset, int memOffset, final long booleanDataTypeId,
             final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, 1, offset, memOffset, false,
@@ -233,19 +233,19 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return booleanDataTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     return HDFNativeData.byteToByte((byte) (((Boolean) getArray(obj, index)) ? 1
@@ -253,7 +253,7 @@ class HDF5CompoundMemberByteifyerBooleanFactory implements IHDF5CompoundMemberBy
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     final boolean value = (byteArr[arrayOffset + offsetInMemory] == 0) ? false : true;

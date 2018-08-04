@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package ch.systemsx.cisd.hdf5;
 import java.util.BitSet;
 import java.util.Date;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * A HDF5 writer which contains only the basic methods. If you feel overwhelmed with all the methods
@@ -62,7 +62,7 @@ public interface IHDF5SimpleWriter extends IHDF5SimpleReader
      * Note that the storage form of the bit array is a <code>long[]</code>. However, it is marked
      * in HDF5 to be interpreted bit-wise. Thus a data set written by this method cannot be read
      * back by {@link #readLongArray(String)} but will throw a
-     * {@link ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
+     * {@link hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.

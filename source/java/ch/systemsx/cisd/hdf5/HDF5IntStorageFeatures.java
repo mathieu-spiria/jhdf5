@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_INTEGER;
+import static hdf.hdf5lib.HDF5Constants.H5T_INTEGER;
 
 /**
  * An object representing the storage features that are to be used for an integer data set.
@@ -551,7 +551,8 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
          * Sets that the integer values should be stored as signed integers if
          * <code>signed==true</code> and as unsigned integers if <code>signed==false</code>.
          */
-        public HDF5IntStorageFeatureBuilder signed(boolean signed)
+        public HDF5IntStorageFeatureBuilder signed(@SuppressWarnings("hiding")
+        boolean signed)
         {
             this.signed = signed;
             return this;
@@ -1064,20 +1065,6 @@ public final class HDF5IntStorageFeatures extends HDF5AbstractStorageFeatures
      * Keep existing data set and apply only if a new data set has to be created.
      */
     public static HDF5IntStorageFeatures createIntegerScalingUnsignedKeep(int scalingFactor)
-    {
-        return createIntegerScaling(scalingFactor, true, false);
-    }
-
-    /**
-     * Creates a {@link HDF5IntStorageFeatures} object that represents integer scaling with the
-     * given <var>scalingFactor</var>.
-     * <p>
-     * Keep existing data set and apply only if a new data set has to be created.
-     * 
-     * @deprecated Use {@link #createIntegerScalingUnsigned(int)} instead.
-     */
-    @Deprecated
-    public static HDF5IntStorageFeatures createIntegerScalingUnsigedKeep(int scalingFactor)
     {
         return createIntegerScaling(scalingFactor, true, false);
     }

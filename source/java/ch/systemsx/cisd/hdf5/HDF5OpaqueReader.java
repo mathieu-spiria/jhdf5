@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STRING;
+import static hdf.hdf5lib.HDF5Constants.H5T_STRING;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
@@ -53,9 +53,9 @@ public class HDF5OpaqueReader implements IHDF5OpaqueReader
                 @Override
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final int dataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
+                    final long dataTypeId = baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     return baseReader.h5.tryGetOpaqueTag(dataTypeId);
                 }
             };
@@ -72,10 +72,10 @@ public class HDF5OpaqueReader implements IHDF5OpaqueReader
                         @Override
                         public HDF5OpaqueType call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
-                            final int dataTypeId =
+                            final long dataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId,
                                             baseReader.fileRegistry);
                             final String opaqueTagOrNull =
@@ -102,11 +102,11 @@ public class HDF5OpaqueReader implements IHDF5OpaqueReader
                 @Override
                 public byte[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final boolean isString =
                             (baseReader.h5.getClassType(nativeDataTypeId) == H5T_STRING);
@@ -152,7 +152,7 @@ public class HDF5OpaqueReader implements IHDF5OpaqueReader
                 @Override
                 public byte[] call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     return baseReader.getAttributeAsByteArray(objectId, attributeName, registry);
                 }
@@ -170,12 +170,12 @@ public class HDF5OpaqueReader implements IHDF5OpaqueReader
                 @Override
                 public byte[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, blockNumber * blockSize,
                                     blockSize, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     checkNotAString(objectPath, nativeDataTypeId);
                     final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
@@ -198,11 +198,11 @@ public class HDF5OpaqueReader implements IHDF5OpaqueReader
                 @Override
                 public byte[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     checkNotAString(objectPath, nativeDataTypeId);
                     final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
@@ -230,12 +230,12 @@ public class HDF5OpaqueReader implements IHDF5OpaqueReader
                 @Override
                 public Integer call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, memoryOffset, offset,
                                     blockSize, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     checkNotAString(objectPath, nativeDataTypeId);
                     final int elementSize = baseReader.h5.getDataTypeSize(nativeDataTypeId);
@@ -296,7 +296,7 @@ public class HDF5OpaqueReader implements IHDF5OpaqueReader
             };
     }
 
-    private void checkNotAString(final String objectPath, final int nativeDataTypeId)
+    private void checkNotAString(final String objectPath, final long nativeDataTypeId)
     {
         final boolean isString =
                 (baseReader.h5.getClassType(nativeDataTypeId) == H5T_STRING);

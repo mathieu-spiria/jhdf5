@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,17 +23,18 @@ import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.getMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.putMap;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setArray;
 import static ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.setList;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_IEEE_F32LE;
 
 import java.lang.reflect.Field;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.HDFNativeData;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>float</code>,
@@ -133,8 +134,8 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                         .getNumberOfElements() : rank.isScalar() ? 1 : member.getMemberTypeLength();
         final int[] dimensions = rank.isScalar() ? new int[]
             { 1 } : member.getMemberTypeDimensions();
-        final int storageTypeId = member.getStorageDataTypeId();
-        final int memberTypeId =
+        final long storageTypeId = member.getStorageDataTypeId();
+        final long memberTypeId =
                 rank.isScalar() ? H5T_IEEE_F32LE : ((storageTypeId < 0) ? fileInfoProvider
                         .getArrayTypeId(H5T_IEEE_F32LE, dimensions) : storageTypeId);
         switch (accessType)
@@ -158,7 +159,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
 
     private HDF5MemberByteifyer createByteifyerForField(final Field field, final String memberName,
             final int offset, int memOffset, final int[] dimensions, final int len,
-            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final long memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         ReflectionUtils.ensureAccessible(field);
         return new HDF5MemberByteifyer(field, memberName, FLOAT_SIZE * len, offset, memOffset,
@@ -171,19 +172,19 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     switch (rank)
@@ -191,18 +192,18 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                         case SCALAR:
                             return HDFNativeData.floatToByte(field.getFloat(obj));
                         case ARRAY1D:
-                            return HDFNativeData.floatToByte((float[]) field.get(obj));
+                            return HDFHelper.floatToByte((float[]) field.get(obj));
                         case ARRAY2D:
                         {
                             final float[][] array = (float[][]) field.get(obj);
                             MatrixUtils.checkMatrixDimensions(memberName, dimensions, array);
-                            return HDFNativeData.floatToByte(MatrixUtils.flatten(array));
+                            return HDFHelper.floatToByte(MatrixUtils.flatten(array));
                         }
                         case ARRAYMD:
                         {
                             final MDFloatArray array = (MDFloatArray) field.get(obj);
                             MatrixUtils.checkMDArrayDimensions(memberName, dimensions, array);
-                            return HDFNativeData.floatToByte(array.getAsFlatArray());
+                            return HDFHelper.floatToByte(array.getAsFlatArray());
                         }
                         default:
                             throw new Error("Unknown rank.");
@@ -210,7 +211,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     switch (rank)
@@ -220,13 +221,13 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                                     HDFNativeData.byteToFloat(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            field.set(obj, HDFNativeData.byteToFloat(byteArr, arrayOffset
+                            field.set(obj, HDFHelper.byteToFloat(byteArr, arrayOffset
                                     + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final float[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             field.set(obj, MatrixUtils.shapen(array, dimensions));
                             break;
@@ -234,7 +235,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                         case ARRAYMD:
                         {
                             final float[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             field.set(obj, new MDFloatArray(array, dimensions));
                             break;
@@ -247,7 +248,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
     }
 
     private HDF5MemberByteifyer createByteifyerForMap(final String memberName, final int offset,
-            int memOffset, final int[] dimensions, final int len, final int memberTypeId,
+            int memOffset, final int[] dimensions, final int len, final long memberTypeId,
             final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, FLOAT_SIZE * len, offset, memOffset,
@@ -260,19 +261,19 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     switch (rank)
@@ -281,18 +282,18 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                             return HDFNativeData.floatToByte(((Number) getMap(obj, memberName))
                                     .floatValue());
                         case ARRAY1D:
-                            return HDFNativeData.floatToByte((float[]) getMap(obj, memberName));
+                            return HDFHelper.floatToByte((float[]) getMap(obj, memberName));
                         case ARRAY2D:
                         {
                             final float[][] array = (float[][]) getMap(obj, memberName);
                             MatrixUtils.checkMatrixDimensions(memberName, dimensions, array);
-                            return HDFNativeData.floatToByte(MatrixUtils.flatten(array));
+                            return HDFHelper.floatToByte(MatrixUtils.flatten(array));
                         }
                         case ARRAYMD:
                         {
                             final MDFloatArray array = (MDFloatArray) getMap(obj, memberName);
                             MatrixUtils.checkMDArrayDimensions(memberName, dimensions, array);
-                            return HDFNativeData.floatToByte(array.getAsFlatArray());
+                            return HDFHelper.floatToByte(array.getAsFlatArray());
                         }
                         default:
                             throw new Error("Unknown rank.");
@@ -300,7 +301,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     switch (rank)
@@ -310,13 +311,13 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                                     HDFNativeData.byteToFloat(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            putMap(obj, memberName, HDFNativeData.byteToFloat(byteArr, arrayOffset
+                            putMap(obj, memberName, HDFHelper.byteToFloat(byteArr, arrayOffset
                                     + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final float[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             putMap(obj, memberName, MatrixUtils.shapen(array, dimensions));
                             break;
@@ -324,7 +325,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                         case ARRAYMD:
                         {
                             final float[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             putMap(obj, memberName, new MDFloatArray(array, dimensions));
                             break;
@@ -338,7 +339,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
 
     private HDF5MemberByteifyer createByteifyerForList(final String memberName, final int index,
             final int offset, int memOffset, final int[] dimensions, final int len,
-            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final long memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, FLOAT_SIZE * len, offset, memOffset,
                 false, typeVariant)
@@ -350,19 +351,19 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     switch (rank)
@@ -371,18 +372,18 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                             return HDFNativeData.floatToByte(((Number) getList(obj, index))
                                     .floatValue());
                         case ARRAY1D:
-                            return HDFNativeData.floatToByte((float[]) getList(obj, index));
+                            return HDFHelper.floatToByte((float[]) getList(obj, index));
                         case ARRAY2D:
                         {
                             final float[][] array = (float[][]) getList(obj, index);
                             MatrixUtils.checkMatrixDimensions(memberName, dimensions, array);
-                            return HDFNativeData.floatToByte(MatrixUtils.flatten(array));
+                            return HDFHelper.floatToByte(MatrixUtils.flatten(array));
                         }
                         case ARRAYMD:
                         {
                             final MDFloatArray array = (MDFloatArray) getList(obj, index);
                             MatrixUtils.checkMDArrayDimensions(memberName, dimensions, array);
-                            return HDFNativeData.floatToByte(array.getAsFlatArray());
+                            return HDFHelper.floatToByte(array.getAsFlatArray());
                         }
                         default:
                             throw new Error("Unknown rank.");
@@ -390,7 +391,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     switch (rank)
@@ -400,13 +401,13 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                                     HDFNativeData.byteToFloat(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            putMap(obj, memberName, HDFNativeData.byteToFloat(byteArr, arrayOffset
+                            putMap(obj, memberName, HDFHelper.byteToFloat(byteArr, arrayOffset
                                     + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final float[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             setList(obj, index, MatrixUtils.shapen(array, dimensions));
                             break;
@@ -414,7 +415,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                         case ARRAYMD:
                         {
                             final float[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             setList(obj, index, new MDFloatArray(array, dimensions));
                             break;
@@ -428,7 +429,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
 
     private HDF5MemberByteifyer createByteifyerForArray(final String memberName, final int index,
             final int offset, int memOffset, final int[] dimensions, final int len,
-            final int memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
+            final long memberTypeId, final Rank rank, final HDF5DataTypeVariant typeVariant)
     {
         return new HDF5MemberByteifyer(null, memberName, FLOAT_SIZE * len, offset, memOffset,
                 false, typeVariant)
@@ -440,19 +441,19 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                protected int getMemberStorageTypeId()
+                protected long getMemberStorageTypeId()
                 {
                     return memberTypeId;
                 }
 
                 @Override
-                protected int getMemberNativeTypeId()
+                protected long getMemberNativeTypeId()
                 {
                     return -1;
                 }
 
                 @Override
-                public byte[] byteify(int compoundDataTypeId, Object obj)
+                public byte[] byteify(long compoundDataTypeId, Object obj)
                         throws IllegalAccessException
                 {
                     switch (rank)
@@ -461,18 +462,18 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                             return HDFNativeData.floatToByte(((Number) getArray(obj, index))
                                     .floatValue());
                         case ARRAY1D:
-                            return HDFNativeData.floatToByte((float[]) getArray(obj, index));
+                            return HDFHelper.floatToByte((float[]) getArray(obj, index));
                         case ARRAY2D:
                         {
                             final float[][] array = (float[][]) getArray(obj, index);
                             MatrixUtils.checkMatrixDimensions(memberName, dimensions, array);
-                            return HDFNativeData.floatToByte(MatrixUtils.flatten(array));
+                            return HDFHelper.floatToByte(MatrixUtils.flatten(array));
                         }
                         case ARRAYMD:
                         {
                             final MDFloatArray array = (MDFloatArray) getArray(obj, index);
                             MatrixUtils.checkMDArrayDimensions(memberName, dimensions, array);
-                            return HDFNativeData.floatToByte(array.getAsFlatArray());
+                            return HDFHelper.floatToByte(array.getAsFlatArray());
                         }
                         default:
                             throw new Error("Unknown rank.");
@@ -480,7 +481,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                 }
 
                 @Override
-                public void setFromByteArray(int compoundDataTypeId, Object obj, byte[] byteArr,
+                public void setFromByteArray(long compoundDataTypeId, Object obj, byte[] byteArr,
                         int arrayOffset) throws IllegalAccessException
                 {
                     switch (rank)
@@ -490,13 +491,13 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                                     HDFNativeData.byteToFloat(byteArr, arrayOffset + offsetInMemory));
                             break;
                         case ARRAY1D:
-                            setArray(obj, index, HDFNativeData.byteToFloat(byteArr, arrayOffset
+                            setArray(obj, index, HDFHelper.byteToFloat(byteArr, arrayOffset
                                     + offsetInMemory, len));
                             break;
                         case ARRAY2D:
                         {
                             final float[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             setArray(obj, index, MatrixUtils.shapen(array, dimensions));
                             break;
@@ -504,7 +505,7 @@ class HDF5CompoundMemberByteifyerFloatFactory implements IHDF5CompoundMemberByti
                         case ARRAYMD:
                         {
                             final float[] array =
-                                    HDFNativeData
+                                    HDFHelper
                                             .byteToFloat(byteArr, arrayOffset + offsetInMemory, len);
                             setArray(obj, index, new MDFloatArray(array, dimensions));
                             break;

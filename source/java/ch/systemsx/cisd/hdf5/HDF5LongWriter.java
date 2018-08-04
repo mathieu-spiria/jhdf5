@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2015 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@ package ch.systemsx.cisd.hdf5;
 
 
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;
+import static hdf.hdf5lib.H5.H5Dwrite;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_U64LE;
 
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
@@ -66,7 +66,7 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                         {
                             if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
-                                final int dataSpaceId =
+                                final long dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]
                                             { 1 }, registry);
                                 baseWriter.setAttribute(objectPath, name, H5T_STD_I64LE,
@@ -100,15 +100,15 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                 {
                     if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
-                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                        final long dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { value.length }, registry);
                         baseWriter.setAttribute(objectPath, name, H5T_STD_I64LE, H5T_NATIVE_INT64,
                                 dataSpaceId, value, registry);
                     } else
                     {
-                        final int memoryTypeId =
+                        final long memoryTypeId =
                                 baseWriter.h5.createArrayType(H5T_NATIVE_INT64, value.length, registry);
-                        final int storageTypeId =
+                        final long storageTypeId =
                                 baseWriter.h5.createArrayType(H5T_STD_I64LE, value.length, registry);
                         baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId, -1, value, 
                                 registry);
@@ -135,16 +135,16 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                 {
                     if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
-                        final int dataSpaceId =
+                        final long dataSpaceId =
                                 baseWriter.h5.createSimpleDataSpace(value.longDimensions(), registry);
                         baseWriter.setAttribute(objectPath, name, H5T_STD_I64LE, H5T_NATIVE_INT64,
                                 dataSpaceId, value.getAsFlatArray(), registry);
                     } else
                     {
-                        final int memoryTypeId =
+                        final long memoryTypeId =
                                 baseWriter.h5.createArrayType(H5T_NATIVE_INT64, value.dimensions(),
                                         registry);
-                        final int storageTypeId =
+                        final long storageTypeId =
                                 baseWriter.h5.createArrayType(H5T_STD_I64LE, value.dimensions(),
                                         registry);
                         baseWriter.setAttribute(objectPath, name, storageTypeId, memoryTypeId, -1,
@@ -194,7 +194,7 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, 
                                 features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE, new long[]
                                 { data.length }, 8, features, registry);
@@ -217,7 +217,7 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.createDataSetFromTemplate(objectPath,
                                     template, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
@@ -336,14 +336,14 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                         { dataSize };
                     final long[] slabStartOrNull = new long[]
                         { offset };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
-                    final int dataSpaceId = 
+                    final long dataSpaceId = 
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId = 
+                    final long memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, 
                             H5P_DEFAULT, data);
@@ -378,10 +378,10 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                     {
                         dataSet.setDimensions(requiredDimensions);
                     }
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSet.getDatasetId(), registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     H5Dwrite(dataSet.getDatasetId(), H5T_NATIVE_INT64, memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data);
@@ -545,7 +545,7 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE, 
                                     data.longDimensions(), 8, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
@@ -688,13 +688,13 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                     {
                         dataSetDimensions[i] = offset[i] + dimensions[i];
                     }
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId = 
+                    final long dataSpaceId = 
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId = 
+                    final long memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, 
                             H5P_DEFAULT, data.getAsFlatArray());
@@ -763,13 +763,13 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
                     {
                         dataSetDimensions[i] = offset[i] + blockDimensions[i];
                     }
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId = 
+                    final long dataSpaceId = 
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId = 
+                    final long memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
                     baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
                             longBlockDimensions);

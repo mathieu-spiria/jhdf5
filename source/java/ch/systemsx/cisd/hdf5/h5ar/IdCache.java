@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ final class IdCache
 
     String getUser(int uid, boolean numeric)
     {
-        String userNameOrNull = uidMap.get(uidMap);
+        String userNameOrNull = uidMap.get(uid);
         if (userNameOrNull == null)
         {
             userNameOrNull =
@@ -92,7 +92,7 @@ final class IdCache
      */
     String getGroup(int gid, boolean numeric)
     {
-        String groupNameOrNull = gidMap.get(uidMap);
+        String groupNameOrNull = gidMap.get(gid);
         if (groupNameOrNull == null)
         {
             groupNameOrNull =

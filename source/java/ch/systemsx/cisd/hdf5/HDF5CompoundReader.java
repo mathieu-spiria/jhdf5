@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,12 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_ARRAY;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_COMPOUND;
+import static hdf.hdf5lib.HDF5Constants.H5T_ARRAY;
+import static hdf.hdf5lib.HDF5Constants.H5T_COMPOUND;
 
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -107,14 +107,14 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                 @Override
                 public T call(final ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
+                    final long attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final int storageDataTypeId =
+                    final long storageDataTypeId =
                             baseReader.h5.getDataTypeForAttribute(attributeId, registry);
                     checkCompoundType(storageDataTypeId, objectPath, type);
-                    final int nativeDataTypeId = type.getNativeTypeId();
+                    final long nativeDataTypeId = type.getNativeTypeId();
                     final byte[] byteArr =
                             baseReader.h5.readAttributeAsByteArray(attributeId, nativeDataTypeId,
                                     type.getObjectByteifyer().getRecordSizeInMemory());
@@ -140,16 +140,16 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                 @Override
                 public T[] call(final ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
+                    final long attributeId =
                             baseReader.h5.openAttribute(dataSetId, attributeName, registry);
-                    final int storageDataTypeId =
+                    final long storageDataTypeId =
                             baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.h5.getNativeDataType(storageDataTypeId, registry);
                     final int len;
-                    final int compoundTypeId;
+                    final long compoundTypeId;
                     if (baseReader.h5.getClassType(storageDataTypeId) == H5T_ARRAY)
                     {
                         final int[] arrayDimensions =
@@ -202,18 +202,18 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                         @Override
                         public MDArray<T> call(final ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            final int attributeId =
+                            final long attributeId =
                                     baseReader.h5.openAttribute(dataSetId, attributeName, registry);
-                            final int storageDataTypeId =
+                            final long storageDataTypeId =
                                     baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                            final int nativeDataTypeId =
+                            final long nativeDataTypeId =
                                     baseReader.h5.getNativeDataType(storageDataTypeId, registry);
                             final int len;
                             final int[] arrayDimensions;
-                            final int compoundTypeId;
+                            final long compoundTypeId;
                             if (baseReader.h5.getClassType(storageDataTypeId) == H5T_ARRAY)
                             {
                                 arrayDimensions =
@@ -428,14 +428,14 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                 @Override
                 public T call(final ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final int storageDataTypeId =
+                    final long storageDataTypeId =
                             baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     checkCompoundType(storageDataTypeId, objectPath, type);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
-                    final int nativeDataTypeId = type.getNativeTypeId();
+                    final long nativeDataTypeId = type.getNativeTypeId();
                     final byte[] byteArr =
                             new byte[spaceParams.blockSize
                                     * type.getObjectByteifyer().getRecordSizeInMemory()];
@@ -463,14 +463,14 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                 @Override
                 public T[] call(final ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final int storageDataTypeId =
+                    final long storageDataTypeId =
                             baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                     checkCompoundType(storageDataTypeId, objectPath, type);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, offset, blockSize, registry);
-                    final int nativeDataTypeId = type.getNativeTypeId();
+                    final long nativeDataTypeId = type.getNativeTypeId();
                     final byte[] byteArr =
                             new byte[spaceParams.blockSize
                                     * type.getObjectByteifyer().getRecordSizeInMemory()];
@@ -489,7 +489,7 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
         return baseReader.runner.call(readRunnable);
     }
 
-    private void checkCompoundType(final int dataTypeId, final String path,
+    private void checkCompoundType(final long dataTypeId, final String path,
             final HDF5CompoundType<?> type) throws HDF5JavaException
     {
         final boolean isCompound = (baseReader.h5.getClassType(dataTypeId) == H5T_COMPOUND);
@@ -575,16 +575,16 @@ class HDF5CompoundReader extends HDF5CompoundInformationRetriever implements IHD
                         @Override
                         public MDArray<T> call(final ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
-                            final int storageDataTypeId =
+                            final long storageDataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                             checkCompoundType(storageDataTypeId, objectPath, type);
                             final DataSpaceParameters spaceParams =
                                     baseReader.getSpaceParameters(dataSetId, offsetOrNull,
                                             dimensionsOrNull, registry);
-                            final int nativeDataTypeId = type.getNativeTypeId();
+                            final long nativeDataTypeId = type.getNativeTypeId();
                             final byte[] byteArr =
                                     new byte[spaceParams.blockSize
                                             * type.getObjectByteifyer().getRecordSizeInMemory()];

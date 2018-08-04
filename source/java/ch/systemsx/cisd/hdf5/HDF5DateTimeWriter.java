@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,12 @@
 package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5IntStorageFeatures.INT_NO_COMPRESSION;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_I64LE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_STD_U64LE;
+import static hdf.hdf5lib.H5.H5Dwrite;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT64;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_I64LE;
+import static hdf.hdf5lib.HDF5Constants.H5T_STD_U64LE;
 
 import java.util.Date;
 
@@ -30,7 +30,7 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
-import ch.systemsx.cisd.hdf5.hdf5lib.HDFNativeData;
+import hdf.hdf5lib.HDFNativeData;
 
 /**
  * Implementation of {@link IHDF5DateTimeWriter}.
@@ -64,7 +64,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 {
                     if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
-                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                        final long dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { 1 }, registry);
                         baseWriter
                                 .setAttribute(
@@ -116,7 +116,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 {
                     if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
-                        final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                        final long dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                             { timeStamps.length }, registry);
                         baseWriter
                                 .setAttribute(
@@ -127,10 +127,10 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                                         registry);
                     } else
                     {
-                        final int memoryTypeId =
+                        final long memoryTypeId =
                                 baseWriter.h5.createArrayType(H5T_NATIVE_INT64, timeStamps.length,
                                         registry);
-                        final int storageTypeId =
+                        final long storageTypeId =
                                 baseWriter.h5.createArrayType(H5T_STD_I64LE, timeStamps.length,
                                         registry);
                         baseWriter
@@ -161,7 +161,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 {
                     if (baseWriter.useSimpleDataSpaceForAttributes)
                     {
-                        final int dataSpaceId =
+                        final long dataSpaceId =
                                 baseWriter.h5.createSimpleDataSpace(timeStamps.longDimensions(),
                                         registry);
                         baseWriter
@@ -173,10 +173,10 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                                         timeStamps.getAsFlatArray(), registry);
                     } else
                     {
-                        final int memoryTypeId =
+                        final long memoryTypeId =
                                 baseWriter.h5.createArrayType(H5T_NATIVE_INT64, timeStamps.dimensions(),
                                         registry);
-                        final int storageTypeId =
+                        final long storageTypeId =
                                 baseWriter.h5.createArrayType(H5T_STD_I64LE, timeStamps.dimensions(),
                                         registry);
                         baseWriter
@@ -210,7 +210,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 @Override
                 public Object call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.writeScalar(objectPath, H5T_STD_I64LE, H5T_NATIVE_INT64,
                                     HDFNativeData.longToByte(timeStamp), true, true, registry);
                     baseWriter.setTypeVariant(dataSetId,
@@ -248,7 +248,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int longBytes = 8;
-                    final int dataSetId;
+                    final long dataSetId;
                     if (features.requiresChunking())
                     {
                         dataSetId =
@@ -286,7 +286,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int longBytes = 8;
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.createDataSet(objectPath, H5T_STD_I64LE, features,
                                     new long[]
                                         { length }, new long[]
@@ -320,7 +320,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 public Void call(ICleanUpRegistry registry)
                 {
                     final int longBytes = 8;
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, H5T_STD_I64LE, new long[]
                                 { timeStamps.length }, longBytes, features, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, H5S_ALL, H5S_ALL, H5P_DEFAULT, timeStamps);
@@ -349,15 +349,15 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                         { data.length };
                     final long[] slabStartOrNull = new long[]
                         { data.length * blockNumber };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { data.length * (blockNumber + 1) }, -1, registry);
                     baseWriter.checkIsTimeStamp(objectPath, dataSetId, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, dimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
                             data);
@@ -384,15 +384,15 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                         { dataSize };
                     final long[] slabStartOrNull = new long[]
                         { offset };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
                     baseWriter.checkIsTimeStamp(objectPath, dataSetId, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
                             data);
@@ -434,7 +434,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath,
                                     features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE,
                                     data.longDimensions(), 8, features, registry);
@@ -475,7 +475,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId;
+                    final long dataSetId;
                     if (features.requiresChunking())
                     {
                         final long[] nullDimensions = new long[dimensions.length];
@@ -514,7 +514,7 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.createDataSet(objectPath,
                                     features.isSigned() ? H5T_STD_I64LE : H5T_STD_U64LE, features,
                                     dimensions, MDArray.toLong(blockDimensions), 8, registry);
@@ -563,13 +563,13 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                     {
                         dataSetDimensions[i] = offset[i] + dimensions[i];
                     }
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(dimensions, registry);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT64, memorySpaceId, dataSpaceId, H5P_DEFAULT,
                             data.getAsFlatArray());
@@ -605,13 +605,13 @@ public class HDF5DateTimeWriter extends HDF5DateTimeReader implements IHDF5DateT
                     {
                         dataSetDimensions[i] = offset[i] + blockDimensions[i];
                     }
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, dataSetDimensions, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
                     baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
                             longBlockDimensions);

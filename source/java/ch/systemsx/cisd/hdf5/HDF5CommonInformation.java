@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5L_TYPE_EXTERNAL;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5L_TYPE_SOFT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5O_TYPE_DATASET;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5O_TYPE_NAMED_DATATYPE;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5O_TYPE_NTYPES;
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import static hdf.hdf5lib.HDF5Constants.H5L_TYPE_EXTERNAL;
+import static hdf.hdf5lib.HDF5Constants.H5L_TYPE_SOFT;
+import static hdf.hdf5lib.HDF5Constants.H5O_TYPE_DATASET;
+import static hdf.hdf5lib.HDF5Constants.H5O_TYPE_GROUP;
+import static hdf.hdf5lib.HDF5Constants.H5O_TYPE_NAMED_DATATYPE;
+import static hdf.hdf5lib.HDF5Constants.H5O_TYPE_NTYPES;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * The common super class of {@link HDF5LinkInformation} and {@link HDF5ObjectInformation}. 

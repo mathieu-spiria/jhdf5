@@ -46,7 +46,6 @@ task nativeJarLinuxIntel(type: Jar) {
     archiveName 'hdf5-linux-intel.jar'
     from ("libs") {
         include 'native/jhdf5/amd64-Linux/**/*'
-        include 'native/jhdf5/i386-Linux/**/*'
         include 'native/jhdf5/arm-Linux/**/*'
     }
     
@@ -58,7 +57,6 @@ task nativeJarLinuxIntel(type: Jar) {
 task nativeJarMacIntel(type: Jar) {
     archiveName 'hdf5-macosx-intel.jar'
     from ("libs") {
-        include 'native/jhdf5/i386-Mac OS X/**/*'
         include 'native/jhdf5/x86_64-Mac OS X/**/*'
     }
     
@@ -71,7 +69,6 @@ task nativeJarWindowsIntel(type: Jar) {
     archiveName 'hdf5-windows-intel.jar'
     from ("libs") {
         include 'native/jhdf5/amd64-Windows/**/*'
-        include 'native/jhdf5/x86-Windows/**/*'
     }
     
     from('targets/dist') {
@@ -150,8 +147,10 @@ task myJavadoc(type: Javadoc) {
 	options.memberLevel = JavadocMemberLevel.PUBLIC
 	options.overview = "overview.html"
 	include "ch/systemsx/cisd/hdf5/**"
-	include "ncsa/hdf/hdf5lib/exceptions/**"
+	include "ch/ethz/sis/hdf5/**"
+	include "hdf/hdf5lib/exceptions/**"
 	exclude "ch/systemsx/cisd/hdf5/hdf5lib/**"
+	exclude "ch/ethz/sis/hdf5/hdf5lib/**"
 	exclude "ch/systemsx/cisd/hdf5/cleanup/**"
 	exclude "ch/systemsx/cisd/hdf5/BitSetConversionUtils.java"
 	exclude "ch/systemsx/cisd/hdf5/MatrixUtils.java"
@@ -202,7 +201,7 @@ task distributionZip(type: Zip, dependsOn: [jar, toolsJar, allJar, nativeJarLinu
     }
     
     from (zipTree(batteriesIncluded.archivePath)) {
-        into "${project.group}-jhdf5/lib/native"
+        into "${project.group}-jhdf5/lib"
         include 'native/**'
     }
     

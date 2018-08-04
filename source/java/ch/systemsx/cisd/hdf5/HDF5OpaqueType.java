@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ public final class HDF5OpaqueType extends HDF5DataType
 
     private final String tag;
     
-    HDF5OpaqueType(int fileId, int typeId, String tag, HDF5BaseReader baseReader)
+    HDF5OpaqueType(long fileId, long typeId, String tag, HDF5BaseReader baseReader)
     {
         super(fileId, typeId, typeId, baseReader);
 

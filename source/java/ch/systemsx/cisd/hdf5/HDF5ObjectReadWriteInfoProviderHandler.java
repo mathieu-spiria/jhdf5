@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,11 +83,6 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
         assert linkPath != null;
 
         baseWriter.checkOpen();
-        if (baseWriter.fileFormat.isHDF5_1_8_OK() == false)
-        {
-            throw new IllegalStateException(
-                    "External links are not allowed in strict HDF5 1.6.x compatibility mode.");
-        }
         baseWriter.h5.createExternalLink(baseWriter.fileId, linkPath, targetFileName, targetPath);
     }
 
@@ -100,11 +95,6 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
         assert linkPath != null;
 
         baseWriter.checkOpen();
-        if (baseWriter.fileFormat.isHDF5_1_8_OK() == false)
-        {
-            throw new IllegalStateException(
-                    "External links are not allowed in strict HDF5 1.6.x compatibility mode.");
-        }
         if (isSymbolicLink(linkPath))
         {
             delete(linkPath);
@@ -165,11 +155,6 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
     public void createGroup(final String groupPath, final int maxCompact, final int minDense)
     {
         baseWriter.checkOpen();
-        if (baseWriter.fileFormat.isHDF5_1_8_OK() == false)
-        {
-            throw new IllegalStateException(
-                    "New style groups are not allowed in strict HDF5 1.6.x compatibility mode.");
-        }
         final ICallableWithCleanUp<Void> createGroupRunnable = new ICallableWithCleanUp<Void>()
             {
                 @Override
@@ -196,7 +181,7 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseWriter.h5.openObject(baseWriter.fileId, objectPath, registry);
                     baseWriter.h5.deleteAttribute(objectId, name);
                     return null; // Nothing to return.
@@ -247,7 +232,7 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
                     {
                         if (baseWriter.useSimpleDataSpaceForAttributes)
                         {
-                            final int dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
+                            final long dataSpaceId = baseWriter.h5.createSimpleDataSpace(new long[]
                                 { 1 }, registry);
                             baseWriter.setAttribute(
                                     objectPath,
@@ -287,7 +272,7 @@ final class HDF5ObjectReadWriteInfoProviderHandler extends HDF5ObjectReadOnlyInf
                         {
                             if (baseWriter.useSimpleDataSpaceForAttributes)
                             {
-                                final int dataSpaceId =
+                                final long dataSpaceId =
                                         baseWriter.h5.createSimpleDataSpace(new long[]
                                             { 1 }, registry);
                                 baseWriter.setAttribute(

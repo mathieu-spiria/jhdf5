@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -198,10 +198,10 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
                         @Override
                         public String call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
-                            final int dataTypeId =
+                            final long dataTypeId =
                                     baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
                             return baseReader.tryGetDataTypePath(dataTypeId);
                         }
@@ -240,7 +240,7 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
                         @Override
                         public List<String> call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
                             return baseReader.h5.getAttributeNames(objectId, registry);
@@ -271,13 +271,13 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
                         {
                             try
                             {
-                                final int objectId =
+                                final long objectId =
                                         baseReader.h5.openObject(baseReader.fileId, dataSetPath,
                                                 registry);
-                                final int attributeId =
+                                final long attributeId =
                                         baseReader.h5.openAttribute(objectId, attributeName,
                                                 registry);
-                                final int dataTypeId =
+                                final long dataTypeId =
                                         baseReader.h5
                                                 .getDataTypeForAttribute(attributeId, registry);
                                 final HDF5DataTypeInformation dataTypeInformation =
@@ -515,7 +515,7 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
                 @Override
                 public Boolean call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
                     return baseReader.h5.existsAttribute(objectId, attributeName);
                 }

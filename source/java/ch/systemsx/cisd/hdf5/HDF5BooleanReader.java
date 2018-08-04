@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,13 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5T_NATIVE_UINT64;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_B64;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_UINT64;
 
 import java.util.BitSet;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5DatatypeInterfaceException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
@@ -63,11 +63,11 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
                 @Override
                 public Boolean call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
+                    final long attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForAttribute(attributeId, registry);
                     byte[] data =
                             baseReader.h5
@@ -100,9 +100,9 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
                 @Override
                 public Boolean call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.h5.getNativeDataTypeForDataSet(dataSetId, registry);
                     final byte[] data = new byte[1];
                     baseReader.h5.readDataSet(dataSetId, nativeDataTypeId, data);
@@ -134,7 +134,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
                 @Override
                 public long[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParams =
                             baseReader.getSpaceParameters(dataSetId, registry);
@@ -164,7 +164,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
                 @Override
                 public long[] call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final DataSpaceParameters spaceParamsOrNull =
                             baseReader.tryGetSpaceParameters(dataSetId, offset, blockSize,
@@ -221,7 +221,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
                         @Override
                         public MDLongArray call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final DataSpaceParameters spaceParams =
@@ -262,7 +262,7 @@ public class HDF5BooleanReader implements IHDF5BooleanReader
                 @Override
                 public MDLongArray call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
                     final long[] dimensions = baseReader.h5.getDataDimensions(dataSetId, registry);
                     checkDimensions2D(dimensions);

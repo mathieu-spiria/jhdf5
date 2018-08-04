@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
 
 import java.util.Iterator;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
@@ -55,7 +55,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         baseReader.checkOpen();
         final String dataTypePath =
                 createDataTypePath(ENUM_PREFIX, baseReader.houseKeepingNameSuffix, name);
-        final int storageDataTypeId = baseReader.getDataTypeId(dataTypePath);
+        final long storageDataTypeId = baseReader.getDataTypeId(dataTypePath);
         return baseReader.getEnumTypeForStorageDataType(name, storageDataTypeId, true, null, null,
                 baseReader.fileRegistry);
     }
@@ -138,7 +138,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                         @Override
                         public HDF5EnumerationType call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, dataSetPath,
                                             registry);
                             return getEnumTypeForDataSetId(dataSetId, dataSetPath,
@@ -148,7 +148,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readEnumTypeCallable);
     }
 
-    private HDF5EnumerationType getEnumTypeForDataSetId(final int objectId,
+    private HDF5EnumerationType getEnumTypeForDataSetId(final long objectId,
             final String objectName, final boolean scaledEnum, final ICleanUpRegistry registry)
     {
         if (scaledEnum)
@@ -160,7 +160,7 @@ class HDF5EnumReader implements IHDF5EnumReader
             return getType(enumTypeName);
         } else
         {
-            final int storageDataTypeId =
+            final long storageDataTypeId =
                     baseReader.h5.getDataTypeForDataSet(objectId, baseReader.fileRegistry);
             return baseReader.getEnumTypeForStorageDataType(null, storageDataTypeId, true,
                     objectName, null, baseReader.fileRegistry);
@@ -177,12 +177,12 @@ class HDF5EnumReader implements IHDF5EnumReader
                         @Override
                         public HDF5EnumerationType call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, dataSetPath,
                                             registry);
-                            final int attributeId =
+                            final long attributeId =
                                     baseReader.h5.openAttribute(dataSetId, attributeName, registry);
-                            final int storageDataTypeId =
+                            final long storageDataTypeId =
                                     baseReader.h5.getDataTypeForAttribute(attributeId,
                                             baseReader.fileRegistry);
                             return baseReader.getEnumTypeForStorageDataType(null,
@@ -210,16 +210,16 @@ class HDF5EnumReader implements IHDF5EnumReader
                 @Override
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int objectId =
+                    final long objectId =
                             baseReader.h5.openObject(baseReader.fileId, objectPath, registry);
-                    final int attributeId =
+                    final long attributeId =
                             baseReader.h5.openAttribute(objectId, attributeName, registry);
-                    final int storageDataTypeId =
+                    final long storageDataTypeId =
                             baseReader.h5.getDataTypeForAttribute(attributeId, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.h5.getNativeDataType(storageDataTypeId, registry);
 
-                    final int enumDataTypeId =
+                    final long enumDataTypeId =
                             baseReader.getEnumDataTypeId(storageDataTypeId, registry);
                     final int size = baseReader.h5.getDataTypeSize(enumDataTypeId);
                     final byte[] data =
@@ -253,22 +253,22 @@ class HDF5EnumReader implements IHDF5EnumReader
                         @Override
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            final int attributeId =
+                            final long attributeId =
                                     baseReader.h5.openAttribute(objectId, attributeName, registry);
-                            final int storageDataTypeId =
+                            final long storageDataTypeId =
                                     baseReader.h5.getDataTypeForAttribute(attributeId,
                                             baseReader.fileRegistry);
-                            final int enumTypeId =
+                            final long enumTypeId =
                                     baseReader.getEnumDataTypeId(storageDataTypeId,
                                             baseReader.fileRegistry);
                             final HDF5EnumerationType enumType =
                                     baseReader.getEnumTypeForStorageDataType(null, enumTypeId,
                                             true, objectPath, attributeName,
                                             baseReader.fileRegistry);
-                            final int nativeDataTypeId;
+                            final long nativeDataTypeId;
                             if (storageDataTypeId != enumTypeId) // Array data type
                             {
                                 nativeDataTypeId =
@@ -317,10 +317,10 @@ class HDF5EnumReader implements IHDF5EnumReader
                         @Override
                         public HDF5EnumerationValueArray call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            final int attributeId =
+                            final long attributeId =
                                     baseReader.h5.openAttribute(objectId, attributeName, registry);
                             return baseReader.getEnumValueArray(attributeId, objectPath,
                                     attributeName, registry);
@@ -351,10 +351,10 @@ class HDF5EnumReader implements IHDF5EnumReader
                         @Override
                         public HDF5EnumerationValueMDArray call(ICleanUpRegistry registry)
                         {
-                            final int objectId =
+                            final long objectId =
                                     baseReader.h5.openObject(baseReader.fileId, objectPath,
                                             registry);
-                            final int attributeId =
+                            final long attributeId =
                                     baseReader.h5.openAttribute(objectId, attributeName, registry);
                             return baseReader.getEnumValueMDArray(attributeId, objectPath,
                                     attributeName, registry);
@@ -379,11 +379,11 @@ class HDF5EnumReader implements IHDF5EnumReader
                 @Override
                 public String call(ICleanUpRegistry registry)
                 {
-                    final int dataSetId =
+                    final long dataSetId =
                             baseReader.h5.openDataSet(baseReader.fileId, objectPath, registry);
-                    final int storageDataTypeId =
+                    final long storageDataTypeId =
                             baseReader.h5.getDataTypeForDataSet(dataSetId, registry);
-                    final int nativeDataTypeId =
+                    final long nativeDataTypeId =
                             baseReader.h5.getNativeDataType(storageDataTypeId, registry);
                     final int size = baseReader.h5.getDataTypeSize(nativeDataTypeId);
                     final byte[] data = new byte[size];
@@ -428,7 +428,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                         @Override
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final HDF5EnumerationType enumType =
@@ -455,7 +455,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                         @Override
                         public HDF5EnumerationValue call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             return readEnumValue(dataSetId, enumType);
@@ -465,7 +465,7 @@ class HDF5EnumReader implements IHDF5EnumReader
         return baseReader.runner.call(readRunnable);
     }
 
-    private HDF5EnumerationValue readEnumValue(final int dataSetId,
+    private HDF5EnumerationValue readEnumValue(final long dataSetId,
             final HDF5EnumerationType enumType)
     {
         final byte[] data = new byte[enumType.getStorageForm().getStorageSize()];
@@ -490,7 +490,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                         @Override
                         public HDF5EnumerationValueArray call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final long[] dimensions =
@@ -542,7 +542,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                         @Override
                         public HDF5EnumerationValueArray call(ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final DataSpaceParameters spaceParams =
@@ -629,7 +629,7 @@ class HDF5EnumReader implements IHDF5EnumReader
                         @Override
                         public HDF5EnumerationValueMDArray call(final ICleanUpRegistry registry)
                         {
-                            final int dataSetId =
+                            final long dataSetId =
                                     baseReader.h5.openDataSet(baseReader.fileId, objectPath,
                                             registry);
                             final boolean scaledEnum = baseReader.isScaledEnum(dataSetId, registry);

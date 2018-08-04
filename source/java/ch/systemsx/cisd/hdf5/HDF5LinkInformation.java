@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 
 package ch.systemsx.cisd.hdf5;
-
 
 /**
  * Information about a link in an HDF5 file.
@@ -41,15 +40,18 @@ public final class HDF5LinkInformation extends HDF5CommonInformation
         return new HDF5LinkInformation(path, type, symbolicLinkTargetOrNull);
     }
 
+    static HDF5LinkInformation create(String path, int typeId, String[] linkTarget)
+    {
+        final HDF5ObjectType type = objectTypeIdToObjectType(typeId);
+        return new HDF5LinkInformation(path, type, linkTarget[0]);
+    }
+
     /**
-     * Returns the symbolic link target of this link, or <code>null</code>, if this link does not
-     * exist or is not a symbolic link.
+     * Returns the symbolic link target of this link, or <code>null</code>, if this link does not exist or is not a symbolic link.
      * <p>
-     * Note that external links have a special format: They start with a prefix "
-     * <code>EXTERNAL::</code>", then comes the path of the external file (beware that this part
-     * uses the native path separator, i.e. "\" on Windows). Finally, separated by "<code>::</code>
-     * ", the path of the link in the external file is provided (this part always uses "/" as path
-     * separator).
+     * Note that external links have a special format: They start with a prefix " <code>EXTERNAL::</code>", then comes the path of the external file
+     * (beware that this part uses the native path separator, i.e. "\" on Windows). Finally, separated by "<code>::</code> ", the path of the link in
+     * the external file is provided (this part always uses "/" as path separator).
      */
     public String tryGetSymbolicLinkTarget()
     {

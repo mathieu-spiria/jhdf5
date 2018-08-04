@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,13 @@ final class CompoundTypeInformation
 {
     final String name;
 
-    final int compoundDataTypeId;
+    final long compoundDataTypeId;
 
-    final int nativeCompoundDataTypeId;
+    final long nativeCompoundDataTypeId;
 
     private final HDF5CompoundMemberInformation[] members;
 
-    final int[] dataTypeIds;
+    final long[] dataTypeIds;
     
     final HDF5EnumerationType[] enumTypes;
 
@@ -41,14 +41,14 @@ final class CompoundTypeInformation
     
     private int numberOfVLMembers;
 
-    CompoundTypeInformation(String name, int compoundDataTypeId, int nativeCompoundDataTypeId,
+    CompoundTypeInformation(String name, long compoundDataTypeId, long nativeCompoundDataTypeId,
             int numberOfElements, int recordSizeOnDisk, int recordSizeInMemory)
     {
         this.name = name;
         this.compoundDataTypeId = compoundDataTypeId;
         this.nativeCompoundDataTypeId = nativeCompoundDataTypeId;
         this.members = new HDF5CompoundMemberInformation[numberOfElements];
-        this.dataTypeIds = new int[numberOfElements];
+        this.dataTypeIds = new long[numberOfElements];
         this.enumTypes = new HDF5EnumerationType[numberOfElements];
         this.recordSizeOnDisk = recordSizeOnDisk;
         this.recordSizeInMemory = recordSizeInMemory;

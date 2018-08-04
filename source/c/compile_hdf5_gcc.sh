@@ -10,7 +10,13 @@ if [ "$PLATFORM" != "i386" -a "$PLATFORM" != "x86" -a "$PLATFORM" != "amd64" -a 
   exit 1
 fi
 
-tar xvf hdf5-$VERSION.tar
+rm -fR build
+mkdir build
+
+cd build
+BUILD_ROOT=`pwd`
+
+tar xvf ../hdf5-$VERSION.tar*
 
 if [ -n "$POSTFIX" ]; then
   mv hdf5-$VERSION hdf5-$VERSION-$POSTFIX
@@ -21,12 +27,15 @@ cd hdf5-$VERSION
 
 if [ -n "$PATCHES" ]; then
   for p in $PATCHES; do
-    patch -p1 < ../$p
+    patch -p1 < ../../$p
   done
 fi
 
-CFLAGS=$CFLAGS ./configure --prefix=/opt/hdf5-$VERSION-$PLATFORM --enable-debug=none --enable-production $ADDITIONAL &> configure.log
+CFLAGS=$CFLAGS ./configure --prefix=$BUILD_ROOT/hdf5-$VERSION-$PLATFORM --enable-build-mode=production $ADDITIONAL &> configure.log
 
-make &> make.log
+make -j 4 &> build.log
+make install &> install.log
+#make test &> test.log
 
-make test &> test.log
+
+

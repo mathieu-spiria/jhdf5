@@ -16,13 +16,8 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5F.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5S.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5T.*;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.*;
-
-import ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants;
+import static hdf.hdf5lib.H5.*;
+import static hdf.hdf5lib.HDF5Constants.*;
 
 public class TestLowLevelHDF5
 {
@@ -39,21 +34,19 @@ public class TestLowLevelHDF5
 
     public static void main(String[] args) throws Exception
     {
-        System.out.println(HDF5Constants.H5S_MAX_RANK);
-        System.exit(0);
         Container[] cont = new Container[1];
         cont[0] = new Container();
         cont[0].s = "aaa";
         long[] dims = new long[]
             { cont.length };
-        int fileId = H5Fcreate("compoundTest.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-        int dataSpaceId = H5Screate_simple(1, dims, dims);
+        long fileId = H5Fcreate("compoundTest.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+        long dataSpaceId = H5Screate_simple(1, dims, dims);
         
-        int dataTypeId = H5Tcreate(H5T_COMPOUND, 5);
-        int stringDataType = H5Tcopy(H5T_C_S1);
+        long dataTypeId = H5Tcreate(H5T_COMPOUND, 5);
+        long stringDataType = H5Tcopy(H5T_C_S1);
         H5Tset_size(stringDataType, 5);
         H5Tinsert(dataTypeId, "s", 0, stringDataType);
-        int dataSetId =
+        long dataSetId =
                 H5Dcreate(fileId, "ds", dataTypeId, dataSpaceId, H5P_DEFAULT, H5P_DEFAULT,
                         H5P_DEFAULT);
         H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, (cont[0].s + '\0').getBytes());

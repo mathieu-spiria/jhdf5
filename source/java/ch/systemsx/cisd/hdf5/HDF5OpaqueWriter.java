@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ package ch.systemsx.cisd.hdf5;
 
 import static ch.systemsx.cisd.hdf5.HDF5Utils.OPAQUE_PREFIX;
 import static ch.systemsx.cisd.hdf5.HDF5Utils.createDataTypePath;
-import static ch.systemsx.cisd.hdf5.hdf5lib.H5D.H5Dwrite;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static ch.systemsx.cisd.hdf5.hdf5lib.HDF5Constants.H5S_ALL;
+import static hdf.hdf5lib.H5.H5Dwrite;
+import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5S_ALL;
 
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
@@ -63,8 +63,8 @@ public class HDF5OpaqueWriter extends HDF5OpaqueReader implements IHDF5OpaqueWri
                 @Override
                 public Void call(ICleanUpRegistry registry)
                 {
-                    final int dataTypeId = getOrCreateOpaqueTypeId(tag);
-                    final int dataSetId =
+                    final long dataTypeId = getOrCreateOpaqueTypeId(tag);
+                    final long dataSetId =
                             baseWriter.getOrCreateDataSetId(objectPath, dataTypeId, new long[]
                                 { data.length }, 1, features, registry);
                     H5Dwrite(dataSetId, dataTypeId, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
@@ -98,7 +98,7 @@ public class HDF5OpaqueWriter extends HDF5OpaqueReader implements IHDF5OpaqueWri
         assert size >= 0;
 
         baseWriter.checkOpen();
-        final int dataTypeId = getOrCreateOpaqueTypeId(tag);
+        final long dataTypeId = getOrCreateOpaqueTypeId(tag);
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
                 @Override
@@ -131,7 +131,7 @@ public class HDF5OpaqueWriter extends HDF5OpaqueReader implements IHDF5OpaqueWri
         assert blockSize >= 0 && (blockSize <= size || size == 0);
 
         baseWriter.checkOpen();
-        final int dataTypeId = getOrCreateOpaqueTypeId(tag);
+        final long dataTypeId = getOrCreateOpaqueTypeId(tag);
         final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
             {
                 @Override
@@ -166,14 +166,14 @@ public class HDF5OpaqueWriter extends HDF5OpaqueReader implements IHDF5OpaqueWri
                         { data.length };
                     final long[] slabStartOrNull = new long[]
                         { data.length * blockNumber };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { data.length * (blockNumber + 1) }, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     H5Dwrite(dataSetId, dataType.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data);
@@ -202,14 +202,14 @@ public class HDF5OpaqueWriter extends HDF5OpaqueReader implements IHDF5OpaqueWri
                         { dataSize };
                     final long[] slabStartOrNull = new long[]
                         { offset };
-                    final int dataSetId =
+                    final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
                                         { offset + dataSize }, -1, registry);
-                    final int dataSpaceId =
+                    final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
-                    final int memorySpaceId =
+                    final long memorySpaceId =
                             baseWriter.h5.createSimpleDataSpace(blockDimensions, registry);
                     H5Dwrite(dataSetId, dataType.getNativeTypeId(), memorySpaceId, dataSpaceId,
                             H5P_DEFAULT, data);
@@ -219,11 +219,11 @@ public class HDF5OpaqueWriter extends HDF5OpaqueReader implements IHDF5OpaqueWri
         baseWriter.runner.call(writeRunnable);
     }
 
-    private int getOrCreateOpaqueTypeId(final String tag)
+    private long getOrCreateOpaqueTypeId(final String tag)
     {
         final String dataTypePath =
                 createDataTypePath(OPAQUE_PREFIX, baseWriter.houseKeepingNameSuffix, tag);
-        int dataTypeId = baseWriter.getDataTypeId(dataTypePath);
+        long dataTypeId = baseWriter.getDataTypeId(dataTypePath);
         if (dataTypeId < 0)
         {
             dataTypeId = baseWriter.h5.createDataTypeOpaque(1, tag, baseWriter.fileRegistry);

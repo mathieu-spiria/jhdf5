@@ -1,5 +1,5 @@
 /*
- * Copyright 2007 - 2014 ETH Zuerich, CISD and SIS.
+ * Copyright 2007 - 2018 ETH Zuerich, CISD and SIS.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import ncsa.hdf.hdf5lib.exceptions.HDF5JavaException;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -97,7 +97,7 @@ public final class HDF5CompoundMemberMapping
 {
     private final String memberName;
 
-    private final int storageDataTypeId;
+    private final long storageDataTypeId;
 
     private final Field fieldOrNull;
 
@@ -151,7 +151,7 @@ public final class HDF5CompoundMemberMapping
      * @param typeVariantOrNull The data type variant of this mapping or <code>null</code>
      */
     static HDF5CompoundMemberMapping mappingArrayWithStorageId(String fieldName, String memberName,
-            Class<?> memberClass, int[] memberDimensions, int storageDataTypeId, boolean unsigned,
+            Class<?> memberClass, int[] memberDimensions, long storageDataTypeId, boolean unsigned,
             boolean variableLength, boolean reference, HDF5DataTypeVariant typeVariantOrNull)
     {
         return new HDF5CompoundMemberMapping(fieldName, null, memberClass, memberName, null, null,
@@ -170,7 +170,7 @@ public final class HDF5CompoundMemberMapping
      * @param typeVariantOrNull The data type variant of this mapping or <code>null</code>
      */
     static HDF5CompoundMemberMapping mappingWithStorageTypeId(String fieldName, String memberName,
-            HDF5EnumerationType enumType, int[] memberTypeDimensions, int storageTypeId,
+            HDF5EnumerationType enumType, int[] memberTypeDimensions, long storageTypeId,
             HDF5DataTypeVariant typeVariantOrNull)
     {
         assert enumType != null;
@@ -1156,9 +1156,10 @@ public final class HDF5CompoundMemberMapping
      * @param reference If <code>true</code>, the type will be mapped to a reference type.
      * @param storageMemberTypeId The storage data type id of member, or -1, if not available
      */
+    @SuppressWarnings("unlikely-arg-type")
     private HDF5CompoundMemberMapping(String fieldName, Field fieldOrNull,
             Class<?> memberClassOrNull, String memberName, HDF5EnumerationType enumTypeOrNull,
-            String enumTypeNameOrNull, int[] memberTypeDimensions, int storageMemberTypeId,
+            String enumTypeNameOrNull, int[] memberTypeDimensions, long storageMemberTypeId,
             boolean unsigned, boolean variableLength, boolean reference,
             HDF5DataTypeVariant typeVariantOrNull)
     {
@@ -1174,10 +1175,8 @@ public final class HDF5CompoundMemberMapping
         this.unsigned = unsigned;
         this.variableLength = variableLength;
         this.reference = reference;
-        if (typeVariantMap.containsKey(typeVariantOrNull))
-        {
-            this.typeVariantOrNull = typeVariantMap.get(typeVariantOrNull);
-        } else
+        this.typeVariantOrNull = typeVariantMap.get(typeVariantOrNull);
+        if (this.typeVariantOrNull == null)
         {
             this.typeVariantOrNull = HDF5DataTypeVariant.maskNull(typeVariantOrNull);
         }
@@ -1187,6 +1186,7 @@ public final class HDF5CompoundMemberMapping
      * Sets the field name in the Java class to use for the mapping, overriding the member name
      * which is used by default to find the field.
      */
+    @SuppressWarnings("hiding")
     public HDF5CompoundMemberMapping fieldName(String fieldName)
     {
         this.fieldName = fieldName;
@@ -1297,6 +1297,7 @@ public final class HDF5CompoundMemberMapping
      * Can be used as a convenience method replacing {@link #dimensions(int[])} for array members of
      * rank 1.
      */
+    @SuppressWarnings("hiding")
     public HDF5CompoundMemberMapping length(int memberTypeLength)
     {
         return dimensions(new int[]
@@ -1324,6 +1325,7 @@ public final class HDF5CompoundMemberMapping
      * Sets the dimensions of the member type to use for the mapping. Must be set for array members
      * of rank N.
      */
+    @SuppressWarnings("hiding")
     public HDF5CompoundMemberMapping dimensions(int[] memberTypeDimensions)
     {
         this.memberTypeDimensions = memberTypeDimensions;
@@ -1349,7 +1351,8 @@ public final class HDF5CompoundMemberMapping
      * Sets this field to an unsigned type, if <var>unsigned</var> is <code>true</code>. Must be an
      * integer.
      */
-    public HDF5CompoundMemberMapping unsigned(boolean unsigned)
+    public HDF5CompoundMemberMapping unsigned(@SuppressWarnings("hiding")
+    boolean unsigned)
     {
         this.unsigned = unsigned;
         return this;
@@ -1376,7 +1379,8 @@ public final class HDF5CompoundMemberMapping
      * Sets this field to a variable-length type, if <var>variableLength</var> is <code>true</code>.
      * Must be a string.
      */
-    public HDF5CompoundMemberMapping variableLength(boolean variableLength)
+    public HDF5CompoundMemberMapping variableLength(@SuppressWarnings("hiding")
+    boolean variableLength)
     {
         this.variableLength = variableLength;
         return this;
@@ -1403,7 +1407,8 @@ public final class HDF5CompoundMemberMapping
      * Sets this field to a reference type, if <var>reference</var> is <code>true</code>. Must be a
      * string.
      */
-    public HDF5CompoundMemberMapping reference(boolean reference)
+    public HDF5CompoundMemberMapping reference(@SuppressWarnings("hiding")
+    boolean reference)
     {
         this.reference = reference;
         return this;
@@ -1440,7 +1445,7 @@ public final class HDF5CompoundMemberMapping
         return memberTypeDimensions;
     }
 
-    int getStorageDataTypeId()
+    long getStorageDataTypeId()
     {
         return storageDataTypeId;
     }
