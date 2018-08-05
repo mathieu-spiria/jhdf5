@@ -20,8 +20,8 @@ import static hdf.hdf5lib.H5.H5Tinsert;
 
 import java.lang.reflect.Field;
 
-import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFHelper;
 
 /**
  * A class that byteifies member fields of objects.

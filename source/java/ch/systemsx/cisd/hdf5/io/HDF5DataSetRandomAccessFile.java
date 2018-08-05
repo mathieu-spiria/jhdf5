@@ -26,7 +26,6 @@ import java.nio.ByteOrder;
 import java.util.Arrays;
 
 import hdf.hdf5lib.exceptions.HDF5Exception;
-import ch.ethz.sis.hdf5.exceptions.HDF5FileNotFoundException;
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.exceptions.CheckedExceptionTunnel;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
@@ -40,6 +39,7 @@ import ch.systemsx.cisd.hdf5.HDF5OpaqueType;
 import ch.systemsx.cisd.hdf5.HDF5StorageLayout;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
+import ch.systemsx.cisd.hdf5.exceptions.HDF5FileNotFoundException;
 
 /**
  * A {@link IRandomAccessFile} backed by an HDF5 dataset. The HDF5 dataset needs to be a byte array

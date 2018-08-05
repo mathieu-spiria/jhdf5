@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.ethz.sis.hdf5.hdf5lib;
+package ch.systemsx.cisd.hdf5.hdf5lib;
 
 import static hdf.hdf5lib.H5.H5Gclose;
 import static hdf.hdf5lib.H5.H5Gopen;

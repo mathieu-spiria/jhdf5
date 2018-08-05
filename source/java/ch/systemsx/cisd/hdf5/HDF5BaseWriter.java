@@ -49,7 +49,6 @@ import java.util.concurrent.TimeUnit;
 
 import hdf.hdf5lib.exceptions.HDF5DatasetInterfaceException;
 import hdf.hdf5lib.exceptions.HDF5JavaException;
-import ch.ethz.sis.hdf5.exceptions.HDF5FileNotFoundException;
 import ch.systemsx.cisd.base.exceptions.CheckedExceptionTunnel;
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.mdarray.MDArray;
@@ -59,6 +58,7 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.exceptions.HDF5FileNotFoundException;
 
 /**
  * Class that provides base methods for reading and writing HDF5 files.

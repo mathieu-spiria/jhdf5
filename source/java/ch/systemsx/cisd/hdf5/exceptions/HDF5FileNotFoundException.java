@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ch.ethz.sis.hdf5.exceptions;
+package ch.systemsx.cisd.hdf5.exceptions;
 
 import java.io.File;
 

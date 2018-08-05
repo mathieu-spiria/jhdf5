@@ -26,22 +26,22 @@ extern jboolean h5libraryError( JNIEnv *env );
 
 
 /*
- * Class:     ch_ethz_sis_hdf5_hdf5lib_H5
+ * Class:     ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper
  * Method:    getPointerSize
  * Signature: ()I
  */
-JNIEXPORT jint JNICALL Java_ch_ethz_sis_hdf5_hdf5lib_HDFHelper_getPointerSize
+JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper_getPointerSize
   (JNIEnv *env, jclass clss)
 {
     return sizeof(void *);
 }
 
 /*
- * Class:     ch_ethz_sis_hdf5_hdf5lib_H5
+ * Class:     ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper
  * Method:    compoundCpyVLStr
  * Signature: (Ljava/lang/String;[B)I)I
  */
-JNIEXPORT jint JNICALL Java_ch_ethz_sis_hdf5_hdf5lib_HDFHelper_compoundCpyVLStr
+JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper_compoundCpyVLStr
   (JNIEnv *env, 
    jclass clss, 
    jstring str, /* IN: the string to copy */ 
@@ -80,11 +80,11 @@ JNIEXPORT jint JNICALL Java_ch_ethz_sis_hdf5_hdf5lib_HDFHelper_compoundCpyVLStr
 }
 
 /*
- * Class:     ch_ethz_sis_hdf5_hdf5lib_H5
+ * Class:     ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper
  * Method:    createVLStrFromCompound
  * Signature: ([B)I)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_ch_ethz_sis_hdf5_hdf5lib_HDFHelper_createVLStrFromCompound
+JNIEXPORT jstring JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper_createVLStrFromCompound
   (JNIEnv *env, 
    jclass clss, 
    jbyteArray buf, /* IN: array of byte containing the compound or compound array. */
@@ -115,11 +115,11 @@ JNIEXPORT jstring JNICALL Java_ch_ethz_sis_hdf5_hdf5lib_HDFHelper_createVLStrFro
 }
 
 /*
- * Class:     ch_ethz_sis_hdf5_hdf5lib_H5
+ * Class:     ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper
  * Method:    freeCompoundVLStr
  * Signature: ([B)I[I))I
  */
-JNIEXPORT jint JNICALL Java_ch_ethz_sis_hdf5_hdf5lib_HDFHelper_freeCompoundVLStr
+JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper_freeCompoundVLStr
   (JNIEnv *env, 
    jclass clss, 
    jbyteArray buf, /* IN: array of byte containing the compound or compound array. */

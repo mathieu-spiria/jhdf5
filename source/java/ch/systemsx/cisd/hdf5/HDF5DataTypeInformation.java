@@ -18,8 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 import org.apache.commons.lang.ObjectUtils;
 
-import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFHelper;
 
 /**
  * A class that holds relevant information about a data type.

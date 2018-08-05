@@ -28,10 +28,10 @@ import static hdf.hdf5lib.HDF5Constants.H5T_STD_B64LE;
 import java.lang.reflect.Field;
 import java.util.BitSet;
 
-import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.AccessType;
 import ch.systemsx.cisd.hdf5.HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory;
 import ch.systemsx.cisd.hdf5.HDF5ValueObjectByteifyer.IFileAccessProvider;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFHelper;
 
 /**
  * A {@link HDF5CompoundByteifyerFactory.IHDF5CompoundMemberBytifyerFactory} for <code>BitSet</code>

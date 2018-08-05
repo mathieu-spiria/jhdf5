@@ -28,6 +28,17 @@ extern jboolean h5badArgument( JNIEnv *env, char *functName);
 extern jboolean h5libraryError( JNIEnv *env );
 extern void  h5str_array_free(char **strs, size_t len);
 
+/*
+/////////////////////////////////////////////////////////////////////////////////
+//
+// H5L and H5O helper methods.
+// Add these methods so that we don't need to call H5Lget_info in a Java loop 
+// to get information for all the object in a group, which takes
+// a lot of time to execute if the number of objects is more than 10,000
+//
+/////////////////////////////////////////////////////////////////////////////////
+*/
+
 char *get_external_link(  JNIEnv *env, const char *linkval_buf, size_t size ) {
       const char *filename;
       const char *obj_path;
@@ -79,10 +90,10 @@ long get_minor_error_number()
 }
 
 /*
- * Class:     ch_ethz_sis_hdf5_hdf5lib_HDFHelper
+ * Class:     ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper
  * Method:    _H5Lget_link_info
  */
-JNIEXPORT jint JNICALL Java_ch_ethz_sis_hdf5_hdf5lib_HDFHelper__1H5Lget_1link_1info
+JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1link_1info
   (JNIEnv *env, jclass clss, jlong loc_id, jstring object_name,
     jobjectArray linkName, jboolean exception_when_non_existent)
 {
@@ -172,17 +183,6 @@ JNIEXPORT jint JNICALL Java_ch_ethz_sis_hdf5_hdf5lib_HDFHelper__1H5Lget_1link_1i
 
 }
 
-/*
-/////////////////////////////////////////////////////////////////////////////////
-//
-//
-// Add these methods so that we don't need to call H5Lget_info
-// in a loop to get information for all the object in a group, which takes
-// a lot of time to finish if the number of objects is more than 10,000
-//
-/////////////////////////////////////////////////////////////////////////////////
-*/
-
 typedef struct link_info_all
 {
 	JNIEnv *env;
@@ -224,10 +224,10 @@ herr_t H5Lget_link_names_all( JNIEnv *env, hid_t loc_id, char *group_name, char 
 }
 
 /*
- * Class:     ch_ethz_sis_hdf5_hdf5lib_HDFHelper
+ * Class:     ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper
  * Method:    _H5Lget_link_names_all
  */
-JNIEXPORT jint JNICALL Java_ch_ethz_sis_hdf5_hdf5lib_HDFHelper__1H5Lget_1link_1names_1all
+JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1link_1names_1all
   (JNIEnv *env, jclass clss, jlong loc_id, jstring group_name,
     jobjectArray oname, jint n)
 {
@@ -358,10 +358,10 @@ herr_t H5Lget_link_info_all( JNIEnv *env, hid_t loc_id, char *group_name, char *
 }
 
 /*
- * Class:     ch_ethz_sis_hdf5_hdf5lib_HDFHelper
+ * Class:     ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper
  * Method:    _H5Lget_link_info_all
  */
-JNIEXPORT jint JNICALL Java_ch_ethz_sis_hdf5_hdf5lib_HDFHelper__1H5Lget_1link_1info_1all
+JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1link_1info_1all
   (JNIEnv *env, jclass clss, jlong loc_id, jstring group_name,
     jobjectArray oname, jintArray otype, jobjectArray lname, jint n)
 {

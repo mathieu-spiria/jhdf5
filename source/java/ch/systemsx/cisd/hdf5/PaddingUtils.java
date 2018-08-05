@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import ch.ethz.sis.hdf5.hdf5lib.HDFHelper;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFHelper;
 
 /**
  * A class with methods for padding of memory structures.

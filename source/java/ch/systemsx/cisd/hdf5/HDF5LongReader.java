@@ -27,13 +27,13 @@ import java.util.Iterator;
 
 import hdf.hdf5lib.exceptions.HDF5JavaException;
 import hdf.hdf5lib.exceptions.HDF5LibraryException;
-import ch.ethz.sis.hdf5.exceptions.HDF5SpaceRankMismatch;
 import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 import ch.systemsx.cisd.hdf5.HDF5BaseReader.DataSpaceParameters;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import ch.systemsx.cisd.hdf5.exceptions.HDF5SpaceRankMismatch;
 import hdf.hdf5lib.HDF5Constants;
 
 /**
