@@ -6,3 +6,4 @@
 /.settings
 /test-output
 /source/c/build
+source/c/hdf5*tar*
