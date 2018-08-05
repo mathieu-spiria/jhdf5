@@ -18,6 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 import java.io.File;
 
+import ch.systemsx.cisd.hdf5.HDF5BaseReader.MDCImageGeneration;
+
 /**
  * If you want the reader to perform numeric conversions, call {@link #performNumericConversions()}
  * before calling {@link #reader()}.
@@ -36,7 +38,7 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
     protected boolean autoDereference = true;
 
     protected HDF5Reader readerWriterOrNull;
-
+    
     HDF5ReaderConfigurator(File hdf5File)
     {
         assert hdf5File != null;
@@ -82,8 +84,8 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
         {
             readerWriterOrNull =
                     new HDF5Reader(new HDF5BaseReader(hdf5File, performNumericConversions,
-                            autoDereference, IHDF5WriterConfigurator.FileFormatVersionBounds.getDefault(), false,
-                            ""));
+                            autoDereference, IHDF5WriterConfigurator.FileFormatVersionBounds.getDefault(), 
+                            MDCImageGeneration.NO_MDC_IMAGE, false, ""));
         }
         return readerWriterOrNull;
     }

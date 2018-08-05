@@ -69,28 +69,36 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
         /**
          * The library will create objects with the earliest possible format versions.
          */
-        EARLIEST(HDF5Constants.H5F_LIBVER_EARLIEST),
+        EARLIEST(HDF5Constants.H5F_LIBVER_EARLIEST, false),
 
         /**
          * The library will allow objects to be created with the latest format versions available to the current library release version.
          */
-        LATEST(HDF5Constants.H5F_LIBVER_LATEST),
+        LATEST(HDF5Constants.H5F_LIBVER_LATEST, true),
 
         /**
          * The library will allow objects to be created with the latest format versions available to HDF5 v1.8.
          */
-        V1_8(HDF5Constants.H5F_LIBVER_V18),
+        V1_8(HDF5Constants.H5F_LIBVER_V18, false),
 
         /**
          * The library will allow objects to be created with the latest format versions available to HDF5 v1.10.
          */
-        V1_10(HDF5Constants.H5F_LIBVER_V110);
+        V1_10(HDF5Constants.H5F_LIBVER_V110, true);
 
         private final int hdf5Constant;
+        
+        private final boolean supportsMDCCache;
 
-        private FileFormatVersion(int hdf5Constant)
+        private FileFormatVersion(int hdf5Constant, boolean supportsMDCCache)
         {
             this.hdf5Constant = hdf5Constant;
+            this.supportsMDCCache = supportsMDCCache;
+        }
+
+        public boolean supportsMDCCache()
+        {
+            return supportsMDCCache;
         }
 
         int getHdf5Constant()
@@ -178,7 +186,16 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
          * <li>Earlier versions of the library than the current one may not be able to access objects created with this setting.</li>
          * </ul>
          */
-        V1_10_LATEST(FileFormatVersion.V1_10, FileFormatVersion.LATEST);
+        V1_10_LATEST(FileFormatVersion.V1_10, FileFormatVersion.LATEST),
+
+        /**
+         * <ul>
+         * <li>The library will create objects with the latest format versions available to the current library release version.</li>
+         * <li>This setting allows users to take advantage of the latest features and performance enhancements in the current library.</li>
+         * <li>Earlier versions of the library than the current one may not be able to access objects created with this setting.</li>
+         * </ul>
+         */
+        LATEST_LATEST(FileFormatVersion.LATEST, FileFormatVersion.LATEST);
 
         private final FileFormatVersion low;
 
@@ -259,6 +276,20 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
      */
     @Override
     public IHDF5WriterConfigurator performNumericConversions();
+
+    /**
+     * Enables generation of a metadata cache image.
+     * <p>
+     * Use {#link {@link #keepMDCImage()} to only generate an MDC image if the file already has one. 
+     */
+    public IHDF5WriterConfigurator generateMDCImage();
+
+    /**
+     * Keep an existing metadata cache image.
+     * <p>
+     * Use {#link {@link #generateMDCImage()} to generate an MDC image regardless of whether the file already has one.
+     */
+    public IHDF5WriterConfigurator keepMDCImage();
 
     /**
      * Sets UTF8 character encoding for all paths and all strings in this file. (The default is ASCII.)

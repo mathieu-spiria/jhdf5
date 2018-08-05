@@ -51,6 +51,7 @@ import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import ch.systemsx.cisd.hdf5.exceptions.HDF5FileNotFoundException;
 import ch.systemsx.cisd.hdf5.exceptions.HDF5SpaceRankMismatch;
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFHelper;
 import hdf.hdf5lib.HDF5Constants;
 
 /**
@@ -67,6 +68,29 @@ class HDF5BaseReader
         CONFIG, OPEN, CLOSED
     }
 
+    /** Control of metadate image generation. */
+    static enum MDCImageGeneration 
+    { 
+        /** Do not generate an MDC image. */
+        NO_MDC_IMAGE(false), 
+        /** Generate an MDC image if the file already has one. */
+        KEEP_MDC_IMAGE(false), 
+        /** Generate an MDC image. */
+        GENERATE_MDC_IMAGE(true);
+        
+        final boolean generateImageForNewFile;
+        
+        public boolean isGenerateImageForNewFile()
+        {
+            return generateImageForNewFile;
+        }
+
+        MDCImageGeneration(boolean generateImageForNewFile)
+        {
+            this.generateImageForNewFile = generateImageForNewFile;
+        }
+    };
+
     /** The size of a reference in bytes. */
     static final int REFERENCE_SIZE_IN_BYTES = 8;
 
@@ -77,6 +101,10 @@ class HDF5BaseReader
     protected final CleanUpRegistry fileRegistry;
 
     protected final boolean performNumericConversions;
+    
+    protected final boolean hasMDCImage;
+    
+    protected boolean readOnly;
 
     /** Map from named data types to ids. */
     private final Map<String, Long> namedDataTypeMap;
@@ -119,19 +147,22 @@ class HDF5BaseReader
     private HDF5Reader myReader;
 
     HDF5BaseReader(File hdf5File, boolean performNumericConversions, boolean autoDereference,
-            FileFormatVersionBounds fileFormat, boolean overwrite, String preferredHouseKeepingNameSuffix)
+            FileFormatVersionBounds fileFormat, MDCImageGeneration mdcGenerateImage, boolean overwrite, 
+            String preferredHouseKeepingNameSuffix)
     {
-        this(hdf5File, performNumericConversions, false, autoDereference, fileFormat, overwrite,
+        this(hdf5File, performNumericConversions, false, autoDereference, fileFormat, mdcGenerateImage, 
+                overwrite,
                 preferredHouseKeepingNameSuffix);
     }
 
     HDF5BaseReader(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
-            boolean autoDereference, FileFormatVersionBounds fileFormat, boolean overwrite,
-            String preferredHouseKeepingNameSuffix)
+            boolean autoDereference, FileFormatVersionBounds fileFormat, MDCImageGeneration mdcGenerateImage, 
+            boolean overwrite, String preferredHouseKeepingNameSuffix)
     {
         assert hdf5File != null;
         assert preferredHouseKeepingNameSuffix != null;
 
+        this.readOnly = true;
         this.performNumericConversions = performNumericConversions;
         this.hdf5File = hdf5File.getAbsoluteFile();
         this.runner = new CleanUpCallable();
@@ -143,7 +174,8 @@ class HDF5BaseReader
         this.h5 =
                 new HDF5(fileRegistry, runner, performNumericConversions, useUTF8CharEncoding,
                         autoDereference);
-        this.fileId = openFile(fileFormat, overwrite);
+        this.fileId = openFile(fileFormat, mdcGenerateImage, overwrite);
+        this.hasMDCImage = HDFHelper.H5Fhas_mdc_image(fileId);
         this.state = State.OPEN;
 
         final String houseKeepingNameSuffixFromFileOrNull = tryGetHouseKeepingNameSuffix();
@@ -186,7 +218,7 @@ class HDF5BaseReader
         }
     }
 
-    long openFile(FileFormatVersionBounds fileFormat, boolean overwrite)
+    long openFile(FileFormatVersionBounds fileFormat, MDCImageGeneration mdcGenerateImage, boolean overwrite)
     {
         if (hdf5File.exists() == false)
         {
@@ -265,6 +297,11 @@ class HDF5BaseReader
                 }
             };
         return runner.call(readRunnable);
+    }
+    
+    boolean isMDCImageGenerationEnabled()
+    {
+        return readOnly ? hasMDCImage : h5.isMDCImageGenerationEnabled(fileId);
     }
 
     public HDF5DataSet openDataSet(final String objectPath)

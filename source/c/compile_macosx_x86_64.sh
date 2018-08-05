@@ -7,6 +7,7 @@ if [ -n "$POSTFIX" ]; then
 fi
 
 rm -fR build/jni
+rm -f build/libjhdf5.jnilib
 cp -a jni build/
 cp -a *.c build/jni/
 cd build

@@ -29,9 +29,12 @@ import static hdf.hdf5lib.HDF5Constants.H5L_TYPE_HARD;
 import static hdf.hdf5lib.HDF5Constants.H5L_TYPE_SOFT;
 import static hdf.hdf5lib.HDF5Constants.H5O_TYPE_NTYPES;
 import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
+import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static hdf.hdf5lib.HDF5Constants.H5_INDEX_NAME;
 import static hdf.hdf5lib.HDF5Constants.H5_ITER_INC;
 
+import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
+import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import hdf.hdf5lib.H5;
 import hdf.hdf5lib.HDF5Constants;
 import hdf.hdf5lib.HDFNativeData;
@@ -294,10 +297,6 @@ public class HDFHelper
     // //
     // ////////////////////////////////////////////////////////////
 
-    /**
-     * Returns a dataset transfer property list (<code>H5P_DATASET_XFER</code>) that has a conversion exception handler set which abort conversions
-     * that triggers overflows.
-     */
     private static native long _H5Pcreate_xfer_abort_overflow();
 
     /**
@@ -312,10 +311,6 @@ public class HDFHelper
         }
     }
 
-    /**
-     * Returns a dataset transfer property list (<code>H5P_DATASET_XFER</code>) that has a conversion exception handler set which aborts all
-     * conversions.
-     */
     private static native long _H5Pcreate_xfer_abort();
 
     /**
@@ -330,6 +325,89 @@ public class HDFHelper
         }
     }
 
+    // ////////////////////////////////////////////////////////////
+    // //
+    // Functions for controlling the metadata cache configuration //
+    // //
+    // ////////////////////////////////////////////////////////////
+
+    private static native long _H5Pset_mdc_image_config(long fapl, boolean generate_image) throws HDF5LibraryException;
+    
+    /**
+     * Sets whether a metadata cache image should be generated for an HDF5 file.
+     * 
+     * @param fapl The file access property list of the file.
+     * @param generate_image If a metadata cache image should be generated for the file. 
+     * @return 0 for successfull completion.
+     */
+    public static long H5Pset_mdc_image_config(long fapl, boolean generate_image) throws HDF5LibraryException
+    {
+        synchronized (H5.class)
+        {
+            return _H5Pset_mdc_image_config(fapl, generate_image);
+        }        
+    }
+    
+    private static native boolean _H5Pget_mdc_image_enabled(long fapl);
+    
+    /**
+     * Determines whether the metadata cache image generation is enabled for an HDF5 file.
+     * 
+     * @param fapl The file access property list of the file.
+     * @return <code>true</code> if a metadata cache image will ge generated on file close for this file.
+     */
+    public static boolean H5Pget_mdc_image_enabled(long fapl)
+    {
+        synchronized (H5.class)
+        {
+            return _H5Pget_mdc_image_enabled(fapl);
+        }        
+    }
+    
+    private static native boolean _H5Fhas_mdc_image(long file_id);
+    
+    /**
+     * Checks whether the file has an metadata cache image. 
+     * <p>
+     * On files open for read/write access this function needs to be called 
+     * immediately after opening the file and before the first access to any metadata.
+     * 
+     * @param file_id The id of the file
+     * @return <code>true</code> if the file has a metadata cache image.
+     */
+    public static boolean H5Fhas_mdc_image(long file_id)
+    {
+        synchronized (H5.class)
+        {
+            return _H5Fhas_mdc_image(file_id);
+        }
+    }
+    
+    /**
+     * Checks whether the file has an metadata cache image. 
+     * <p>
+     * 
+     * @param file_path The path of the file
+     * @return <code>true</code> if the file has a metadata cache image.
+     */
+    public static boolean H5Fhas_mdc_image(String file_path)
+    {
+        long fileId = -1;
+        try {
+            fileId =
+                hdf.hdf5lib.H5.H5Fopen(file_path,
+                        hdf.hdf5lib.HDF5Constants.H5F_ACC_RDONLY,
+                        hdf.hdf5lib.HDF5Constants.H5P_DEFAULT);
+            return H5Fhas_mdc_image(fileId);
+        } finally 
+        {
+            if (fileId != -1)
+            {
+                hdf.hdf5lib.H5.H5Fclose(fileId);
+            }
+        }
+    }
+    
     // ////////////////////////////////////////////////////////////
     // //
     // Convenience functions for converting native data types. //

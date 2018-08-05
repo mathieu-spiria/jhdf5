@@ -17,6 +17,8 @@
 package ch.systemsx.cisd.hdf5;
 
 import static hdf.hdf5lib.H5.*;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDFHelper.H5Pset_mdc_image_config;
+import static ch.systemsx.cisd.hdf5.hdf5lib.HDFHelper.H5Pget_mdc_image_enabled;
 import static hdf.hdf5lib.HDF5Constants.H5_INDEX_NAME;
 import static hdf.hdf5lib.HDF5Constants.H5_ITER_NATIVE;
 import static hdf.hdf5lib.HDF5Constants.H5D_CHUNKED;
@@ -69,6 +71,7 @@ import hdf.hdf5lib.exceptions.HDF5JavaException;
 import hdf.hdf5lib.structs.H5O_info_t;
 import ch.systemsx.cisd.base.convert.NativeData;
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersion;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpCallable;
 import ch.systemsx.cisd.hdf5.cleanup.CleanUpRegistry;
@@ -137,10 +140,11 @@ class HDF5
     // File
     //
 
-    public long createFile(String fileName, FileFormatVersionBounds fileFormatVersionBounds, ICleanUpRegistry registry)
+    public long createFile(String fileName, FileFormatVersionBounds fileFormatVersionBounds, 
+            Boolean mdcGenerateImage, ICleanUpRegistry registry)
     {
         final long fileAccessPropertyListId =
-                createFileAccessPropertyListId(fileFormatVersionBounds, registry);
+                createFileAccessPropertyListId(fileFormatVersionBounds, mdcGenerateImage, registry);
         final long fileId =
                 H5Fcreate(fileName, H5F_ACC_TRUNC, H5P_DEFAULT, fileAccessPropertyListId);
         registry.registerCleanUp(new Runnable()
@@ -154,10 +158,28 @@ class HDF5
         return fileId;
     }
 
-    private long createFileAccessPropertyListId(FileFormatVersionBounds fileFormatVersionBounds, ICleanUpRegistry registry)
+    private long createFileAccessPropertyListId(FileFormatVersionBounds fileFormatVersionBounds, 
+            boolean mdcGenerateImage, ICleanUpRegistry registry)
     {
         long fileAccessPropertyListId = H5P_DEFAULT;
-        if (fileFormatVersionBounds != FileFormatVersionBounds.getDefault())
+        // MDC image generation is incompatible with low file format bound EARLIEST, thus raise it to V1_8.
+        if (mdcGenerateImage && (fileFormatVersionBounds.getLowBound() == FileFormatVersion.EARLIEST))
+        {
+            switch (fileFormatVersionBounds)
+            {
+                case EARLIEST_LATEST:
+                    fileFormatVersionBounds = FileFormatVersionBounds.V1_8_LATEST;
+                    break;
+                case EARLIEST_V1_10:
+                    fileFormatVersionBounds = FileFormatVersionBounds.V1_8_V1_10;
+                    break;
+                case EARLIEST_V1_8:
+                    throw new HDF5JavaException("Upper file version bound V1_8 is incompatible with MDC image generation.");
+                default:
+                    throw new IllegalStateException("Unhandled case switch");
+            }
+        }
+        if (fileFormatVersionBounds != FileFormatVersionBounds.getDefault() || mdcGenerateImage)
         {
             final long fapl = H5Pcreate(H5P_FILE_ACCESS);
             registry.registerCleanUp(new Runnable()
@@ -168,11 +190,29 @@ class HDF5
                         H5Pclose(fapl);
                     }
                 });
-            H5Pset_libver_bounds(fapl, fileFormatVersionBounds.getLowBound().getHdf5Constant(), 
-                    fileFormatVersionBounds.getHighBound().getHdf5Constant());
             fileAccessPropertyListId = fapl;
+            if (fileFormatVersionBounds != FileFormatVersionBounds.getDefault())
+            {
+                H5Pset_libver_bounds(fileAccessPropertyListId, 
+                        fileFormatVersionBounds.getLowBound().getHdf5Constant(), 
+                        fileFormatVersionBounds.getHighBound().getHdf5Constant());
+            }
+            if (mdcGenerateImage)
+            {
+                H5Pset_mdc_image_config(fileAccessPropertyListId, mdcGenerateImage);
+            }
         }
         return fileAccessPropertyListId;
+    }
+    
+    /**
+     * @return if the generation of a metadata image is enabled for <code>fileId</code>.
+     */
+    public boolean isMDCImageGenerationEnabled(long fileId)
+    {
+        final long fapl = H5Fget_access_plist(fileId);
+        return H5Pget_mdc_image_enabled(fapl);
+        
     }
 
     public long openFileReadOnly(String fileName, ICleanUpRegistry registry)
@@ -189,9 +229,10 @@ class HDF5
         return fileId;
     }
 
-    public long openFileReadWrite(String fileName, FileFormatVersionBounds fileFormatVersionBounds, ICleanUpRegistry registry)
+    public long openFileReadWrite(String fileName, FileFormatVersionBounds fileFormatVersionBounds, 
+            Boolean mdcGenerateImage, ICleanUpRegistry registry)
     {
-        final long fileAccessPropertyListId = createFileAccessPropertyListId(fileFormatVersionBounds, registry);
+        final long fileAccessPropertyListId = createFileAccessPropertyListId(fileFormatVersionBounds, mdcGenerateImage, registry);
         final File f = new File(fileName);
         if (f.exists() && f.isFile() == false)
         {

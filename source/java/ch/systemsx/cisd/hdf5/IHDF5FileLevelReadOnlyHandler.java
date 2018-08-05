@@ -37,6 +37,17 @@ public interface IHDF5FileLevelReadOnlyHandler
     public boolean isPerformNumericConversions();
 
     /**
+     * Returns <code>true</code>, if the generation of a metadata cache image is enabled for 
+     * this file and <code>false</code> otherwise.
+     */
+    public boolean isMDCImageGenerationEnabled();
+    
+    /**
+     * Returns <code>true</code>, if this file has an MDC image.
+     */
+    public boolean hasMDCImage();
+    
+    /**
      * Returns the suffix used to mark and recognize internal (house keeping) files and groups. An
      * empty string ("") encodes for the default, which is two leading and two trailing underscores
      * ("__NAME__")

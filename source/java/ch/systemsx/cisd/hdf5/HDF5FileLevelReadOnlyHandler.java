@@ -39,7 +39,19 @@ class HDF5FileLevelReadOnlyHandler implements IHDF5FileLevelReadOnlyHandler
     {
         return baseReader.performNumericConversions;
     }
-    
+
+    @Override
+    public boolean hasMDCImage()
+    {
+        return baseReader.hasMDCImage;
+    }
+
+    @Override
+    public boolean isMDCImageGenerationEnabled()
+    {
+        return baseReader.isMDCImageGenerationEnabled();
+    }
+
     @Override
     public boolean isClosed()
     {

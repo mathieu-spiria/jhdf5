@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5;
 import java.io.File;
 
 import ch.systemsx.cisd.base.utilities.OSUtilities;
+import ch.systemsx.cisd.hdf5.HDF5BaseReader.MDCImageGeneration;
 
 /**
  * The configuration of the writer is done by chaining calls to configuration methods before calling
@@ -39,7 +40,9 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     private boolean useSimpleDataSpaceForAttributes = false;
 
     private FileFormatVersionBounds fileFormatVersionBounds = FileFormatVersionBounds.getDefault();
-
+    
+    private MDCImageGeneration mdcImageGeneration = MDCImageGeneration.NO_MDC_IMAGE;
+    
     private String houseKeepingNameSuffix = "";
 
     // For Windows, use a blocking sync mode by default as otherwise the mandatory locks are up for
@@ -109,6 +112,20 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     }
 
     @Override
+    public HDF5WriterConfigurator generateMDCImage()
+    {
+        this.mdcImageGeneration = MDCImageGeneration.GENERATE_MDC_IMAGE;
+        return this;
+    }
+
+    @Override
+    public IHDF5WriterConfigurator keepMDCImage()
+    {
+        this.mdcImageGeneration = MDCImageGeneration.KEEP_MDC_IMAGE;
+        return this;
+    }
+
+    @Override
     public HDF5WriterConfigurator useUTF8CharacterEncoding()
     {
         return (HDF5WriterConfigurator) super.useUTF8CharacterEncoding();
@@ -129,10 +146,10 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
             readerWriterOrNull =
                     new HDF5Writer(new HDF5BaseWriter(hdf5File, performNumericConversions,
                             useUTF8CharEncoding, autoDereference, fileFormatVersionBounds,
-                            useExtentableDataTypes, overwriteFile, keepDataSetIfExists,
-                            useSimpleDataSpaceForAttributes, houseKeepingNameSuffix, syncMode));
+                            mdcImageGeneration, useExtentableDataTypes, overwriteFile, 
+                            keepDataSetIfExists, useSimpleDataSpaceForAttributes, houseKeepingNameSuffix, 
+                            syncMode));
         }
         return (HDF5Writer) readerWriterOrNull;
     }
-
 }

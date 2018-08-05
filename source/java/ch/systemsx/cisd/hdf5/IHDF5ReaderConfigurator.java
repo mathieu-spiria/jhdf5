@@ -59,7 +59,7 @@ public interface IHDF5ReaderConfigurator
      * <i>Note: automatic dereferencing is switched on by default.</i>
      */
     public IHDF5ReaderConfigurator noAutoDereference();
-
+    
     /**
      * Returns an {@link IHDF5Reader} based on this configuration.
      */

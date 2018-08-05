@@ -26,7 +26,7 @@ extern jboolean h5libraryError( JNIEnv *env );
 /*
 /////////////////////////////////////////////////////////////////////////////////
 //
-// H5P helper methods for controling the behavior on numeric conversions.
+// H5P helper methods for controlling the behavior on numeric conversions.
 //
 /////////////////////////////////////////////////////////////////////////////////
 */
@@ -91,3 +91,55 @@ JNIEXPORT jlong JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Pcreate
     return plist;
 }
 
+/*
+/////////////////////////////////////////////////////////////////////////////////
+//
+// H5P helper methods for setting / getting the metadata cache image configuration. 
+//
+/////////////////////////////////////////////////////////////////////////////////
+*/
+
+/*
+ * Class:     ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper
+ * Method:    _H5Pset_mdc_image_config
+ * Signature: herr_t _H5Pset_mdc_image_config(hid_t, bool)
+ */
+JNIEXPORT jlong JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Pset_1mdc_1image_1config
+  (JNIEnv *env, jclass clss, hid_t plist, jboolean generate_image)
+{
+    herr_t status;
+    H5AC_cache_image_config_t config;
+    
+    config.version = H5AC__CURR_CACHE_IMAGE_CONFIG_VERSION;
+    config.generate_image = generate_image;
+    config.save_resize_status = 0;
+    config.entry_ageout = H5AC__CACHE_IMAGE__ENTRY_AGEOUT__NONE;
+
+    status = H5Pset_mdc_image_config(plist, &config);
+    if (status < 0)
+    {
+        h5libraryError(env);
+    }
+    return status;
+}
+
+/*
+ * Class:     ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper
+ * Method:    _H5Pget_mdc_image_enabled
+ * Signature: hbool _H5Pget_mdc_image_enabled(hid_t)
+ */
+JNIEXPORT jboolean JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Pget_1mdc_1image_1enabled
+  (JNIEnv *env, jclass clss, hid_t plist)
+{
+    herr_t status;
+    H5AC_cache_image_config_t config;
+    
+    config.version = H5AC__CURR_CACHE_IMAGE_CONFIG_VERSION;
+    
+    status = H5Pget_mdc_image_config(plist, &config);
+    if (status < 0)
+    {
+        h5libraryError(env);
+    }
+    return config.generate_image;
+}

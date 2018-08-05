@@ -18,6 +18,7 @@ package ch.systemsx.cisd.hdf5;
 
 import java.io.File;
 
+import ch.systemsx.cisd.hdf5.hdf5lib.HDFHelper;
 import hdf.hdf5lib.H5;
 
 /**
@@ -60,6 +61,11 @@ public final class HDF5FactoryProvider
             return H5.H5Fis_hdf5(file.getPath());
         }
 
+        @Override
+        public boolean hasMDCImage(File file)
+        {
+            return HDFHelper.H5Fhas_mdc_image(file.getPath());
+        }
     }
 
     /**

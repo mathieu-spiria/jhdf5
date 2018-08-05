@@ -58,5 +58,9 @@ public interface IHDF5Factory
      * otherwise.
      */
     public boolean isHDF5File(File file);
-
+    
+    /**
+     * Returns <code>true</code> if the HDF5 file has a metadata cache image.
+     */
+    public boolean hasMDCImage(File file);
 }

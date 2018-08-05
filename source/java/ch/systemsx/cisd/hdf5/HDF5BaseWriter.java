@@ -85,7 +85,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
      * The size threshold for the COMPACT storage layout.
      */
     final static int COMPACT_LAYOUT_THRESHOLD = 256;
-
+    
     /**
      * ExecutorService for calling <code>fsync(2)</code> in a non-blocking way.
      */
@@ -137,13 +137,14 @@ final class HDF5BaseWriter extends HDF5BaseReader
     final FileFormatVersionBounds fileFormat;
 
     HDF5BaseWriter(File hdf5File, boolean performNumericConversions, boolean useUTF8CharEncoding,
-            boolean autoDereference, FileFormatVersionBounds fileFormat, boolean useExtentableDataTypes,
-            boolean overwriteFile, boolean keepDataSetIfExists,
+            boolean autoDereference, FileFormatVersionBounds fileFormat, MDCImageGeneration mdcGenerateImage, 
+            boolean useExtentableDataTypes, boolean overwriteFile, boolean keepDataSetIfExists,
             boolean useSimpleDataSpaceForAttributes, String preferredHouseKeepingNameSuffix,
             SyncMode syncMode)
     {
         super(hdf5File, performNumericConversions, useUTF8CharEncoding, autoDereference,
-                fileFormat, overwriteFile, preferredHouseKeepingNameSuffix);
+                fileFormat, mdcGenerateImage, overwriteFile, preferredHouseKeepingNameSuffix);
+        this.readOnly = false;
         try
         {
             this.fileForSyncing = new RandomAccessFile(hdf5File, "rw");
@@ -202,15 +203,20 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     @Override
-    long openFile(FileFormatVersionBounds fileFormatInit, boolean overwriteInit)
+    long openFile(FileFormatVersionBounds fileFormatInit, MDCImageGeneration mdcGenerateImage, boolean overwriteInit)
     {
+        boolean generateMDCImage = mdcGenerateImage.isGenerateImageForNewFile();
         if (hdf5File.exists() && overwriteInit == false)
         {
             if (hdf5File.canWrite() == false)
             {
                 throw new HDF5FileNotFoundException(hdf5File, "File is not writable.");
             }
-            return h5.openFileReadWrite(hdf5File.getPath(), fileFormatInit, fileRegistry);
+            if (mdcGenerateImage == MDCImageGeneration.KEEP_MDC_IMAGE)
+            {
+                generateMDCImage = HDF5Factory.hasMDCImage(hdf5File);
+            }
+            return h5.openFileReadWrite(hdf5File.getPath(), fileFormatInit, generateMDCImage, fileRegistry);
         } else
         {
             final File directory = hdf5File.getParentFile();
@@ -222,7 +228,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             {
                 throw new HDF5FileNotFoundException(directory, "Directory is not writable.");
             }
-            return h5.createFile(hdf5File.getPath(), fileFormatInit, fileRegistry);
+            return h5.createFile(hdf5File.getPath(), fileFormatInit, generateMDCImage, fileRegistry);
         }
     }
 

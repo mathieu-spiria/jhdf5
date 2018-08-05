@@ -121,5 +121,20 @@ public final class HDF5Factory
     {
         return HDF5FactoryProvider.get().isHDF5File(new File(filePath));
     }
+    
+    /**
+     * Returns <code>true</code> if the HDF5 file has a metadata cache image.
+     */
+    public static boolean hasMDCImage(File file)
+    {
+        return HDF5FactoryProvider.get().hasMDCImage(file);
+    }
 
+    /**
+     * Returns <code>true</code> if the HDF5 file has a metadata cache image.
+     */
+    public static boolean hasMDCImage(String filePath)
+    {
+        return HDF5FactoryProvider.get().hasMDCImage(new File(filePath));
+    }
 }

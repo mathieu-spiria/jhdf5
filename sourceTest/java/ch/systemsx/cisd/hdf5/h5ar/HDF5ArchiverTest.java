@@ -45,6 +45,7 @@ import ch.systemsx.cisd.base.unix.Unix.Stat;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5Factory;
 import ch.systemsx.cisd.hdf5.IHDF5Writer;
+import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 
 /**
  * Tests for {@link HDF5Archiver}.
@@ -203,7 +204,7 @@ public class HDF5ArchiverTest
         final File file = new File(workingDirectory, "writeByteArrayToArchive.h5ar");
         file.delete();
         file.deleteOnExit();
-        final IHDF5Archiver a = HDF5ArchiverFactory.open(file);
+        final IHDF5Archiver a = HDF5ArchiverFactory.open(file, false, FileFormatVersionBounds.LATEST_LATEST, null);
         writeToArchive(a, "hello.txt", "Hello World\n");
         writeToArchive(a, "hello2.txt", "Yet another Hello World\n");
         a.close();
@@ -228,6 +229,7 @@ public class HDF5ArchiverTest
                 "755\t100\t100\t        24\t1970-01-12 14:46:40\tee5f3107\t/test/hello2.txt\tOK",
                 list2.get(1).describeLink(true, true));
         aro.close();
+        assertTrue(HDF5Factory.hasMDCImage(file));
     }
 
     @Test

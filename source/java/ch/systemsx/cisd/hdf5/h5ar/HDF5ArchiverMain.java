@@ -164,7 +164,7 @@ public class HDF5ArchiverMain
     @Option(name = "m", longName = "check-missing-files", usage = "Check for files present on the filesystem but missing from the archive for VERIFY")
     private boolean checkMissingFile = false;
 
-    @Option(longName = "file-format", skipForExample = true, usage = "Specifies the file format version when creating an archive (N=1 -> HDF51.8 (default), N=2 -> HDF51.10)")
+    @Option(longName = "file-format", skipForExample = true, usage = "Specifies the file format version when creating an archive (N=1 -> HDF51.8 (default), N=2 -> HDF51.10), N=99 -> LATEST")
     private int fileFormat = 1;
 
     @Option(longName = "stop-on-error", skipForExample = true, usage = "Stop on first error and give detailed error report")
@@ -278,8 +278,18 @@ public class HDF5ArchiverMain
 
     private boolean createArchiver()
     {
-        final FileFormatVersionBounds fileFormatEnum =
-                (fileFormat == 1) ? FileFormatVersionBounds.V1_8_V1_8 : FileFormatVersionBounds.V1_10_V1_10;
+        final FileFormatVersionBounds fileFormatEnum;
+        switch (fileFormat)
+        {
+            case 1:
+                fileFormatEnum = FileFormatVersionBounds.V1_8_V1_8;
+                break;
+            case 2:
+                fileFormatEnum = FileFormatVersionBounds.V1_10_V1_10;
+                break;
+           default:
+               fileFormatEnum = FileFormatVersionBounds.LATEST_LATEST;
+        }
         try
         {
             archiver =

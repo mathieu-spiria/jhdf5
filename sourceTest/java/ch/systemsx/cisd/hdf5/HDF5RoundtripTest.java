@@ -467,6 +467,8 @@ public class HDF5RoundtripTest
         test.testObjectReferenceMDArray();
         test.testObjectReferenceMDArrayBlockWise();
         test.testHDFJavaLowLevel();
+        test.testMDCImageGeneration();
+        test.testMDCImageGenerationBug();
 
         test.finalize();
     }
@@ -11530,5 +11532,77 @@ public class HDF5RoundtripTest
         hdf.hdf5lib.H5.H5Dclose(dsId);
         hdf.hdf5lib.H5.H5Sclose(spcId);
         hdf.hdf5lib.H5.H5Fclose(fileId);
+    }
+    
+    @Test
+    public void testMDCImageGeneration()
+    {
+        final File hdf5File = new File(workingDirectory, "testMDCImageGeneration.h5");
+        hdf5File.delete();
+        assertFalse(hdf5File.exists());
+        hdf5File.deleteOnExit();
+        
+        IHDF5Writer writer = HDF5Factory.configure(hdf5File).generateMDCImage().writer();
+        assertFalse(writer.file().hasMDCImage());
+        assertTrue(writer.file().isMDCImageGenerationEnabled());
+        writer.writeIntArray("a", new int[] { 1, 10, 100, 1000});
+        writer.close();
+
+        IHDF5Reader reader = HDF5Factory.configureForReading(hdf5File).reader();
+        assertTrue(reader.file().hasMDCImage());
+        assertTrue(reader.file().isMDCImageGenerationEnabled());
+        reader.close();
+
+        writer = HDF5Factory.configure(hdf5File).keepMDCImage().writer();
+        assertTrue(writer.file().hasMDCImage());
+        assertTrue(writer.file().isMDCImageGenerationEnabled());
+        writer.close();
+
+        reader = HDF5Factory.configureForReading(hdf5File).reader();
+        assertTrue(reader.file().hasMDCImage());
+        assertTrue(reader.file().isMDCImageGenerationEnabled());
+        reader.close();
+
+        writer = HDF5Factory.configure(hdf5File).writer();
+        assertTrue(writer.file().hasMDCImage());
+        assertFalse(writer.file().isMDCImageGenerationEnabled());
+        writer.close();
+
+        writer = HDF5Factory.configure(hdf5File).generateMDCImage().writer();
+        assertFalse(writer.file().hasMDCImage());
+        assertTrue(writer.file().isMDCImageGenerationEnabled());
+        writer.close();
+
+        reader = HDF5Factory.configureForReading(hdf5File).reader();
+        assertTrue(reader.file().hasMDCImage());
+        assertTrue(reader.file().isMDCImageGenerationEnabled());
+        reader.close();
+    }
+
+    @Test
+    public void testMDCImageGenerationBug()
+    {
+        final File hdf5File = new File(workingDirectory, "testMDCImageGenerationBug.h5");
+        hdf5File.delete();
+        assertFalse(hdf5File.exists());
+        hdf5File.deleteOnExit();
+        
+        IHDF5Writer writer = HDF5Factory.configure(hdf5File).writer();
+        assertFalse(writer.file().hasMDCImage());
+        assertFalse(writer.file().isMDCImageGenerationEnabled());
+        writer.writeIntArray("a", new int[] { 1, 10, 100, 1000});
+        writer.close();
+        
+        writer = HDF5Factory.configure(hdf5File).generateMDCImage().writer();
+        assertFalse(writer.file().hasMDCImage());
+        assertTrue(writer.file().isMDCImageGenerationEnabled());
+        writer.close();
+        
+        // Note: this is not really expected but documents the behavior as of HDF5 1.10.3-pre1.
+        assertFalse(HDF5Factory.hasMDCImage(hdf5File));
+        
+        // This would be the expected behavior as the default library version boundaries are (EARLIEST, LATEST)
+        // and thus HDF5 should be able to generate an MDC image!
+        /* assertTrue(HDF5Factory.hasMDCImage(hdf5File)); */
     }
 }
