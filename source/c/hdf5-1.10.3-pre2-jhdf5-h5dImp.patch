@@ -1,5 +1,6 @@
---- hdf5-1.10.3-pre1/java/src/jni/h5dImp.c	2018-07-29 14:25:43.000000000 +0200
-+++ jhdf5/source/c/jni/h5dImp.c	2018-08-03 12:07:34.352345437 +0200
+diff -ru hdf5-1.10.3-pre2/java/src/jni/h5dImp.c hdf5-1.10.3-pre2.patched/java/src/jni/h5dImp.c
+--- hdf5-1.10.3-pre2/java/src/jni/h5dImp.c	2018-08-09 18:19:06.000000000 +0200
++++ hdf5-1.10.3-pre2.patched/java/src/jni/h5dImp.c	2018-08-13 15:49:12.894709592 +0200
 @@ -295,21 +295,7 @@
      if (buf == NULL) {
          h5nullArgument(env, "H5Dread:  buf is NULL");
@@ -60,38 +61,3 @@
      } /* end else */
  
      return (jint)status;
-@@ -1343,9 +1313,6 @@
-     htri_t  isVlenStr = 0;
-     htri_t  isComplex = 0;
- 
--    h5unimplemented(env, "H5DwriteVL:  not implemented");
--    return -1;
--#ifdef notdef
-    if (buf == NULL) {
-         h5nullArgument(env, "H5DwriteVL:  buf is NULL");
-     } /* end if */
-@@ -1364,12 +1331,15 @@
-         else if (H5Tget_class((hid_t)mem_type_id) == H5T_VLEN) {
-             isVlenStr = 1; /* strings created by H5Tvlen_create(H5T_C_S1) */
-         }
-+#ifdef notdef
-         if (isStr == 0 || isComplex>0 || isVlenStr) {
-             status = H5DwriteVL_asstr(env, (hid_t)dataset_id, (hid_t)mem_type_id,
-                                         (hid_t)mem_space_id, (hid_t)file_space_id,
-                                         (hid_t)xfer_plist_id, buf);
-         }
--        else if (isStr > 0) {
-+        else 
-+#endif
-+        if (isStr > 0) {
-             status = H5DwriteVL_str(env, (hid_t)dataset_id, (hid_t)mem_type_id,
-                                         (hid_t)mem_space_id, (hid_t)file_space_id,
-                                         (hid_t)xfer_plist_id, buf);
-@@ -1377,7 +1347,6 @@
-     } /* end else */
- 
-     return (jint)status;
--#endif
- } /* end Java_hdf_hdf5lib_H5_H5Dwrite_1VL */
- 
- herr_t
