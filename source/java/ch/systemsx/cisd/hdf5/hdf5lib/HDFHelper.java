@@ -29,12 +29,9 @@ import static hdf.hdf5lib.HDF5Constants.H5L_TYPE_HARD;
 import static hdf.hdf5lib.HDF5Constants.H5L_TYPE_SOFT;
 import static hdf.hdf5lib.HDF5Constants.H5O_TYPE_NTYPES;
 import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
-import static hdf.hdf5lib.HDF5Constants.H5T_NATIVE_INT32;
 import static hdf.hdf5lib.HDF5Constants.H5_INDEX_NAME;
 import static hdf.hdf5lib.HDF5Constants.H5_ITER_INC;
 
-import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
-import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
 import hdf.hdf5lib.H5;
 import hdf.hdf5lib.HDF5Constants;
 import hdf.hdf5lib.HDFNativeData;
