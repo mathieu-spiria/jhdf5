@@ -314,17 +314,6 @@ public class ArchivingStrategy
         return this;
     }
 
-    /**
-     * @deprecated Use {@link #compressAll(boolean)} instead.
-     */
-    @Deprecated
-    public final void setCompress(boolean compress)
-    {
-        checkSealed();
-        this.compressionStrategy =
-                compress ? CompressionStrategy.COMPRESS_ALL : CompressionStrategy.COMPRESS_NOTHING;
-    }
-
     boolean doExclude(String path, boolean isDirectory)
     {
         if (isDirectory)

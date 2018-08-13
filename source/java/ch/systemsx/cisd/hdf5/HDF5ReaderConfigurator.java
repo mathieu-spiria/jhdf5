@@ -64,13 +64,6 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
     }
 
     @Override
-    public HDF5ReaderConfigurator useUTF8CharacterEncoding()
-    {
-        this.useUTF8CharEncoding = true;
-        return this;
-    }
-
-    @Override
     public HDF5ReaderConfigurator noAutoDereference()
     {
         this.autoDereference = false;

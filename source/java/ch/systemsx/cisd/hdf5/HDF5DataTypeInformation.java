@@ -339,17 +339,6 @@ public final class HDF5DataTypeInformation
     }
 
     /**
-     * Returns <code>true</code> if this type is an HDF5 VL (variable-length) type.
-     * 
-     * @deprecated Use {@link #isVariableLengthString()} instead.
-     */
-    @Deprecated
-    public boolean isVariableLengthType()
-    {
-        return variableLengthString;
-    }
-
-    /**
      * Returns <code>true</code>, if this data set type has a sign anf <code>false</code> otherwise.
      */
     public boolean isSigned()

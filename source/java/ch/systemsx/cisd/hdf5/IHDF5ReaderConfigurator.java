@@ -41,15 +41,6 @@ public interface IHDF5ReaderConfigurator
     public IHDF5ReaderConfigurator performNumericConversions();
 
     /**
-     * Sets UTF8 character encoding for all paths and all strings in this file. (The default is
-     * ASCII.)
-     * 
-     * @deprecated Should not be used for the reader as it will figure that out by looking at the HDF5 file.
-     */
-    @Deprecated
-    public IHDF5ReaderConfigurator useUTF8CharacterEncoding();
-
-    /**
      * Switches off automatic dereferencing of unresolved references. Use this when you need to
      * access file names that start with \0. The down-side of switching off automatic dereferencing
      * is that you can't provide references as obtained by

@@ -301,7 +301,6 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
     /**
      * Sets UTF8 character encoding for all paths and all strings in this file. (The default is ASCII.)
      */
-    @Override
     public IHDF5WriterConfigurator useUTF8CharacterEncoding();
 
     /**

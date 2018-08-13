@@ -94,18 +94,6 @@ public final class HDF5CompoundMemberInformation implements
     }
 
     /**
-     * Returns the byte offset of this member within the compound data type, 0 meaning that the
-     * member is the first one in the compound data type.
-     * 
-     * @deprecated Use {@link #getOffsetOnDisk()} instead.
-     */
-    @Deprecated
-    public int getOffset()
-    {
-        return offsetOnDisk;
-    }
-
-    /**
      * Returns the byte offset of this member within the compound data type on disk. 0 meaning that
      * the member is the first one in the compound data type.
      * <p>

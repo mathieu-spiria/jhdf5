@@ -134,7 +134,8 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
     @Override
     public HDF5WriterConfigurator useUTF8CharacterEncoding()
     {
-        return (HDF5WriterConfigurator) super.useUTF8CharacterEncoding();
+        this.useUTF8CharEncoding = true;
+        return this;
     }
 
     @Override

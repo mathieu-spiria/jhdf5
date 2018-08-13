@@ -271,12 +271,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     }
 
     @Override
-    public void writeString(String objectPath, String data, int maxLength)
-    {
-        stringWriter.write(objectPath, data, maxLength);
-    }
-
-    @Override
     public void writeString(String objectPath, String data)
     {
         stringWriter.write(objectPath, data);
@@ -286,12 +280,6 @@ final class HDF5Writer extends HDF5Reader implements IHDF5Writer
     public void writeStringArray(String objectPath, String[] data)
     {
         stringWriter.writeArray(objectPath, data);
-    }
-
-    @Override
-    public void writeStringArray(String objectPath, String[] data, int maxLength)
-    {
-        stringWriter.writeArray(objectPath, data, maxLength);
     }
 
     //
