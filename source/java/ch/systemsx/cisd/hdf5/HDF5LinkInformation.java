@@ -24,26 +24,34 @@ package ch.systemsx.cisd.hdf5;
 public final class HDF5LinkInformation extends HDF5CommonInformation
 {
     static final HDF5LinkInformation ROOT_LINK_INFO =
-            new HDF5LinkInformation("/", HDF5ObjectType.GROUP, null);
+            new HDF5LinkInformation("/", HDF5ObjectType.GROUP, null, null);
 
     private final String symbolicLinkTargetOrNull;
+    
+    private final String externalLinkFilenameOrNull;
 
-    private HDF5LinkInformation(String path, HDF5ObjectType type, String symbolicLinkTargetOrNull)
+    private final String externalLinkTargetOrNull;
+    
+    private HDF5LinkInformation(String path, HDF5ObjectType type, String linkFilenameOrNull, String linkTargetOrNull)
     {
         super(path, type);
-        this.symbolicLinkTargetOrNull = symbolicLinkTargetOrNull;
+        if (type == HDF5ObjectType.EXTERNAL_LINK && linkFilenameOrNull != null && linkTargetOrNull != null)
+        {
+            this.symbolicLinkTargetOrNull = "EXTERNAL::" + linkFilenameOrNull + "::" + linkTargetOrNull;
+            this.externalLinkFilenameOrNull = linkFilenameOrNull;
+            this.externalLinkTargetOrNull = linkTargetOrNull;
+        } else
+        {
+            this.symbolicLinkTargetOrNull = linkTargetOrNull;
+            this.externalLinkFilenameOrNull = null;
+            this.externalLinkTargetOrNull = null;
+        }
     }
 
-    static HDF5LinkInformation create(String path, int typeId, String symbolicLinkTargetOrNull)
+    static HDF5LinkInformation create(String path, int typeId, String linkFilenameOrNull, String linkTargetOrNull)
     {
         final HDF5ObjectType type = objectTypeIdToObjectType(typeId);
-        return new HDF5LinkInformation(path, type, symbolicLinkTargetOrNull);
-    }
-
-    static HDF5LinkInformation create(String path, int typeId, String[] linkTarget)
-    {
-        final HDF5ObjectType type = objectTypeIdToObjectType(typeId);
-        return new HDF5LinkInformation(path, type, linkTarget[0]);
+        return new HDF5LinkInformation(path, type, linkFilenameOrNull, linkTargetOrNull);
     }
 
     /**
@@ -56,6 +64,22 @@ public final class HDF5LinkInformation extends HDF5CommonInformation
     public String tryGetSymbolicLinkTarget()
     {
         return symbolicLinkTargetOrNull;
+    }
+
+    /**
+     * Returns the filename of an external link, or <code>null</code>, if this link does not exist or is not an external link.
+     */
+    public String tryGetExternalLinkFilename()
+    {
+        return externalLinkFilenameOrNull;
+    }
+
+    /**
+     * Returns the external link target of this link, or <code>null</code>, if this link does not exist or is not an external link.
+     */
+    public String tryGetExternalLinkTarget()
+    {
+        return externalLinkTargetOrNull;
     }
 
     /**

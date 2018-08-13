@@ -411,9 +411,9 @@ class HDF5
         {
             return HDF5LinkInformation.ROOT_LINK_INFO;
         }
-        final String[] lname = new String[1];
+        final String[] lname = new String[2];
         final int typeId = HDFHelper.H5Lget_link_info(fileId, objectName, lname, exceptionIfNonExistent);
-        return HDF5LinkInformation.create(objectName, typeId, lname);
+        return HDF5LinkInformation.create(objectName, typeId, lname[1], lname[0]);
     }
 
     public HDF5ObjectType getLinkTypeInfo(final long fileId, final String objectName,
@@ -500,9 +500,10 @@ class HDF5
                                         "Number of group members is too large (n=" + nLong + ")");
                             }
                             final String[] names = new String[n];
-                            final String[] linkNames = new String[n];
+                            final String[] linkFilenames = new String[n];
+                            final String[] linkTargets = new String[n];
                             final int[] types = new int[n];
-                            HDFHelper.H5Lget_link_info_all(groupId, ".", names, types, linkNames);
+                            HDFHelper.H5Lget_link_info_all(groupId, ".", names, types, linkFilenames, linkTargets);
                             final String superGroupName =
                                     (groupName.equals("/") ? "/" : groupName + "/");
                             final List<HDF5LinkInformation> info =
@@ -514,7 +515,7 @@ class HDF5
                                                 houseKeepingNameSuffix) == false)
                                 {
                                     info.add(HDF5LinkInformation.create(superGroupName + names[i],
-                                            types[i], linkNames[i]));
+                                            types[i], linkFilenames[i], linkTargets[i]));
                                 }
                             }
                             return info;
@@ -544,7 +545,7 @@ class HDF5
                             }
                             final String[] names = new String[n];
                             final int[] types = new int[n];
-                            HDFHelper.H5Lget_link_info_all(groupId, ".", names, types, null);
+                            HDFHelper.H5Lget_link_info_all(groupId, ".", names, types, null, null);
                             final String superGroupName =
                                     (groupName.equals("/") ? "/" : groupName + "/");
                             final List<HDF5LinkInformation> info =
@@ -556,7 +557,7 @@ class HDF5
                                                 houseKeepingNameSuffix) == false)
                                 {
                                     info.add(HDF5LinkInformation.create(superGroupName + names[i],
-                                            types[i], (String) null));
+                                            types[i], null, null));
                                 }
                             }
                             return info;

@@ -39,25 +39,6 @@ extern void  h5str_array_free(char **strs, size_t len);
 /////////////////////////////////////////////////////////////////////////////////
 */
 
-char *get_external_link(  JNIEnv *env, const char *linkval_buf, size_t size ) {
-      const char *filename;
-      const char *obj_path;
-      char *external_link_buf;
-      const char *prefix = "EXTERNAL::";
-      H5Lunpack_elink_val(linkval_buf, size, NULL, &filename, &obj_path);
-      external_link_buf = (char *) malloc(strlen(prefix) + strlen(filename) + strlen(obj_path) + 3);
-      if (external_link_buf == NULL)
-      {
-	        h5outOfMemory(env, "get_external_link: malloc failed");
-	        return NULL;
-      }
-      strcpy(external_link_buf, prefix);
-      strcat(external_link_buf, filename);
-      strcat(external_link_buf, "::");
-      strcat(external_link_buf, obj_path);
-      return external_link_buf;
-}
-
 /* major and minor error numbers */
 typedef struct H5E_num_t {
     hid_t maj_num;
@@ -102,7 +83,8 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1li
     long minor_err_num;
     char *oName;
    	char *linkval_buf;
-   	char *linkname_buf;
+    const char *filename;
+    const char *obj_path;
     jboolean isCopy;
     jstring str;
     H5L_info_t link_info;
@@ -167,14 +149,17 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1li
 				    }
 				    if (link_info.type == H5L_TYPE_EXTERNAL)
 				    {
-				        linkname_buf = get_external_link(env, linkval_buf, link_info.u.val_size);
-				        free(linkval_buf);
-			  	  } else
+                        H5Lunpack_elink_val(linkval_buf, link_info.u.val_size, NULL, &filename, &obj_path);
+                        str = (*env)->NewStringUTF(env,obj_path);
+	                    (*env)->SetObjectArrayElement(env,linkName,0,(jobject)str);
+                        str = (*env)->NewStringUTF(env,filename);
+	                    (*env)->SetObjectArrayElement(env,linkName,1,(jobject)str);
+			  	  } else /* H5L_TYPE_SYMBOLIC */
 			    	{
-			      	  linkname_buf = linkval_buf;
-			    	}
-              str = (*env)->NewStringUTF(env,linkname_buf);
-	          (*env)->SetObjectArrayElement(env,linkName,0,(jobject)str);
+                      str = (*env)->NewStringUTF(env,linkval_buf);
+	                  (*env)->SetObjectArrayElement(env,linkName,0,(jobject)str);
+                  }
+                  free(linkval_buf);
 	        }
 	      }
     }
@@ -189,6 +174,8 @@ typedef struct link_info_all
     char **name;
     int *type;
     char **linkname;
+    char **linkfname;
+    void **buf;
     int count;
 } link_info_all_t;
 
@@ -290,6 +277,8 @@ herr_t link_info_all(hid_t loc_id, const char *name, const H5L_info_t *link_info
     link_info_all_t* info = (link_info_all_t*)opdata;
     H5O_info_t obj_info;
    	char *linkval_buf;
+    const char *filename;
+    const char *obj_path;
     *(info->name+info->count) = (char *) malloc(strlen(name)+1);
     if (*(info->name+info->count) == NULL)
     {
@@ -323,17 +312,21 @@ herr_t link_info_all(hid_t loc_id, const char *name, const H5L_info_t *link_info
 		    }
 		    if (H5Lget_val(loc_id, name, linkval_buf, link_info->u.val_size, H5P_DEFAULT) < 0)
 		    {
-	        h5libraryError(info->env);
-	        free(linkval_buf);
-					return -1;	        
+               h5libraryError(info->env);
+               free(linkval_buf);
+               return -1;	        
 		    }
 		    if (link_info->type == H5L_TYPE_EXTERNAL)
 		    {
-		        *(info->linkname+info->count) = get_external_link( info->env, linkval_buf, link_info->u.val_size );
-		        free(linkval_buf);
+                H5Lunpack_elink_val(linkval_buf, link_info->u.val_size, NULL, &filename, &obj_path);
+		        *(info->linkname+info->count) = obj_path;
+		        *(info->linkfname+info->count) = filename;
+		        *(info->buf+info->count) = linkval_buf;
 		    } else
 		    {
 		        *(info->linkname+info->count) = linkval_buf;
+		        *(info->linkfname+info->count) = NULL;
+		        *(info->buf+info->count) = linkval_buf;
 		    }
 		  }
     }
@@ -342,13 +335,15 @@ herr_t link_info_all(hid_t loc_id, const char *name, const H5L_info_t *link_info
     return 0;
 }
 
-herr_t H5Lget_link_info_all( JNIEnv *env, hid_t loc_id, char *group_name, char **names, int *linktypes, char **linknames )
+herr_t H5Lget_link_info_all( JNIEnv *env, hid_t loc_id, char *group_name, char **names, int *linktypes, char **linknames, char **linkfnames, void **buf )
 {
     link_info_all_t info;
     info.env = env;
     info.name = names;
     info.type = linktypes;
     info.linkname = linknames;
+    info.linkfname = linkfnames;
+    info.buf = buf;
     info.count = 0;
 
     if(H5Literate_by_name(loc_id, group_name, H5_INDEX_NAME, H5_ITER_NATIVE, NULL, link_info_all, (void *)&info, H5P_DEFAULT) < 0)
@@ -363,12 +358,14 @@ herr_t H5Lget_link_info_all( JNIEnv *env, hid_t loc_id, char *group_name, char *
  */
 JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1link_1info_1all
   (JNIEnv *env, jclass clss, jlong loc_id, jstring group_name,
-    jobjectArray oname, jintArray otype, jobjectArray lname, jint n)
+    jobjectArray oname, jintArray otype, jobjectArray lname, jobjectArray lfname, jint n)
 {
     herr_t status;
     char *gName=NULL;
     char **oName=NULL;
     char **lName=NULL;
+    char **lfName=NULL;
+    void **buf=NULL;
     jboolean isCopy;
     jstring str;
     jint *tarr;
@@ -386,6 +383,11 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1li
 
     if (otype == NULL) {
         h5nullArgument( env, "H5Lget_link_info_all:  otype is NULL");
+        return -1;
+    }
+
+    if ((lname != NULL && lfname == NULL) || (lname == NULL && lfname != NULL)) {
+        h5nullArgument( env, "H5Lget_link_info_all:  lname and lfname either both NULL or both not NULL");
         return -1;
     }
 
@@ -409,7 +411,8 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1li
         h5outOfMemory(env, "H5Lget_link_info_all: malloc failed");
         return -1;
     }
-    for (i=0; i<n; i++) {
+    for (i=0; i<n; i++) 
+    {
         oName[i] = NULL;
     } /* for (i=0; i<n; i++)*/
     if (lname != NULL)
@@ -422,11 +425,32 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1li
 	        h5outOfMemory(env, "H5Lget_link_info_all: malloc failed");
 	        return -1;
 	    }
+	    lfName = malloc(n * sizeof (*lfName));
+	    if (lfName == NULL) {
+	        (*env)->ReleaseStringUTFChars(env,group_name,gName);
+	        (*env)->ReleaseIntArrayElements(env,otype,tarr,0);
+	        h5str_array_free(oName, n);
+            free(lName);
+	        h5outOfMemory(env, "H5Lget_link_info_all: malloc failed");
+	        return -1;
+	    }
+	    buf = malloc(n * sizeof (*buf));
+	    if (buf == NULL) {
+	        (*env)->ReleaseStringUTFChars(env,group_name,gName);
+	        (*env)->ReleaseIntArrayElements(env,otype,tarr,0);
+	        h5str_array_free(oName, n);
+            free(lName);
+            free(lfName);
+	        h5outOfMemory(env, "H5Lget_link_info_all: malloc failed");
+	        return -1;
+	    }
 	    for (i=0; i<n; i++) {
 	        lName[i] = NULL;
+            lfName[i] = NULL;
+            buf[i] = NULL;
 	    } /* for (i=0; i<n; i++)*/
 	  }
-    status = H5Lget_link_info_all( env, (hid_t) loc_id, gName, oName, (int *)tarr, lName );
+    status = H5Lget_link_info_all( env, (hid_t) loc_id, gName, oName, (int *)tarr, lName, lfName, buf );
 
     (*env)->ReleaseStringUTFChars(env,group_name,gName);
     if (status < 0) {
@@ -435,6 +459,14 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1li
         if (lName != NULL)
         {
         	h5str_array_free(lName, n);
+       	}
+        if (lfName != NULL)
+        {
+        	h5str_array_free(lfName, n);
+       	}
+        if (buf != NULL)
+        {
+        	h5str_array_free(buf, n);
        	}
         h5libraryError(env);
     } else {
@@ -448,13 +480,27 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1li
         } /* for (i=0; i<n; i++)*/
         if (lname != NULL)
         {
-	        for (i=0; i<n; i++) {
-	            if (*(lName+i)) {
+	        for (i=0; i<n; i++) 
+            {
+	            if (*(lName+i)) 
+                {
 	                str = (*env)->NewStringUTF(env,*(lName+i));
 	                (*env)->SetObjectArrayElement(env,lname,i,(jobject)str);
 	            }
+	            if (*(lfName+i)) 
+                {
+	                str = (*env)->NewStringUTF(env,*(lfName+i));
+	                (*env)->SetObjectArrayElement(env,lfname,i,(jobject)str);
+	            }
+                if (*(buf+i))
+                {
+                    /*FIXME*/
+                    /* free(buf+i); */
+                }
 	        } /* for (i=0; i<n; i++)*/
-	        h5str_array_free(lName, n);
+	        free(lName);
+	        free(lfName);
+	        h5str_array_free(buf, n);
 	      }
         h5str_array_free(oName, n);
     }

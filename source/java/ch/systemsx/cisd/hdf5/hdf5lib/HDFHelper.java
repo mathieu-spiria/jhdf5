@@ -98,14 +98,14 @@ public class HDFHelper
     public static int H5Lget_link_info(
             final long fileId,
             final String objectName,
-            final String[] lnameOrNull,
+            final String[] linkTargetOrNull,
             boolean exceptionIfNonExistent)
     {
         if (USE_NATIVE_METHODS)
         {
             synchronized (H5.class)
             {
-                return _H5Lget_link_info(fileId, objectName, lnameOrNull, exceptionIfNonExistent);
+                return _H5Lget_link_info(fileId, objectName, linkTargetOrNull, exceptionIfNonExistent);
             }
         }
 
@@ -119,9 +119,11 @@ public class HDFHelper
             } else
             {
                 result = H5O_TYPE_NTYPES + info.type;
-                if (lnameOrNull != null && lnameOrNull.length > 0)
+                if (linkTargetOrNull != null && linkTargetOrNull.length > 1)
                 {
-                    lnameOrNull[0] = getLinkTarget(fileId, objectName, info.type);
+                    final String[] linkTarget = getLinkTarget(fileId, objectName, info.type);
+                    linkTargetOrNull[0] = linkTarget[0];
+                    linkTargetOrNull[1] = linkTarget[1];
                 }
             }
         } catch (HDF5LibraryException e)
@@ -144,34 +146,25 @@ public class HDFHelper
         return result;
     }
 
-    private static String getLinkTarget(final long locId, final String objectName, int type)
+    private static String[] getLinkTarget(final long locId, final String objectName, int type)
     {
         final String[] linkTarget = new String[2];
         H5Lget_value(locId, objectName, linkTarget, H5P_DEFAULT);
-        if (type == H5L_TYPE_SOFT)
+        if (type == H5L_TYPE_SOFT || type == H5L_TYPE_EXTERNAL)
         {
-            return linkTarget[0];
-        } else if (type == H5L_TYPE_EXTERNAL)
-        {
-            return "EXTERNAL::" + linkTarget[1] + "::" + linkTarget[0];
+            return linkTarget;
         } else
         {
             throw new HDF5Exception("No Link: " + objectName);
         }
     }
 
-    private static String getLinkTargetByIdx(final long locId, final String objectName, final int idx, int type)
+    private static void getLinkTargetByIdx(final long locId, final String objectName, final int idx, final int type, 
+            final String[] linkTarget)
     {
-        final String[] linkTarget = new String[2];
         H5Lget_value_by_idx(locId, objectName, H5_INDEX_NAME, H5_ITER_INC, idx, linkTarget, H5P_DEFAULT);
 
-        if (type == H5L_TYPE_SOFT)
-        {
-            return linkTarget[0];
-        } else if (type == H5L_TYPE_EXTERNAL)
-        {
-            return "EXTERNAL::" + linkTarget[1] + "::" + linkTarget[0];
-        } else
+        if (type != H5L_TYPE_SOFT && type != H5L_TYPE_EXTERNAL)
         {
             throw new HDF5Exception("No Link: " + objectName);
         }
@@ -202,20 +195,22 @@ public class HDFHelper
     }
 
     private static native int _H5Lget_link_info_all(long loc_id, String name, String[] oname,
-            int[] type, String[] lname, int n) throws HDF5LibraryException, NullPointerException;
+            int[] type, String[] lname, String[] lfname, int n) throws HDF5LibraryException, NullPointerException;
 
     public static void H5Lget_link_info_all(
             final long locId,
             final String groupName,
             final String[] objectNames,
             final int[] objectTypes,
+            final String[] linkFilenamesOrNull,
             final String[] linkTargetsOrNull)
     {
         if (USE_NATIVE_METHODS)
         {
             synchronized (H5.class)
             {
-                _H5Lget_link_info_all(locId, groupName, objectNames, objectTypes, linkTargetsOrNull, objectNames.length);
+                _H5Lget_link_info_all(locId, groupName, objectNames, objectTypes, linkTargetsOrNull, linkFilenamesOrNull, 
+                        objectNames.length);
             }
             return;
         }
@@ -236,9 +231,13 @@ public class HDFHelper
                     } else
                     {
                         objectTypes[i] = H5O_TYPE_NTYPES + info.type;
-                        if (linkTargetsOrNull != null && linkTargetsOrNull.length == objectNames.length)
+                        if (linkTargetsOrNull != null && linkTargetsOrNull.length == objectNames.length
+                                && linkFilenamesOrNull != null && linkFilenamesOrNull.length == objectNames.length)
                         {
-                            linkTargetsOrNull[i] = getLinkTargetByIdx(locId, groupName, i, info.type);
+                            final String[] linkTarget = new String[2];
+                            getLinkTargetByIdx(locId, groupName, i, info.type, linkTarget);
+                            linkTargetsOrNull[i] = linkTarget[0];
+                            linkFilenamesOrNull[i] = linkTarget[1];
                         }
                     }
                 }

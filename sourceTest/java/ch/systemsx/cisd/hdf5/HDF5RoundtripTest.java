@@ -6079,11 +6079,15 @@ public class HDF5RoundtripTest
         assertTrue(info.exists());
         assertEquals(HDF5ObjectType.SOFT_LINK, info.getType());
         assertEquals(dataSetName2, info.tryGetSymbolicLinkTarget());
+        assertNull(info.tryGetExternalLinkFilename());
+        assertNull(info.tryGetExternalLinkTarget());
         info = map.get(eLinkName);
         assertNotNull(info);
         assertTrue(info.exists());
         assertEquals(HDF5ObjectType.EXTERNAL_LINK, info.getType());
         assertEquals("EXTERNAL::" + tFileName + "::" + dataSetName3, info.tryGetSymbolicLinkTarget());
+        assertEquals(tFileName, info.tryGetExternalLinkFilename());
+        assertEquals(dataSetName3, info.tryGetExternalLinkTarget());
 
         reader.close();
     }
@@ -6236,11 +6240,13 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(linkFile);
         assertEquals(HDF5ObjectType.EXTERNAL_LINK, reader.object().getObjectType(linkName, false));
         assertEquals(dataSetValue, reader.readString(linkName));
-        final String expectedLink =
-                OSUtilities.isWindows() ? "EXTERNAL::targets\\unit-test-wd\\hdf5-roundtrip-wd\\fileToLinkTo.h5::/data/set"
-                        : "EXTERNAL::targets/unit-test-wd/hdf5-roundtrip-wd/fileToLinkTo.h5::/data/set";
-        assertEquals(expectedLink, reader.object().getLinkInformation(linkName)
-                .tryGetSymbolicLinkTarget());
+        final String expectedExternalLinkFilename = OSUtilities.isWindows() ? "targets\\unit-test-wd\\hdf5-roundtrip-wd\\fileToLinkTo.h5"
+                : "targets/unit-test-wd/hdf5-roundtrip-wd/fileToLinkTo.h5";
+        final String expectedLink = "EXTERNAL::" + expectedExternalLinkFilename + "::" + dataSetName;
+        final HDF5LinkInformation info = reader.object().getLinkInformation(linkName);
+        assertEquals(expectedLink, info.tryGetSymbolicLinkTarget());
+        assertEquals(expectedExternalLinkFilename, info.tryGetExternalLinkFilename());
+        assertEquals(dataSetName, info.tryGetExternalLinkTarget());
         reader.close();
     }
 
