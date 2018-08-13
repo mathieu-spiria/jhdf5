@@ -71,8 +71,7 @@ package ch.systemsx.cisd.hdf5;
  * 
  * @author Bernd Rinn
  */
-@SuppressWarnings("deprecation")
-public interface IHDF5Reader extends IHDF5SimpleReader, IHDF5LegacyReader
+public interface IHDF5Reader extends IHDF5SimpleReader
 {
 
     // /////////////////////

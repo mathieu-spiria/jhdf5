@@ -78,8 +78,7 @@ package ch.systemsx.cisd.hdf5;
  * 
  * @author Bernd Rinn
  */
-@SuppressWarnings("deprecation")
-public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter, IHDF5LegacyWriter
+public interface IHDF5Writer extends IHDF5Reader, IHDF5SimpleWriter
 {
     // /////////////////////
     // File

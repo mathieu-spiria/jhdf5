@@ -445,7 +445,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
             final String typeVariantPath = findFirstUnusedTypeVariantPath(writer);
             dataType = createTypeVariantDataType();
             commitDataType(typeVariantPath, dataType.getStorageTypeId());
-            writer.createOrUpdateSoftLink(typeVariantPath.substring(getDataTypeGroup(
+            writer.object().createOrUpdateSoftLink(typeVariantPath.substring(getDataTypeGroup(
                     houseKeepingNameSuffix).length() + 1), typeVariantTypePath);
         } else
         {
@@ -595,7 +595,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         do
         {
             path = getTypeVariantDataTypePath(houseKeepingNameSuffix) + "." + (number++);
-        } while (reader.exists(path, false) && number < MAX_TYPE_VARIANT_TYPES);
+        } while (reader.object().exists(path, false) && number < MAX_TYPE_VARIANT_TYPES);
         return path;
     }
 
