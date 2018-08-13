@@ -11563,19 +11563,31 @@ public class HDF5RoundtripTest
         assertTrue(reader.file().isMDCImageGenerationEnabled());
         reader.close();
 
+        // Default is to keep an MDC.
         writer = HDF5Factory.configure(hdf5File).writer();
         assertTrue(writer.file().hasMDCImage());
-        assertFalse(writer.file().isMDCImageGenerationEnabled());
+        assertTrue(writer.file().isMDCImageGenerationEnabled());
         writer.close();
 
         writer = HDF5Factory.configure(hdf5File).generateMDCImage().writer();
-        assertFalse(writer.file().hasMDCImage());
+        assertTrue(writer.file().hasMDCImage());
         assertTrue(writer.file().isMDCImageGenerationEnabled());
         writer.close();
 
         reader = HDF5Factory.configureForReading(hdf5File).reader();
         assertTrue(reader.file().hasMDCImage());
         assertTrue(reader.file().isMDCImageGenerationEnabled());
+        reader.close();
+
+        // Default is to keep an MDC.
+        writer = HDF5Factory.configure(hdf5File).noGenerateMDCImage().writer();
+        assertTrue(writer.file().hasMDCImage());
+        assertFalse(writer.file().isMDCImageGenerationEnabled());
+        writer.close();
+
+        reader = HDF5Factory.configureForReading(hdf5File).reader();
+        assertFalse(reader.file().hasMDCImage());
+        assertFalse(reader.file().isMDCImageGenerationEnabled());
         reader.close();
     }
 

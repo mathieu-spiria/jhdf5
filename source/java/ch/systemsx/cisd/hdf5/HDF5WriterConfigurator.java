@@ -41,7 +41,7 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
 
     private FileFormatVersionBounds fileFormatVersionBounds = FileFormatVersionBounds.getDefault();
     
-    private MDCImageGeneration mdcImageGeneration = MDCImageGeneration.NO_MDC_IMAGE;
+    private MDCImageGeneration mdcImageGeneration = MDCImageGeneration.KEEP_MDC_IMAGE;
     
     private String houseKeepingNameSuffix = "";
 
@@ -118,6 +118,12 @@ final class HDF5WriterConfigurator extends HDF5ReaderConfigurator implements
         return this;
     }
 
+    @Override
+    public IHDF5WriterConfigurator noGenerateMDCImage()
+    {
+        this.mdcImageGeneration = MDCImageGeneration.NO_GENERATE_MDC_IMAGE;
+        return this;
+    }
     @Override
     public IHDF5WriterConfigurator keepMDCImage()
     {

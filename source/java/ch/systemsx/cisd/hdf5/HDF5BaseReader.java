@@ -72,7 +72,7 @@ class HDF5BaseReader
     static enum MDCImageGeneration 
     { 
         /** Do not generate an MDC image. */
-        NO_MDC_IMAGE(false), 
+        NO_GENERATE_MDC_IMAGE(false), 
         /** Generate an MDC image if the file already has one. */
         KEEP_MDC_IMAGE(false), 
         /** Generate an MDC image. */

@@ -285,7 +285,14 @@ public interface IHDF5WriterConfigurator extends IHDF5ReaderConfigurator
     public IHDF5WriterConfigurator generateMDCImage();
 
     /**
-     * Keep an existing metadata cache image.
+     * Disables generation of a metadata cache image.
+     * <p>
+     * Use {#link {@link #keepMDCImage()} to keep an MDC image if the file already has one but disable it if it does not. 
+     */
+    public IHDF5WriterConfigurator noGenerateMDCImage();
+
+    /**
+     * Keep an existing metadata cache image, but do not generate an MDC if the file has none already. This is the default.
      * <p>
      * Use {#link {@link #generateMDCImage()} to generate an MDC image regardless of whether the file already has one.
      */

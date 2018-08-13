@@ -85,7 +85,7 @@ class HDF5ReaderConfigurator implements IHDF5ReaderConfigurator
             readerWriterOrNull =
                     new HDF5Reader(new HDF5BaseReader(hdf5File, performNumericConversions,
                             autoDereference, IHDF5WriterConfigurator.FileFormatVersionBounds.getDefault(), 
-                            MDCImageGeneration.NO_MDC_IMAGE, false, ""));
+                            MDCImageGeneration.NO_GENERATE_MDC_IMAGE, false, ""));
         }
         return readerWriterOrNull;
     }
