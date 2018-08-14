@@ -39,44 +39,13 @@ extern void  h5str_array_free(char **strs, size_t len);
 /////////////////////////////////////////////////////////////////////////////////
 */
 
-/* major and minor error numbers */
-typedef struct H5E_num_t {
-    hid_t maj_num;
-    hid_t min_num;
-} H5E_num_t;
-
-/* get the major and minor error numbers on the top of the error stack */
-static
-herr_t walk_error_callback(unsigned n, const H5E_error2_t *err_desc, void *_err_nums)
-{
-    H5E_num_t *err_nums = (H5E_num_t *)_err_nums;
-
-    if (err_desc) {
-        err_nums->maj_num = err_desc->maj_num;
-        err_nums->min_num = err_desc->min_num;
-    }
-
-    return 0;
-}
-
-long get_minor_error_number()
-{
-    H5E_num_t err_nums;
-    err_nums.maj_num = 0;
-    err_nums.min_num = 0;
-
-    H5Ewalk2(H5E_DEFAULT, H5E_WALK_DOWNWARD, walk_error_callback, &err_nums);
-
-    return (long) err_nums.min_num;
-}
-
 /*
  * Class:     ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper
  * Method:    _H5Lget_link_info
  */
 JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1link_1info
   (JNIEnv *env, jclass clss, jlong loc_id, jstring object_name,
-    jobjectArray linkName, jboolean exception_when_non_existent)
+    jobjectArray linkName)
 {
     jint type;
     herr_t status;
@@ -103,69 +72,58 @@ JNIEXPORT jint JNICALL Java_ch_systemsx_cisd_hdf5_hdf5lib_HDFHelper__1H5Lget_1li
 
     type = H5Lget_info( (hid_t) loc_id, oName, &link_info, H5P_DEFAULT );
 
-    if (type < 0) {
-		    (*env)->ReleaseStringUTFChars(env,object_name,oName);
-        if (exception_when_non_existent == JNI_FALSE)
-        {
-            minor_err_num = get_minor_error_number();
-            /*
-             * Note: H5E_CANTINSERT is thrown by the dense group lookup, see H5Gdense:534. That is
-             * probably a wrong error code, but we have to deal with it here anyway.
-             */
-            if (minor_err_num  == H5E_NOTFOUND || minor_err_num == H5E_CANTINSERT)
-            {
-                return -1;
-            }
-        }
-        h5libraryError(env);
+    if (type < 0) 
+    {
+       (*env)->ReleaseStringUTFChars(env,object_name,oName);
+       h5libraryError(env);
+       return -1;
     } else {
-		    str = NULL;
-		    if (link_info.type == H5L_TYPE_HARD)
-		    {
-		    	status = H5Oget_info_by_name1(loc_id, oName, &obj_info, H5P_DEFAULT); 
-			    (*env)->ReleaseStringUTFChars(env,object_name,oName);
-			    if (status  < 0 )
-			    {
-		        h5libraryError(env);
-		        return -1;
-			    } else {
-			        type = obj_info.type;
-			    }
-			  } else
-			  {
-		      type = H5O_TYPE_NTYPES + link_info.type;
-		      if (linkName != NULL)
-		      {
-			    	linkval_buf = (char*) malloc(link_info.u.val_size);
-				    if (linkval_buf == NULL)
-				    {
-				        h5outOfMemory(env, "H5Lget_link_info: malloc failed");
-			  	      return -1;
-			    	}
-				    if (H5Lget_val(loc_id, oName, linkval_buf, link_info.u.val_size, H5P_DEFAULT) < 0)
-				    {
-			        h5libraryError(env);
-							return -1;					
-				    }
-				    if (link_info.type == H5L_TYPE_EXTERNAL)
-				    {
-                        H5Lunpack_elink_val(linkval_buf, link_info.u.val_size, NULL, &filename, &obj_path);
-                        str = (*env)->NewStringUTF(env,obj_path);
-	                    (*env)->SetObjectArrayElement(env,linkName,0,(jobject)str);
-                        str = (*env)->NewStringUTF(env,filename);
-	                    (*env)->SetObjectArrayElement(env,linkName,1,(jobject)str);
-			  	  } else /* H5L_TYPE_SYMBOLIC */
-			    	{
-                      str = (*env)->NewStringUTF(env,linkval_buf);
-	                  (*env)->SetObjectArrayElement(env,linkName,0,(jobject)str);
-                  }
-                  free(linkval_buf);
-	        }
-	      }
+       str = NULL;
+       if (link_info.type == H5L_TYPE_HARD)
+       {
+          status = H5Oget_info_by_name1(loc_id, oName, &obj_info, H5P_DEFAULT); 
+          (*env)->ReleaseStringUTFChars(env,object_name,oName);
+          if (status  < 0 )
+          {
+             h5libraryError(env);
+             return -1;
+          } else {
+             type = obj_info.type;
+          }
+       } else
+       {
+          type = H5O_TYPE_NTYPES + link_info.type;
+          if (linkName != NULL)
+          {
+             linkval_buf = (char*) malloc(link_info.u.val_size);
+             if (linkval_buf == NULL)
+             {
+                h5outOfMemory(env, "H5Lget_link_info: malloc failed");
+                return -1;
+             }
+             if (H5Lget_val(loc_id, oName, linkval_buf, link_info.u.val_size, H5P_DEFAULT) < 0)
+             {
+                h5libraryError(env);
+                return -1;					
+             }
+             if (link_info.type == H5L_TYPE_EXTERNAL)
+             {
+                H5Lunpack_elink_val(linkval_buf, link_info.u.val_size, NULL, &filename, &obj_path);
+                str = (*env)->NewStringUTF(env,obj_path);
+                (*env)->SetObjectArrayElement(env,linkName,0,(jobject)str);
+                str = (*env)->NewStringUTF(env,filename);
+                (*env)->SetObjectArrayElement(env,linkName,1,(jobject)str);
+             } else /* H5L_TYPE_SYMBOLIC */
+             {
+                str = (*env)->NewStringUTF(env,linkval_buf);
+                (*env)->SetObjectArrayElement(env,linkName,0,(jobject)str);
+             }
+             free(linkval_buf);
+          }
+       }
     }
 
     return (jint)type;
-
 }
 
 typedef struct link_info_all

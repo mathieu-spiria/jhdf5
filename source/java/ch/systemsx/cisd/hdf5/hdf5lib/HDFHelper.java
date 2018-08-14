@@ -92,8 +92,8 @@ public class HDFHelper
      * contain the target of the link. If <var>exception_when_non_existent</var> is <code>true</code>, the method will throw an exception when the
      * link does not exist, otherwise -1 will be returned.
      */
-    private static native int _H5Lget_link_info(long locId, String name, String[] lname,
-            boolean exceptionIfNotExistent) throws HDF5LibraryException, NullPointerException;
+    private static native int _H5Lget_link_info(long locId, String name, 
+                                    String[] lname) throws HDF5LibraryException, NullPointerException;
 
     public static int H5Lget_link_info(
             final long fileId,
@@ -101,17 +101,17 @@ public class HDFHelper
             final String[] linkTargetOrNull,
             boolean exceptionIfNonExistent)
     {
-        if (USE_NATIVE_METHODS)
-        {
-            synchronized (H5.class)
-            {
-                return _H5Lget_link_info(fileId, objectName, linkTargetOrNull, exceptionIfNonExistent);
-            }
-        }
-
         int result = -1;
         try
         {
+            if (USE_NATIVE_METHODS)
+            {
+                synchronized (H5.class)
+                {
+                    return _H5Lget_link_info(fileId, objectName, linkTargetOrNull);
+                }
+            }
+
             final H5L_info_t info = H5Lget_info(fileId, objectName, H5P_DEFAULT);
             if (info.type == H5L_TYPE_HARD)
             {
@@ -136,6 +136,7 @@ public class HDFHelper
             {
                 if (exceptionIfNonExistent)
                 {
+                    System.err.println("Ups, throwing exception " + e + " anyway");
                     throw e;
                 }
             } else
