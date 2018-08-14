@@ -1,0 +1,13 @@
+--- CMake-hdf5-1.10.3-pre2/hdf5-1.10.3-pre2/java/src/jni/CMakeLists.txt.orig	2018-07-29 14:25:43.000000000 +0200
++++ CMake-hdf5-1.10.3-pre2/hdf5-1.10.3-pre2/java/src/jni/CMakeLists.txt	2018-08-14 17:47:57.250369809 +0200
+@@ -21,6 +21,10 @@
+     ${HDF5_JAVA_JNI_SOURCE_DIR}/h5util.c
+     ${HDF5_JAVA_JNI_SOURCE_DIR}/h5zImp.c
+     ${HDF5_JAVA_JNI_SOURCE_DIR}/nativeData.c
++    ${HDF5_JAVA_JNI_SOURCE_DIR}/h5VLStrHelperImp.c
++    ${HDF5_JAVA_JNI_SOURCE_DIR}/h5fHelperImp.c
++    ${HDF5_JAVA_JNI_SOURCE_DIR}/h5lHelperImp.c
++    ${HDF5_JAVA_JNI_SOURCE_DIR}/h5pHelperImp.c
+ )
+ 
+ set (HDF5_JAVA_JNI_CHDRS
