@@ -6,7 +6,7 @@ targetCompatibility='1.8'
 
 dependencies {
     compile 'cisd:cisd-args4j:+',
-            'cisd:cisd-base:+',
+            'sis:sis-base:+',
             'rinn:restrictions:+'
     
     testCompile 'testng:testng:+',
