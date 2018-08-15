@@ -235,30 +235,56 @@ public class H5 implements java.io.Serializable {
     private final static boolean IS_CRITICAL_PINNING = true;
     // change from Vector to LinkedHashSet - jp 6-Oct-2014
     private final static LinkedHashSet<Long> OPEN_IDS = new LinkedHashSet<Long>();
-
+    
     static {
         loadH5Lib();
     }
 
     public synchronized static void loadH5Lib() {
+        if (isLibraryLoaded)
+        {
+            return;
+        }
         if (NativeLibraryUtilities.loadNativeLibrary("jhdf5") == false)
         {
             throw new UnsupportedOperationException("No suitable HDF5 native library found for this platform.");
         }
+        isLibraryLoaded = true;
 
-        H5error_off();
+        /* Important! Exit quietly */
+        try {
+            H5.H5dont_atexit();
+        }
+        catch (HDF5LibraryException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        try {
+            H5error_off();
+        }
+        catch (HDF5LibraryException e) {
+            e.printStackTrace();
+            System.exit(1);
+        }
 
         // Ensure we have the expected version of the library (with at least the expected release
         // number)
         final int[] libversion = new int[3];
-        H5get_libversion(libversion);
-        if (libversion[0] != LIB_VERSION[0] || libversion[1] != LIB_VERSION[1]
-                || libversion[2] < LIB_VERSION[2])
-        {
-            throw new UnsupportedOperationException("The HDF5 native library is outdated! It is version "
-                    + libversion[0] + "." + libversion[1] + "." + libversion[2]
-                    + ", but we require " + LIB_VERSION[0] + "." + LIB_VERSION[1] + ".x with x >= "
-                    + LIB_VERSION[2] + ".");
+        try {
+            H5get_libversion(libversion);
+            if (libversion[0] != LIB_VERSION[0] || libversion[1] != LIB_VERSION[1]
+                    || libversion[2] < LIB_VERSION[2])
+            {
+                throw new UnsupportedOperationException("The HDF5 native library is outdated! It is version "
+                        + libversion[0] + "." + libversion[1] + "." + libversion[2]
+                        + ", but we require " + LIB_VERSION[0] + "." + LIB_VERSION[1] + ".x with x >= "
+                        + LIB_VERSION[2] + ".");
+            }
+        }
+        catch (HDF5LibraryException e) {
+            e.printStackTrace();
+            System.exit(1);
         }
     }
 
