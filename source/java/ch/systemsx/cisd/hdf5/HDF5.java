@@ -304,7 +304,7 @@ class HDF5
         checkMaxLength(srcPath);
         checkMaxLength(dstPath);
         final int success = 0;
-        H5Ocopy(srcFileId, srcPath, dstFileId, dstPath, H5P_DEFAULT, H5P_DEFAULT);
+        H5Ocopy(srcFileId, srcPath, dstFileId, dstPath, H5P_DEFAULT, lcplCreateIntermediateGroups);
         return success;
     }
 

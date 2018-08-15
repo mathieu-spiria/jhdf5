@@ -196,10 +196,6 @@ class HDF5BaseReader
     void copyObject(String srcPath, long dstFileId, String dstPath)
     {
         final boolean dstIsDir = dstPath.endsWith("/");
-        if (dstIsDir && h5.exists(dstFileId, dstPath) == false)
-        {
-            h5.createGroup(dstFileId, dstPath);
-        }
         if ("/".equals(srcPath))
         {
             final String dstDir = dstIsDir ? dstPath : dstPath + "/";

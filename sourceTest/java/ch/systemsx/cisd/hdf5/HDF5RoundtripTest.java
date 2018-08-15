@@ -150,6 +150,7 @@ public class HDF5RoundtripTest
         test.testOverwriteScalar();
         test.testOverwriteScalarKeepDataSet();
         test.testDataSets();
+        test.testCopyDataSet();
         test.testFixedLengthStringArray();
         test.testVLStringCrash();
         test.testDataTypeInfoOptions();
@@ -1311,6 +1312,54 @@ public class HDF5RoundtripTest
         reader.close();
     }
 
+    @Test
+    public void testCopyDataSet()
+    {
+        final File datasetFile1 = new File(workingDirectory, "testCopyDataSet1.h5");
+        datasetFile1.delete();
+        assertFalse(datasetFile1.exists());
+        datasetFile1.deleteOnExit();
+        final File datasetFile2 = new File(workingDirectory, "testCopyDataSet2.h5");
+        datasetFile2.delete();
+        assertFalse(datasetFile2.exists());
+        datasetFile2.deleteOnExit();
+        final File datasetFile3 = new File(workingDirectory, "testCopyDataSet3.h5");
+        datasetFile3.delete();
+        assertFalse(datasetFile3.exists());
+        datasetFile3.deleteOnExit();
+        final IHDF5Writer writer1 = HDF5FactoryProvider.get().open(datasetFile1);
+        final IHDF5Writer writer2 = HDF5FactoryProvider.get().open(datasetFile2);
+        final IHDF5Writer writer3 = HDF5FactoryProvider.get().open(datasetFile3);
+        final String floatDatasetName = "/Group1/floats";
+        final float[] floatDataWritten = new float[]
+                { 2.8f, 8.2f, -3.1f, 0.0f, 10000.0f };
+        writer1.float32().writeArray(floatDatasetName, floatDataWritten);
+        final long[] longDataWritten = new long[]
+                { 10, -1000000, 1, 0, 100000000000L };
+            final String longDatasetName = "/Group2/longs";
+        writer1.int64().writeArray(longDatasetName, longDataWritten);
+        final String stringDatasetName = "/Group1/Group3/strings";
+        final String stringDataWritten1 = "Some Random String";
+        writer1.string().write(stringDatasetName, stringDataWritten1);
+        writer1.object().copy(floatDatasetName, writer2, floatDatasetName);
+        writer1.object().copyAll(writer3);
+        writer1.close();
+        writer2.close();
+        writer3.close();
+        final IHDF5Reader reader2 = HDF5FactoryProvider.get().openForReading(datasetFile2);
+        assertTrue(reader2.exists(floatDatasetName));
+        assertTrue(Arrays.equals(new long[]
+                { floatDataWritten.length }, reader2.object().getDimensions(floatDatasetName)));
+        reader2.close();
+        final IHDF5Reader reader3 = HDF5FactoryProvider.get().openForReading(datasetFile3);
+        assertTrue(reader3.exists(floatDatasetName));
+        assertTrue(Arrays.equals(floatDataWritten, reader3.float32().readArray(floatDatasetName)));
+        assertTrue(reader3.exists(longDatasetName));
+        assertTrue(Arrays.equals(longDataWritten, reader3.int64().readArray(longDatasetName)));
+        assertEquals(stringDataWritten1, reader3.string().read(stringDatasetName));
+        reader3.close();
+    }
+    
     @Test
     public void testScaleOffsetFilterInt()
     {
