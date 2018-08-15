@@ -15,8 +15,6 @@
 package hdf.hdf5lib;
 
 import java.nio.ByteBuffer;
-import java.util.Collection;
-import java.util.LinkedHashSet;
 
 import ch.systemsx.cisd.base.utilities.NativeLibraryUtilities;
 import hdf.hdf5lib.callbacks.H5A_iterate_cb;
@@ -224,18 +222,8 @@ public class H5 implements java.io.Serializable {
      */
     public final static int LIB_VERSION[] = { 1, 10, 3 };
 
-    public final static String H5PATH_PROPERTY_KEY = "hdf.hdf5lib.H5.hdf5lib";
-
-    // add system property to load library by name from library path, via
-    // System.loadLibrary()
-    public final static String H5_LIBRARY_NAME_PROPERTY_KEY = "hdf.hdf5lib.H5.loadLibraryName";
-    private static String s_libraryName;
     private static boolean isLibraryLoaded = false;
 
-    private final static boolean IS_CRITICAL_PINNING = true;
-    // change from Vector to LinkedHashSet - jp 6-Oct-2014
-    private final static LinkedHashSet<Long> OPEN_IDS = new LinkedHashSet<Long>();
-    
     static {
         loadH5Lib();
     }
@@ -293,24 +281,6 @@ public class H5 implements java.io.Serializable {
     // H5: General Library Functions //
     // //
     // ////////////////////////////////////////////////////////////
-
-    /**
-     * Get number of open IDs.
-     *
-     * @return Returns a count of open IDs
-     */
-    public final static int getOpenIDCount() {
-        return OPEN_IDS.size();
-    }
-
-    /**
-     * Get the open IDs
-     *
-     * @return Returns a collection of open IDs
-     */
-    public final static Collection<Long> getOpenIDs() {
-        return OPEN_IDS;
-    }
 
     /**
      * H5check_version verifies that the arguments match the version numbers compiled into the library.
@@ -463,7 +433,6 @@ public class H5 implements java.io.Serializable {
         if (attr_id < 0)
             return 0; // throw new HDF5LibraryException("Negative ID");;
 
-        OPEN_IDS.remove(attr_id);
         return _H5Aclose(attr_id);
     }
 
@@ -510,9 +479,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Acreate(long loc_id, String attr_name, long type_id, long space_id, long acpl_id, long aapl_id)
             throws HDF5LibraryException, NullPointerException {
         long id = _H5Acreate2(loc_id, attr_name, type_id, space_id, acpl_id, aapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -556,9 +522,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Acreate_by_name(long loc_id, String obj_name, String attr_name, long type_id, long space_id,
             long acpl_id, long aapl_id, long lapl_id) throws HDF5LibraryException, NullPointerException {
         long id = _H5Acreate_by_name(loc_id, obj_name, attr_name, type_id, space_id, acpl_id, aapl_id, lapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -787,9 +750,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Aget_space(long attr_id) throws HDF5LibraryException {
         long id = _H5Aget_space(attr_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -821,9 +781,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Aget_type(long attr_id) throws HDF5LibraryException {
         long id = _H5Aget_type(attr_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -850,9 +807,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Aopen(long obj_id, String attr_name, long aapl_id) throws HDF5LibraryException,
             NullPointerException {
         long id = _H5Aopen(obj_id, attr_name, aapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -888,9 +842,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Aopen_by_idx(long loc_id, String obj_name, int idx_type, int order, long n, long aapl_id,
             long lapl_id) throws HDF5LibraryException, NullPointerException {
         long id = _H5Aopen_by_idx(loc_id, obj_name, idx_type, order, n, aapl_id, lapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -921,9 +872,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Aopen_by_name(long loc_id, String obj_name, String attr_name, long aapl_id, long lapl_id)
             throws HDF5LibraryException, NullPointerException {
         long id = _H5Aopen_by_name(loc_id, obj_name, attr_name, aapl_id, lapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -1107,9 +1055,6 @@ public class H5 implements java.io.Serializable {
             throws HDF5LibraryException
     {
         long id = _H5Aget_create_plist(attr_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -1263,7 +1208,6 @@ public class H5 implements java.io.Serializable {
         if (dataset_id < 0)
             return 0; // throw new HDF5LibraryException("Negative ID");
 
-        OPEN_IDS.remove(dataset_id);
         return _H5Dclose(dataset_id);
     }
 
@@ -1297,9 +1241,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Dcreate(long loc_id, String name, long type_id, long space_id, long lcpl_id, long dcpl_id,
             long dapl_id) throws HDF5LibraryException, NullPointerException {
         long id = _H5Dcreate2(loc_id, name, type_id, space_id, lcpl_id, dcpl_id, dapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -1334,9 +1275,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Dcreate_anon(long loc_id, long type_id, long space_id, long dcpl_id, long dapl_id)
             throws HDF5LibraryException {
         long id = _H5Dcreate_anon(loc_id, type_id, space_id, dcpl_id, dapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -1390,9 +1328,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Dget_create_plist(long dataset_id) throws HDF5LibraryException {
         long id = _H5Dget_create_plist(dataset_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -1424,9 +1359,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Dget_space(long dataset_id) throws HDF5LibraryException {
         long id = _H5Dget_space(dataset_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -1472,9 +1404,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Dget_type(long dataset_id) throws HDF5LibraryException {
         long id = _H5Dget_type(dataset_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -1526,9 +1455,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Dopen(long loc_id, String name, long dapl_id) throws HDF5LibraryException,
     NullPointerException {
         long id = _H5Dopen2(loc_id, name, dapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -2382,7 +2308,6 @@ public class H5 implements java.io.Serializable {
         if (file_id < 0)
             return 0; // throw new HDF5LibraryException("Negative ID");;
 
-        OPEN_IDS.remove(file_id);
         return _H5Fclose(file_id);
     }
 
@@ -2408,9 +2333,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Fopen(String name, int flags, long access_id) throws HDF5LibraryException,
             NullPointerException {
         long id = _H5Fopen(name, flags, access_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -2429,9 +2351,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Freopen(long file_id) throws HDF5LibraryException {
         long id = _H5Freopen(file_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -2475,9 +2394,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Fcreate(String name, int flags, long create_id, long access_id) throws HDF5LibraryException,
             NullPointerException {
         long id = _H5Fcreate(name, flags, create_id, access_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -2526,9 +2442,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Fget_access_plist(long file_id) throws HDF5LibraryException {
         long id = _H5Fget_access_plist(file_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -2548,9 +2461,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Fget_create_plist(long file_id) throws HDF5LibraryException {
         long id = _H5Fget_create_plist(file_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -2948,7 +2858,6 @@ public class H5 implements java.io.Serializable {
         if (group_id < 0)
             return 0; // throw new HDF5LibraryException("Negative ID");;
 
-        OPEN_IDS.remove(group_id);
         return _H5Gclose(group_id);
     }
 
@@ -2979,9 +2888,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Gcreate(long loc_id, String name, long lcpl_id, long gcpl_id, long gapl_id)
             throws HDF5LibraryException, NullPointerException {
         long id = _H5Gcreate2(loc_id, name, lcpl_id, gcpl_id, gapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -3006,9 +2912,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Gcreate_anon(long loc_id, long gcpl_id, long gapl_id) throws HDF5LibraryException {
         long id = _H5Gcreate_anon(loc_id, gcpl_id, gapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -3318,9 +3221,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Gopen(long loc_id, String name, long gapl_id) throws HDF5LibraryException,
     NullPointerException {
         long id = _H5Gopen2(loc_id, name, gapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -4035,7 +3935,6 @@ public class H5 implements java.io.Serializable {
         if (object_id < 0)
             return 0; // throw new HDF5LibraryException("Negative ID");;
 
-        OPEN_IDS.remove(object_id);
         return _H5Oclose(object_id);
     }
 
@@ -4319,9 +4218,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Oopen(long loc_id, String name, long lapl_id) throws HDF5LibraryException, NullPointerException {
         long id = _H5Oopen(loc_id, name, lapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -4495,9 +4391,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Oopen_by_addr(long loc_id, long addr) throws HDF5LibraryException {
         long id = _H5Oopen_by_addr(loc_id, addr);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -4522,9 +4415,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Oopen_by_idx(long loc_id, String group_name,
             int idx_type, int order, long n, long lapl_id) throws HDF5LibraryException, NullPointerException {
         long id = _H5Oopen_by_idx(loc_id, group_name, idx_type, order, n, lapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -4597,9 +4487,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Pcreate(long type) throws HDF5LibraryException {
         long id = _H5Pcreate(type);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -4792,7 +4679,6 @@ public class H5 implements java.io.Serializable {
         if (plid < 0)
             return 0; // throw new HDF5LibraryException("Negative ID");;
 
-        OPEN_IDS.remove(plid);
         return _H5Pclose_class(plid);
     }
 
@@ -4812,7 +4698,6 @@ public class H5 implements java.io.Serializable {
         if (plist < 0)
             return 0; // throw new HDF5LibraryException("Negative ID");;
 
-        OPEN_IDS.remove(plist);
         return _H5Pclose(plist);
     }
 
@@ -4831,9 +4716,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Pcopy(long plist) throws HDF5LibraryException {
         long id = _H5Pcopy(plist);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -4841,9 +4723,6 @@ public class H5 implements java.io.Serializable {
 
     public static long H5Pcreate_class_nocb(long parent_class, String name) throws HDF5LibraryException {
         long id = _H5Pcreate_class_nocb(parent_class, name);
-          if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -7100,9 +6979,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Pget_elink_fapl(long lapl_id) throws HDF5LibraryException {
         long id = _H5Pget_elink_fapl(lapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -7623,9 +7499,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Rdereference(long dataset, long access_list, int ref_type, byte[] ref)
             throws HDF5LibraryException, NullPointerException, IllegalArgumentException {
         long id = _H5Rdereference(dataset, access_list, ref_type, ref);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -7714,9 +7587,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Rget_region(long loc_id, int ref_type, byte[] ref) throws HDF5LibraryException,
     NullPointerException, IllegalArgumentException {
         long id = _H5Rget_region(loc_id, ref_type, ref);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -7744,7 +7614,6 @@ public class H5 implements java.io.Serializable {
         if (space_id < 0)
             return 0; // throw new HDF5LibraryException("Negative ID");;
 
-        OPEN_IDS.remove(space_id);
         return _H5Sclose(space_id);
     }
 
@@ -7762,9 +7631,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Scopy(long space_id) throws HDF5LibraryException {
         long id = _H5Scopy(space_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -7783,9 +7649,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Screate(int type) throws HDF5LibraryException {
         long id = _H5Screate(type);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -7811,9 +7674,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Screate_simple(int rank, long[] dims, long[] maxdims) throws HDF5Exception,
             NullPointerException {
         long id = _H5Screate_simple(rank, dims, maxdims);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -8377,9 +8237,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Tarray_create(long base_id, int ndims, long[] dim) throws HDF5LibraryException,
             NullPointerException {
         long id = _H5Tarray_create2(base_id, ndims, dim);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -8401,7 +8258,6 @@ public class H5 implements java.io.Serializable {
         if (type_id < 0)
             return 0; // throw new HDF5LibraryException("Negative ID");;
 
-        OPEN_IDS.remove(type_id);
         return _H5Tclose(type_id);
     }
 
@@ -8518,9 +8374,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Tcopy(long type_id) throws HDF5LibraryException {
         long id = _H5Tcopy(type_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -8541,9 +8394,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Tcreate(int tclass, long size) throws HDF5LibraryException {
         long id = _H5Tcreate(tclass, size);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -8564,9 +8414,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Tdecode(byte[] buf) throws HDF5LibraryException, NullPointerException {
         long id = _H5Tdecode(buf);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -8635,9 +8482,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Tenum_create(long base_id) throws HDF5LibraryException {
         long id = _H5Tenum_create(base_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -8913,9 +8757,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Tget_create_plist(long type_id) throws HDF5LibraryException {
         long id = _H5Tget_create_plist(type_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -9213,9 +9054,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Tget_member_type(long type_id, int field_idx) throws HDF5LibraryException {
         long id = _H5Tget_member_type(type_id, field_idx);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -9295,9 +9133,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Tget_native_type(long type_id, int direction) throws HDF5LibraryException {
         long id = _H5Tget_native_type(type_id, direction);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -9611,9 +9446,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Tget_super(long type) throws HDF5LibraryException {
         long id = _H5Tget_super(type);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -9715,9 +9547,6 @@ public class H5 implements java.io.Serializable {
     public static long H5Topen(long loc_id, String name, long tapl_id) throws HDF5LibraryException,
     NullPointerException {
         long id = _H5Topen2(loc_id, name, tapl_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
@@ -9754,9 +9583,6 @@ public class H5 implements java.io.Serializable {
      **/
     public static long H5Tvlen_create(long base_id) throws HDF5LibraryException {
         long id = _H5Tvlen_create(base_id);
-        if (id > 0) {
-            OPEN_IDS.add(id);
-        }
         return id;
     }
 
