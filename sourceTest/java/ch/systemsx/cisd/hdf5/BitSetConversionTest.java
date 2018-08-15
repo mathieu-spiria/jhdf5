@@ -80,14 +80,6 @@ public class BitSetConversionTest
     }
 
     @Test(dataProvider = "createBitSets")
-    public void testBitSetRoundTripGeneric(final BitSet bs)
-    {
-        final long[] bsArray = BitSetConversionUtils.toStorageFormGeneric(bs);
-        final BitSet bs2 = BitSetConversionUtils.fromStorageFormGeneric(bsArray, 0, bsArray.length);
-        assertEquals(bs, bs2);
-    }
-
-    @Test(dataProvider = "createBitSets")
     public void testBitSetRoundTrip(final BitSet bs)
     {
         final long[] bsArray = BitSetConversionUtils.toStorageForm(bs);
