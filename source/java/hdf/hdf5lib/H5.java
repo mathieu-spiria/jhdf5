@@ -224,6 +224,8 @@ public class H5 implements java.io.Serializable {
 
     private static boolean isLibraryLoaded = false;
 
+    private static int openFileCount = 0;
+    
     static {
         loadH5Lib();
     }
@@ -281,6 +283,15 @@ public class H5 implements java.io.Serializable {
     // H5: General Library Functions //
     // //
     // ////////////////////////////////////////////////////////////
+
+    /**
+     * Get number of currently open HDF5 files.
+     *
+     * @return number of open files.
+     */
+    public final synchronized static int getOpenFileCount() {
+        return openFileCount;
+    }
 
     /**
      * H5check_version verifies that the arguments match the version numbers compiled into the library.
@@ -2304,9 +2315,10 @@ public class H5 implements java.io.Serializable {
      * @exception HDF5LibraryException
      *                - Error from the HDF-5 Library.
      **/
-    public static int H5Fclose(long file_id) throws HDF5LibraryException {
+    public static synchronized int H5Fclose(long file_id) throws HDF5LibraryException {
         if (file_id < 0)
             return 0; // throw new HDF5LibraryException("Negative ID");;
+        --openFileCount;
 
         return _H5Fclose(file_id);
     }
@@ -2330,9 +2342,10 @@ public class H5 implements java.io.Serializable {
      * @exception NullPointerException
      *                - name is null.
      **/
-    public static long H5Fopen(String name, int flags, long access_id) throws HDF5LibraryException,
+    public static synchronized long H5Fopen(String name, int flags, long access_id) throws HDF5LibraryException,
             NullPointerException {
         long id = _H5Fopen(name, flags, access_id);
+        ++openFileCount;
         return id;
     }
 
@@ -2349,8 +2362,9 @@ public class H5 implements java.io.Serializable {
      *                - Error from the HDF-5 Library.
      * @return a new file identifier if successful
      **/
-    public static long H5Freopen(long file_id) throws HDF5LibraryException {
+    public static synchronized long H5Freopen(long file_id) throws HDF5LibraryException {
         long id = _H5Freopen(file_id);
+        ++openFileCount;
         return id;
     }
 
@@ -2394,6 +2408,7 @@ public class H5 implements java.io.Serializable {
     public static long H5Fcreate(String name, int flags, long create_id, long access_id) throws HDF5LibraryException,
             NullPointerException {
         long id = _H5Fcreate(name, flags, create_id, access_id);
+        ++openFileCount;
         return id;
     }
 

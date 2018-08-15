@@ -504,7 +504,9 @@ public class HDF5RoundtripTest
         final String groupName = "/some/deep/and/non/existing/group";
         writer.object().createGroup(groupName);
         assertTrue(writer.isGroup(groupName));
+        assertFalse(HDF5Factory.reset());
         writer.close();
+        assertTrue(HDF5Factory.reset());
     }
 
     @Test
@@ -2143,6 +2145,7 @@ public class HDF5RoundtripTest
 
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         assertEquals(arr, reader.int32().readMDArray("array"));
+        reader.close();
     }
 
     @Test
@@ -2299,7 +2302,9 @@ public class HDF5RoundtripTest
         datasetFile.delete();
         assertFalse(datasetFile.exists());
         datasetFile.deleteOnExit();
+        assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        assertEquals(1, HDF5Factory.getOpenHDF5FileCount());
         final String dsName = "ds";
         final byte[] byteArray = new byte[100];
         for (int i = 0; i < byteArray.length; ++i)
@@ -2308,7 +2313,9 @@ public class HDF5RoundtripTest
         }
         writer.int8().writeArray(dsName, byteArray);
         writer.close();
+        assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        assertEquals(1, HDF5Factory.getOpenHDF5FileCount());
         final int blockSize = 10;
         for (int i = 0; i < 10; ++i)
         {
@@ -2319,6 +2326,7 @@ public class HDF5RoundtripTest
             assertTrue("Block " + i, Arrays.equals(byteArrayBlockExpected, byteArrayBlockRead));
         }
         reader.close();
+        assertEquals(0, HDF5Factory.getOpenHDF5FileCount());
     }
 
     @Test
@@ -2634,6 +2642,7 @@ public class HDF5RoundtripTest
                         byteMatrixRead[i][j]);
             }
         }
+        HDF5Factory.garbageCollect();
     }
 
     @Test
@@ -4479,12 +4488,13 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
-        writer.writeBoolean("/some/boolean/value", true);
-        writer.int32().write("/a/new/home", 4);
-        // This will fail.
-        writer.object().move("/some/boolean/value", "/a/new/home");
-        writer.close();
+        try (final IHDF5Writer writer = HDF5FactoryProvider.get().open(file))
+        {
+            writer.writeBoolean("/some/boolean/value", true);
+            writer.int32().write("/a/new/home", 4);
+            // This will fail.
+            writer.object().move("/some/boolean/value", "/a/new/home");
+        }
     }
 
     @Test(expectedExceptions = HDF5SymbolTableException.class)
@@ -4494,9 +4504,10 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
-        writer.object().move("/some/boolean/value", "/a/new/home");
-        writer.close();
+        try (final IHDF5Writer writer = HDF5FactoryProvider.get().open(file))
+        {
+            writer.object().move("/some/boolean/value", "/a/new/home");
+        }
     }
 
     @Test
@@ -5697,6 +5708,7 @@ public class HDF5RoundtripTest
 
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(attributeFile);
         assertTrue(Arrays.equals(farray, reader.float32().getArrayAttr(datasetName, attributeName)));
+        reader.close();
     }
 
     @Test
@@ -5725,6 +5737,7 @@ public class HDF5RoundtripTest
 
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(attributeFile);
         assertTrue(Arrays.equals(farray, reader.float32().getArrayAttr(datasetName, attributeName)));
+        reader.close();
     }
 
     @Test
@@ -9204,31 +9217,33 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
-        HDF5CompoundType<MatrixRecord> compoundType =
-                writer.compound().getType(MatrixRecord.class, MatrixRecord.getMapping());
-        final MatrixRecord recordWritten = new MatrixRecord(new byte[][]
-            {
-                { 1, 2 } }, new short[][]
-            {
-                { 1 },
-                { 2 } }, new int[][]
-            {
-                { 1, 2 },
-                { 3, 4 } }, new long[][]
-            {
-                { 1, 2 },
-                { 3, 4 },
-                { 5, 6 } }, new float[][]
-            {
-                { 1, 2 },
-                { 3, 4 } }, new double[][]
-            {
-                { 1, 2, 3, 4 },
-                { 5, 6, 7, 8 },
-                { 9, 10, 11, 12, 13 } });
-        String name = "/testMatrixCompound";
-        writer.compound().write(name, compoundType, recordWritten);
+        try (final IHDF5Writer writer = HDF5FactoryProvider.get().open(file))
+        {
+            HDF5CompoundType<MatrixRecord> compoundType =
+                    writer.compound().getType(MatrixRecord.class, MatrixRecord.getMapping());
+            final MatrixRecord recordWritten = new MatrixRecord(new byte[][]
+                {
+                    { 1, 2 } }, new short[][]
+                {
+                    { 1 },
+                    { 2 } }, new int[][]
+                {
+                    { 1, 2 },
+                    { 3, 4 } }, new long[][]
+                {
+                    { 1, 2 },
+                    { 3, 4 },
+                    { 5, 6 } }, new float[][]
+                {
+                    { 1, 2 },
+                    { 3, 4 } }, new double[][]
+                {
+                    { 1, 2, 3, 4 },
+                    { 5, 6, 7, 8 },
+                    { 9, 10, 11, 12, 13 } });
+            String name = "/testMatrixCompound";
+            writer.compound().write(name, compoundType, recordWritten);
+        }
     }
 
     @Test(expectedExceptions = IllegalArgumentException.class)
@@ -9239,30 +9254,32 @@ public class HDF5RoundtripTest
         file.delete();
         assertFalse(file.exists());
         file.deleteOnExit();
-        final IHDF5Writer writer = HDF5FactoryProvider.get().open(file);
-        HDF5CompoundType<MatrixRecord> compoundType =
-                writer.compound().getType(MatrixRecord.class, MatrixRecord.getMapping());
-        final MatrixRecord recordWritten = new MatrixRecord(new byte[][]
-            {
-                { 1, 2 } }, new short[][]
-            {
-                { 1 },
-                { 2 } }, new int[][]
-            {
-                { 1, 2 },
-                { 3, 4 } }, new long[][]
-            {
-                { 1, 2 },
-                { 3, 4 },
-                { 5, 6 } }, new float[][]
-            {
-                { 1, 2 },
-                { 3, 4 } }, new double[][]
-            {
-                { 1, 2, 3 },
-                { 4, 5 } });
-        String name = "/testMatrixCompound";
-        writer.compound().write(name, compoundType, recordWritten);
+        try (final IHDF5Writer writer = HDF5FactoryProvider.get().open(file))
+        {
+            HDF5CompoundType<MatrixRecord> compoundType =
+                    writer.compound().getType(MatrixRecord.class, MatrixRecord.getMapping());
+            final MatrixRecord recordWritten = new MatrixRecord(new byte[][]
+                {
+                    { 1, 2 } }, new short[][]
+                {
+                    { 1 },
+                    { 2 } }, new int[][]
+                {
+                    { 1, 2 },
+                    { 3, 4 } }, new long[][]
+                {
+                    { 1, 2 },
+                    { 3, 4 },
+                    { 5, 6 } }, new float[][]
+                {
+                    { 1, 2 },
+                    { 3, 4 } }, new double[][]
+                {
+                    { 1, 2, 3 },
+                    { 4, 5 } });
+            String name = "/testMatrixCompound";
+            writer.compound().write(name, compoundType, recordWritten);
+        }
     }
 
     private static boolean equals(double[][] a, double[][] a2)
@@ -10969,6 +10986,7 @@ public class HDF5RoundtripTest
                 reader.compound().read("/testCompound", compoundTypeMatrixRead);
         assertEquals(recordWritten.s, recordRead.s);
         assertEquals(recordWritten.fm, recordRead.fm);
+        reader.close();
     }
 
     @Test
@@ -11005,6 +11023,7 @@ public class HDF5RoundtripTest
             assertEquals("" + i, recordArrayWritten[i].s, recordReadArray[i].s);
             assertEquals("" + i, recordArrayWritten[i].fm, recordReadArray[i].fm);
         }
+        reader.close();
     }
 
     @Test

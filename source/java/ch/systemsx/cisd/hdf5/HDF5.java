@@ -63,6 +63,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import hdf.hdf5lib.H5;
 import hdf.hdf5lib.HDF5Constants;
 import hdf.hdf5lib.HDFNativeData;
 import hdf.hdf5lib.exceptions.HDF5Exception;
@@ -133,6 +134,20 @@ class HDF5
         if (path.length() > MAX_PATH_LENGTH)
         {
             throw new HDF5JavaException("Path too long (length=" + path.length() + ")");
+        }
+    }
+    
+    //
+    // Library
+    //
+    
+    public static void resetLibrary()
+    {
+        synchronized (H5.class)
+        {
+            H5.H5close();
+            H5.H5open();
+            H5.H5error_off();
         }
     }
 
