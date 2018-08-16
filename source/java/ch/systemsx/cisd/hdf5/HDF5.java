@@ -407,15 +407,8 @@ class HDF5
 
     public boolean exists(final long fileId, final String linkName)
     {
-        boolean result = false;
         checkMaxLength(linkName);
-        try
-        {
-            result = H5Lexists(fileId, linkName, H5P_DEFAULT);
-        } catch (Exception e)
-        {
-        }
-        return result;
+        return HDFHelper.H5Lexists(fileId, linkName, H5P_DEFAULT);
     }
 
     public HDF5LinkInformation getLinkInfo(final long fileId, final String objectName,

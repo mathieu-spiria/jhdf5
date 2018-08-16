@@ -17,11 +17,7 @@
 #include "hdf5.h"
 #include "H5Ppublic.h"
 #include <jni.h>
-
-extern jboolean h5outOfMemory( JNIEnv *env, char *functName);
-extern jboolean h5JNIFatalError( JNIEnv *env, char *functName);
-extern jboolean h5nullArgument( JNIEnv *env, char *functName);
-extern jboolean h5libraryError( JNIEnv *env );
+#include "h5jni.h"
 
 /*
 /////////////////////////////////////////////////////////////////////////////////

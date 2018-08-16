@@ -32,6 +32,8 @@ import static hdf.hdf5lib.HDF5Constants.H5P_DEFAULT;
 import static hdf.hdf5lib.HDF5Constants.H5_INDEX_NAME;
 import static hdf.hdf5lib.HDF5Constants.H5_ITER_INC;
 
+import com.sun.xml.internal.bind.v2.runtime.Name;
+
 import hdf.hdf5lib.H5;
 import hdf.hdf5lib.HDF5Constants;
 import hdf.hdf5lib.HDFNativeData;
@@ -58,6 +60,21 @@ public class HDFHelper
     // //
     // ////////////////////////////////////////////////////////////
 
+    private static native boolean _H5Lexists(long loc_id, String name, long lapl_id)
+            throws HDF5LibraryException, NullPointerException;
+
+    /**
+     * Version of {@link H5#H5Lexists(long, String, long)} that never throws an exception when {@link Name} does not exist. 
+     */
+    public static boolean H5Lexists(long loc_id, String name, long lapl_id)
+            throws HDF5LibraryException, NullPointerException
+    {
+        synchronized (H5.class)
+        {
+            return _H5Lexists(loc_id, name, lapl_id);
+        }
+    }
+    
     public static H5O_info_t H5Oget_info_by_name(
             long loc_id,
             String object_name,
