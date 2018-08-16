@@ -33,9 +33,6 @@ fi
 
 CFLAGS=$CFLAGS ./configure --prefix=$BUILD_ROOT/hdf5-$VERSION-$PLATFORM --enable-build-mode=production $ADDITIONAL &> configure.log
 
-make -j 4 &> build.log
+make -j `lscpu|awk '/^CPU\(s\)/ {print $2}'` &> build.log
 make install &> install.log
 #make test &> test.log
-
-
-
