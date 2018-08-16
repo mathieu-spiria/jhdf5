@@ -10,7 +10,7 @@ configurations {
 }
 
 configurations {
-	ecj
+    ecj
 }
 
 configurations.all {
@@ -50,12 +50,7 @@ sourceSets {
 buildDir = 'targets/gradle'
 
 buildscript {
-    apply from: '../jhdf5/repository.gradle'
-    
-    repositories repositoryConfig
 }
-
-repositories repositoryConfig
 
 def execute(command, arguments) {
     new ByteArrayOutputStream().withStream { os ->
@@ -230,7 +225,7 @@ test {
 test.dependsOn checkRestrictions
 
 dependencies {
-    ecj "eclipse:ecj:+"
+    ecj files('libs/build/ecj-4.6.1.jar')
 }
 
 compileJava {

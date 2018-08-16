@@ -25,7 +25,6 @@ import java.util.BitSet;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import ch.rinn.restrictions.Friend;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
@@ -33,7 +32,6 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
  * 
  * @author Bernd Rinn
  */
-@Friend(toClasses = BitSetConversionUtils.class)
 public class BitSetConversionTest
 {
     private BitSet create(final Integer... indices)

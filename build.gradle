@@ -5,12 +5,8 @@ sourceCompatibility='1.8'
 targetCompatibility='1.8'
 
 dependencies {
-    compile 'cisd:cisd-args4j:+',
-            'sis:sis-base:+',
-            'rinn:restrictions:+'
-    
-    testCompile 'testng:testng:+',
-                'jmock:jmock:+'
+    compile fileTree(dir: 'libs/prod', include: '*.jar')
+    testCompile fileTree(dir: 'libs/test', include: '*.jar')
 }
 
 tasks.withType(Test) {

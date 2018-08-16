@@ -3,19 +3,20 @@
 	<classpathentry kind="src" path="source/java"/>
 	<classpathentry kind="src" path="sourceExamples/java"/>
 	<classpathentry kind="src" path="sourceTest/java"/>
-	<classpathentry kind="lib" path="/libraries/commons-lang/commons-lang.jar" sourcepath="/libraries/commons-lang/src.zip"/>
-	<classpathentry kind="lib" path="/libraries/commons-io/commons-io.jar" sourcepath="/libraries/commons-io/src.zip"/>
-	<classpathentry kind="lib" path="/libraries/cisd-args4j/cisd-args4j.jar"/>
-	<classpathentry kind="lib" path="/libraries/restrictionchecker/restrictions.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="lib" path="/libraries/testng/testng-jdk15.jar" sourcepath="/libraries/testng/src.zip"/>
-	<classpathentry kind="lib" path="/libraries/jmock/jmock.jar"/>
-	<classpathentry kind="lib" path="/libraries/jmock/hamcrest/hamcrest-core.jar"/>
-	<classpathentry kind="lib" path="/libraries/jmock/hamcrest/hamcrest-integration.jar"/>
-	<classpathentry kind="lib" path="/libraries/jmock/hamcrest/hamcrest-library.jar"/>
-	<classpathentry kind="lib" path="/libraries/jmock/objenesis/objenesis-1.0.jar"/>
 	<classpathentry kind="lib" path="libs"/>
-	<classpathentry kind="lib" path="/libraries/sis-base/sis-base.jar" sourcepath="/libraries/sis-base/sis-base-src.zip"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="libs/test/hamcrest-core.jar"/>
+	<classpathentry kind="lib" path="libs/test/hamcrest-integration.jar"/>
+	<classpathentry kind="lib" path="libs/test/hamcrest-library.jar"/>
+	<classpathentry kind="lib" path="libs/test/jmock.jar"/>
+	<classpathentry kind="lib" path="libs/test/objenesis-1.0.jar"/>
+	<classpathentry kind="lib" path="libs/test/testng-jdk15.jar"/>
+	<classpathentry kind="lib" path="libs/build/ecj-4.6.1.jar"/>
+	<classpathentry kind="lib" path="libs/prod/cisd-args4j-9.11.2.jar" sourcepath="libs/prod/cisd-args4j-9.11.2-src.zip"/>
+	<classpathentry kind="lib" path="libs/prod/cisd-args4j-9.11.2-src.zip"/>
+	<classpathentry kind="lib" path="libs/prod/commons-io-1.4.jar" sourcepath="libs/prod/commons-io-1.4-src.zip"/>
+	<classpathentry kind="lib" path="libs/prod/commons-lang-2.4.jar" sourcepath="libs/prod/commons-lang-2.4-src.zip"/>
+	<classpathentry kind="lib" path="libs/prod/sis-base-SNAPSHOT-r31435.jar" sourcepath="libs/prod/sis-base-SNAPSHOT-r31435-src.zip"/>
 	<classpathentry kind="output" path="targets/classes"/>
 </classpath>

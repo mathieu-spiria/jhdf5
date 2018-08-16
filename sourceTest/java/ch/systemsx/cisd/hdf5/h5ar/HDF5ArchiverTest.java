@@ -38,7 +38,6 @@ import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
-import ch.rinn.restrictions.Friend;
 import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.base.unix.Unix.Stat;
@@ -52,8 +51,6 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
  * 
  * @author Bernd Rinn
  */
-@Friend(toClasses =
-    { HDF5Archiver.class, IdCache.class, LinkRecord.class })
 public class HDF5ArchiverTest
 {
     private static final File rootDirectory = new File("targets", "unit-test-wd");
