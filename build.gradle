@@ -1,8 +1,6 @@
 apply from: 'javaproject.gradle'
 
 group='sis'
-sourceCompatibility='1.8'
-targetCompatibility='1.8'
 
 dependencies {
     compile fileTree(dir: 'libs/prod', include: '*.jar')
@@ -11,15 +9,6 @@ dependencies {
 
 tasks.withType(Test) {
     systemProperty "java.library.path", "libs/native/jhdf5/amd64-Linux:libs/native/jhdf5/amd64-Linux:libs/native/jhdf5/x86_64-Mac OS X:libs/native/jhdf5/x86_64-Mac OS X"
-}
-
-// Eclipse Gradle plugin always uses the default JRE, so we need to explicitly set it to 1.7.
-// (https://issues.gradle.org/browse/GRADLE-3100)
-eclipse {
-    classpath {
-         containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
-         containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8'
-    }
 }
 
 task nativeJarLinuxARM(type: Jar) {
@@ -165,7 +154,7 @@ task batteriesIncludedJar(type: Jar, dependsOn: [allJar, nativeJarLinuxARM, nati
 
 task myJavadoc(type: Javadoc, dependsOn: [compileJava]) {
 	source = [ sourceSets.main.allJava, "base-src" ]
-	classpath = files(sourceSets.main.output.classesDir) + fileTree(dir: 'libs/prod', include: '*.jar')
+	classpath = files(sourceSets.main.output.classesDir) + fileTree(dir: 'libs/prod', include: '*.jar') + files("libs/build/restrictions-1.0.2.jar")
 	options.memberLevel = JavadocMemberLevel.PUBLIC
 	options.overview = "overview.html"
 	include "ch/systemsx/cisd/hdf5/**"
@@ -280,16 +269,6 @@ task distributionZip(type: Zip, dependsOn: [jar, coreJar, toolsJar, allJar, nati
     from (sourcesJar.archivePath) {
         into "${project.group}-jhdf5/src"
         rename '(.*)', "${project.group}-jhdf5-src.zip"
-    }
-
-	// BR 2014-06-09:
-	// This is a workaround for an issue in Gradle: if one of entries from a jar file gets extraced read-only, 
-	// overwriting it in a subsequent run will fail. It should be fixed in a future version of Gradle.
-	// See http://forums.gradle.org/gradle/topics/ziptree_unable_to_overwrite_temporary_read_only_files 
-    doLast {
-        exec {
-            commandLine = "chmod -R u+w $buildDir/tmp/expandedArchives".tokenize()
-        }
     }
 
 }

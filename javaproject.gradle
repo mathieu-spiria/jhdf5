@@ -19,8 +19,8 @@ configurations.all {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '2.3'
-    distributionUrl = "http://svnsis.ethz.ch/repos/cisd/ivy-repository/trunk/gradle/distribution/2.3/gradle-2.3-all.zip"
+    gradleVersion = '4.9'
+    distributionUrl = "http://svnsis.ethz.ch/repos/cisd/ivy-repository/trunk/gradle/distribution/4.9/gradle-4.9-all.zip"
 }
 
 sourceCompatibility='1.8'
@@ -85,11 +85,6 @@ def isGitProject() {
 }
 
 def calculateCleanFlag() {
-    for (childProject in project.childProjects.values()) {
-        if (childProject.cleanFlag == 'dirty') {
-            return 'dirty'
-        }
-    }
     if (isGitProject()) {
         def output = execute_working_dir('git', ['status', '--porcelain'], '.')
         return output.length == 1 && output[0].length() == 0 ? 'clean' : 'dirty'
@@ -98,28 +93,32 @@ def calculateCleanFlag() {
     }
 }
 
-def findMaximum(lines, key) {
-    return lines.findAll({ it.startsWith(key)}).collect({element -> element.split(':')[1].toInteger()}).max()
-}
-
 def calculateBuildInfo() {
     if (isGitProject()) {
-        def gitlogoutput = execute_working_dir('git', ['log', '-1', '--format=%h'], '../' + project.name)
-        project.ext.revisionNumber = gitlogoutput[0]
-        def tag = 'git describe --tags'.execute().text.trim()
+        def gitlogoutput = execute_working_dir('git', ['log', '-1', '--format=%at-%H'], '../' + project.name)
+        def rev = gitlogoutput[0].split("-")
+        project.ext.revisionNumber = Integer.parseInt(rev[0])
+        def commitHash = rev[1]
+        def date = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX").format(new Date(revisionNumber * 1000L))
+        project.ext.revisionInfo = "${commitHash} [${date}]"
+        def tag = 'git tag -l --points-at HEAD'.execute().text.trim()
         if (tag == null || tag.isEmpty()) {
             project.ext.versionNumber = 'SNAPSHOT'
+        } else if (tag.contains('pybis')) {
+           throw new GradleException("project must contain a readme file")
         } else {
-            project.ext.versionNumber = tag
+           project.ext.versionNumber = tag
         }
     } else {
-        project.ext.revisionNumber = '?'
+        project.ext.revisionInfo = '?'
+        project.ext.revisionNumber = 1
         project.ext.versionNumber = 'SNAPSHOT'
     }
-    version = "${project.ext.versionNumber}-${project.ext.revisionNumber}"
+
+    version = project.ext.versionNumber.startsWith('SNAPSHOT') ? "${project.ext.revisionNumber}" : project.ext.versionNumber
     project.ext.revisionForPublication = project.ext.versionNumber.startsWith('SNAPSHOT') ? "${project.ext.revisionNumber}" : project.ext.versionNumber
     project.ext.cleanFlag = calculateCleanFlag()
-    def buildInfo = "${project.ext.versionNumber}:${project.ext.revisionNumber}:${project.ext.cleanFlag}"
+    def buildInfo = "${project.ext.versionNumber}::${project.ext.revisionInfo}::${project.ext.cleanFlag}"
     println "BUILD INFO for $project: $buildInfo"
     def targetsDist = 'targets/dist'
     def distFolder = new File("${project.projectDir}/$targetsDist")
@@ -195,16 +194,7 @@ compileTestJava {
 
 def createJvmArgs() {
     def args = ['-cp', configurations.ecj.asPath, 'org.eclipse.jdt.internal.compiler.batch.Main', '-nowarn']
-    appendCompatibilityOption(args, '-source', sourceCompatibility)
-    appendCompatibilityOption(args, '-target', targetCompatibility)
     return args
-}
-
-def appendCompatibilityOption(args, option, versionCompatibility) {
-    if (JavaVersion.current().equals(JavaVersion.toVersion(versionCompatibility))) {
-        args.add(option)
-        args.add(versionCompatibility.toString())
-    }
 }
 
 processTestResources {
