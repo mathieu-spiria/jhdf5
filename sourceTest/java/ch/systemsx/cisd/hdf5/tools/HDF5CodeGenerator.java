@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * A code generator for the identical parts of the HDF5 Java classes class for different numerical

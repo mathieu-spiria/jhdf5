@@ -32,7 +32,7 @@ import java.util.Map.Entry;
 
 import hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import ch.systemsx.cisd.base.exceptions.CheckedExceptionTunnel;
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;

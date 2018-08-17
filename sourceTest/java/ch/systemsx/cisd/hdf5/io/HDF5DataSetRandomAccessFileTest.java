@@ -33,9 +33,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.Objects;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
@@ -139,7 +139,7 @@ public class HDF5DataSetRandomAccessFileTest
             assertEquals(referenceArray.length - idx, raFile.available());
         }
         assertEquals(referenceArray.length, idx);
-        assertTrue(ArrayUtils.isEquals(referenceArray, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArray, arrayRead));
         raFile.close();
     }
 
@@ -202,7 +202,7 @@ public class HDF5DataSetRandomAccessFileTest
             assertEquals(referenceArray.length - idx, raFile.available());
         }
         assertEquals(referenceArray.length, idx);
-        assertTrue(ArrayUtils.isEquals(referenceArray, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArray, arrayRead));
         raFile.close();
     }
 
@@ -239,7 +239,7 @@ public class HDF5DataSetRandomAccessFileTest
             assertEquals(referenceArray.length - idx, raFile.available());
         }
         assertEquals(referenceArray.length, idx);
-        assertTrue(ArrayUtils.isEquals(referenceArray, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArray, arrayRead));
         raFile.close();
     }
 
@@ -277,7 +277,7 @@ public class HDF5DataSetRandomAccessFileTest
             assertEquals(referenceArray.length - idx, raFile.available());
         }
         assertEquals(referenceArray.length, idx);
-        assertTrue(ArrayUtils.isEquals(referenceArray, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArray, arrayRead));
         raFile.close();
     }
 
@@ -323,7 +323,7 @@ public class HDF5DataSetRandomAccessFileTest
                 break;
             }
         }
-        assertTrue(ArrayUtils.isEquals(referenceArray, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArray, arrayRead));
         raFile.close();
     }
 
@@ -534,7 +534,7 @@ public class HDF5DataSetRandomAccessFileTest
         writer.close();
         final InputStream istream = asInputStream(dataSetFile, dataSetName);
         final byte[] arrayRead = IOUtils.toByteArray(istream);
-        assertTrue(ArrayUtils.isEquals(referenceArray, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArray, arrayRead));
         istream.close();
     }
 
@@ -563,10 +563,10 @@ public class HDF5DataSetRandomAccessFileTest
         final HDF5DataSetRandomAccessFile raFile =
                 asRandomAccessFileReadOnly(dataSetFile, dataSetName);
         byte[] arrayRead = IOUtils.toByteArray(new AdapterIInputStreamToInputStream(raFile));
-        assertTrue(ArrayUtils.isEquals(referenceArray, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArray, arrayRead));
         raFile.seek(0);
         arrayRead = IOUtils.toByteArray(new AdapterIInputStreamToInputStream(raFile));
-        assertTrue(ArrayUtils.isEquals(referenceArray, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArray, arrayRead));
         raFile.seek(1113);
         assertEquals(referenceArray[1113], (byte) raFile.read());
         raFile.close();
@@ -635,7 +635,7 @@ public class HDF5DataSetRandomAccessFileTest
             assertEquals(referenceArrayByte.length - idx * 2, raFile.available());
         }
         assertEquals(referenceArrayByte.length, idx * 2);
-        assertTrue(ArrayUtils.isEquals(referenceArrayShort, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArrayShort, arrayRead));
         raFile.close();
     }
 
@@ -675,7 +675,7 @@ public class HDF5DataSetRandomAccessFileTest
             assertEquals(referenceArrayByte.length - idx * 2, raFile.available());
         }
         assertEquals(referenceArrayByte.length, idx * 2);
-        assertTrue(ArrayUtils.isEquals(referenceArrayShort, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArrayShort, arrayRead));
         raFile.close();
     }
 
@@ -714,7 +714,7 @@ public class HDF5DataSetRandomAccessFileTest
             assertEquals(referenceArrayByte.length - idx * 8, raFile.available());
         }
         assertEquals(referenceArrayByte.length, idx * 8);
-        assertTrue(ArrayUtils.isEquals(referenceArrayDouble, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArrayDouble, arrayRead));
         raFile.close();
     }
 
@@ -754,7 +754,7 @@ public class HDF5DataSetRandomAccessFileTest
             assertEquals(referenceArrayByte.length - idx * 8, raFile.available());
         }
         assertEquals(referenceArrayByte.length, idx * 8);
-        assertTrue(ArrayUtils.isEquals(referenceArrayDouble, arrayRead));
+        assertTrue(Objects.deepEquals(referenceArrayDouble, arrayRead));
         raFile.close();
     }
 

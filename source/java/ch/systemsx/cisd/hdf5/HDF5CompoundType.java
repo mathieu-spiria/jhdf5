@@ -28,7 +28,7 @@ import java.util.Set;
 
 import hdf.hdf5lib.exceptions.HDF5JavaException;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 

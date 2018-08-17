@@ -16,7 +16,7 @@
 
 package ch.systemsx.cisd.hdf5;
 
-import org.apache.commons.lang.ObjectUtils;
+import java.util.Objects;
 
 import ch.systemsx.cisd.base.mdarray.MDAbstractArray;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFHelper;
@@ -508,19 +508,19 @@ public final class HDF5DataTypeInformation
         final HDF5DataTypeVariant thatTypeVariant = that.tryGetTypeVariant();
         return dataClass.equals(that.dataClass) && elementSize == that.elementSize
                 && encoding == that.encoding && numberOfElements == that.numberOfElements
-                && ObjectUtils.equals(nameOrNull, that.nameOrNull)
-                && ObjectUtils.equals(dataTypePathOrNull, that.dataTypePathOrNull)
-                && ObjectUtils.equals(thisTypeVariant, thatTypeVariant);
+                && Objects.equals(nameOrNull, that.nameOrNull)
+                && Objects.equals(dataTypePathOrNull, that.dataTypePathOrNull)
+                && Objects.equals(thisTypeVariant, thatTypeVariant);
     }
 
     @Override
     public int hashCode()
     {
         final HDF5DataTypeVariant typeVariant = tryGetTypeVariant();
-        return ((((((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + ObjectUtils
-                .hashCode(encoding)) * 59 + numberOfElements) * 59 + ObjectUtils
-                .hashCode(nameOrNull)) * 59 + ObjectUtils.hashCode(dataTypePathOrNull) * 59)
-                + ObjectUtils.hashCode(typeVariant);
+        return ((((((17 * 59 + dataClass.hashCode()) * 59 + elementSize) * 59 + Objects
+                .hashCode(encoding)) * 59 + numberOfElements) * 59 + Objects
+                .hashCode(nameOrNull)) * 59 + Objects.hashCode(dataTypePathOrNull) * 59)
+                + Objects.hashCode(typeVariant);
     }
 
     @Override

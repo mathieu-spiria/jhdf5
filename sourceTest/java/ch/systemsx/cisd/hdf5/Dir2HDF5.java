@@ -19,7 +19,7 @@ package ch.systemsx.cisd.hdf5;
 import java.io.File;
 import java.io.IOException;
 
-import org.apache.commons.lang.time.StopWatch;
+import org.apache.commons.lang3.time.StopWatch;
 
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 import ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverFactory;

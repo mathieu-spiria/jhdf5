@@ -19,7 +19,7 @@ package ch.systemsx.cisd.hdf5.h5ar;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang3.ArrayUtils;
 
 import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.base.unix.Unix.Group;

@@ -24,14 +24,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
-
-import hdf.hdf5lib.exceptions.HDF5JavaException;
+import org.apache.commons.lang3.StringUtils;
 
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.cleanup.ICallableWithCleanUp;
 import ch.systemsx.cisd.hdf5.cleanup.ICleanUpRegistry;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * The implementation of {@link IHDF5CompoundInformationRetriever}.

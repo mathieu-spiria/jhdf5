@@ -66,7 +66,7 @@ public final class ReflectionUtils
             for (Field f : c.getDeclaredFields())
             {
                 final CompoundElement e = f.getAnnotation(CompoundElement.class);
-                if (e != null && org.apache.commons.lang.StringUtils.isNotEmpty(e.memberName()))
+                if (e != null && org.apache.commons.lang3.StringUtils.isNotEmpty(e.memberName()))
                 {
                     map.put(e.memberName(), f);
                 } else if (e != null || includeAllFields)

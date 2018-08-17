@@ -51,15 +51,16 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -8752,7 +8753,7 @@ public class HDF5RoundtripTest
         final HDF5CompoundDataMap mapRead = reader.compound().read("cpd", typeRead);
         assertEquals(9, mapRead.size());
         assertEquals(a, mapRead.get("a"));
-        assertTrue(ArrayUtils.toString(mapRead.get("b")), ArrayUtils.isEquals(b, mapRead.get("b")));
+        assertTrue(ArrayUtils.toString(mapRead.get("b")), Objects.deepEquals(b, mapRead.get("b")));
         assertEquals(c, mapRead.get("c"));
         final HDF5EnumerationValueArray dRead = (HDF5EnumerationValueArray) mapRead.get("d");
         assertEquals("someEnumType", dRead.getType().getName());
@@ -8762,7 +8763,7 @@ public class HDF5RoundtripTest
             assertEquals("enum array idx=" + i, d.getValue(i), dRead.getValue(i));
         }
         assertEquals(e, mapRead.get("e"));
-        assertTrue(ArrayUtils.toString(mapRead.get("f")), ArrayUtils.isEquals(f, mapRead.get("f")));
+        assertTrue(ArrayUtils.toString(mapRead.get("f")), Objects.deepEquals(f, mapRead.get("f")));
         assertEquals(g, mapRead.get("g"));
         assertEquals(h, mapRead.get("h"));
         assertEquals(ii, mapRead.get("i"));
@@ -8861,7 +8862,7 @@ public class HDF5RoundtripTest
         final HDF5CompoundDataMap mapRead = reader.compound().read("cpd", typeRead);
         assertEquals(9, mapRead.size());
         assertEquals(a, mapRead.get("a"));
-        assertTrue(ArrayUtils.toString(mapRead.get("b")), ArrayUtils.isEquals(b, mapRead.get("b")));
+        assertTrue(ArrayUtils.toString(mapRead.get("b")), Objects.deepEquals(b, mapRead.get("b")));
         assertEquals(c, mapRead.get("c"));
         final HDF5EnumerationValueArray dRead = (HDF5EnumerationValueArray) mapRead.get("d");
         assertEquals("someEnumType", dRead.getType().getName());
@@ -8871,7 +8872,7 @@ public class HDF5RoundtripTest
             assertEquals("enum array idx=" + i, d.getValue(i), dRead.getValue(i));
         }
         assertEquals(e, mapRead.get("e"));
-        assertTrue(ArrayUtils.toString(mapRead.get("f")), ArrayUtils.isEquals(f, mapRead.get("f")));
+        assertTrue(ArrayUtils.toString(mapRead.get("f")), Objects.deepEquals(f, mapRead.get("f")));
         assertEquals(g, mapRead.get("g"));
         assertEquals(h, mapRead.get("h"));
         assertEquals(ii, mapRead.get("i"));
@@ -9048,7 +9049,7 @@ public class HDF5RoundtripTest
         final IHDF5Reader reader = HDF5Factory.openForReading(file);
         final MDArray<HDF5CompoundDataMap> maps =
                 reader.compound().readMDArray("cpd", HDF5CompoundDataMap.class);
-        assertTrue(ArrayUtils.isEquals(new int[]
+        assertTrue(Objects.deepEquals(new int[]
             { 2, 2 }, maps.dimensions()));
         assertEquals(map1, maps.get(0, 0));
         assertEquals(map2, maps.get(0, 1));
@@ -9822,7 +9823,7 @@ public class HDF5RoundtripTest
         final MDArray<SimpleRecord> records =
                 reader.compound().readMDArray("cpd", SimpleRecord.class);
         assertEquals(6, records.size());
-        assertTrue(ArrayUtils.isEquals(new int[]
+        assertTrue(Objects.deepEquals(new int[]
             { 2, 3 }, records.dimensions()));
         assertEquals(createSR(1), records.get(0, 0));
         assertEquals(createSR(2), records.get(0, 1));
@@ -10424,7 +10425,7 @@ public class HDF5RoundtripTest
                 return false;
             }
             SimpleInheretingRecord other = (SimpleInheretingRecord) obj;
-            if (ArrayUtils.isEquals(l, other.l) == false)
+            if (Objects.deepEquals(l, other.l) == false)
             {
                 return false;
             }
@@ -10483,7 +10484,7 @@ public class HDF5RoundtripTest
                 return false;
             }
             SimpleInheretingRecord2 other = (SimpleInheretingRecord2) obj;
-            if (ArrayUtils.isEquals(ll, other.ll) == false)
+            if (Objects.deepEquals(ll, other.ll) == false)
             {
                 return false;
             }
@@ -11317,15 +11318,15 @@ public class HDF5RoundtripTest
         writer.reference().writeArray("b", new String[]
             { "a1", "a2", "a3" });
         String[] arrayBVal = writer.reference().readArray("/b");
-        assertTrue(ArrayUtils.isEquals(new String[]
+        assertTrue(Objects.deepEquals(new String[]
             { "/a1", "/a2", "/a3" }, arrayBVal));
         writer.object().move("/a1", "/C");
         arrayBVal = writer.reference().readArray("/b");
-        assertTrue(ArrayUtils.isEquals(new String[]
+        assertTrue(Objects.deepEquals(new String[]
             { "/C", "/a2", "/a3" }, arrayBVal));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
-        assertTrue(ArrayUtils.isEquals(new String[]
+        assertTrue(Objects.deepEquals(new String[]
             { "/C", "/a2", "/a3" }, reader.reference().readArray("/b")));
         final String[] refs = reader.reference().readArray("/b", false);
         assertEquals("TestA", reader.string().read(refs[0]));
@@ -11362,17 +11363,17 @@ public class HDF5RoundtripTest
         writer.reference().writeArrayBlock("b", chunk[2], 2);
         writer.reference().writeArrayBlock("b", chunk[1], 1);
         writer.reference().writeArrayBlock("b", chunk[3], 3);
-        assertTrue(ArrayUtils.isEquals(completeArray, writer.reference().readArray("/b")));
+        assertTrue(Objects.deepEquals(completeArray, writer.reference().readArray("/b")));
         writer.object().move("/a1", "/C");
         completeArray[0] = "/C";
         chunk[0][0] = "/C";
-        assertTrue(ArrayUtils.isEquals(completeArray, writer.reference().readArray("/b")));
+        assertTrue(Objects.deepEquals(completeArray, writer.reference().readArray("/b")));
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         int idx = 0;
         for (HDF5DataBlock<String[]> block : reader.reference().getArrayNaturalBlocks("b"))
         {
-            assertTrue("" + idx, ArrayUtils.isEquals(chunk[idx++], block.getData()));
+            assertTrue("" + idx, Objects.deepEquals(chunk[idx++], block.getData()));
         }
         reader.close();
     }
@@ -11520,7 +11521,7 @@ public class HDF5RoundtripTest
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(file);
         final MDArray<String> referencesRead = reader.reference().getMDArrayAttr("b", "partner");
-        assertTrue(ArrayUtils.isEquals(new int[]
+        assertTrue(Objects.deepEquals(new int[]
             { 2, 2 }, referencesRead.dimensions()));
         assertEquals("/a1", referencesRead.get(0, 0));
         assertEquals("/a2", referencesRead.get(0, 1));

@@ -15,8 +15,8 @@
 	<classpathentry kind="lib" path="libs/build/ecj-4.6.1.jar"/>
 	<classpathentry kind="lib" path="libs/prod/cisd-args4j-9.11.2.jar" sourcepath="libs/prod/cisd-args4j-9.11.2-src.zip"/>
 	<classpathentry kind="lib" path="libs/prod/cisd-args4j-9.11.2-src.zip"/>
-	<classpathentry kind="lib" path="libs/prod/commons-io-1.4.jar" sourcepath="libs/prod/commons-io-1.4-src.zip"/>
-	<classpathentry kind="lib" path="libs/prod/commons-lang-2.4.jar" sourcepath="libs/prod/commons-lang-2.4-src.zip"/>
-	<classpathentry kind="lib" path="libs/prod/sis-base-SNAPSHOT-r31435.jar" sourcepath="libs/prod/sis-base-SNAPSHOT-r31435-src.zip"/>
+	<classpathentry kind="lib" path="libs/prod/commons-lang3-3.7.jar" sourcepath="libs/prod/commons-lang3-3.7-sources.jar"/>
+	<classpathentry kind="lib" path="libs/prod/commons-io-2.6.jar" sourcepath="libs/prod/commons-io-2.6-sources.jar"/>
+	<classpathentry kind="lib" path="libs/prod/sis-base-18.08.0.jar" sourcepath="libs/prod/sis-base-18.08.0-sources.jar"/>
 	<classpathentry kind="output" path="targets/classes"/>
 </classpath>
