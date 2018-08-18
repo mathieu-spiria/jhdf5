@@ -19,6 +19,7 @@ package ch.systemsx.cisd.hdf5.tools;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -255,7 +256,8 @@ public class HDF5CodeGenerator
                 final String interfaceTemplateReader =
                         FileUtils
                                 .readFileToString(new File(
-                                        "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5PrimitiveReader.java.templ"));
+                                        "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5PrimitiveReader.java.templ"), 
+                                        Charset.defaultCharset());
                 final PrintStream outInterfaceReader =
                         new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/IHDF5"
                                 + t.capitalizedName + "Reader.java"));
@@ -266,7 +268,8 @@ public class HDF5CodeGenerator
                     FileUtils
                             .readFileToString(new File(
                                     t.isUnsigned ? "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5UnsignedPrimitiveReader.java.templ"
-                                            : "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveReader.java.templ"));
+                                            : "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveReader.java.templ"), 
+                                    Charset.defaultCharset());
             final PrintStream outclassReader =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
                             + (t.isUnsigned ? "Unsigned" : "") + t.capitalizedName + "Reader.java"));
@@ -276,7 +279,8 @@ public class HDF5CodeGenerator
                     FileUtils
                             .readFileToString(new File(
                                     t.isUnsigned ? "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5UnsignedPrimitiveWriter.java.templ"
-                                            : "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5PrimitiveWriter.java.templ"));
+                                            : "sourceTest/java/ch/systemsx/cisd/hdf5/tools/IHDF5PrimitiveWriter.java.templ"), 
+                                    Charset.defaultCharset());
             final PrintStream outInterfaceWriter =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/IHDF5"
                             + (t.isUnsigned ? "Unsigned" : "") + t.capitalizedName + "Writer.java"));
@@ -286,7 +290,8 @@ public class HDF5CodeGenerator
                     FileUtils
                             .readFileToString(new File(
                                     t.isUnsigned ? "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5UnsignedPrimitiveWriter.java.templ"
-                                            : "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveWriter.java.templ"));
+                                            : "sourceTest/java/ch/systemsx/cisd/hdf5/tools/HDF5PrimitiveWriter.java.templ"), 
+                                    Charset.defaultCharset());
             final PrintStream outclassWriter =
                     new PrintStream(new File("source/java/ch/systemsx/cisd/hdf5/HDF5"
                             + (t.isUnsigned ? "Unsigned" : "") + t.capitalizedName + "Writer.java"));

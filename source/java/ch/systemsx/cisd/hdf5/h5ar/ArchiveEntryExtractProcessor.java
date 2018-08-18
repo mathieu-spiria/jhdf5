@@ -21,11 +21,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.CRC32;
 
-import hdf.hdf5lib.exceptions.HDF5Exception;
-import hdf.hdf5lib.exceptions.HDF5JavaException;
-
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
@@ -33,6 +29,8 @@ import ch.systemsx.cisd.base.unix.FileLinkType;
 import ch.systemsx.cisd.base.unix.Unix;
 import ch.systemsx.cisd.base.unix.Unix.Stat;
 import ch.systemsx.cisd.hdf5.IHDF5Reader;
+import hdf.hdf5lib.exceptions.HDF5Exception;
+import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * A processor that extracts files from an archive to the file system.
@@ -208,10 +206,9 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
     private int copyFromHDF5(final IHDF5Reader reader, final String objectPath, final long size,
             File destination) throws IOException
     {
-        final OutputStream output = FileUtils.openOutputStream(destination);
-        final CRC32 crc32 = new CRC32();
-        try
+        try (final OutputStream output = FileUtils.openOutputStream(destination))
         {
+            final CRC32 crc32 = new CRC32();
             long offset = 0;
             while (offset < size)
             {
@@ -223,11 +220,8 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
                 crc32.update(buffer, 0, n);
             }
             output.close(); // Make sure we don't silence exceptions on closing.
-        } finally
-        {
-            IOUtils.closeQuietly(output);
+            return (int) crc32.getValue();
         }
-        return (int) crc32.getValue();
     }
 
     private void restoreAttributes(File file, LinkRecord linkInfoOrNull)

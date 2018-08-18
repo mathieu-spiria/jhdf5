@@ -25,7 +25,6 @@ import java.util.zip.CRC32;
 import hdf.hdf5lib.exceptions.HDF5Exception;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.unix.FileLinkType;
@@ -208,20 +207,16 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
 
     private static int calcCRC32Filesystem(File source, byte[] buffer) throws IOException
     {
-        final InputStream input = FileUtils.openInputStream(source);
-        final CRC32 crc32 = new CRC32();
-        try
+        try (final InputStream input = FileUtils.openInputStream(source))
         {
+            final CRC32 crc32 = new CRC32();
             int n = 0;
             while (-1 != (n = input.read(buffer)))
             {
                 crc32.update(buffer, 0, n);
             }
-        } finally
-        {
-            IOUtils.closeQuietly(input);
+            return (int) crc32.getValue();
         }
-        return (int) crc32.getValue();
     }
 
     private static String doFilesystemAttributeCheck(File file, IdCache idCache, LinkRecord link,

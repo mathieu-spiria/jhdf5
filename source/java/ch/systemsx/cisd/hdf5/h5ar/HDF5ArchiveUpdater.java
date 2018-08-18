@@ -26,7 +26,6 @@ import java.util.zip.CRC32;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 
 import ch.systemsx.cisd.base.exceptions.IErrorStrategy;
 import ch.systemsx.cisd.base.exceptions.IOExceptionUnchecked;
@@ -653,13 +652,9 @@ class HDF5ArchiveUpdater
     private DataSetInfo copyToHDF5(final File source, final String objectPath,
             final HDF5GenericStorageFeatures compression, int chunkSize) throws IOException
     {
-        final InputStream input = FileUtils.openInputStream(source);
-        try
+        try (final InputStream input = FileUtils.openInputStream(source))
         {
             return copyToHDF5(input, objectPath, compression, chunkSize);
-        } finally
-        {
-            IOUtils.closeQuietly(input);
         }
     }
 
