@@ -120,7 +120,7 @@ final class Utils
         final String pathToNormalize =
                 OSUtilities.isWindows() ? unixOrWindowsPath.replace('/', '\\') : unixOrWindowsPath;
         final String normalized = FilenameUtils.normalize(pathToNormalize);
-        return OSUtilities.isWindows() ? normalized.replace('\\', '/') : normalized;
+        return OSUtilities.isWindows() && normalized != null ? normalized.replace('\\', '/') : normalized;
     }
 
     /**
