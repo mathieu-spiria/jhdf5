@@ -11,149 +11,33 @@ tasks.withType(Test) {
     systemProperty "java.library.path", "libs/native/jhdf5/amd64-Linux:libs/native/jhdf5/amd64-Linux:libs/native/jhdf5/x86_64-Mac OS X:libs/native/jhdf5/x86_64-Mac OS X"
 }
 
-task nativeJarLinuxARM(type: Jar) {
-    baseName "${project.group}-hdf5-linux-arm"
-    from ("libs") {
-        include 'native/jhdf5/arm-Linux/**/*'
-    }
-    
-    from('targets/dist') {
-        include 'BUILD*INFO'
-    }    
-}
-
-task nativeJarLinuxIntel(type: Jar) {
-    baseName "${project.group}-hdf5-linux-intel"
-    from ("libs") {
-        include 'native/jhdf5/amd64-Linux/**/*'
-    }
-   
-    from('targets/dist') {
-        include 'BUILD*INFO'
-    }
-}
-
-task nativeJarMacIntel(type: Jar) {
-    baseName "${project.group}-hdf5-macosx-intel"
-    from ("libs") {
-        include 'native/jhdf5/x86_64-Mac OS X/**/*'
-    }
-    
-    from('targets/dist') {
-        include 'BUILD*INFO'
-    }    
-}
-
-task nativeJarWindowsIntel(type: Jar) {
-    baseName "${project.group}-hdf5-windows-intel"
-    from ("libs") {
-        include 'native/jhdf5/amd64-Windows/**/*'
-    }
-    
-    from('targets/dist') {
-        include 'BUILD*INFO'
-    }    
-}
-
 jar {
     baseName "${project.group}-jhdf5"
     from('targets/dist') {
         include 'BUILD*INFO'
     }
+
+    from ("libs/") {
+        include 'native/jhdf5/**/**/*'
+    }
+
     manifest {
-        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo'
-        attributes 'Class-Path': configurations.runtime.collect { it.getName() }.join(' ')
+        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
+        attributes 'Class-Path': configurations.runtime.collect { it.getName().contains("-sources") ? "" : it.getName() + " " }.join('')
     }
 }
 
 sourcesJar {
     baseName "${project.group}-jhdf5"
-}
 
-task coreJar(type: Jar, dependsOn: [compileJava]) {
-    baseName "${project.group}-jhdf5-core"
-    from (sourceSets.main.output.classesDir) { 
-        exclude('ch/systemsx/cisd/hdf5/h5ar') 
-        exclude('ch/systemsx/cisd/hdf5/io')
-    }
-    from('targets/dist') {
-        include 'BUILD*INFO'
-    }    
-    manifest {
-        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo'
-        attributes 'Class-Path': configurations.runtime.collect { it.getName() }.join(' ')
-    }
-}
-
-task toolsJar(type: Jar, dependsOn: [compileJava]) {
-    baseName "${project.group}-jhdf5-tools"
-    from (sourceSets.main.output.classesDir) {
-        include('ch/systemsx/cisd/hdf5/h5ar/**/*')
-        include('ch/systemsx/cisd/hdf5/io/**/*')
+    from ("targets/dist") {
+        include "BUILD-jhdf5.INFO"
     }
 
-    from('targets/dist') {
-        include 'BUILD*INFO'
-    }   
-
-    manifest {
-        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
-        attributes 'Class-Path': configurations.runtime.collect { it.getName() }.join(' ') + " ${project.group}-jhdf5-core.jar " + [nativeJarLinuxARM, nativeJarLinuxIntel, nativeJarMacIntel, nativeJarWindowsIntel].collect {it.archiveName}.join(' ')
-    }
-}
-
-task allJar(type: Jar, dependsOn: [compileJava]) {
-    baseName "${project.group}-jhdf5-all"
-
-    from (sourceSets.main.output.classesDir) {
-        include '**/*'
-    }
-
-    from (configurations.runtime.collect {zipTree(it)}) {
-        exclude 'native/**/*'
-        exclude 'BUILD-*.INFO'
-    }
-
-    from('targets/dist') {
-        include 'BUILD*INFO'
-    }   
-
-    manifest {
-        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
-        attributes 'Class-Path': [nativeJarLinuxARM, nativeJarLinuxIntel, nativeJarMacIntel, nativeJarWindowsIntel].collect {it.archiveName}.join(' ')
-    }
-}
-
-task batteriesIncludedJar(type: Jar, dependsOn: [allJar, nativeJarLinuxARM, nativeJarLinuxIntel, nativeJarMacIntel, nativeJarWindowsIntel]) {
-    baseName "${project.group}-jhdf5-batteries_included"
-    from (zipTree(allJar.archivePath)) {
-        include '**/*'
-    }
-    
-    from (configurations.runtime.collect {zipTree(it)}) {
-        include 'native/**/*'
-    }
-
-    from (zipTree(nativeJarLinuxARM.archivePath)) {
-        include 'native/**/*'
-    }
-    from (zipTree(nativeJarLinuxIntel.archivePath)) {
-        include 'native/**/*'
-    }
-    from (zipTree(nativeJarMacIntel.archivePath)) {
-        include 'native/**/*'
-    }
-    from (zipTree(nativeJarWindowsIntel.archivePath)) {
-        include 'native/**/*'
-    }
-    
-    manifest {
-        attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
-    }
 }
 
 task myJavadoc(type: Javadoc, dependsOn: [compileJava]) {
-	source = [ sourceSets.main.allJava, "base-src" ]
+	source = [ sourceSets.main.allJava, "base-sources" ]
 	classpath = files(sourceSets.main.output.classesDir) + fileTree(dir: 'libs/prod', include: '*.jar') + files("libs/build/restrictions-1.0.2.jar")
 	options.memberLevel = JavadocMemberLevel.PUBLIC
 	options.overview = "overview.html"
@@ -170,7 +54,7 @@ task myJavadoc(type: Javadoc, dependsOn: [compileJava]) {
 	exclude "ch/systemsx/cisd/hdf5/ReflectionUtils.java"
 }
 
-task javadocZip(type: Zip, dependsOn: myJavadoc) {
+task javadocJar(type: Jar, dependsOn: myJavadoc) {
     archiveName "${project.group}-jhdf5-javadoc-${project.version}.zip"
     from javadoc.destinationDir
     from ("sourceExamples/java") {
@@ -179,10 +63,15 @@ task javadocZip(type: Zip, dependsOn: myJavadoc) {
     from ("dist/doc") {
         include 'JHDF5.pdf'
     }
+
+    from ("targets/dist") {
+        include "BUILD-jhdf5.INFO"
+    }
+
 }
 
-task exampleZip(type: Jar) {
-    baseName "${project.group}-jhdf5-examples-src"
+task exampleJar(type: Jar) {
+    baseName "${project.group}-jhdf5-examples-sources"
 
     from ("sourceExamples/java") {
         include '**/*'
@@ -191,84 +80,58 @@ task exampleZip(type: Jar) {
     from ("targets/dist") {
         include "BUILD-jhdf5.INFO"
     }
+
 }
 
-task distributionZip(type: Zip, dependsOn: [jar, coreJar, toolsJar, allJar, nativeJarLinuxARM, nativeJarLinuxIntel, nativeJarMacIntel, nativeJarWindowsIntel, batteriesIncludedJar, javadocZip, sourcesJar, exampleZip]) {
+task distributionZip(type: Zip, dependsOn: [jar, javadocJar, sourcesJar, exampleJar]) {
     baseName "${project.group}-jhdf5"
-
-    from (coreJar.archivePath) {
-        into "${project.group}-jhdf5/lib"
-        rename '(.*)', "${project.group}-jhdf5-core.jar"
-    }
-    
-    from (toolsJar.archivePath) {
-        into "${project.group}-jhdf5/lib"
-        rename '(.*)', "${project.group}-jhdf5-tools.jar"
-    }
 
     from (jar.archivePath) {
         into "${project.group}-jhdf5/lib"
-        rename '(.*)', "${project.group}-jhdf5.jar"
     }
 
-    from (allJar.archivePath) {
-        into "${project.group}-jhdf5/lib"
-        rename '(.*)', "${project.group}-jhdf5-all.jar"
-    }
-    
     from (configurations.runtime) {
         exclude '*restriction*'
         exclude '*bcel*'
+        exclude '*-sources*'
         into "${project.group}-jhdf5/lib"
     }
     
-    from (zipTree(batteriesIncludedJar.archivePath)) {
+    from (configurations.runtime) {
+        include '*-sources*'
+        into "${project.group}-jhdf5/sources"
+    }
+    
+    from ("libs") {
         into "${project.group}-jhdf5/lib"
         include 'native/**'
     }
-    
-    from (nativeJarLinuxARM.archivePath) {
-        into "${project.group}-jhdf5/lib/nativejar"
-        rename '(.*)', "${project.group}-hdf5-linux-arm.jar"
-    }
 
-    from (nativeJarLinuxIntel.archivePath) {
-        into "${project.group}-jhdf5/lib/nativejar"
-        rename '(.*)', "${project.group}-hdf5-linux-intel.jar"
-    }
-    
-    from (nativeJarMacIntel.archivePath) {
-        into "${project.group}-jhdf5/lib/nativejar"
-        rename '(.*)', "${project.group}-hdf5-macosx-intel.jar"
-    }
-    
-    from (nativeJarWindowsIntel.archivePath) {
-        into "${project.group}-jhdf5/lib/nativejar"
-        rename '(.*)', "${project.group}-hdf5-windows-intel.jar"
-    }
-
-    from (batteriesIncludedJar.archivePath) {
-        into "${project.group}-jhdf5/lib/batteries_included"
-        rename '(.*)', "${project.group}-jhdf5-batteries_included.jar"
+    from (configurations.runtime.collect {zipTree(it)}) {
+        into "${project.group}-jhdf5/lib"
+        include 'native/**/*'
     }
 
     from ("dist") {
         into "${project.group}-jhdf5"
     }
     
-    from (javadocZip.archivePath) {
+    from (javadocJar.archivePath) {
         into "${project.group}-jhdf5/doc"
-        rename '(.*)', "${project.group}-jhdf5-javadoc.zip"
     }
     
-    from (exampleZip.archivePath) {
+    from (exampleJar.archivePath) {
         into "${project.group}-jhdf5/doc"
-        rename '(.*)', "${project.group}-jhdf5-examples-src.zip"
     }    
     
     from (sourcesJar.archivePath) {
-        into "${project.group}-jhdf5/src"
-        rename '(.*)', "${project.group}-jhdf5-src.zip"
+        into "${project.group}-jhdf5/sources"
+    }
+
+    from('targets/dist') {
+        into "${project.group}-jhdf5"
+        include 'version.txt'
+        include 'build.txt'
     }
 
 }
@@ -281,26 +144,6 @@ if (project == project.rootProject)
                 module "${project.group}-jhdf5"
                 revision project.revisionForPublication
                 from components.java
-                artifact(toolsJar) {
-                    name = "${project.group}-jhdf5-tools"
-                    conf = "runtime"
-                }
-                artifact(nativeJarLinuxARM) {
-                    name = "hdf5-linux-intel"
-                    conf = "runtime"
-                }
-                artifact(nativeJarLinuxIntel) {
-                    name = "hdf5-linux-intel"
-                    conf = "runtime"
-                }
-                artifact(nativeJarMacIntel) {
-                    name = "hdf5-macosx-intel"
-                    conf = "runtime"
-                }
-                artifact(nativeJarWindowsIntel) {
-                    name = "hdf5-windows-intel"
-                    conf = "runtime"
-                }
                 artifact(sourcesJar) {
                     type = "source"
                 }

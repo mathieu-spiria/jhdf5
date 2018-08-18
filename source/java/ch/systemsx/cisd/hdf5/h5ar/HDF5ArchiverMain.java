@@ -247,6 +247,16 @@ public class HDF5ArchiverMain
         }
     }
 
+    @Option(longName = "build", skipForExample = true, usage = "Prints out the build and environment information")
+    void printBuildAndEnvironmentInfo(final boolean exit)
+    {
+        System.err.println(ch.systemsx.cisd.hdf5.BuildAndEnvironmentInfo.INSTANCE);
+        if (exit)
+        {
+            System.exit(0);
+        }
+    }
+
     private boolean helpPrinted = false;
 
     @Option(longName = "help", skipForExample = true, usage = "Shows this help text")

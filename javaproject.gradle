@@ -119,12 +119,15 @@ def calculateBuildInfo() {
     project.ext.revisionForPublication = project.ext.versionNumber.startsWith('SNAPSHOT') ? "${project.ext.revisionNumber}" : project.ext.versionNumber
     project.ext.cleanFlag = calculateCleanFlag()
     def buildInfo = "${project.ext.versionNumber}::${project.ext.revisionInfo}::${project.ext.cleanFlag}"
+    project.ext.buildInfo = buildInfo
     println "BUILD INFO for $project: $buildInfo"
     def targetsDist = 'targets/dist'
     def distFolder = new File("${project.projectDir}/$targetsDist")
     distFolder.deleteDir()
     distFolder.mkdirs()
     file("${project.projectDir}/$targetsDist/BUILD-${project.name}.INFO") << buildInfo
+    file("${project.projectDir}/$targetsDist/build.txt") << buildInfo
+    file("${project.projectDir}/$targetsDist/version.txt") << version
 }
 
 calculateBuildInfo()
@@ -212,7 +215,7 @@ eclipse {
 
 eclipse.classpath.file {
     whenMerged{ classpath ->
-        def projectRefs = classpath.entries.findAll{entry -> entry.kind =='src' && entry.path.startsWith('/')}
+        def projectRefs = classpath.entries.findAll{entry -> entry.kind =='sources' && entry.path.startsWith('/')}
         classpath.entries.removeAll(projectRefs)
         classpath.entries.addAll(projectRefs)   
     }
@@ -224,7 +227,7 @@ task testJar(type: Jar, dependsOn: testClasses) {
 }
 
 task sourcesJar(type: Jar) {
-    classifier = 'src'
+    classifier = 'sources'
     from sourceSets.main.allSource
 }
 

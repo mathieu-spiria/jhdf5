@@ -19,4 +19,5 @@ while [ -n "${LINK}" ]; do
 done
 BINDIR="${SCRIPT%/*}"
 JHDFDIR="${BINDIR%/*}"
-java -Dnative.libpath="${JHDFDIR}/lib/native" -jar "${JHDFDIR}/lib/sis-jhdf5-tools.jar" "$@"
+VERSION=`cat "${JHDFDIR}/version.txt"`
+java -Dnative.libpath="${JHDFDIR}/lib/native" -jar "${JHDFDIR}/lib/sis-jhdf5-${VERSION}.jar" "$@"
