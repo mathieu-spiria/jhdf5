@@ -84,23 +84,25 @@ def isGitProject() {
    return new java.io.File(projectDir, ".git").isDirectory() || new java.io.File(projectDir, "../.git").isDirectory() 
 }
 
-def calculateCleanFlag() {
+def getDirtyFiles() {
     if (isGitProject()) {
-        def output = execute_working_dir('git', ['status', '--porcelain'], '.')
-        return output.length == 1 && output[0].length() == 0 ? 'clean' : 'dirty'
+        return execute_working_dir('git', ['status', '--porcelain'], '.')
     } else {
-    	return 'dirty'
+    	return [ 'Workspace is not under revision control.' ].toArray()
     }
 }
 
 def calculateBuildInfo() {
+    def humanReadableBuildInfo = ""
     if (isGitProject()) {
         def gitlogoutput = execute_working_dir('git', ['log', '-1', '--format=%at-%H'], '../' + project.name)
         def rev = gitlogoutput[0].split("-")
         project.ext.revisionNumber = Integer.parseInt(rev[0])
         def commitHash = rev[1]
-        def date = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX").format(new Date(revisionNumber * 1000L))
-        project.ext.revisionInfo = "${commitHash} [${date}]"
+        def commitDate = new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssX").format(new Date(revisionNumber * 1000L))
+        def dirtyFiles = getDirtyFiles()
+        project.ext.cleanFlag = dirtyFiles.length == 1 && dirtyFiles[0].length() == 0 ? 'clean' : 'dirty'
+        project.ext.revisionInfo = "${commitHash} [${commitDate}]"
         def tag = 'git tag -l --points-at HEAD'.execute().text.trim()
         if (tag == null || tag.isEmpty()) {
             project.ext.versionNumber = 'SNAPSHOT'
@@ -109,15 +111,23 @@ def calculateBuildInfo() {
         } else {
            project.ext.versionNumber = tag
         }
+        humanReadableBuildInfo = "Version: ${project.ext.versionNumber}\n"
+        humanReadableBuildInfo += "GIT Revision SHA1 Hash: ${commitHash}\n"
+        humanReadableBuildInfo += "GIT Revision Date: ${commitDate}\n"
+        if (project.ext.cleanFlag == 'dirty') {
+            humanReadableBuildInfo += "Uncommitted Files in Build Workspace:\n"
+            humanReadableBuildInfo += "   " + dirtyFiles.join("\n   ") + "\n"
+        }
     } else {
         project.ext.revisionInfo = '?'
         project.ext.revisionNumber = 1
         project.ext.versionNumber = 'SNAPSHOT'
+        project.ext.cleanFlag = 'dirty'
+        humanReadableBuildInfo += "Build workspace not under revision control.\n"
     }
 
     version = project.ext.versionNumber.startsWith('SNAPSHOT') ? "${project.ext.revisionNumber}" : project.ext.versionNumber
     project.ext.revisionForPublication = project.ext.versionNumber.startsWith('SNAPSHOT') ? "${project.ext.revisionNumber}" : project.ext.versionNumber
-    project.ext.cleanFlag = calculateCleanFlag()
     def buildInfo = "${project.ext.versionNumber}::${project.ext.revisionInfo}::${project.ext.cleanFlag}"
     project.ext.buildInfo = buildInfo
     println "BUILD INFO for $project: $buildInfo"
@@ -126,7 +136,7 @@ def calculateBuildInfo() {
     distFolder.deleteDir()
     distFolder.mkdirs()
     file("${project.projectDir}/$targetsDist/BUILD-${project.name}.INFO") << buildInfo
-    file("${project.projectDir}/$targetsDist/build.txt") << buildInfo
+    file("${project.projectDir}/$targetsDist/build.txt") << humanReadableBuildInfo
     file("${project.projectDir}/$targetsDist/version.txt") << version
 }
 
