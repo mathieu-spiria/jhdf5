@@ -55,7 +55,7 @@ task myJavadoc(type: Javadoc, dependsOn: [compileJava]) {
 }
 
 task javadocJar(type: Jar, dependsOn: myJavadoc) {
-    archiveName "${project.group}-jhdf5-javadoc-${project.version}.zip"
+    archiveName "${project.group}-jhdf5-javadoc-${project.version}.jar"
     from javadoc.destinationDir
     from ("sourceExamples/java") {
         include '**/*'
@@ -83,8 +83,78 @@ task exampleJar(type: Jar) {
 
 }
 
-task distributionZip(type: Zip, dependsOn: [jar, javadocJar, sourcesJar, exampleJar]) {
+def execute(command, arguments) {
+    new ByteArrayOutputStream().withStream { os ->
+        print "execute: ${command}"
+        arguments.collect({print " ${it}"})
+        println ''
+        def result = exec {
+            executable = command
+            args = arguments
+            standardOutput = os
+        }
+        return os.toString().split('\n')
+    }
+}
+
+task processDistFiles( type: Copy) {
+    into "$buildDir/output/dist"
+
+    from ("dist") {
+        exclude 'doc/JHDF5.odt'
+    }
+
+    from ("dist") {
+        include 'doc/JHDF5.odt'
+        rename { "JHDF5-${version}.odt" }
+    }
+
+   doLast {
+        execute('lowriter', [ '--headless', '--convert-to', 'pdf', '--outdir', "$buildDir/output/dist/doc", "$buildDir/output/dist/doc/JHDF5-${version}.odt" ])
+   }
+
+}
+
+task distributionZip(type: Zip, dependsOn: [jar, javadocJar, sourcesJar, exampleJar, processDistFiles]) {
     baseName "${project.group}-jhdf5"
+
+    from('targets/dist') {
+        into "${project.group}-jhdf5"
+        include 'version.txt'
+        include 'build.txt'
+    }
+
+    from ("$buildDir/output/dist") {
+        into "${project.group}-jhdf5"
+        include '*'
+    }
+
+    from ("$buildDir/output/dist") {
+        into "${project.group}-jhdf5"
+        include 'bin/*'
+    }
+
+    from ("$buildDir/output/dist") {
+        into "${project.group}-jhdf5"
+        include 'doc/*'
+    }
+
+    from (javadocJar.archivePath) {
+        into "${project.group}-jhdf5/doc"
+    }
+   
+    from (exampleJar.archivePath) {
+        into "${project.group}-jhdf5/doc"
+    }
+
+    from (configurations.runtime) {
+        include '*-sources*'
+        into "${project.group}-jhdf5/sources"
+    }
+
+    from (sourcesJar.archivePath) {
+        into "${project.group}-jhdf5/sources"
+    }
 
     from (jar.archivePath) {
         into "${project.group}-jhdf5/lib"
@@ -97,11 +167,6 @@ task distributionZip(type: Zip, dependsOn: [jar, javadocJar, sourcesJar, example
         into "${project.group}-jhdf5/lib"
     }
     
-    from (configurations.runtime) {
-        include '*-sources*'
-        into "${project.group}-jhdf5/sources"
-    }
-    
     from ("libs") {
         into "${project.group}-jhdf5/lib"
         include 'native/**'
@@ -110,28 +175,6 @@ task distributionZip(type: Zip, dependsOn: [jar, javadocJar, sourcesJar, example
     from (configurations.runtime.collect {zipTree(it)}) {
         into "${project.group}-jhdf5/lib"
         include 'native/**/*'
-    }
-
-    from ("dist") {
-        into "${project.group}-jhdf5"
-    }
-    
-    from (javadocJar.archivePath) {
-        into "${project.group}-jhdf5/doc"
-    }
-    
-    from (exampleJar.archivePath) {
-        into "${project.group}-jhdf5/doc"
-    }    
-    
-    from (sourcesJar.archivePath) {
-        into "${project.group}-jhdf5/sources"
-    }
-
-    from('targets/dist') {
-        into "${project.group}-jhdf5"
-        include 'version.txt'
-        include 'build.txt'
     }
 
 }

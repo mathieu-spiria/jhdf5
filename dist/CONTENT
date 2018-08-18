@@ -1,50 +1,66 @@
-Documentation
-  doc/jhdf5-javadoc.zip
+General Information:
+  build.txt
+    The build information of this distribution in human readable form.
+  version.txt
+    The version information of this distribution in machine readable form.
+  CONTENT
+    This file.
+  COPYING
+    Copyright notice of the JHDF5 and the SIS base libraries.
+  COPYING-hdf5
+    Copyright notice of the HDF5 library.
+  COPYING-commons
+    Copyright notice of the Apache "Commons IO" and "Commons Lang3" libraries.
+  COPYING-args4j
+    Copyright notice of the CISD args4j library.
+  LICENSE
+    The Apache Sofware License 2.0.
+
+Documentation:
+  doc/sis-jhdf5-javadoc-<VERSION>.jar
+    The Javadoc of JHDF5.
   
-  doc/cisd-jhdf5-examples-src.zip
-    Example programs for some of the features of JHDF5
+  doc/sis-jhdf5-examples-sources-<VERSION>.jar
+    Simple example programs showing some features of JHDF5.
 
-Source
-  src/jhdf5-src.zip
+  doc/JHDF5-<VERSION>.pdf
+     A simple (and incomplete) introduction into JHDF5 (in Portable Document Format).
+
+  doc/JHDF5-<VERSION>.odt
+     A simple (and incomplete) introduction into JHDF5 (in OpenDocument Text Format).
+
+Source Code:
+  sources/jhdf5-sources-<VERSION>.jar
+    The source code of jhdf5.
+  sources/sis-base-18.08.0-sources.jar
+    The source code of the SIS base library.
+  sources/cisd-args4j-9.11.2-sources.jar
+    The source code of the CISD args4j library.
+  sources/commons-io-2.6-sources.jar
+    The source code of the Apache "Commons IO" library.
+  sources/commons-lang3-3.7-sources.jar
+    The source code of the Apache "Commons Lang3" library.
   
-Library
-  lib/cisd-jhdf5-core.jar: 
-    The Java class files of the JHDF5 library. Requires commons-io.jar, commons-lang.jar and  
-    cisd-base.jar on the class path. Requires the native libraries to be provided separately (see 
-    below at lib/native).
-
-  lib/cisd-jhdf5-tools.jar: 
-    The Java class files of the h5ar archiver. It can be used like 'java -jar cisd-jhdf5-tools.jar'. 
-    Requires commons-io.jar, commons-lang.jar, cisd-base.jar, cisd-args4j.jar and cisd-jhdf5-core.jar in 
-    the class path. Requires the native libraries to be provided separately (see below at lib/native).
-
-  lib/cisd-jhdf5.jar: 
-    All Java class files packaged in one jar file. Requires the native libraries to be provided 
-    separately. 
-
-  lib/batteries_included:
-    Includes all Java class files of the JHDF5 library and the h5ar archiver and all native 
-    libraries necessary to use JHDF5.
-    No other file is needed when using one of these jar files. 
-
-	  All supported platforms:
-	    lib/batteries_included/cisd-jhdf5-batteries_included_lin_win_mac_sol.jar 
-	  
-	  Linux/MacOS X/Windows, but no Solaris support: 
-	    lib/batteries_included/cisd-jhdf5-batteries_included_lin_win_mac.jar
-	    
+Libraries:
+  lib/sis-jhdf5.jar: 
+    The Java class files of the JHDF5 library, the h5ar archiver and the hdf5 native libraries. 
+    Requires commons-io-2.6.jar, commons-lang3-3.7.jar, sis-base-18.08.0.jar and cisd-args4j-9.11.2 
+    (only needed for h5ar archiver) on the class path. 
+  lib/sis-base-18.08.0.jar
+    The Java class files of the SIS base library. Requires commons-io-2.6.jar, commons-lang3-3.7.jar
+    on the class path.
+  lib/cisd-args4j-9.11.2.jar
+    The Java class files of the CISD args4j library.
+  lib/commons-lang3-3.7.jar
+    The Java class files of the Apache "Commons Lang3" library.
+  lib/commons-io-2.6.jar
+    The Java class files of the Apache "Commons IO" library.
   lib/native:
     The native libraries as files in folders jhdf5 and unix. In order to use them ensure that you 
     point the Java property native.libpath to the root of this hierarchy,
     e.g.: "-Dnative.libpath=/home/joe/lib/native"
 
-  lib/nativejar:
-    The jar files in this folder contain the native libraries for each platform, e.g. 
-    hdf5-linux-intel.jar has the shared libraries for Linux on Intel/AMD. Note that these jar 
-    files do not contain the Java class files. In order to make use of these jar files you need
-    to ensure that the file for your platform is in the class path of the jre.
- 
-Wrapper
+Wrapper Executables:
   bin/h5ar.sh:
     A script that calls h5ar by invoking the JRE with appropriate parameters. Suitable for being 
     symlinked to e.g. /usr/local/bin
