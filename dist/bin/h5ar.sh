@@ -20,4 +20,4 @@ done
 BINDIR="${SCRIPT%/*}"
 JHDFDIR="${BINDIR%/*}"
 VERSION=`cat "${JHDFDIR}/version.txt"`
-java -Dnative.libpath="${JHDFDIR}/lib/native" -jar "${JHDFDIR}/lib/sis-jhdf5-${VERSION}.jar" "$@"
+java -Dnative.libpath="${JHDFDIR}/lib/native" -jar "${JHDFDIR}/lib/sis-jhdf5-h5ar-cli-${VERSION}.jar" "$@"

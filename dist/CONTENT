@@ -42,13 +42,16 @@ Source Code:
     The source code of the Apache "Commons Lang3" library.
   
 Libraries:
-  lib/sis-jhdf5.jar: 
-    The Java class files of the JHDF5 library, the h5ar archiver and the hdf5 native libraries. 
-    Requires commons-io-2.6.jar, commons-lang3-3.7.jar, sis-base-18.08.0.jar and cisd-args4j-9.11.2 
-    (only needed for h5ar archiver) on the class path. 
+  lib/sis-jhdf5-<VERSION>.jar: 
+    The Java class files of the JHDF5 library and the hdf5 native libraries. 
+    Requires commons-io-2.6.jar, commons-lang3-3.7.jar and sis-base-18.08.0.jar on the class path. 
+  lib/sis-jhdf5-h5ar-cli-<VERSION>.jar: 
+    The Java class files of the h5ar archiver command line interface application.
+    Requires sis-jhdf5-<VERSION> and all its dependencies, as well as  cisd-args4j-9.11.2 
+    on the class path. 
   lib/sis-base-18.08.0.jar
-    The Java class files of the SIS base library. Requires commons-io-2.6.jar, commons-lang3-3.7.jar
-    on the class path.
+    The Java class files of the SIS base library. Requires commons-io-2.6.jar and
+    commons-lang3-3.7.jar on the class path.
   lib/cisd-args4j-9.11.2.jar
     The Java class files of the CISD args4j library.
   lib/commons-lang3-3.7.jar

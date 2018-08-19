@@ -45,6 +45,7 @@ task processDistFiles( type: Copy) {
 
 jar {
     baseName "${project.group}-jhdf5"
+    exclude '**/HDF5ArchiverMain*.class'
     from('targets/dist') {
         include 'BUILD*INFO'
     }
@@ -54,8 +55,23 @@ jar {
     }
 
     manifest {
+        attributes 'Main-Class': 'ch.systemsx.cisd.base.BuildAndEnvironmentInfo'
+        attributes 'Class-Path': configurations.runtime.filter { !(it.getName().contains("-sources") || it.getName().startsWith("cisd-args4j")) }.collect { it.getName() }.join(' ')
+    }
+}
+
+task h5arCLIJar(type: Jar, dependsOn: [jar]) {
+    archiveName "${project.group}-jhdf5-h5ar-cli-${version}.jar"
+    from files(sourceSets.main.output.classesDir) {
+        include '**/HDF5ArchiverMain*.class'
+    }
+    from('targets/dist') {
+        include 'BUILD*INFO'
+    }
+
+    manifest {
         attributes 'Main-Class': 'ch.systemsx.cisd.hdf5.h5ar.HDF5ArchiverMain'
-        attributes 'Class-Path': configurations.runtime.collect { it.getName().contains("-sources") ? "" : it.getName() + " " }.join('')
+        attributes 'Class-Path': "${project.group}-jhdf5-${version}.jar " + configurations.runtime.filter { !it.getName().contains("-sources") }.collect { it.getName() }.join(' ') 
     }
 }
 
@@ -116,7 +132,7 @@ task exampleJar(type: Jar) {
 
 }
 
-task distributionZip(type: Zip, dependsOn: [jar, javadocJar, sourcesJar, exampleJar, processDistFiles]) {
+task distributionZip(type: Zip, dependsOn: [jar, h5arCLIJar, javadocJar, sourcesJar, exampleJar, processDistFiles]) {
     baseName "${project.group}-jhdf5"
 
     from('targets/dist') {
@@ -158,6 +174,10 @@ task distributionZip(type: Zip, dependsOn: [jar, javadocJar, sourcesJar, example
     }
 
     from (jar.archivePath) {
+        into "${project.group}-jhdf5/lib"
+    }
+
+    from (h5arCLIJar.archivePath) {
         into "${project.group}-jhdf5/lib"
     }
 
