@@ -11,6 +11,38 @@ tasks.withType(Test) {
     systemProperty "java.library.path", "libs/native/jhdf5/amd64-Linux:libs/native/jhdf5/amd64-Linux:libs/native/jhdf5/x86_64-Mac OS X:libs/native/jhdf5/x86_64-Mac OS X"
 }
 
+def execute(command, arguments) {
+    new ByteArrayOutputStream().withStream { os ->
+        print "execute: ${command}"
+        arguments.collect({print " ${it}"})
+        println ''
+        def result = exec {
+            executable = command
+            args = arguments
+            standardOutput = os
+        }
+        return os.toString().split('\n')
+    }
+}
+
+task processDistFiles( type: Copy) {
+    into "$buildDir/output/dist"
+
+    from ("dist") {
+        exclude 'doc/JHDF5.odt'
+    }
+
+    from ("dist") {
+        include 'doc/JHDF5.odt'
+        rename { "JHDF5-${version}.odt" }
+    }
+
+   doLast {
+        execute('lowriter', [ '--headless', '--convert-to', 'pdf', '--outdir', "$buildDir/output/dist/doc", "$buildDir/output/dist/doc/JHDF5-${version}.odt" ])
+   }
+
+}
+
 jar {
     baseName "${project.group}-jhdf5"
     from('targets/dist') {
@@ -54,14 +86,15 @@ task myJavadoc(type: Javadoc, dependsOn: [compileJava]) {
 	exclude "ch/systemsx/cisd/hdf5/ReflectionUtils.java"
 }
 
-task javadocJar(type: Jar, dependsOn: myJavadoc) {
+task javadocJar(type: Jar, dependsOn: [myJavadoc, processDistFiles]) {
     archiveName "${project.group}-jhdf5-javadoc-${project.version}.jar"
     from javadoc.destinationDir
     from ("sourceExamples/java") {
         include '**/*'
     }
-    from ("dist/doc") {
-        include 'JHDF5.pdf'
+    from ("$buildDir/output/dist/doc") {
+        include "JHDF5-${version}.pdf"
+        rename { "JHDF5.pdf" }
     }
 
     from ("targets/dist") {
@@ -80,38 +113,6 @@ task exampleJar(type: Jar) {
     from ("targets/dist") {
         include "BUILD-jhdf5.INFO"
     }
-
-}
-
-def execute(command, arguments) {
-    new ByteArrayOutputStream().withStream { os ->
-        print "execute: ${command}"
-        arguments.collect({print " ${it}"})
-        println ''
-        def result = exec {
-            executable = command
-            args = arguments
-            standardOutput = os
-        }
-        return os.toString().split('\n')
-    }
-}
-
-task processDistFiles( type: Copy) {
-    into "$buildDir/output/dist"
-
-    from ("dist") {
-        exclude 'doc/JHDF5.odt'
-    }
-
-    from ("dist") {
-        include 'doc/JHDF5.odt'
-        rename { "JHDF5-${version}.odt" }
-    }
-
-   doLast {
-        execute('lowriter', [ '--headless', '--convert-to', 'pdf', '--outdir', "$buildDir/output/dist/doc", "$buildDir/output/dist/doc/JHDF5-${version}.odt" ])
-   }
 
 }
 
