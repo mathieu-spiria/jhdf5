@@ -158,9 +158,23 @@ public interface IHDF5ObjectReadOnlyInfoProviderHandler
     /**
      * Returns the target of the symbolic link that <var>objectPath</var> points to, or
      * <code>null</code>, if <var>objectPath</var> is not a symbolic link.
+     * <p>
+     * Note that external links have a special format: They start with a prefix " <code>EXTERNAL::</code>", then comes the path of the external file
+     * (beware that this part uses the native path separator, i.e. "\" on Windows). Finally, separated by "<code>::</code> ", the path of the link in
+     * the external file is provided (this part always uses "/" as path separator).
      */
     public String tryGetSymbolicLinkTarget(final String objectPath);
 
+    /**
+     * Returns the filename of an external link, or <code>null</code>, if this link does not exist or is not an external link.
+     */
+    public String tryGetExternalLinkFilename(final String objectPath);
+    
+    /**
+     * Returns the external link target of this link, or <code>null</code>, if this link does not exist or is not an external link.
+     */
+    public String tryGetExternalLinkTarget(final String objectPath);
+    
     // /////////////////////
     // Attributes
     // /////////////////////

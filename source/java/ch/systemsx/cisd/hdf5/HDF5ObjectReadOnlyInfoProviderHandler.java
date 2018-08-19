@@ -187,6 +187,18 @@ class HDF5ObjectReadOnlyInfoProviderHandler implements IHDF5ObjectReadOnlyInfoPr
     }
 
     @Override
+    public String tryGetExternalLinkFilename(final String objectPath)
+    {
+        return getLinkInformation(objectPath).tryGetExternalLinkFilename();
+    }
+
+    @Override
+    public String tryGetExternalLinkTarget(final String objectPath)
+    {
+        return getLinkInformation(objectPath).tryGetExternalLinkTarget();
+    }
+
+    @Override
     public String tryGetDataTypePath(final String objectPath)
     {
         assert objectPath != null;
