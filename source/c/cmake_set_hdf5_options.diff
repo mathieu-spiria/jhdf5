@@ -1,5 +1,6 @@
---- CMake-hdf5-1.10.3-pre2/HDF5options.cmake.orig	2018-08-09 16:45:18.000000000 +0200
-+++ CMake-hdf5-1.10.3-pre2/HDF5options.cmake	2018-08-14 15:38:08.752198818 +0200
+diff -ruN CMake-hdf5-1.10.3.orig/HDF5options.cmake CMake-hdf5-1.10.3/HDF5options.cmake
+--- CMake-hdf5-1.10.3.orig/HDF5options.cmake	2018-08-21 08:17:50.000000000 +0200
++++ CMake-hdf5-1.10.3/HDF5options.cmake	2018-08-23 12:14:22.128057145 +0200
 @@ -38,9 +38,9 @@
  
  #############################################################################################
@@ -21,5 +22,5 @@
 +set(ADD_BUILD_OPTIONS "${ADD_BUILD_OPTIONS} -DHDF5_ENABLE_SZIP_SUPPORT:BOOL=OFF")
 +set(ADD_BUILD_OPTIONS "${ADD_BUILD_OPTIONS} -DHDF5_ENABLE_SZIP_ENCODING:BOOL=OFF")
  
- #############################################################################################
- ### disable test program builds
+ ####      package examples       ####
+ #set(ADD_BUILD_OPTIONS "${ADD_BUILD_OPTIONS} -DHDF5_PACK_EXAMPLES:BOOL=ON -DHDF5_EXAMPLES_COMPRESSED:STRING=HDF5Examples-1.10.9-Source.tar.gz -DHDF5_EXAMPLES_COMPRESSED_DIR:PATH=${CTEST_SCRIPT_DIRECTORY}")

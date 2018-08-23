@@ -1,0 +1,63 @@
+diff -ru hdf5-1.10.3/java/src/jni/h5dImp.c hdf5-1.10.3.patched/java/src/jni/h5dImp.c
+--- hdf5-1.10.3/java/src/jni/h5dImp.c	2018-08-09 18:19:06.000000000 +0200
++++ hdf5-1.10.3.patched/java/src/jni/h5dImp.c	2018-08-13 15:49:12.894709592 +0200
+@@ -295,21 +295,7 @@
+     if (buf == NULL) {
+         h5nullArgument(env, "H5Dread:  buf is NULL");
+     } /* end if */
+-    else if((data_class = H5Tdetect_class(mem_type_id, H5T_VLEN)) < 0) {
+-        h5JNIFatalError(env, "H5Dread: H5Tdetect_class() failed");
+-    } /* end else if */
+-    else  if(data_class == 1) {
+-        h5badArgument(env, "H5Dread:  buf does not support variable length type");
+-    } /* end else if */
+     else {
+-        /* recursive detect any vlen string in type (compound, array ...) */
+-        if((data_class = H5Tdetect_variable_str(mem_type_id)) < 0) {
+-            h5JNIFatalError(env, "H5Dread: H5Tdetect_variable_str() failed");
+-        } /* end if */
+-        else  if(data_class == 1) {
+-            h5badArgument(env, "H5Dread:  buf does not support variable length type");
+-        } /* end else if */
+-        else {
+             PIN_BYTE_ARRAY();
+ 
+             if (buffP == NULL) {
+@@ -327,7 +313,6 @@
+                     UNPIN_BYTE_ARRAY(0); /* update java buffer for return */
+                 } /* end else */
+             } /* end else */
+-        } /* end else */
+     } /* end else */
+ 
+     return (jint)status;
+@@ -351,21 +336,7 @@
+     if (buf == NULL) {
+         h5nullArgument(env, "H5Dwrite:  buf is NULL");
+     } /* end if */
+-    else if((data_class = H5Tdetect_class(mem_type_id, H5T_VLEN)) < 0) {
+-        h5JNIFatalError(env, "H5Dwrite: H5Tdetect_class() failed");
+-    } /* end else if */
+-    else  if(data_class == 1) {
+-        h5badArgument(env, "H5Dwrite:  buf does not support variable length type");
+-    } /* end else if */
+     else {
+-        /* recursive detect any vlen string in type (compound, array ...) */
+-        if((data_class = H5Tdetect_variable_str(mem_type_id)) < 0) {
+-            h5JNIFatalError(env, "H5Dwrite: H5Tdetect_variable_str() failed");
+-        } /* end if */
+-        else  if(data_class == 1) {
+-            h5badArgument(env, "H5Dwrite:  buf does not support variable length type");
+-        } /* end else if */
+-        else {
+             PIN_BYTE_ARRAY();
+             if (buffP == NULL) {
+                 h5JNIFatalError(env, "H5Dwrite:  buf not pinned");
+@@ -379,7 +350,6 @@
+                 if (status < 0)
+                     h5libraryError(env);
+             } /* end else */
+-        } /* end else */
+     } /* end else */
+ 
+     return (jint)status;
