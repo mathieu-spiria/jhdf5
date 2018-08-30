@@ -281,6 +281,23 @@ task checkDependencies(dependsOn: classes) << {
     }
 }
 
+task checkRestrictions(type: Exec, dependsOn: [classes, testClasses]) {
+    doFirst {
+        def cp = configurations.testCompile.filter({ f -> f.name.startsWith('restrictionchecker') || f.name.startsWith('bcel')}).asPath
+        def cmd = ['java', '-cp', cp, 'ch.rinn.restrictions.RestrictionChecker', '-r', sourceSets.main.output.classesDir]
+        if (sourceSets.test.output.classesDir.exists()) {
+            cmd.add(sourceSets.test.output.classesDir)
+        }
+        cmd.add('-cp')
+        cmd.add(sourceSets.main.output.classesDir)
+        if (sourceSets.test.output.classesDir.exists()) {
+            cmd.add(sourceSets.test.output.classesDir)
+        }
+        cmd.add(configurations.testCompile.asPath)
+        commandLine cmd
+    }
+}
+
 apply plugin: 'ivy-publish'
 if (hasProperty('ivyRepository') == false || ''.equals(project.ivyRepository))
 {
