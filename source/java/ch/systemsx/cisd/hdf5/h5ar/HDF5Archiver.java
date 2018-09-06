@@ -467,6 +467,12 @@ final class HDF5Archiver implements Closeable, Flushable, IHDF5Archiver, IHDF5Ar
     }
 
     @Override
+    public List<ArchiveEntry> verifyAgainstFilesystem(File rootDirectoryOnFS, VerifyParameters params)
+    {
+        return verifyAgainstFilesystem("/", rootDirectoryOnFS, params);
+    }
+
+    @Override
     public List<ArchiveEntry> verifyAgainstFilesystem(String fileOrDir, File rootDirectoryOnFS)
     {
         return verifyAgainstFilesystem(fileOrDir, rootDirectoryOnFS, VerifyParameters.DEFAULT);

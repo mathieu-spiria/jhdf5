@@ -556,7 +556,7 @@ public final class ArchiveEntry
     /**
      * Returns a status string for this entry.
      * <p>
-     * Note that the status will alway be <code>OK</code> if no verification information is
+     * Note that the status will always be <code>OK</code> if no verification information is
      * available.
      * 
      * @see #hasVerificationInfo()

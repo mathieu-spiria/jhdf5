@@ -195,6 +195,16 @@ public interface IHDF5ArchiveReader extends IHDF5ArchiveInfoProvider
     public List<ArchiveEntry> verifyAgainstFilesystem(File rootDirectoryOnFS);
 
     /**
+     * Verifies the content of the complete archive against the filesystem.
+     * 
+     * @param rootDirectoryOnFS The root directory on the file system that should be added to each
+     *            entry in the archive when comparing.
+     * @param params The parameters to determine behavior of the verification process.
+     * @return The list of archive entries which failed verification.
+     */
+    public List<ArchiveEntry> verifyAgainstFilesystem(File rootDirectoryOnFS, VerifyParameters params);
+
+    /**
      * Verifies the content of the archive against the filesystem.
      * 
      * @param fileOrDir The file or directory entry in the archive to verify. May be empty, in which
