@@ -98,6 +98,7 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
                 file.delete();
                 final String linkTarget = link.tryGetLinkTarget();
                 Unix.createSymbolicLink(linkTarget, file.getAbsolutePath());
+                restoreAttributes(file, link);
                 if (visitorOrNull != null)
                 {
                     visitorOrNull.visit(new ArchiveEntry(dir, path, link, idCache));
@@ -232,19 +233,22 @@ class ArchiveEntryExtractProcessor implements IArchiveEntryProcessor
         {
             if (linkInfoOrNull.hasLastModified())
             {
-                file.setLastModified(linkInfoOrNull.getLastModified() * Utils.MILLIS_PER_SECOND);
+                Unix.setLinkTimestamps(file.getAbsolutePath(), linkInfoOrNull.getLastModified(), linkInfoOrNull.getLastModified());
             }
             if (linkInfoOrNull.hasUnixPermissions() && Unix.isOperational())
             {
-                Unix.setAccessMode(file.getPath(), linkInfoOrNull.getPermissions());
+                if (linkInfoOrNull.isSymLink() == false)
+                {
+                    Unix.setAccessMode(file.getPath(), linkInfoOrNull.getPermissions());
+                }
                 if (Unix.getUid() == ROOT_UID) // Are we root?
                 {
-                    Unix.setOwner(file.getPath(), linkInfoOrNull.getUid(), linkInfoOrNull.getGid());
+                    Unix.setLinkOwner(file.getPath(), linkInfoOrNull.getUid(), linkInfoOrNull.getGid());
                 } else
                 {
                     if (groupCache.isUserInGroup(linkInfoOrNull.getGid()))
                     {
-                        Unix.setOwner(file.getPath(), Unix.getUid(), linkInfoOrNull.getGid());
+                        Unix.setLinkOwner(file.getPath(), Unix.getUid(), linkInfoOrNull.getGid());
                     }
                 }
             }

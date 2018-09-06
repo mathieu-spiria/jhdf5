@@ -28,11 +28,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
-import java.nio.file.Files;
-import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
@@ -297,8 +294,11 @@ public class HDF5ArchiverTest
             final File l1 = new File(dir2, "link_todir3");
             l1.delete();
             l1.deleteOnExit();
-            Unix.createSymbolicLink("../" + dir3.getName(), l1.getAbsolutePath());
-            Files.setLastModifiedTime(l1.toPath(), FileTime.from(time + 24 * 3600L, TimeUnit.MILLISECONDS));
+            final String linktarget = "../" + dir3.getName();
+            final String linkname = l1.getAbsolutePath();
+            Unix.createSymbolicLink(linktarget, linkname);
+            final long linktime = time / Utils.MILLIS_PER_SECOND + 24 * 3600L;
+            Unix.setLinkTimestamps(linkname, linktime, linktime);
         }
         dir2.setLastModified(time);
         dir3.setLastModified(time);
