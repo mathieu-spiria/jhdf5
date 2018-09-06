@@ -225,8 +225,8 @@ class ArchiveEntryVerifyProcessor implements IArchiveEntryProcessor
         final StringBuilder sb = new StringBuilder();
         if (link.hasLastModified())
         {
-            final long expectedLastModifiedMillis = link.getLastModified() * 1000L;
-            final long foundLastModifiedMillis = file.lastModified();
+            final long expectedLastModifiedMillis = link.getLastModified() * Utils.MILLIS_PER_SECOND;
+            final long foundLastModifiedMillis = Unix.getLinkInfo(file.getAbsolutePath()).getLastModified() * Utils.MILLIS_PER_SECOND;
             if (expectedLastModifiedMillis != foundLastModifiedMillis)
             {
                 sb.append(String.format("'last modified time': (expected: "

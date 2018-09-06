@@ -28,8 +28,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
@@ -295,6 +298,7 @@ public class HDF5ArchiverTest
             l1.delete();
             l1.deleteOnExit();
             Unix.createSymbolicLink("../" + dir3.getName(), l1.getAbsolutePath());
+            Files.setLastModifiedTime(l1.toPath(), FileTime.from(time + 24 * 3600L, TimeUnit.MILLISECONDS));
         }
         dir2.setLastModified(time);
         dir3.setLastModified(time);
@@ -414,7 +418,11 @@ public class HDF5ArchiverTest
                 }
             });
         assertEquals(5, entryCount.get());
-        assertTrue(ar.verifyAgainstFilesystem(extracted).isEmpty());
+        for (ArchiveEntry s : ar.verifyAgainstFilesystem(extracted, VerifyParameters.build().verifyAttributes().get()))
+        {
+            System.out.println(s.getStatus(true));
+        }
+        assertTrue(ar.verifyAgainstFilesystem(extracted, VerifyParameters.build().verifyAttributes().get()).isEmpty());
         entryCount.set(0);
         checkDirectoryEntries(dir, extracted, entryCount);
         assertEquals(5, entryCount.intValue());
