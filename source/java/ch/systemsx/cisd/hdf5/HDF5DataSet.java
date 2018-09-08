@@ -21,6 +21,25 @@ import static hdf.hdf5lib.H5.H5Sclose;
 
 /**
  * An object to represent an HDF5 data set.
+ * <p>
+ * Open using the {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet(String)} and use it in readers and writers 
+ * instead of the data set path. As it caches HDF5 objects, it will speed up the access for repeated access to the 
+ * same data set.
+ * <p>
+ * A typical pattern for using this class is:
+ * <pre>
+ *    try (final HDF5DataSet ds = reader.object().openDataSet("/path/to/dataset"))
+ *    {
+ *        for (long bx = 0; bx < 8; ++bx)
+ *        {
+ *            final float[] dataRead =
+ *                    reader.float32().readArrayBlock(ds, length, bx);
+ *            ... work with dataRead ...
+ *        }
+ *    }
+ * </pre>
+ * Assigning the <code>HDF5DataSet</code> object in a <code>try()</code> block is a recommened practice to ensure that 
+ * the underlying HDF5 object is properly closed at the end. 
  * 
  * @author Bernd Rinn
  */
