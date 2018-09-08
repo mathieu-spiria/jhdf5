@@ -119,7 +119,7 @@ public interface IHDF5ByteWriter extends IHDF5ByteReader
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param data The data to write. Must not be <code>null</code>.
      * @param template The template to be used to determine the features of the data set.
-     * @throws ncsa.hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
+     * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
      */
     public void writeArray(String objectPath, byte[] data, HDF5DataSetTemplate template);
 
