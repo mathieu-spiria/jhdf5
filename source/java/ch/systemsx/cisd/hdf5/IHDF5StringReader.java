@@ -22,6 +22,8 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * An interface that provides methods for reading <code>String</code> values from HDF5 files.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#string()}.
  * 
  * @author Bernd Rinn
  */

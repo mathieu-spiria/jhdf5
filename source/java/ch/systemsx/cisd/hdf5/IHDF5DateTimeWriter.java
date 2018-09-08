@@ -23,6 +23,8 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
  * An interface that provides methods for writing time and date values from HDF5 files.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Writer#time()}.
  * 
  * @author Bernd Rinn
  */

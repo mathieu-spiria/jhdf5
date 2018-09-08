@@ -23,6 +23,8 @@ import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 /**
  * An interface for getting information on HDF5 objects like links, groups, data sets and data
  * types.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#object()}.
  * 
  * @author Bernd Rinn
  */

@@ -22,6 +22,8 @@ import hdf.hdf5lib.exceptions.HDF5JavaException;
  * An interface that provides methods for reading any data sets as byte arrays (as 'opaque data',
  * just like ordinary file systems treat files). This is particularly useful for opaque data types,
  * which are "black boxes" to the HDF5 library.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#opaque()}.
  * 
  * @author Bernd Rinn
  */

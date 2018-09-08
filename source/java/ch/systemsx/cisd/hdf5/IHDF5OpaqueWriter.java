@@ -23,6 +23,8 @@ package ch.systemsx.cisd.hdf5;
  * data sets which are a "black box". Note that there are no dedicated methods for reading opaque
  * types. Use the methods in {@link IHDF5OpaqueReader} instead which allow you to read any data set
  * as a byte array.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Writer#opaque()}.
  * 
  * @author Bernd Rinn
  */

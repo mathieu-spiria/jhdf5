@@ -22,8 +22,11 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * An interface for reading references in HDF5 files.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#reference()}.
+ * <p>
+ * For an explanation about references, see {@link IHDF5ReferenceWriter}.
  * 
- * @see IHDF5ReferenceWriter
  * @author Bernd Rinn
  */
 public interface IHDF5ReferenceReader

@@ -20,6 +20,8 @@ import java.util.BitSet;
 
 /**
  * An interface that provides methods for writing <code>boolean</code> values to HDF5 files.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Writer#bool()}.
  * 
  * @author Bernd Rinn
  */

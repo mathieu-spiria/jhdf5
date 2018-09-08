@@ -20,6 +20,8 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * An interface that provides methods for writing <code>String</code> values to HDF5 files.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Writer#string()}.
  * 
  * @author Bernd Rinn
  */

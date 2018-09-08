@@ -22,6 +22,8 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * An interface that provides methods for writing compound values to HDF5 files.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Writer#compound()}.
  * 
  * @author Bernd Rinn
  */

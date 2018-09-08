@@ -22,6 +22,8 @@ import hdf.hdf5lib.exceptions.HDF5SymbolTableException;
 /**
  * An interface for getting information on and handling HDF5 objects like links, groups, data sets
  * and data types.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Writer#object()}.
  * 
  * @author Bernd Rinn
  */

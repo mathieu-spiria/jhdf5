@@ -20,7 +20,11 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
- * An interface for writing references. References can refer to objects or regions of datasets. This
+ * An interface for writing references. 
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Writer#reference()}.
+ * <p>
+ * References can refer to objects or regions of datasets. This
  * version only supports object references.
  * <p>
  * <b>Note:</b> References are a low-level feature and it is easy to get dangling or even wrong

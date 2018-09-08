@@ -23,6 +23,8 @@ import ch.systemsx.cisd.base.mdarray.MDShortArray;
 
 /**
  * Interface for creation of enumeration values.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Writer#enumeration()}.
  * 
  * @author Bernd Rinn
  */

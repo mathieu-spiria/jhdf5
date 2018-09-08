@@ -19,6 +19,8 @@ package ch.systemsx.cisd.hdf5;
 /**
  * A configurator for a {@link IHDF5Reader}.
  * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Factory#configureForReading(java.io.File)}.
+ * <p>
  * If you want the reader to perform numeric conversions, call {@link #performNumericConversions()}
  * before calling {@link #reader()}.
  * 

@@ -27,6 +27,8 @@ import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
  * An interface to get information on HDF5 compound data sets and compound data types, and to create
  * compound types from mappings to Java classes.
  * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#compound()}.
+ * <p>
  * <h2>What is an {@link HDF5CompoundType}?</h2>
  * <p>
  * A {@link HDF5CompoundType} is a Java object representing both an HDF5 compound type in a

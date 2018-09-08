@@ -20,6 +20,8 @@ import java.io.File;
 
 /**
  * An interface for handling file-level information and status of the reader. 
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#file()}.
  *
  * @author Bernd Rinn
  */

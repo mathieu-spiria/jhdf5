@@ -17,7 +17,10 @@
 package ch.systemsx.cisd.hdf5;
 
 /**
- * An interface for writing HDF5 files (HDF5 1.6.x or HDF5 1.8.x).
+ * An interface for writing HDF5 files (HDF5 1.6.x, HDF5 1.8.x or HDF5 1.10.x).
+ * <p>
+ * Obtain an object implementing this interface by calling {@link HDF5Factory#open(String)} or 
+ * {@link IHDF5WriterConfigurator#writer()}.
  * <p>
  * The interface focuses on ease of use instead of completeness. As a consequence not all features
  * of HDF5 are supported by this class, however it covers a large subset.

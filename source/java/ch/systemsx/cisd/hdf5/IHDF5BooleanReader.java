@@ -23,6 +23,8 @@ import hdf.hdf5lib.exceptions.HDF5JavaException;
 
 /**
  * An interface that provides methods for reading boolean and bit field values from HDF5 files.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#bool()}.
  * 
  * @author Bernd Rinn
  */

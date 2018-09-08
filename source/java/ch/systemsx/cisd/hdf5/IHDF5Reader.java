@@ -17,7 +17,10 @@
 package ch.systemsx.cisd.hdf5;
 
 /**
- * An interface for reading HDF5 files (HDF5 1.8.x and older).
+ * An interface for reading HDF5 files (HDF5 1.10.x and older).
+ * <p>
+ * Obtain an object implementing this interface by calling {@link HDF5Factory#openForReading(String)} 
+ * or {@link IHDF5ReaderConfigurator#reader()}.
  * <p>
  * The interface focuses on ease of use instead of completeness. As a consequence not all features
  * of HDF5 are supported by this class, however it covers a large subset. In particular all

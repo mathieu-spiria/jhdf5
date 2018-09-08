@@ -20,6 +20,8 @@ import hdf.hdf5lib.HDF5Constants;
 
 /**
  * The configuration of the writer is done by chaining calls to configuration methods before calling {@link #writer()}.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Factory#configure(java.io.File)}.
  * 
  * @author Bernd Rinn
  */

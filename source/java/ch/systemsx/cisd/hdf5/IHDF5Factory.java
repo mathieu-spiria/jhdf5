@@ -21,8 +21,9 @@ import java.io.File;
 /**
  * A factory for creating writers and readers of HDF5 files. For straight-forward creation, see
  * methods {@link #open(File)} and {@link #openForReading(File)}. If you need full control over the
- * creation process, see the methods {@link #configure(File)} and {@link #configureForReading(File)}
- * .
+ * creation process, see the methods {@link #configure(File)} and {@link #configureForReading(File)}.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link HDF5FactoryProvider#get()}.
  * 
  * @author Bernd Rinn
  */

@@ -18,6 +18,8 @@ package ch.systemsx.cisd.hdf5;
 
 /**
  * An interface that provides methods for writing time duration values from HDF5 files.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Writer#duration()}.
  * 
  * @author Bernd Rinn
  */

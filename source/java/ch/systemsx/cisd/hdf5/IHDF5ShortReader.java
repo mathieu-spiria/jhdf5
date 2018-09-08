@@ -23,6 +23,8 @@ import ch.systemsx.cisd.base.mdarray.MDShortArray;
 /**
  * An interface that provides methods for reading <code>short</code> values from HDF5 files.
  * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#int16()} or {@link IHDF5Reader#uint16()}.
+ * <p>
  * <i>Note:</i> This interface supports block access and sliced access (which is a special cases of 
  * block access) to arrays. The performance of this block access can vary greatly depending on how 
  * the data are layed out in the HDF5 file. For best performance, the block (or slice) dimension should 

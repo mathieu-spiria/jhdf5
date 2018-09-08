@@ -22,6 +22,8 @@ import hdf.hdf5lib.exceptions.HDF5JavaException;
  * An interface for retrieving HDF5 enum types. Depending on whether it is reader or a writer that
  * implements it, non-existing enum types may be created by calling the methods of this interface or
  * an exception may be thrown.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#enumeration()}.
  * 
  * @author Bernd Rinn
  */

@@ -22,6 +22,8 @@ import ch.systemsx.cisd.base.mdarray.MDArray;
 
 /**
  * An interface that provides methods for reading compound values from HDF5 files.
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#compound()}.
  * 
  * @author Bernd Rinn
  */

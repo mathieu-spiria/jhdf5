@@ -25,7 +25,9 @@ import ch.systemsx.cisd.base.mdarray.MDLongArray;
 
 /**
  * An interface that provides methods for reading time and date values from HDF5 files.
- * 
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Reader#time()}.
+ *
  * @author Bernd Rinn
  */
 public interface IHDF5DateTimeReader

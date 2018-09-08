@@ -22,6 +22,8 @@ import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.FileFormatVersionBounds;
 
 /**
  * An interface for handling file-level information and status of the writer. 
+ * <p>
+ * Obtain an object implementing this interface by calling {@link IHDF5Writer#file()}.
  *
  * @author Bernd Rinn
  */
