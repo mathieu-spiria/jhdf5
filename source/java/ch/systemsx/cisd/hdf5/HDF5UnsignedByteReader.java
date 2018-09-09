@@ -672,6 +672,8 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
                 {
                     return new Iterator<HDF5DataBlock<byte[]>>()
                         {
+                            final HDF5DataSet dataset = baseReader.openDataSet(dataSetPath);
+                        
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
 
@@ -686,7 +688,7 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final byte[] block =
-                                        readArrayBlockWithOffset(dataSetPath, index
+                                        readArrayBlockWithOffset(dataset, index
                                                 .getBlockSize(), offset);
                                 return new HDF5DataBlock<byte[]>(block, index.getAndIncIndex(), 
                                         offset);
@@ -818,3 +820,4 @@ class HDF5UnsignedByteReader implements IHDF5ByteReader
         }
     }
 }
+

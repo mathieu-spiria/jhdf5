@@ -671,6 +671,8 @@ class HDF5FloatReader implements IHDF5FloatReader
                 {
                     return new Iterator<HDF5DataBlock<float[]>>()
                         {
+                            final HDF5DataSet dataset = baseReader.openDataSet(dataSetPath);
+                        
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
 
@@ -685,7 +687,7 @@ class HDF5FloatReader implements IHDF5FloatReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final float[] block =
-                                        readArrayBlockWithOffset(dataSetPath, index
+                                        readArrayBlockWithOffset(dataset, index
                                                 .getBlockSize(), offset);
                                 return new HDF5DataBlock<float[]>(block, index.getAndIncIndex(), 
                                         offset);
