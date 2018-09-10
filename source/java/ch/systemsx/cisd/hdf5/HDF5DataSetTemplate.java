@@ -24,6 +24,24 @@ import static hdf.hdf5lib.H5.H5Sclose;
  * <p>
  * <i>Close it after usage is finished as otherwise you will leak resources from the HDF5
  * library.</i>
+ * <p>
+ * Open the object using the method <code>createArrayTemplate()</code> from one of the primitive writers and use it
+ * in that writer to specify the parameters of a new data set. As it caches HDF5 objects, it will speed up the creation
+ * process for repeated creation of data sets with the same template parameters.
+ * <p>
+ * A typical pattern for using this class is:
+ * <pre>
+ *    try (final HDF5DataSetTemplate tmpl =
+ *            writer.float32().createArrayTemplate(length, length, HDF5IntStorageFeatures.INT_CONTIGUOUS))
+ *    {
+ *        for (int i = 0; i < num; ++i)
+ *        {
+ *            writer.float32().writeArray("ds" + i, array[i], tmpl);
+ *        }
+ *    }
+ * </pre>
+ * Assigning the <code>HDF5DataSetTemplate</code> object in a <code>try()</code> block is a recommened practice to
+ * ensure that the underlying HDF5 objects are properly closed at the end.
  * 
  * @author Bernd Rinn
  */

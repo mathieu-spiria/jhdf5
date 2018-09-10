@@ -22,9 +22,12 @@ import static hdf.hdf5lib.H5.H5Sclose;
 /**
  * An object to represent an HDF5 data set.
  * <p>
- * Open using the {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet(String)} and use it in readers and writers 
- * instead of the data set path. As it caches HDF5 objects, it will speed up the access for repeated access to the 
- * same data set.
+ * <i>Close it after usage is finished as otherwise you will leak resources from the HDF5
+ * library.</i>
+ * <p>
+ * Open the object using the method {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet(String)} and use it
+ * in readers and writers instead of the data set path. As it caches HDF5 objects, it will speed up the access
+ * for repeated access to the same data set.
  * <p>
  * A typical pattern for using this class is:
  * <pre>
