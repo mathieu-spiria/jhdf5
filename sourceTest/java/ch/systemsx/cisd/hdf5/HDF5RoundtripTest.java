@@ -3121,7 +3121,7 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(floatArrayFile);
         final float[] dataWritten = new float[128];
         writer.int32().createArray("ds", dataWritten.length);
-        try (final HDF5DataSet ds = writer.object().openDataSet("ds"))
+        try (final HDF5DataSet ds = writer.int32().createArrayAndOpen("ds", dataWritten.length))
         {
             for (long bx = 0; bx < 8; ++bx)
             {
@@ -3155,13 +3155,14 @@ public class HDF5RoundtripTest
         final IHDF5Writer writer = HDF5FactoryProvider.get().open(floatArrayFile);
         final float[] dataWritten = new float[128];
         try (final HDF5DataSetTemplate tmpl =
-                writer.int32().createArrayTemplate(dataWritten.length, dataWritten.length,
-                        HDF5IntStorageFeatures.INT_CONTIGUOUS))
+                writer.float32().createArrayTemplate(dataWritten.length, dataWritten.length,
+                        HDF5FloatStorageFeatures.FLOAT_CONTIGUOUS))
         {
             for (long bx = 0; bx < 8; ++bx)
+            try (final HDF5DataSet ds = writer.float32().createArrayAndOpen("ds" + bx, tmpl)) 
             {
                 fillArray(bx + 1, dataWritten);
-                writer.float32().writeArray("ds" + bx, dataWritten, tmpl);
+                writer.float32().writeArrayBlock(ds, dataWritten, 0);
             }
         }
         writer.close();

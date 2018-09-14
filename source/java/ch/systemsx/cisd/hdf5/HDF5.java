@@ -684,13 +684,63 @@ class HDF5
         return dataSetId;
     }
 
+    public HDF5DataSet createDataSetDetached(long fileId, long[] dimensions, long[] chunkSizeOrNull, long dataTypeId,
+            HDF5AbstractStorageFeatures compression, String dataSetName, HDF5StorageLayout layout,
+            ICleanUpRegistry registry)
+    {
+        checkMaxLength(dataSetName);
+        final long[] maxDimensions = createMaxDimensions(dimensions, (layout == HDF5StorageLayout.CHUNKED)); 
+        final long dataSpaceId =
+                H5Screate_simple(dimensions.length, dimensions, maxDimensions);
+        final long dataSetCreationPropertyListId;
+        if (layout == HDF5StorageLayout.CHUNKED && chunkSizeOrNull != null)
+        {
+            dataSetCreationPropertyListId = createDataSetCreationPropertyList(registry);
+            setChunkedLayout(dataSetCreationPropertyListId, chunkSizeOrNull);
+            if (compression.isScaling())
+            {
+                final int classTypeId = getClassType(dataTypeId);
+                assert compression.isCompatibleWithDataClass(classTypeId);
+                if (classTypeId == H5T_INTEGER)
+                {
+                    H5Pset_scaleoffset(dataSetCreationPropertyListId, H5Z_SO_INT,
+                            compression.getScalingFactor());
+                } else if (classTypeId == H5T_FLOAT)
+                {
+                    H5Pset_scaleoffset(dataSetCreationPropertyListId, H5Z_SO_FLOAT_DSCALE,
+                            compression.getScalingFactor());
+                }
+            }
+            if (compression.isShuffleBeforeDeflate())
+            {
+                setShuffle(dataSetCreationPropertyListId);
+            }
+            if (compression.isDeflating())
+            {
+                setDeflate(dataSetCreationPropertyListId, compression.getDeflateLevel());
+            }
+        } else if (layout == HDF5StorageLayout.COMPACT)
+        {
+            dataSetCreationPropertyListId =
+                    dataSetCreationPropertyListCompactStorageLayoutFileTimeAlloc;
+        } else
+        {
+            dataSetCreationPropertyListId = dataSetCreationPropertyListFillTimeAlloc;
+        }
+        final long dataSetId =
+                H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
+                        lcplCreateIntermediateGroups, dataSetCreationPropertyListId, H5P_DEFAULT);
+
+        return new HDF5DataSet(dataSetName, dataSetId, dataSpaceId, dimensions, maxDimensions, layout, true);
+    }
+
     public HDF5DataSetTemplate createDataSetTemplateLowLevel(long fileId, long[] dimensions,
             long[] chunkSizeOrNull, long dataTypeId, HDF5AbstractStorageFeatures compression,
             HDF5StorageLayout layout, FileFormatVersionBounds fileFormat)
     {
+        final long[] maxDimensions = createMaxDimensions(dimensions, (layout == HDF5StorageLayout.CHUNKED));
         final long dataSpaceId =
-                H5Screate_simple(dimensions.length, dimensions,
-                        createMaxDimensions(dimensions, (layout == HDF5StorageLayout.CHUNKED)));
+                H5Screate_simple(dimensions.length, dimensions, maxDimensions);
         final long dataSetCreationPropertyListId;
         final boolean closeCreationPropertyListId;
         if (layout == HDF5StorageLayout.CHUNKED && chunkSizeOrNull != null)
@@ -732,25 +782,28 @@ class HDF5
         }
 
         return new HDF5DataSetTemplate(dataSpaceId, dataSetCreationPropertyListId,
-                closeCreationPropertyListId, dataTypeId, dimensions, layout);
+                closeCreationPropertyListId, dataTypeId, dimensions, maxDimensions, layout);
     }
 
     public long createDataSetSimple(long fileId, long dataTypeId, long dataSpaceId, String dataSetName,
-            ICleanUpRegistry registry)
+            ICleanUpRegistry registryOrNull)
     {
         final long dataSetId =
                 H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
                         lcplCreateIntermediateGroups, dataSetCreationPropertyListFillTimeAlloc,
                         H5P_DEFAULT);
-        registry.registerCleanUp(new Runnable()
-            {
-                @Override
-                public void run()
+        if (registryOrNull != null)
+        {
+            registryOrNull.registerCleanUp(new Runnable()
                 {
-                    H5Dclose(dataSetId);
-                }
-            });
-
+                    @Override
+                    public void run()
+                    {
+                        H5Dclose(dataSetId);
+                    }
+                });
+    
+        }
         return dataSetId;
     }
 

@@ -53,6 +53,8 @@ public class HDF5DataSet implements AutoCloseable
     private final HDF5StorageLayout layout;
 
     private final long dataspaceId;
+    
+    private final boolean closeDataSpaceId;
 
     private final long[] maxDimensions;
 
@@ -61,11 +63,12 @@ public class HDF5DataSet implements AutoCloseable
     private long datasetId;
 
     HDF5DataSet(String datasetPath, long datasetId, long dataspaceId, long[] dimensions,
-            long[] maxDimensions, HDF5StorageLayout layout)
+            long[] maxDimensions, HDF5StorageLayout layout, boolean closeDataSpaceId)
     {
         this.datasetPath = datasetPath;
         this.datasetId = datasetId;
         this.dataspaceId = dataspaceId;
+        this.closeDataSpaceId = closeDataSpaceId;
         this.maxDimensions = maxDimensions;
         this.dimensions = dimensions;
         this.layout = layout;
@@ -114,7 +117,10 @@ public class HDF5DataSet implements AutoCloseable
     {
         if (datasetId > 0)
         {
-            H5Sclose(dataspaceId);
+            if (closeDataSpaceId)
+            {
+                H5Sclose(dataspaceId);
+            }
             H5Dclose(datasetId);
             datasetId = -1;
         }

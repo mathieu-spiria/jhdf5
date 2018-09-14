@@ -140,16 +140,44 @@ public interface IHDF5FloatWriter extends IHDF5FloatReader
     public void createArray(String objectPath, int size);
 
     /**
+     * Creates a <code>float</code> array (of rank 1) and opens it for writing.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size When the writer is configured to use extendable data types (see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
+     *            and the chunk size of the array will be <var>size</var>. When the writer is
+     *            configured to <i>enforce</i> a non-extendable data set, the initial size equals the
+     *            total size and will be <var>size</var>.
+     * @return The {@link HDF5DataSet} object of the new data set.
+     */
+    public HDF5DataSet createArrayAndOpen(String objectPath, int size);
+
+    /**
      * Creates a <code>float</code> array (of rank 1).
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the float array to create. When using extendable data sets 
      *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
      *          set smaller than this size can be created, however data sets may be larger.
-     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
+     * @param blockSize The size of one block (for block-wise IO). Ignored if non-extendable data 
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
      */
     public void createArray(String objectPath, long size, int blockSize);
+
+    /**
+     * Creates a <code>float</code> array (of rank 1) and opens it for writing.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size When the writer is configured to use extendable data types (see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
+     *            and the chunk size of the array will be <var>size</var>. When the writer is
+     *            configured to <i>enforce</i> a non-extendable data set, the initial size equals the
+     *            total size and will be <var>size</var>.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if non-extendable data 
+     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
+     * @return The {@link HDF5DataSet} object of the new data set.
+     */
+    public HDF5DataSet createArrayAndOpen(String objectPath, int size, int blockSize);
 
     /**
      * Creates a <code>float</code> array (of rank 1).
@@ -172,20 +200,79 @@ public interface IHDF5FloatWriter extends IHDF5FloatReader
             HDF5FloatStorageFeatures features);
     
     /**
-     * Creates a <code>float</code> array (of rank 1).
+     * Creates a <code>float</code> array (of rank 1). When creating many data sets with the same
+     * features, this method will be faster than
+     * {@link #createArray(String, HDF5FloatStorageFeatures)}.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
-     * @param size The size of the float array to create. When using extendable data sets 
+     * @param template The template to be used to determine the features of the data set.
+     * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
+     */
+    public void createArray(String objectPath, HDF5DataSetTemplate template);
+
+    /**
+     * Creates a <code>float</code> array (of rank 1) and opens it for writing.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the <code>int</code> array to create. When <i>requesting</i> a 
+     *            chunked data set (e.g. {@link HDF5IntStorageFeatures#INT_CHUNKED}), 
+     *            the initial size of the array will be 0 and the chunk size will be <var>arraySize</var>. 
+     *            When <i>allowing</i> a chunked data set (e.g. 
+     *            {@link HDF5IntStorageFeatures#INT_NO_COMPRESSION} when the writer is 
+     *            not configured to avoid extendable data types, see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
+     *            and the chunk size of the array will be <var>arraySize</var>. When <i>enforcing</i> a 
+     *            on-extendable data set (e.g. 
+     *            {@link HDF5IntStorageFeatures#INT_CONTIGUOUS}), the initial size equals 
+     *            the total size and will be <var>arraySize</var>.
+     * @param features The storage features of the data set.
+     * @return The {@link HDF5DataSet} object of the new data set.
+     */
+    public HDF5DataSet createArrayAndOpen(String objectPath, int size,
+            final HDF5FloatStorageFeatures features);
+    
+    /**
+     * Creates a <code>float</code> array (of rank 1) and opens it for writing.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the int array to create. When using extendable data sets 
      *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
      *          set smaller than this size can be created, however data sets may be larger.
      * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
-     *                <code>features</code> is <code>HDF5FloatStorageFeature.FLOAT_NO_COMPRESSION</code>.
+     *                <code>features</code> is <code>HDF5IntStorageFeature.INT_NO_COMPRESSION</code>.
+     * @param features The storage features of the data set.
+     * @return The {@link HDF5DataSet} object of the new data set.
+     */
+    public HDF5DataSet createArrayAndOpen(final String objectPath, final long size, final int blockSize,
+            final HDF5FloatStorageFeatures features);
+    
+    /**
+     * Creates a <code>float</code> array (of rank 1).
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param size The size of the int array to create. When using extendable data sets 
+     *          ((see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data 
+     *          set smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data 
+     *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
+     *                <code>features</code> is <code>HDF5IntStorageFeature.INT_NO_COMPRESSION</code>.
      * @param features The storage features of the data set.
      */
     public void createArray(String objectPath, long size, int blockSize,
             HDF5FloatStorageFeatures features);
 
+    /**
+     * Creates a <code>float</code> array (of rank 1) and opens it for writing.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param template The template to be used to determine the features of the data set.
+     * @return The {@link HDF5DataSet} object of the new data set.
+     * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name 
+     *         <code>objectPath</code> already exists.
+     */
+    public HDF5DataSet createArrayAndOpen(String objectPath, HDF5DataSetTemplate template);
+    
     /**
      * Creates a <code>float</code> array template (of rank 1) which can be used in
      * {@link #writeArray(String, float[], HDF5DataSetTemplate)} to create data sets.

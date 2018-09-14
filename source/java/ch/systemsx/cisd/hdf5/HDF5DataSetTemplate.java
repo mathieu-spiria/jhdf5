@@ -51,6 +51,8 @@ public class HDF5DataSetTemplate implements AutoCloseable
 
     private final long[] dimensions;
 
+    private final long[] maxDimensions;
+
     private final long dataSetCreationPropertyListId;
 
     private final boolean closeCreationPropertyListId;
@@ -60,14 +62,15 @@ public class HDF5DataSetTemplate implements AutoCloseable
     private long dataspaceId;
 
     HDF5DataSetTemplate(long dataspaceId, long dataSetCreationPropertyListId,
-            boolean closeCreationPropertyListId, long storageDataTypeId, long[] dimensions,
-            HDF5StorageLayout layout)
+            boolean closeCreationPropertyListId, long storageDataTypeId, long[] dimensions, 
+            long[] maxDimensions, HDF5StorageLayout layout)
     {
         this.dataspaceId = dataspaceId;
         this.dataSetCreationPropertyListId = dataSetCreationPropertyListId;
         this.closeCreationPropertyListId = closeCreationPropertyListId;
         this.storageDataTypeId = storageDataTypeId;
         this.dimensions = dimensions;
+        this.maxDimensions = maxDimensions;
         this.layout = layout;
     }
 
@@ -89,6 +92,11 @@ public class HDF5DataSetTemplate implements AutoCloseable
     long[] getDimensions()
     {
         return dimensions;
+    }
+
+    long[] getMaxDimensions()
+    {
+        return maxDimensions;
     }
 
     HDF5StorageLayout getLayout()

@@ -316,7 +316,7 @@ class HDF5BaseReader
                                     h5.getDataMaxDimensions(dataSetId, registry);
                             final HDF5DataSet dataSet =
                                     new HDF5DataSet(objectPath, dataSetId, dataSpaceId, dimensions,
-                                            maxDimensions, layout);
+                                            maxDimensions, layout, true);
                             fileRegistry.registerCleanUp(new Runnable()
                                 {
                                     @Override

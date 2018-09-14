@@ -239,6 +239,18 @@ class HDF5FloatWriter extends HDF5FloatReader implements IHDF5FloatWriter
     }
 
     @Override
+    public HDF5DataSet createArrayAndOpen(String objectPath, int size)
+    {
+        return createArrayAndOpen(objectPath, size, FLOAT_NO_COMPRESSION);
+    }
+
+    @Override
+    public HDF5DataSet createArrayAndOpen(String objectPath, int size, int blockSize)
+    {
+        return createArrayAndOpen(objectPath, size, blockSize, FLOAT_NO_COMPRESSION);
+    }
+
+    @Override
     public void createArray(final String objectPath, final int size,
             final HDF5FloatStorageFeatures features)
     {
@@ -268,6 +280,55 @@ class HDF5FloatWriter extends HDF5FloatReader implements IHDF5FloatWriter
     }
 
     @Override
+    public void createArray(String objectPath, HDF5DataSetTemplate template)
+    {
+        assert objectPath != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    baseWriter.createDataSetFromTemplate(objectPath, template, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+    
+    @Override
+    public HDF5DataSet createArrayAndOpen(final String objectPath, final int size,
+            final HDF5FloatStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+
+        baseWriter.checkOpen();
+        if (features.requiresChunking())
+        {
+            return baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, 
+                features, new long[] { 0 }, new long[] { size }, 4);
+
+        } else
+        {
+            return baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, 
+                features, new long[] { size }, null, 4);
+        }
+    }
+
+    @Override
+    public HDF5DataSet createArrayAndOpen(String objectPath, HDF5DataSetTemplate template)
+    {
+        assert objectPath != null;
+
+        baseWriter.checkOpen();
+        final long dataSetId = baseWriter.createDataSetFromTemplate(objectPath, template, null);
+        return new HDF5DataSet(objectPath, dataSetId, template.getDataspaceId(), template.getDimensions(), 
+                template.getMaxDimensions(), template.getLayout(), false);
+    }
+    
+    @Override
     public void createArray(final String objectPath, final long size, final int blockSize,
             final HDF5FloatStorageFeatures features)
     {
@@ -288,6 +349,20 @@ class HDF5FloatWriter extends HDF5FloatReader implements IHDF5FloatWriter
                 }
             };
         baseWriter.runner.call(createRunnable);
+    }
+
+    @Override
+    public HDF5DataSet createArrayAndOpen(final String objectPath, final long size, final int blockSize,
+            final HDF5FloatStorageFeatures features)
+    {
+        assert objectPath != null;
+        assert size >= 0;
+        assert blockSize >= 0 && (blockSize <= size || size == 0);
+
+        baseWriter.checkOpen();
+        return baseWriter.createDataSet(objectPath, H5T_IEEE_F32LE, 
+                features, new long[] { size }, new long[]
+                { blockSize }, 4);
     }
 
     @Override

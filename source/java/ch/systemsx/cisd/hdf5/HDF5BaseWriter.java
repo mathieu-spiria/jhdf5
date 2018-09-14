@@ -1035,6 +1035,74 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     /**
+     * Creates a detached data set.
+     */
+    HDF5DataSet createDataSet(final String objectPath, final long storageDataTypeId,
+            final HDF5AbstractStorageFeatures features, final long[] dimensions,
+            final long[] chunkSizeOrNull, int elementLength)
+    {
+        final ICallableWithCleanUp<HDF5DataSet> openDataSetCallable =
+                new ICallableWithCleanUp<HDF5DataSet>()
+                    {
+                        @Override
+                        public HDF5DataSet call(ICleanUpRegistry registry)
+                        {
+                            final boolean empty = isEmpty(dimensions);
+                            final boolean chunkSizeProvided =
+                                    (chunkSizeOrNull != null && isNonPositive(chunkSizeOrNull) == false);
+                            final long[] definitiveChunkSizeOrNull;
+                            if (h5.exists(fileId, objectPath))
+                            {
+                                if (keepDataIfExists(features))
+                                {
+                                    return openDataSet(objectPath);
+                                }
+                                h5.deleteObject(fileId, objectPath);
+                            }
+                            if (empty)
+                            {
+                                definitiveChunkSizeOrNull =
+                                        chunkSizeProvided ? chunkSizeOrNull : HDF5Utils.tryGetChunkSize(dimensions,
+                                                elementLength, features.requiresChunking(), true);
+                            } else if (features.tryGetProposedLayout() == HDF5StorageLayout.COMPACT
+                                    || features.tryGetProposedLayout() == HDF5StorageLayout.CONTIGUOUS
+                                    || (useExtentableDataTypes == false) && features.requiresChunking() == false)
+                            {
+                                definitiveChunkSizeOrNull = null;
+                            } else if (chunkSizeProvided)
+                            {
+                                definitiveChunkSizeOrNull = chunkSizeOrNull;
+                            } else
+                            {
+                                definitiveChunkSizeOrNull =
+                                        HDF5Utils
+                                                .tryGetChunkSize(
+                                                        dimensions,
+                                                        elementLength,
+                                                        features.requiresChunking(),
+                                                        useExtentableDataTypes
+                                                                || features.tryGetProposedLayout() == HDF5StorageLayout.CHUNKED);
+                            }
+                            final HDF5StorageLayout layout =
+                                    determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull,
+                                            features.tryGetProposedLayout());
+                            final HDF5DataSet dataSet = h5.createDataSetDetached(fileId, dimensions, definitiveChunkSizeOrNull, storageDataTypeId,
+                                            features, objectPath, layout, registry);
+                            fileRegistry.registerCleanUp(new Runnable()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    dataSet.close();
+                                }
+                            });
+                            return dataSet;
+                        }
+                    };
+        return runner.call(openDataSetCallable);
+    }
+
+    /**
      * Creates a data set template.
      */
     HDF5DataSetTemplate createDataSetTemplate(final long storageDataTypeId,
@@ -1077,7 +1145,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
     }
 
     /**
-     * Creates a new data set from a template. The data set must not yet exist or elese an exception
+     * Creates a new data set from a template. The data set must not yet exist or else an exception
      * from the HDF5 library is thrown.
      */
     long createDataSetFromTemplate(final String objectPath,
