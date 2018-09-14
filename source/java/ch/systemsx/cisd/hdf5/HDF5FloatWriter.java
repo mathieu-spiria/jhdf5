@@ -324,8 +324,8 @@ class HDF5FloatWriter extends HDF5FloatReader implements IHDF5FloatWriter
 
         baseWriter.checkOpen();
         final long dataSetId = baseWriter.createDataSetFromTemplate(objectPath, template, null);
-        return new HDF5DataSet(objectPath, dataSetId, template.getDataspaceId(), template.getDimensions(), 
-                template.getMaxDimensions(), template.getLayout(), false);
+        return new HDF5DataSet(baseWriter.h5, objectPath, dataSetId, template.getDataspaceId(), 
+        		template.getDimensions(), template.getMaxDimensions(), template.getLayout(), false);
     }
     
     @Override

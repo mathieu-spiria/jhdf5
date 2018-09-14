@@ -312,11 +312,9 @@ class HDF5BaseReader
                             final HDF5StorageLayout layout = h5.getLayout(dataSetId, registry);
                             final long dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, null);
                             final long[] dimensions = h5.getDataSpaceDimensions(dataSpaceId);
-                            final long[] maxDimensions =
-                                    h5.getDataMaxDimensions(dataSetId, registry);
                             final HDF5DataSet dataSet =
-                                    new HDF5DataSet(objectPath, dataSetId, dataSpaceId, dimensions,
-                                            maxDimensions, layout, true);
+                                    new HDF5DataSet(h5, objectPath, dataSetId, dataSpaceId, dimensions, 
+                                            null, layout, true);
                             fileRegistry.registerCleanUp(new Runnable()
                                 {
                                     @Override

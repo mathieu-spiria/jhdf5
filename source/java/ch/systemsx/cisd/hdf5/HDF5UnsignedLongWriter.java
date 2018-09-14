@@ -324,8 +324,8 @@ class HDF5UnsignedLongWriter extends HDF5UnsignedLongReader implements IHDF5Long
 
         baseWriter.checkOpen();
         final long dataSetId = baseWriter.createDataSetFromTemplate(objectPath, template, null);
-        return new HDF5DataSet(objectPath, dataSetId, template.getDataspaceId(), template.getDimensions(), 
-                template.getMaxDimensions(), template.getLayout(), false);
+        return new HDF5DataSet(baseWriter.h5, objectPath, dataSetId, template.getDataspaceId(), 
+        		template.getDimensions(), template.getMaxDimensions(), template.getLayout(), false);
     }
     
     @Override

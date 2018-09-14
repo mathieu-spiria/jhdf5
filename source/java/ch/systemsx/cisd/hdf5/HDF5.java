@@ -731,7 +731,8 @@ class HDF5
                 H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
                         lcplCreateIntermediateGroups, dataSetCreationPropertyListId, H5P_DEFAULT);
 
-        return new HDF5DataSet(dataSetName, dataSetId, dataSpaceId, dimensions, maxDimensions, layout, true);
+        return new HDF5DataSet(this, dataSetName, dataSetId, dataSpaceId, dimensions, 
+                    maxDimensions, layout, true);
     }
 
     public HDF5DataSetTemplate createDataSetTemplateLowLevel(long fileId, long[] dimensions,
