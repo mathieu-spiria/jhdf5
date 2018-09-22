@@ -1243,7 +1243,7 @@ final class HDF5BaseWriter extends HDF5BaseReader
         {
             dataSetId =
                     h5.openAndExtendDataSet(fileId, objectPath, fileFormat, dimensions,
-                            storageDataTypeId, registry);
+                            true, registry);
         } else
         {
             dataSetId =

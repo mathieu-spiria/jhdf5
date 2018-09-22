@@ -317,16 +317,16 @@ public interface IHDF5FloatReader
 
     /**
      * Reads a block from a multi-dimensional <code>float</code> array from the data set 
-     * <var>dataset</var>.
+     * <var>dataSet</var>.
      * 
-     * @param dataset The data set to read from.
+     * @param dataSet The data set to read from.
      * @param blockDimensions The extent of the block in each dimension.
      * @param blockNumber The block number in each dimension (offset: multiply with the
      *            <var>blockDimensions</var> in the according dimension).
      * @return The data block read from the data set.
      */
-    public MDFloatArray readMDArrayBlock(final HDF5DataSet dataset, final int[] blockDimensions,
-            final long[] blockNumber);
+    public MDFloatArray readMDArrayBlock(HDF5DataSet dataSet, int[] blockDimensions,
+            long[] blockNumber);
     
     /**
      * Reads a sliced block from a multi-dimensional <code>float</code> array from the data set

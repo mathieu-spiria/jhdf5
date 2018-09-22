@@ -410,6 +410,29 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
+    public MDShortArray readMDArraySlice(HDF5DataSet dataSet, IndexMap boundIndices)
+    {
+        baseReader.checkOpen();
+        final long[] fullDimensions = dataSet.getDimensions();
+        final int[] fullBlockDimensions = new int[fullDimensions.length];
+        final long[] fullOffset = new long[fullDimensions.length];
+        final int cardBoundIndices = cardinalityBoundIndices(boundIndices);
+        checkBoundIndices(dataSet.getDatasetPath(), fullDimensions, cardBoundIndices);
+        final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - cardBoundIndices];
+        Arrays.fill(effectiveBlockDimensions, -1);
+        createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
+                fullBlockDimensions, fullOffset);
+        final MDShortArray result = readMDArrayBlockWithOffset(dataSet, fullBlockDimensions, fullOffset);
+        if (fullBlockDimensions.length == cardBoundIndices) // no free indices
+        {
+            return new MDShortArray(result.getAsFlatArray(), new int[] { 1 });
+        } else
+        {
+            return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+        }
+    }
+    
+    @Override
     public MDShortArray readMDArraySlice(String objectPath, long[] boundIndices)
     {
         baseReader.checkOpen();
@@ -430,6 +453,29 @@ class HDF5ShortReader implements IHDF5ShortReader
 	    {
 	        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
 	    }
+    }
+
+    @Override
+    public MDShortArray readMDArraySlice(final HDF5DataSet dataSet, final long[] boundIndices)
+    {
+        baseReader.checkOpen();
+        final long[] fullDimensions = dataSet.getDimensions();
+        final int[] fullBlockDimensions = new int[fullDimensions.length];
+        final long[] fullOffset = new long[fullDimensions.length];
+        final int cardBoundIndices = cardinalityBoundIndices(boundIndices);
+        checkBoundIndices(dataSet.getDatasetPath(), fullDimensions, boundIndices);
+        final int[] effectiveBlockDimensions = new int[fullBlockDimensions.length - cardBoundIndices];
+        Arrays.fill(effectiveBlockDimensions, -1);
+        createFullBlockDimensionsAndOffset(effectiveBlockDimensions, null, boundIndices, fullDimensions,
+                fullBlockDimensions, fullOffset);
+        final MDShortArray result = readMDArrayBlockWithOffset(dataSet, fullBlockDimensions, fullOffset);
+        if (fullBlockDimensions.length == cardBoundIndices) // no free indices
+        {
+            return new MDShortArray(result.getAsFlatArray(), new int[] { 1 });
+        } else
+        {
+            return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+        }
     }
 
     @Override
@@ -555,6 +601,23 @@ class HDF5ShortReader implements IHDF5ShortReader
     }
 
     @Override
+    public MDShortArray readSlicedMDArrayBlockWithOffset(HDF5DataSet dataSet, int[] blockDimensions,
+            long[] offset, IndexMap boundIndices)
+    {
+        baseReader.checkOpen();
+        final int[] effectiveBlockDimensions = blockDimensions.clone();
+        final long[] fullDimensions = dataSet.getDimensions();
+        final int[] fullBlockDimensions = new int[fullDimensions.length];
+        final long[] fullOffset = new long[fullDimensions.length];
+        checkBoundIndices(dataSet.getDatasetPath(), fullDimensions, blockDimensions,
+                cardinalityBoundIndices(boundIndices));
+        createFullBlockDimensionsAndOffset(effectiveBlockDimensions, offset, boundIndices, fullDimensions,
+                fullBlockDimensions, fullOffset);
+        final MDShortArray result = readMDArrayBlockWithOffset(dataSet, fullBlockDimensions, fullOffset);
+        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+    }
+
+    @Override
     public MDShortArray readSlicedMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
             long[] offset, long[] boundIndices)
     {
@@ -571,6 +634,80 @@ class HDF5ShortReader implements IHDF5ShortReader
         return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
     }
 
+    @Override
+    public MDShortArray readSlicedMDArrayBlockWithOffset(HDF5DataSet dataSet, int[] blockDimensions,
+            long[] offset, long[] boundIndices)
+    {
+        baseReader.checkOpen();
+        final int[] effectiveBlockDimensions = blockDimensions.clone();
+        final long[] fullDimensions = dataSet.getDimensions();
+        final int[] fullBlockDimensions = new int[fullDimensions.length];
+        final long[] fullOffset = new long[fullDimensions.length];
+        checkBoundIndices(dataSet.getDatasetPath(), fullDimensions, blockDimensions,
+                cardinalityBoundIndices(boundIndices));
+        createFullBlockDimensionsAndOffset(effectiveBlockDimensions, offset, boundIndices, fullDimensions,
+                fullBlockDimensions, fullOffset);
+        final MDShortArray result = readMDArrayBlockWithOffset(dataSet, fullBlockDimensions, fullOffset);
+        return new MDShortArray(result.getAsFlatArray(), effectiveBlockDimensions);
+    }
+
+    @Override
+    public MDShortArray readMDArrayBlock(final HDF5DataSet dataSet, final int[] blockDimensions,
+            final long[] blockNumber)
+    {
+        final long[] offset = new long[blockDimensions.length];
+        for (int i = 0; i < offset.length; ++i)
+        {
+            offset[i] = blockNumber[i] * blockDimensions[i];
+        }
+        return readMDArrayBlockWithOffset(dataSet, blockDimensions, offset);
+    }
+
+    @Override
+    public MDShortArray readMDArrayBlockWithOffset(final HDF5DataSet dataSet,
+            final int[] blockDimensions, final long[] offset)
+    {
+        assert dataSet != null;
+        assert blockDimensions != null;
+        assert offset != null;
+
+        baseReader.checkOpen();
+        final ICallableWithCleanUp<MDShortArray> readCallable = new ICallableWithCleanUp<MDShortArray>()
+            {
+                @Override
+                public MDShortArray call(ICleanUpRegistry registry)
+                {
+                    final long dataSetId = dataSet.getDatasetId();
+                    try
+                    {
+                        final DataSpaceParameters spaceParams =
+                                baseReader.getSpaceParameters(dataSet, offset,
+                                        blockDimensions, registry);
+                        final short[] dataBlock = new short[spaceParams.blockSize];
+                        baseReader.h5.readDataSet(dataSetId, H5T_NATIVE_INT16,
+                                spaceParams.memorySpaceId, spaceParams.dataSpaceId,
+                                dataBlock);
+                        return new MDShortArray(dataBlock, spaceParams.dimensions);
+                    } catch (HDF5SpaceRankMismatch ex)
+                    {
+                        final HDF5DataSetInformation info =
+                                baseReader.getDataSetInformation(dataSet.getDatasetPath(),
+                                        DataTypeInfoOptions.MINIMAL, false);
+                        if (ex.getSpaceRankExpected() - ex.getSpaceRankFound() == info
+                                .getTypeInformation().getRank())
+                        {
+                            return readMDArrayBlockOfArrays(dataSetId, blockDimensions,
+                                    offset, info, ex.getSpaceRankFound(), registry);
+                        } else
+                        {
+                            throw ex;
+                        }
+                    }
+                }
+            };
+        return baseReader.runner.call(readCallable);
+    }
+        
     @Override
     public MDShortArray readMDArrayBlockWithOffset(final String objectPath,
             final int[] blockDimensions, final long[] offset)
@@ -671,7 +808,7 @@ class HDF5ShortReader implements IHDF5ShortReader
                 {
                     return new Iterator<HDF5DataBlock<short[]>>()
                         {
-                            final HDF5DataSet dataset = baseReader.openDataSet(dataSetPath);
+                            final HDF5DataSet dataSet = baseReader.openDataSet(dataSetPath);
                         
                             final HDF5NaturalBlock1DParameters.HDF5NaturalBlock1DIndex index =
                                     params.getNaturalBlockIndex();
@@ -687,7 +824,7 @@ class HDF5ShortReader implements IHDF5ShortReader
                             {
                                 final long offset = index.computeOffsetAndSizeGetOffset();
                                 final short[] block =
-                                        readArrayBlockWithOffset(dataset, index
+                                        readArrayBlockWithOffset(dataSet, index
                                                 .getBlockSize(), offset);
                                 return new HDF5DataBlock<short[]>(block, index.getAndIncIndex(), 
                                         offset);

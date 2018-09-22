@@ -224,7 +224,7 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                     final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
-                                        { offset + dataSize }, -1, registry);
+                                        { offset + dataSize }, false, registry);
                     final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
@@ -387,7 +387,7 @@ public class HDF5BooleanWriter extends HDF5BooleanReader implements IHDF5Boolean
                     final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
-                                        { -1, offset + dataSize }, -1, registry);
+                                        { -1, offset + dataSize }, false, registry);
                     final long[] dimensions = baseWriter.h5.getDataDimensions(dataSetId, registry);
                     if (dimensions.length != 2)
                     {

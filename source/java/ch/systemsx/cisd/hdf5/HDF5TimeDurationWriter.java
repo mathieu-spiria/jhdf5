@@ -373,7 +373,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                     final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
-                                        { offset + dataSize }, -1, registry);
+                                        { offset + dataSize }, false, registry);
                     final HDF5TimeUnit storedUnit =
                             baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
                     final long dataSpaceId =
@@ -562,7 +562,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                     }
                     final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
+                                    baseWriter.fileFormat, dataSetDimensions, false, registry);
                     final HDF5TimeUnit storedUnit =
                             baseWriter.checkIsTimeDuration(objectPath, dataSetId, registry);
                     final long dataSpaceId =
@@ -604,7 +604,7 @@ public class HDF5TimeDurationWriter extends HDF5TimeDurationReader implements
                     }
                     final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
+                                    baseWriter.fileFormat, dataSetDimensions, false, registry);
                     final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     final HDF5TimeUnit storedUnit =

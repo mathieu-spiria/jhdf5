@@ -153,8 +153,7 @@ public interface IHDF5ByteReader
      * <i>This method is faster than {@link #readArrayBlock(String, int, long)} 
      * when called many times on the same data set.</i>
      * 
-     * @param dataSet The data set object in the file which has been created by using
-                  {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet}.
+     * @param dataSet The data set to read from.
      * @param blockSize The block size (this will be the length of the <code>int[]</code> returned
      *            if the data set is long enough).
      * @param blockNumber The number of the block to read (starting with 0, offset: multiply with
@@ -184,8 +183,7 @@ public interface IHDF5ByteReader
      * <i>This method is faster than {@link #readArrayBlockWithOffset(String, int, long)} 
      * when called many times on the same data set.</i>
      * 
-     * @param dataSet The data set object in the file which has been created by using
-                  {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet}.
+     * @param dataSet The data set to read from.
      * @param blockSize The block size (this will be the length of the <code>int[]</code>
      *            returned).
      * @param offset The offset of the block in the data set to start reading from (starting with 0).
@@ -265,6 +263,19 @@ public interface IHDF5ByteReader
 
     /**
      * Reads a slice of a multi-dimensional <code>byte</code> array from the data set
+     * <var>dataSet</var>. The slice is defined by "bound indices", each of which is fixed to a
+     * given value. The returned data block only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param dataSet The data set to read from.
+     * @param boundIndices The mapping of indices to index values which should be bound. For example
+     *            a map of <code>new IndexMap().mapTo(2, 5).mapTo(4, 7)</code> has 2 and 4 as bound
+     *            indices and binds them to the values 5 and 7, respectively.
+     * @return The data block read from the data set.
+     */
+    public MDByteArray readMDArraySlice(HDF5DataSet dataSet, IndexMap boundIndices);
+
+    /**
+     * Reads a slice of a multi-dimensional <code>byte</code> array from the data set
      * <var>objectPath</var>. The slice is defined by "bound indices", each of which is fixed to a
      * given value. The returned data block only contains the free (i.e. non-fixed) indices.
      * 
@@ -276,6 +287,20 @@ public interface IHDF5ByteReader
      * @return The data block read from the data set.
      */
     public MDByteArray readMDArraySlice(String objectPath, long[] boundIndices);
+
+    /**
+     * Reads a slice of a multi-dimensional <code>byte</code> array from the data set
+     * <var>dataSet</var>. The slice is defined by "bound indices", each of which is fixed to a
+     * given value. The returned data block only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param dataSet The data set to read from.
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     * @return The data block read from the data set.
+     */
+    public MDByteArray readMDArraySlice(HDF5DataSet dataSet, long[] boundIndices);
 
     /**
      * Reads a block from a multi-dimensional <code>byte</code> array from the data set 
@@ -290,6 +315,19 @@ public interface IHDF5ByteReader
     public MDByteArray readMDArrayBlock(String objectPath,
     				int[] blockDimensions, long[] blockNumber);
 
+    /**
+     * Reads a block from a multi-dimensional <code>byte</code> array from the data set 
+     * <var>dataSet</var>.
+     * 
+     * @param dataSet The data set to read from.
+     * @param blockDimensions The extent of the block in each dimension.
+     * @param blockNumber The block number in each dimension (offset: multiply with the
+     *            <var>blockDimensions</var> in the according dimension).
+     * @return The data block read from the data set.
+     */
+    public MDByteArray readMDArrayBlock(HDF5DataSet dataSet, int[] blockDimensions,
+            long[] blockNumber);
+    
     /**
      * Reads a sliced block from a multi-dimensional <code>byte</code> array from the data set
      * <var>objectPath</var>. The slice is defined by "bound indices", each of which is fixed to a
@@ -338,6 +376,18 @@ public interface IHDF5ByteReader
             int[] blockDimensions, long[] offset);
     
     /**
+     * Reads a block from a multi-dimensional <code>byte</code> array from the data set
+     * <var>dataSet</var>.
+     * 
+     * @param dataSet The data set to read from.
+     * @param blockDimensions The extent of the block in each dimension.
+     * @param offset The offset in the data set to start reading from in each dimension.
+     * @return The data block read from the data set.
+     */
+    public MDByteArray readMDArrayBlockWithOffset(HDF5DataSet dataSet,
+            int[] blockDimensions, long[] offset);
+    
+    /**
      * Reads a sliced block of a multi-dimensional <code>byte</code> array from the data set
      * <var>objectPath</var>. The slice is defined by "bound indices", each of which is fixed to a
      * given value. The returned data block only contains the free (i.e. non-fixed) indices.
@@ -355,6 +405,22 @@ public interface IHDF5ByteReader
 
     /**
      * Reads a sliced block of a multi-dimensional <code>byte</code> array from the data set
+     * <var>dataSet</var>. The slice is defined by "bound indices", each of which is fixed to a
+     * given value. The returned data block only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param dataSet The data set to read from.
+     * @param blockDimensions The extent of the block in each dimension.
+     * @param offset The offset in the data set to start reading from in each dimension.
+     * @param boundIndices The mapping of indices to index values which should be bound. For example
+     *            a map of <code>new IndexMap().mapTo(2, 5).mapTo(4, 7)</code> has 2 and 4 as bound
+     *            indices and binds them to the values 5 and 7, respectively.
+     * @return The data block read from the data set.
+     */
+    public MDByteArray readSlicedMDArrayBlockWithOffset(HDF5DataSet dataSet, int[] blockDimensions,
+            long[] offset, IndexMap boundIndices);
+    
+    /**
+     * Reads a sliced block of a multi-dimensional <code>byte</code> array from the data set
      * <var>objectPath</var>. The slice is defined by "bound indices", each of which is fixed to a
      * given value. The returned data block only contains the free (i.e. non-fixed) indices.
      * 
@@ -370,6 +436,23 @@ public interface IHDF5ByteReader
     public MDByteArray readSlicedMDArrayBlockWithOffset(String objectPath, int[] blockDimensions,
             long[] offset, long[] boundIndices);
 
+    /**
+     * Reads a sliced block of a multi-dimensional <code>byte</code> array from the data set
+     * <var>dataSet</var>. The slice is defined by "bound indices", each of which is fixed to a
+     * given value. The returned data block only contains the free (i.e. non-fixed) indices.
+     * 
+     * @param dataSet The data set to read from.
+     * @param blockDimensions The extent of the block in each dimension.
+     * @param offset The offset in the data set to start reading from in each dimension.
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     * @return The data block read from the data set.
+     */
+    public MDByteArray readSlicedMDArrayBlockWithOffset(HDF5DataSet dataSet, int[] blockDimensions,
+            long[] offset, long[] boundIndices);
+    
     /**
      * Provides all natural blocks of this one-dimensional data set to iterate over.
      * 

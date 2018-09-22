@@ -290,8 +290,8 @@ public interface IHDF5FloatWriter extends IHDF5FloatReader
      *            .
      * @param features The storage features of the data set.
      */
-    public HDF5DataSetTemplate createArrayTemplate(final long size, final int blockSize,
-            final HDF5FloatStorageFeatures features);
+    public HDF5DataSetTemplate createArrayTemplate(long size, int blockSize,
+            HDF5FloatStorageFeatures features);
 
     /**
      * Writes out a block of a <code>float</code> array (of rank 1). The data set needs to have
@@ -314,7 +314,7 @@ public interface IHDF5FloatWriter extends IHDF5FloatReader
      * <i>This method is faster than {@link #writeArrayBlock(String, float[], long)} 
      * when called many times on the same data set.</i>
      * 
-     * @param dataSet The data set object to write to.
+     * @param dataSet The data set to write to.
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
@@ -351,7 +351,7 @@ public interface IHDF5FloatWriter extends IHDF5FloatReader
      * <i>This method is faster than {@link #writeArrayBlockWithOffset(String, float[], int, long)} 
      * when called many times on the same data set.</i>
      * 
-     * @param dataSet The data set object to write to.
+     * @param dataSet The data set to write to.
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param offset The offset in the data set to start writing to.

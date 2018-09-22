@@ -143,7 +143,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void createArray(String objectPath, int size);
 
     /**
-     * Creates a <code>short</code> array (of rank 1) and opens it for writing.
+     * Creates a <code>short</code> array (of rank 1) and opens it for reading and writing.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size When the writer is configured to use extendable data types (see
@@ -151,7 +151,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *            and the chunk size of the array will be <var>size</var>. When the writer is
      *            configured to <i>enforce</i> a non-extendable data set, the initial size equals the
      *            total size and will be <var>size</var>.
-     * @return The {@link HDF5DataSet} object of the new data set.
+     * @return The created data set.
      */
     public HDF5DataSet createArrayAndOpen(String objectPath, int size);
 
@@ -168,7 +168,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void createArray(String objectPath, long size, int blockSize);
 
     /**
-     * Creates a <code>short</code> array (of rank 1) and opens it for writing.
+     * Creates a <code>short</code> array (of rank 1) and opens it for reading and writing.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size When the writer is configured to use extendable data types (see
@@ -178,7 +178,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *            total size and will be <var>size</var>.
      * @param blockSize The size of one block (for block-wise IO). Ignored if non-extendable data 
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}).
-     * @return The {@link HDF5DataSet} object of the new data set.
+     * @return The created data set.
      */
     public HDF5DataSet createArrayAndOpen(String objectPath, int size, int blockSize);
 
@@ -214,7 +214,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void createArray(String objectPath, HDF5DataSetTemplate template);
 
     /**
-     * Creates a <code>short</code> array (of rank 1) and opens it for writing.
+     * Creates a <code>short</code> array (of rank 1) and opens it for reading and writing.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the <code>int</code> array to create. When <i>requesting</i> a 
@@ -229,13 +229,13 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *            {@link HDF5IntStorageFeatures#INT_CONTIGUOUS}), the initial size equals 
      *            the total size and will be <var>arraySize</var>.
      * @param features The storage features of the data set.
-     * @return The {@link HDF5DataSet} object of the new data set.
+     * @return The created data set.
      */
     public HDF5DataSet createArrayAndOpen(String objectPath, int size,
-            final HDF5IntStorageFeatures features);
+            HDF5IntStorageFeatures features);
     
     /**
-     * Creates a <code>short</code> array (of rank 1) and opens it for writing.
+     * Creates a <code>short</code> array (of rank 1) and opens it for reading and writing.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param size The size of the int array to create. When using extendable data sets 
@@ -245,10 +245,10 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *          sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}) and 
      *                <code>features</code> is <code>HDF5IntStorageFeature.INT_NO_COMPRESSION</code>.
      * @param features The storage features of the data set.
-     * @return The {@link HDF5DataSet} object of the new data set.
+     * @return The created data set.
      */
-    public HDF5DataSet createArrayAndOpen(final String objectPath, final long size, final int blockSize,
-            final HDF5IntStorageFeatures features);
+    public HDF5DataSet createArrayAndOpen(String objectPath, long size, int blockSize,
+            HDF5IntStorageFeatures features);
     
     /**
      * Creates a <code>short</code> array (of rank 1).
@@ -266,11 +266,11 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             HDF5IntStorageFeatures features);
 
     /**
-     * Creates a <code>short</code> array (of rank 1) and opens it for writing.
+     * Creates a <code>short</code> array (of rank 1) and opens it for reading and writing.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
      * @param template The template to be used to determine the features of the data set.
-     * @return The {@link HDF5DataSet} object of the new data set.
+     * @return The created data set.
      * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name 
      *         <code>objectPath</code> already exists.
      */
@@ -293,8 +293,8 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      *            .
      * @param features The storage features of the data set.
      */
-    public HDF5DataSetTemplate createArrayTemplate(final long size, final int blockSize,
-            final HDF5IntStorageFeatures features);
+    public HDF5DataSetTemplate createArrayTemplate(long size, int blockSize,
+            HDF5IntStorageFeatures features);
 
     /**
      * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
@@ -317,14 +317,13 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * <i>This method is faster than {@link #writeArrayBlock(String, short[], long)} 
      * when called many times on the same data set.</i>
      * 
-     * @param dataSet The data set object in the file which has been created by using
-     	 		  {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet}.
+     * @param dataSet The data set to write to.
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param blockNumber The number of the block to write.
      */
-    public void writeArrayBlock(final HDF5DataSet dataSet, final short[] data,
-            final long blockNumber);
+    public void writeArrayBlock(HDF5DataSet dataSet, short[] data,
+            long blockNumber);
 
     /**
      * Writes out a block of a <code>short</code> array (of rank 1). The data set needs to have
@@ -355,8 +354,7 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * <i>This method is faster than {@link #writeArrayBlockWithOffset(String, short[], int, long)} 
      * when called many times on the same data set.</i>
      * 
-     * @param dataSet The data set object in the file which has been created by using
-     	 		  {@link IHDF5ObjectReadOnlyInfoProviderHandler#openDataSet}.
+     * @param dataSet The data set to write to.
      * @param data The data to write. The length defines the block size. Must not be
      *            <code>null</code> or of length 0.
      * @param offset The offset in the data set to start writing to.
@@ -534,6 +532,20 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
      * Writes out a slice of a multi-dimensional <code>short</code> array. The slice is defined by
      * "bound indices", each of which is fixed to a given value. The <var>data</var> object only  
      * contains the free (i.e. non-fixed) indices.
+     * 
+     * @param dataSet The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param boundIndices The mapping of indices to index values which should be bound. For example
+     *            a map of <code>new IndexMap().mapTo(2, 5).mapTo(4, 7)</code> has 2 and 4 as bound
+     *            indices and binds them to the values 5 and 7, respectively.
+     */
+    public void writeMDArraySlice(HDF5DataSet dataSet, MDShortArray data, IndexMap boundIndices);
+    
+    /**
+     * Writes out a slice of a multi-dimensional <code>short</code> array. The slice is defined by
+     * "bound indices", each of which is fixed to a given value. The <var>data</var> object only  
+     * contains the free (i.e. non-fixed) indices.
      * <p> 
      * <i>Note:</i>The object identified by <var>objectPath</var> needs to exist when this method is 
      * called. This method will <i>not</i> create the array.
@@ -549,6 +561,21 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void writeMDArraySlice(String objectPath, MDShortArray data, long[] boundIndices);
 
     /**
+     * Writes out a slice of a multi-dimensional <code>short</code> array. The slice is defined by
+     * "bound indices", each of which is fixed to a given value. The <var>data</var> object only  
+     * contains the free (i.e. non-fixed) indices.
+     * 
+     * @param dataSet The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param boundIndices The array containing the values of the bound indices at the respective
+     *            index positions, and -1 at the free index positions. For example an array of
+     *            <code>new long[] { -1, -1, 5, -1, 7, -1 }</code> has 2 and 4 as bound indices and
+     *            binds them to the values 5 and 7, respectively.
+     */
+    public void writeMDArraySlice(HDF5DataSet dataSet, MDShortArray data, long[] boundIndices);
+    
+    /**
      * Creates a multi-dimensional <code>short</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -561,6 +588,19 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void createMDArray(String objectPath, int[] dimensions);
 
     /**
+     * Creates a multi-dimensional <code>short</code> array and opens it for reading and writing.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions When the writer is configured to use extendable data types (see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial dimensions
+     *            and the dimensions of a chunk of the array will be <var>dimensions</var>. When the 
+     *            writer is configured to <i>enforce</i> a non-extendable data set, the initial dimensions 
+     *            equal the dimensions and will be <var>dimensions</var>.
+     * @return The created data set.
+     */
+    public HDF5DataSet createMDArrayAndOpen(String objectPath, int[] dimensions);
+    
+    /**
      * Creates a multi-dimensional <code>short</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -570,6 +610,17 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void createMDArray(String objectPath, long[] dimensions,
             int[] blockDimensions);
 
+    /**
+     * Creates a multi-dimensional <code>short</code> array and opens it for reading and writing.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     * @return the created data set.
+     */
+    public HDF5DataSet createMDArrayAndOpen(String objectPath, long[] dimensions,
+            int[] blockDimensions);
+    
     /**
      * Creates a multi-dimensional <code>short</code> array.
      * 
@@ -591,6 +642,27 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
             HDF5IntStorageFeatures features);
 
     /**
+     * Creates a multi-dimensional <code>short</code> array and opens it for reading and writing.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the <code>float</code> array to create. When <i>requesting</i> 
+     *            a chunked data set (e.g. {@link HDF5IntStorageFeatures#INT_CHUNKED}), 
+     *            the initial size of the array will be 0 and the chunk size will be <var>dimensions</var>. 
+     *            When <i>allowing</i> a chunked data set (e.g. 
+     *            {@link HDF5IntStorageFeatures#INT_NO_COMPRESSION} when the writer is 
+     *            not configured to avoid extendable data types, see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()}), the initial size
+     *            and the chunk size of the array will be <var>dimensions</var>. When <i>enforcing</i> a 
+     *            on-extendable data set (e.g. 
+     *            {@link HDF5IntStorageFeatures#INT_CONTIGUOUS}), the initial size equals 
+     *            the total size and will be <var>dimensions</var>.
+     * @param features The storage features of the data set.
+     * @return The created data set.
+     */
+    public HDF5DataSet createMDArrayAndOpen(String objectPath, int[] dimensions,
+            HDF5IntStorageFeatures features);
+        
+    /**
      * Creates a multi-dimensional <code>short</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -601,6 +673,18 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void createMDArray(String objectPath, long[] dimensions,
             int[] blockDimensions, HDF5IntStorageFeatures features);
 
+    /**
+     * Creates a multi-dimensional <code>short</code> array.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param dimensions The dimensions of the array.
+     * @param blockDimensions The dimensions of one block (chunk) of the array.
+     * @param features The storage features of the data set.
+     * @return The created data set.
+     */
+    public HDF5DataSet createMDArrayAndOpen(String objectPath, long[] dimensions,
+            int[] blockDimensions, HDF5IntStorageFeatures features);
+    
     /**
      * Writes out a block of a multi-dimensional <code>short</code> array.
      * 
@@ -613,6 +697,19 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void writeMDArrayBlock(String objectPath, MDShortArray data,
             long[] blockNumber);
 
+    /**
+     * Writes out a block of a multi-dimensional <code>short</code> array.
+     * 
+     * @param dataset The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param blockNumber The block number in each dimension (offset: multiply with the extend in
+     *            the according dimension).
+     * @return The created data set.
+     */
+    public void writeMDArrayBlock(HDF5DataSet dataset, MDShortArray data,
+            long[] blockNumber);
+    
     /**
      * Writes out a sliced block of a multi-dimensional <code>short</code> array. The slice is
      * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 
@@ -659,6 +756,17 @@ public interface IHDF5ShortWriter extends IHDF5ShortReader
     public void writeMDArrayBlockWithOffset(String objectPath, MDShortArray data,
             long[] offset);
 
+    /**
+     * Writes out a block of a multi-dimensional <code>short</code> array.
+     * 
+     * @param dataSet The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>. All columns need to have the
+     *            same length.
+     * @param offset The offset in the data set  to start writing to in each dimension.
+     */
+    public void writeMDArrayBlockWithOffset(HDF5DataSet dataSet, MDShortArray data,
+            long[] offset);
+    
     /**
      * Writes out a sliced block of a multi-dimensional <code>short</code> array. The slice is
      * defined by "bound indices", each of which is fixed to a given value. The <var>data</var> 

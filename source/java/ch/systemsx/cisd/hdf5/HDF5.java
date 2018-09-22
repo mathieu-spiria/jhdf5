@@ -971,38 +971,6 @@ class HDF5
         return dataSetId;
     }
 
-    /**
-     * @param storageDataTypeId The storage type id, if in overwrite mode, or else -1.
-     */
-    @Deprecated
-    public long openAndExtendDataSet(long fileId, String path, FileFormatVersionBounds fileFormat,
-            long[] dimensions, long storageDataTypeId, ICleanUpRegistry registry)
-            throws HDF5JavaException
-    {
-        checkMaxLength(path);
-        final long dataSetId =
-                isReference(path) ? H5Rdereference(fileId, H5P_DEFAULT, H5R_OBJECT, HDFNativeData.longToByte(Long.parseLong(path.substring(1))))
-                        : H5Dopen(fileId, path, H5P_DEFAULT);
-        registry.registerCleanUp(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    H5Dclose(dataSetId);
-                }
-            });
-        extendDataSet(dataSetId, null, null, dimensions, null, (storageDataTypeId > -1), registry);
-        return dataSetId;
-    }
-
-    @Deprecated
-    public boolean extendDataSet(long fileId, long dataSetId, HDF5StorageLayout layoutOrNull,
-            long[] oldDimensionsOrNull, long[] newDimensions, long[] maxDimensionsOrNull,
-            long storageDataTypeId, ICleanUpRegistry registry) throws HDF5JavaException
-    {
-        return extendDataSet(dataSetId, layoutOrNull, oldDimensionsOrNull, newDimensions, maxDimensionsOrNull, (storageDataTypeId > -1), registry);
-    }
-    
     public boolean extendDataSet(long dataSetId, HDF5StorageLayout layoutOrNull,
             long[] oldDimensionsOrNull, long[] newDimensions, long[] maxDimensionsOrNull,
             boolean overwriteMode, ICleanUpRegistry registry) throws HDF5JavaException

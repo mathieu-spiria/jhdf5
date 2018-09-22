@@ -689,7 +689,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                     final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
                                     baseWriter.fileFormat, new long[]
-                                        { offset + dataSize }, -1, registry);
+                                        { offset + dataSize }, false, registry);
                     final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, slabStartOrNull, blockDimensions);
@@ -783,7 +783,7 @@ class HDF5EnumWriter extends HDF5EnumReader implements IHDF5EnumWriter
                 {
                     final long dataSetId =
                             baseWriter.h5.openAndExtendDataSet(baseWriter.fileId, objectPath,
-                                    baseWriter.fileFormat, dataSetDimensions, -1, registry);
+                                    baseWriter.fileFormat, dataSetDimensions, false, registry);
                     final long dataSpaceId =
                             baseWriter.h5.getDataSpaceForDataSet(dataSetId, registry);
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, dimensions);

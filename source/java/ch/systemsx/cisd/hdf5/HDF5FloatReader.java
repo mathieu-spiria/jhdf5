@@ -409,6 +409,7 @@ class HDF5FloatReader implements IHDF5FloatReader
 	    }
     }
 
+    @Override
     public MDFloatArray readMDArraySlice(HDF5DataSet dataSet, IndexMap boundIndices)
     {
         baseReader.checkOpen();
@@ -454,6 +455,7 @@ class HDF5FloatReader implements IHDF5FloatReader
 	    }
     }
 
+    @Override
     public MDFloatArray readMDArraySlice(final HDF5DataSet dataSet, final long[] boundIndices)
     {
         baseReader.checkOpen();
