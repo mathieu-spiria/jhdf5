@@ -786,12 +786,13 @@ class HDF5
                 closeCreationPropertyListId, dataTypeId, dimensions, maxDimensions, layout);
     }
 
-    public long createDataSetSimple(long fileId, long dataTypeId, long dataSpaceId, String dataSetName,
-            ICleanUpRegistry registryOrNull)
+    public long createDataSetSimple(long fileId, long dataTypeId, long dataSpaceId, 
+            long dataSetCreationPropertyListId, 
+            String dataSetName, ICleanUpRegistry registryOrNull)
     {
         final long dataSetId =
                 H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
-                        lcplCreateIntermediateGroups, dataSetCreationPropertyListFillTimeAlloc,
+                        lcplCreateIntermediateGroups, dataSetCreationPropertyListId,
                         H5P_DEFAULT);
         if (registryOrNull != null)
         {

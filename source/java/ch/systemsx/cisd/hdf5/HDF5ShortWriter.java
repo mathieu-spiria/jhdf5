@@ -660,6 +660,27 @@ class HDF5ShortWriter extends HDF5ShortReader implements IHDF5ShortWriter
     }
 
     @Override
+    public void writeMDArray(String objectPath, MDShortArray data, HDF5DataSetTemplate template)
+    {
+        assert data != null;
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long dataSetId =
+                            baseWriter.createDataSetFromTemplate(objectPath,
+                                    template, registry);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT16, H5S_ALL, H5S_ALL, H5P_DEFAULT, 
+                            data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    @Override
     public void createMDArray(final String objectPath, final int[] dimensions)
     {
         createMDArray(objectPath, dimensions, INT_NO_COMPRESSION);
@@ -767,6 +788,22 @@ class HDF5ShortWriter extends HDF5ShortReader implements IHDF5ShortWriter
     }
 
     @Override
+    public void createMDArray(String objectPath, HDF5DataSetTemplate template)
+    {
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> createRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    baseWriter.createDataSetFromTemplate(objectPath, template, registry);
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(createRunnable);
+    }
+
+    @Override
     public HDF5DataSet createMDArrayAndOpen(final String objectPath, final long[] dimensions,
             final int[] blockDimensions, final HDF5IntStorageFeatures features)
     {
@@ -785,6 +822,35 @@ class HDF5ShortWriter extends HDF5ShortReader implements IHDF5ShortWriter
                 }
             };
         return baseWriter.runner.call(createRunnable);
+    }
+
+    @Override
+    public HDF5DataSet createMDArrayAndOpen(String objectPath, HDF5DataSetTemplate template)
+    {
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<HDF5DataSet> createRunnable = new ICallableWithCleanUp<HDF5DataSet>()
+            {
+                @Override
+                public HDF5DataSet call(ICleanUpRegistry registry)
+                {
+                    final long dataSetId = baseWriter.createDataSetFromTemplate(objectPath, template, null);
+                    return new HDF5DataSet(baseWriter, objectPath, dataSetId, template.getDataspaceId(), 
+                            template.getDimensions(), template.getMaxDimensions(), template.getLayout(), false);
+                }
+            };
+        return baseWriter.runner.call(createRunnable);
+    }
+
+    @Override
+    public HDF5DataSetTemplate createMDArrayTemplate(long[] dimensions, int[] blockDimensions, 
+            HDF5IntStorageFeatures features)
+    {
+        assert dimensions != null;
+        assert blockDimensions != null;;
+
+        baseWriter.checkOpen();
+        return baseWriter.createDataSetTemplate(
+                features.isSigned() ? H5T_STD_I16LE : H5T_STD_U16LE, features, dimensions, MDArray.toLong(blockDimensions), 2);
     }
 
     @Override

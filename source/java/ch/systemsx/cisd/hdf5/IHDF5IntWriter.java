@@ -512,6 +512,18 @@ public interface IHDF5IntWriter extends IHDF5IntReader
             HDF5IntStorageFeatures features);
 
     /**
+     * Writes out a multi-dimensional <code>int</code> array. When creating many data sets with the same
+     * features, this method will be faster than
+     * {@link #writeMDArray(String, MDIntArray, HDF5IntStorageFeatures)}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param template The template to be used to determine the features of the data set.
+     * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
+     */
+    public void writeMDArray(String objectPath, MDIntArray data, HDF5DataSetTemplate template);
+
+    /**
      * Writes out a slice of a multi-dimensional <code>int</code> array. The slice is defined by
      * "bound indices", each of which is fixed to a given value. The <var>data</var> object only  
      * contains the free (i.e. non-fixed) indices.
@@ -622,6 +634,17 @@ public interface IHDF5IntWriter extends IHDF5IntReader
             int[] blockDimensions);
     
     /**
+     * Creates a multi-dimensional <code>int</code> array. When creating many data sets with the same
+     * features, this method will be faster than
+     * {@link #createMDArray(String, HDF5IntStorageFeatures)}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param template The template to be used to determine the features of the data set.
+     * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
+     */
+    public void createMDArray(String objectPath, HDF5DataSetTemplate template);
+
+    /**
      * Creates a multi-dimensional <code>int</code> array.
      * 
      * @param objectPath The name (including path information) of the data set object in the file.
@@ -685,6 +708,36 @@ public interface IHDF5IntWriter extends IHDF5IntReader
     public HDF5DataSet createMDArrayAndOpen(String objectPath, long[] dimensions,
             int[] blockDimensions, HDF5IntStorageFeatures features);
     
+    /**
+     * Creates a multi-dimensional <code>int</code> array and opens it for reading and writing. 
+     * When creating many data sets with the same features, this method will be faster than
+     * {@link #createMDArray(String, HDF5IntStorageFeatures)}.
+     * 
+     * @param objectPath The name (including path information) of the data set object in the file.
+     * @param template The template to be used to determine the features of the data set.
+     * @throws hdf.hdf5lib.exceptions.HDF5LibraryException If a data set with name <code>objectPath</code> already exists.
+     */
+    public HDF5DataSet createMDArrayAndOpen(String objectPath, HDF5DataSetTemplate template);
+
+    /**
+     * Creates a multi-dimensional <code>int</code> array template which can be used e.g. in
+     * {@link #writeArray(String, int[], HDF5DataSetTemplate)} to create data sets.
+     * It is meant to be used when creating many data sets with the same features.
+     * <p>
+     * <i>The template returned by this method must be closed after work, as otherwise resources of
+     * the HDF5 library are leaked.</i>
+     * 
+     * @param dimensions The dimensions of the array. When using extendable data sets ((see
+     *            {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})), then no data set
+     *            smaller than this size can be created, however data sets may be larger.
+     * @param blockSize The size of one block (for block-wise IO). Ignored if no extendable data
+     *            sets are used (see {@link IHDF5WriterConfigurator#dontUseExtendableDataTypes()})
+     *            and <code>features</code> doesn't enforce them.
+     * @param features The storage features of the data set.
+     */
+    public HDF5DataSetTemplate createMDArrayTemplate(long[] dimensions, int[] blockSize,
+            HDF5IntStorageFeatures features);
+
     /**
      * Writes out a block of a multi-dimensional <code>int</code> array.
      * 

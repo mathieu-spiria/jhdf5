@@ -1152,7 +1152,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
             final HDF5DataSetTemplate dataSetTemplate, final ICleanUpRegistry registry)
     {
         return h5.createDataSetSimple(fileId, dataSetTemplate.getStorageDataTypeId(),
-                dataSetTemplate.getDataspaceId(), objectPath, registry);
+                dataSetTemplate.getDataspaceId(), dataSetTemplate.getDataSetCreationPropertyListId(), 
+                objectPath, registry);
     }
 
     boolean keepDataIfExists(final HDF5AbstractStorageFeatures features)
