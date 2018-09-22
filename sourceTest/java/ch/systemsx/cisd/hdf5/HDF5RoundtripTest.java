@@ -172,6 +172,7 @@ public class HDF5RoundtripTest
         test.testBooleanArrayBlock();
         test.testFloatArrayBlockWithPreopenedDataSet();
         test.testFloatArraysFromTemplates();
+        test.testFloatMDArraysDetachedDataSets();
         test.testBitFieldArray();
         test.testBitFieldArrayBlockWise();
         test.testSmallString();
@@ -282,6 +283,7 @@ public class HDF5RoundtripTest
         test.testSetExtentBug();
         test.testMDFloatArrayBlockWise();
         test.testMDFloatArraySliced();
+        test.testMDFloatArraySlicedDetachedDataSet();
         test.testMDFloatArrayBlockWiseWithMemoryOffset();
         test.testDoubleArrayAsByteArray();
         test.testCompressedDataSet();
@@ -1079,6 +1081,55 @@ public class HDF5RoundtripTest
                         { i, -1, -1 });
             assertEquals(Integer.toString(i), new MDFloatArray(timesTwo(floatArrayWritten),
                     sliceShape), arrayRead);
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testMDFloatArraySlicedDetachedDataSet()
+    {
+        final File datasetFile = new File(workingDirectory, "mdArraySlicedDetachedDataSet.h5");
+        datasetFile.delete();
+        assertFalse(datasetFile.exists());
+        datasetFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(datasetFile);
+        final String floatDatasetName = "/floatMatrix";
+        final long[] shape = new long[]
+            { 10, 10, 10 };
+        final int[] sliceShape = new int[]
+            { 10, 10 };
+        final int[] sliceBlockShape = new int[]
+            { 1, 10, 10 };
+        final float[] baseArray = new float[MDArray.getLength(sliceShape)];
+        float[] floatArrayWritten;
+        try (HDF5DataSet ds = writer.float32().createMDArrayAndOpen(floatDatasetName, shape, sliceBlockShape))
+        {
+            for (int i = 0; i < baseArray.length; ++i)
+            {
+                baseArray[i] = i;
+            }
+            floatArrayWritten = baseArray.clone();
+            for (int i = 0; i < 10; ++i)
+            {
+                writer.float32().writeMDArraySlice(ds,
+                        new MDFloatArray(timesTwo(floatArrayWritten), sliceShape), new long[]
+                            { i, -1, -1 });
+            }
+        }
+        writer.close();
+
+        floatArrayWritten = baseArray.clone();
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
+        try (HDF5DataSet ds = reader.object().openDataSet(floatDatasetName))
+        {
+            for (int i = 0; i < 10; ++i)
+            {
+                final MDFloatArray arrayRead =
+                        reader.float32().readMDArraySlice(ds, new long[]
+                            { i, -1, -1 });
+                assertEquals(Integer.toString(i), new MDFloatArray(timesTwo(floatArrayWritten),
+                        sliceShape), arrayRead);
+            }
         }
         reader.close();
     }
@@ -3114,7 +3165,7 @@ public class HDF5RoundtripTest
     @Test
     public void testFloatArrayBlockWithPreopenedDataSet()
     {
-        final File floatArrayFile = new File(workingDirectory, "floatArrayBlock.h5");
+        final File floatArrayFile = new File(workingDirectory, "testFloatArrayBlockWithPreopenedDataSet.h5");
         floatArrayFile.delete();
         assertFalse(floatArrayFile.exists());
         floatArrayFile.deleteOnExit();
@@ -3173,6 +3224,44 @@ public class HDF5RoundtripTest
             fillArray(bx + 1, dataWritten);
             final float[] dataRead = reader.float32().readArray("ds" + bx);
             assertTrue("" + bx, Arrays.equals(dataWritten, dataRead));
+        }
+        reader.close();
+    }
+
+    @Test
+    public void testFloatMDArraysDetachedDataSets()
+    {
+        final File floatArrayFile = new File(workingDirectory, "testFloatMDArraysDetachedDataSets.h5");
+        floatArrayFile.delete();
+        assertFalse(floatArrayFile.exists());
+        floatArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(floatArrayFile);
+        final MDFloatArray dataWritten = new MDFloatArray(new int[] { 5, 3 });
+        try (HDF5DataSet ds = writer.float32().createMDArrayAndOpen("ds", new int[] { 5, 3 }, HDF5FloatStorageFeatures.FLOAT_CHUNKED))
+        {
+            for (int i = 0; i < 4; ++i)
+            {
+                for (int j = 0; j < 4; ++j)
+                {
+                    fillArray(i + j + 17, dataWritten.getAsFlatArray());
+                    writer.float32().writeMDArrayBlock(ds, dataWritten, new long[] { i, j });
+                }
+            }
+        }
+        writer.close();
+
+        final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(floatArrayFile);
+        try (HDF5DataSet ds = reader.object().openDataSet("ds"))
+        {
+            for (int i = 0; i < 4; ++i)
+            {
+                for (int j = 0; j < 4; ++j)
+                {
+                    fillArray(i + j + 17, dataWritten.getAsFlatArray());
+                    final MDFloatArray dataRead = reader.float32().readMDArrayBlock(ds, new int[] { 5, 3 }, new long[] {i, j});
+                    assertEquals(i + "," + j, dataWritten, dataRead);
+                }
+            }
         }
         reader.close();
     }

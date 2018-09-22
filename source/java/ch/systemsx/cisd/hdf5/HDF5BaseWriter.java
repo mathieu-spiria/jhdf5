@@ -1086,8 +1086,8 @@ final class HDF5BaseWriter extends HDF5BaseReader
                             final HDF5StorageLayout layout =
                                     determineLayout(storageDataTypeId, dimensions, definitiveChunkSizeOrNull,
                                             features.tryGetProposedLayout());
-                            final HDF5DataSet dataSet = h5.createDataSetDetached(fileId, dimensions, definitiveChunkSizeOrNull, storageDataTypeId,
-                                            features, objectPath, layout, registry);
+                            final HDF5DataSet dataSet = h5.createDataSetDetached(HDF5BaseWriter.this, dimensions, 
+                                            definitiveChunkSizeOrNull, storageDataTypeId, features, objectPath, layout, registry);
                             fileRegistry.registerCleanUp(new Runnable()
                             {
                                 @Override

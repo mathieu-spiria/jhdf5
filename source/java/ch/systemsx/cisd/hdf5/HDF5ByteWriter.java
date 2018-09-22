@@ -325,7 +325,7 @@ class HDF5ByteWriter extends HDF5ByteReader implements IHDF5ByteWriter
 
         baseWriter.checkOpen();
         final long dataSetId = baseWriter.createDataSetFromTemplate(objectPath, template, null);
-        return new HDF5DataSet(baseWriter.h5, objectPath, dataSetId, template.getDataspaceId(), 
+        return new HDF5DataSet(baseWriter, objectPath, dataSetId, template.getDataspaceId(), 
         		template.getDimensions(), template.getMaxDimensions(), template.getLayout(), false);
     }
     

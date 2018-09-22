@@ -17,7 +17,13 @@
 package ch.systemsx.cisd.hdf5;
 
 import static hdf.hdf5lib.H5.H5Dclose;
+import static hdf.hdf5lib.H5.H5Dget_type;
 import static hdf.hdf5lib.H5.H5Sclose;
+import static hdf.hdf5lib.H5.H5Scopy;
+import static hdf.hdf5lib.H5.H5Screate_simple;
+import static hdf.hdf5lib.H5.H5Tclose;
+
+import java.util.Arrays;
 
 /**
  * An object to represent an HDF5 data set.
@@ -48,33 +54,51 @@ import static hdf.hdf5lib.H5.H5Sclose;
  */
 public class HDF5DataSet implements AutoCloseable
 {
+    private final HDF5BaseReader baseReader;
+    
     private final HDF5 h5;
     
     private final String datasetPath;
 
     private final HDF5StorageLayout layout;
 
-    private final long dataspaceId;
+    private long dataspaceId;
     
-    private final boolean closeDataSpaceId;
-
     private long[] maxDimensions;
 
     private long[] dimensions;
 
     private long datasetId;
+    
+    private long[] memoryBlockDimensions;
+    
+    private long memorySpaceId;
+    
+    private long dataTypeId;
+    
+    private int fullRank;
 
-    HDF5DataSet(HDF5 h5, String datasetPath, long datasetId, long dataspaceId, long[] dimensions,
-            long[] maxDimensionsOrNull, HDF5StorageLayout layout, boolean closeDataSpaceId)
+    HDF5DataSet(HDF5BaseReader baseReader, String datasetPath, long datasetId, long dataspaceId, long[] dimensions,
+            long[] maxDimensionsOrNull, HDF5StorageLayout layout, boolean ownDataSpaceId)
     {
-        this.h5 = h5;
+        this.baseReader = baseReader;
+        this.h5 = baseReader.h5;
         this.datasetPath = datasetPath;
         this.datasetId = datasetId;
-        this.dataspaceId = dataspaceId;
-        this.closeDataSpaceId = closeDataSpaceId;
+        if (ownDataSpaceId)
+        {
+            this.dataspaceId = dataspaceId;
+        } else
+        {
+            this.dataspaceId = H5Scopy(dataspaceId);
+        }
         this.maxDimensions = maxDimensionsOrNull;
         this.dimensions = dimensions;
         this.layout = layout;
+        this.memoryBlockDimensions = null;
+        this.memorySpaceId = -1;
+        this.dataTypeId = -1;
+        this.fullRank = -1;
     }
 
     /**
@@ -93,6 +117,17 @@ public class HDF5DataSet implements AutoCloseable
     long getDataspaceId()
     {
         return dataspaceId;
+    }
+    
+    long getMemorySpaceId(long[] memoryBlockDimensions)
+    {
+        if (false == Arrays.equals(this.memoryBlockDimensions, memoryBlockDimensions))
+        {
+            closeMemorySpaceId();
+            this.memoryBlockDimensions = memoryBlockDimensions;
+            this.memorySpaceId = H5Screate_simple(memoryBlockDimensions.length, memoryBlockDimensions, null);
+        }
+        return memorySpaceId;
     }
 
     long[] getDimensions()
@@ -118,18 +153,80 @@ public class HDF5DataSet implements AutoCloseable
     {
         return layout;
     }
+    
+    int getFullRank()
+    {
+        if (fullRank == -1)
+        {
+            this.fullRank = baseReader.getRank(datasetPath);
+        }
+        return fullRank;
+    }
+
+    void extend(long[] requiredDimensions)
+    {
+        final long[] newDimensions = h5.computeNewDimensions(dimensions, requiredDimensions, false);
+        if (false == Arrays.equals(dimensions, newDimensions))
+        {
+            closeDataSpaceId();
+            h5.extendDataSet(this, newDimensions, false);
+            this.dimensions = newDimensions;
+            this.dataspaceId = h5.getDataSpaceForDataSet(datasetId, null);
+        }
+    }
+
+    long getDataTypeId()
+    {
+        if (dataTypeId == -1)
+        {
+            this.dataTypeId = H5Dget_type(datasetId);
+        }
+        return dataTypeId;
+    }
 
     @Override
     public void close()
     {
+        closeDataSetId();
+        closeDataSpaceId();
+        closeMemorySpaceId();
+        closeDataTypeId();
+    }
+
+    private void closeDataTypeId()
+    {
+        if (dataTypeId > -1)
+        {
+            H5Tclose(dataTypeId);
+            dataTypeId = -1;
+        }
+    }
+
+    private void closeDataSetId()
+    {
         if (datasetId > 0)
         {
-            if (closeDataSpaceId)
-            {
-                H5Sclose(dataspaceId);
-            }
             H5Dclose(datasetId);
             datasetId = -1;
+        }
+    }
+
+    private void closeDataSpaceId()
+    {
+        if (dataspaceId > -1)
+        {
+            H5Sclose(dataspaceId);
+            dataspaceId = -1;
+        }
+    }
+    
+    private void closeMemorySpaceId()
+    {
+        if (memorySpaceId > 0)
+        {
+            H5Sclose(memorySpaceId);
+            memoryBlockDimensions = null;
+            memorySpaceId = -1;
         }
     }
 

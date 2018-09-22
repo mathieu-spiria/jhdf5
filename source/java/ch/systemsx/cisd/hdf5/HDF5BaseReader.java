@@ -313,8 +313,8 @@ class HDF5BaseReader
                             final long dataSpaceId = h5.getDataSpaceForDataSet(dataSetId, null);
                             final long[] dimensions = h5.getDataSpaceDimensions(dataSpaceId);
                             final HDF5DataSet dataSet =
-                                    new HDF5DataSet(h5, objectPath, dataSetId, dataSpaceId, dimensions, 
-                                            null, layout, true);
+                                    new HDF5DataSet(HDF5BaseReader.this, objectPath, dataSetId, dataSpaceId, 
+                                            dimensions, null, layout, true);
                             fileRegistry.registerCleanUp(new Runnable()
                                 {
                                     @Override
@@ -581,7 +581,7 @@ class HDF5BaseReader
                 { effectiveBlockSize };
             h5.setHyperslabBlock(dataSpaceId, new long[]
                 { offset }, blockShape);
-            memorySpaceId = h5.createSimpleDataSpace(blockShape, registry);
+            memorySpaceId = dataset.getMemorySpaceId(blockShape);
             h5.setHyperslabBlock(memorySpaceId, new long[]
                 { 0 }, blockShape);
         } else
@@ -715,6 +715,51 @@ class HDF5BaseReader
             memorySpaceId = H5S_ALL;
             dataSpaceId = H5S_ALL;
             effectiveBlockDimensions = h5.getDataDimensions(dataSetId, registry);
+        }
+        return new DataSpaceParameters(memorySpaceId, dataSpaceId,
+                MDAbstractArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
+    }
+
+    /**
+     * Returns the {@link DataSpaceParameters} for a multi-dimensional block of the given
+     * <var>dataSet</var>.
+     */
+    DataSpaceParameters getSpaceParameters(final HDF5DataSet dataSet, final long[] offset,
+            final int[] blockDimensionsOrNull, ICleanUpRegistry registry)
+    {
+        final long memorySpaceId;
+        final long dataSpaceId;
+        final long[] effectiveBlockDimensions;
+        if (blockDimensionsOrNull != null)
+        {
+            assert offset != null;
+            assert blockDimensionsOrNull.length == offset.length;
+
+            dataSpaceId = dataSet.getDataspaceId();
+            final long[] dimensions = dataSet.getDimensions();
+            if (dimensions.length != blockDimensionsOrNull.length)
+            {
+                throw new HDF5SpaceRankMismatch(blockDimensionsOrNull.length, dimensions.length);
+            }
+            effectiveBlockDimensions = new long[blockDimensionsOrNull.length];
+            for (int i = 0; i < offset.length; ++i)
+            {
+                final long maxBlockSize = dimensions[i] - offset[i];
+                if (maxBlockSize <= 0)
+                {
+                    throw new HDF5JavaException("Offset " + offset[i] + " >= Size " + dimensions[i]);
+                }
+                effectiveBlockDimensions[i] =
+                        (blockDimensionsOrNull[i] < 0) ? (int) maxBlockSize : Math.min(
+                                blockDimensionsOrNull[i], maxBlockSize);
+            }
+            h5.setHyperslabBlock(dataSpaceId, offset, effectiveBlockDimensions);
+            memorySpaceId = dataSet.getMemorySpaceId(effectiveBlockDimensions);
+        } else
+        {
+            memorySpaceId = H5S_ALL;
+            dataSpaceId = H5S_ALL;
+            effectiveBlockDimensions = dataSet.getDimensions();
         }
         return new DataSpaceParameters(memorySpaceId, dataSpaceId,
                 MDAbstractArray.getLength(effectiveBlockDimensions), effectiveBlockDimensions);
@@ -992,7 +1037,6 @@ class HDF5BaseReader
         final HDF5DataSetInformation info =
                 getDataSetInformation(dataSetPath, DataTypeInfoOptions.MINIMAL, true);
         return info.getRank() + info.getTypeInformation().getRank();
-        
     }
     
     /**

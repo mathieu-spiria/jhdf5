@@ -684,7 +684,7 @@ class HDF5
         return dataSetId;
     }
 
-    public HDF5DataSet createDataSetDetached(long fileId, long[] dimensions, long[] chunkSizeOrNull, long dataTypeId,
+    public HDF5DataSet createDataSetDetached(HDF5BaseWriter baseWriter, long[] dimensions, long[] chunkSizeOrNull, long dataTypeId,
             HDF5AbstractStorageFeatures compression, String dataSetName, HDF5StorageLayout layout,
             ICleanUpRegistry registry)
     {
@@ -728,10 +728,10 @@ class HDF5
             dataSetCreationPropertyListId = dataSetCreationPropertyListFillTimeAlloc;
         }
         final long dataSetId =
-                H5Dcreate(fileId, dataSetName, dataTypeId, dataSpaceId,
+                H5Dcreate(baseWriter.fileId, dataSetName, dataTypeId, dataSpaceId,
                         lcplCreateIntermediateGroups, dataSetCreationPropertyListId, H5P_DEFAULT);
 
-        return new HDF5DataSet(this, dataSetName, dataSetId, dataSpaceId, dimensions, 
+        return new HDF5DataSet(baseWriter, dataSetName, dataSetId, dataSpaceId, dimensions, 
                     maxDimensions, layout, true);
     }
 
@@ -951,9 +951,30 @@ class HDF5
         return autoDereference && (path.charAt(0) == '\0');
     }
 
+    public long openAndExtendDataSet(long fileId, String path, FileFormatVersionBounds fileFormat,
+            long[] dimensions, boolean overwriteMode, ICleanUpRegistry registry)
+            throws HDF5JavaException
+    {
+        checkMaxLength(path);
+        final long dataSetId =
+                isReference(path) ? H5Rdereference(fileId, H5P_DEFAULT, H5R_OBJECT, HDFNativeData.longToByte(Long.parseLong(path.substring(1))))
+                        : H5Dopen(fileId, path, H5P_DEFAULT);
+        registry.registerCleanUp(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    H5Dclose(dataSetId);
+                }
+            });
+        extendDataSet(dataSetId, null, null, dimensions, null, overwriteMode, registry);
+        return dataSetId;
+    }
+
     /**
      * @param storageDataTypeId The storage type id, if in overwrite mode, or else -1.
      */
+    @Deprecated
     public long openAndExtendDataSet(long fileId, String path, FileFormatVersionBounds fileFormat,
             long[] dimensions, long storageDataTypeId, ICleanUpRegistry registry)
             throws HDF5JavaException
@@ -970,15 +991,22 @@ class HDF5
                     H5Dclose(dataSetId);
                 }
             });
-        extendDataSet(fileId, dataSetId, null, null, dimensions, null, storageDataTypeId, registry);
+        extendDataSet(dataSetId, null, null, dimensions, null, (storageDataTypeId > -1), registry);
         return dataSetId;
     }
 
+    @Deprecated
     public boolean extendDataSet(long fileId, long dataSetId, HDF5StorageLayout layoutOrNull,
             long[] oldDimensionsOrNull, long[] newDimensions, long[] maxDimensionsOrNull,
             long storageDataTypeId, ICleanUpRegistry registry) throws HDF5JavaException
     {
-        final boolean overwriteMode = (storageDataTypeId > -1);
+        return extendDataSet(dataSetId, layoutOrNull, oldDimensionsOrNull, newDimensions, maxDimensionsOrNull, (storageDataTypeId > -1), registry);
+    }
+    
+    public boolean extendDataSet(long dataSetId, HDF5StorageLayout layoutOrNull,
+            long[] oldDimensionsOrNull, long[] newDimensions, long[] maxDimensionsOrNull,
+            boolean overwriteMode, ICleanUpRegistry registry) throws HDF5JavaException
+    {
         final long[] oldDimensions =
                 (oldDimensionsOrNull != null) ? oldDimensionsOrNull
                         : getDataDimensions(dataSetId,
@@ -1019,7 +1047,48 @@ class HDF5
         return false;
     }
 
-    private long[] computeNewDimensions(long[] oldDimensions, long[] newDimensions,
+    public boolean extendDataSet(HDF5DataSet dataSet,long[] newDimensions, 
+            boolean overwriteMode) throws HDF5JavaException
+    {
+        final long dataSetId = dataSet.getDatasetId();
+        final long[] oldDimensions = dataSet.getDimensions();
+        if (Arrays.equals(oldDimensions, newDimensions) == false)
+        {
+            final HDF5StorageLayout layout = dataSet.getLayout();
+            final long[] maxDimensions = dataSet.getMaxDimensions();
+            if (layout == HDF5StorageLayout.CHUNKED)
+            {
+                // Safety check. JHDF5 creates CHUNKED data sets always with unlimited max
+                // dimensions but we may have to work on a file we haven't created.
+                if (areDimensionsInBounds(dataSetId, newDimensions, maxDimensions, null))
+                {
+                    setDataSetExtentChunked(dataSetId,
+                            computeNewDimensions(oldDimensions, newDimensions, overwriteMode));
+                    return true;
+                } else
+                {
+                    throw new HDF5JavaException("New data set dimensions are out of bounds.");
+                }
+            } else if (overwriteMode)
+            {
+                throw new HDF5JavaException("Cannot change dimensions on non-extendable data set.");
+            } else
+            {
+                long dataTypeId = dataSet.getDataTypeId();
+                if (getClassType(dataTypeId) == H5T_ARRAY)
+                {
+                    throw new HDF5JavaException("Cannot partially overwrite array type.");
+                }
+                if (HDF5Utils.isInBounds(oldDimensions, newDimensions) == false)
+                {
+                    throw new HDF5JavaException("New data set dimensions are out of bounds.");
+                }
+            }
+        }
+        return false;
+    }
+
+    long[] computeNewDimensions(long[] oldDimensions, long[] newDimensions,
             boolean cutDownExtendIfNecessary)
     {
         if (cutDownExtendIfNecessary)

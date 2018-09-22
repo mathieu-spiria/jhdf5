@@ -324,7 +324,7 @@ class HDF5DoubleWriter extends HDF5DoubleReader implements IHDF5DoubleWriter
 
         baseWriter.checkOpen();
         final long dataSetId = baseWriter.createDataSetFromTemplate(objectPath, template, null);
-        return new HDF5DataSet(baseWriter.h5, objectPath, dataSetId, template.getDataspaceId(), 
+        return new HDF5DataSet(baseWriter, objectPath, dataSetId, template.getDataspaceId(), 
         		template.getDimensions(), template.getMaxDimensions(), template.getLayout(), false);
     }
     
