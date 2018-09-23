@@ -25,6 +25,8 @@ import static hdf.hdf5lib.H5.H5Tclose;
 
 import java.util.Arrays;
 
+import hdf.hdf5lib.H5;
+
 /**
  * An object to represent an HDF5 data set.
  * <p>
@@ -116,6 +118,7 @@ public class HDF5DataSet implements AutoCloseable
 
     long getDataspaceId()
     {
+        H5.H5Sselect_all(dataspaceId);
         return dataspaceId;
     }
     
@@ -127,6 +130,7 @@ public class HDF5DataSet implements AutoCloseable
             this.memoryBlockDimensions = memoryBlockDimensions;
             this.memorySpaceId = H5Screate_simple(memoryBlockDimensions.length, memoryBlockDimensions, null);
         }
+        H5.H5Sselect_all(memorySpaceId);
         return memorySpaceId;
     }
 

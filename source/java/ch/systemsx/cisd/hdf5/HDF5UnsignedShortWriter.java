@@ -265,12 +265,12 @@ class HDF5UnsignedShortWriter extends HDF5UnsignedShortReader implements IHDF5Sh
                 {
                     if (features.requiresChunking())
                     {
-                        baseWriter.createDataSet(objectPath, H5T_STD_U16LE, 
+                        baseWriter.createDataSet(objectPath, H5T_STD_U16LE,
                             features, new long[] { 0 }, new long[] { size }, 2, registry);
 
                     } else
                     {
-                        baseWriter.createDataSet(objectPath, H5T_STD_U16LE, 
+                        baseWriter.createDataSet(objectPath, H5T_STD_U16LE,
                             features, new long[] { size }, null, 2, registry);
                     }
                     return null; // Nothing to return.
@@ -307,13 +307,13 @@ class HDF5UnsignedShortWriter extends HDF5UnsignedShortReader implements IHDF5Sh
         baseWriter.checkOpen();
         if (features.requiresChunking())
         {
-            return baseWriter.createDataSet(objectPath, H5T_NATIVE_UINT16, 
-                features, new long[] { 0 }, new long[] { size }, 4);
+            return baseWriter.createDataSet(objectPath, H5T_STD_U16LE,
+                features, new long[] { 0 }, new long[] { size }, 2);
 
         } else
         {
-            return baseWriter.createDataSet(objectPath, H5T_NATIVE_UINT16, 
-                features, new long[] { size }, null, 4);
+            return baseWriter.createDataSet(objectPath, H5T_STD_U16LE,
+                features, new long[] { size }, null, 2);
         }
     }
 
@@ -352,20 +352,6 @@ class HDF5UnsignedShortWriter extends HDF5UnsignedShortReader implements IHDF5Sh
     }
 
     @Override
-    public HDF5DataSetTemplate createArrayTemplate(final long size, final int blockSize,
-            final HDF5IntStorageFeatures features)
-    {
-        assert size >= 0;
-        assert blockSize >= 0 && (blockSize <= size || size == 0);
-
-        baseWriter.checkOpen();
-        return baseWriter.createDataSetTemplate(
-                H5T_STD_U16LE, features, new long[]
-                    { size }, new long[]
-                    { blockSize }, 2);
-    }
-
-    @Override
     public HDF5DataSet createArrayAndOpen(final String objectPath, final long size, final int blockSize,
             final HDF5IntStorageFeatures features)
     {
@@ -377,6 +363,20 @@ class HDF5UnsignedShortWriter extends HDF5UnsignedShortReader implements IHDF5Sh
         return baseWriter.createDataSet(objectPath, H5T_STD_U16LE, 
                 features, new long[] { size }, new long[]
                 { blockSize }, 2);
+    }
+
+    @Override
+    public HDF5DataSetTemplate createArrayTemplate(final long size, final int blockSize,
+            final HDF5IntStorageFeatures features)
+    {
+        assert size >= 0;
+        assert blockSize >= 0 && (blockSize <= size || size == 0);
+
+        baseWriter.checkOpen();
+        return baseWriter.createDataSetTemplate(
+                H5T_STD_U16LE, features, new long[]
+                    { size }, new long[]
+                    { blockSize }, 2);
     }
 
     @Override
@@ -1049,6 +1049,43 @@ class HDF5UnsignedShortWriter extends HDF5UnsignedShortReader implements IHDF5Sh
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
                     final long memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
+                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
+                    H5Dwrite(dataSetId, H5T_NATIVE_UINT16, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    @Override
+    public void writeMDArrayBlockWithOffset(final HDF5DataSet dataSet, final MDShortArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
+    {
+        assert dataSet != null;
+        assert data != null;
+        assert offset != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    assert memoryDimensions.length == offset.length;
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    assert longBlockDimensions.length == offset.length;
+                    final long[] dataSetDimensions = new long[blockDimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        dataSetDimensions[i] = offset[i] + blockDimensions[i];
+                    }
+                    final long dataSetId = dataSet.getDatasetId();
+                    final long dataSpaceId = dataSet.getDataspaceId(); 
+                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final long memorySpaceId = dataSet.getMemorySpaceId(memoryDimensions);
                     baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
                             longBlockDimensions);
                     H5Dwrite(dataSetId, H5T_NATIVE_UINT16, memorySpaceId, dataSpaceId,

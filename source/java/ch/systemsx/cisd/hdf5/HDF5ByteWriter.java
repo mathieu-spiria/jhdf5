@@ -266,12 +266,12 @@ class HDF5ByteWriter extends HDF5ByteReader implements IHDF5ByteWriter
                 {
                     if (features.requiresChunking())
                     {
-                        baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE, 
+                        baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE,
                             features, new long[] { 0 }, new long[] { size }, 1, registry);
 
                     } else
                     {
-                        baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE, 
+                        baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE,
                             features, new long[] { size }, null, 1, registry);
                     }
                     return null; // Nothing to return.
@@ -308,12 +308,12 @@ class HDF5ByteWriter extends HDF5ByteReader implements IHDF5ByteWriter
         baseWriter.checkOpen();
         if (features.requiresChunking())
         {
-            return baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE, 
+            return baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE,
                 features, new long[] { 0 }, new long[] { size }, 1);
 
         } else
         {
-            return baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE, 
+            return baseWriter.createDataSet(objectPath, features.isSigned() ? H5T_STD_I8LE : H5T_STD_U8LE,
                 features, new long[] { size }, null, 1);
         }
     }
@@ -1050,6 +1050,43 @@ class HDF5ByteWriter extends HDF5ByteReader implements IHDF5ByteWriter
                     baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
                     final long memorySpaceId = 
                             baseWriter.h5.createSimpleDataSpace(memoryDimensions, registry);
+                    baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
+                            longBlockDimensions);
+                    H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId,
+                            H5P_DEFAULT, data.getAsFlatArray());
+                    return null; // Nothing to return.
+                }
+            };
+        baseWriter.runner.call(writeRunnable);
+    }
+
+    @Override
+    public void writeMDArrayBlockWithOffset(final HDF5DataSet dataSet, final MDByteArray data,
+            final int[] blockDimensions, final long[] offset, final int[] memoryOffset)
+    {
+        assert dataSet != null;
+        assert data != null;
+        assert offset != null;
+
+        baseWriter.checkOpen();
+        final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
+            {
+                @Override
+                public Void call(ICleanUpRegistry registry)
+                {
+                    final long[] memoryDimensions = data.longDimensions();
+                    assert memoryDimensions.length == offset.length;
+                    final long[] longBlockDimensions = MDArray.toLong(blockDimensions);
+                    assert longBlockDimensions.length == offset.length;
+                    final long[] dataSetDimensions = new long[blockDimensions.length];
+                    for (int i = 0; i < offset.length; ++i)
+                    {
+                        dataSetDimensions[i] = offset[i] + blockDimensions[i];
+                    }
+                    final long dataSetId = dataSet.getDatasetId();
+                    final long dataSpaceId = dataSet.getDataspaceId(); 
+                    baseWriter.h5.setHyperslabBlock(dataSpaceId, offset, longBlockDimensions);
+                    final long memorySpaceId = dataSet.getMemorySpaceId(memoryDimensions);
                     baseWriter.h5.setHyperslabBlock(memorySpaceId, MDArray.toLong(memoryOffset),
                             longBlockDimensions);
                     H5Dwrite(dataSetId, H5T_NATIVE_INT8, memorySpaceId, dataSpaceId,

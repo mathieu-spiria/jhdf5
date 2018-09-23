@@ -1171,21 +1171,27 @@ public class HDF5RoundtripTest
         final String floatDatasetName = "/floatMatrix";
         final long[] shape = new long[]
             { 10, 10 };
-        writer.float32().createMDArray(floatDatasetName, shape, MDArray.toInt(shape));
-        final float[] flatArray = new float[MDArray.getLength(shape)];
-        for (int i = 0; i < flatArray.length; ++i)
+        try (HDF5DataSet fds = writer.float32().createMDArrayAndOpen(floatDatasetName, shape, MDArray.toInt(shape)))
         {
-            flatArray[i] = i;
+            final float[] flatArray = new float[MDArray.getLength(shape)];
+            for (int i = 0; i < flatArray.length; ++i)
+            {
+                flatArray[i] = i;
+            }
+            final MDFloatArray arrayBlockWritten = new MDFloatArray(flatArray, shape);
+            writer.float32().writeMDArrayBlockWithOffset(floatDatasetName, arrayBlockWritten, new int[]
+                { 2, 2 }, new long[]
+                { 0, 0 }, new int[]
+                { 1, 3 });
+            writer.float32().writeMDArrayBlockWithOffset(fds, arrayBlockWritten, new int[]
+                { 2, 2 }, new long[]
+                { 2, 2 }, new int[]
+                { 5, 1 });
+            writer.float32().writeMDArrayBlockWithOffset(fds, arrayBlockWritten, new int[]
+                    { 2, 2 }, new long[]
+                    { 4, 4 }, new int[]
+                    { 2, 7 });
         }
-        final MDFloatArray arrayBlockWritten = new MDFloatArray(flatArray, shape);
-        writer.float32().writeMDArrayBlockWithOffset(floatDatasetName, arrayBlockWritten, new int[]
-            { 2, 2 }, new long[]
-            { 0, 0 }, new int[]
-            { 1, 3 });
-        writer.float32().writeMDArrayBlockWithOffset(floatDatasetName, arrayBlockWritten, new int[]
-            { 2, 2 }, new long[]
-            { 2, 2 }, new int[]
-            { 5, 1 });
         writer.close();
         final IHDF5Reader reader = HDF5FactoryProvider.get().openForReading(datasetFile);
         final float[][] matrixRead = reader.float32().readMatrix(floatDatasetName);
@@ -1198,11 +1204,15 @@ public class HDF5RoundtripTest
         assertEquals(52f, matrixRead[2][3]);
         assertEquals(61f, matrixRead[3][2]);
         assertEquals(62f, matrixRead[3][3]);
+        assertEquals(27f, matrixRead[4][4]);
+        assertEquals(28f, matrixRead[4][5]);
+        assertEquals(37f, matrixRead[5][4]);
+        assertEquals(38f, matrixRead[5][5]);
         for (int i = 0; i < 10; ++i)
         {
             for (int j = 0; j < 10; ++j)
             {
-                if ((i < 2 && j < 2) || (i > 1 && i < 4 && j > 1 && j < 4))
+                if ((i < 2 && j < 2) || (i > 1 && i < 4 && j > 1 && j < 4) || (i > 3 && i < 6 && j > 3 && j < 6))
                 {
                     continue;
                 }

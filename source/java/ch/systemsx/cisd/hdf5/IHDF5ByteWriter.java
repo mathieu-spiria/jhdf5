@@ -865,4 +865,16 @@ public interface IHDF5ByteWriter extends IHDF5ByteReader
      */
     public void writeMDArrayBlockWithOffset(String objectPath, MDByteArray data,
             int[] blockDimensions, long[] offset, int[] memoryOffset);
+
+   /**
+     * Writes out a block of a multi-dimensional <code>byte</code> array.
+     * 
+     * @param dataSet The data set to write to.
+     * @param data The data to write. Must not be <code>null</code>.
+     * @param blockDimensions The dimensions of the block to write to the data set.
+     * @param offset The offset of the block in the data set to start writing to in each dimension.
+     * @param memoryOffset The offset of the block in the <var>data</var> array.
+     */
+    public void writeMDArrayBlockWithOffset(HDF5DataSet dataSet, MDByteArray data,
+            int[] blockDimensions, long[] offset, int[] memoryOffset);
 }
