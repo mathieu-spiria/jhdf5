@@ -436,6 +436,7 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
         assert data != null;
 
         baseWriter.checkOpen();
+        baseWriter.checkDimensions(dataSet, new long[] { dataSize }, new long[] { offset });
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
                 @Override
@@ -957,6 +958,7 @@ class HDF5LongWriter extends HDF5LongReader implements IHDF5LongWriter
         assert offset != null;
 
         baseWriter.checkOpen();
+        baseWriter.checkDimensions(dataSet, MDArray.toLong(data.dimensions()), offset);
         final ICallableWithCleanUp<Void> writeRunnable = new ICallableWithCleanUp<Void>()
             {
                 @Override

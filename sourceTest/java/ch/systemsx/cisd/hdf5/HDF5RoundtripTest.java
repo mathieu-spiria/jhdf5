@@ -73,10 +73,12 @@ import ch.systemsx.cisd.base.mdarray.MDDoubleArray;
 import ch.systemsx.cisd.base.mdarray.MDFloatArray;
 import ch.systemsx.cisd.base.mdarray.MDIntArray;
 import ch.systemsx.cisd.base.mdarray.MDLongArray;
+import ch.systemsx.cisd.base.mdarray.MDShortArray;
 import ch.systemsx.cisd.base.utilities.OSUtilities;
 import ch.systemsx.cisd.hdf5.HDF5CompoundMappingHints.EnumReturnType;
 import ch.systemsx.cisd.hdf5.HDF5DataTypeInformation.DataTypeInfoOptions;
 import ch.systemsx.cisd.hdf5.IHDF5WriterConfigurator.SyncMode;
+import ch.systemsx.cisd.hdf5.exceptions.HDF5SpaceRankMismatch;
 import ch.systemsx.cisd.hdf5.hdf5lib.HDFHelper;
 import hdf.hdf5lib.H5;
 import hdf.hdf5lib.HDF5Constants;
@@ -172,6 +174,8 @@ public class HDF5RoundtripTest
         test.testBooleanArrayBlock();
         test.testFloatArrayBlockWithPreopenedDataSet();
         test.testFloatArraysFromTemplates();
+        test.testMDShortArrayRankMismatch();
+        test.testMDLongArrayArrayIndexOutOfBounds();
         test.testFloatMDArraysDetachedDataSets();
         test.testFloatMDArraysFromTemplates();
         test.testBitFieldArray();
@@ -3163,6 +3167,22 @@ public class HDF5RoundtripTest
         }
     }
 
+    private static void fillArray(short mult, short[] data)
+    {
+        for (short i = 0; i < data.length; ++i)
+        {
+            data[i] = (short) (mult * i);
+        }
+    }
+
+    private static void fillArray(long mult, long[] data)
+    {
+        for (int i = 0; i < data.length; ++i)
+        {
+            data[i] = mult * i;
+        }
+    }
+
     @Test
     public void testFloatArrayBlockWithPreopenedDataSet()
     {
@@ -3223,12 +3243,53 @@ public class HDF5RoundtripTest
         for (long bx = 0; bx < 8; ++bx)
         {
             fillArray(bx + 1, dataWritten);
-            final float[] dataRead = reader.float32().readArray("ds" + bx);
-            assertTrue("" + bx, Arrays.equals(dataWritten, dataRead));
+            final double[] dataRead = reader.float64().readArray("ds" + bx);
+            final double[] dataWrittenDouble = new double[dataWritten.length];
+            for (int i = 0; i < dataWritten.length; ++i)
+            {
+                dataWrittenDouble[i] = dataWritten[i];
+            }
+            assertTrue("" + bx, Arrays.equals(dataWrittenDouble, dataRead));
         }
         reader.close();
     }
 
+    @Test(expectedExceptions = { HDF5SpaceRankMismatch.class })
+    public void testMDShortArrayRankMismatch()
+    {
+        final File shortArrayFile = new File(workingDirectory, "MDShortArrayRankMismatch.h5");
+        shortArrayFile.delete();
+        assertFalse(shortArrayFile.exists());
+        shortArrayFile.deleteOnExit();
+        final IHDF5Writer writer = HDF5FactoryProvider.get().open(shortArrayFile);
+        final MDShortArray dataWritten = new MDShortArray(new int[] { 2, 2, 2 });
+        try (final HDF5DataSet ds = writer.uint16().createMDArrayAndOpen("ds", new int[] { 4, 2 })) 
+        {
+            fillArray((short) 7, dataWritten.getAsFlatArray());
+            // Will fail with an HDF5SpaceRankException as the data set is of rank 3, but the data are of rank 2.
+            writer.uint16().writeMDArrayBlock(ds, dataWritten, dataWritten.longDimensions());
+        }
+    }
+
+    @Test(expectedExceptions = { ArrayIndexOutOfBoundsException.class })
+    public void testMDLongArrayArrayIndexOutOfBounds()
+    {
+        final File longArrayFile = new File(workingDirectory, "MDLongArrayArrayIndexOutOfBounds.h5");
+        longArrayFile.delete();
+        assertFalse(longArrayFile.exists());
+        longArrayFile.deleteOnExit();
+        try (final IHDF5Writer writer = HDF5FactoryProvider.get().open(longArrayFile))
+        {
+            final MDLongArray dataWritten = new MDLongArray(new int[] { 2, 2, 2 });
+            try (final HDF5DataSet ds = writer.int64().createMDArrayAndOpen("ds", new int[] { 2, 2, 2 }, HDF5IntStorageFeatures.INT_COMPACT)) 
+            {
+                fillArray(7, dataWritten.getAsFlatArray());
+                // Will fail with an ArrayIndexOutOfBoundsException as the data are larger than the data set.
+                writer.int64().writeMDArrayBlock(ds, dataWritten, new long[] { 0, 1, 0 });
+            }
+        }
+    }
+    
     @Test
     public void testFloatMDArraysFromTemplates()
     {

@@ -246,6 +246,31 @@ class HDF5BaseReader
         }
     }
 
+    void checkDimensions(HDF5DataSet dataSet, final long[] dataDimensions, final long[] offset)
+    {
+        assert dataSet != null;
+        assert dataDimensions != null;
+
+        if (dataSet.getDimensions().length != dataDimensions.length)
+        {
+            throw new HDF5SpaceRankMismatch(dataSet.getDimensions().length, dataDimensions.length);
+        }
+        if (offset.length != dataDimensions.length)
+        {
+            throw new HDF5SpaceRankMismatch(dataSet.getDimensions().length, offset.length);
+        }
+        final long[] maxDimensions = dataSet.getMaxDimensions();
+        for (int i = 0; i < maxDimensions.length; ++i)
+        {
+            final long max = maxDimensions[i];
+            if (max >= 0 && offset[i] + dataDimensions[i] > max)
+            {
+                throw new ArrayIndexOutOfBoundsException("Dimension " + i + ": " + offset[i] 
+                        + "+" + dataDimensions[i] + " > " + max);
+            }
+        }
+    }
+
     /**
      * Closes this object and the file referenced by this object. This object must not be used after
      * being closed.
